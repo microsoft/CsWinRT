@@ -12,6 +12,7 @@ namespace Windows.Foundation
     // a "public" type for the type mapping definition.
     // IReferenceArray cannot appear in signatures, so it doesn't need to actually be public.
     [Guid("61C17707-2D65-11E0-9AE8-D48564015472")]
+    [WindowsRuntimeHelperType(typeof(global::ABI.Windows.Foundation.IReferenceArray<>))]
     internal interface IReferenceArray<T>
     {
         T[] Value { get; }

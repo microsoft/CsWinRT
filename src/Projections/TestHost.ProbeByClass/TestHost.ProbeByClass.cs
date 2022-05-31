@@ -13,6 +13,7 @@ namespace Windows.Foundation
 {
     [global::WinRT.WindowsRuntimeType]
     [Guid("00000035-0000-0000-c000-000000000046")]
+    [WindowsRuntimeHelperType(typeof(global::ABI.Windows.Foundation.IActivationFactory))]
     internal interface IActivationFactory
     {
         Object ActivateInstance();

@@ -21,6 +21,9 @@ MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Componen
 MembersMustExist : Member 'public System.ComponentModel.PropertyChangedEventHandler ABI.System.ComponentModel.PropertyChangedEventHandler.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.IWeakReferenceSourceMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'Windows.Foundation.Point' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'Windows.Foundation.Rect' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'Windows.Foundation.Size' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.ComWrappersHelper' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ComWrappersSupport.GetObjectReferenceForInterface<T>(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ComWrappersSupport.GetObjectReferenceForInterface<T>(System.IntPtr, System.Guid)' does not exist in the reference but it does exist in the implementation.
@@ -49,6 +52,9 @@ MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi()' do
 MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi(WinRT.MarshalString.Pinnable)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.ObjectReferenceValue' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.WindowsRuntimeHelperTypeAttribute' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'WinRT.Interop.IActivationFactory' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'WinRT.Interop.IAgileObject' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 52
+Total Issues: 58
