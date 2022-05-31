@@ -2,16 +2,16 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="CSWinMDProduceWinMDFromCSharpComponent" BeforeTargets="CSWinMDInsertComponentWinMD">
     <PropertyGroup>
-      <CsWinMDPath Condition="'$(CsWinMDPath)'==''">$(MSBuildThisFileDirectory)..\tools\CsWinMD.exe</CsWinMDPath>
+      <CsWinMDPath Condition="'$(CsWinMDPath)'==''">$(MSBuildThisFileDirectory)..\tools\native\CsWinMD.exe</CsWinMDPath>
       <CsWinMDOutputPath Condition="'$(CsWinMDOutputPath)'==''">$(OutDir)cswinmd-$(ProjectName)</CsWinMDOutputPath>
     </PropertyGroup>
     <Message Text="Producing winmd for %(CSWinMDComponent.Identity)" Importance="High" />
-    <Message Text="$(CsWinMDPath) -i %(CSWinMDComponent.FullPath) -o $(CsWinMDOutputPath)" Importance="High" />
+    <Message Text="$(CsWinMDPath) -i %(CSWinMDComponent.FullPath) -o $(CsWinMDOutputPath) -a $(RootNamespace)" Importance="High" />
     <MakeDir Directories="$(CSWinMDOutputPath)" />
-    <Exec Command="$(CsWinMDPath) -i %(CSWinMDComponent.FullPath) -o $(CsWinMDOutputPath)" />
+    <Exec Command="$(CsWinMDPath) -i %(CSWinMDComponent.FullPath) -o $(CsWinMDOutputPath) -a $(RootNamespace)" />
   </Target>
 
-  <Target Name="CSWinMDInsertComponentWinMD" AfterTargets="GetCppWinRTMdMergeInputs;CppWinRTMergeProjectWinMDInputs" BeforeTargets="CppWinRTMakeComponentProjection">
+  <Target Name="CSWinMDInsertComponentWinMD" AfterTargets="GetCppWinRTMdMergeInputs" BeforeTargets="CppWinRTMakeComponentProjection;CppWinRTMergeProjectWinMDInputs">
     <ItemGroup>
       <CppWinRTMdMergeInputs Include="@(CSWinMDComponent->'$(CsWinMDOutputPath)\%(FileName).winmd')">
         <IsWinMDFile>true</IsWinMDFile>

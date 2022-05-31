@@ -114,7 +114,12 @@ namespace Generator
 
         public static string GetWinmdOutputFile(this GeneratorExecutionContext context)
         {
-            return Path.Combine(context.GetGeneratedFilesDir(), context.GetAssemblyName() + ".winmd");
+            var fileName = context.GetAssemblyName();
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTWinMDOutputFile", out var ret))
+            {
+                fileName = ret!;
+            }
+            return Path.Combine(context.GetGeneratedFilesDir(), fileName + ".winmd");
         }
     }
 }

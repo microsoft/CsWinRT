@@ -36,17 +36,60 @@ namespace Generator
     }
     class Program
     {
+#nullable enable
+        public static void Main(string[] args)
+        {
+            var i = new List<string>();
+            string? o = null;
+            string? sdkVersion = null;
+            bool? verbose = false;
+            bool? nologo = false;
+            string a = null;
+            for (int idx = 0; idx < args.Length; idx++)
+            {
+                if (args[idx] == "-i")
+                {
+                    idx++;
+                    i.AddRange(args[idx].Split(';'));
+                }
+                else if (args[idx] == "-o")
+                {
+                    idx++;
+                    o = args[idx]; 
+                }
+                else if (args[idx] == "-a")
+                {
+                    idx++;
+                    a = args[idx];
+                }
+                else if (args[idx] == "-sdkVersion")
+                {
+                    idx++;
+                    sdkVersion = args[idx];
+                }
+                else if (args[idx] == "-verbose")
+                {
+                    verbose = true;
+                }
+                else if (args[idx] == "-nologo")
+                {
+                    nologo = true;
+                }
+            }
+
+            DoMain(i.ToArray(), o!, a!, sdkVersion, verbose, nologo);
+        }
         /// <summary>
         /// CSWinMD - Compile C# definitions to WinMD
         /// </summary>
         /// <param name="i">Input WinMD path</param>
         /// <param name="o">Output directory</param>
+        /// <param name="a">Assembly name</param>
         /// <param name="sdkVersion">Optional sdk version</param>
         /// <param name="verbose">Verbose logging</param>
         /// <param name="nologo">Don't print logo</param>
         /// Uses System.CommandLine.Dragonfruit
-        #nullable enable
-        public static void Main(string[] i, string o, string? sdkVersion, bool? verbose, bool? nologo)
+        public static void DoMain(string[] i, string o, string a, string? sdkVersion, bool? verbose, bool? nologo)
         {
             if (!nologo.HasValue || !nologo.Value)
             {
@@ -72,14 +115,15 @@ namespace Generator
 
                 string componentName = Path.GetFileNameWithoutExtension(inputFile);
 
-                var assemblyName = componentName;
+                var assemblyName = a;
 
                 var windows_winmd = GetWindowsWinMdPath(sdkVersion);
                 var compilation = CSharpCompilation.Create(
-                    assemblyName: componentName,
+                    assemblyName: assemblyName,
                     syntaxTrees: new[] { CSharpSyntaxTree.ParseText(inputText, new CSharpParseOptions(LanguageVersion.Preview), inputFile) },
-                    references: new[] { MetadataReference.CreateFromFile(windows_winmd),
-                MetadataReference.CreateFromFile(typeof(Binder).Assembly.Location)
+                    references: new[] { 
+                        MetadataReference.CreateFromFile(windows_winmd),
+                        MetadataReference.CreateFromFile(typeof(Binder).Assembly.Location)
                     },
                     options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
                     );
@@ -93,6 +137,7 @@ namespace Generator
                 var cp = new ConfigProvider();
                 var config = (cp.GlobalOptions as ConfigOptions)!;
                 config.Values["build_property.AssemblyName"] = assemblyName;
+                config.Values["build_property.CsWinRTWinMDOutputFile"] = componentName;
                 config.Values["build_property.AssemblyVersion"] = "0.0.0.1";
                 config.Values["build_property.CsWinRTGeneratedFilesDir"] = outFolder;
                 config.Values["build_property.CsWinRTEnableLogging"] = "true";
