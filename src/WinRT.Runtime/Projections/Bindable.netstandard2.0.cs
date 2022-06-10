@@ -15,7 +15,7 @@ namespace Microsoft.UI.Xaml.Interop
 {
     [global::WinRT.WindowsRuntimeType]
     [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
-    // [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Interop.IBindableIterable))]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.System.Collections.IEnumerable))]
     internal interface IBindableIterable
     {
         IBindableIterator First();
@@ -37,7 +37,6 @@ namespace Microsoft.UI.Xaml.Interop
     }
     [global::WinRT.WindowsRuntimeType]
     [Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
-    // [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Interop.IBindableVector))]
     internal interface IBindableVector : IEnumerable
     {
         object GetAt(uint index);
