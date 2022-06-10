@@ -38,7 +38,6 @@ namespace Microsoft.UI.Xaml.Interop
     }
     [global::WinRT.WindowsRuntimeType]
     [Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
-    // [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Interop.IBindableVector))]
     internal interface IBindableVector : IEnumerable
     {
         object GetAt(uint index);
