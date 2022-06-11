@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace WinRT
@@ -25,24 +26,43 @@ namespace WinRT
                     type = typeof(Exception);
                 }
                 Type customMapping = Projections.FindCustomHelperTypeMapping(type);
-                if (customMapping is object)
+                if (customMapping is not null)
                 {
                     return customMapping;
                 }
 
                 var helperTypeAtribute = type.GetCustomAttribute<WindowsRuntimeHelperTypeAttribute>();
-                if (helperTypeAtribute is object)
+                if (helperTypeAtribute is not null)
                 {
-                    if (type.IsGenericType)
-                    {
-                        return helperTypeAtribute.HelperType.MakeGenericType(type.GetGenericArguments());
-                    }
-                    else
-                    {
-                        return helperTypeAtribute.HelperType;
-                    }
+                    return GetHelperTypeFromAttribute(helperTypeAtribute, type);
                 }
 
+                return FindHelperTypeFallback(type);
+            });
+
+#if NET
+            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+                Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
+#endif
+            static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
+            {
+                if (type.IsGenericType)
+                {
+                    return helperTypeAtribute.HelperType.MakeGenericType(type.GetGenericArguments());
+                }
+                else
+                {
+                    return helperTypeAtribute.HelperType;
+                }
+            }
+
+#if NET
+            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+                Justification = "This is a fallback for compat purposes with existing projections.  " +
+                "Applications which make use of trimming will make use of updated projections that won't hit this code path.")]
+#endif
+            static Type FindHelperTypeFallback(Type type)
+            {
                 string fullTypeName = type.FullName;
                 string ccwTypePrefix = "ABI.Impl.";
                 if (fullTypeName.StartsWith(ccwTypePrefix, StringComparison.Ordinal))
@@ -52,7 +72,7 @@ namespace WinRT
 
                 var helper = $"ABI.{fullTypeName}";
                 return type.Assembly.GetType(helper) ?? Type.GetType(helper);
-            });
+            }
         }
 
         public static Type GetHelperType(this Type type)

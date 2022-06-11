@@ -201,6 +201,12 @@ namespace GuidPatch
                 return false;
             }
 
+            if (runtimeClassAttribute.ConstructorArguments[0].Value is TypeReference typeReference)
+            {
+                defaultInterface = typeReference;
+                return true;
+            }
+
             string defaultInterfacePropertyName = (string)runtimeClassAttribute.ConstructorArguments[0].Value;
 
             var defaultInterfaceProperty = rcDef.Properties.FirstOrDefault(prop => prop.Name == defaultInterfacePropertyName);
