@@ -6433,7 +6433,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
         w.write(R"(%%
-[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
 {
@@ -6470,6 +6470,7 @@ private struct InterfaceTag<I>{};
 )",
             bind<write_winrt_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
+            default_interface_name,
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
             bind<write_class_modifiers>(type),
