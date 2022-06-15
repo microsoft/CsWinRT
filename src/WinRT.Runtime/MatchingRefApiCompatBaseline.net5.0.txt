@@ -2,6 +2,7 @@ Compat issues with assembly WinRT.Runtime:
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.EventHandler<T>.CreateMarshaler2(System.EventHandler<T>)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.EventHandler<T> ABI.System.EventHandler<T>.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Nullable<T>.CreateMarshaler2(System.Object)' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'ABI.System.Type.FromAbi(ABI.System.Type)' in the implementation but not the reference.
 MembersMustExist : Member 'public ABI.System.Type ABI.System.Type.GetAbi(ABI.System.Type.Pinnable)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Type.Pinnable' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Uri.CreateMarshaler2(System.Uri)' does not exist in the reference but it does exist in the implementation.
@@ -57,4 +58,4 @@ CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exis
 CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'WinRT.Interop.IAgileObject' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 58
+Total Issues: 59

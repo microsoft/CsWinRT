@@ -118,6 +118,9 @@ namespace ABI.System
             };
         }
 
+#if NET
+        [global::System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Types accessed only from the non-managed layer might be trimmed.")]
+#endif
         public static global::System.Type FromAbi(Type value)
         {
             string name = MarshalString.FromAbi(value.Name);

@@ -151,7 +151,7 @@ namespace WinRT
             return AuthoringMetadataTypeCache.GetOrAdd(type, (type) =>
             {
                 var ccwTypeName = $"ABI.Impl.{type.FullName}";
-                return type.Assembly.GetType(ccwTypeName, false) ?? Type.GetType(ccwTypeName, false);
+                return type.Assembly.GetType(ccwTypeName, false);
             });
         }
     }
