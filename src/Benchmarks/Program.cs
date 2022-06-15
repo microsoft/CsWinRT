@@ -59,7 +59,7 @@ namespace Benchmarks
                     )
                     .WithId("WinMD NetCoreApp31");
 
-                // Optimizer needs to be diabled as it errors on WinMDs
+                // Optimizer needs to be disabled as it errors on WinMDs
                 Config = Config.WithOption(ConfigOptions.DisableOptimizationsValidator, true)
                         .AddJob(winmdJob);
 #else
