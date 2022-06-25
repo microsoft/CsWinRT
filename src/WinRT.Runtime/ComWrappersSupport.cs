@@ -217,6 +217,12 @@ namespace WinRT
                     {
                         foreach (var compatibleIface in compatibleIfaces)
                         {
+                            // Entry has already been added above.
+                            if (compatibleIface == iface)
+                            {
+                                continue;
+                            }
+
                             var compatibleIfaceAbiType = compatibleIface.FindHelperType();
                             entries.Add(new ComInterfaceEntry
                             {
