@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WinRT
 {
@@ -83,11 +84,18 @@ namespace WinRT
         {
         }
 
-        public WindowsRuntimeHelperTypeAttribute(Type helperType)
+        public WindowsRuntimeHelperTypeAttribute(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
+            Type helperType)
         {
             HelperType = helperType;
         }
 
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
         public Type HelperType { get; }
     }
 }

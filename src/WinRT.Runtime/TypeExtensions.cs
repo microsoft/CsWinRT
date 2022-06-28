@@ -17,9 +17,20 @@ namespace WinRT
     {
         private readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
 
+#if NET
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                            DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                            DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
         public static Type FindHelperType(this Type type)
         {
-            return HelperTypeCache.GetOrAdd(type, (type) =>
+            return HelperTypeCache.GetOrAdd(type,
+#if NET
+            [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                                DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                                DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
+            (type) =>
             {
                 if (typeof(Exception).IsAssignableFrom(type))
                 {
@@ -43,6 +54,7 @@ namespace WinRT
 #if NET
             [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
                 Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
+            [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicNestedTypes)]
 #endif
             static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
             {
@@ -75,6 +87,11 @@ namespace WinRT
             }
         }
 
+#if NET
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | 
+                                            DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                            DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
         public static Type GetHelperType(this Type type)
         {
             var helperType = type.FindHelperType();
@@ -83,11 +100,17 @@ namespace WinRT
             throw new InvalidOperationException($"Target type is not a projected type: {type.FullName}.");
         }
 
+#if NET
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
         public static Type GetGuidType(this Type type)
         {
             return type.IsDelegate() ? type.GetHelperType() : type;
         }
 
+#if NET
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
         public static Type FindVftblType(this Type helperType)
         {
             Type vftblType = helperType.GetNestedType("Vftbl");

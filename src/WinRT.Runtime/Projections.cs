@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -24,6 +25,7 @@ namespace WinRT
     static class Projections
     {
         private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
+
         private static readonly Dictionary<Type, Type> CustomTypeToHelperTypeMappings = new Dictionary<Type, Type>();
         private static readonly Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
         private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>(StringComparer.Ordinal);
@@ -108,7 +110,17 @@ namespace WinRT
             CustomTypeToAbiTypeNameMappings.Add(typeof(System.Type), "Windows.UI.Xaml.Interop.TypeName");
         }
 
-        public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName, bool isRuntimeClass = false)
+        public static void RegisterCustomAbiTypeMapping(
+            Type publicType,
+#if NET
+            [DynamicallyAccessedMembers(
+                DynamicallyAccessedMemberTypes.PublicMethods |
+                DynamicallyAccessedMemberTypes.NonPublicMethods |
+                DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
+            Type abiType, 
+            string winrtTypeName, 
+            bool isRuntimeClass = false)
         {
             rwlock.EnterWriteLock();
             try
@@ -121,7 +133,17 @@ namespace WinRT
             }
         }
 
-        private static void RegisterCustomAbiTypeMappingNoLock(Type publicType, Type abiType, string winrtTypeName, bool isRuntimeClass = false)
+        private static void RegisterCustomAbiTypeMappingNoLock(
+            Type publicType,
+#if NET
+            [DynamicallyAccessedMembers(
+                DynamicallyAccessedMemberTypes.PublicMethods |
+                DynamicallyAccessedMemberTypes.NonPublicMethods |
+                DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
+            Type abiType, 
+            string winrtTypeName,
+            bool isRuntimeClass = false)
         {
             CustomTypeToHelperTypeMappings.Add(publicType, abiType);
             CustomAbiTypeToTypeMappings.Add(abiType, publicType);
@@ -134,6 +156,12 @@ namespace WinRT
             }
         }
 
+#if NET
+        [return: DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicMethods |
+            DynamicallyAccessedMemberTypes.NonPublicMethods |
+            DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
         public static Type FindCustomHelperTypeMapping(Type publicType, bool filterToRuntimeClass = false)
         {
             rwlock.EnterReadLock();

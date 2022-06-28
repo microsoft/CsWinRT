@@ -845,19 +845,19 @@ namespace WinRT
     }
 }
 
+#if !NET
 namespace System.Runtime.CompilerServices
 {
     [AttributeUsage(AttributeTargets.Method)]
     internal sealed class ModuleInitializerAttribute : Attribute { }
 }
+#endif
 
 namespace WinRT
 {
     internal static class ProjectionInitializer
     {
-#pragma warning disable 0436
         [ModuleInitializer]
-#pragma warning restore 0436
         internal static void InitalizeProjection()
         {
             ComWrappersSupport.RegisterProjectionAssembly(typeof(ProjectionInitializer).Assembly);

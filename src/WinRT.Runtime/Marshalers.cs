@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -447,7 +448,11 @@ namespace WinRT
 #endif
     class MarshalGeneric<T>
     {
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
+#endif
         protected static readonly Type HelperType = typeof(T).GetHelperType();
+
         protected static readonly Type AbiType = typeof(T).GetAbiType();
         protected static readonly Type MarshalerType = typeof(T).GetMarshalerType();
         private static readonly bool MarshalByObjectReferenceValueSupported = typeof(T).GetMarshaler2Type() == typeof(ObjectReferenceValue);
@@ -1038,6 +1043,14 @@ namespace WinRT
 #endif
     struct MarshalInterface<T>
     {
+#if NET
+        [DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicFields | 
+            DynamicallyAccessedMemberTypes.NonPublicFields | 
+            DynamicallyAccessedMemberTypes.PublicNestedTypes |
+            DynamicallyAccessedMemberTypes.PublicMethods |
+            DynamicallyAccessedMemberTypes.NonPublicMethods)]
+#endif
         private static readonly Type HelperType = typeof(T).GetHelperType();
         private static Func<T, IObjectReference> _ToAbi;
         private static Func<T, IObjectReference> _CreateMarshaler;
@@ -1181,7 +1194,11 @@ namespace WinRT
 #else 
     public
 #endif
-    static class MarshalInspectable<T>
+    static class MarshalInspectable<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        T>
     {
         public static IObjectReference CreateMarshaler<V>(T o, Guid iid, bool unwrapObject = true)
         {
@@ -1397,7 +1414,7 @@ namespace WinRT
 
 #if EMBED
     internal
-#else 
+#else
     public
 #endif
     class Marshaler<T>
@@ -1599,6 +1616,9 @@ namespace WinRT
             RefAbiType = AbiType.MakeByRefType();
         }
 
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
+#endif
         public static readonly Type AbiType;
         public static readonly Type RefAbiType;
         public static readonly Func<T, object> CreateMarshaler;
