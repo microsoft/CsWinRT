@@ -1,4 +1,10 @@
-﻿#if UAC_VERSION_13
+﻿#if UAC_VERSION_15
+#define UAC_VERSION_14
+#endif
+#if UAC_VERSION_14
+#define UAC_VERSION_13
+#endif
+#if UAC_VERSION_13
 #define UAC_VERSION_12
 #endif
 #if UAC_VERSION_12
@@ -412,6 +418,36 @@ namespace Windows.UI.ViewManagement
         {
             var iid = GuidGenerator.CreateIID(typeof(IUIViewSettings));
             return (UIViewSettings)uIViewSettingsInterop.GetForWindow(hwnd, iid);
+        }
+    }
+#endif
+}
+
+namespace Windows.Graphics.Display
+{
+#if UAC_VERSION_15
+#if NET
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.22621.0")]
+#endif
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class DisplayInformationInterop
+    {
+        private static IDisplayInformationStaticsInterop displayInformationInterop = DisplayInformation.As<IDisplayInformationStaticsInterop>();
+
+        public static DisplayInformation GetForWindow(IntPtr window)
+        {
+            Guid iid = GuidGenerator.CreateIID(typeof(IDisplayInformation));
+            return (DisplayInformation)displayInformationInterop.GetForWindow(window, iid);
+        }
+
+        public static DisplayInformation GetForMonitor(IntPtr monitor)
+        {
+            Guid iid = GuidGenerator.CreateIID(typeof(IDisplayInformation));
+            return (DisplayInformation)displayInformationInterop.GetForMonitor(monitor, iid);
         }
     }
 #endif

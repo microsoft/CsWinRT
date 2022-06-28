@@ -34,14 +34,23 @@
     <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
     <file src="$winrt_host_x64$" target ="hosting\x64\native"/>
     <file src="$winrt_host_x86$" target ="hosting\x86\native"/>
-    <file src="$winrt_host_arm$" target ="hosting\arm\native"/>
     <file src="$winrt_host_arm64$" target ="hosting\arm64\native"/>
-    <file src="$winrt_host_resource_x64$" target ="hosting\x64\native\en-us"/>
-    <file src="$winrt_host_resource_x86$" target ="hosting\x86\native\en-us"/>
-    <file src="$winrt_host_resource_arm$" target ="hosting\arm\native\en-us"/>
-    <file src="$winrt_host_resource_arm64$" target ="hosting\arm64\native\en-us"/>
     <file src="$winrt_shim$" target ="lib\net5.0\"/>
-    
+
+    <!-- Localized resources for error strings 
+         The paths here leads to a folder of folders, 
+           wherein the folders are the resources for a particular locale/cultures. 
+         E.g. fr-FR/WinRT.Host.dll.mui -->
+    <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="hosting\x64\native"/>
+    <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="hosting\x86\native"/>
+    <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="hosting\arm64\native"/>
+    <file src="$winrt_host_resource_x64$" target ="hosting\x64\native\en-US"/>
+    <file src="$winrt_host_resource_x86$" target ="hosting\x86\native\en-US"/>
+    <file src="$winrt_host_resource_arm64$" target ="hosting\arm64\native\en-US"/>
+
+    <file src="..\src\WinRT.Runtime\ResX\**" target ="lib\net5.0\"/>
+    <file src="..\src\Authoring\WinRT.SourceGenerator\ResX\**" target ="analyzers\dotnet\cs\"/>
+
     <!-- Add the WinRT.Runtime sources to the pkg for embedded scenarios -->
 
     <file src="..\src\WinRT.Runtime\*.cs" exclude="..\src\WinRT.Runtime\*.net*.cs" target="embedded\any\" />

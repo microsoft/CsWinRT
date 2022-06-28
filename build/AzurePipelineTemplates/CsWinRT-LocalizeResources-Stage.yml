@@ -53,6 +53,58 @@ stages:
         cultureMappingType: 'None'
         gitAction: NONE 
 
+    # Sign TDBuild Output
+    - task: EsrpCodeSigning@1
+      displayName: ESRP CodeSigning
+      inputs:
+        ConnectedServiceName: 81cc6790-027c-4ef3-928d-65e8b96a691a
+        FolderPath: $(LocOutputDir)
+        Pattern: |
+          release_x64\de-DE\WinRT.Host.dll.mui
+          release_x64\es-ES\WinRT.Host.dll.mui
+          release_x64\fr-FR\WinRT.Host.dll.mui
+          release_x64\it-IT\WinRT.Host.dll.mui
+          release_x64\ja-JP\WinRT.Host.dll.mui
+          release_x64\ko-KR\WinRT.Host.dll.mui
+          release_x64\pt-BR\WinRT.Host.dll.mui
+          release_x64\ru-RU\WinRT.Host.dll.mui
+          release_x64\zh-CN\WinRT.Host.dll.mui
+          release_x64\zh-TW\WinRT.Host.dll.mui
+        UseMinimatch: true
+        signConfigType: inlineSignParams
+        inlineOperation: |
+          [
+            {
+              "keyCode": "CP-230012",
+              "operationSetCode": "SigntoolSign",
+                "parameters": [
+                {
+                  "parameterName": "OpusName",
+                  "parameterValue": "Microsoft"
+                },
+                {
+                  "parameterName": "OpusInfo",
+                  "parameterValue": "http://www.microsoft.com"
+                },
+                {
+                  "parameterName": "PageHash",
+                  "parameterValue": "/NPH"
+                },
+                {
+                  "parameterName": "FileDigest",
+                  "parameterValue": "/fd sha256"
+                },
+                {
+                  "parameterName": "TimeStamp",
+                  "parameterValue": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+                }
+              ],
+              "toolName": "signtool.exe",
+              "toolVersion": "6.2.9304.0"
+            }
+          ]
+
+
     # Stage TDBuild Output
     - task: CopyFiles@2
       displayName: Stage TouchdownBuild Output

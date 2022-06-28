@@ -179,4 +179,18 @@ namespace WinRT.Interop
             ref const GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult*>)
     }
 #endif
+
+    // WindowsGraphicsDisplayInterop.idl
+#if UAC_VERSION > 14
+    [uuid(7449121C-382B-4705-8DA7-A795BA482013), ProjectionInternal]
+    interface IDisplayInformationStaticsInterop
+    {
+        Object GetForWindow(
+            HWND window,
+            ref const GUID riid);
+        Object GetForMonitor(
+            HWND monitor,
+            ref const GUID riid);
+    }
+#endif
 }

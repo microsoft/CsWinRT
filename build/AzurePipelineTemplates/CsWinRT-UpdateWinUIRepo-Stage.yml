@@ -1,0 +1,82 @@
+stages: 
+- stage: UpdateWinUI
+  displayName: CI with WinUI
+  jobs:
+  - job: TriggerWinUIPipelines
+    pool: 
+      name: Azure Pipelines
+      vmImage: windows-2019
+    steps:
+    - script: |
+        rem Parse the build-generated Build.BuildNumber into components that 
+        rem can be recombined for version resources, nuget packages, etc.
+   
+        @echo off
+   
+        rem Encode the build date/rev into a 16 bit value for resource versions
+        if "$(PrereleaseVersion)"=="" (
+        set RevisionBase=30000
+        ) else (
+        set RevisionBase=0
+        )
+        for /f "tokens=4,5 delims=." %%i in ("$(Build.BuildNumber)") do set BuildMetadata=%%i.%%j & set /a BuildRevision=%RevisionBase%+(((%%i/10000)-20)*366+((%%i)%%10000)/100*31+((%%i)%%100))*10+%%j
+   
+        set VersionNumber=$(MajorVersion).$(MinorVersion).$(PatchVersion).%BuildRevision%
+   
+        if "$(PrereleaseVersion)"=="" (
+        set NugetVersion=$(MajorVersion).$(MinorVersion).$(PatchVersion)
+        ) else (
+        set NugetVersion=$(Build.BuildNumber)
+        )
+   
+        rem Export generated version numbers back for subsequent tasks
+        echo ##vso[task.setvariable variable=BuildMetadata;]%BuildMetadata%
+        echo ##vso[task.setvariable variable=BuildRevision;]%BuildRevision%
+        echo ##vso[task.setvariable variable=VersionNumber;]%VersionNumber%
+        echo ##vso[task.setvariable variable=NugetVersion;]%NugetVersion%
+      workingDirectory: '$(Build.SourcesDirectory)'
+      displayName: 'Parse Versions'
+
+    # If we're doing a release, call the WinUI UpdateCsWinRT Pipeline, which pulls the latest from nuget (?)
+    - powershell: |
+        $updateCsWinRTPipelineID = 58312
+        $branch = "master"
+        $runInfo = (az pipelines run `
+          --organization https://dev.azure.com/microsoft `
+          --project WinUI `
+          --id $updateCsWinRTPipelineID `
+          --branch $branch) | ConvertFrom-Json
+   
+        $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
+   
+        Start-Process $buildUrl
+      condition: eq(variables['_IsRelease'],'true')
+      errorActionPreference: continue
+      ignoreLASTEXITCODE: true
+      displayName: 'Run WinUI UpdateCSWinRT Pipeline'
+      continueOnError: true
+      env:
+        AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+    # On a nightly, we trigger a CI build (on WinUI's main branch) with the private nupkg made from master
+    - powershell: |
+        $WinUICIPipelineID = 38157
+        $branch = "master"
+        $runInfo = (az pipelines run `
+         --organization https://dev.azure.com/microsoft `
+        --project WinUI `
+        --id $WinUICIPipelineID `
+        --branch $branch `
+        --variables "privateCsWinRTNupkgVersion=$($env:cswinrtVersion)") | ConvertFrom-Json
+   
+        $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
+   
+        Start-Process $buildUrl
+      condition: eq(variables['Build.Reason'],'Schedule')
+      errorActionPreference: continue
+      ignoreLASTEXITCODE: true
+      displayName: 'Run WinUI CI Pipeline'
+      continueOnError: true
+      env:
+        AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        cswinrtVersion: $(NugetVersion)

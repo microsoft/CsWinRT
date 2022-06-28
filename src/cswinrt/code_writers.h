@@ -5973,7 +5973,7 @@ public static Guid PIID = Vftbl.PIID;
 %
 }
 )", 
-        is_exclusive_to(iface) ? "internal" : internal_accessibility(), 
+        (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), 
         [&](writer& w) {
             if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
@@ -7024,7 +7024,7 @@ global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
 )", 
         bind<write_winrt_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
-        internal_accessibility(),
+        (settings.internal || settings.embedded) ? (settings.public_enums ? "public" : "internal") : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
