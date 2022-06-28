@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -35,6 +36,7 @@ namespace WinRT
     static class TypeNameSupport
     {
         private static readonly List<Assembly> projectionAssemblies = new List<Assembly>();
+        private static readonly List<IDictionary<string, string>> projectionTypeNameToBaseTypeNameMappings = new List<IDictionary<string, string>>();
         private static readonly ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal) { ["TrackerCollection<T>"] = null };
 
         public static void RegisterProjectionAssembly(Assembly assembly)
@@ -42,14 +44,32 @@ namespace WinRT
             projectionAssemblies.Add(assembly);
         }
 
+        internal static void RegisterProjectionTypeBaseTypeMapping(IDictionary<string, string> typeNameToBaseTypeNameMapping)
+        {
+            projectionTypeNameToBaseTypeNameMappings.Add(typeNameToBaseTypeNameMapping);
+        }
+
         /// <summary>
         /// Parses and loads the given type name, if not found in the cache.
         /// </summary>
         /// <param name="runtimeClassName">The runtime class name to attempt to parse.</param>
         /// <returns>The type, if found.  Null otherwise</returns>
-        public static Type FindTypeByNameCached(string runtimeClassName)
+#if NET
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        public static Type FindTypeByNameCached(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+            string runtimeClassName)
         {
-            return typeNameCache.GetOrAdd(runtimeClassName, (runtimeClassName) =>
+            return typeNameCache.GetOrAdd(runtimeClassName, 
+            (
+#if NET
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+                runtimeClassName
+            ) =>
             {
                 Type implementationType = null;
                 try
@@ -68,7 +88,11 @@ namespace WinRT
         /// </summary>
         /// <param name="runtimeClassName">The runtime class name to attempt to parse.</param>
         /// <returns>A tuple containing the resolved type and the index of the end of the resolved type name.</returns>
-        public static (Type type, int remaining) FindTypeByName(ReadOnlySpan<char> runtimeClassName)
+        public static (Type type, int remaining) FindTypeByName(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+            ReadOnlySpan<char> runtimeClassName)
         {
             // Assume that anonymous types are expando objects, whether declared 'dynamic' or not.
             // It may be necessary to detect otherwise and return System.Object.
@@ -102,7 +126,15 @@ namespace WinRT
         /// We look up the type dynamically because at this point in the stack we can't know
         /// the full type closure of the application.
         /// </remarks>
-        private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
+#if NET
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        private static Type FindTypeByNameCore(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+            string runtimeClassName,
+            Type[] genericTypes)
         {
             Type resolvedType = Projections.FindCustomTypeForAbiTypeName(runtimeClassName);
 
@@ -111,7 +143,7 @@ namespace WinRT
                 if (genericTypes is null)
                 {
                     Type primitiveType = ResolvePrimitiveType(runtimeClassName);
-                    if (primitiveType is object)
+                    if (primitiveType is not null)
                     {
                         return primitiveType;
                     }
@@ -120,7 +152,7 @@ namespace WinRT
                 foreach (var assembly in projectionAssemblies)
                 {
                     Type type = assembly.GetType(runtimeClassName);
-                    if (type is object)
+                    if (type is not null)
                     {
                         resolvedType = type;
                         break;
@@ -133,7 +165,7 @@ namespace WinRT
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     Type type = assembly.GetType(runtimeClassName);
-                    if (type is object)
+                    if (type is not null)
                     {
                         resolvedType = type;
                         break;
@@ -141,7 +173,17 @@ namespace WinRT
                 }
             }
 
-            if (resolvedType is object)
+            // Type might have been trimmed, check if base type exists and if so use that instead.
+            if (resolvedType is null)
+            {
+                var resolvedBaseType = projectionTypeNameToBaseTypeNameMappings.Find((dict) => dict.ContainsKey(runtimeClassName))?[runtimeClassName];
+                if (resolvedBaseType is not null)
+                {
+                    resolvedType = FindTypeByNameCached(resolvedBaseType);
+                }
+            }
+
+            if (resolvedType is not null)
             {
                 if (genericTypes != null)
                 {
