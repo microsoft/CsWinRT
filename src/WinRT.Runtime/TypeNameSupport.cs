@@ -134,7 +134,6 @@ namespace WinRT
                 if (type is object)
                 {
                     resolvedType = type;
-                    break;
                 }
             }
 
