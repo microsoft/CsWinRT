@@ -53,24 +53,37 @@ using WinRT.Interop;
 
 namespace WinRT.Interop
 {
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
-    internal interface IWindowNative
+ 
+#if EMBED
+    internal 
+#else
+    public
+#endif
+    static class IWindowNativeMethods
     {
-        IntPtr WindowHandle { get; }
+        public static unsafe global::System.IntPtr get_WindowHandle(object _obj)
+        {
+            var asObjRef = global::WinRT.MarshalInspectable<object>.CreateMarshaler2(_obj, System.Guid.Parse("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB"));
+
+            var ThisPtr = asObjRef.GetAbi();
+
+            global::System.IntPtr __retval = default;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, out global::System.IntPtr, int>**)ThisPtr)[3](ThisPtr, out __retval));
+            return __retval;
+        }
     }
 
-#if EMBED 
+
+#if EMBED
     internal 
-#else 
-    public 
+#else
+    public
 #endif
     static class WindowNative
     {
-        public static IntPtr GetWindowHandle(object target) => target.As<IWindowNative>().WindowHandle;
+        public static IntPtr GetWindowHandle(object target) => IWindowNativeMethods.get_WindowHandle(target);   // target.As<IWindowNative>().WindowHandle;
     }
-
+   
     [ComImport]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
