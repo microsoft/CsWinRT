@@ -131,7 +131,7 @@ namespace ABI.System
                 return global::System.Type.GetType(name);
             }
 
-            return TypeNameSupport.FindTypeByNameCached(name);
+            return TypeNameSupport.FindTypeByName(name.AsSpan()).type;
         }
 
         public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
