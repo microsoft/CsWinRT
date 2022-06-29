@@ -113,7 +113,8 @@ namespace ObjectLifetimeTests
                 .CallFromUIThread(() =>
                 {
                     Microsoft.UI.Xaml.Window testWindow = new();
-                    var x = WindowNative.GetWindowHandle(testWindow);
+                    var hwnd = WindowNative.GetWindowHandle(testWindow);
+                    Verify(hwnd != IntPtr.Zero, "Window Handle was null");
                 });
         }
 

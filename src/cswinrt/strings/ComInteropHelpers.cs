@@ -75,15 +75,15 @@ namespace WinRT.Interop
 
 
 #if EMBED
-    internal 
+    internal
 #else
     public
 #endif
     static class WindowNative
     {
-        public static IntPtr GetWindowHandle(object target) => IWindowNativeMethods.get_WindowHandle(target);   // target.As<IWindowNative>().WindowHandle;
+        public static IntPtr GetWindowHandle(object target) => IWindowNativeMethods.get_WindowHandle(target);
     }
-   
+
     [ComImport]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
