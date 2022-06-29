@@ -60,12 +60,18 @@ namespace WinRT.Interop
         public static unsafe global::System.IntPtr get_WindowHandle(object _obj)
         {
             var asObjRef = global::WinRT.MarshalInspectable<object>.CreateMarshaler2(_obj, IWindowNativeIID);
-
             var ThisPtr = asObjRef.GetAbi();
-
             global::System.IntPtr __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, out global::System.IntPtr, int>**)ThisPtr)[3](ThisPtr, out __retval));
-            return __retval;
+
+            try
+            {
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, out global::System.IntPtr, int>**)ThisPtr)[3](ThisPtr, out __retval));
+                return __retval;
+            }
+            finally
+            {
+                asObjRef.Dispose();
+            }
         }
     }
 
