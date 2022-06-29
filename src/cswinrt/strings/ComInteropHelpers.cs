@@ -65,6 +65,7 @@ namespace WinRT.Interop
 
             try
             {
+                // We use 3 here because IWindowNative only implements IUnknown, whose only functions are AddRef, Release and QI
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, out global::System.IntPtr, int>**)ThisPtr)[3](ThisPtr, out __retval));
                 return __retval;
             }
