@@ -53,7 +53,7 @@ using WinRT.Interop;
 
 namespace WinRT.Interop
 {
-    internal static readonly Guid IWindowNativeIID = new("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB");
+    internal static readonly Guid IWindowNativeIID = new(0xEECDBF0E, 0xBAE9, 0x4CB6, 0xA6, 0x8E, 0x95, 0x98, 0xE1, 0xCB, 0x57, 0xBB);
 
     internal static class IWindowNativeMethods
     {
