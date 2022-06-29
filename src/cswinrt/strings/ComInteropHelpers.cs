@@ -53,17 +53,13 @@ using WinRT.Interop;
 
 namespace WinRT.Interop
 {
- 
-#if EMBED
-    internal 
-#else
-    public
-#endif
-    static class IWindowNativeMethods
+    internal static readonly Guid IWindowNativeIID = new("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB");
+
+    internal static class IWindowNativeMethods
     {
         public static unsafe global::System.IntPtr get_WindowHandle(object _obj)
         {
-            var asObjRef = global::WinRT.MarshalInspectable<object>.CreateMarshaler2(_obj, System.Guid.Parse("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB"));
+            var asObjRef = global::WinRT.MarshalInspectable<object>.CreateMarshaler2(_obj, IWindowNativeIID);
 
             var ThisPtr = asObjRef.GetAbi();
 
