@@ -57,19 +57,9 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
-        public static Type FindTypeByNameCached(
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-            string runtimeClassName)
+        public static Type FindTypeByNameCached(string runtimeClassName)
         {
-            return typeNameCache.GetOrAdd(runtimeClassName, 
-            (
-#if NET
-                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-                runtimeClassName
-            ) =>
+            return typeNameCache.GetOrAdd(runtimeClassName, (runtimeClassName) =>
             {
                 Type implementationType = null;
                 try
@@ -88,11 +78,7 @@ namespace WinRT
         /// </summary>
         /// <param name="runtimeClassName">The runtime class name to attempt to parse.</param>
         /// <returns>A tuple containing the resolved type and the index of the end of the resolved type name.</returns>
-        public static (Type type, int remaining) FindTypeByName(
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-            ReadOnlySpan<char> runtimeClassName)
+        public static (Type type, int remaining) FindTypeByName(ReadOnlySpan<char> runtimeClassName)
         {
             // Assume that anonymous types are expando objects, whether declared 'dynamic' or not.
             // It may be necessary to detect otherwise and return System.Object.
@@ -127,14 +113,11 @@ namespace WinRT
         /// the full type closure of the application.
         /// </remarks>
 #if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+            Justification = "Any types which are trimmed are not used by user code and there is fallback logic to handle that.")]
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
-        private static Type FindTypeByNameCore(
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-            string runtimeClassName,
-            Type[] genericTypes)
+        private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
         {
             Type resolvedType = Projections.FindCustomTypeForAbiTypeName(runtimeClassName);
 
