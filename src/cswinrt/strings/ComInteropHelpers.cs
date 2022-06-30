@@ -53,22 +53,38 @@ using WinRT.Interop;
 
 namespace WinRT.Interop
 {
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
-    internal interface IWindowNative
+    internal static class IWindowNativeMethods
     {
-        IntPtr WindowHandle { get; }
+        internal static readonly Guid IWindowNativeIID = new(0xEECDBF0E, 0xBAE9, 0x4CB6, 0xA6, 0x8E, 0x95, 0x98, 0xE1, 0xCB, 0x57, 0xBB);
+
+        public static unsafe global::System.IntPtr get_WindowHandle(object _obj)
+        {
+            var asObjRef = global::WinRT.MarshalInspectable<object>.CreateMarshaler2(_obj, IWindowNativeIID);
+            var ThisPtr = asObjRef.GetAbi();
+            global::System.IntPtr __retval = default;
+
+            try
+            {
+                // We use 3 here because IWindowNative only implements IUnknown, whose only functions are AddRef, Release and QI
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, out global::System.IntPtr, int>**)ThisPtr)[3](ThisPtr, out __retval));
+                return __retval;
+            }
+            finally
+            {
+                asObjRef.Dispose();
+            }
+        }
     }
 
-#if EMBED 
-    internal 
-#else 
-    public 
+
+#if EMBED
+    internal
+#else
+    public
 #endif
     static class WindowNative
     {
-        public static IntPtr GetWindowHandle(object target) => target.As<IWindowNative>().WindowHandle;
+        public static IntPtr GetWindowHandle(object target) => IWindowNativeMethods.get_WindowHandle(target);
     }
 
     [ComImport]

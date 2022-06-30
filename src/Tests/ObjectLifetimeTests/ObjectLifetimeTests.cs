@@ -15,6 +15,7 @@ using Microsoft.UI.Xaml.Shapes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
+using WinRT.Interop;
 
 namespace ObjectLifetimeTests
 {
@@ -104,6 +105,19 @@ namespace ObjectLifetimeTests
 
             o = null;
         }
+
+        [TestMethod]
+        public void TestWindowNative()
+        {
+            _asyncQueue
+                .CallFromUIThread(() =>
+                {
+                    Microsoft.UI.Xaml.Window testWindow = new();
+                    var hwnd = WindowNative.GetWindowHandle(testWindow);
+                    Verify(hwnd != IntPtr.Zero, "Window Handle was null");
+                });
+        }
+
         [TestMethod]
         public void BasicTest1()
         {
