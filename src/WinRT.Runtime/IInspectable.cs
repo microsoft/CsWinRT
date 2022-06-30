@@ -133,9 +133,6 @@ namespace WinRT
             _obj = obj;
         }
 
-#if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
         public unsafe string GetRuntimeClassName(bool noThrow = false)
         {
             IntPtr __retval = default;

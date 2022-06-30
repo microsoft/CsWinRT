@@ -3,6 +3,9 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Reflection;
 using WinRT;
 
 namespace ABI.System
@@ -56,9 +59,15 @@ namespace ABI.System
 
         private static (String Name, TypeKind Kind) ToAbi(global::System.Type value)
         {
-            TypeKind kind = TypeKind.Custom;
+#if NET
+            if (value is FakeMetadataType fakeMetadataType)
+            {
+                return (fakeMetadataType.FullName, TypeKind.Metadata);
+            }
+#endif
 
-            if (value is object)
+            TypeKind kind = TypeKind.Custom;
+            if (value is not null)
             {
                 if (value.IsPrimitive)
                 {
@@ -129,12 +138,24 @@ namespace ABI.System
                 return null;
             }
 
-            if(value.Kind == TypeKind.Custom)
+            if (value.Kind == TypeKind.Custom)
             {
                 return global::System.Type.GetType(name);
             }
 
-            return TypeNameSupport.FindTypeByNameCached(name);
+            var type = TypeNameSupport.FindTypeByNameCached(name);
+
+#if NET
+            // The type might have been trimmed, represent it with a fake type if requested
+            // by the the Xaml metadata provider. Given there are no C# references to it, it shouldn't
+            // be used, but if it is, an exception will be thrown.
+            if (type == null && value.Kind == TypeKind.Metadata)
+            {
+                type = FakeMetadataType.GetFakeMetadataType(name);
+            }
+#endif
+
+            return type;
         }
 
         public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
@@ -161,4 +182,201 @@ namespace ABI.System
             return "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
         }
     }
+
+    // Restricting to NET5 or greater as TypeInfo doesn't expose a constructor on .NET Standard 2.0 and we only need this
+    // for WinUI scenarios.
+#if NET
+    internal sealed class FakeMetadataType : global::System.Reflection.TypeInfo
+    {
+        private static readonly ConcurrentDictionary<string, FakeMetadataType> fakeMetadataTypeCache = new(StringComparer.Ordinal);
+
+        private readonly string fullName;
+
+        private FakeMetadataType(string fullName)
+        {
+            this.fullName = fullName;
+        }
+
+        internal static FakeMetadataType GetFakeMetadataType(string name)
+        {
+            return fakeMetadataTypeCache.GetOrAdd(name, (name) => new FakeMetadataType(name));
+        }
+
+        public override Assembly Assembly => throw new NotImplementedException();
+
+        public override string AssemblyQualifiedName => throw new NotImplementedException();
+
+        public override global::System.Type BaseType => throw new NotImplementedException();
+
+        public override string FullName => fullName;
+
+        public override Guid GUID => throw new NotImplementedException();
+
+        public override Module Module => throw new NotImplementedException();
+
+        public override string Namespace => throw new NotImplementedException();
+
+        public override global::System.Type UnderlyingSystemType => throw new NotImplementedException();
+
+        public override string Name => throw new NotImplementedException();
+
+        public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object[] GetCustomAttributes(bool inherit)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object[] GetCustomAttributes(global::System.Type attributeType, bool inherit)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override global::System.Type GetElementType()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override EventInfo GetEvent(string name, BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override EventInfo[] GetEvents(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override FieldInfo GetField(string name, BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override FieldInfo[] GetFields(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+#if NET6_0_OR_GREATER
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#endif
+        public override global::System.Type GetInterface(string name, bool ignoreCase)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override global::System.Type[] GetInterfaces()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override MemberInfo[] GetMembers(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override global::System.Type GetNestedType(string name, BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override global::System.Type[] GetNestedTypes(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override PropertyInfo[] GetProperties(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object InvokeMember(string name, BindingFlags invokeAttr, Binder binder, object target, object[] args, ParameterModifier[] modifiers, CultureInfo culture, string[] namedParameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool IsDefined(global::System.Type attributeType, bool inherit)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override TypeAttributes GetAttributeFlagsImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override ConstructorInfo GetConstructorImpl(BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, global::System.Type[] types, ParameterModifier[] modifiers)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override MethodInfo GetMethodImpl(string name, BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, global::System.Type[] types, ParameterModifier[] modifiers)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override PropertyInfo GetPropertyImpl(string name, BindingFlags bindingAttr, Binder binder, global::System.Type returnType, global::System.Type[] types, ParameterModifier[] modifiers)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool HasElementTypeImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsArrayImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsByRefImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsCOMObjectImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsPointerImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool IsPrimitiveImpl()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return fullName;
+        }
+
+        public override bool Equals(object o)
+        {
+            return ReferenceEquals(this, o);
+        }
+
+        public override bool Equals(global::System.Type o)
+        {
+            return ReferenceEquals(this, o);
+        }
+
+        public override int GetHashCode()
+        {
+            return fullName.GetHashCode();
+        }
+    }
+#endif
 }
