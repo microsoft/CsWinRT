@@ -8,8 +8,8 @@ set this_dir=%~dp0
 :dotnet
 rem Install required .NET SDK version and add to environment
 set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
-set DOTNET_ROOT(86)=%LocalAppData%\Microsoft\dotnet\x86
-set path=%DOTNET_ROOT%;%path%
+set DOTNET_ROOT(x86)=%LocalAppData%\Microsoft\dotnet\x86
+set path=%DOTNET_ROOT%;%DOTNET_ROOT(x86)%;%path%
 set DownloadTimeout=1200
 
 rem Install .NET Version used to build projection
@@ -21,7 +21,7 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTBuildNetSDKVersion%' -InstallDir '%DOTNET_ROOT(86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
+-Version '%CsWinRTBuildNetSDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson
@@ -157,7 +157,7 @@ if %cswinrt_platform%==arm64 goto :package
 :test
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 if %cswinrt_platform%==x86 (
-  set dotnet_exe="%DOTNET_ROOT(86)%\dotnet.exe"
+  set dotnet_exe="%DOTNET_ROOT(x86)%\dotnet.exe"
 ) else (
   set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
 )
