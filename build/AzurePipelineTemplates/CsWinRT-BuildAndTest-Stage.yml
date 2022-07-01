@@ -36,6 +36,15 @@ stages:
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml
 
+# Set Dotnet paths
+- task: PowerShell@2
+  displayName: Set DotNet paths
+  inputs:
+    targetType: inline
+    script: |
+      Write-Host "##vso[task.setvariable variable=DOTNET_ROOT;]C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\"
+      Write-Host "##vso[task.setvariable variable=DOTNET_ROOT(x86);]C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\x86\"
+
 # Run Unit Tests
     - task: DotNetCoreCLI@2
       displayName: Run Unit Tests
