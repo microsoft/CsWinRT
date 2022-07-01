@@ -23,7 +23,9 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
-	<NoWarn>CA2257,CA2256</NoWarn>
+    <NoWarn>CA2257,CA2256</NoWarn>
+    <DebuggerSupport>true</DebuggerSupport>
+    <TrimmerRemoveSymbols>false</TrimmerRemoveSymbols>
   </PropertyGroup>
     
   <ItemGroup>
