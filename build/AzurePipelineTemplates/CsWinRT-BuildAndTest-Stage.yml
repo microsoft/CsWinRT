@@ -118,7 +118,7 @@ stages:
     condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
     dependsOn: []
     pool:
-      vmImage: windows-2019
+      vmImage: windows-latest
     timeoutInMinutes: 120
     steps:
     - template: CsWinRT-Benchmarks-Steps.yml
