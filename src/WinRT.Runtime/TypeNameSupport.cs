@@ -36,7 +36,7 @@ namespace WinRT
     static class TypeNameSupport
     {
         private static readonly List<Assembly> projectionAssemblies = new List<Assembly>();
-        private static readonly List<IDictionary<string, string>> projectionTypeNameToBaseTypeNameMappings = new List<IDictionary<string, string>>();
+        internal static readonly List<IDictionary<string, string>> projectionTypeNameToBaseTypeNameMappings = new List<IDictionary<string, string>>();
         private static readonly ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal) { ["TrackerCollection<T>"] = null };
 
         public static void RegisterProjectionAssembly(Assembly assembly)
@@ -153,16 +153,6 @@ namespace WinRT
                         resolvedType = type;
                         break;
                     }
-                }
-            }
-
-            // Type might have been trimmed, check if base type exists and if so use that instead.
-            if (resolvedType is null)
-            {
-                var resolvedBaseType = projectionTypeNameToBaseTypeNameMappings.Find((dict) => dict.ContainsKey(runtimeClassName))?[runtimeClassName];
-                if (resolvedBaseType is not null)
-                {
-                    resolvedType = FindTypeByNameCached(resolvedBaseType);
                 }
             }
 
