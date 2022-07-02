@@ -488,6 +488,16 @@ namespace WinRT
             if (!string.IsNullOrEmpty(runtimeClassName))
             {
                 implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+
+                // Type might have been trimmed, check if base type exists and if so use that instead.
+                if (implementationType is null)
+                {
+                    var resolvedBaseType = TypeNameSupport.projectionTypeNameToBaseTypeNameMappings.Find((dict) => dict.ContainsKey(runtimeClassName))?[runtimeClassName];
+                    if (resolvedBaseType is not null)
+                    {
+                        implementationType = TypeNameSupport.FindTypeByNameCached(resolvedBaseType);
+                    }
+                }
             }
 
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
