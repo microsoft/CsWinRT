@@ -1195,12 +1195,22 @@ namespace WinRT
     public
 #endif
     static class MarshalInspectable<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#if NET6_0_OR_GREATER || NET6_0
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#elif NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 #endif
         T>
     {
-        public static IObjectReference CreateMarshaler<V>(T o, Guid iid, bool unwrapObject = true)
+        public static IObjectReference CreateMarshaler<V>(
+#if NET6_0_OR_GREATER || NET6_0
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            T o,
+            Guid iid,
+            bool unwrapObject = true)
         {
             if (o is null)
             {
@@ -1222,12 +1232,27 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObject<V>(o, iid);
         }
 
-        public static IObjectReference CreateMarshaler(T o, bool unwrapObject = true)
+        public static IObjectReference CreateMarshaler(
+#if NET6_0_OR_GREATER || NET6_0
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            T o,
+            bool unwrapObject = true)
         {
             return CreateMarshaler<IInspectable.Vftbl>(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
         }
 
-        public static ObjectReferenceValue CreateMarshaler2(T o, Guid iid, bool unwrapObject = true)
+        public static ObjectReferenceValue CreateMarshaler2(
+#if NET6_0_OR_GREATER || NET6_0
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            T o,
+            Guid iid,
+            bool unwrapObject = true)
         {
             if (o is null)
             {
@@ -1249,8 +1274,13 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObjectForMarshaling(o, iid);
         }
 
-        public static ObjectReferenceValue CreateMarshaler2(T o, bool unwrapObject = true) => 
-            CreateMarshaler2(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
+        public static ObjectReferenceValue CreateMarshaler2(
+#if NET6_0_OR_GREATER || NET6_0
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            T o, bool unwrapObject = true) => CreateMarshaler2(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef is null ? IntPtr.Zero : MarshalInterfaceHelper<T>.GetAbi(objRef);
