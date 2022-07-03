@@ -20,7 +20,8 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
                                             DynamicallyAccessedMemberTypes.NonPublicMethods |
-                                            DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+                                            DynamicallyAccessedMemberTypes.PublicNestedTypes | 
+                                            DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         public static Type FindHelperType(this Type type)
         {
@@ -28,7 +29,8 @@ namespace WinRT
 #if NET
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
                                                 DynamicallyAccessedMemberTypes.NonPublicMethods |
-                                                DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+                                                DynamicallyAccessedMemberTypes.PublicNestedTypes | 
+                                                DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             (type) =>
             {
@@ -54,7 +56,7 @@ namespace WinRT
 #if NET
             [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
                 Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
-            [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+            [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicNestedTypes | DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
             {
@@ -111,7 +113,11 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-        public static Type FindVftblType(this Type helperType)
+        public static Type FindVftblType(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
+            this Type helperType)
         {
             Type vftblType = helperType.GetNestedType("Vftbl");
             if (vftblType is null)
@@ -125,7 +131,11 @@ namespace WinRT
             return vftblType;
         }
 
-        internal static IntPtr GetAbiToProjectionVftblPtr(this Type helperType)
+        internal static IntPtr GetAbiToProjectionVftblPtr(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            this Type helperType)
         {
             return (IntPtr)(helperType.FindVftblType() ?? helperType).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null);
         }
