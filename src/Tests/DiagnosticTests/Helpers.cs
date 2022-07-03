@@ -34,7 +34,6 @@ namespace DiagnosticTests
                 additionalTexts: ImmutableArray<AdditionalText>.Empty,
                 parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
                 optionsProvider: options); 
-        // todo: pass the CsWinRTComponent config option here so we don't have to comment out the check in the source generator 
 
         /// <summary>
         /// RunGenerators makes a driver and applies the given generators to the compilation, storing diagnostics in an out param
