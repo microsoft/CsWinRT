@@ -260,7 +260,7 @@ namespace ABI.System
             throw new NotImplementedException();
         }
 
-#if NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER || NET6_0
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
 #endif
         public override global::System.Type GetInterface(string name, bool ignoreCase)

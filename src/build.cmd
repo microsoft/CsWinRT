@@ -75,7 +75,7 @@ if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
 if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking_compat_errors=false
 if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
 
-set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass
+set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
 
 rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.targets

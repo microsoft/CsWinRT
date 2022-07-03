@@ -169,7 +169,13 @@ namespace WinRT
             return obj;
         }
 
-        internal static List<ComInterfaceEntry> GetInterfaceTableEntries(Type type)
+        internal static List<ComInterfaceEntry> GetInterfaceTableEntries(
+#if NET6_0_OR_GREATER || NET6_0
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            Type type)
         {
             var entries = new List<ComInterfaceEntry>();
             bool hasCustomIMarshalInterface = false;

@@ -150,7 +150,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Async", "Tests\FunctionalTe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynamicInterfaceCasting", "Tests\FunctionalTests\DynamicInterfaceCasting\DynamicInterfaceCasting.csproj", "{756947F1-26D7-49ED-A4E8-8C4F126182C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DerivedClassAsBaseClass", "Tests\FunctionalTests\DerivedClassAsBaseClass\DerivedClassAsBaseClass.csproj", "{E3AEC9A4-D1A3-448D-B980-F82894792AF1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DerivedClassAsBaseClass", "Tests\FunctionalTests\DerivedClassAsBaseClass\DerivedClassAsBaseClass.csproj", "{E3AEC9A4-D1A3-448D-B980-F82894792AF1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCW", "Tests\FunctionalTests\CCW\CCW.csproj", "{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -662,6 +664,22 @@ Global
 		{E3AEC9A4-D1A3-448D-B980-F82894792AF1}.Release|x64.Build.0 = Release|x64
 		{E3AEC9A4-D1A3-448D-B980-F82894792AF1}.Release|x86.ActiveCfg = Release|x86
 		{E3AEC9A4-D1A3-448D-B980-F82894792AF1}.Release|x86.Build.0 = Release|x86
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Debug|ARM.ActiveCfg = Debug|ARM
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Debug|ARM.Build.0 = Debug|ARM
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Debug|ARM64.Build.0 = Debug|ARM64
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Debug|x64.ActiveCfg = Debug|x64
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Debug|x64.Build.0 = Debug|x64
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Debug|x86.ActiveCfg = Debug|x86
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Debug|x86.Build.0 = Debug|x86
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Release|ARM.ActiveCfg = Release|ARM
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Release|ARM.Build.0 = Release|ARM
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Release|ARM64.ActiveCfg = Release|ARM64
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Release|ARM64.Build.0 = Release|ARM64
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Release|x64.ActiveCfg = Release|x64
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Release|x64.Build.0 = Release|x64
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Release|x86.ActiveCfg = Release|x86
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}.Release|x86.Build.0 = Release|x86 
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -703,6 +721,7 @@ Global
 		{94E1D7EA-F932-4C7F-8EE8-5DEFD8474D05} = {5ECC38F0-16FD-47E1-B8DC-8C474008AD55}
 		{756947F1-26D7-49ED-A4E8-8C4F126182C8} = {5ECC38F0-16FD-47E1-B8DC-8C474008AD55}
 		{E3AEC9A4-D1A3-448D-B980-F82894792AF1} = {5ECC38F0-16FD-47E1-B8DC-8C474008AD55}
+		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F} = {5ECC38F0-16FD-47E1-B8DC-8C474008AD55}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5AE8C9D7-2613-4E1A-A4F2-579BAC28D0A2}
