@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TestComponentCSharp;
 
@@ -41,4 +42,18 @@ instance.CollectionEvent += (Class sender, IList<int> arg0, IDictionary<int, str
 instance.InvokeCollectionEvent(instance, collection0, collection1);
 events_expected++;
 
-return events_received == events_expected ? 100 : 101;
+var managedUriHandler = new ManagedUriHandler();
+instance.AddUriHandler(managedUriHandler);
+bool uriMatches = managedUriHandler.Uri == new Uri("http://github.com");
+
+return events_received == events_expected && uriMatches ? 100 : 101;
+
+class ManagedUriHandler : IUriHandler
+{
+    public Uri Uri { get; private set; }
+
+    public void AddUriHandler(ProvideUri provideUri)
+    {
+        Uri = provideUri();
+    }
+}
