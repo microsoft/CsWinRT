@@ -105,7 +105,7 @@ namespace WinRT
             CustomTypeToHelperTypeMappings.Add(typeof(ICollection<>), typeof(ABI.System.Collections.Generic.ICollection<>));
             CustomTypeToHelperTypeMappings.Add(typeof(IReadOnlyCollection<>), typeof(ABI.System.Collections.Generic.IReadOnlyCollection<>));
 #endif
-            CustomTypeToHelperTypeMappings.Add(typeof(EventHandler), typeof(ABI.System.EventHandler));
+            RegisterCustomAbiTypeMappingNoLock(typeof(EventHandler), typeof(ABI.System.EventHandler));
 
             CustomTypeToAbiTypeNameMappings.Add(typeof(System.Type), "Windows.UI.Xaml.Interop.TypeName");
         }
@@ -154,6 +154,20 @@ namespace WinRT
                 ProjectedRuntimeClassNames.Add(winrtTypeName);
                 ProjectedCustomTypeRuntimeClasses.Add(publicType);
             }
+        }
+
+        private static void RegisterCustomAbiTypeMappingNoLock(
+            Type publicType,
+#if NET
+            [DynamicallyAccessedMembers(
+                DynamicallyAccessedMemberTypes.PublicMethods |
+                DynamicallyAccessedMemberTypes.NonPublicMethods |
+                DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+#endif
+            Type abiType)
+        {
+            CustomTypeToHelperTypeMappings.Add(publicType, abiType);
+            CustomAbiTypeToTypeMappings.Add(abiType, publicType);
         }
 
 #if NET
