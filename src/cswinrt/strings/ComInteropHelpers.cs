@@ -76,7 +76,6 @@ namespace WinRT.Interop
         }
     }
 
-
 #if EMBED
     internal
 #else
@@ -87,23 +86,42 @@ namespace WinRT.Interop
         public static IntPtr GetWindowHandle(object target) => IWindowNativeMethods.get_WindowHandle(target);
     }
 
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
-    internal interface IInitializeWithWindow
+    internal static class IInitializeWithWindowMethods
     {
-        void Initialize(IntPtr hwnd);
+        internal static readonly Guid IInitializeWithWindowIID = new(0x3E68D4BD, 0x7135, 0x4D10, 0x80, 0x18, 0x9F, 0xB6, 0xD9, 0xF3, 0x3F, 0xA1);
+
+        public static unsafe object Initialize(object _obj, IntPtr window)
+        {
+            var asObjRef = global::WinRT.MarshalInspectable<object>.CreateMarshaler2(_obj, IInitializeWithWindowIID);
+            var ThisPtr = asObjRef.GetAbi();
+            global::System.IntPtr __retval = default;
+
+            try
+            {
+                // IInitializeWithWindow inherits IUnknown (3 functions) and provides Initialize giving a total of 4 functions
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, global::System.IntPtr, out IntPtr, int>**)ThisPtr)[4](ThisPtr, window, out __retval));
+                return __retval;
+            }
+            finally
+            {
+                asObjRef.Dispose();
+            }
+        }
     }
 
 #if EMBED
-    internal 
+    internal
 #else
     public
 #endif
     static class InitializeWithWindow
     {
-        public static void Initialize(object target, IntPtr hwnd) => target.As<IInitializeWithWindow>().Initialize(hwnd);
+        public static void Initialize(object target, IntPtr hwnd)
+        {
+            IInitializeWithWindowMethods.Initialize(target, hwnd);
+        }
     }
+
 }
 
 namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
@@ -194,7 +212,7 @@ namespace Windows.Media.PlayTo
     internal
 #else
     public 
-#endif 
+#endif
     static class PlayToManagerInterop
     {
         private static IPlayToManagerInterop playToManagerInterop = PlayToManager.As<IPlayToManagerInterop>();
