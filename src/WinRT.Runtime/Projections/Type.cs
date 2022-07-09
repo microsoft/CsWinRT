@@ -128,7 +128,8 @@ namespace ABI.System
         }
 
 #if NET
-        [global::System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Types accessed only from the non-managed layer might be trimmed.")]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", 
+            Justification = "Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]
 #endif
         public static global::System.Type FromAbi(Type value)
         {
