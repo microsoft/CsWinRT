@@ -25,24 +25,36 @@ async_get_string.GetResults();
 
 if (async_string != "foo")
 {
-    return 101;
+    return 102;
 }
 
 var task = InvokeAddAsync(instance, 20, 10);
 if (task.Wait(25))
 {
-    return 101;
+    return 103;
 }
 
 instance.CompleteAsync();
 if (!task.Wait(1000))
 {
-    return 101;
+    return 104;
 }
 
 if (task.Status != TaskStatus.RanToCompletion || task.Result != 30)
 {
-    return 101;
+    return 105;
+}
+
+var ports = await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(
+    Windows.Devices.SerialCommunication.SerialDevice.GetDeviceSelector(),
+    new string[] { "System.ItemNameDisplay" });
+foreach (var port in ports)
+{
+    object o = port.Properties["System.ItemNameDisplay"];
+    if (o is null)
+    {
+        return 106;
+    }
 }
 
 return 100;
