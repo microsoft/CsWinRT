@@ -5993,10 +5993,50 @@ public static Guid PIID = Vftbl.PIID;
 
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
-
         bool is_generic = distance(type.GenericParam()) > 0;
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
+
+        // For exclusive interfaces which aren't overridable interfaces that are implemented by unsealed types,
+        // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
+        // But we are still keeping the interface itself for any helper type lookup that may happen for like GUID lookup.
+        if (!is_generic &&
+            is_exclusive_to(type) &&
+            // check for !authored type
+            !(settings.component && settings.filter.includes(type)))
+        {
+            bool hasOverridableAttribute = false;
+            auto exclusive_to_type = get_exclusive_to_type(type);
+            for (auto&& iface : exclusive_to_type.InterfaceImpl())
+            {
+                for_typedef(w, get_type_semantics(iface.Interface()), [&](auto interface_type)
+                {
+                    if (type == interface_type && is_overridable(iface))
+                    {
+                        hasOverridableAttribute = true;
+                    }
+                });
+
+                if (hasOverridableAttribute)
+                {
+                    break;
+                }
+            }
+
+            if (!hasOverridableAttribute)
+            {
+                w.write(R"(%
+internal interface % : %
+{
+}
+)",
+bind<write_guid_attribute>(type),
+type_name,
+bind<write_type_name>(type, typedef_name_type::CCW, false)
+);
+                return true;
+            }
+        }
 
         auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
 
@@ -6017,7 +6057,7 @@ internal unsafe interface % : %
             type_name,
             bind<write_type_name>(type, typedef_name_type::CCW, false),
             [&](writer& w) {
-                w.write(distance(type.GenericParam()) > 0 ? "public static Guid PIID = Vftbl.PIID;\n\n" : "");
+                w.write(is_generic ? "public static Guid PIID = Vftbl.PIID;\n\n" : "");
             },
             // Vftbl
             bind([&](writer& w)

@@ -39,6 +39,25 @@ namespace cswinrt
         return get_category(type) == category::interface_type && has_attribute(type, "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv);
     }
 
+    TypeDef get_exclusive_to_type(TypeDef const& type)
+    {
+        if (auto exclusive_to_attr = get_attribute(type, "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv))
+        {
+            auto sig = exclusive_to_attr.Value();
+            auto const& fixed_args = sig.FixedArgs();
+            XLANG_ASSERT(fixed_args.size() == 1);
+            auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(fixed_args[0].value).value);
+            return type.get_cache().find_required(sys_type.name);
+        }
+
+        throw_invalid("Exclusive type not found");
+    }
+
+    bool is_overridable(InterfaceImpl const& interfaceImpl)
+    {
+        return has_attribute(interfaceImpl, "Windows.Foundation.Metadata"sv, "OverridableAttribute"sv);
+    }
+
     bool is_projection_internal(TypeDef const& type)
     {
         return has_attribute(type, "WinRT.Interop"sv, "ProjectionInternalAttribute"sv);
