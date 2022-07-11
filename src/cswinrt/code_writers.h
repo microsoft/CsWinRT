@@ -5997,12 +5997,12 @@ public static Guid PIID = Vftbl.PIID;
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
 
-        // For exclusive interfaces which aren't overriable interfaces that are implemented by unsealed types,
+        // For exclusive interfaces which aren't overridable interfaces that are implemented by unsealed types,
         // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
         // But we are still keeping the interface itself for any helper type lookup that may happen for like GUID lookup.
         if (!is_generic &&
             is_exclusive_to(type) &&
-            // !authored type
+            // check for !authored type
             !(settings.component && settings.filter.includes(type)))
         {
             bool hasOverridableAttribute = false;
