@@ -2,6 +2,7 @@
 if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTBuildNetSDKVersion=6.0.101
+set CsWinRTBuildNet7SDKVersion=7.0.100-preview.7.22361.1
 set CsWinRTNet5SdkVersion=5.0.404
 set this_dir=%~dp0
 
@@ -33,6 +34,17 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
 -Version '%CsWinRTBuildNetSDKVersion%' -InstallDir '%DOTNET_ROOT(86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
+-AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
+rem Install .NET 7 used to build projection
+powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
+&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
+-Version '%CsWinRTBuildNet7SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
+-AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
+powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
+&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
+-Version '%CsWinRTBuildNet7SDKVersion%' -InstallDir '%DOTNET_ROOT(86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson
