@@ -107,14 +107,29 @@ namespace ObjectLifetimeTests
         }
 
         [TestMethod]
+        public void TestInitializeWithWindow()
+        {
+            _asyncQueue
+                .CallFromUIThread(() =>
+                {
+                    Windows.Storage.Pickers.FolderPicker folderMenu = new();
+                    Microsoft.UI.Xaml.Window testWindow = new();
+                    var windowHandle = WindowNative.GetWindowHandle(testWindow);
+                    InitializeWithWindow.Initialize(testWindow, windowHandle);
+                    Verify(windowHandle != IntPtr.Zero, "Failed to initialize");
+                });
+        }
+
+
+        [TestMethod]
         public void TestWindowNative()
         {
             _asyncQueue
                 .CallFromUIThread(() =>
                 {
                     Microsoft.UI.Xaml.Window testWindow = new();
-                    var hwnd = WindowNative.GetWindowHandle(testWindow);
-                    Verify(hwnd != IntPtr.Zero, "Window Handle was null");
+                    var windowHandle = WindowNative.GetWindowHandle(testWindow);
+                    Verify(windowHandle != IntPtr.Zero, "Window Handle was null");
                 });
         }
 
