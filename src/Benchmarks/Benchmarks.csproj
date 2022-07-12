@@ -13,6 +13,7 @@
     <BenchmarkTargetFramework Condition="$(IsTargetFrameworkNet5OrGreater)">$(TargetFramework)</BenchmarkTargetFramework>
     <IsDotnetBuild Condition="'$(IsDotnetBuild)' == ''">false</IsDotnetBuild>
     <LangVersion Condition="$(IsDotnetBuild) == true">9.0</LangVersion>
+    <DefineConstants Condition="$(UseWinmd) == true">USE_WINMD</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

@@ -33,7 +33,8 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>AuthoringConsumptionTest</RootNamespace>
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <_WinMDPlatform>$(Platform)</_WinMDPlatform>
     <_WinMDPlatform Condition="'$(Platform)' == 'Win32'">x86</_WinMDPlatform>
@@ -68,21 +69,26 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj">
       <Project>{ffa9a78b-f53f-43ee-af87-24a80f4c330a}</Project>
+      <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj">
       <Project>{0a991d5f-bfee-4d2f-9aad-6ad06470a5df}</Project>
+      <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Authoring\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
+      <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Authoring\WinRT.Host\WinRT.Host.vcxproj">
       <Project>{7e33bcb7-19c5-4061-981d-ba695322708a}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj">
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
+      <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
       <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
+      <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

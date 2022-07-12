@@ -24,26 +24,13 @@ steps:
 
       Write-Host ##vso[task.setvariable variable=PATH;]${env:Agent_TempDirectory}\procdump;${env:PATH};
 
-# Use .NET Core SDK 2.1
+# Use .NET Core SDK 3.1
 - task: UseDotNet@2
-  displayName: Use .NET Core SDK 2.1
+  displayName: Use .NET Core SDK 3.1
   inputs:
-    version: 2.1.x
+    version: 3.1.x
     installationPath: C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\
     performMultiLevelLookup: true
-
-# Install .NET 5 SDK
-- task: PowerShell@2 
-  displayName: Install .NET 5 SDK
-  inputs:
-    targetType: inline
-    failOnStderr: true
-    script: |
-      Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH};
-    
-      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-            
-      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 # Install .NET 6 SDK 
 - task: PowerShell@2
@@ -128,7 +115,7 @@ steps:
     script: |
       if "%VSCMD_VER%"=="" (
         pushd c:
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
         popd
       )
 
@@ -146,7 +133,7 @@ steps:
     script: |
       if "%VSCMD_VER%"=="" (
         pushd c:
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
         popd
       )
 
