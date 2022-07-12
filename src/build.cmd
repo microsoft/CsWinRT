@@ -139,6 +139,13 @@ if ErrorLevel 1 (
   echo ERROR: Build failed
   exit /b !ErrorLevel!
 )
+
+echo Publishing function tests for %cswinrt_platform% %cswinrt_configuration%
+for %%a in (%cswinrt_functional_tests%) do (
+  echo Publishing %%a
+  call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+)
+
 if "%cswinrt_build_only%"=="true" goto :eof
 
 :buildembedded
@@ -150,13 +157,6 @@ if ErrorLevel 1 (
   echo.
   echo ERROR: Embedded build failed
   exit /b !ErrorLevel!
-)
-
-:publishfunctionaltests
-echo Publishing function tests for %cswinrt_platform% %cswinrt_configuration%
-for %%a in (%cswinrt_functional_tests%) do (
-  echo Publishing %%a
-  call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
 )
 
 rem Tests are not yet enabled for ARM builds (not supported by Project Reunion)
