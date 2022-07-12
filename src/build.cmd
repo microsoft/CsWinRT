@@ -2,7 +2,7 @@
 if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTBuildNetSDKVersion=6.0.101
-set CsWinRTBuildNet7SDKVersion=7.0.100-preview.7.22361.1
+set CsWinRTBuildNet7SDKVersion=7.0.100-preview.5.22307.18
 set CsWinRTNet5SdkVersion=5.0.404
 set this_dir=%~dp0
 
@@ -52,7 +52,7 @@ rem Create global.json for current .NET SDK, and with allowPrerelease=true
 set global_json=%this_dir%global.json
 echo { > %global_json%
 echo   "sdk": { >> %global_json%
-echo     "version": "%CsWinRTBuildNetSDKVersion%", >> %global_json%
+echo     "version": "%CsWinRTBuildNet7SDKVersion%", >> %global_json%
 echo     "allowPrerelease": true >> %global_json%
 echo   } >> %global_json%
 echo } >> %global_json%
