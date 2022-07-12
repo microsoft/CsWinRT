@@ -140,10 +140,12 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
-echo Publishing function tests for %cswinrt_platform% %cswinrt_configuration%
-for %%a in (%cswinrt_functional_tests%) do (
-  echo Publishing %%a
-  call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+if not %cswinrt_platform%==arm and not %cswinrt_platform%==arm64 (
+  echo Publishing function tests for %cswinrt_platform% %cswinrt_configuration%
+  for %%a in (%cswinrt_functional_tests%) do (
+    echo Publishing %%a
+    call :exec %msbuild_path%msbuild.exe /t:restore /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+  )
 )
 
 if "%cswinrt_build_only%"=="true" goto :eof
