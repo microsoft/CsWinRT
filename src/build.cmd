@@ -140,11 +140,13 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
-if "%cswinrt_platform%" NEQ "arm" and "%cswinrt_platform%" NEQ "arm64" (
-  echo Publishing functional tests for %cswinrt_platform% %cswinrt_configuration%
-  for %%a in (%cswinrt_functional_tests%) do (
-    echo Publishing %%a
-    call :exec %msbuild_path%msbuild.exe /t:restore /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+if "%cswinrt_platform%" NEQ "arm" (
+  if "%cswinrt_platform%" NEQ "arm64" (
+    echo Publishing functional tests for %cswinrt_platform% %cswinrt_configuration%
+    for %%a in (%cswinrt_functional_tests%) do (
+      echo Publishing %%a
+      call :exec %msbuild_path%msbuild.exe /t:restore /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+    )
   )
 )
 
