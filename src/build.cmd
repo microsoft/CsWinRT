@@ -250,7 +250,7 @@ for %%a in (%cswinrt_functional_tests%) do (
   )
 )
 
-if "%cswinrt_label%"=="functionaltest" goto :eof
+if "%cswinrt_label%"=="functionaltest" exit /b 0
 
 :package
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`

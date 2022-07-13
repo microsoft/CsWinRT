@@ -5,7 +5,7 @@ stages:
   - job: BuildAndTest
     pool:
       vmImage: windows-latest
-    timeoutInMinutes: 90
+    timeoutInMinutes: 120
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
       maxParallel: 10
@@ -120,7 +120,6 @@ stages:
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src
         script: |
-          set cswinrt_echo=on
           set cswinrt_label=functionaltest
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
