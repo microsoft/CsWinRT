@@ -5,7 +5,7 @@ stages:
   - job: TriggerMaestroPublish
     condition: eq(variables['_IsRelease'],'true')
     pool: 
-      vmImage: windows-2019
+      vmImage: windows-latest
     steps:
   
   # Parse Versions needed for offical CsWinRT version of build
