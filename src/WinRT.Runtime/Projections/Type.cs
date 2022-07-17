@@ -203,62 +203,62 @@ namespace ABI.System
             return fakeMetadataTypeCache.GetOrAdd(name, (name) => new FakeMetadataType(name));
         }
 
-        public override Assembly Assembly => throw new NotImplementedException();
+        public override Assembly Assembly => throw new InvalidOperationException();
 
-        public override string AssemblyQualifiedName => throw new NotImplementedException();
+        public override string AssemblyQualifiedName => throw new InvalidOperationException();
 
-        public override global::System.Type BaseType => throw new NotImplementedException();
+        public override global::System.Type BaseType => throw new InvalidOperationException();
 
         public override string FullName => fullName;
 
-        public override Guid GUID => throw new NotImplementedException();
+        public override Guid GUID => throw new InvalidOperationException();
 
-        public override Module Module => throw new NotImplementedException();
+        public override Module Module => throw new InvalidOperationException();
 
-        public override string Namespace => throw new NotImplementedException();
+        public override string Namespace => throw new InvalidOperationException();
 
-        public override global::System.Type UnderlyingSystemType => throw new NotImplementedException();
+        public override global::System.Type UnderlyingSystemType => throw new InvalidOperationException();
 
-        public override string Name => throw new NotImplementedException();
+        public override string Name => throw new InvalidOperationException();
 
         public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override object[] GetCustomAttributes(bool inherit)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override object[] GetCustomAttributes(global::System.Type attributeType, bool inherit)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override global::System.Type GetElementType()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override EventInfo GetEvent(string name, BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override EventInfo[] GetEvents(BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override FieldInfo GetField(string name, BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override FieldInfo[] GetFields(BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
 #if NET6_0_OR_GREATER || NET6_0
@@ -266,97 +266,97 @@ namespace ABI.System
 #endif
         public override global::System.Type GetInterface(string name, bool ignoreCase)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override global::System.Type[] GetInterfaces()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override MemberInfo[] GetMembers(BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override global::System.Type GetNestedType(string name, BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override global::System.Type[] GetNestedTypes(BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override PropertyInfo[] GetProperties(BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override object InvokeMember(string name, BindingFlags invokeAttr, Binder binder, object target, object[] args, ParameterModifier[] modifiers, CultureInfo culture, string[] namedParameters)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override bool IsDefined(global::System.Type attributeType, bool inherit)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override TypeAttributes GetAttributeFlagsImpl()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override ConstructorInfo GetConstructorImpl(BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, global::System.Type[] types, ParameterModifier[] modifiers)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override MethodInfo GetMethodImpl(string name, BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, global::System.Type[] types, ParameterModifier[] modifiers)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override PropertyInfo GetPropertyImpl(string name, BindingFlags bindingAttr, Binder binder, global::System.Type returnType, global::System.Type[] types, ParameterModifier[] modifiers)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override bool HasElementTypeImpl()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override bool IsArrayImpl()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override bool IsByRefImpl()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override bool IsCOMObjectImpl()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override bool IsPointerImpl()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override bool IsPrimitiveImpl()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public override string ToString()
