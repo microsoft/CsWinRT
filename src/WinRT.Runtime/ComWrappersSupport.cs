@@ -170,7 +170,7 @@ namespace WinRT
         }
 
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(
-#if NET6_0_OR_GREATER || NET6_0
+#if NET6_0_OR_GREATER
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
 #elif NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
