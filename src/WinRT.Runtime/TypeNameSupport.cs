@@ -36,8 +36,9 @@ namespace WinRT
     static class TypeNameSupport
     {
         private static readonly List<Assembly> projectionAssemblies = new List<Assembly>();
-        internal static readonly List<IDictionary<string, string>> projectionTypeNameToBaseTypeNameMappings = new List<IDictionary<string, string>>();
+        private static readonly List<IDictionary<string, string>> projectionTypeNameToBaseTypeNameMappings = new List<IDictionary<string, string>>();
         private static readonly ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal) { ["TrackerCollection<T>"] = null };
+        private static readonly ConcurrentDictionary<string, Type> baseRcwTypeCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal) { ["TrackerCollection<T>"] = null };
 
         public static void RegisterProjectionAssembly(Assembly assembly)
         {
@@ -47,6 +48,30 @@ namespace WinRT
         internal static void RegisterProjectionTypeBaseTypeMapping(IDictionary<string, string> typeNameToBaseTypeNameMapping)
         {
             projectionTypeNameToBaseTypeNameMappings.Add(typeNameToBaseTypeNameMapping);
+        }
+
+#if NET
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        public static Type FindRCWTypeByNameCached(string runtimeClassName)
+        {
+            // Try to get the given type name. If it is not found, the type might have been trimmed.
+            // Due to that, check if one of the base types exists and if so use that instead for the RCW type.
+            var rcwType = FindTypeByNameCached(runtimeClassName);
+            if (rcwType is null)
+            {
+                rcwType = baseRcwTypeCache.GetOrAdd(runtimeClassName,
+#if NET
+                    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+                    (runtimeClassName) =>
+                    {
+                        var resolvedBaseType = projectionTypeNameToBaseTypeNameMappings.Find((dict) => dict.ContainsKey(runtimeClassName))?[runtimeClassName];
+                        return resolvedBaseType is not null ? FindRCWTypeByNameCached(resolvedBaseType) : null;
+                    });
+            }
+
+            return rcwType;
         }
 
         /// <summary>
@@ -59,18 +84,22 @@ namespace WinRT
 #endif
         public static Type FindTypeByNameCached(string runtimeClassName)
         {
-            return typeNameCache.GetOrAdd(runtimeClassName, (runtimeClassName) =>
-            {
-                Type implementationType = null;
-                try
+            return typeNameCache.GetOrAdd(runtimeClassName,
+#if NET
+                [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+                (runtimeClassName) =>
                 {
-                    implementationType = FindTypeByName(runtimeClassName.AsSpan()).type;
-                }
-                catch (Exception)
-                {
-                }
-                return implementationType;
-            });
+                    Type implementationType = null;
+                    try
+                    {
+                        implementationType = FindTypeByName(runtimeClassName.AsSpan()).type;
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    return implementationType;
+                });
         }
 
         /// <summary>
