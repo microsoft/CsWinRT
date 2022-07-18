@@ -297,6 +297,17 @@ steps:
       WinRT.Runtime.pdb
     TargetFolder: $(Build.ArtifactStagingDirectory)\release_net5.0
 
+# Stage Net6.0
+- task: CopyFiles@2
+  displayName: Stage Net6.0
+  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net6.0
+    Contents: |
+      WinRT.Runtime.dll
+      WinRT.Runtime.pdb
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0
+
 # Stage WinRT.Host.Shim
 - task: CopyFiles@2 
   displayName: Stage WinRT.Host.Shim
@@ -376,6 +387,14 @@ steps:
   inputs:
     PathtoPublish: $(Build.ArtifactStagingDirectory)\release_net5.0
     ArtifactName: net5.0
+
+# Publish Net6.0
+- task: PublishBuildArtifacts@1
+  displayName: Publish Net6.0
+  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+  inputs:
+    PathtoPublish: $(Build.ArtifactStagingDirectory)\release_net6.0
+    ArtifactName: net6.0
 
 # Generate SBOM 
 - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
