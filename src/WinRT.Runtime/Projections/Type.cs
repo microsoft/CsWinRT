@@ -261,7 +261,7 @@ namespace ABI.System
             throw new InvalidOperationException();
         }
 
-#if NET6_0_OR_GREATER || NET6_0
+#if NET6_0_OR_GREATER
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
 #endif
         public override global::System.Type GetInterface(string name, bool ignoreCase)

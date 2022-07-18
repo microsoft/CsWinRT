@@ -1195,7 +1195,7 @@ namespace WinRT
     public
 #endif
     static class MarshalInspectable<
-#if NET6_0_OR_GREATER || NET6_0
+#if NET6_0_OR_GREATER
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #elif NET
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
@@ -1203,7 +1203,7 @@ namespace WinRT
         T>
     {
         public static IObjectReference CreateMarshaler<V>(
-#if NET6_0_OR_GREATER || NET6_0
+#if NET6_0_OR_GREATER
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
 #elif NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
@@ -1233,7 +1233,7 @@ namespace WinRT
         }
 
         public static IObjectReference CreateMarshaler(
-#if NET6_0_OR_GREATER || NET6_0
+#if NET6_0_OR_GREATER
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
 #elif NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
@@ -1245,7 +1245,7 @@ namespace WinRT
         }
 
         public static ObjectReferenceValue CreateMarshaler2(
-#if NET6_0_OR_GREATER || NET6_0
+#if NET6_0_OR_GREATER
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
 #elif NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
@@ -1275,7 +1275,7 @@ namespace WinRT
         }
 
         public static ObjectReferenceValue CreateMarshaler2(
-#if NET6_0_OR_GREATER || NET6_0
+#if NET6_0_OR_GREATER
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
 #elif NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
