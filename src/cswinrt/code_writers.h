@@ -201,10 +201,10 @@ namespace cswinrt
                 auto guard{ w.push_generic_args(type) };
                 return action(type.generic_type);
             },
+            #pragma warning(disable:4702)
             [](auto)
             {
                 throw_invalid("type definition expected");
-                #pragma warning(disable:4702)
                 return TResult();
             });
     }
