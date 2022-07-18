@@ -493,7 +493,7 @@ namespace WinRT
             Type implementationType = null;
             if (!string.IsNullOrEmpty(runtimeClassName))
             {
-                implementationType = TypeNameSupport.FindRCWTypeByNameCached(runtimeClassName);
+                implementationType = TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName);
             }
 
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))

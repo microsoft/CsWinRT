@@ -53,7 +53,7 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
-        public static Type FindRCWTypeByNameCached(string runtimeClassName)
+        public static Type FindRcwTypeByNameCached(string runtimeClassName)
         {
             // Try to get the given type name. If it is not found, the type might have been trimmed.
             // Due to that, check if one of the base types exists and if so use that instead for the RCW type.
@@ -67,7 +67,7 @@ namespace WinRT
                     (runtimeClassName) =>
                     {
                         var resolvedBaseType = projectionTypeNameToBaseTypeNameMappings.Find((dict) => dict.ContainsKey(runtimeClassName))?[runtimeClassName];
-                        return resolvedBaseType is not null ? FindRCWTypeByNameCached(resolvedBaseType) : null;
+                        return resolvedBaseType is not null ? FindRcwTypeByNameCached(resolvedBaseType) : null;
                     });
             }
 
