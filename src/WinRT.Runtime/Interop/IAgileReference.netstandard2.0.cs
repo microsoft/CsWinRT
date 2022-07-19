@@ -8,6 +8,7 @@ namespace WinRT.Interop
 {
     [WindowsRuntimeType]
     [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
+    [WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IAgileReference))]
     internal interface IAgileReference
     {
         IObjectReference Resolve(Guid riid);
@@ -15,6 +16,7 @@ namespace WinRT.Interop
 
     [WindowsRuntimeType]
     [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
+    [WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IAgileObject))]
 #if EMBED
     internal
 #else
@@ -26,6 +28,7 @@ namespace WinRT.Interop
 
     [WindowsRuntimeType]
     [Guid("00000146-0000-0000-C000-000000000046")]
+    [WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IGlobalInterfaceTable))]
     internal interface IGlobalInterfaceTable
     {
         IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid);
