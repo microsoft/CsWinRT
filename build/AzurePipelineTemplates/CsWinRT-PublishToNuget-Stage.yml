@@ -4,7 +4,7 @@ stages:
   jobs:
   - job: PublishTo_CsWinRT_InternalFeed
     pool:
-      vmImage: windows-2019
+      vmImage: windows-latest
     steps:
     - checkout: self
       clean: True
