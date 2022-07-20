@@ -201,10 +201,10 @@ namespace cswinrt
                 auto guard{ w.push_generic_args(type) };
                 return action(type.generic_type);
             },
+            #pragma warning(disable:4702)
             [](auto)
             {
                 throw_invalid("type definition expected");
-                #pragma warning(disable:4702)
                 return TResult();
             });
     }
@@ -1099,6 +1099,20 @@ namespace cswinrt
             }
         }
 
+        bool method_return_matches;
+        if (is_object_equals_method(method, &method_return_matches) ||
+            is_object_hashcode_method(method, &method_return_matches))
+        {
+            if (method_return_matches)
+            {
+                method_spec = "override ";
+            }
+            else
+            {
+                method_spec += "new ";
+            }
+        }
+
         bool is_private = is_implemented_as_private_method(w, class_type, method);
         auto static_method_params = call_static_method.has_value() ? std::optional(std::pair(call_static_method.value(), method)) : std::nullopt;
         if (!is_private)
@@ -1488,10 +1502,24 @@ remove => %;
                 },
                 [&](std::string_view type_name)
                 {
+                    bool previous_char_escape = false;
                     std::string sanitized_type_name;
                     sanitized_type_name.reserve(type_name.length() * 2);
                     for (const auto& c : type_name)
                     {
+                        if (c == '\\' && !previous_char_escape)
+                        {
+                            previous_char_escape = true;
+                            continue;
+                        }
+
+                        // We only handle the following escape characters for now.
+                        if (previous_char_escape && c != '\\' && c != '\'' && c != '"')
+                        {
+                            sanitized_type_name += '\\';
+                        }
+                        previous_char_escape = false;
+
                         sanitized_type_name += c;
                         if (c == '"')
                         {
@@ -3080,6 +3108,29 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         std::filesystem::path db_path(type.get_database().path());
         w.write(R"([global::WinRT.WindowsRuntimeType("%")])",
 db_path.stem().string());
+    }
+
+    void write_winrt_helper_type_attribute(writer& w, TypeDef const& type)
+    {
+        if (get_category(type) == category::struct_type && is_type_blittable(type))
+        {
+            w.write(R"([global::WinRT.WindowsRuntimeHelperType])");
+            return;
+        }
+
+        w.write(R"([global::WinRT.WindowsRuntimeHelperType(typeof(%%))])",
+            bind<write_typedef_name>(type, typedef_name_type::ABI, false),
+            bind([&](writer& w)
+            {
+                if (distance(type.GenericParam()) == 0)
+                {
+                    return;
+                }
+
+                // Writes out the generic definition without the types.
+                separator s{ w };
+                w.write("<%>", bind_each([&](writer& /*w*/, GenericParam const& /*gp*/){ s(); }, type.GenericParam()));
+            }));
     }
 
     auto get_invoke_info(writer& w, MethodDef const& method, uint32_t const& abi_methods_start_index = INSPECTABLE_METHOD_COUNT)
@@ -5745,8 +5796,16 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_authoring_metadata_type(writer& w, TypeDef const& type)
     {
-        w.write("%%internal class % {}\n",
+        w.write("%%%internal class % {}\n",
             bind<write_winrt_attribute>(type),
+            [&](writer& w)
+            {
+                auto category = get_category(type);
+                if (category == category::delegate_type || category == category::struct_type)
+                {
+                    write_winrt_helper_type_attribute(w, type);
+                }
+            },
             bind<write_type_custom_attributes>(type, false),
             bind<write_type_name>(type, typedef_name_type::CCW, false));
     }
@@ -5799,7 +5858,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
-        w.write(R"(%%
+        w.write(R"(%%%
 %% interface %%
 {%
 }
@@ -5807,6 +5866,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             // Interface
             bind<write_winrt_attribute>(type),
             bind<write_guid_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             is_exclusive_to(type) || (is_projection_internal(type) || (settings.internal || settings.embedded)) ? "internal" : "public",
             type_name,
@@ -5945,7 +6005,7 @@ public static Guid PIID = Vftbl.PIID;
 %
 }
 )", 
-        is_exclusive_to(iface) ? "internal" : internal_accessibility(), 
+        (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), 
         [&](writer& w) {
             if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
@@ -5965,10 +6025,50 @@ public static Guid PIID = Vftbl.PIID;
 
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
-
         bool is_generic = distance(type.GenericParam()) > 0;
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
+
+        // For exclusive interfaces which aren't overridable interfaces that are implemented by unsealed types,
+        // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
+        // But we are still keeping the interface itself for any helper type lookup that may happen for like GUID lookup.
+        if (!is_generic &&
+            is_exclusive_to(type) &&
+            // check for !authored type
+            !(settings.component && settings.filter.includes(type)))
+        {
+            bool hasOverridableAttribute = false;
+            auto exclusive_to_type = get_exclusive_to_type(type);
+            for (auto&& iface : exclusive_to_type.InterfaceImpl())
+            {
+                for_typedef(w, get_type_semantics(iface.Interface()), [&](auto interface_type)
+                {
+                    if (type == interface_type && is_overridable(iface))
+                    {
+                        hasOverridableAttribute = true;
+                    }
+                });
+
+                if (hasOverridableAttribute)
+                {
+                    break;
+                }
+            }
+
+            if (!hasOverridableAttribute)
+            {
+                w.write(R"(%
+internal interface % : %
+{
+}
+)",
+bind<write_guid_attribute>(type),
+type_name,
+bind<write_type_name>(type, typedef_name_type::CCW, false)
+);
+                return true;
+            }
+        }
 
         auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
 
@@ -5989,7 +6089,7 @@ internal unsafe interface % : %
             type_name,
             bind<write_type_name>(type, typedef_name_type::CCW, false),
             [&](writer& w) {
-                w.write(distance(type.GenericParam()) > 0 ? "public static Guid PIID = Vftbl.PIID;\n\n" : "");
+                w.write(is_generic ? "public static Guid PIID = Vftbl.PIID;\n\n" : "");
             },
             // Vftbl
             bind([&](writer& w)
@@ -6131,7 +6231,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         auto base_semantics = get_type_semantics(type.Extends());
         auto from_abi_new = !std::holds_alternative<object_type>(base_semantics) ? "new " : "";
 
-        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+        w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 %internal %class %%
 {
 public %(% comp)
@@ -6156,6 +6256,7 @@ private readonly % _comp;
 }
 )",
         bind<write_winrt_attribute>(type),
+        bind<write_winrt_helper_type_attribute>(type),
         default_interface_name,
         bind<write_type_custom_attributes>(type, false),
         bind<write_class_modifiers>(type),
@@ -6204,7 +6305,7 @@ private readonly % _comp;
             gc_pressure_amount = amount == 0 ? 12000 : amount == 1 ? 120000 : 1200000;
         }
 
-        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+        w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 %% %class %%, IEquatable<%>
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
@@ -6229,9 +6330,7 @@ _defaultLazy = new Lazy<%>(() => ifc);
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
-public bool Equals(% other) => this == other;
-public override bool Equals(object obj) => obj is % that && this == that;
-public override int GetHashCode() => ThisPtr.GetHashCode();
+%
 %
 
 private struct InterfaceTag<I>{};
@@ -6241,6 +6340,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 }
 )",
             bind<write_winrt_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             internal_accessibility(),
             bind<write_class_modifiers>(type),
@@ -6281,8 +6381,30 @@ GC.RemoveMemoryPressure(%);
             type_name,
             type_name,
             type_name,
-            type_name,
-            type_name,
+            bind([&](writer& w)
+            {
+                bool return_type_matches = false;
+                if (!has_class_equals_method(type, &return_type_matches))
+                {
+                    w.write("public bool Equals(% other) => this == other;\n", type_name);
+                }
+                // Even though there is an equals method defined, it doesn't match the signature for IEquatable
+                // so we define an explicitly implemented one.
+                else if (!return_type_matches)
+                {
+                    w.write("bool IEquatable<%>.Equals(% other) => this == other;\n", type_name, type_name);
+                }
+
+                if (!has_object_equals_method(type))
+                {
+                    w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", type_name);
+                }
+
+                if (!has_object_hashcode_method(type))
+                {
+                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();\n");
+                }
+            }),
             bind([&](writer& w)
             {
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
@@ -6350,8 +6472,8 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(type)), [&](auto&& iface) { return iface; });
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
-        w.write(R"(%
-[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+        w.write(R"(%%
+[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
 {
@@ -6378,9 +6500,7 @@ _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
-public bool Equals(% other) => this == other;
-public override bool Equals(object obj) => obj is % that && this == that;
-public override int GetHashCode() => ThisPtr.GetHashCode();
+%
 %
 
 private struct InterfaceTag<I>{};
@@ -6389,6 +6509,8 @@ private struct InterfaceTag<I>{};
 }
 )",
             bind<write_winrt_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
+            default_interface_name,
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
             bind<write_class_modifiers>(type),
@@ -6430,8 +6552,30 @@ private struct InterfaceTag<I>{};
             type_name,
             type_name,
             type_name,
-            type_name,
-            type_name,
+            bind([&](writer& w)
+            {
+                bool return_type_matches = false;
+                if (!has_class_equals_method(type, &return_type_matches))
+                {
+                    w.write("public bool Equals(% other) => this == other;\n", type_name);
+                }
+                // Even though there is an equals method defined, it doesn't match the signature for IEquatable
+                // so we define an explicitly implemented one.
+                else if (!return_type_matches)
+                {
+                    w.write("bool IEquatable<%>.Equals(% other) => this == other;\n", type_name, type_name);
+                }
+
+                if (!has_object_equals_method(type))
+                {
+                    w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", type_name);
+                }
+
+                if (!has_object_hashcode_method(type))
+                {
+                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();\n");
+                }
+            }),
             bind([&](writer& w)
             {
                 if (is_fast_abi_class(type))
@@ -6611,9 +6755,10 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
         }
 
         method_signature signature{ get_delegate_invoke(type) };
-        w.write(R"(%%% delegate % %(%);
+        w.write(R"(%%%% delegate % %(%);
 )",
             bind<write_winrt_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
@@ -6956,7 +7101,7 @@ global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
 )", 
         bind<write_winrt_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
-        internal_accessibility(),
+        (settings.internal || settings.embedded) ? (settings.public_enums ? "public" : "internal") : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
@@ -7006,7 +7151,7 @@ global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
             fields.emplace_back(field_info);
         }
 
-        w.write(R"(%%% struct %: IEquatable<%>
+        w.write(R"(%%%% struct %: IEquatable<%>
 {
 %
 public %(%)
@@ -7023,6 +7168,7 @@ public override int GetHashCode() => %;
 )",
             // struct
             bind<write_winrt_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
             name,
@@ -7583,5 +7729,32 @@ bind<write_event_invoke_args>(invokeMethodSig));
             auto&& eventClass = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
             typeNameToDefinitionMap[eventTypeCode] = eventClass;
         }
+    }
+
+    void add_base_type_entry(TypeDef const& classType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToBaseTypeMap)
+    {
+        writer w("");
+        auto base_type = get_type_semantics(classType.Extends());
+        bool has_base_type = !std::holds_alternative<object_type>(base_type);
+        if (has_base_type)
+        {
+            int numChars = (int)strlen("global::");
+            auto&& typeName = w.write_temp("%", bind<write_type_name>(classType, typedef_name_type::Projected, true)).substr(numChars);
+            auto&& baseTypeName = w.write_temp("%", bind<write_type_name>(base_type, typedef_name_type::Projected, true)).substr(numChars);
+            typeNameToBaseTypeMap[typeName] = baseTypeName;
+        }
+    }
+
+    void write_file_header(writer& w)
+    {
+        w.write(R"(//------------------------------------------------------------------------------
+// <auto-generated>
+//     This file was generated by cswinrt.exe version %
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+)", VERSION_STRING);
     }
 }

@@ -5,6 +5,7 @@ namespace Windows.UI
     using global::System.Globalization;
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Color))]
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal

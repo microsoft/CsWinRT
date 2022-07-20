@@ -39,7 +39,7 @@ namespace Benchmarks
                 Config = Config.AddExporter(JsonExporter.Full);
 
                 // Test WinMD support
-#if NETCOREAPP3_1
+#if USE_WINMD
                 // BenchmarkDotNet will rebuild the project with a project reference to this project when this project's output exe is ran.  It
                 // will be ran from the same folder as where we have the application manifest binplaced which we want to embed in the new exe.
                 string manifestFile = Path.Combine(

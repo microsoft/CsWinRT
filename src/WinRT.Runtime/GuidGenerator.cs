@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -21,7 +22,11 @@ namespace WinRT
             return type.GetGuidType().GUID;
         }
 
-        public static Guid GetIID(Type type)
+        public static Guid GetIID(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            Type type)
         {
             type = type.GetGuidType();
             if (!type.IsGenericType)
@@ -31,7 +36,11 @@ namespace WinRT
             return (Guid)type.GetField("PIID").GetValue(null);
         }
 
-        public static string GetSignature(Type type)
+        public static string GetSignature(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            Type type)
         {
             if (type == typeof(object))
             {

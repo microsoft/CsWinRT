@@ -4,6 +4,7 @@ namespace Microsoft.UI.Xaml.Controls.Primitives
     using Windows.Foundation;
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Controls.Primitives.GeneratorPosition))]
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
