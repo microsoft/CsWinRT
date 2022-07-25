@@ -14,10 +14,7 @@ using System.Threading;
 namespace WinRT
 {
     [Flags]
-#if EMBED
-    internal
-#endif
-    enum TypeNameGenerationFlags
+    internal enum TypeNameGenerationFlags
     {
         None = 0,
         /// <summary>
@@ -30,10 +27,7 @@ namespace WinRT
         NoCustomTypeName = 0x2
     }
 
-#if EMBED
-    internal
-#endif
-    static class TypeNameSupport
+    internal static class TypeNameSupport
     {
         private static readonly List<Assembly> projectionAssemblies = new List<Assembly>();
         private static readonly List<IDictionary<string, string>> projectionTypeNameToBaseTypeNameMappings = new List<IDictionary<string, string>>();
@@ -45,7 +39,7 @@ namespace WinRT
             projectionAssemblies.Add(assembly);
         }
 
-        internal static void RegisterProjectionTypeBaseTypeMapping(IDictionary<string, string> typeNameToBaseTypeNameMapping)
+        public static void RegisterProjectionTypeBaseTypeMapping(IDictionary<string, string> typeNameToBaseTypeNameMapping)
         {
             projectionTypeNameToBaseTypeNameMappings.Add(typeNameToBaseTypeNameMapping);
         }
@@ -127,6 +121,10 @@ namespace WinRT
             else
             {
                 var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
+                if (genericTypeName == null)
+                {
+                    return (null, -1);
+                }
                 return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
             }
         }
@@ -198,7 +196,8 @@ namespace WinRT
                 return resolvedType;
             }
 
-            throw new TypeLoadException($"Unable to find a type named '{runtimeClassName}'");
+            Debug.WriteLine($"FindTypeByNameCore: Unable to find a type named '{runtimeClassName}'");
+            return null;
         }
 
         public static Type ResolvePrimitiveType(string primitiveTypeName)
@@ -257,6 +256,11 @@ namespace WinRT
             {
                 // Resolve the generic type argument at this point in the parameter list.
                 var (genericType, endOfGenericArgument) = FindTypeByName(remainingTypeName);
+                if (genericType == null)
+                {
+                    return (null, null, -1);
+                }
+
                 remainingIndex += endOfGenericArgument;
                 genericTypes.Add(genericType);
                 remainingTypeName = remainingTypeName.Slice(endOfGenericArgument);
