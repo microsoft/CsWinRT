@@ -43,7 +43,7 @@ namespace Benchmarks
                 // BenchmarkDotNet will rebuild the project with a project reference to this project when this project's output exe is ran.  It
                 // will be ran from the same folder as where we have the application manifest binplaced which we want to embed in the new exe.
                 string manifestFile = Path.Combine(
-                    Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    AppContext.BaseDirectory,
                     "Benchmarks.manifest");
 
                 var winmdJob = Job.Default
