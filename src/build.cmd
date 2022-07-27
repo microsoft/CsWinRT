@@ -87,6 +87,8 @@ if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
 if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking_compat_errors=false
 if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
 
+set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
+
 rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
 rem Create default %prerelease_targets%
@@ -149,6 +151,17 @@ if ErrorLevel 1 (
   echo ERROR: Build failed
   exit /b !ErrorLevel!
 )
+
+if "%cswinrt_platform%" NEQ "arm" (
+  if "%cswinrt_platform%" NEQ "arm64" (
+    echo Publishing functional tests for %cswinrt_platform% %cswinrt_configuration%
+    for %%a in (%cswinrt_functional_tests%) do (
+      echo Publishing %%a
+      call :exec %msbuild_path%msbuild.exe /t:restore /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+    )
+  )
+)
+
 if "%cswinrt_build_only%"=="true" goto :eof
 
 :buildembedded
@@ -234,6 +247,23 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+:functionaltest
+rem Run functional tests
+echo Running cswinrt functional tests for %cswinrt_platform% %cswinrt_configuration%
+
+for %%a in (%cswinrt_functional_tests%) do (
+  echo Running %%a
+
+  call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net6.0\win10-%cswinrt_platform%\publish\%%a.exe
+  if !errorlevel! NEQ 100 (
+    echo.
+    echo ERROR: Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
+    exit /b !ErrorLevel!
+  )
+)
+
+if "%cswinrt_label%"=="functionaltest" exit /b 0
+
 :package
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
@@ -260,4 +290,3 @@ echo.
 %*
 )
 goto :eof
-

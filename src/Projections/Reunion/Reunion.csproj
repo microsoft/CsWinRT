@@ -5,6 +5,8 @@
     <Platforms>x64;x86</Platforms>
     <AssemblyName>Microsoft.WinUI</AssemblyName>
     <AssemblyVersion>9.9.9.9</AssemblyVersion>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsTrimmable>true</IsTrimmable>	  
   </PropertyGroup>
 
   <ItemGroup>

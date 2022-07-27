@@ -5,7 +5,7 @@ stages:
   - job: BuildAndTest
     pool:
       vmImage: windows-latest
-    timeoutInMinutes: 90
+    timeoutInMinutes: 120
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
       maxParallel: 10
@@ -112,6 +112,16 @@ stages:
           dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
           exit /b 0 
+
+# Run Functional Tests  
+    - task: CmdLine@2
+      displayName: Run Functional Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src
+        script: |
+          set cswinrt_label=functionaltest
+          build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
   - job: Benchmarks
     displayName: Run Benchmarks

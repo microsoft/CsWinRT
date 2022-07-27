@@ -10,6 +10,7 @@ namespace WinRT.Interop
 {
     [WindowsRuntimeType]
     [Guid("00000038-0000-0000-C000-000000000046")]
+    [WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IWeakReferenceSource))]
 #if EMBED
     internal
 #else
@@ -22,6 +23,7 @@ namespace WinRT.Interop
 
     [WindowsRuntimeType]
     [Guid("00000037-0000-0000-C000-000000000046")]
+    [WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IWeakReference))]
 #if EMBED
     internal
 #else
