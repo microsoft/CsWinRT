@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFrameworks>net5.0-windows10.0.19041.0;net6.0-windows10.0.19041.0;net7.0-windows10.0.19041.0</TargetFrameworks>
+        <TargetFrameworks>$(TestsBuildTFMs)</TargetFrameworks>
         <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
         <RootNamespace>ObjectLifetimeTests.Lifted</RootNamespace>
         <ApplicationManifest>app.manifest</ApplicationManifest>

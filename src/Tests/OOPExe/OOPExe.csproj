@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.0;net5.0;net6.0;net7.0</TargetFrameworks>
+    <TargetFrameworks>$(AppBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>

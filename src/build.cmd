@@ -114,7 +114,7 @@ if ErrorLevel 1 (
   set nuget_params=-MSBuildPath !msbuild_path!
 ) else (
   set msbuild_path=
-  set nuget_params= 
+  set nuget_params=/p:CIBuildReason=Local
 )
 :skip_build_tools
 
@@ -136,14 +136,14 @@ if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https:
 %nuget_dir%\nuget update -self
 rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
 call %this_dir%get_testwinrt.cmd
-set NUGET_RESTORE_MSBUILD_ARGS=/p:platform="%cswinrt_platform%"
+set NUGET_RESTORE_MSBUILD_ARGS=/p:platform="%cswinrt_platform%";CIBuildReason=Local
 call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.sln
 rem: Calling nuget restore again on ObjectLifetimeTests.Lifted.csproj to prevent .props from \microsoft.testplatform.testhost\build\netcoreapp2.1 from being included. Nuget.exe erroneously imports props files. https://github.com/NuGet/Home/issues/9672
-call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;CIBuildReason=Local
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln 
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors%;CIBuildReason=Local %this_dir%cswinrt.sln 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed
@@ -207,7 +207,7 @@ rem executing "dotnet test --no-build ...", which evidently still needs to parse
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
 echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
 echo ^<Project/^> > %temp%\EmptyMsAppxPackage.Targets
-call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml %this_dir%Tests/unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets -- RunConfiguration.TreatNoTestsAsError=true
+call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml %this_dir%Tests/unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;CIBuildReason=Local;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets -- RunConfiguration.TreatNoTestsAsError=true
 if ErrorLevel 1 (
   echo.
   echo ERROR: Unit test failed, skipping NuGet pack
