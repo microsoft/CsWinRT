@@ -6,7 +6,8 @@
         xmlns:local="WinUIDesktopSample"
         mc:Ignorable="d"
         Height="450" Width="800">
-    <Grid>
+    <StackPanel>
         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Hello from WinUI Desktop!" x:Name="text"/>
-    </Grid>
+        <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
+    </StackPanel>
 </Page>

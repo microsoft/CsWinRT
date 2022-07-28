@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using System;
+using System.Runtime.ExceptionServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace WinUIDesktopSample
 {
@@ -22,6 +21,20 @@ namespace WinUIDesktopSample
 
         private void Foo_PointerTapped(object sender, TappedRoutedEventArgs e)
         {
+        }
+
+        static private int ThrowException()
+        {
+            throw new InvalidOperationException("Can't touch this");
+        }
+
+        private async void myButton_Click(object sender, RoutedEventArgs e)
+        {
+            myButton.Content = "Clicked";
+            // Test error propagation on UI thread
+            ThrowException();
+            // Test error propagation on thread pool
+            int t = await Task.Run(ThrowException);
         }
     }
 }
