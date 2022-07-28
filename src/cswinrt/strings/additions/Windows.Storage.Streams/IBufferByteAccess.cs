@@ -4,6 +4,7 @@ namespace Windows.Storage.Streams
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
     [Guid("905a0fef-bc53-11df-8c49-001e4fc686da")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.Storage.Streams.IBufferByteAccess))]
     internal interface IBufferByteAccess
     {
         IntPtr Buffer { get; }

@@ -53,41 +53,74 @@ using WinRT.Interop;
 
 namespace WinRT.Interop
 {
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
-    internal interface IWindowNative
+    internal static class IWindowNativeMethods
     {
-        IntPtr WindowHandle { get; }
-    }
+        internal static readonly Guid IWindowNativeIID = new(0xEECDBF0E, 0xBAE9, 0x4CB6, 0xA6, 0x8E, 0x95, 0x98, 0xE1, 0xCB, 0x57, 0xBB);
 
-#if EMBED 
-    internal 
-#else 
-    public 
-#endif
-    static class WindowNative
-    {
-        public static IntPtr GetWindowHandle(object target) => target.As<IWindowNative>().WindowHandle;
-    }
+        public static unsafe global::System.IntPtr get_WindowHandle(object _obj)
+        {
+            var asObjRef = global::WinRT.MarshalInspectable<object>.CreateMarshaler2(_obj, IWindowNativeIID);
+            var ThisPtr = asObjRef.GetAbi();
+            global::System.IntPtr __retval = default;
 
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
-    internal interface IInitializeWithWindow
-    {
-        void Initialize(IntPtr hwnd);
+            try
+            {
+                // We use 3 here because IWindowNative only implements IUnknown, whose only functions are AddRef, Release and QI
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>**)ThisPtr)[3](ThisPtr, out __retval));
+                return __retval;
+            }
+            finally
+            {
+                asObjRef.Dispose();
+            }
+        }
     }
 
 #if EMBED
-    internal 
+    internal
+#else
+    public
+#endif
+    static class WindowNative
+    {
+        public static IntPtr GetWindowHandle(object target) => IWindowNativeMethods.get_WindowHandle(target);
+    }
+
+    internal static class IInitializeWithWindowMethods
+    {
+        internal static readonly Guid IInitializeWithWindowIID = new(0x3E68D4BD, 0x7135, 0x4D10, 0x80, 0x18, 0x9F, 0xB6, 0xD9, 0xF3, 0x3F, 0xA1);
+
+        public static unsafe void Initialize(object _obj, IntPtr window)
+        {
+            var asObjRef = global::WinRT.MarshalInspectable<object>.CreateMarshaler2(_obj, IInitializeWithWindowIID);
+            var ThisPtr = asObjRef.GetAbi();
+            global::System.IntPtr __retval = default;
+
+            try
+            {
+                // IInitializeWithWindow inherits IUnknown (3 functions) and provides Initialize giving a total of 4 functions
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>**)ThisPtr)[3](ThisPtr, window));
+            }
+            finally
+            {
+                asObjRef.Dispose();
+            }
+        }
+    }
+
+#if EMBED
+    internal
 #else
     public
 #endif
     static class InitializeWithWindow
     {
-        public static void Initialize(object target, IntPtr hwnd) => target.As<IInitializeWithWindow>().Initialize(hwnd);
+        public static void Initialize(object target, IntPtr hwnd)
+        {
+            IInitializeWithWindowMethods.Initialize(target, hwnd);
+        }
     }
+
 }
 
 namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
@@ -178,7 +211,7 @@ namespace Windows.Media.PlayTo
     internal
 #else
     public 
-#endif 
+#endif
     static class PlayToManagerInterop
     {
         private static IPlayToManagerInterop playToManagerInterop = PlayToManager.As<IPlayToManagerInterop>();

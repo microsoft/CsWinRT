@@ -95,7 +95,7 @@ namespace WinRT
         readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> _GetActivationFactory;
         readonly delegate* unmanaged[Stdcall]<int> _CanUnloadNow; // TODO: Eventually periodically call
 
-        static readonly string _currentModuleDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        static readonly string _currentModuleDirectory = AppContext.BaseDirectory;
 
         static Dictionary<string, DllModule> _cache = new System.Collections.Generic.Dictionary<string, DllModule>(StringComparer.Ordinal);
 
@@ -845,19 +845,19 @@ namespace WinRT
     }
 }
 
+#if !NET
 namespace System.Runtime.CompilerServices
 {
     [AttributeUsage(AttributeTargets.Method)]
     internal sealed class ModuleInitializerAttribute : Attribute { }
 }
+#endif
 
 namespace WinRT
 {
     internal static class ProjectionInitializer
     {
-#pragma warning disable 0436
         [ModuleInitializer]
-#pragma warning restore 0436
         internal static void InitalizeProjection()
         {
             ComWrappersSupport.RegisterProjectionAssembly(typeof(ProjectionInitializer).Assembly);

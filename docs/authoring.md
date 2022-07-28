@@ -175,7 +175,7 @@ The following tables outline the Windows App SDK application types that are supp
 |:--|:-:|:-:|:-:|
 |C++ Packaged|Project Reference| ✅ | |
 |C++ Packaged with WAP |Project Reference| 🟥 | [#1120](https://github.com/microsoft/CsWinRT/issues/1120) |
-|C++ Unpackaged|Project Reference| 🟥 | [#1116](https://github.com/microsoft/CsWinRT/issues/1116) |
+|C++ Unpackaged|Project Reference| ✅ | |
 |C++ Packaged|Package Reference|🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
 |C++ Packaged with WAP |Package Reference| 🟥 | [#1123](https://github.com/microsoft/CsWinRT/issues/1123) |
 |C++ Unpackaged|Package Reference|🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
@@ -185,7 +185,7 @@ The following tables outline the Windows App SDK application types that are supp
 |:--|:-:|:-:|:-:|
 |C# Packaged|Project Reference| ✅ |
 |C# Packaged with WAP|Project Reference| ✅ |
-|C# Unpackaged|Project Reference|🟥| [#1116](https://github.com/microsoft/CsWinRT/issues/1116) |
+|C# Unpackaged|Project Reference| ✅ |  |
 |C# Packaged|Package Reference| 🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
 |C# Packaged with WAP |Package Reference| 🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
 |C# Unpackaged|Package Reference|🟥 | [#1116](https://github.com/microsoft/CsWinRT/issues/1116) |
