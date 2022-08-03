@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+	<CIBuildReason>Local</CIBuildReason>
   </PropertyGroup>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
