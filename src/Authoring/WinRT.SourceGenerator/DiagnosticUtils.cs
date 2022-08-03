@@ -29,9 +29,9 @@ namespace Generator
         /// Perform code analysis to find scenarios that are erroneous in Windows Runtime</summary>
         public void FindDiagnostics()
         {
-            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+            WinRTSyntaxReceiver syntaxReceiver = (WinRTSyntaxReceiver)_context.SyntaxReceiver;
 
-            if (!syntaxReciever.Declarations.Any())
+            if (!syntaxReceiver.Declarations.Any())
             {
                 Report(WinRTRules.NoPublicTypesRule, null);
                 return;
@@ -43,12 +43,12 @@ namespace Generator
 
         private void CheckNamespaces()
         {
-            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+            WinRTSyntaxReceiver syntaxReceiver = (WinRTSyntaxReceiver)_context.SyntaxReceiver;
 
             // Used to check for conflicitng namespace names
             HashSet<string> namespaceNames = new();
 
-            foreach (var @namespace in syntaxReciever.Namespaces)
+            foreach (var @namespace in syntaxReceiver.Namespaces)
             {
                 var model = _context.Compilation.GetSemanticModel(@namespace.SyntaxTree);
                 var namespaceSymbol = model.GetDeclaredSymbol(@namespace);
@@ -82,7 +82,7 @@ namespace Generator
 
         private void CheckDeclarations()
         {
-            WinRTSyntaxReciever syntaxReceiver = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+            WinRTSyntaxReceiver syntaxReceiver = (WinRTSyntaxReceiver)_context.SyntaxReceiver;
 
             foreach (var declaration in syntaxReceiver.Declarations)
             {

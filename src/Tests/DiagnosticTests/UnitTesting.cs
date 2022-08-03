@@ -5,12 +5,52 @@ using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Microsoft.CodeAnalysis.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DiagnosticTests
 {
+    class ConfigOptions : AnalyzerConfigOptions
+    {
+        public Dictionary<string, string> Values { get; set; } = new();
+        public override bool TryGetValue(string key, [NotNullWhen(true)] out string value)
+        {
+            return Values.TryGetValue(key, out value);
+        }
+    }
+
+    class ConfigProvider : AnalyzerConfigOptionsProvider
+    {
+        public override AnalyzerConfigOptions GlobalOptions { get; } = new ConfigOptions();
+
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree)
+        {
+            return GlobalOptions;
+        }
+
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile)
+        {
+            return GlobalOptions;
+        }
+    }
+
     [TestFixture]
     public sealed partial class UnitTesting
     {
+
+        private static AnalyzerConfigOptionsProvider Options
+        {
+            get
+            {
+                var o = new ConfigProvider();
+                var config = o.GlobalOptions as ConfigOptions;
+                config.Values["build_property.AssemblyName"] = "DiagnosticTests";
+                config.Values["build_property.AssemblyVersion"] = "1.0.0.0";
+                config.Values["build_property.CsWinRTComponent"] = "true";
+                return o;
+            }
+        }
+
         /// <summary>
         /// CheckNoDiagnostic asserts that no diagnostics are raised on the compilation produced 
         /// from the cswinrt source generator based on the given source code</summary>
@@ -19,17 +59,13 @@ namespace DiagnosticTests
         public void CheckNoDiagnostic(string source)
         { 
             Compilation compilation = CreateCompilation(source);
-            RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
+            RunGenerators(compilation, out var diagnosticsFound, out var result, Options, new Generator.SourceGenerator());
             
             var WinRTDiagnostics = diagnosticsFound.Where(diag => diag.Id.StartsWith("CsWinRT", StringComparison.Ordinal));
             if (WinRTDiagnostics.Any())
             {
-                string foundDiagnostics = "";
-                foreach (var d in WinRTDiagnostics)
-                {
-                    foundDiagnostics += d.Descriptor.Description + "\n";
-                }
-                throw new System.Exception("Expected no diagnostics. But found:" + foundDiagnostics);
+                var foundDiagnostics = string.Join("\n", WinRTDiagnostics.Select(x => x.GetMessage()));
+                throw new SuccessException("Expected no diagnostics. But found:\n" + foundDiagnostics);
             }
         }
 
@@ -41,22 +77,23 @@ namespace DiagnosticTests
         public void CodeHasDiagnostic(string testCode, DiagnosticDescriptor rule)
         { 
             Compilation compilation = CreateCompilation(testCode);
-            RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
+            RunGenerators(compilation, out var diagnosticsFound, out var result, Options, new Generator.SourceGenerator());
             HashSet<DiagnosticDescriptor> diagDescsFound = MakeDiagnosticSet(diagnosticsFound);
             if (!diagDescsFound.Contains(rule))
             {
                 if (diagDescsFound.Count != 0)
                 {
-                    string foundDiagnostics = "";
-                    foreach (var d in diagDescsFound)
+                    var foundDiagnostics = string.Join("\n", diagDescsFound.Select(x => x.Description));
+                    Exception inner = null;
+                    if (!result.Results.IsEmpty)
                     {
-                        foundDiagnostics += d.Description + "\n";
+                        inner = result.Results[0].Exception;
                     }
-                    throw new System.Exception("Didn't find the expected diagnostic, found:\n" + foundDiagnostics);
+                    throw new SuccessException("Didn't find the expected diagnostic, found:\n" + foundDiagnostics, inner);
                 }
                 else
                 { 
-                    throw new System.Exception("No diagnostics found.");
+                    throw new SuccessException("No diagnostics found.");
                 }
             }
         }
