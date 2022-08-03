@@ -99,3 +99,26 @@ namespace WinRT
         public Type HelperType { get; }
     }
 }
+
+namespace System.Runtime.InteropServices.WindowsRuntime
+{
+    [AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class ReadOnlyArrayAttribute : Attribute
+    {
+    }
+
+    [AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class WriteOnlyArrayAttribute : Attribute
+    {
+    }
+}
