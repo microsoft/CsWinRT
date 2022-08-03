@@ -189,7 +189,7 @@ namespace Generator
         public void Execute(GeneratorExecutionContext context)
         {
             var isTest = string.CompareOrdinal(Process.GetCurrentProcess().ProcessName, "testhost") == 0;
-            if (!isTest/* && !context.IsCsWinRTComponent()*/)
+            if (!isTest && !context.IsCsWinRTComponent())
             {
                 return;
             }
