@@ -395,7 +395,6 @@ namespace Generator
             SpecialType.System_Int16,
             SpecialType.System_Int32,
             SpecialType.System_Int64,
-            SpecialType.System_Enum,
         };
 
         private static readonly HashSet<string> nonWindowsRuntimeInterfaces = new HashSet<string>()

@@ -5,8 +5,8 @@
     <Platforms>x64;x86</Platforms>
     <CsWinRTComponent>true</CsWinRTComponent>
     <!-- Enable to diagnose generation issues -->
-    <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
-    <!-- <CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources> -->
+     <CsWinRTEnableLogging>true</CsWinRTEnableLogging> 
+     <!--<CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>--> 
   </PropertyGroup>
 
   <ItemGroup>

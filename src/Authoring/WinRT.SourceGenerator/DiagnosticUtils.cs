@@ -196,7 +196,7 @@ namespace Generator
             }
 
             // the return type can be covariant with the interface method's return type (i.e. a sub-type)
-            if (m.ReturnType != interfaceMethod.ReturnType && !m.ReturnType.AllInterfaces.Contains(interfaceMethod.ReturnType))
+            if (SymEq(m.ReturnType, interfaceMethod.ReturnType) && !m.ReturnType.AllInterfaces.Contains(interfaceMethod.ReturnType))
             {
                 return false;
             }
@@ -379,7 +379,9 @@ namespace Generator
                 {
                     IFieldSymbol varFieldSym = (IFieldSymbol)GetModel(variable.SyntaxTree).GetDeclaredSymbol(variable);
 
-                    if (ValidStructFieldTypes.Contains(varFieldSym.Type.SpecialType) || varFieldSym.Type.TypeKind == TypeKind.Struct)
+                    if (ValidStructFieldTypes.Contains(varFieldSym.Type.SpecialType) ||
+                        varFieldSym.Type.TypeKind == TypeKind.Struct ||
+                        varFieldSym.Type.TypeKind == TypeKind.Enum)
                     {
                         break;
                     }
