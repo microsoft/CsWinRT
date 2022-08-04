@@ -65,9 +65,8 @@ namespace DiagnosticTests
 
                 var WinRTDiagnostics = diagnosticsFound.Where(diag =>
                     diag.Id.StartsWith("CsWinRT", StringComparison.Ordinal)
-                    //|| diag.Id == "CS8785"
                     );
-                // warning CS8785: Generator 'SourceGenerator' failed to generate source. It will not contribute to the output and compilation errors may occur as a result
+
                 if (WinRTDiagnostics.Any())
                 {
                     var foundDiagnostics = string.Join("\n", WinRTDiagnostics.Select(x => x.GetMessage()));
