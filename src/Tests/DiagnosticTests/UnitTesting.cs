@@ -57,16 +57,29 @@ namespace DiagnosticTests
         /// <param name="source"></param>
         [Test, TestCaseSource(nameof(ValidCases))] 
         public void CheckNoDiagnostic(string source)
-        { 
-            Compilation compilation = CreateCompilation(source);
-            RunGenerators(compilation, out var diagnosticsFound, out var result, Options, new Generator.SourceGenerator());
-            
-            var WinRTDiagnostics = diagnosticsFound.Where(diag => diag.Id.StartsWith("CsWinRT", StringComparison.Ordinal));
-            if (WinRTDiagnostics.Any())
+        {
+            Assert.DoesNotThrow(() =>
             {
-                var foundDiagnostics = string.Join("\n", WinRTDiagnostics.Select(x => x.GetMessage()));
-                throw new SuccessException("Expected no diagnostics. But found:\n" + foundDiagnostics);
-            }
+                Compilation compilation = CreateCompilation(source);
+                RunGenerators(compilation, out var diagnosticsFound, out var result, Options, new Generator.SourceGenerator());
+
+                var WinRTDiagnostics = diagnosticsFound.Where(diag =>
+                    diag.Id.StartsWith("CsWinRT", StringComparison.Ordinal)
+                    //|| diag.Id == "CS8785"
+                    );
+                // warning CS8785: Generator 'SourceGenerator' failed to generate source. It will not contribute to the output and compilation errors may occur as a result
+                if (WinRTDiagnostics.Any())
+                {
+                    var foundDiagnostics = string.Join("\n", WinRTDiagnostics.Select(x => x.GetMessage()));
+                    Exception inner = null;
+                    if (!result.Results.IsEmpty)
+                    {
+                        inner = result.Results[0].Exception;
+                    }
+
+                    throw new AssertionException("Expected no diagnostics. But found:\n" + foundDiagnostics, inner);
+                }
+            });
         }
 
         /// <summary>
@@ -411,12 +424,12 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_TwoNamespacesSameName).SetName("Valid. Namespaces with same name");
                 yield return new TestCaseData(Valid_NestedNamespace).SetName("Valid. Nested namespaces are fine");
                 yield return new TestCaseData(Valid_NestedNamespace2).SetName("Valid. Twice nested namespaces are fine");
-                yield return new TestCaseData(Valid_NestedNamespace3).SetName("Valid. Namespace. Test[dot]Component with an inner namespace InnerComponent");
-                yield return new TestCaseData(Valid_NestedNamespace4).SetName("Valid. Namespace. Test and Test[dot]Component namespaces, latter with an inner namespace");
-                yield return new TestCaseData(Valid_NestedNamespace5).SetName("Valid. Namespace. ABCType in ABwinmd");
+                //yield return new TestCaseData(Valid_NestedNamespace3).SetName("Valid. Namespace. Test[dot]Component with an inner namespace InnerComponent");
+                //yield return new TestCaseData(Valid_NestedNamespace4).SetName("Valid. Namespace. Test and Test[dot]Component namespaces, latter with an inner namespace");
+                //yield return new TestCaseData(Valid_NestedNamespace5).SetName("Valid. Namespace. ABCType in ABwinmd");
                 yield return new TestCaseData(Valid_NamespacesDiffer).SetName("Valid. Similar namespace but different name (not just case)");
                 yield return new TestCaseData(Valid_NamespaceAndPrefixedNamespace).SetName("Valid. Two top-level namespaces, one prefixed with the other");
-                
+
                 #region InvalidTypes_Signatures
                 yield return new TestCaseData(Valid_ListUsage).SetName("Valid. Internally uses List<>");
                 yield return new TestCaseData(Valid_ListUsage2).SetName("Valid. Internally uses List<> (qualified)"); 
@@ -476,6 +489,7 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_StructWithPrimitiveTypes).SetName("Valid. Struct with only fields of basic types");
                 yield return new TestCaseData(Valid_StructWithImportedStruct).SetName("Valid. Struct with struct field");
                 yield return new TestCaseData(Valid_StructWithImportedStructQualified).SetName("Valid. Struct with qualified struct field");
+                yield return new TestCaseData(Valid_StructWithEnumField).SetName("Valid. Struct with enum field");
                 #endregion
 
                 #region InvalidArrayTypes_Signatures
