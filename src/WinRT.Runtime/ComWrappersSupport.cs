@@ -6,6 +6,7 @@ using ABI.Windows.Foundation;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -151,6 +152,8 @@ namespace WinRT
 
         public static void RegisterProjectionAssembly(Assembly assembly) => TypeNameSupport.RegisterProjectionAssembly(assembly);
 
+        public static void RegisterProjectionTypeBaseTypeMapping(IDictionary<string, string> typeNameToBaseTypeNameMapping) => TypeNameSupport.RegisterProjectionTypeBaseTypeMapping(typeNameToBaseTypeNameMapping);
+
         internal static object GetRuntimeClassCCWTypeIfAny(object obj)
         {
             var type = obj.GetType();
@@ -166,7 +169,13 @@ namespace WinRT
             return obj;
         }
 
-        internal static List<ComInterfaceEntry> GetInterfaceTableEntries(Type type)
+        internal static List<ComInterfaceEntry> GetInterfaceTableEntries(
+#if NET6_0_OR_GREATER
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            Type type)
         {
             var entries = new List<ComInterfaceEntry>();
             bool hasCustomIMarshalInterface = false;
@@ -374,7 +383,11 @@ namespace WinRT
             return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
         }
 
-        private static Func<IInspectable, object> CreateAbiNullableTFactory(Type implementationType)
+        private static Func<IInspectable, object> CreateAbiNullableTFactory(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)]
+#endif
+            Type implementationType)
         {
             var getValueMethod = implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic);
             return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
@@ -413,7 +426,12 @@ namespace WinRT
             return (IInspectable obj) => fromAbiMethodFunc(obj.ThisPtr);
         }
 
-        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+            Type implementationType,
+            string runtimeClassName = null)
         {
             // If runtime class name is empty or "Object", then just use IInspectable.
             if (implementationType == null || implementationType == typeof(object))
@@ -466,13 +484,16 @@ namespace WinRT
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
         }
 
+#if NET
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
         internal static Type GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
         {
             string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
             Type implementationType = null;
             if (!string.IsNullOrEmpty(runtimeClassName))
             {
-                implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+                implementationType = TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName);
             }
 
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))

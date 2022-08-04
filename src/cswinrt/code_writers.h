@@ -201,10 +201,10 @@ namespace cswinrt
                 auto guard{ w.push_generic_args(type) };
                 return action(type.generic_type);
             },
+            #pragma warning(disable:4702)
             [](auto)
             {
                 throw_invalid("type definition expected");
-                #pragma warning(disable:4702)
                 return TResult();
             });
     }
@@ -3110,6 +3110,29 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 db_path.stem().string());
     }
 
+    void write_winrt_helper_type_attribute(writer& w, TypeDef const& type)
+    {
+        if (get_category(type) == category::struct_type && is_type_blittable(type))
+        {
+            w.write(R"([global::WinRT.WindowsRuntimeHelperType])");
+            return;
+        }
+
+        w.write(R"([global::WinRT.WindowsRuntimeHelperType(typeof(%%))])",
+            bind<write_typedef_name>(type, typedef_name_type::ABI, false),
+            bind([&](writer& w)
+            {
+                if (distance(type.GenericParam()) == 0)
+                {
+                    return;
+                }
+
+                // Writes out the generic definition without the types.
+                separator s{ w };
+                w.write("<%>", bind_each([&](writer& /*w*/, GenericParam const& /*gp*/){ s(); }, type.GenericParam()));
+            }));
+    }
+
     auto get_invoke_info(writer& w, MethodDef const& method, uint32_t const& abi_methods_start_index = INSPECTABLE_METHOD_COUNT)
     {
         TypeDef const& type = method.Parent();
@@ -5773,8 +5796,16 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_authoring_metadata_type(writer& w, TypeDef const& type)
     {
-        w.write("%%internal class % {}\n",
+        w.write("%%%internal class % {}\n",
             bind<write_winrt_attribute>(type),
+            [&](writer& w)
+            {
+                auto category = get_category(type);
+                if (category == category::delegate_type || category == category::struct_type)
+                {
+                    write_winrt_helper_type_attribute(w, type);
+                }
+            },
             bind<write_type_custom_attributes>(type, false),
             bind<write_type_name>(type, typedef_name_type::CCW, false));
     }
@@ -5827,7 +5858,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
-        w.write(R"(%%
+        w.write(R"(%%%
 %% interface %%
 {%
 }
@@ -5835,6 +5866,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             // Interface
             bind<write_winrt_attribute>(type),
             bind<write_guid_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             is_exclusive_to(type) || (is_projection_internal(type) || (settings.internal || settings.embedded)) ? "internal" : "public",
             type_name,
@@ -6199,7 +6231,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         auto base_semantics = get_type_semantics(type.Extends());
         auto from_abi_new = !std::holds_alternative<object_type>(base_semantics) ? "new " : "";
 
-        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+        w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 %internal %class %%
 {
 public %(% comp)
@@ -6224,6 +6256,7 @@ private readonly % _comp;
 }
 )",
         bind<write_winrt_attribute>(type),
+        bind<write_winrt_helper_type_attribute>(type),
         default_interface_name,
         bind<write_type_custom_attributes>(type, false),
         bind<write_class_modifiers>(type),
@@ -6272,7 +6305,7 @@ private readonly % _comp;
             gc_pressure_amount = amount == 0 ? 12000 : amount == 1 ? 120000 : 1200000;
         }
 
-        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+        w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 %% %class %%, IEquatable<%>
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
@@ -6307,6 +6340,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 }
 )",
             bind<write_winrt_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             internal_accessibility(),
             bind<write_class_modifiers>(type),
@@ -6438,8 +6472,8 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(type)), [&](auto&& iface) { return iface; });
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
-        w.write(R"(%
-[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+        w.write(R"(%%
+[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
 {
@@ -6475,6 +6509,8 @@ private struct InterfaceTag<I>{};
 }
 )",
             bind<write_winrt_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
+            default_interface_name,
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
             bind<write_class_modifiers>(type),
@@ -6719,9 +6755,10 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
         }
 
         method_signature signature{ get_delegate_invoke(type) };
-        w.write(R"(%%% delegate % %(%);
+        w.write(R"(%%%% delegate % %(%);
 )",
             bind<write_winrt_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
@@ -7114,7 +7151,7 @@ global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
             fields.emplace_back(field_info);
         }
 
-        w.write(R"(%%% struct %: IEquatable<%>
+        w.write(R"(%%%% struct %: IEquatable<%>
 {
 %
 public %(%)
@@ -7131,6 +7168,7 @@ public override int GetHashCode() => %;
 )",
             // struct
             bind<write_winrt_attribute>(type),
+            bind<write_winrt_helper_type_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
             name,
@@ -7691,5 +7729,32 @@ bind<write_event_invoke_args>(invokeMethodSig));
             auto&& eventClass = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
             typeNameToDefinitionMap[eventTypeCode] = eventClass;
         }
+    }
+
+    void add_base_type_entry(TypeDef const& classType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToBaseTypeMap)
+    {
+        writer w("");
+        auto base_type = get_type_semantics(classType.Extends());
+        bool has_base_type = !std::holds_alternative<object_type>(base_type);
+        if (has_base_type)
+        {
+            int numChars = (int)strlen("global::");
+            auto&& typeName = w.write_temp("%", bind<write_type_name>(classType, typedef_name_type::Projected, true)).substr(numChars);
+            auto&& baseTypeName = w.write_temp("%", bind<write_type_name>(base_type, typedef_name_type::Projected, true)).substr(numChars);
+            typeNameToBaseTypeMap[typeName] = baseTypeName;
+        }
+    }
+
+    void write_file_header(writer& w)
+    {
+        w.write(R"(//------------------------------------------------------------------------------
+// <auto-generated>
+//     This file was generated by cswinrt.exe version %
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+)", VERSION_STRING);
     }
 }

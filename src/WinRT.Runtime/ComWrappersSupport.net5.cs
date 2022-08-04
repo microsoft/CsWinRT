@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -35,7 +36,10 @@ namespace WinRT
         }
 
         internal static readonly ConditionalWeakTable<Type, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<Type, InspectableInfo>();
-        [ThreadStatic] internal static Type CreateRCWType;
+        
+        [ThreadStatic]
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+        internal static Type CreateRCWType;
 
         private static ComWrappers _comWrappers;
         private static object _comWrappersLock = new object();
@@ -82,12 +86,12 @@ namespace WinRT
             return InspectableInfoTable.GetValue(_this.GetType(), o => PregenerateNativeTypeInformation(o).inspectableInfo);
         }
 
-        public static T CreateRcwForComObject<T>(IntPtr ptr)
+        public static T CreateRcwForComObject<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr ptr)
         {
             return CreateRcwForComObject<T>(ptr, true);
         }
 
-        private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
+        private static T CreateRcwForComObject<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr ptr, bool tryUseCache)
         {
             if (ptr == IntPtr.Zero)
             {
@@ -211,11 +215,30 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
+        internal static Func<IInspectable, object> GetTypedRcwFactory([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
         
-        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
+        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType)
         {
             if (implementationType.IsGenericType)
+            {
+                Type genericImplType = GetGenericImplType(implementationType);
+                if (genericImplType != null)
+                {
+                    var createRcw = genericImplType.GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(IInspectable) }, null);
+                    return (Func<IInspectable, object>)createRcw.CreateDelegate(typeof(Func<IInspectable, object>));
+                }
+            }
+
+            if (implementationType.IsInterface)
+            {
+                return obj => obj;
+            }
+
+            var constructor = implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null);
+            return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
+
+            [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
+            static Type GetGenericImplType(Type implementationType)
             {
                 var genericType = implementationType.GetGenericTypeDefinition();
 
@@ -240,21 +263,13 @@ namespace WinRT
                 {
                     genericImplType = typeof(IEnumerableImpl<>);
                 }
-
-                if (genericImplType != null)
+                else
                 {
-                    var createRcw = genericImplType.MakeGenericType(implementationType.GetGenericArguments()).GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(IInspectable) }, null);
-                    return (Func<IInspectable, object>)createRcw.CreateDelegate(typeof(Func<IInspectable, object>));
+                    return null;
                 }
-            }
 
-            if (implementationType.IsInterface)
-            {
-                return obj => obj;
+                return genericImplType.MakeGenericType(implementationType.GetGenericArguments());
             }
-
-            var constructor = implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null);
-            return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
         }
     }
 
@@ -439,7 +454,13 @@ namespace WinRT
 
         protected override unsafe ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
         {
-            var vtableEntries = TypeVtableEntryTable.GetValue(obj.GetType(), (type) => 
+            var vtableEntries = TypeVtableEntryTable.GetValue(obj.GetType(), (
+#if NET6_0_OR_GREATER
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+                type) => 
             {
                 if (IsRuntimeImplementedRCW(type))
                 {
