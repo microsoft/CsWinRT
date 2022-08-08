@@ -1578,6 +1578,17 @@ namespace DiagnosticTests
         public byte b;
     }
 }";
+
+        private const string Valid_StructWithEnumField = @"
+namespace DiagnosticTests
+{
+    public enum AnEnum { A = 0, B = 1 }
+    public struct StructWithEnumField_Valid
+    {
+        public AnEnum value;
+    }
+}";
+        
         private const string Valid_StructWithImportedStruct = @"
 using System.Numerics;
 namespace DiagnosticTests
