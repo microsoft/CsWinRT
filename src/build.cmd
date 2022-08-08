@@ -258,7 +258,7 @@ set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
 set interop_winmd=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\obj\merged\WinRT.Interop.winmd
 set netstandard2_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
-set net5_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net5.0\WinRT.Runtime.dll
+set net6_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net6.0\WinRT.Runtime.dll
 set source_generator=%this_dir%Authoring\WinRT.SourceGenerator\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
@@ -266,7 +266,7 @@ set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\n
 set guid_patch=%this_dir%Perf\IIDOptimizer\bin\%cswinrt_configuration%\net5.0\*.*
 rem Now call pack
 echo Creating nuget package
-call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;guid_patch=%guid_patch% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;netstandard2_runtime=%netstandard2_runtime%;net6_runtime=%net6_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;guid_patch=%guid_patch% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
 
 :exec
