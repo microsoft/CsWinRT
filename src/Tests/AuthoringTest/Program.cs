@@ -170,6 +170,7 @@ namespace AuthoringTest
     {
         public int X, Y;
         public string Value;
+        public BasicEnum basicEnum;
     }
 
     public struct ComplexStruct

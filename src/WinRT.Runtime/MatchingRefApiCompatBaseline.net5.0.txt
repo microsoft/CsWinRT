@@ -61,4 +61,6 @@ CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exis
 CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'WinRT.Interop.IAgileObject' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 62
+TypesMustExist : Type 'System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute' does not exist in the reference but it does exist in the implementation.
+Total Issues: 64
