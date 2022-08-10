@@ -9,6 +9,9 @@
     <ProjectName>cswinrt</ProjectName>
     <RootNamespace>cswinrt</RootNamespace>
   </PropertyGroup>
+	<!--<PropertyGroup>
+		<VCTargetsPath Condition="'$(VCTargetsPath)' == ''">C:\Program Files\Microsoft Visual Studio\2022\Preview\MSBuild\Microsoft\VC\v170\</VCTargetsPath>
+	</PropertyGroup>-->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">

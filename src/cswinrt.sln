@@ -128,6 +128,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonValueFunctionCalls", "Tests\FunctionalTests\JsonValueFunctionCalls\JsonValueFunctionCalls.csproj", "{EE5B4B23-5D4B-4DFB-8DC9-4DBB1B735CC8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FunctionalTests", "FunctionalTests", "{5ECC38F0-16FD-47E1-B8DC-8C474008AD55}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\FunctionalTests\Directory.Build.targets = Tests\FunctionalTests\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PublishProfiles", "PublishProfiles", "{6FBE79A9-9D6D-4436-9F84-797ED1C9F676}"
 	ProjectSection(SolutionItems) = preProject
