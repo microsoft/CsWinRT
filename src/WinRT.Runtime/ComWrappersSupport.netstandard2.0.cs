@@ -208,12 +208,7 @@ namespace WinRT
         private unsafe static QueryInterface Abi_QueryInterface = Do_Abi_QueryInterface; 
         private unsafe static int Do_Abi_QueryInterface(IntPtr pThis, Guid* iid, IntPtr* ptr)
         {
-            int hr = UnmanagedObject.FindObject<ComCallableWrapper>(pThis).QueryInterface(*iid, out IntPtr thatPtr);
-            if (hr == 0)
-            {
-                *ptr = thatPtr;
-            }
-            return hr;
+            return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).QueryInterface(*iid, out *ptr);
         }
 
         private delegate uint AddRefRelease(IntPtr pThis);
