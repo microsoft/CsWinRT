@@ -196,7 +196,7 @@ namespace WinRT
             IUnknownVftblPtr = Marshal.AllocHGlobal(sizeof(IUnknownVftbl));
             (*(IUnknownVftbl*)IUnknownVftblPtr) = new IUnknownVftbl
             {
-                QueryInterface = (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
+                QueryInterface = (delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
                 AddRef = (delegate* unmanaged[Stdcall]<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_AddRef),
                 Release = (delegate* unmanaged[Stdcall]<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_Release),
             };
@@ -204,11 +204,11 @@ namespace WinRT
         
         public static IntPtr AllocateVtableMemory(Type vtableType, int size) => Marshal.AllocCoTaskMem(size);
 
-        private delegate int QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr ptr);
-        private static QueryInterface Abi_QueryInterface = Do_Abi_QueryInterface; 
-        private static int Do_Abi_QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr ptr)
+        private unsafe delegate int QueryInterface(IntPtr pThis, Guid* iid, IntPtr* ptr);
+        private unsafe static QueryInterface Abi_QueryInterface = Do_Abi_QueryInterface; 
+        private unsafe static int Do_Abi_QueryInterface(IntPtr pThis, Guid* iid, IntPtr* ptr)
         {
-            return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).QueryInterface(iid, out ptr);
+            return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).QueryInterface(*iid, out *ptr);
         }
 
         private delegate uint AddRefRelease(IntPtr pThis);
