@@ -144,7 +144,8 @@ namespace WinRT
             if (typeof(TInterface).IsDefined(typeof(System.Runtime.InteropServices.ComImportAttribute)))
             {
                 Guid iid = typeof(TInterface).GUID;
-                Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr comPtr));
+                IntPtr comPtr = IntPtr.Zero;
+                Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, &iid, &comPtr));
                 try
                 {
                     return (TInterface)Marshal.GetObjectForIUnknown(comPtr);
@@ -178,7 +179,8 @@ namespace WinRT
         {
             objRef = null;
             ThrowIfDisposed();
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            IntPtr thatPtr = IntPtr.Zero;
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr);
             if (hr >= 0)
             {
                 if (IsAggregated)
@@ -214,7 +216,8 @@ namespace WinRT
         {
             ppv = IntPtr.Zero;
             ThrowIfDisposed();
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            IntPtr thatPtr = IntPtr.Zero;
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr);
             if (hr >= 0)
             {
                 ppv = thatPtr;
@@ -387,7 +390,8 @@ namespace WinRT
 
         public unsafe ObjectReferenceValue AsValue(Guid iid)
         {
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
+            IntPtr thatPtr = IntPtr.Zero;
+            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr));
             if (IsAggregated)
             {
                 Marshal.Release(thatPtr);
@@ -641,7 +645,8 @@ namespace WinRT
         {
             objRef = null;
 
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            IntPtr thatPtr = IntPtr.Zero;
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr);
             if (hr >= 0)
             {
                 if (IsAggregated)
