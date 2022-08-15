@@ -1519,13 +1519,24 @@ namespace WinRT
             }
             else if (type.IsValueType)
             {
-                AbiType = type.FindHelperType();
-                if (AbiType != null)
+                if (type == typeof(bool))
                 {
-                    // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
-                    if (AbiType.GetMethod("FromAbi", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static) == null)
+                    AbiType = typeof(byte);
+                }
+                else if (type == typeof(char))
+                {
+                    AbiType = typeof(ushort);
+                }
+                else
+                {
+                    AbiType = type.FindHelperType();
+                    if (AbiType != null)
                     {
-                        AbiType = null;
+                        // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
+                        if (AbiType.GetMethod("FromAbi", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static) == null)
+                        {
+                            AbiType = null;
+                        }
                     }
                 }
 

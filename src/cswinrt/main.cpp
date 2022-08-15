@@ -5,6 +5,7 @@
 #include "type_writers.h"
 #include "code_writers.h"
 #include <concurrent_unordered_map.h>
+#include <concurrent_unordered_set.h>
 
 namespace cswinrt
 {
@@ -175,10 +176,11 @@ Where <spec> is one or more of:
             task_group group;
 
             concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap;
+            concurrency::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
@@ -253,6 +255,7 @@ Where <spec> is one or more of:
                                 break;
                             }
 
+                            add_generic_type_references_in_type(type, abiDelegateEntries);
                             written = true;
                             requires_abi = requires_abi || type_requires_abi;
                         }
@@ -351,35 +354,80 @@ Where <spec> is one or more of:
             }));
             eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
 
-            if (!typeNameToBaseTypeMap.empty())
+            if (!typeNameToBaseTypeMap.empty() || !abiDelegateEntries.empty())
             {
                 writer baseTypeWriter("WinRT");
                 write_file_header(baseTypeWriter);
-                baseTypeWriter.write(R"(namespace WinRT
+                baseTypeWriter.write(R"(
+using System;
+
+namespace WinRT
 {
 internal static class ProjectionTypesInitializer
 {
-internal readonly static System.Collections.Generic.Dictionary<string, string> TypeNameToBaseTypeNameMapping = new System.Collections.Generic.Dictionary<string, string>(%, System.StringComparer.Ordinal)
-{
 %
-};
 
 [System.Runtime.CompilerServices.ModuleInitializer]
 internal static void InitalizeProjectionTypes()
 {
-ComWrappersSupport.RegisterProjectionTypeBaseTypeMapping(TypeNameToBaseTypeNameMapping);
+%
+
+#if !NET
+%
+#endif
 }
+
+%
 }
 })",
-            typeNameToBaseTypeMap.size(),
-            bind([&](writer& w) {
-                for (auto&& [key, value] : typeNameToBaseTypeMap)
-                {
-                    w.write(R"(["%"] = "%",)", key, value);
-                    w.write("\n");
-                }
+                bind([&](writer& w) {
+                    if (!typeNameToBaseTypeMap.empty())
+                    {
+                        w.write(R"(
+internal readonly static System.Collections.Generic.Dictionary<string, string> TypeNameToBaseTypeNameMapping = new System.Collections.Generic.Dictionary<string, string>(%, System.StringComparer.Ordinal)
+{
+%
+};
+)",
+                        typeNameToBaseTypeMap.size(),
+                        bind([&](writer& w) {
+                            for (auto&& [key, value] : typeNameToBaseTypeMap)
+                            {
+                                w.write(R"(["%"] = "%",)", key, value);
+                                w.write("\n");
+                            }
+                        }));
+                    }
+                }),
+                bind([&](writer& w) {
+                    if (!typeNameToBaseTypeMap.empty())
+                    {
+                        w.write("ComWrappersSupport.RegisterProjectionTypeBaseTypeMapping(TypeNameToBaseTypeNameMapping);");
+                    }
+                }),
+                bind([&](writer& w) {
+                    for (auto&& entry : abiDelegateEntries)
+                    {
+                        w.write("Projections.RegisterAbiDelegate(%, typeof(%));\n", entry.abi_delegate_types, entry.abi_delegate_name);
+                    }
+
+                    if (settings.filter.includes("Windows"))
+                    {
+                        w.write("Projections.RegisterAbiDelegate(new Type[] { typeof(void*), typeof(IntPtr), typeof(global::Windows.Foundation.AsyncStatus), typeof(int) }, typeof(_invoke_IntPtr_AsyncStatus));\n");
+                    }
+                }),
+                bind([&](writer& w) {
+                    for (auto&& entry : abiDelegateEntries)
+                    {
+                        w.write("%\n", entry.abi_delegate_declaration);
+                    }
+
+                    if (settings.filter.includes("Windows"))
+                    {
+                        w.write("internal unsafe delegate int _invoke_IntPtr_AsyncStatus(void* thisPtr, IntPtr asyncInfo, global::Windows.Foundation.AsyncStatus asyncStatus);\n");
+                    }
                 }));
-                baseTypeWriter.flush_to_file(settings.output_folder / "WinRTBaseTypeMappingHelper.cs");
+                baseTypeWriter.flush_to_file(settings.output_folder / "WinRTProjectionTypesInitializer.cs");
             }
 
             if (projectionFileWritten)
