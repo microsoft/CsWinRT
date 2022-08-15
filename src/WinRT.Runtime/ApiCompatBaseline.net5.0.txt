@@ -8,4 +8,6 @@ MembersMustExist : Member 'public void WinRT.MarshalString..ctor()' does not exi
 TypesMustExist : Type 'WinRT.MarshalString.HStringHeader' does not exist in the implementation but it does exist in the contract.
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.CompilerGeneratedAttribute' exists on 'WinRT.SingleInterfaceOptimizedObject.WinRT.IWinRTObject.get_AdditionalTypeData()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.CompilerGeneratedAttribute' exists on 'WinRT.SingleInterfaceOptimizedObject.WinRT.IWinRTObject.get_QueryInterfaceCache()' in the contract but not the implementation.
-Total Issues: 9
+MembersMustExist : Member 'public function System.Int32 (System.IntPtr, System.Guid, System.IntPtr) WinRT.Interop.IUnknownVftbl.QueryInterface.get()' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public void WinRT.Interop.IUnknownVftbl.QueryInterface.set(function System.Int32 (System.IntPtr, System.Guid, System.IntPtr))' does not exist in the implementation but it does exist in the contract.
+Total Issues: 11

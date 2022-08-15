@@ -22,6 +22,8 @@ MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Componen
 MembersMustExist : Member 'public System.ComponentModel.PropertyChangedEventHandler ABI.System.ComponentModel.PropertyChangedEventHandler.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.IWeakReferenceSourceMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute' does not exist in the reference but it does exist in the implementation.
 CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'Windows.Foundation.Point' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'Windows.Foundation.Rect' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'Windows.Foundation.Size' in the implementation but not the reference.
@@ -59,8 +61,8 @@ TypesMustExist : Type 'WinRT.ObjectReferenceValue' does not exist in the referen
 TypesMustExist : Type 'WinRT.WindowsRuntimeHelperTypeAttribute' does not exist in the reference but it does exist in the implementation.
 CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'WinRT.Interop.IActivationFactory' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'WinRT.Interop.IAgileObject' in the implementation but not the reference.
+MembersMustExist : Member 'public function System.Int32 (System.IntPtr, System.Guid*, System.IntPtr*) WinRT.Interop.IUnknownVftbl.QueryInterface.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Interop.IUnknownVftbl.QueryInterface.set(function System.Int32 (System.IntPtr, System.Guid*, System.IntPtr*))' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-TypesMustExist : Type 'System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute' does not exist in the reference but it does exist in the implementation.
-TypesMustExist : Type 'System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 64
+Total Issues: 66
