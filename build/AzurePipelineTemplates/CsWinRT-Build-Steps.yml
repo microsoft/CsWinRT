@@ -326,7 +326,7 @@ steps:
   condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
   continueOnError: True
   inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Perf\IIDOptimizer\bin\$(BuildConfiguration)\net5.0
+    SourceFolder: $(Build.SourcesDirectory)\src\Perf\IIDOptimizer\bin\$(BuildConfiguration)\net6.0
     Contents: |
       IIDOptimizer.exe 
       IIDOptimizer.dll
