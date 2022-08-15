@@ -231,4 +231,33 @@ namespace WinRT.Interop
     public 
 #endif 
     delegate int _remove_EventHandler(IntPtr thisPtr, EventRegistrationToken token);
+ 
+    internal unsafe delegate int _get_Current_IntPtr(void* thisPtr, out IntPtr __return_value__);
+    internal unsafe delegate int _get_Current_Type(void* thisPtr, out ABI.System.Type __return_value__);
+
+    internal unsafe delegate int _get_At_IntPtr(void* thisPtr, uint index, out IntPtr __return_value__);
+    internal unsafe delegate int _get_At_Type(void* thisPtr, uint index, out ABI.System.Type __return_value__);
+    internal unsafe delegate int _index_Of_IntPtr(void* thisPtr, IntPtr value, out uint index, out byte found);
+    internal unsafe delegate int _index_Of_Type(void* thisPtr, ABI.System.Type value, out uint index, out byte found);
+    internal unsafe delegate int _set_At_IntPtr(void* thisPtr, uint index, IntPtr value);
+    internal unsafe delegate int _set_At_Type(void* thisPtr, uint index, ABI.System.Type value);
+    internal unsafe delegate int _append_IntPtr(void* thisPtr, IntPtr value);
+    internal unsafe delegate int _append_Type(void* thisPtr, ABI.System.Type value);
+
+    internal unsafe delegate int _lookup_IntPtr_IntPtr(void* thisPtr, IntPtr key, out IntPtr value);
+    internal unsafe delegate int _lookup_Type_Type(void* thisPtr, ABI.System.Type key, out ABI.System.Type value);
+    internal unsafe delegate int _lookup_IntPtr_Type(void* thisPtr, IntPtr key, out ABI.System.Type value);
+    internal unsafe delegate int _lookup_Type_IntPtr(void* thisPtr, ABI.System.Type key, out IntPtr value);
+    internal unsafe delegate int _has_key_IntPtr(void* thisPtr, IntPtr key, out byte found);
+    internal unsafe delegate int _has_key_Type(void* thisPtr, ABI.System.Type key, out byte found);
+    internal unsafe delegate int _insert_IntPtr_IntPtr(void* thisPtr, IntPtr key, IntPtr value, out byte replaced);
+    internal unsafe delegate int _insert_Type_Type(void* thisPtr, ABI.System.Type key, ABI.System.Type value, out byte replaced);
+    internal unsafe delegate int _insert_IntPtr_Type(void* thisPtr, IntPtr key, ABI.System.Type value, out byte replaced);
+    internal unsafe delegate int _insert_Type_IntPtr(void* thisPtr, ABI.System.Type key, IntPtr value, out byte replaced);
+
+    internal unsafe delegate int _invoke_IntPtr_IntPtr(void* thisPtr, IntPtr sender, IntPtr args);
+    internal unsafe delegate int _invoke_IntPtr_Type(void* thisPtr, IntPtr sender, ABI.System.Type args);
+    internal unsafe delegate int _invoke_Type_IntPtr(void* thisPtr, ABI.System.Type sender, IntPtr args);
+    internal unsafe delegate int _invoke_Type_Type(void* thisPtr, ABI.System.Type sender, ABI.System.Type args);
+
 }

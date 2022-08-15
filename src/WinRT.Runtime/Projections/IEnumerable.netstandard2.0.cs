@@ -454,7 +454,7 @@ namespace ABI.System.Collections.Generic
             public IEnumerator_Delegates.MoveNext_2 MoveNext_2;
             public IEnumerator_Delegates.GetMany_3 GetMany_3;
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerator<T>));
-            private static readonly Type get_Current_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type get_Current_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {

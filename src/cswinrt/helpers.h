@@ -1421,4 +1421,34 @@ namespace cswinrt
         return get_fast_abi_class_for_class(fast_abi_class_type.value());
     }
 
+    struct generic_abi_delegate
+    {
+        std::string abi_delegate_name;
+        std::string abi_delegate_declaration;
+        std::string abi_delegate_types;
+
+        // Hash / equality for the hast set this is added to is based on the types in the delegate
+        // as we do not need duplicate delegate entries from different collection types.
+        bool operator==(const generic_abi_delegate& entry) const
+        {
+            return abi_delegate_types == entry.abi_delegate_types;
+        }
+    };
+
+    std::string escape_type_name_for_identifier(std::string typeName)
+    {
+        std::regex re(R"-((\ |:|<|>|,|\.))-");
+        return std::regex_replace(typeName, re, "_");
+    }
+}
+
+namespace std
+{
+    template<>
+    struct hash<cswinrt::generic_abi_delegate> {
+        size_t operator()(const cswinrt::generic_abi_delegate& entry) const
+        {
+            return hash<string>()(entry.abi_delegate_types);
+        }
+    };
 }

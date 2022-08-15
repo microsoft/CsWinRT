@@ -516,8 +516,8 @@ namespace ABI.System.Collections.Generic
             public global::System.Delegate HasKey_2;
             public IReadOnlyDictionary_Delegates.Split_3 Split_3;
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IReadOnlyDictionary<K, V>));
-            private static readonly Type Lookup_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
-            private static readonly Type HasKey_2_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });
+            private static readonly Type Lookup_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type HasKey_2_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {

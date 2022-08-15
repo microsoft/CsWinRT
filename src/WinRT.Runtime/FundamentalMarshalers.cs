@@ -7,28 +7,26 @@ namespace ABI.System
 {
     internal struct Boolean
     {
-        byte value;
         public static bool CreateMarshaler(bool value) => value;
-        public static Boolean GetAbi(bool value) => new Boolean() { value = (byte)(value ? 1 : 0) };
-        public static bool FromAbi(Boolean abi) => abi.value != 0;
-        public static unsafe void CopyAbi(bool value, IntPtr dest) => *(byte*)dest.ToPointer() = GetAbi(value).value;
-        public static Boolean FromManaged(bool value) => GetAbi(value);
-        public static unsafe void CopyManaged(bool arg, IntPtr dest) => *(byte*)dest.ToPointer() = FromManaged(arg).value;
+        public static byte GetAbi(bool value) => (byte)(value ? 1 : 0);
+        public static bool FromAbi(byte abi) => abi != 0;
+        public static unsafe void CopyAbi(bool value, IntPtr dest) => *(byte*)dest.ToPointer() = GetAbi(value);
+        public static byte FromManaged(bool value) => GetAbi(value);
+        public static unsafe void CopyManaged(bool arg, IntPtr dest) => *(byte*)dest.ToPointer() = FromManaged(arg);
         public static void DisposeMarshaler(bool m) { }
-        public static void DisposeAbi(Boolean abi) { }
+        public static void DisposeAbi(byte abi) { }
     }
 
     internal struct Char
     {
-        ushort value;
         public static char CreateMarshaler(char value) => value;
-        public static Char GetAbi(char value) => new Char() { value = (ushort)value };
-        public static char FromAbi(Char abi) => (char)abi.value;
-        public static unsafe void CopyAbi(char value, IntPtr dest) => *(ushort*)dest.ToPointer() = GetAbi(value).value;
-        public static Char FromManaged(char value) => GetAbi(value);
-        public static unsafe void CopyManaged(char arg, IntPtr dest) => *(ushort*)dest.ToPointer() = FromManaged(arg).value;
+        public static ushort GetAbi(char value) => (ushort)value;
+        public static char FromAbi(ushort abi) => (char)abi;
+        public static unsafe void CopyAbi(char value, IntPtr dest) => *(ushort*)dest.ToPointer() = GetAbi(value);
+        public static ushort FromManaged(char value) => GetAbi(value);
+        public static unsafe void CopyManaged(char arg, IntPtr dest) => *(ushort*)dest.ToPointer() = FromManaged(arg);
         public static void DisposeMarshaler(char m) { }
-        public static void DisposeAbi(Char abi) { }
+        public static void DisposeAbi(ushort abi) { }
     }
 }
 
