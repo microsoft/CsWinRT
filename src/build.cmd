@@ -262,7 +262,7 @@ set net6_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net6.0\WinR
 set source_generator=%this_dir%Authoring\WinRT.SourceGenerator\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
-set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net5.0\WinRT.Host.Shim.dll
+set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net6.0\WinRT.Host.Shim.dll
 set guid_patch=%this_dir%Perf\IIDOptimizer\bin\%cswinrt_configuration%\net6.0\*.*
 rem Now call pack
 echo Creating nuget package

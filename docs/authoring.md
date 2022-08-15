@@ -66,9 +66,9 @@ To make your component available as a NuGet package, it is important to include 
             target="build\MyAuthoredComponent.targets" />
       
       <!-- Include the managed DLLs -->
-      <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Host.Shim.dll"                                  
+      <file src="C:\Path\To\CsWinRT\NugetDir\lib\net6.0\WinRT.Host.Shim.dll"                                  
             target="lib\$(TargetFramework)\WinRT.Host.Shim.dll" />  
-      <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Runtime.dll"                                  
+      <file src="C:\Path\To\CsWinRT\NugetDir\lib\net6.0\WinRT.Runtime.dll"                                  
             target="lib\$(TargetFramework)\WinRT.Runtime.dll" />
       
       <!-- Include the native DLLs -->

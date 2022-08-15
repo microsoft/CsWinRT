@@ -314,11 +314,11 @@ steps:
   condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
   continueOnError: True
   inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net5.0
+    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net6.0
     Contents: |
       WinRT.Host.Shim.dll
       WinRT.Host.Shim.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net5.0
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0
 
 # Stage IID Optimizer
 - task: CopyFiles@2
