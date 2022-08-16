@@ -58,7 +58,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
   <ItemGroup> 
 
-    <None Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
+    <None Condition="Exists('$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
       <TargetPath>WinRT.Host.Shim.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -253,7 +253,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- When packing, include all necessary DLLs and the targets file for DLL copying on the native side -->
     <ItemGroup>
 
-      <Content Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
+      <Content Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
         <Pack>true</Pack>
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>

@@ -23,16 +23,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
   <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
     <PropertyGroup>
-      <CsWinRTPkg-Net5Dir>$(CsWinRTPath)lib\net5.0</CsWinRTPkg-Net5Dir>
+      <CsWinRTPkg-Net6Dir>$(CsWinRTPath)lib\net6.0</CsWinRTPkg-Net6Dir>
       <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
     </PropertyGroup>
     <ItemGroup>
      <ReferenceCopyLocalPaths        Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
      <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
      <RuntimeTargetsCopyLocalItems   Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
-     <Reference                      Remove="$(CsWinRTPkg-Net5Dir)\WinRT.Host.Shim.dll"/>
-     <ResolvedCompileFileDefinitions Remove="$(CsWinRTPkg-Net5Dir)\WinRT.Host.Shim.dll"/>
-     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-Net5Dir)\WinRT.Host.Shim.dll"/>
+     <Reference                      Remove="$(CsWinRTPkg-Net6Dir)\WinRT.Host.Shim.dll"/>
+     <ResolvedCompileFileDefinitions Remove="$(CsWinRTPkg-Net6Dir)\WinRT.Host.Shim.dll"/>
+     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-Net6Dir)\WinRT.Host.Shim.dll"/>
     </ItemGroup>
   </Target>
 
