@@ -26,7 +26,7 @@
   </PropertyGroup>
 
 
-  <PropertyGroup Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) < 5">
+  <PropertyGroup Condition="'$(TargetFramework)' != 'net6.0'">
     <DefineConstants>$(DefineConstants);MANUAL_IUNKNOWN</DefineConstants>
   </PropertyGroup>
 
