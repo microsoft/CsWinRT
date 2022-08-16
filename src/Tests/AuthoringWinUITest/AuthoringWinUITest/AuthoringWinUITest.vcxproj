@@ -137,7 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AuthoringTest">
-      <HintPath>..\..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net5.0\AuthoringTest.winmd</HintPath>
+      <HintPath>..\..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net6.0\AuthoringTest.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
       <Implementation>WinRT.Host.dll</Implementation>
     </Reference>
