@@ -25,7 +25,8 @@
     <IsTargetFrameworkNet5OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">true</IsTargetFrameworkNet5OrGreater>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' != 'net5.0'">
+
+  <PropertyGroup Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) < 5">
     <DefineConstants>$(DefineConstants);MANUAL_IUNKNOWN</DefineConstants>
   </PropertyGroup>
 

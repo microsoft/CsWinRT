@@ -17,7 +17,7 @@ The following apps demonstrate how to consume the C#/WinRT component **Authoring
 * [.NET 6](https://dotnet.microsoft.com/download/dotnet/6.0)
 * Visual Studio 2022
 
-**Note**: This sample can be modified to target .NET 5 and Visual Studio 2019. This involves editing the `TargetFramework` properties to target `net5.0-windows10.0.19041.0`.
+**Note**: This sample can be modified to target .NET 5 and Visual Studio 2019. This involves editing the `TargetFramework` properties to target `net5.0-windows10.0.19041.0` and using a C#/WinRT version < 2.0.
 
 ## Building and running the sample
 

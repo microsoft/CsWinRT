@@ -6,4 +6,4 @@ nuget restore Perf\ResultsComparer\ResultsComparer.sln
 msbuild Perf\ResultsComparer\ResultsComparer.sln -t:restore -t:build /p:platform="Any CPU" /p:configuration=release
 set baselinedir=%1
 IF "%baselinedir%" == "" set baselinedir="Perf\BenchmarkBaseline"
-Perf\ResultsComparer\bin\Release\net5.0\ResultsComparer.exe --base %baselinedir% --diff BenchmarkDotNet.Artifacts\results\ --threshold 5%% --xml BenchmarkDotNet.Artifacts\results\comparison.xml
+Perf\ResultsComparer\bin\Release\net6.0\ResultsComparer.exe --base %baselinedir% --diff BenchmarkDotNet.Artifacts\results\ --threshold 5%% --xml BenchmarkDotNet.Artifacts\results\comparison.xml

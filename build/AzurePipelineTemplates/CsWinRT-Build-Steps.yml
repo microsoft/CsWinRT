@@ -243,7 +243,7 @@ steps:
   displayName: Stage Unit Test
   condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
   inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net5.0
+    SourceFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0
     Contents: |
       unittest.dll
       unittest.pdb
@@ -285,17 +285,6 @@ steps:
   inputs:
     PathtoPublish: $(Build.ArtifactStagingDirectory)\release_netstandard2.0
     ArtifactName: netstandard2.0
-
-# Stage Net5.0
-- task: CopyFiles@2
-  displayName: Stage Net5.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net5.0
-    Contents: |
-      WinRT.Runtime.dll
-      WinRT.Runtime.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net5.0
 
 # Stage Net6.0
 - task: CopyFiles@2
@@ -379,14 +368,6 @@ steps:
   inputs:
     PathtoPublish: $(Build.ArtifactStagingDirectory)\resx
     ArtifactName: ResX
-
-# Publish Net5.0
-- task: PublishBuildArtifacts@1
-  displayName: Publish Net5.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\release_net5.0
-    ArtifactName: net5.0
 
 # Publish Net6.0
 - task: PublishBuildArtifacts@1
