@@ -590,6 +590,15 @@ And this is another one"
         Boolean Equals(UnSealedCustomEquals other);
     }
 
+    [default_interface]
+    [experimental]
+    runtimeclass CustomExperimentClass
+    {
+        CustomExperimentClass();
+        Int32 Value{ get; set; };
+        void f();
+    }
+
     // Compile time test for sub windows namespace
     namespace Windows
     {
