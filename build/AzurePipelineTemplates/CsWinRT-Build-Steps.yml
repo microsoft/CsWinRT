@@ -377,14 +377,6 @@ steps:
     PathtoPublish: $(Build.ArtifactStagingDirectory)\release_net6.0
     ArtifactName: net6.0
 
-# Publish Net6.0
-- task: PublishBuildArtifacts@1
-  displayName: Publish Net6.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\release_net6.0
-    ArtifactName: net6.0
-
 # Generate SBOM 
 - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
   displayName: 'SBOM Generator Task'

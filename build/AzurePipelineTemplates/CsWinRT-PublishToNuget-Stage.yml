@@ -66,15 +66,6 @@ stages:
         downloadPath: $(Build.SourcesDirectory)
         extractTars: false
 
-# Download Net6.0
-    - task: DownloadBuildArtifacts@0
-      displayName: 'Download Net6.0'
-      inputs:
-        artifactName: net6.0
-        itemPattern: ''
-        downloadPath: $(Build.SourcesDirectory)
-        extractTars: false
-
 # Stage Binaries
     - task: CmdLine@2
       displayName: Stage Binaries
