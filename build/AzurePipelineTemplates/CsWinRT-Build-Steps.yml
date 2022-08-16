@@ -297,17 +297,6 @@ steps:
       WinRT.Runtime.pdb
     TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0
 
-# Stage Net6.0
-- task: CopyFiles@2
-  displayName: Stage Net6.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net6.0
-    Contents: |
-      WinRT.Runtime.dll
-      WinRT.Runtime.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0
-
 # Stage WinRT.Host.Shim
 - task: CopyFiles@2 
   displayName: Stage WinRT.Host.Shim
