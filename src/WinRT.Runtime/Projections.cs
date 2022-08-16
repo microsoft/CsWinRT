@@ -116,7 +116,8 @@ namespace WinRT
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
                 DynamicallyAccessedMemberTypes.NonPublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+                DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType, 
             string winrtTypeName, 
@@ -139,7 +140,8 @@ namespace WinRT
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
                 DynamicallyAccessedMemberTypes.NonPublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+                DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType, 
             string winrtTypeName,
@@ -174,7 +176,8 @@ namespace WinRT
         [return: DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicMethods |
             DynamicallyAccessedMemberTypes.NonPublicMethods |
-            DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+            DynamicallyAccessedMemberTypes.PublicNestedTypes |
+            DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         public static Type FindCustomHelperTypeMapping(Type publicType, bool filterToRuntimeClass = false)
         {
@@ -383,6 +386,10 @@ namespace WinRT
             }
             return accum;
 
+#if NET
+            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+                Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
+#endif
             void GetAllPossibleTypeCombinationsCore(List<Type> accum, Stack<Type> stack, IEnumerable<Type>[] compatibleTypes, int index)
             {
                 foreach (var type in compatibleTypes[index])

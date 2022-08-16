@@ -309,6 +309,10 @@ namespace WinRT
             return entries;
         }
 
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+            Justification = "The existence of the ABI type implies the non-ABI type exists if it did exist as the ABI type is constructed for the other in authoring scenarios.")]
+#endif
         internal static (InspectableInfo inspectableInfo, List<ComInterfaceEntry> interfaceTableEntries) PregenerateNativeTypeInformation(Type type)
         {
             var interfaceTableEntries = GetInterfaceTableEntries(type);

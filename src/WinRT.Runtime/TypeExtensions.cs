@@ -92,7 +92,8 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | 
                                             DynamicallyAccessedMemberTypes.NonPublicMethods |
-                                            DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+                                            DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                            DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         public static Type GetHelperType(this Type type)
         {
