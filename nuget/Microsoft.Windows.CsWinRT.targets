@@ -20,6 +20,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
   
+  <Target Name="CsWinRTNet5EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5" BeforeTargets="CsWinRTPrepareProjection">
+    <Error Text="Support for .NET 5 ended with C#/WinRT 2.0. For .NET 5 support, use C#/WinRT version 1.6.5. See https://github.com/microsoft/CsWinRT/discussions/1232" />
+  </Target>
+
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
   <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
     <PropertyGroup>
