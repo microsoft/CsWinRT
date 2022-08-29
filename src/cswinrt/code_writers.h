@@ -7788,7 +7788,8 @@ bind<write_event_invoke_args>(invokeMethodSig));
                 // Handle generics of generics where their delegate entries should also be added.
                 for (auto& arg : type.generic_args)
                 {
-                    add_if_generic_type_reference(arg, abiDelegateEntries);
+                    // None of the generics should be an array given WinRT doens't support that.
+                    add_if_generic_type_reference(arg, false, abiDelegateEntries);
                 }
 
                 writer w;
@@ -8109,10 +8110,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
     {
         switch (get_category(type))
         {
-        case category::class_type:
-            break;
         case category::delegate_type:
-            break;
         case category::interface_type:
             add_generic_type_references_in_interface_type(type, abiDelegateEntries);
             break;
