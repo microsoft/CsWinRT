@@ -7780,6 +7780,281 @@ bind<write_event_invoke_args>(invokeMethodSig));
             });
     }
 
+    void add_abi_delegates_for_type(std::string_view typeNamespace, std::string_view typeName, std::vector<type_semantics> generics, concurrency::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
+    {
+        writer w;
+        if (typeNamespace == "Windows.Foundation" || typeNamespace == "Windows.Foundation.Collections")
+        {
+            if (typeName == "IIterator`1")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_get_Current_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _get_Current_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                        });
+                }
+            }
+            else if (typeName == "IKeyValuePair`2")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_get_Key_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _get_Key_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                        });
+                }
+
+                if (is_abi_delegate_required_for_type(generics[1]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[1]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_get_Value_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _get_Value_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                        });
+                }
+            }
+            else if (typeName == "IMapView`2")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]) || is_abi_delegate_required_for_type(generics[1]))
+                {
+                    auto keyAbiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedKeyAbiType = escape_type_name_for_identifier(keyAbiType);
+
+                    auto valueAbiType = w.write_temp("%", bind<write_abi_type>(generics[1]));
+                    auto escapedValueAbiType = escape_type_name_for_identifier(valueAbiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_lookup_%_%", escapedKeyAbiType, escapedValueAbiType),
+                            w.write_temp("internal unsafe delegate int _lookup_%_%(void* thisPtr, % key, out % value);", escapedKeyAbiType, escapedValueAbiType, keyAbiType, valueAbiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(%).MakeByRefType(), typeof(int) }", keyAbiType, valueAbiType)
+                        });
+
+                    if (is_abi_delegate_required_for_type(generics[0]))
+                    {
+                        abiDelegateEntries.insert(generic_abi_delegate
+                            {
+                                w.write_temp("_has_key_%", escapedKeyAbiType),
+                                w.write_temp("internal unsafe delegate int _has_key_%(void* thisPtr, % key, out byte found);", escapedKeyAbiType, keyAbiType),
+                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(byte).MakeByRefType(), typeof(int) }", keyAbiType)
+                            });
+                    }
+                }
+            }
+            else if (typeName == "IMap`2")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]) || is_abi_delegate_required_for_type(generics[1]))
+                {
+                    auto keyAbiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedKeyAbiType = escape_type_name_for_identifier(keyAbiType);
+
+                    auto valueAbiType = w.write_temp("%", bind<write_abi_type>(generics[1]));
+                    auto escapedValueAbiType = escape_type_name_for_identifier(valueAbiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_lookup_%_%", escapedKeyAbiType, escapedValueAbiType),
+                            w.write_temp("internal unsafe delegate int _lookup_%_%(void* thisPtr, % key, out % value);", escapedKeyAbiType, escapedValueAbiType, keyAbiType, valueAbiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(%).MakeByRefType(), typeof(int) }", keyAbiType, valueAbiType)
+                        });
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_insert_%_%", escapedKeyAbiType, escapedValueAbiType),
+                            w.write_temp("internal unsafe delegate int _insert_%_%(void* thisPtr, % key, % value, out byte replaced);", escapedKeyAbiType, escapedValueAbiType, keyAbiType, valueAbiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(%), typeof(byte).MakeByRefType(), typeof(int) }", keyAbiType, valueAbiType)
+                        });
+
+                    if (is_abi_delegate_required_for_type(generics[0]))
+                    {
+                        abiDelegateEntries.insert(generic_abi_delegate
+                            {
+                                w.write_temp("_has_key_%", escapedKeyAbiType),
+                                w.write_temp("internal unsafe delegate int _has_key_%(void* thisPtr, % key, out byte found);", escapedKeyAbiType, keyAbiType),
+                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(byte).MakeByRefType(), typeof(int) }", keyAbiType)
+                            });
+
+                        abiDelegateEntries.insert(generic_abi_delegate
+                            {
+                                w.write_temp("_remove_%", escapedKeyAbiType),
+                                w.write_temp("internal unsafe delegate int _remove_%(void* thisPtr, % key);", escapedKeyAbiType, keyAbiType),
+                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(int) }", keyAbiType)
+                            });
+                    }
+                }
+            }
+            else if (typeName == "IVectorView`1")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_get_at_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _get_at_%(void* thisPtr, uint index, out % __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(uint), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                        });
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_index_of_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _index_of_%(void* thisPtr, % value, out uint index, out byte found);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) }", abiType)
+                        });
+                }
+            }
+            else if (typeName == "IVector`1")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_get_at_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _get_at_%(void* thisPtr, uint index, out % __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(uint), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                        });
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_index_of_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _index_of_%(void* thisPtr, % value, out uint index, out byte found);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) }", abiType)
+                        });
+
+                    // SetAt / InsertAt
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_set_at_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _set_at_%(void* thisPtr, uint index, % value);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(uint), typeof(%), typeof(int) }", abiType)
+                        });
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_append_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _append_%(void* thisPtr, % value);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(int) }", abiType)
+                        });
+                }
+            }
+            else if (typeName == "EventHandler`1")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_invoke_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _invoke_%(void* thisPtr, IntPtr sender, % args);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(IntPtr), typeof(%), typeof(int) }", abiType)
+                        });
+                }
+            }
+            else if (typeName == "IReference`1")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_get_Value_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _get_Value_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                        });
+                }
+            }
+            else if (typeName == "IMapChangedEventArgs`1" ||
+                typeName == "IAsyncOperation`1" ||
+                typeName == "IAsyncOperationWithProgress`2")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_get_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _get_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                        });
+                }
+            }
+            else if (typeName == "TypedEventHandler`2")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]) || is_abi_delegate_required_for_type(generics[1]))
+                {
+                    auto senderAbiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedSenderAbiType = escape_type_name_for_identifier(senderAbiType);
+
+                    auto resultAbiType = w.write_temp("%", bind<write_abi_type>(generics[1]));
+                    auto escapedResultAbiType = escape_type_name_for_identifier(resultAbiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_invoke_%_%", escapedSenderAbiType, escapedResultAbiType),
+                            w.write_temp("internal unsafe delegate int _invoke_%_%(void* thisPtr, % sender, % args);", escapedSenderAbiType, escapedResultAbiType, senderAbiType, resultAbiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(%), typeof(int) }", senderAbiType, resultAbiType)
+                        });
+                }
+            }
+            else if (typeName == "AsyncOperationProgressHandler`2")
+            {
+                if (is_abi_delegate_required_for_type(generics[1]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[1]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_invoke_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _invoke_%(void* thisPtr, IntPtr asyncInfo, % progressInfo);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(IntPtr), typeof(%), typeof(int) }", abiType)
+                        });
+                }
+            }
+            else if (typeName == "AsyncActionProgressHandler`1")
+            {
+                if (is_abi_delegate_required_for_type(generics[0]))
+                {
+                    auto abiType = w.write_temp("%", bind<write_abi_type>(generics[0]));
+                    auto escapedAbiType = escape_type_name_for_identifier(abiType);
+
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_invoke_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _invoke_%(void* thisPtr, IntPtr asyncInfo, % progressInfo);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(IntPtr), typeof(%), typeof(int) }", abiType)
+                        });
+                }
+            }
+        }
+    }
+
     void add_if_generic_type_reference(cswinrt::type_semantics const& typeSemantics, bool isArray, concurrency::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
     {
         call(typeSemantics,
@@ -7792,282 +8067,37 @@ bind<write_event_invoke_args>(invokeMethodSig));
                     add_if_generic_type_reference(arg, false, abiDelegateEntries);
                 }
 
-                writer w;
-                auto typeNamespace = type.generic_type.TypeNamespace();
-                auto typeName = type.generic_type.TypeName();
-
-                if (typeNamespace == "Windows.Foundation" || typeNamespace == "Windows.Foundation.Collections")
+                add_abi_delegates_for_type(type.generic_type.TypeNamespace(), type.generic_type.TypeName(), type.generic_args, abiDelegateEntries);
+            },
+            [&](type_definition const& type)
+            {
+                switch (get_category(type))
                 {
-                    if (typeName == "IIterator`1")
+                    case category::enum_type:
+                    case category::struct_type:
                     {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_get_Current_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _get_Current_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType) 
-                            });
-                        }
-                    }
-                    else if (typeName == "IKeyValuePair`2")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_get_Key_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _get_Key_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
-                            });
-                        }
-
-                        if (is_abi_delegate_required_for_type(type.generic_args[1]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[1]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_get_Value_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _get_Value_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
-                            });
-                        }
-                    }
-                    else if (typeName == "IMapView`2")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]) || is_abi_delegate_required_for_type(type.generic_args[1]))
-                        {
-                            auto keyAbiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedKeyAbiType = escape_type_name_for_identifier(keyAbiType);
-
-                            auto valueAbiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[1]));
-                            auto escapedValueAbiType = escape_type_name_for_identifier(valueAbiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_lookup_%_%", escapedKeyAbiType, escapedValueAbiType),
-                                w.write_temp("internal unsafe delegate int _lookup_%_%(void* thisPtr, % key, out % value);", escapedKeyAbiType, escapedValueAbiType, keyAbiType, valueAbiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(%).MakeByRefType(), typeof(int) }", keyAbiType, valueAbiType)
-                            });
-
-                            if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                            {
-                                abiDelegateEntries.insert(generic_abi_delegate
-                                {
-                                    w.write_temp("_has_key_%", escapedKeyAbiType),
-                                    w.write_temp("internal unsafe delegate int _has_key_%(void* thisPtr, % key, out byte found);", escapedKeyAbiType, keyAbiType),
-                                    w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(byte).MakeByRefType(), typeof(int) }", keyAbiType)
-                                });
-                            }
-                        }
-                    }
-                    else if (typeName == "IMap`2")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]) || is_abi_delegate_required_for_type(type.generic_args[1]))
-                        {
-                            auto keyAbiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedKeyAbiType = escape_type_name_for_identifier(keyAbiType);
-
-                            auto valueAbiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[1]));
-                            auto escapedValueAbiType = escape_type_name_for_identifier(valueAbiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_lookup_%_%", escapedKeyAbiType, escapedValueAbiType),
-                                w.write_temp("internal unsafe delegate int _lookup_%_%(void* thisPtr, % key, out % value);", escapedKeyAbiType, escapedValueAbiType, keyAbiType, valueAbiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(%).MakeByRefType(), typeof(int) }", keyAbiType, valueAbiType)
-                            });
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_insert_%_%", escapedKeyAbiType, escapedValueAbiType),
-                                w.write_temp("internal unsafe delegate int _insert_%_%(void* thisPtr, % key, % value, out byte replaced);", escapedKeyAbiType, escapedValueAbiType, keyAbiType, valueAbiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(%), typeof(byte).MakeByRefType(), typeof(int) }", keyAbiType, valueAbiType)
-                            });
-
-                            if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                            {
-                                abiDelegateEntries.insert(generic_abi_delegate
-                                {
-                                    w.write_temp("_has_key_%", escapedKeyAbiType),
-                                    w.write_temp("internal unsafe delegate int _has_key_%(void* thisPtr, % key, out byte found);", escapedKeyAbiType, keyAbiType),
-                                    w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(byte).MakeByRefType(), typeof(int) }", keyAbiType)
-                                });
-
-                                abiDelegateEntries.insert(generic_abi_delegate
-                                {
-                                    w.write_temp("_remove_%", escapedKeyAbiType),
-                                    w.write_temp("internal unsafe delegate int _remove_%(void* thisPtr, % key);", escapedKeyAbiType, keyAbiType),
-                                    w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(int) }", keyAbiType)
-                                });
-                            }
-                        }
-                    }
-                    else if (typeName == "IVectorView`1")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_get_at_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _get_at_%(void* thisPtr, uint index, out % __return_value__);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(uint), typeof(%).MakeByRefType(), typeof(int) }", abiType)
-                            });
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_index_of_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _index_of_%(void* thisPtr, % value, out uint index, out byte found);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) }", abiType)
-                            });
-                        }
-                    }
-                    else if (typeName == "IVector`1")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_get_at_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _get_at_%(void* thisPtr, uint index, out % __return_value__);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(uint), typeof(%).MakeByRefType(), typeof(int) }", abiType)
-                            });
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_index_of_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _index_of_%(void* thisPtr, % value, out uint index, out byte found);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) }", abiType)
-                            });
-
-                            // SetAt / InsertAt
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_set_at_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _set_at_%(void* thisPtr, uint index, % value);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(uint), typeof(%), typeof(int) }", abiType)
-                            });
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_append_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _append_%(void* thisPtr, % value);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(int) }", abiType)
-                            });
-                        }
-                    }
-                    else if (typeName == "EventHandler`1")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_invoke_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _invoke_%(void* thisPtr, IntPtr sender, % args);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(IntPtr), typeof(%), typeof(int) }", abiType)
-                            });
-                        }
-                    }
-                    else if (typeName == "IReference`1")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_get_Value_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _get_Value_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
-                            });
-                        }
-                    }
-                    else if (typeName == "IMapChangedEventArgs`1" ||
-                             typeName == "IAsyncOperation`1" ||
-                             typeName == "IAsyncOperationWithProgress`2")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_get_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _get_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
-                            });
-                        }
-                    }
-                    else if (typeName == "TypedEventHandler`2")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]) || is_abi_delegate_required_for_type(type.generic_args[1]))
-                        {
-                            auto senderAbiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedSenderAbiType = escape_type_name_for_identifier(senderAbiType);
-
-                            auto resultAbiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[1]));
-                            auto escapedResultAbiType = escape_type_name_for_identifier(resultAbiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_invoke_%_%", escapedSenderAbiType, escapedResultAbiType),
-                                w.write_temp("internal unsafe delegate int _invoke_%_%(void* thisPtr, % sender, % args);", escapedSenderAbiType, escapedResultAbiType, senderAbiType, resultAbiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(%), typeof(int) }", senderAbiType, resultAbiType)
-                            });
-                        }
-                    }
-                    else if (typeName == "AsyncOperationProgressHandler`2")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[1]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[1]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_invoke_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _invoke_%(void* thisPtr, IntPtr asyncInfo, % progressInfo);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(IntPtr), typeof(%), typeof(int) }", abiType)
-                            });
-                        }
-                    }
-                    else if (typeName == "AsyncActionProgressHandler`1")
-                    {
-                        if (is_abi_delegate_required_for_type(type.generic_args[0]))
-                        {
-                            auto abiType = w.write_temp("%", bind<write_abi_type>(type.generic_args[0]));
-                            auto escapedAbiType = escape_type_name_for_identifier(abiType);
-
-                            abiDelegateEntries.insert(generic_abi_delegate
-                            {
-                                w.write_temp("_invoke_%", escapedAbiType),
-                                w.write_temp("internal unsafe delegate int _invoke_%(void* thisPtr, IntPtr asyncInfo, % progressInfo);", escapedAbiType, abiType),
-                                w.write_temp("new global::System.Type[] { typeof(void*), typeof(IntPtr), typeof(%), typeof(int) }", abiType)
-                            });
-                        }
+                        std::vector<cswinrt::type_semantics> genericArgs = { typeSemantics };
+                        add_abi_delegates_for_type("Windows.Foundation", "IReference`1", genericArgs, abiDelegateEntries);
+                        break;
                     }
                 }
+
+                // On the CCW for arrays, we also generate an IVector CCW, so we need to generate the appropriate delegates.
+                if (isArray)
+                {
+                    std::vector<cswinrt::type_semantics> genericArgs = { typeSemantics };
+                    add_abi_delegates_for_type("Windows.Foundation.Collections", "IVector`1", genericArgs, abiDelegateEntries);
+                }
             },
-            [&](auto) {}
+            [&](auto)
+            {
+                // On the CCW for arrays, we also generate an IVector CCW, so we need to generate the appropriate delegates.
+                if (isArray)
+                {
+                    std::vector<cswinrt::type_semantics> genericArgs = { typeSemantics };
+                    add_abi_delegates_for_type("Windows.Foundation.Collections", "IVector`1", genericArgs, abiDelegateEntries);
+                }
+            }
         );
     }
 
