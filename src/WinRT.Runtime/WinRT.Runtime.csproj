@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup> 
-    <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net5.0;net6.0;net7.0</TargetFrameworks>
     <RootNamespace>WinRT</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>9</LangVersion>
@@ -54,6 +54,7 @@
     <CsWinRTApiCompatVersion>1.0.1</CsWinRTApiCompatVersion>
     <ApiCompatArgs>$(ApiCompatArgs) --allow-default-interface-methods</ApiCompatArgs>
     <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --allow-default-interface-methods</MatchingRefApiCompatArgs>
+    <UserSecretsId>cb8b09a7-512e-4aba-be03-74040939947c</UserSecretsId>
   </PropertyGroup> 
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
