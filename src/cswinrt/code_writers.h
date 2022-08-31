@@ -7917,6 +7917,14 @@ bind<write_event_invoke_args>(invokeMethodSig));
                             w.write_temp("internal unsafe delegate int _index_of_%(void* thisPtr, % value, out uint index, out byte found);", escapedAbiType, abiType),
                             w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) }", abiType)
                         });
+
+                    // GetEnumerator in IVectorView
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_get_Current_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _get_Current_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                        });
                 }
             }
             else if (typeName == "IVector`1")
@@ -7953,6 +7961,14 @@ bind<write_event_invoke_args>(invokeMethodSig));
                             w.write_temp("_append_%", escapedAbiType),
                             w.write_temp("internal unsafe delegate int _append_%(void* thisPtr, % value);", escapedAbiType, abiType),
                             w.write_temp("new global::System.Type[] { typeof(void*), typeof(%), typeof(int) }", abiType)
+                        });
+
+                    // GetEnumerator in IVector
+                    abiDelegateEntries.insert(generic_abi_delegate
+                        {
+                            w.write_temp("_get_Current_%", escapedAbiType),
+                            w.write_temp("internal unsafe delegate int _get_Current_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
                         });
                 }
             }
@@ -8072,11 +8088,14 @@ bind<write_event_invoke_args>(invokeMethodSig));
             {
                 switch (get_category(type))
                 {
-                    case category::enum_type:
                     case category::struct_type:
                     {
-                        std::vector<cswinrt::type_semantics> genericArgs = { typeSemantics };
-                        add_abi_delegates_for_type("Windows.Foundation", "IReference`1", genericArgs, abiDelegateEntries);
+                        // Struct fields can have IReference generics which we should generate delegates for.
+                        for (auto&& field : type.FieldList())
+                        {
+                            auto fieldType = field.Signature().Type();
+                            add_if_generic_type_reference(get_type_semantics(fieldType), fieldType.is_szarray(), abiDelegateEntries);
+                        }
                         break;
                     }
                 }
@@ -8140,6 +8159,23 @@ bind<write_event_invoke_args>(invokeMethodSig));
         switch (get_category(type))
         {
         case category::delegate_type:
+        {
+            method_signature signature{ get_delegate_invoke(type) };
+            if (signature.has_params())
+            {
+                for (auto&& param : signature.params())
+                {
+                    add_if_generic_type_reference(get_type_semantics(param.second->Type()), param.second->Type().is_szarray(), abiDelegateEntries);
+                }
+            }
+
+            if (auto& returnSignature = signature.return_signature())
+            {
+                add_if_generic_type_reference(get_type_semantics(returnSignature.Type()), returnSignature.Type().is_szarray(), abiDelegateEntries);
+            }
+
+            break;
+        }
         case category::interface_type:
             add_generic_type_references_in_interface_type(type, abiDelegateEntries);
             break;
