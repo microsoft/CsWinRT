@@ -4,7 +4,7 @@ stages:
   jobs:
   - job: Localize
     pool: 
-      vmImage: windows-2019
+      vmImage: windows-2022
     timeoutInMinutes: 90
     steps:
     - checkout: self
