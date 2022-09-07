@@ -36,7 +36,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <CsWinRTIIDOptimizerPath>$(MSBuildThisFileDirectory)Perf\IIDOptimizer\bin\$(Configuration)\net5.0\</CsWinRTIIDOptimizerPath>
+    <CsWinRTIIDOptimizerPath>$(MSBuildThisFileDirectory)Perf\IIDOptimizer\bin\$(Configuration)\net6.0\</CsWinRTIIDOptimizerPath>
   </PropertyGroup>
 
   <PropertyGroup>
