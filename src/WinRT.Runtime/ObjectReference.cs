@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -122,8 +123,17 @@ namespace WinRT
             Dispose(false);
         }
 
-        public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
-        public unsafe ObjectReference<T> As<T>(Guid iid)
+        public ObjectReference<T> As<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+        T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
+
+        public unsafe ObjectReference<T> As<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+        T>(Guid iid)
         {
             Marshal.ThrowExceptionForHR(TryAs<T>(iid, out var objRef));
             return objRef;
@@ -134,7 +144,8 @@ namespace WinRT
             if (typeof(TInterface).IsDefined(typeof(System.Runtime.InteropServices.ComImportAttribute)))
             {
                 Guid iid = typeof(TInterface).GUID;
-                Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr comPtr));
+                IntPtr comPtr = IntPtr.Zero;
+                Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, &iid, &comPtr));
                 try
                 {
                     return (TInterface)Marshal.GetObjectForIUnknown(comPtr);
@@ -154,13 +165,22 @@ namespace WinRT
 #endif
         }
 
-        public int TryAs<T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
+        public int TryAs<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+        T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
 
-        public virtual unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
+        public virtual unsafe int TryAs<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+        T>(Guid iid, out ObjectReference<T> objRef)
         {
             objRef = null;
             ThrowIfDisposed();
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            IntPtr thatPtr = IntPtr.Zero;
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr);
             if (hr >= 0)
             {
                 if (IsAggregated)
@@ -196,7 +216,8 @@ namespace WinRT
         {
             ppv = IntPtr.Zero;
             ThrowIfDisposed();
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            IntPtr thatPtr = IntPtr.Zero;
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr);
             if (hr >= 0)
             {
                 ppv = thatPtr;
@@ -369,7 +390,8 @@ namespace WinRT
 
         public unsafe ObjectReferenceValue AsValue(Guid iid)
         {
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
+            IntPtr thatPtr = IntPtr.Zero;
+            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr));
             if (IsAggregated)
             {
                 Marshal.Release(thatPtr);
@@ -385,7 +407,11 @@ namespace WinRT
 #else
     public
 #endif
-    class ObjectReference<T> : IObjectReference
+    class ObjectReference<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        T> : IObjectReference
     {
         private readonly T _vftbl;
         public T Vftbl
@@ -472,7 +498,11 @@ namespace WinRT
         }
     }
 
-    internal sealed class ObjectReferenceWithContext<T> : ObjectReference<T>
+    internal sealed class ObjectReferenceWithContext<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        T> : ObjectReference<T>
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
@@ -607,11 +637,16 @@ namespace WinRT
             return objRef;
         }
 
-        public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
+        public override unsafe int TryAs<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        U>(Guid iid, out ObjectReference<U> objRef)
         {
             objRef = null;
 
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            IntPtr thatPtr = IntPtr.Zero;
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr);
             if (hr >= 0)
             {
                 if (IsAggregated)

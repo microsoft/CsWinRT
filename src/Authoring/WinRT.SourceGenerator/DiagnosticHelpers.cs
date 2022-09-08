@@ -10,29 +10,6 @@ using WinRT.SourceGenerator;
 
 namespace Generator
 {
-    // Helper Class, makes for clean collection of types and namespaces, needed for checking
-    internal class TypeCollector
-    {
-        private HashSet<INamedTypeSymbol> types;
-        private HashSet<INamedTypeSymbol> structs;
-        private HashSet<INamespaceSymbol> namespaces;
-
-        public TypeCollector()
-        {
-            types = new HashSet<INamedTypeSymbol>();
-            structs = new HashSet<INamedTypeSymbol>();
-            namespaces = new HashSet<INamespaceSymbol>();
-        }
-
-        public void AddType(INamedTypeSymbol newType) { types.Add(newType); }
-        public void AddStruct(INamedTypeSymbol newType) { structs.Add(newType); }
-        public void AddNamespace(INamespaceSymbol newType) { namespaces.Add(newType); }
-
-        public HashSet<INamedTypeSymbol> GetTypes() { return types; }
-        public HashSet<INamedTypeSymbol> GetStructs() { return structs; }
-        public HashSet<INamespaceSymbol> GetNamespaces() { return namespaces; }
-    }
-
     public partial class WinRTComponentScanner
     {
         private void Flag() { _flag |= true; }
@@ -395,7 +372,6 @@ namespace Generator
             SpecialType.System_Int16,
             SpecialType.System_Int32,
             SpecialType.System_Int64,
-            SpecialType.System_Enum,
         };
 
         private static readonly HashSet<string> nonWindowsRuntimeInterfaces = new HashSet<string>()

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -95,7 +96,7 @@ namespace WinRT
         readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> _GetActivationFactory;
         readonly delegate* unmanaged[Stdcall]<int> _CanUnloadNow; // TODO: Eventually periodically call
 
-        static readonly string _currentModuleDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        static readonly string _currentModuleDirectory = AppContext.BaseDirectory;
 
         static Dictionary<string, DllModule> _cache = new System.Collections.Generic.Dictionary<string, DllModule>(StringComparer.Ordinal);
 
@@ -294,6 +295,10 @@ namespace WinRT
             }
         }
 
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode",
+            Justification = "No members of the generic type are dynamically accessed in this code path.")]
+#endif
         public unsafe ObjectReference<I> _ActivateInstance<I>()
         {
             IntPtr instancePtr;
@@ -308,6 +313,10 @@ namespace WinRT
             }
         }
 
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode",
+            Justification = "No members of the generic type are dynamically accessed in this code path.")]
+#endif
         public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
         public IObjectReference _As(Guid iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid);
     }
@@ -320,7 +329,16 @@ namespace WinRT
         public static new I AsInterface<I>() => _factory.Value.AsInterface<I>();
         public static ObjectReference<I> As<I>() => _factory._As<I>();
         public static IObjectReference As(Guid iid) => _factory._As(iid);
-        public static ObjectReference<I> ActivateInstance<I>() => _factory._ActivateInstance<I>();
+
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode", 
+            Justification = "No members of the generic type are dynamically accessed in this code path.")]
+#endif
+        public static ObjectReference<I> ActivateInstance<
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.None)]
+#endif 
+            I>() => _factory._ActivateInstance<I>();
     }
 
     internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
@@ -845,19 +863,19 @@ namespace WinRT
     }
 }
 
+#if !NET
 namespace System.Runtime.CompilerServices
 {
     [AttributeUsage(AttributeTargets.Method)]
     internal sealed class ModuleInitializerAttribute : Attribute { }
 }
+#endif
 
 namespace WinRT
 {
     internal static class ProjectionInitializer
     {
-#pragma warning disable 0436
         [ModuleInitializer]
-#pragma warning restore 0436
         internal static void InitalizeProjection()
         {
             ComWrappersSupport.RegisterProjectionAssembly(typeof(ProjectionInitializer).Assembly);

@@ -39,11 +39,11 @@ namespace Benchmarks
                 Config = Config.AddExporter(JsonExporter.Full);
 
                 // Test WinMD support
-#if NETCOREAPP3_1
+#if USE_WINMD
                 // BenchmarkDotNet will rebuild the project with a project reference to this project when this project's output exe is ran.  It
                 // will be ran from the same folder as where we have the application manifest binplaced which we want to embed in the new exe.
                 string manifestFile = Path.Combine(
-                    Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    AppContext.BaseDirectory,
                     "Benchmarks.manifest");
 
                 var winmdJob = Job.Default
@@ -59,7 +59,7 @@ namespace Benchmarks
                     )
                     .WithId("WinMD NetCoreApp31");
 
-                // Optimizer needs to be diabled as it errors on WinMDs
+                // Optimizer needs to be disabled as it errors on WinMDs
                 Config = Config.WithOption(ConfigOptions.DisableOptimizationsValidator, true)
                         .AddJob(winmdJob);
 #else

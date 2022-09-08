@@ -4,8 +4,8 @@ stages:
   jobs: 
   - job: BuildAndTest
     pool:
-      vmImage: windows-2019
-    timeoutInMinutes: 90
+      vmImage: windows-latest
+    timeoutInMinutes: 120
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
       maxParallel: 10
@@ -36,6 +36,15 @@ stages:
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml
 
+# Set Dotnet paths
+    - task: PowerShell@2
+      displayName: Set DotNet paths
+      inputs:
+        targetType: inline
+        script: |
+          Write-Host "##vso[task.setvariable variable=DOTNET_ROOT;]C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\"
+          Write-Host "##vso[task.setvariable variable=DOTNET_ROOT(x86);]C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\x86\"
+
 # Run Unit Tests
     - task: DotNetCoreCLI@2
       displayName: Run Unit Tests
@@ -43,7 +52,7 @@ stages:
       inputs:
         command: test
         projects: 'src/Tests/UnitTest/UnitTest.csproj'
-        arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration) -- RunConfiguration.TreatNoTestsAsError=true
         testRunTitle: Unit Tests
 
 # Run Embedded Unit Tests
@@ -53,7 +62,7 @@ stages:
       inputs:
         command: test
         projects: 'src/Samples/TestEmbedded/UnitTestEmbedded/UnitTestEmbedded.csproj'
-        arguments: --diag $(Build.ArtifactStagingDirectory)\unittestembedded\test.log --no-build --logger xunit;LogFilePath=EMBEDDEDUNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        arguments: --diag $(Build.ArtifactStagingDirectory)\unittestembedded\test.log --no-build --logger xunit;LogFilePath=EMBEDDEDUNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration) -- RunConfiguration.TreatNoTestsAsError=true
         testRunTitle: Embedded Unit Tests
 
 # Run Object Lifetime Tests
@@ -61,7 +70,7 @@ stages:
       displayName: Run Object Lifetime Tests
       condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
       inputs:
-        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net5.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
+        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
 
 # Publish Test Log
@@ -104,12 +113,22 @@ stages:
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
           exit /b 0 
 
+# Run Functional Tests  
+    - task: CmdLine@2
+      displayName: Run Functional Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src
+        script: |
+          set cswinrt_label=functionaltest
+          build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
+
   - job: Benchmarks
     displayName: Run Benchmarks
     condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
     dependsOn: []
     pool:
-      vmImage: windows-2019
+      vmImage: windows-latest
     timeoutInMinutes: 120
     steps:
     - template: CsWinRT-Benchmarks-Steps.yml

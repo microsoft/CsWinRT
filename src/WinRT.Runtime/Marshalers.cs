@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -447,7 +448,11 @@ namespace WinRT
 #endif
     class MarshalGeneric<T>
     {
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
+#endif
         protected static readonly Type HelperType = typeof(T).GetHelperType();
+
         protected static readonly Type AbiType = typeof(T).GetAbiType();
         protected static readonly Type MarshalerType = typeof(T).GetMarshalerType();
         private static readonly bool MarshalByObjectReferenceValueSupported = typeof(T).GetMarshaler2Type() == typeof(ObjectReferenceValue);
@@ -1038,6 +1043,14 @@ namespace WinRT
 #endif
     struct MarshalInterface<T>
     {
+#if NET
+        [DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicFields | 
+            DynamicallyAccessedMemberTypes.NonPublicFields | 
+            DynamicallyAccessedMemberTypes.PublicNestedTypes |
+            DynamicallyAccessedMemberTypes.PublicMethods |
+            DynamicallyAccessedMemberTypes.NonPublicMethods)]
+#endif
         private static readonly Type HelperType = typeof(T).GetHelperType();
         private static Func<T, IObjectReference> _ToAbi;
         private static Func<T, IObjectReference> _CreateMarshaler;
@@ -1181,9 +1194,23 @@ namespace WinRT
 #else 
     public
 #endif
-    static class MarshalInspectable<T>
+    static class MarshalInspectable<
+#if NET6_0_OR_GREATER
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#elif NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+        T>
     {
-        public static IObjectReference CreateMarshaler<V>(T o, Guid iid, bool unwrapObject = true)
+        public static IObjectReference CreateMarshaler<V>(
+#if NET6_0_OR_GREATER
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            T o,
+            Guid iid,
+            bool unwrapObject = true)
         {
             if (o is null)
             {
@@ -1205,12 +1232,27 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObject<V>(o, iid);
         }
 
-        public static IObjectReference CreateMarshaler(T o, bool unwrapObject = true)
+        public static IObjectReference CreateMarshaler(
+#if NET6_0_OR_GREATER
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            T o,
+            bool unwrapObject = true)
         {
             return CreateMarshaler<IInspectable.Vftbl>(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
         }
 
-        public static ObjectReferenceValue CreateMarshaler2(T o, Guid iid, bool unwrapObject = true)
+        public static ObjectReferenceValue CreateMarshaler2(
+#if NET6_0_OR_GREATER
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            T o,
+            Guid iid,
+            bool unwrapObject = true)
         {
             if (o is null)
             {
@@ -1232,8 +1274,13 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObjectForMarshaling(o, iid);
         }
 
-        public static ObjectReferenceValue CreateMarshaler2(T o, bool unwrapObject = true) => 
-            CreateMarshaler2(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
+        public static ObjectReferenceValue CreateMarshaler2(
+#if NET6_0_OR_GREATER
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
+#elif NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#endif
+            T o, bool unwrapObject = true) => CreateMarshaler2(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef is null ? IntPtr.Zero : MarshalInterfaceHelper<T>.GetAbi(objRef);
@@ -1397,7 +1444,7 @@ namespace WinRT
 
 #if EMBED
     internal
-#else 
+#else
     public
 #endif
     class Marshaler<T>
@@ -1599,6 +1646,9 @@ namespace WinRT
             RefAbiType = AbiType.MakeByRefType();
         }
 
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
+#endif
         public static readonly Type AbiType;
         public static readonly Type RefAbiType;
         public static readonly Func<T, object> CreateMarshaler;

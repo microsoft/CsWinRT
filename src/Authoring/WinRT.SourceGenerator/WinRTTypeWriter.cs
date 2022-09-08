@@ -48,7 +48,7 @@ namespace Generator
             // Set out parameter attribute if write only array.
             bool isWriteOnlyArray = parameterSymbol.Type is IArrayTypeSymbol &&
                 parameterSymbol.GetAttributes().Where(
-                    attr => string.CompareOrdinal(attr.AttributeClass.ToString(), "System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray") == 0
+                    attr => string.CompareOrdinal(attr.AttributeClass.ToString(), "System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute") == 0
                 ).Count() != 0;
 
             Type = new Symbol(parameterSymbol.Type);

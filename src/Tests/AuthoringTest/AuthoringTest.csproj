@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Platforms>x64;x86</Platforms>
     <CsWinRTComponent>true</CsWinRTComponent>
-    <!-- Enable to diagnose generation issues -->
-    <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
-    <!-- <CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources> -->
+    <!-- CsWinRTEnableLogging helps to diagnose generation issues -->
+    <!--<CsWinRTEnableLogging>true</CsWinRTEnableLogging>-->
+    <!--<CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>--> 
   </PropertyGroup>
 
   <ItemGroup>

@@ -10,6 +10,7 @@ namespace Microsoft.UI.Xaml.Data
 {
     [global::WinRT.WindowsRuntimeType]
     [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Data.ICustomProperty))]
     interface ICustomProperty
     {
         object GetValue(object target);

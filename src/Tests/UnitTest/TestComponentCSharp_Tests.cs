@@ -2905,5 +2905,12 @@ namespace UnitTest
             Assert.True(eighth.Equals(seventh));
             Assert.False(seventh.Equals(eighth));
         }
+
+        // Manually verify warning for experimental.
+        private void TestExperimentAttribute()
+        {
+            CustomExperimentClass custom = new CustomExperimentClass();
+            custom.f();
+        }
     }
 }

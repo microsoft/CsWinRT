@@ -17,20 +17,6 @@ namespace Generator
 {
     public class ComponentGenerator
     {
-        private static readonly string ArrayAttributes = @"
-namespace System.Runtime.InteropServices.WindowsRuntime
-{
-    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    internal sealed class ReadOnlyArrayAttribute : global::System.Attribute
-    {
-    }
-
-    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    internal sealed class WriteOnlyArrayAttribute : global::System.Attribute
-    {
-    }
-}";
-
         private Logger Logger { get; }
         private readonly GeneratorExecutionContext context;
         private string tempFolder;
@@ -140,9 +126,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         private bool CatchWinRTDiagnostics()
         {
-            // "DiagnosticTests" is a workaround, GetAssemblyName returns null when used by unit tests 
-            // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
-            string assemblyName = context.GetAssemblyName() ?? "DiagnosticTests";
+            string assemblyName = context.GetAssemblyName();
             WinRTComponentScanner winrtScanner = new(context, assemblyName);
             winrtScanner.FindDiagnostics();
             return winrtScanner.Found();
@@ -154,12 +138,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");
                 Logger.Close();
+                Environment.ExitCode = -1;
                 return;
             }
 
             try
             {
-                context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
                 string assembly = context.GetAssemblyName();
                 string version = context.GetAssemblyVersion();
                 MetadataBuilder metadataBuilder = new MetadataBuilder();
@@ -170,9 +154,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                     metadataBuilder,
                     Logger);
 
-                WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)context.SyntaxReceiver;
-                Logger.Log("Found " + syntaxReciever.Declarations.Count + " types");
-                foreach (var declaration in syntaxReciever.Declarations)
+                WinRTSyntaxReceiver syntaxReceiver = (WinRTSyntaxReceiver)context.SyntaxReceiver;
+                Logger.Log("Found " + syntaxReceiver.Declarations.Count + " types");
+                foreach (var declaration in syntaxReceiver.Declarations)
                 {
                     writer.Model = context.Compilation.GetSemanticModel(declaration.SyntaxTree);
                     writer.Visit(declaration);
@@ -193,6 +177,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                     Logger.Log(e.InnerException.ToString());
                 }
                 Logger.Close();
+                Environment.ExitCode = -2;
                 throw;
             }
 
@@ -206,8 +191,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     {
         public void Execute(GeneratorExecutionContext context)
         {
-            var isTest = string.CompareOrdinal(Process.GetCurrentProcess().ProcessName, "testhost") == 0;
-            if (!isTest && !context.IsCsWinRTComponent() && !context.ShouldGenerateWinMDOnly())
+            if (!context.IsCsWinRTComponent() && !context.ShouldGenerateWinMDOnly())
             {
                 System.Diagnostics.Debug.WriteLine($"Skipping component {context.GetAssemblyName()}");
                 return;
@@ -219,11 +203,11 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            context.RegisterForSyntaxNotifications(() => new WinRTSyntaxReciever());
+            context.RegisterForSyntaxNotifications(() => new WinRTSyntaxReceiver());
         }
     }
 
-    class WinRTSyntaxReciever : ISyntaxReceiver
+    class WinRTSyntaxReceiver : ISyntaxReceiver
     {
         public List<MemberDeclarationSyntax> Declarations = new();
         public List<NamespaceDeclarationSyntax> Namespaces = new();
@@ -249,7 +233,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return;
             }
 
-            if (syntaxNode is not MemberDeclarationSyntax decaralation || !IsPublic(decaralation))
+            if (syntaxNode is not MemberDeclarationSyntax declaration || !IsPublic(declaration))
             {
                 return;
             }
@@ -260,7 +244,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 syntaxNode is DelegateDeclarationSyntax ||
                 syntaxNode is StructDeclarationSyntax)
             {
-                Declarations.Add(decaralation);
+                Declarations.Add(declaration);
             }
         }
 

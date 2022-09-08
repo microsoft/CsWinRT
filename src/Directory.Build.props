@@ -17,7 +17,8 @@
     <GenerateTestProjection Condition="'$(GenerateTestProjection)' == ''">false</GenerateTestProjection>
     <CsWinRTGenerateProjection>$(GenerateTestProjection)</CsWinRTGenerateProjection>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
     <IsTargetFrameworkNet5OrGreater>false</IsTargetFrameworkNet5OrGreater>
@@ -29,7 +30,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <CsWinRTIIDOptimizerPath>$(MSBuildThisFileDirectory)Perf\IIDOptimizer\bin\$(Configuration)\net5.0\</CsWinRTIIDOptimizerPath>
+    <CsWinRTIIDOptimizerPath>$(MSBuildThisFileDirectory)Perf\IIDOptimizer\bin\$(Configuration)\net6.0\</CsWinRTIIDOptimizerPath>
   </PropertyGroup>
 
   <PropertyGroup>

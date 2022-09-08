@@ -14,6 +14,7 @@ namespace WinRT.Interop
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
     [Guid("00000003-0000-0000-c000-000000000046")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IMarshal))]
     internal interface IMarshal
     {
         unsafe void GetUnmarshalClass(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, Guid* pCid);

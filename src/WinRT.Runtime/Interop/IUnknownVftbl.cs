@@ -15,7 +15,7 @@ namespace WinRT.Interop
     unsafe struct IUnknownVftbl
     {
         private void* _QueryInterface;
-        public delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int> QueryInterface { get => (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)_QueryInterface; set => _QueryInterface = (void*)value; }
+        public delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int> QueryInterface { get => (delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>)_QueryInterface; set => _QueryInterface = (void*)value; }
         private void* _AddRef;
         public delegate* unmanaged[Stdcall]<IntPtr, uint> AddRef { get => (delegate* unmanaged[Stdcall]<IntPtr, uint>)_AddRef; set => _AddRef = (void*)value; }
         private void* _Release;
