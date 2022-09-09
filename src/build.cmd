@@ -2,7 +2,7 @@
 if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTBuildNetSDKVersion=6.0.301
-set CsWinRTBuildNet7SDKVersion=7.0.100-preview.5.22307.18
+set CsWinRTBuildNet7SDKVersion=7.0.100-preview.7.22377.5
 set CsWinRTNet5SdkVersion=5.0.408
 set this_dir=%~dp0
 
