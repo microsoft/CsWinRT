@@ -226,6 +226,7 @@ stages:
 
     - task: NuGetCommand@2
       displayName: NuGet pack
+      condition: eq(variables['_PublishCsWinMD'], 'true')
       inputs:
         command: pack
         searchPatternPack: nuget/Microsoft.Windows.CsWinMD.nuspec

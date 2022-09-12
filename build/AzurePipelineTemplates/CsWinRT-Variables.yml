@@ -15,3 +15,4 @@ variables:
   _RunBenchmarks: $[coalesce(variables.RunBenchmarks, 'false')]
   _DotNetRuntimeVersion: $[coalesce(variables.DotNetRuntimeVersion, '5.0.17')]  
   _WindowsSdkVersionSuffix: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  
+  _PublishCsWinMD: $[coalesce(variables.PublishCsWinMD, 'false')]
