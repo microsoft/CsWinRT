@@ -382,6 +382,7 @@ steps:
       CsWinMD.dll
       CsWinMD.exe
       CsWinMD.pdb
+      CsWinMD.deps.json
       CsWinMD.runtimeconfig.json
       Microsoft.CodeAnalysis.CSharp.dll
       Microsoft.CodeAnalysis.dll
