@@ -78,6 +78,16 @@ namespace Generator
             return false;
         }
 
+        public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateWinMDOnly", out var CsWinRTGenerateWinMDOnlyStr))
+            {
+                return bool.TryParse(CsWinRTGenerateWinMDOnlyStr, out var CsWinRTGenerateWinMDOnly) && CsWinRTGenerateWinMDOnly;
+            }
+
+            return false;
+        }
+
         public static string GetCsWinRTExe(this GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);
@@ -104,7 +114,12 @@ namespace Generator
 
         public static string GetWinmdOutputFile(this GeneratorExecutionContext context)
         {
-            return Path.Combine(context.GetGeneratedFilesDir(), context.GetAssemblyName() + ".winmd");
+            var fileName = context.GetAssemblyName();
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTWinMDOutputFile", out var ret))
+            {
+                fileName = ret!;
+            }
+            return Path.Combine(context.GetGeneratedFilesDir(), fileName + ".winmd");
         }
     }
 }

@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata minClientVersion="2.5">
+    <id>Microsoft.Windows.CsWinMD</id>
+    <version>$cswinmd_nuget_version$</version>
+    <title>C#/WinMD tooling</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>C#/WinMD provides support for compiling WinRT API definitions written in C# to be implemented in C++.</description>
+    <releaseNotes>Release notes are available at https://github.com/microsoft/CsWinRT/releases</releaseNotes>
+    <tags>C++ C#/WinMD WinRT cswinmd WinMD xlang</tags>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <license type="file">LICENSE</license>
+    <projectUrl>https://github.com/microsoft/cswinrt</projectUrl>
+    <dependencies>
+      <group targetFramework="native" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="LICENSE"/>
+    <file src="NOTICE.txt"/>
+
+    <file src="$cswinmd_outpath$\CsWinMD.deps.json" target="tools\native"/>
+    <file src="$cswinmd_outpath$\cswinmd.dll" target="tools\native"/>
+    <file src="$cswinmd_outpath$\cswinmd.exe" target="tools\native"/>
+    <file src="$cswinmd_outpath$\CsWinMD.runtimeconfig.json" target="tools\native"/>
+    <file src="$cswinmd_outpath$\Microsoft.CodeAnalysis.CSharp.dll" target="tools\native"/>
+    <file src="$cswinmd_outpath$\Microsoft.CodeAnalysis.dll" target="tools\native"/>
+    <file src="$cswinmd_outpath$\WinRT.SourceGenerator.dll" target="tools\native"/>
+    <file src="Microsoft.Windows.CsWinMD.targets" target="build"/>
+
+  </files>
+</package>
