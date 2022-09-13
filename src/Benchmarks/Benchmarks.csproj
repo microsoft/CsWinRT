@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <Platforms>x64;x86</Platforms>
-    <TargetFrameworks>netcoreapp2.0;$(AppBuildTFMs)</TargetFrameworks>
+    <TargetFrameworks>$(AppBuildTFMs)</TargetFrameworks>
     <UseWinmd>false</UseWinmd>
     <BenchmarkWinmdSupport Condition="'$(BenchmarkWinmdSupport)' == ''">false</BenchmarkWinmdSupport>
     <!-- Controls whether to build using WinMDs or the projection. -->
