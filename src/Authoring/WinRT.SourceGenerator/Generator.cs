@@ -164,7 +164,10 @@ namespace Generator
                 writer.FinalizeGeneration();
 
                 GenerateWinMD(metadataBuilder);
-                GenerateSources();
+                if (!context.ShouldGenerateWinMDOnly())
+                {
+                    GenerateSources();
+                }
             }
             catch (Exception e)
             {
@@ -188,8 +191,9 @@ namespace Generator
     {
         public void Execute(GeneratorExecutionContext context)
         {
-            if (!context.IsCsWinRTComponent())
+            if (!context.IsCsWinRTComponent() && !context.ShouldGenerateWinMDOnly())
             {
+                System.Diagnostics.Debug.WriteLine($"Skipping component {context.GetAssemblyName()}");
                 return;
             }
 

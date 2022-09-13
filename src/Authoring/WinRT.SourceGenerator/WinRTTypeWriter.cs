@@ -1522,6 +1522,11 @@ namespace Generator
                 {
                     encoder.SystemType(type);
                 }
+                else if (argument is INamedTypeSymbol namedTypeSymbol)
+                {
+                    var typeEntity = GetTypeReference(namedTypeSymbol);
+                    encoder.Builder.WriteReference(CodedIndex.TypeDefOrRef(typeEntity), false);
+                }
                 else
                 {
                     encoder.Constant(argument);
@@ -1713,7 +1718,9 @@ namespace Generator
             Logger.Log("# constructor found: " + attributeType.Constructors.Length);
             var matchingConstructor = attributeType.Constructors.Where(constructor =>
                 constructor.Parameters.Length == primitiveValues.Count &&
-                constructor.Parameters.Select(param => param.Type).SequenceEqual(primitiveTypes));
+                constructor.Parameters.Select(param => (param.Type is IErrorTypeSymbol) ?
+                    Model.Compilation.GetTypeByMetadataName(param.Type.ToDisplayString()) : param.Type)
+                .SequenceEqual(primitiveTypes));
 
             Logger.Log("# matching constructor found: " + matchingConstructor.Count());
             Logger.Log("matching constructor found: " + matchingConstructor.First());
@@ -2584,6 +2591,7 @@ namespace Generator
             var classTypeDeclarations = typeDefinitionMapping.Values
                 .Where(declaration => declaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Class)
                 .ToList();
+
             foreach (var classTypeDeclaration in classTypeDeclarations)
             {
                 INamedTypeSymbol classSymbol = classTypeDeclaration.Node as INamedTypeSymbol;
