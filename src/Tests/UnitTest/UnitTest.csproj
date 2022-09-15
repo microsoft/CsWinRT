@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!--Target .NET Core 3.1 to test .NET Standard 2.0 projection -->
-    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>$(AppBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <ProjectName>UnitTest</ProjectName>
     <NoWarn>1701;1702;0436;1658</NoWarn>
