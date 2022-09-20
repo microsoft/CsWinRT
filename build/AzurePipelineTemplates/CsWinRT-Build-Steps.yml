@@ -121,8 +121,9 @@ steps:
 
       set cswinrt_echo=on
       set cswinrt_build_only=true
+      set CIBuildReason=CI
       rem PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
-      set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /p:CIBuildReason=CI
       build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
 # Build Tool for Embedded Sample
