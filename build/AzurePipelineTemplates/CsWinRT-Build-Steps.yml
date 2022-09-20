@@ -373,6 +373,22 @@ steps:
       CsWinRTDiagnosticStrings.resx
     TargetFolder: $(Build.ArtifactStagingDirectory)\resx\WinRT.SourceGenerator
 
+# Stage CsWinMD
+- task: CopyFiles@2
+  displayName: Stage CsWinMD
+  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\$(BuildConfiguration)\net6.0
+    Contents: |
+      CsWinMD.dll
+      CsWinMD.exe
+      CsWinMD.pdb
+      CsWinMD.deps.json
+      CsWinMD.runtimeconfig.json
+      Microsoft.CodeAnalysis.CSharp.dll
+      Microsoft.CodeAnalysis.dll
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0\CsWinMD
+
 # Publish ResX
 - task: PublishBuildArtifacts@1
   displayName: Publish ResX files
