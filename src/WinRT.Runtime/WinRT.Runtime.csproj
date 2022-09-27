@@ -23,6 +23,8 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
+	  <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+
   </PropertyGroup>
     
   <ItemGroup>

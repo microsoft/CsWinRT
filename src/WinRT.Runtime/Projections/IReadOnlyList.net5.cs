@@ -167,6 +167,7 @@ namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+    using global::System.Diagnostics.CodeAnalysis;
 
 #if EMBED
     internal
@@ -202,6 +203,22 @@ namespace ABI.System.Collections.Generic
 
                 throw;
             }
+        }
+
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        internal static Type implType = typeof(IReadOnlyListImpl<T>);
+
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        public static Type InitImplType() 
+        {
+            ComWrappersSupport.ImplTypesDict.Add(typeof(IReadOnlyListImpl<>), implType);
+            return implType;
         }
     }
 

@@ -9,6 +9,7 @@
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <PublishAot>true</PublishAot>
+	<IlcDumpGeneratedIL>true</IlcDumpGeneratedIL>
   </PropertyGroup>
 
   <ItemGroup>

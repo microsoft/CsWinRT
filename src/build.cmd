@@ -1,9 +1,9 @@
-@echo off
+rem @echo off
 if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTBuildNetSDKVersion=6.0.301
 set CsWinRTNet5SdkVersion=5.0.408
-set CsWinRTNet7SdkVersion=7.0.100-preview.7.22377.5
+set CsWinRTNet7SdkVersion=7.0.100-rc.1.22431.12
 set this_dir=%~dp0
 
 :dotnet
@@ -27,12 +27,12 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTBuildNet7SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
+-Version '%CsWinRTNet7SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTBuildNet7SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
+-Version '%CsWinRTNet7SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson

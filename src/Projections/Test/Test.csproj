@@ -5,6 +5,8 @@
     <Platforms>x64;x86</Platforms>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
+	  <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+
   </PropertyGroup>
   
   <ItemGroup>

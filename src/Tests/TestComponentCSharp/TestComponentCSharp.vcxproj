@@ -78,7 +78,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.h" />
     <ClInclude Include="AnotherAssembly.SetPropertyClass.h" />
     <ClInclude Include="CustomExperimentClass.h" />
     <ClInclude Include="CustomEquals.h" />
@@ -96,7 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
-    <ClCompile Include="ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.cpp" />
     <ClCompile Include="AnotherAssembly.SetPropertyClass.cpp" />
     <ClCompile Include="CustomExperimentClass.cpp" />
     <ClCompile Include="CustomEquals.cpp" />
