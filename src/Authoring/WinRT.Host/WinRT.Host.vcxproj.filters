@@ -46,8 +46,8 @@
     <None Include="NetHostDir.csproj">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="packages.config" />
     <None Include="Directory.Build.targets" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinRTHostErrorStrings.rc">
