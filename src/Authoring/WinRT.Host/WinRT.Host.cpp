@@ -280,8 +280,8 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
     auto probe = [&](const wchar_t* suffix)
     {
         auto probe_path = target_path + suffix;
-        auto end = probe_paths.end();
-        if (std::find(probe_paths.begin(), end, probe_path) == end)
+  
+        if (std::ranges::find(probe_paths, probe_path) ==  probe_paths.end())
         {
             if (std::filesystem::exists(probe_path))
             {
