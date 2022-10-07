@@ -21,19 +21,19 @@
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
     <ProjectReference Include="..\..\Projections\Test\Test.csproj" />
     <ProjectReference Include="..\OOPExe\OOPExe.csproj" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.console" Version="2.4.1">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.7" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.console" Version="2.4.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="XunitXml.TestLogger" Version="2.1.26" />
-    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="XunitXml.TestLogger" Version="3.0.70" />
+    <PackageReference Include="System.Memory" Version="4.5.5" />
     <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.1.635-beta">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
