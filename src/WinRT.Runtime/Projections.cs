@@ -17,10 +17,29 @@ using Windows.Foundation.Collections;
 
 namespace WinRT
 {
+
+    public interface IDelegateHelper
+    {
+        public Type DelegateType { get; }
+        public IntPtr GetFunctionPointer(object delegateInstance);
+      
+    }
+
+    public sealed class DelegateHelper<T> : IDelegateHelper
+    {
+        public Type DelegateType => typeof(T);
+
+        public IntPtr GetFunctionPointer(object delegateInstance)    
+        {
+            return System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate<T>((T)delegateInstance);
+        }
+    }
+
+
 #if EMBED
     internal
-#else 
-    public
+#else
+public
 #endif
     static class Projections
     {
@@ -108,6 +127,43 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(EventHandler), typeof(ABI.System.EventHandler));
 
             CustomTypeToAbiTypeNameMappings.Add(typeof(System.Type), "Windows.UI.Xaml.Interop.TypeName");
+        }
+
+        // New
+
+        private class DelegateTypeComparer : IEqualityComparer<Type[]>
+        {
+            public bool Equals(Type[] x, Type[] y)
+            {
+                return x.SequenceEqual(y);
+            }
+
+            public int GetHashCode(Type[] obj)
+            {
+                int hashCode = 0;
+                for (int idx = 0; idx < obj.Length; idx++)
+                {
+                    hashCode ^= obj[idx].GetHashCode();
+                }
+                return hashCode;
+            }
+        }
+
+        private static readonly ConcurrentDictionary<Type[], IDelegateHelper> abiDelegateCache = new(new DelegateTypeComparer()) {};
+
+        public static void RegisterAbiDelegate(Type[] delegateSignature, IDelegateHelper delegateType)
+        {
+            abiDelegateCache.TryAdd(delegateSignature, delegateType);
+        }
+
+        public static IDelegateHelper GetAbiDelegateHelper(params Type[] typeArgs)
+        {
+            if (abiDelegateCache.TryGetValue(typeArgs, out var delegateHelperType))
+            {
+                return delegateHelperType;
+            }
+
+            return null;
         }
 
         public static void RegisterCustomAbiTypeMapping(

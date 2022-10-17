@@ -28,11 +28,17 @@ namespace WinRT
 #endif
             Type type)
         {
+            Console.WriteLine("type = " + type.FullName);
             type = type.GetGuidType();
+            Console.WriteLine("type after GetGuidType = " + type.FullName);
             if (!type.IsGenericType)
             {
+                Console.WriteLine("type.GUID = " + type.GUID);
+
                 return type.GUID;
             }
+            Console.WriteLine("(Guid)type.GetField(\"PIID\").GetValue(null)= " + (Guid)type.GetField("PIID").GetValue(null));
+
             return (Guid)type.GetField("PIID").GetValue(null);
         }
 
@@ -151,6 +157,7 @@ namespace WinRT
         public static Guid CreateIID(Type type)
         {
             var sig = GetSignature(type);
+            Console.WriteLine("CreateIID, GetSignature, sig = " + sig);
             if (!type.IsGenericType)
             {
                 return new Guid(sig);

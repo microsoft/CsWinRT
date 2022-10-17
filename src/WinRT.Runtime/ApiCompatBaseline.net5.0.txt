@@ -10,4 +10,11 @@ CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.CompilerGener
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.CompilerGeneratedAttribute' exists on 'WinRT.SingleInterfaceOptimizedObject.WinRT.IWinRTObject.get_QueryInterfaceCache()' in the contract but not the implementation.
 MembersMustExist : Member 'public function System.Int32 (System.IntPtr, System.Guid, System.IntPtr) WinRT.Interop.IUnknownVftbl.QueryInterface.get()' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public void WinRT.Interop.IUnknownVftbl.QueryInterface.set(function System.Int32 (System.IntPtr, System.Guid, System.IntPtr))' does not exist in the implementation but it does exist in the contract.
-Total Issues: 11
+sSupport.ImplTypesDict' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Type WinRT.Projections.GetAbiDelegateHelper(System.Type[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterAbiDelegate(System.Type[], WinRT.IDelegateHelper)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.DelegateHelper<T>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.IDelegateHelper' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.IDelegateHelper WinRT.Projections.GetAbiDelegateHelper(System.Type[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterAbiDelegate(System.Type[], WinRT.IDelegateHelper)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 17
