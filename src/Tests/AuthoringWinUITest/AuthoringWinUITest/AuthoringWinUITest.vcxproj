@@ -52,7 +52,7 @@
   </ItemGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <_WinMDPlatform>$(Platform)</_WinMDPlatform>
     <_WinMDPlatform Condition="'$(Platform)' == 'Win32'">x86</_WinMDPlatform>

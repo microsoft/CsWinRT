@@ -121,8 +121,9 @@ steps:
 
       set cswinrt_echo=on
       set cswinrt_build_only=true
+      set CIBuildReason=CI
       rem PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
-      set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /p:CIBuildReason=CI
       build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
 # Build Tool for Embedded Sample
@@ -371,6 +372,22 @@ steps:
     Contents: |
       CsWinRTDiagnosticStrings.resx
     TargetFolder: $(Build.ArtifactStagingDirectory)\resx\WinRT.SourceGenerator
+
+# Stage CsWinMD
+- task: CopyFiles@2
+  displayName: Stage CsWinMD
+  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\$(BuildConfiguration)\net6.0
+    Contents: |
+      CsWinMD.dll
+      CsWinMD.exe
+      CsWinMD.pdb
+      CsWinMD.deps.json
+      CsWinMD.runtimeconfig.json
+      Microsoft.CodeAnalysis.CSharp.dll
+      Microsoft.CodeAnalysis.dll
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0\CsWinMD
 
 # Publish ResX
 - task: PublishBuildArtifacts@1
