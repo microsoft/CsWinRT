@@ -16,7 +16,7 @@ The [`build.cmd`](src/build.cmd) script takes care of all related configuration 
 
 - Open a Visual Studio Developer command prompt pointing at the repo.
 - Run `src\build.cmd`. 
-- To launch the project in Visual Studio, run `devenv cswinrt.sln` from the same command prompt. This will inherit the necessary environment.
+- To launch the project in Visual Studio, run `devenv src\cswinrt.sln` from the same command prompt. This will inherit the necessary environment.
 
 **Note:**  By default, the projects for various [Projections](src/Projections) only generate source files for Release configurations, where `cswinrt.exe` can execute in seconds.  To generate sources for the [Projections](src/Projections) projects on Debug configurations, set the project property `GenerateTestProjection` to `true`. This configuration permits a faster inner loop in Visual Studio. In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.
 
