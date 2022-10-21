@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Microsoft.System;
 
@@ -27,7 +28,36 @@ namespace Microsoft.System
 
         public override void Send(SendOrPostCallback d, object state)
         {
-            throw new NotSupportedException("Send not supported");
+            if (m_dispatcherQueue.HasThreadAccess)
+            {
+                d(state);
+            }
+            else
+            {
+                var m = new ManualResetEvent(false);
+                ExceptionDispatchInfo edi = null;
+
+                m_dispatcherQueue.TryEnqueue(() =>
+                {
+                    try
+                    {
+                        d(state);
+                    }
+                    catch (Exception ex)
+                    {
+                        edi = ExceptionDispatchInfo.Capture(ex);
+                    }
+                    finally
+                    {
+                        m.Set();
+                    }
+                });
+                m.WaitOne();
+
+#pragma warning disable CA1508 // Avoid dead conditional code
+                edi?.Throw();
+#pragma warning restore CA1508 // Avoid dead conditional code
+            }
         }
 
         public override SynchronizationContext CreateCopy()
