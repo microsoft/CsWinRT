@@ -24,12 +24,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
-    <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
+    <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
     <!--
-      Exclude compile time assets so we don't pick up the interop assembly from the WinUI Nuget
-      since we are building our own in the WinUIProjection project
+      Exclude compile time assets so we don't pick up the interop assembly from the WinAppSDK Nuget
+      since we are building our own in our WinAppSDK projection project
     -->
-    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.1.5" GeneratePathProperty="true">
       <ExcludeAssets>compile; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>

@@ -35,4 +35,7 @@
     <RemoveDir Directories="$(IntDir)" />
   </Target>
 
+  <!-- Overriding check in WinAppSDK for WinRT.Runtime version -->
+  <Target Name="WindowsAppSDKVerifyWinrtRuntimeVersion" />
+	
 </Project>
