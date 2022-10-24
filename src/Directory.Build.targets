@@ -34,8 +34,5 @@
   <Target Name="CleanIntermediateDirs" Condition="'$(CleanIntermediateDirs)'=='true'" AfterTargets="Build">
     <RemoveDir Directories="$(IntDir)" />
   </Target>
-
-  <!-- Overriding check in WinAppSDK for WinRT.Runtime version -->
-  <Target Name="WindowsAppSDKVerifyWinrtRuntimeVersion" />
 	
 </Project>
