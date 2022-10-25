@@ -62,6 +62,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <!--Remove winmd references from deps.json to prevent CLR failing unit test execution-->
       <ReferenceDependencyPaths Remove="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'"/>
     </ItemGroup>
+    <PropertyGroup>
+      <!--If CsWinRTIncludes is not specified, generate projections for all referenced winmd files-->
+      <CsWinRTIncludes Condition="'$(CsWinRTIncludes)' == ''">@(CsWinRTRemovedReferences->'%(FileName)')</CsWinRTIncludes>
+    </PropertyGroup>
   </Target>
 
   <Target Name="CsWinRTPrepareProjection" DependsOnTargets="$(CsWinRTPrepareProjectionDependsOn)" Outputs="$(CsWinRTGeneratedFilesDir)">
