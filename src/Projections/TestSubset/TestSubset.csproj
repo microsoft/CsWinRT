@@ -14,19 +14,19 @@
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <ProjectReference Include="..\WinUI\WinUI.csproj" />
+    <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />
     <ProjectReference Include="..\Test\Test.csproj" />
     <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
   <PropertyGroup>
     <CsWinRTIncludes>TestComponentCSharp.AnotherAssembly;</CsWinRTIncludes>
-    <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-    <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
+    <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+    <PkgMicrosoft_WindowsAppSDK>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '1.1.5'))</PkgMicrosoft_WindowsAppSDK>
   </PropertyGroup>
   <ItemGroup>
-    <!--Explicitly reference WinUI winmds from TFM uap10.0-->
-    <CsWinRTInputs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
+    <!--Explicitly reference WinAppSDK winmds from TFM uap10.0-->
+    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK)/**/*.winmd" />
   </ItemGroup>
 
 </Project>
