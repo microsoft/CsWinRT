@@ -1,7 +1,7 @@
 
 namespace Microsoft.UI.Xaml
 {
-    using Windows.Foundation;
+    using global::Windows.Foundation;
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.CornerRadius))]

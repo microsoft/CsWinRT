@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Net5App": {
+    "Net6App": {
       "commandName": "Project",
       "nativeDebugging": true
     }
