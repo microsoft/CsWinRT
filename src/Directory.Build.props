@@ -9,6 +9,7 @@
     <CsWinRTVerbosity>high</CsWinRTVerbosity>
     <!--Note: unlisted at https://www.nuget.org/packages/Microsoft.WinUI/-->
     <MicrosoftWinUIVersion>3.0.0-preview4.210210.4</MicrosoftWinUIVersion>
+    <MicrosoftWinAppSDKVersion>1.1.5</MicrosoftWinAppSDKVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <LangVersion>preview</LangVersion>

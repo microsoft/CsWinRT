@@ -29,7 +29,7 @@
       Exclude compile time assets so we don't pick up the interop assembly from the WinAppSDK Nuget
       since we are building our own in our WinAppSDK projection project
     -->
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.1.5" GeneratePathProperty="true">
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWinAppSDKVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
