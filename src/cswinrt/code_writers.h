@@ -5257,7 +5257,7 @@ try
 }
 catch (Exception __exception__)
 {
-global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+global::WinRT.ExceptionHelpers.ReportUnhandledError(__exception__);
 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
 }
 return 0;)",
@@ -5461,6 +5461,7 @@ return 0;
 }
 catch (Exception __ex)
 {
+global::WinRT.ExceptionHelpers.ReportUnhandledError(__ex);
 return __ex.HResult;
 }
 })",
@@ -5492,6 +5493,7 @@ return 0;
 }
 catch (Exception __ex)
 {
+global::WinRT.ExceptionHelpers.ReportUnhandledError(__ex);
 return __ex.HResult;
 }
 })",
