@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- 
+    Used to test generating the older WinUI projection, but not used as part of tests.
+    The WinAppSDK projection is used for tests instead.
+  -->
   <PropertyGroup>
     <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>

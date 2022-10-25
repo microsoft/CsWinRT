@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <ApplicationManifest>WinUIDesktopSample.exe.manifest</ApplicationManifest>
     <!--
@@ -13,6 +13,7 @@
     <Platforms>x86;x64</Platforms>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,12 +25,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
-    <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
+    <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
     <!--
-      Exclude compile time assets so we don't pick up the interop assembly from the WinUI Nuget
-      since we are building our own in the WinUIProjection project
+      Exclude compile time assets so we don't pick up the interop assembly from the WinAppSDK Nuget
+      since we are building our own in our WinAppSDK projection project
     -->
-    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWinAppSDKVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
