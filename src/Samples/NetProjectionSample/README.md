@@ -10,7 +10,7 @@ This sample demonstrates how to do the following:
 
 * [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) with the Universal Windows Platform development workload installed. In **Installation Details** > **Universal Windows Platform development**, check the **C++ (v14x) Universal Windows Platform tools** option.
 * [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
-* nuget.exe 6.3.0 or later (for command line MSBuild)
+* nuget.exe 6.3.1 or later (for command line MSBuild)
 
 **Note**: This sample uses .NET 6 and therefore requires Visual Studio 2022 to build and run. If you prefer, you can use Visual Studio 2019 and modify the sample to target [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0). To do this, you will need to modify the `TargetFramework` and the *nuspec* file in the `SimpleMathProjection` project to target `net5.0-windows10.0.19041.0`.
 
@@ -19,7 +19,7 @@ This sample demonstrates how to do the following:
 For building in Visual Studio:
 
 1. Open *CppWinRTComponentProjectionSample.sln* in Visual Studio. Ensure that *SimpleMathProjection* is set as the startup project, and set the Platform and Configuration to x64 and Release. Right click on the solution and build. This will do the following:
-    - Build *SimpleMathComponent*: this will generate *SimpleMathComponent.winmd* and *SimpleMathComponent.dll* 
+    - Build *SimpleMathComponent*: this will generate *SimpleMathComponent.winmd* and *SimpleMathComponent.dll*
     - Generate the projection interop assembly for the component using C#/WinRT, *SimpleMathProjection.dll*
     - Generate a NuGet package for the component. To ensure the solution has built successfully, navigate to the *SimpleMathProjection/nuget* folder in your file explorer. You should see the generated NuGet package (*SimpleMathComponent.0.1.0-prerelease.nupkg*). which can be referenced by C# .NET app consumers.
 

@@ -1,29 +1,29 @@
 # C#/WinRT Contributor's Guide
 
-Below is our guidance for how to build the repo, report issues, propose new features, and submit contributions via Pull Requests (PRs). 
+Below is our guidance for how to build the repo, report issues, propose new features, and submit contributions via Pull Requests (PRs).
 
 ## Building the C#/WinRT repo
 
 C#/WinRT currently requires the following packages, or newer, to build:
 
-- [Visual Studio 17.0](https://visualstudio.microsoft.com/downloads/) 
-- [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0) 
+- [Visual Studio 17.0](https://visualstudio.microsoft.com/downloads/)
+- [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
 - [.NET Core 3.1 SDK](https://dotnet.microsoft.com/download/dotnet-core/3.1)
-- [nuget.exe 6.3.0](https://www.nuget.org/downloads)
+- [nuget.exe 6.3.1](https://www.nuget.org/downloads)
 - Microsoft.WinUI 3.0.0-preview4.210210.4
 - Microsoft.WindowsAppSDK 1.1.5
 
-The [`build.cmd`](src/build.cmd) script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. It installs prerequisites such as `nuget.exe` and the .NET 6 SDK, configures the environment to use .NET 6 (creating a `global.json` if necessary), builds the compiler, and builds and executes the unit tests. To build C#/WinRT, follow these steps: 
+The [`build.cmd`](src/build.cmd) script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. It installs prerequisites such as `nuget.exe` and the .NET 6 SDK, configures the environment to use .NET 6 (creating a `global.json` if necessary), builds the compiler, and builds and executes the unit tests. To build C#/WinRT, follow these steps:
 
 - Open a Visual Studio Developer command prompt pointing at the repo.
-- Run `src\build.cmd`. 
+- Run `src\build.cmd`.
 - To launch the project in Visual Studio, run `devenv src\cswinrt.sln` from the same command prompt. This will inherit the necessary environment.
 
 **Note:**  By default, the projects for various [Projections](src/Projections) only generate source files for Release configurations, where `cswinrt.exe` can execute in seconds.  To generate sources for the [Projections](src/Projections) projects on Debug configurations, set the project property `GenerateTestProjection` to `true`. This configuration permits a faster inner loop in Visual Studio. In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.
 
 ### Customizing `build.cmd` options
 
-There are several settings that can be set with `build.cmd` that you might not know about without studying the code. The build settings and defaults are as follows. 
+There are several settings that can be set with `build.cmd` that you might not know about without studying the code. The build settings and defaults are as follows.
 
 ```cmd
 build.cmd [Platform] [Configuration] [VersionNumber] [VersionString] [AssemblyVersion]
@@ -32,7 +32,7 @@ build.cmd [Platform] [Configuration] [VersionNumber] [VersionString] [AssemblyVe
 | Parameter | Value(s) |
 |-|-|
 | Platform | *x64 \| x86 | Default is `x64`
-| Configuration | *Release \| Debug | 
+| Configuration | *Release \| Debug |
 | VersionNumber | *0.0.0.0 |
 | VersionString | *0.0.0-private.0 |
 | AssemblyVersion | *0.0.0.0 |
@@ -52,7 +52,7 @@ build.cmd [Platform] [Configuration] [VersionNumber] [VersionString] [AssemblyVe
     ```cmd
     build.cmd x64 Debug 2.0.0.0 2.0.0-mycswinrt.0 2.0.0.0
     ```
-    This is useful if you want to quickly confirm that your private .nupkg is being used by checking the `WinRT.Runtime` assembly version.  
+    This is useful if you want to quickly confirm that your private .nupkg is being used by checking the `WinRT.Runtime` assembly version.
 
 ## Before you start, file an issue
 
@@ -117,4 +117,4 @@ Once your code has been reviewed and approved by the requisite number of team me
 
 ## Thank you
 
-Thank you in advance for your contribution! 
+Thank you in advance for your contribution!

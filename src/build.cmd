@@ -100,17 +100,17 @@ echo   ^</Target^> >> %prerelease_targets%
 echo ^</Project^> >> %prerelease_targets%
 
 goto :skip_build_tools
-rem VS 16.X BuildTools support (when a prerelease VS is required, until it is deployed to Azure Devops agents) 
+rem VS 16.X BuildTools support (when a prerelease VS is required, until it is deployed to Azure Devops agents)
 msbuild -ver | findstr 16.X >nul
 if ErrorLevel 1 (
-  echo Using VS Build Tools 16.X 
+  echo Using VS Build Tools 16.X
   if %cswinrt_platform%==x86 (
     set msbuild_path="%this_dir%.buildtools\MSBuild\Current\Bin\\"
   ) else (
     set msbuild_path="%this_dir%.buildtools\MSBuild\Current\Bin\amd64\\"
   )
   if not exist !msbuild_path! (
-    if not exist .buildtools md .buildtools 
+    if not exist .buildtools md .buildtools
     powershell -NoProfile -ExecutionPolicy unrestricted -File .\get_buildtools.ps1
   )
   set nuget_params=-MSBuildPath !msbuild_path!
@@ -125,7 +125,7 @@ set nuget_dir=%this_dir%.nuget
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
-rem When a preview nuget is required, update -self doesn't work, so manually update 
+rem When a preview nuget is required, update -self doesn't work, so manually update
 if exist %nuget_dir%\nuget.exe (
   %nuget_dir%\nuget.exe | findstr 5.9 >nul
   if ErrorLevel 1 (
@@ -134,7 +134,7 @@ if exist %nuget_dir%\nuget.exe (
   )
 )
 if not exist %nuget_dir% md %nuget_dir%
-if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v6.3.0/nuget.exe -OutFile %nuget_dir%\nuget.exe"
+if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v6.3.1/nuget.exe -OutFile %nuget_dir%\nuget.exe"
 %nuget_dir%\nuget update -self
 rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
 call %this_dir%get_testwinrt.cmd
@@ -146,7 +146,7 @@ call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\Object
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln 
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed
@@ -196,7 +196,7 @@ if not exist %dotnet_exe% (
 )
 
 :embeddedtests
-:: build the embedded sample and run the unittest 
+:: build the embedded sample and run the unittest
 call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0embedunittest_%cswinrt_version_string%.xml %this_dir%Samples/TestEmbedded/UnitTestEmbedded/UnitTestEmbedded.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration% -- RunConfiguration.TreatNoTestsAsError=true
 if ErrorLevel 1 (
   echo.
@@ -208,7 +208,7 @@ if ErrorLevel 1 (
 rem Running Object Lifetime Unit Tests
 echo Running object lifetime tests for %cswinrt_platform% %cswinrt_configuration%
 if '%NUGET_PACKAGES%'=='' set NUGET_PACKAGES=%USERPROFILE%\.nuget\packages
-call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net7.0-windows10.0.19041.0\win10-%cswinrt_platform%\ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%NUGET_PACKAGES%\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
+call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net7.0-windows10.0.19041.0\win10-%cswinrt_platform%\ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%NUGET_PACKAGES%\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx
 if ErrorLevel 1 (
   echo.
   echo ERROR: Lifetime test failed, skipping NuGet pack
@@ -231,17 +231,17 @@ if ErrorLevel 1 (
 :hosttest
 rem Run WinRT.Host tests
 echo Running cswinrt host tests for %cswinrt_platform% %cswinrt_configuration%
-call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml 
+call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml
 if ErrorLevel 1 (
   echo.
   echo ERROR: Host test failed, skipping NuGet pack
   exit /b !ErrorLevel!
 )
- 
+
 :authortest
 rem Run Authoring tests
 echo Running cswinrt authoring tests for %cswinrt_platform% %cswinrt_configuration%
-call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml 
+call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml
 if ErrorLevel 1 (
   echo.
   echo ERROR: Authoring test failed, skipping NuGet pack
