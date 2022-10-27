@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
+    <TargetFrameworks>$(LibBuildTFMs);net7.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
   </PropertyGroup>
   
   <ItemGroup>

@@ -55,6 +55,7 @@ namespace UnitTest
 
 
         // Test a fix for a bug in Mono.Cecil that was affecting the IIDOptimizer when it encountered long class names 
+        /*
         [Fact]
         public void TestLongClassNameEventSource()
         {
@@ -66,6 +67,7 @@ namespace UnitTest
             long_class_name.InvokeEvent();
             Assert.True(flag);
         }
+        */
 
         [Fact]
         public void TestEventArgsVector()

@@ -2,7 +2,7 @@
 if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTBuildNetSDKVersion=6.0.301
-set CsWinRTBuildNet7SDKVersion=7.0.100-preview.7.22377.5
+set CsWinRTNet7SdkVersion=7.0.100-rc.2.22477.23
 set CsWinRTNet5SdkVersion=5.0.408
 set this_dir=%~dp0
 
@@ -28,13 +28,12 @@ rem Install .NET 7 used to build projection
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTBuildNet7SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
+-Version '%CsWinRTNet7SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
-rem do we need a special, other link for x86 version of this net7 version? reason being we use a preview version?
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTBuildNet7SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
+-Version '%CsWinRTNet7SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson
@@ -42,7 +41,7 @@ rem Create global.json for current .NET SDK, and with allowPrerelease=true
 set global_json=%this_dir%global.json
 echo { > %global_json%
 echo   "sdk": { >> %global_json%
-echo     "version": "%CsWinRTBuildNet7SDKVersion%", >> %global_json%
+echo     "version": "%CsWinRTNet7SdkVersion%", >> %global_json%
 echo     "allowPrerelease": true >> %global_json%
 echo   } >> %global_json%
 echo } >> %global_json%
