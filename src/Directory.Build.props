@@ -9,6 +9,7 @@
     <CsWinRTVerbosity>high</CsWinRTVerbosity>
     <!--Note: unlisted at https://www.nuget.org/packages/Microsoft.WinUI/-->
     <MicrosoftWinUIVersion>3.0.0-preview4.210210.4</MicrosoftWinUIVersion>
+    <MicrosoftWinAppSDKVersion>1.1.5</MicrosoftWinAppSDKVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <LangVersion>preview</LangVersion>
@@ -23,15 +24,16 @@
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
     <IsTargetFrameworkNet5OrGreater>false</IsTargetFrameworkNet5OrGreater>
     <IsTargetFrameworkNet5OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">true</IsTargetFrameworkNet5OrGreater>
-    <AppBuildTFMs>netcoreapp3.1;net5.0;net6.0</AppBuildTFMs>
-    <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netcoreapp3.1;net5.0;net6.0;net7.0</AppBuildTFMs>
-    <LibBuildTFMs>netstandard2.0;net5.0;net6.0</LibBuildTFMs>
-    <LibBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netstandard2.0;net5.0;net6.0;net7.0</LibBuildTFMs>
-    <TestsBuildTFMs>net5.0-windows10.0.19041.0;net6.0-windows10.0.19041.0;net7.0-windows10.0.19041.0</TestsBuildTFMs>
-    <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net5.0-windows10.0.19041.0;net6.0-windows10.0.19041.0;net7.0-windows10.0.19041.0</TestsBuildTFMs>
+    <AppBuildTFMs>netcoreapp3.1;net6.0</AppBuildTFMs>
+    <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netcoreapp3.1;net6.0;net7.0</AppBuildTFMs>
+    <LibBuildTFMs>netstandard2.0;net6.0</LibBuildTFMs>
+    <LibBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netstandard2.0;net6.0;net7.0</LibBuildTFMs>
+    <TestsBuildTFMs>net6.0-windows10.0.19041.0;net7.0-windows10.0.19041.0</TestsBuildTFMs>
+    <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net6.0-windows10.0.19041.0;net7.0-windows10.0.19041.0</TestsBuildTFMs>
+    <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' != 'net5.0'">
+  <PropertyGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">
     <DefineConstants>$(DefineConstants);MANUAL_IUNKNOWN</DefineConstants>
   </PropertyGroup>
 

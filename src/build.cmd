@@ -3,7 +3,6 @@ if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTBuildNetSDKVersion=6.0.301
 set CsWinRTBuildNet7SDKVersion=7.0.100-preview.7.22377.5
-set CsWinRTNet5SdkVersion=5.0.408
 set this_dir=%~dp0
 
 :dotnet
@@ -95,8 +94,8 @@ set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.t
 rem Create default %prerelease_targets%
 echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
 echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
-echo     Condition="'$(NetCoreSdkVersion)' ^!= '%CsWinRTNet5SdkVersion%' and '$(Net5SdkVersion)' ^!= '%CsWinRTNet5SdkVersion%'"^> >> %prerelease_targets%
-echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTNet5SdkVersion%. Other prereleases may be incompatible due to breaking changes." /^> >> %prerelease_targets%
+echo     Condition="'$(NetCoreSdkVersion)' ^!= '%CsWinRTBuildNetSDKVersion%' and '$(Net5SdkVersion)' ^!= '%CsWinRTBuildNetSDKVersion%'"^> >> %prerelease_targets%
+echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTBuildNetSDKVersion%. Other prereleases may be incompatible due to breaking changes." /^> >> %prerelease_targets%
 echo   ^</Target^> >> %prerelease_targets%
 echo ^</Project^> >> %prerelease_targets%
 
@@ -282,7 +281,7 @@ set cswinmd_outpath=%this_dir%Authoring\cswinmd\bin\%cswinrt_configuration%\net6
 rem Now call pack
 echo Creating nuget package
 call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;netstandard2_runtime=%netstandard2_runtime%;net6_runtime=%net6_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;guid_patch=%guid_patch% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
-call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinMD.nuspec -Properties cswinmd_outpath=%cswinmd_outpath%;source_generator=%source_generator%cswinmd_nuget_version=%cswinrt_version_string%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinMD.nuspec -Properties cswinmd_outpath=%cswinmd_outpath%;source_generator=%source_generator%;cswinmd_nuget_version=%cswinrt_version_string%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
 
 :exec

@@ -4,7 +4,7 @@ using Beta;
 using Gamma;
 using Windows.Media;
 
-namespace Net5App.Bootstrap
+namespace Net6App.Bootstrap
 {
     class Program
     {
