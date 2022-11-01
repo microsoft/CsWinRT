@@ -120,7 +120,7 @@ namespace WinRT
 
             if (useGlobalErrorState)
             {
-                var restrictedErrorInfoRef = BorrowRestrictedErrorInfo();
+                using var restrictedErrorInfoRef = BorrowRestrictedErrorInfo();
                 if (restrictedErrorInfoRef != null)
                 {
                     restrictedErrorInfoToSave = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>();
