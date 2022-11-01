@@ -11,12 +11,13 @@ C#/WinRT currently requires the following packages, or newer, to build:
 - [.NET Core 3.1 SDK](https://dotnet.microsoft.com/download/dotnet-core/3.1)
 - [nuget.exe 5.8.0-preview.3](https://www.nuget.org/downloads)
 - Microsoft.WinUI 3.0.0-preview4.210210.4
+- Microsoft.WindowsAppSDK 1.1.5
 
 The [`build.cmd`](src/build.cmd) script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. It installs prerequisites such as `nuget.exe` and the .NET 6 SDK, configures the environment to use .NET 6 (creating a `global.json` if necessary), builds the compiler, and builds and executes the unit tests. To build C#/WinRT, follow these steps: 
 
 - Open a Visual Studio Developer command prompt pointing at the repo.
 - Run `src\build.cmd`. 
-- To launch the project in Visual Studio, run `devenv cswinrt.sln` from the same command prompt. This will inherit the necessary environment.
+- To launch the project in Visual Studio, run `devenv src\cswinrt.sln` from the same command prompt. This will inherit the necessary environment.
 
 **Note:**  By default, the projects for various [Projections](src/Projections) only generate source files for Release configurations, where `cswinrt.exe` can execute in seconds.  To generate sources for the [Projections](src/Projections) projects on Debug configurations, set the project property `GenerateTestProjection` to `true`. This configuration permits a faster inner loop in Visual Studio. In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.
 

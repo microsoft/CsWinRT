@@ -18,7 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Projections\TestSubset\TestSubset.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
-    <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
+    <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
     <ProjectReference Include="..\..\Projections\Test\Test.csproj" />
     <ProjectReference Include="..\OOPExe\OOPExe.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />

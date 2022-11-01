@@ -1,125 +1,15 @@
 <!--
   Copyright (c) Microsoft Corporation. Licensed under the MIT License
 -->
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CSWinRTInAppVerifyConfiguration">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <PropertyGroup Condition="'$(ProjectReunionFrameworkPackage)'=='false'">
-        <!--Microsoft.Common.CurrentVersion.targets initializes many *DependsOn properties, 
-            so GetCopyToOutputDirectoryItemsDependsOn must be assigned here.-->
-        <GetCopyToOutputDirectoryItemsDependsOn>
-            $(GetCopyToOutputDirectoryItemsDependsOn);
-            AddMicrosoftCSWinRTPayloadFiles
-        </GetCopyToOutputDirectoryItemsDependsOn>
-    </PropertyGroup>
-
-    <Target Name="CSWinRTInAppVerifyConfiguration" Condition="'$(ProjectReunionFrameworkPackage)'=='false'">
-        <Error Condition="'$(Platform)'=='AnyCPU' OR '$(Platform)'==''" Text="The platform '$(Platform)' is not supported for InApp mode."/>
-    </Target>
-
-    <Target Name="ExtractMicrosoftCSWinRTAppxFiles"
-        Condition="'$(ProjectReunionFrameworkPackage)'=='false'"
-        DependsOnTargets="ResolveReferences"
-        BeforeTargets="_ComputeInputPriFiles">
-        <Error Condition="'$(PkgMicrosoft_ProjectReunion)'==''" Text="PkgMicrosoft_ProjectReunion is not defined. Please ensure that you've run a nuget restore and that GeneratePathProperty='true' is set on your Microsoft.ProjectReunion PackageReference."/>
-        <PropertyGroup>
-            <NativePlatform Condition="'$(Platform)' == 'Win32'">x86</NativePlatform>
-            <NativePlatform Condition="'$(Platform)' != 'Win32'">$(Platform)</NativePlatform>
-            <MicrosoftCSWinRTAppxContent>$([MSBuild]::NormalizeDirectory('$(ProjectDir)','$(OutDir)'))AppxContent</MicrosoftCSWinRTAppxContent>
-        </PropertyGroup>
-        <ItemGroup>
-            <MicrosoftCSWinRTAppx Include="$([MSBuild]::NormalizeDirectory('$(PkgMicrosoft_ProjectReunion)','tools\AppX\win10-$(NativePlatform)'))Microsoft.ProjectReunion.*.appx"/>
-        </ItemGroup>
-        <Unzip
-            SourceFiles="@(MicrosoftCSWinRTAppx)"
-            DestinationFolder="$(MicrosoftCSWinRTAppxContent)"
-            SkipUnchangedFiles="false"
-            OverwriteReadOnlyFiles="true" />
-        <!--Reverse the rename of Microsoft.UI.Xaml.Controls.pri to resources.pri to enable use of both from the app -->
-        <Move SourceFiles="$(MicrosoftCSWinRTAppxContent)\resources.pri" DestinationFiles="$(MicrosoftCSWinRTAppxContent)\Microsoft.UI.Xaml.Controls.pri"/>
-        <!--Added to the list of .pri files to ensure that it's merged-->
-        <ItemGroup>        
-            <_PriFile Include="$(MicrosoftCSWinRTAppxContent)\Microsoft.UI.Xaml.Controls.pri"/>
-        </ItemGroup>
-    </Target>
-
-    <Target Name="AddMicrosoftCSWinRTPayloadFiles"
-        Condition="'$(ProjectReunionFrameworkPackage)'=='false'"
-        DependsOnTargets="ExtractMicrosoftCSWinRTAppxFiles" >
-        <ItemGroup>
-            <MicrosoftCSWinRTFiles Include="$(MicrosoftCSWinRTAppxContent)\*.dll"/>
-            <MicrosoftCSWinRTFiles Include="$(MicrosoftCSWinRTAppxContent)\*.pri"/>
-            <MicrosoftCSWinRTFiles Include="$(MicrosoftCSWinRTAppxContent)\*-*\*"/>
-            <AllItemsFullPathWithTargetPath Include="@(MicrosoftCSWinRTFiles)">
-                <TargetPath>$([System.String]::Copy('%(Identity)').Replace('$(MicrosoftCSWinRTAppxContent)\', ''))</TargetPath>
-            </AllItemsFullPathWithTargetPath>
-            <_UnfilteredAppxPackagePayload Include ="@(MicrosoftCSWinRTFiles)">            
-                <TargetPath>$([System.String]::Copy('%(Identity)').Replace('$(MicrosoftCSWinRTAppxContent)\', ''))</TargetPath>
-            </_UnfilteredAppxPackagePayload>           
-        </ItemGroup>
-    </Target>
-
+    <!-- We build our own version of the WinUI projection for test purposes. -->
     <Target Name="RemoveDuplicateWinUIDll"
-            BeforeTargets="_ComputeAppxPackagePayload"
-            DependsOnTargets="_CalculateAppxBundleProperties" >
-            <ItemGroup>
-                <PackagingOutputs Remove="$([MSBuild]::NormalizeDirectory('$(PkgMicrosoft_ProjectReunion_WinUI)'))\lib\*\Microsoft.WinUI.dll" />
-            </ItemGroup>
-    </Target>
-
-    <Target Name="AddMicrosoftCSWinRTAppxManifestElements"
-        Condition="'$(ProjectReunionFrameworkPackage)'=='false'"
-        BeforeTargets="_CreateFinalAppxManifestItem"
-        AfterTargets="_GenerateCurrentProjectAppxManifest"
-        DependsOnTargets="ExtractMicrosoftCSWinRTAppxFiles"
-        Inputs="$(FinalAppxManifestName)"
-        Outputs="$(FinalAppxManifestName).inapp.incremental" >
-
-        <!--Copy framework package appx manifest activatable class elements-->
-        <XmlPeek XmlInputPath="$(MicrosoftCSWinRTAppxContent)\appxmanifest.xml"
-            Query="/ns:Package/ns:Extensions/ns:Extension"
-            Namespaces="&lt;Namespace Prefix='ns' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;">
-            <Output TaskParameter="Result" ItemName="MicrosoftCSWinRTExtensions" />
-        </XmlPeek>
-        <XmlPeek XmlInputPath="$(FinalAppxManifestName)"
-            Query="/ns:Package/ns:Extensions/ns:Extension"
-            Namespaces="&lt;Namespace Prefix='ns' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;">
-            <Output TaskParameter="Result" ItemName="AppExtensions" />
-        </XmlPeek>
-        <!--XmlPoke can only replace a single element. If the app has an Extensions element, append to it.
-        If the app has no Extensions element, create one and append that to the Package's other element.-->
-        <PropertyGroup Condition="'@(AppExtensions)'!=''">
-            <XmlPokeQuery>/ns:Package/ns:Extensions</XmlPokeQuery>
-            <XmlPokeContent>
-                @(AppExtensions->'%(Identity)','&#x0d;&#x0a;')
-                @(MicrosoftCSWinRTExtensions->'%(Identity)','&#x0d;&#x0a;')
-            </XmlPokeContent>
-        </PropertyGroup>
-        <XmlPeek Condition="'@(AppExtensions)'==''"
-            XmlInputPath="$(FinalAppxManifestName)"
-            Query="/ns:Package/*"
-            Namespaces="&lt;Namespace Prefix='ns' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;">
-            <Output TaskParameter="Result" ItemName="AppPackageElements" />
-        </XmlPeek>
-        <PropertyGroup Condition="'@(AppExtensions)'==''">
-            <XmlPokeQuery>/ns:Package</XmlPokeQuery>
-            <XmlPokeContent>
-                @(AppPackageElements->'%(Identity)','&#x0d;&#x0a;')
-                &lt;Extensions&gt;
-                    @(MicrosoftCSWinRTExtensions->'%(Identity)','&#x0d;&#x0a;')
-                &lt;/Extensions&gt;
-            </XmlPokeContent>
-        </PropertyGroup>
-        <!--Append Reunion extensions to existing app extensions, 
-        or append new Extensions element to app's existing package elements-->
-        <XmlPoke XmlInputPath="$(FinalAppxManifestName)"
-            Query="$(XmlPokeQuery)"
-            Namespaces="&lt;Namespace Prefix='ns' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;"
-            Value="$(XmlPokeContent)" />
-
-        <Touch
-           Files="$(FinalAppxManifestName).inapp.incremental"
-           AlwaysCreate="true"
-         />
+        BeforeTargets="_ComputeAppxPackagePayload"
+        DependsOnTargets="_CalculateAppxBundleProperties" >
+        <ItemGroup>
+            <PackagingOutputs Remove="$([MSBuild]::NormalizeDirectory('$(PkgMicrosoft_WindowsAppSDK)'))\lib\*\Microsoft.WinUI.dll" />
+        </ItemGroup>
     </Target>
 
 </Project>
