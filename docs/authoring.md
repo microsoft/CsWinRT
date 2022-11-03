@@ -106,6 +106,8 @@ Consuming a C#/WinRT component from a C++/WinRT desktop application is supported
 - **Package Reference**: In Visual Studio, right-click on the project in Solution Explorer and click **Manage NuGet packages** to search for and install the component package.
 
 - **Project Reference**: In Visual Studio, right-click on the project in Solution Explorer and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node. 
+  - Note: The authoring project cannot target AnyCPU due to limitations between MSBuild and C++ Projects.
+
   - Note: If your authored component is built with C#/WinRT version 1.3.3 or earlier, you also need a file reference to the `*.winmd` generated in the authored component's output directory. To add a file reference, right-click on the project in Solution Explorer and click **Add** -> **Reference**. Select the file from the **Browse** node. 
 
 #### Manifest Class Registration
