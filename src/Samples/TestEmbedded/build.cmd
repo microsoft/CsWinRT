@@ -22,7 +22,7 @@ if exist %nuget_dir%\nuget.exe (
   )
 )
 if not exist %nuget_dir% md %nuget_dir%
-if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v6.3.0/nuget.exe -OutFile %nuget_dir%\nuget.exe"
+if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v6.3.1/nuget.exe -OutFile %nuget_dir%\nuget.exe"
 %nuget_dir%\nuget update -self
 call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%TestEmbedded.sln
 

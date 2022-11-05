@@ -154,6 +154,7 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
+    <!-- <Error Condition="!Exists('..\packages\CsWinMD.0.0.2-prerelease\build\Microsoft.Windows.CsWinMD.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CsWinMD.0.0.2-prerelease\build\Microsoft.Windows.CsWinMD.targets'))" /> -->
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.221101.3\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.221101.3\build\native\Microsoft.Windows.CppWinRT.props'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.221101.3\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.221101.3\build\native\Microsoft.Windows.CppWinRT.targets'))" />
   </Target>
