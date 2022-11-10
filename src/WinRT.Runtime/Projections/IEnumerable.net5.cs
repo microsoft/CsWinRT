@@ -119,6 +119,8 @@ namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+    using global::System.Diagnostics.CodeAnalysis;
+
 
 #if EMBED
     internal
@@ -127,6 +129,22 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumerableMethods<T>
     {
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                            DynamicallyAccessedMemberTypes.NonPublicMethods |
+                            DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                            DynamicallyAccessedMemberTypes.PublicFields)]
+        internal static Type implType = typeof(IEnumerableImpl<T>);
+
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        public static Type InitImplType()
+        {
+            ComWrappersSupport.ImplTypesDict.Add(typeof(IEnumerable<>), implType);
+            return implType;
+        }
+
         public static global::System.Collections.Generic.IEnumerator<T> GetEnumerator(IObjectReference obj)
         {
             var first = ABI.Windows.Foundation.Collections.IIterableMethods<T>.First(obj);
@@ -196,7 +214,7 @@ namespace ABI.System.Collections.Generic
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    _first_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache = new IEnumerable_Delegates.First_0(Do_Abi_First_0)),
+                    _first_0 = (void*)Marshal.GetFunctionPointerForDelegate<IEnumerable_Delegates.First_0>(new IEnumerable_Delegates.First_0(Do_Abi_First_0)),
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
@@ -205,6 +223,7 @@ namespace ABI.System.Collections.Generic
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
+            //here
             private static unsafe int Do_Abi_First_0(IntPtr thisPtr, out IntPtr __return_value__)
             {
                 __return_value__ = default;
@@ -489,6 +508,34 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)]
+        internal static Type delegateHelperType = typeof(AbiDelegateHelper<T>);
+
+        internal static class AbiDelegateHelper<TAbi>
+        {
+            private static unsafe int Do_Abi_get_Current_0(void* thisPtr, out TAbi __return_value__)
+            {
+                T ____return_value__ = default;
+
+                __return_value__ = default;
+
+                try
+                {
+                    ____return_value__ = Vftbl.FindAdapter(new IntPtr(thisPtr))._Current;
+                    __return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+
+        }
+
+
         [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
         public unsafe struct Vftbl
         {
@@ -500,7 +547,8 @@ namespace ABI.System.Collections.Generic
             public IEnumerator_Delegates.GetMany_3 GetMany_3;
 
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerator<T>));
-            private static readonly Type get_Current_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly IDelegateHelper get_Current_0_Type_HelperType = Projections.GetAbiDelegateHelper(new Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type get_Current_0_Type = get_Current_0_Type_HelperType.DelegateType;
 
             internal unsafe Vftbl(IntPtr thisPtr) : this()
             {
@@ -522,14 +570,14 @@ namespace ABI.System.Collections.Generic
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    get_Current_0 = global::System.Delegate.CreateDelegate(get_Current_0_Type, typeof(Vftbl).GetMethod("Do_Abi_get_Current_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    _get_HasCurrent_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache = new _get_PropertyAsBoolean(Do_Abi_get_HasCurrent_1)),
+                    get_Current_0 = global::System.Delegate.CreateDelegate(get_Current_0_Type, typeof(AbiDelegateHelper<>).MakeGenericType(new Type[] { typeof(T), Marshaler<T>.AbiType }).GetMethod("Do_Abi_get_Current_0", BindingFlags.NonPublic | BindingFlags.Static)),
+                    _get_HasCurrent_1 = (void*)Marshal.GetFunctionPointerForDelegate<_get_PropertyAsBoolean>(new _get_PropertyAsBoolean(Do_Abi_get_HasCurrent_1)),
                     MoveNext_2 = Do_Abi_MoveNext_2,
                     GetMany_3 = Do_Abi_GetMany_3
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
                 Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
-                nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Current_0);
+                nativeVftbl[6] = get_Current_0_Type_HelperType.GetFunctionPointer(AbiToProjectionVftable.get_Current_0);
                 nativeVftbl[7] = (IntPtr)AbiToProjectionVftable.Get_HasCurrent_1;
                 nativeVftbl[8] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.MoveNext_2);
                 nativeVftbl[9] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.GetMany_3);
@@ -540,7 +588,7 @@ namespace ABI.System.Collections.Generic
             private static ConditionalWeakTable<global::System.Collections.Generic.IEnumerator<T>, ToAbiHelper> _adapterTable =
                 new ConditionalWeakTable<global::System.Collections.Generic.IEnumerator<T>, ToAbiHelper>();
 
-            private static ToAbiHelper FindAdapter(IntPtr thisPtr)
+            internal static ToAbiHelper FindAdapter(IntPtr thisPtr)
             {
                 var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Generic.IEnumerator<T>>(thisPtr);
                 return _adapterTable.GetValue(__this, (enumerator) => new ToAbiHelper(enumerator));
@@ -586,24 +634,7 @@ namespace ABI.System.Collections.Generic
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_Current_0<TAbi>(void* thisPtr, out TAbi __return_value__)
-            {
-                T ____return_value__ = default;
-
-                __return_value__ = default;
-
-                try
-                {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr))._Current;
-                    __return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
+            
 
             private static unsafe int Do_Abi_get_HasCurrent_1(IntPtr thisPtr, out byte __return_value__)
             {

@@ -151,6 +151,7 @@ namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+    using global::System.Diagnostics.CodeAnalysis;
 
 #if EMBED
     internal
@@ -158,7 +159,23 @@ namespace ABI.System.Collections.Generic
     public
 #endif
     static class IListMethods<T> {
-        
+
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                            DynamicallyAccessedMemberTypes.NonPublicMethods |
+                            DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                            DynamicallyAccessedMemberTypes.PublicFields)]
+        internal static Type implType = typeof(IListImpl<T>);
+
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        public static Type InitImplType()
+        {
+            ComWrappersSupport.ImplTypesDict.Add(typeof(IList<>), implType);
+            return implType;
+        }
+
         public static int get_Count(IObjectReference obj)
         {
             uint size = IVectorMethods<T>.get_Size(obj);
@@ -725,6 +742,98 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+        //
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)]
+        internal static Type delegateHelperType = typeof(AbiDelegateHelper<T>);
+
+        internal static class AbiDelegateHelper<TAbi>
+        {
+            private static unsafe int Do_Abi_GetAt_0(void* thisPtr, uint index, out TAbi __return_value__)
+            {
+                T ____return_value__ = default;
+                __return_value__ = default;
+                try
+                {
+                    ____return_value__ = Vftbl.FindAdapter(new IntPtr(thisPtr)).GetAt(index);
+                    __return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
+
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+
+            private static unsafe int Do_Abi_IndexOf_3(void* thisPtr, TAbi value, out uint index, out byte __return_value__)
+            {
+                bool ____return_value__ = default;
+
+                index = default;
+                __return_value__ = default;
+                uint __index = default;
+
+                try
+                {
+                    ____return_value__ = Vftbl.FindAdapter(new IntPtr(thisPtr)).IndexOf(Marshaler<T>.FromAbi(value), out __index);
+                    index = __index;
+                    __return_value__ = (byte)(____return_value__ ? 1 : 0);
+
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+
+            private static unsafe int Do_Abi_SetAt_4(void* thisPtr, uint index, TAbi value)
+            {
+                try
+                {
+                    Vftbl.FindAdapter(new IntPtr(thisPtr)).SetAt(index, Marshaler<T>.FromAbi(value));
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+            private static unsafe int Do_Abi_InsertAt_5(void* thisPtr, uint index, TAbi value)
+            {
+
+
+                try
+                {
+                    Vftbl.FindAdapter(new IntPtr(thisPtr)).InsertAt(index, Marshaler<T>.FromAbi(value));
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+
+            private static unsafe int Do_Abi_Append_7(void* thisPtr, TAbi value)
+            {
+                try
+                {
+                    Vftbl.FindAdapter(new IntPtr(thisPtr)).Append(Marshaler<T>.FromAbi(value));
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+
+        }
+
         [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
         public unsafe struct Vftbl
         {
@@ -750,11 +859,22 @@ namespace ABI.System.Collections.Generic
             public delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int> ReplaceAll_11 { get => (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int>)_replaceAll_11; set => _replaceAll_11 = (void*)value; }
 
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
-            private static readonly Type GetAt_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
-            private static readonly Type IndexOf_3_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
-            private static readonly Type SetAt_4_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
-            private static readonly Type InsertAt_5_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
-            private static readonly Type Append_7_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(int) });
+
+            // private static readonly IDelegateHelper GetAt_0_Type_HelperType = Projections.GetAbiDelegateHelper()
+
+            private static readonly IDelegateHelper GetAt_0_Type_HelperType = Projections.GetAbiDelegateHelper(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly IDelegateHelper IndexOf_3_Type_HelperType = Projections.GetAbiDelegateHelper(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
+            private static readonly IDelegateHelper SetAt_4_Type_HelperType = Projections.GetAbiDelegateHelper(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
+            private static readonly IDelegateHelper InsertAt_5_Type_HelperType = Projections.GetAbiDelegateHelper(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
+            private static readonly IDelegateHelper Append_7_Type_HelperType = Projections.GetAbiDelegateHelper(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(int) });
+
+
+            private static readonly Type GetAt_0_Type = GetAt_0_Type_HelperType.DelegateType;
+            private static readonly Type IndexOf_3_Type = IndexOf_3_Type_HelperType.DelegateType;
+            private static readonly Type SetAt_4_Type = SetAt_4_Type_HelperType.DelegateType;
+            private static readonly Type InsertAt_5_Type = InsertAt_5_Type_HelperType.DelegateType;
+            private static readonly Type Append_7_Type = Append_7_Type_HelperType.DelegateType;
+
 
             internal unsafe Vftbl(IntPtr thisPtr) : this()
             {
@@ -784,29 +904,36 @@ namespace ABI.System.Collections.Generic
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    GetAt_0 = global::System.Delegate.CreateDelegate(GetAt_0_Type, typeof(Vftbl).GetMethod("Do_Abi_GetAt_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    _get_Size_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new _get_PropertyAsUInt32(Do_Abi_get_Size_1)),
-                    _getView_2 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IList_Delegates.GetView_2(Do_Abi_GetView_2)),
-                    IndexOf_3 = global::System.Delegate.CreateDelegate(IndexOf_3_Type, typeof(Vftbl).GetMethod("Do_Abi_IndexOf_3", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    SetAt_4 = global::System.Delegate.CreateDelegate(SetAt_4_Type, typeof(Vftbl).GetMethod("Do_Abi_SetAt_4", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    InsertAt_5 = global::System.Delegate.CreateDelegate(InsertAt_5_Type, typeof(Vftbl).GetMethod("Do_Abi_InsertAt_5", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    _removeAt_6 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IList_Delegates.RemoveAt_6(Do_Abi_RemoveAt_6)),
-                    Append_7 = global::System.Delegate.CreateDelegate(Append_7_Type, typeof(Vftbl).GetMethod("Do_Abi_Append_7", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    _removeAtEnd_8 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new IList_Delegates.RemoveAtEnd_8(Do_Abi_RemoveAtEnd_8)),
-                    _clear_9 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new IList_Delegates.Clear_9(Do_Abi_Clear_9)),
-                    _getMany_10 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[5] = new IList_Delegates.GetMany_10(Do_Abi_GetMany_10)),
-                    _replaceAll_11 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[6] = new IList_Delegates.ReplaceAll_11(Do_Abi_ReplaceAll_11)),
+                    GetAt_0 = global::System.Delegate.CreateDelegate(GetAt_0_Type, typeof(AbiDelegateHelper<>).MakeGenericType(new Type[] { typeof(T), Marshaler<T>.AbiType }).GetMethod("Do_Abi_GetAt_0", BindingFlags.NonPublic | BindingFlags.Static)),
+                    
+                    _get_Size_1 = (void*)Marshal.GetFunctionPointerForDelegate<_get_PropertyAsUInt32>(new _get_PropertyAsUInt32(Do_Abi_get_Size_1)),
+                    _getView_2 = (void*)Marshal.GetFunctionPointerForDelegate<IList_Delegates.GetView_2>(new IList_Delegates.GetView_2(Do_Abi_GetView_2)),
+                    
+                    IndexOf_3 = global::System.Delegate.CreateDelegate(IndexOf_3_Type, typeof(AbiDelegateHelper<>).MakeGenericType(new Type[] { typeof(T), Marshaler<T>.AbiType }).GetMethod("Do_Abi_IndexOf_3", BindingFlags.NonPublic | BindingFlags.Static)),
+                    
+                    SetAt_4 = global::System.Delegate.CreateDelegate(SetAt_4_Type, typeof(AbiDelegateHelper<>).MakeGenericType(new Type[] { typeof(T), Marshaler<T>.AbiType }).GetMethod("Do_Abi_SetAt_4", BindingFlags.NonPublic | BindingFlags.Static)),
+                    
+                    InsertAt_5 = global::System.Delegate.CreateDelegate(InsertAt_5_Type, typeof(AbiDelegateHelper<>).MakeGenericType(new Type[] { typeof(T), Marshaler<T>.AbiType }).GetMethod("Do_Abi_InsertAt_5", BindingFlags.NonPublic | BindingFlags.Static)),
+                    
+                    _removeAt_6 = (void*)Marshal.GetFunctionPointerForDelegate<IList_Delegates.RemoveAt_6>(new IList_Delegates.RemoveAt_6(Do_Abi_RemoveAt_6)),
+                    
+                    Append_7 = global::System.Delegate.CreateDelegate(Append_7_Type, typeof(AbiDelegateHelper<>).MakeGenericType(new Type[] { typeof(T), Marshaler<T>.AbiType }).GetMethod("Do_Abi_Append_7", BindingFlags.NonPublic | BindingFlags.Static)),
+                    
+                    _removeAtEnd_8 = (void*)Marshal.GetFunctionPointerForDelegate<IList_Delegates.RemoveAtEnd_8>(new IList_Delegates.RemoveAtEnd_8(Do_Abi_RemoveAtEnd_8)),
+                    _clear_9 = (void*)Marshal.GetFunctionPointerForDelegate<IList_Delegates.Clear_9>(new IList_Delegates.Clear_9(Do_Abi_Clear_9)),
+                    _getMany_10 = (void*)Marshal.GetFunctionPointerForDelegate<IList_Delegates.GetMany_10>(new IList_Delegates.GetMany_10(Do_Abi_GetMany_10)),
+                    _replaceAll_11 = (void*)Marshal.GetFunctionPointerForDelegate<IList_Delegates.ReplaceAll_11>(new IList_Delegates.ReplaceAll_11(Do_Abi_ReplaceAll_11)),
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 12);
                 Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
-                nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.GetAt_0);
+                nativeVftbl[6] = GetAt_0_Type_HelperType.GetFunctionPointer(AbiToProjectionVftable.GetAt_0);
                 nativeVftbl[7] = (IntPtr)AbiToProjectionVftable.GetSize_1;
                 nativeVftbl[8] = (IntPtr)AbiToProjectionVftable.GetView_2;
-                nativeVftbl[9] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.IndexOf_3);
-                nativeVftbl[10] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.SetAt_4);
-                nativeVftbl[11] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.InsertAt_5);
+                nativeVftbl[9] = IndexOf_3_Type_HelperType.GetFunctionPointer(AbiToProjectionVftable.IndexOf_3);
+                nativeVftbl[10] = SetAt_4_Type_HelperType.GetFunctionPointer(AbiToProjectionVftable.SetAt_4);
+                nativeVftbl[11] = InsertAt_5_Type_HelperType.GetFunctionPointer(AbiToProjectionVftable.InsertAt_5);
                 nativeVftbl[12] = (IntPtr)AbiToProjectionVftable._removeAt_6;
-                nativeVftbl[13] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Append_7);
+                nativeVftbl[13] = Append_7_Type_HelperType.GetFunctionPointer(AbiToProjectionVftable.Append_7);
                 nativeVftbl[14] = (IntPtr)AbiToProjectionVftable._removeAtEnd_8;
                 nativeVftbl[15] = (IntPtr)AbiToProjectionVftable._clear_9;
                 nativeVftbl[16] = (IntPtr)AbiToProjectionVftable._getMany_10;
@@ -818,29 +945,13 @@ namespace ABI.System.Collections.Generic
             private static ConditionalWeakTable<global::System.Collections.Generic.IList<T>, ToAbiHelper> _adapterTable =
                 new ConditionalWeakTable<global::System.Collections.Generic.IList<T>, ToAbiHelper>();
 
-            private static global::Windows.Foundation.Collections.IVector<T> FindAdapter(IntPtr thisPtr)
+            internal static global::Windows.Foundation.Collections.IVector<T> FindAdapter(IntPtr thisPtr)
             {
                 var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Generic.IList<T>>(thisPtr);
                 return _adapterTable.GetValue(__this, (list) => new ToAbiHelper(list));
             }
 
-            private static unsafe int Do_Abi_GetAt_0<TAbi>(void* thisPtr, uint index, out TAbi __return_value__)
-            {
-                T ____return_value__ = default;
-                __return_value__ = default;
-                try
-                {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).GetAt(index);
-                    __return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
-
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
+            
             private static unsafe int Do_Abi_GetView_2(IntPtr thisPtr, out IntPtr __return_value__)
             {
                 global::System.Collections.Generic.IReadOnlyList<T> ____return_value__ = default;
@@ -859,56 +970,7 @@ namespace ABI.System.Collections.Generic
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_IndexOf_3<TAbi>(void* thisPtr, TAbi value, out uint index, out byte __return_value__)
-            {
-                bool ____return_value__ = default;
-
-                index = default;
-                __return_value__ = default;
-                uint __index = default;
-
-                try
-                {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).IndexOf(Marshaler<T>.FromAbi(value), out __index); 
-                    index = __index;
-                    __return_value__ = (byte)(____return_value__ ? 1 : 0);
-
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-            private static unsafe int Do_Abi_SetAt_4<TAbi>(void* thisPtr, uint index, TAbi value)
-            {
-                try
-                {
-                    FindAdapter(new IntPtr(thisPtr)).SetAt(index, Marshaler<T>.FromAbi(value));
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-            private static unsafe int Do_Abi_InsertAt_5<TAbi>(void* thisPtr, uint index, TAbi value)
-            {
-
-
-                try
-                {
-                    FindAdapter(new IntPtr(thisPtr)).InsertAt(index, Marshaler<T>.FromAbi(value));
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
+            
             private static unsafe int Do_Abi_RemoveAt_6(IntPtr thisPtr, uint index)
             {
                 try
@@ -922,19 +984,7 @@ namespace ABI.System.Collections.Generic
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_Append_7<TAbi>(void* thisPtr, TAbi value)
-            {
-                try
-                {
-                    FindAdapter(new IntPtr(thisPtr)).Append(Marshaler<T>.FromAbi(value));
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
+            
             private static unsafe int Do_Abi_RemoveAtEnd_8(IntPtr thisPtr)
             {
                 try

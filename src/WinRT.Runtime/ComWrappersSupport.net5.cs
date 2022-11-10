@@ -216,7 +216,9 @@ namespace WinRT
         }
 
         internal static Func<IInspectable, object> GetTypedRcwFactory([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
-        
+
+        public static Dictionary<Type, Type> ImplTypesDict = new();
+
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType)
         {
             if (implementationType.IsGenericType)
@@ -268,7 +270,7 @@ namespace WinRT
                     return null;
                 }
 
-                return genericImplType.MakeGenericType(implementationType.GetGenericArguments());
+                return ImplTypesDict.TryGetValue(genericImplType, out var initGenericType) ? initGenericType : genericImplType.MakeGenericType(implementationType.GetGenericArguments());
             }
         }
     }

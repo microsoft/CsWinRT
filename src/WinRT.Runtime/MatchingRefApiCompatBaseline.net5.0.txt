@@ -65,4 +65,11 @@ MembersMustExist : Member 'public function System.Int32 (System.IntPtr, System.G
 MembersMustExist : Member 'public void WinRT.Interop.IUnknownVftbl.QueryInterface.set(function System.Int32 (System.IntPtr, System.Guid*, System.IntPtr*))' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 66
+MembersMustExist : Member 'public System.Collections.Generic.Dictionary<System.Type, System.Type> System.Collections.Generic.Dictionary<System.Type, System.Type> WinRT.ComWrappersSupport.ImplTypesDict' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Type WinRT.Projections.GetAbiDelegateType(System.Type[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterAbiDelegate(System.Type[], System.Type)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.IDelegateHelper WinRT.Projections.GetAbiDelegateHelper(System.Type[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterAbiDelegate(System.Type[], WinRT.IDelegateHelper)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.DelegateHelper<T>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.IDelegateHelper' does not exist in the reference but it does exist in the implementation.
+Total Issues: 73

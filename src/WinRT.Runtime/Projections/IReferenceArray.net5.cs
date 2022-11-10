@@ -32,7 +32,8 @@ namespace ABI.Windows.Foundation
             AbiToProjectionVftable = new IReferenceArray<T>.Vftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                _get_Value_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache = new IReferenceArray_Delegates.get_Value_0(Do_Abi_get_Value_0))
+                // might need abi helper? dont think so tho...
+                _get_Value_0 = (void*)Marshal.GetFunctionPointerForDelegate<IReferenceArray_Delegates.get_Value_0>(new IReferenceArray_Delegates.get_Value_0(Do_Abi_get_Value_0))
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedArrayIReferenceArrayImpl<T>), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
             Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
