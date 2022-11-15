@@ -180,6 +180,8 @@ namespace WinRT
         }
 
         private readonly static ConcurrentDictionary<Type, Type> AuthoringMetadataTypeCache = new ConcurrentDictionary<Type, Type>();
+
+        [RequiresUnreferencedCodeAttribute("If authoring a WinRT component in C# using C#/WinRT authoring support, it might require ABI helper types that might get trimmed. Avoid marking such components trimmable or ensure types don't get trimmed from it.")]
         internal static Type GetAuthoringMetadataType(this Type type)
         {
             return AuthoringMetadataTypeCache.GetOrAdd(type, (type) =>
