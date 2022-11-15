@@ -1,7 +1,7 @@
 variables:
   MajorVersion: 2
   MinorVersion: 0
-  PatchVersion: 0
+  PatchVersion: 1
   WinRT.Runtime.AssemblyVersion: '2.0.0.0'
   Net5.SDK.Feed: 'https://dotnetcli.blob.core.windows.net/dotnet'
   Net5.SDK.Version: '5.0.408'
