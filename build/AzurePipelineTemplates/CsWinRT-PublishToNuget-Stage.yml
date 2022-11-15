@@ -17,6 +17,12 @@ stages:
       inputs:
         versionSpec: 5.3
 
+# Use .NET Core SDK 6
+- task: UseDotNet@2
+  displayName: Use .NET Core SDK 6
+  inputs:
+    version: 6.x
+
 # Component Detection 
     - task: ComponentGovernanceComponentDetection@0
       displayName: Component Detection
