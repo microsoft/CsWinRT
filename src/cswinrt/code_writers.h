@@ -2347,6 +2347,29 @@ public static %I As<I>() => ActivationFactory<%>.AsInterface<I>();
         }
     }
 
+    void write_init_impl_type_function(writer& w, TypeDef const& implType)
+    {
+        w.write(R"(
+[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields)]
+internal static Type implType;
+
+[return: global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields)]
+public static Type InitImplType() 
+{
+    implType = typeof(%);
+    return implType;
+}
+)", bind<write_type_name>(implType, typedef_name_type::ABI, false));
+    }
+
     void write_nongeneric_enumerable_members(writer& w, std::string_view target)
     {
         w.write(R"(
@@ -2452,6 +2475,7 @@ visibility, ireadonlycollection, abiClass, objref_name,
 visibility, value, self, key, abiClass, objref_name,
 visibility, self, key, abiClass, objref_name,
 visibility, self, key, value, abiClass, objref_name);
+
     }
 
     void write_readonlydictionary_members_using_idic(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
@@ -2532,6 +2556,7 @@ visibility, icollection, abiClass, objref_name,
 visibility, icollection, key, value, abiClass, objref_name,
 visibility, icollection, key, value, abiClass, objref_name, enumerableObjRefName,
 key, value, key, value, abiClass, objref_name);
+
     }
 
     void write_dictionary_members_using_idic(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
@@ -4353,6 +4378,12 @@ remove
     void write_static_abi_class_members(writer& w, TypeDef const& iface, uint32_t const& abi_methods_start_index)
     {
         bool generic_type = distance(iface.GenericParam()) > 0;
+
+        if (generic_type)
+        {
+            write_init_impl_type_function(w, iface);
+        }
+
         auto init_call_variables = [&](writer& w)
         {
             if (generic_type)
