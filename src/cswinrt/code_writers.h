@@ -2475,7 +2475,6 @@ visibility, ireadonlycollection, abiClass, objref_name,
 visibility, value, self, key, abiClass, objref_name,
 visibility, self, key, abiClass, objref_name,
 visibility, self, key, value, abiClass, objref_name);
-
     }
 
     void write_readonlydictionary_members_using_idic(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
@@ -2556,7 +2555,6 @@ visibility, icollection, abiClass, objref_name,
 visibility, icollection, key, value, abiClass, objref_name,
 visibility, icollection, key, value, abiClass, objref_name, enumerableObjRefName,
 key, value, key, value, abiClass, objref_name);
-
     }
 
     void write_dictionary_members_using_idic(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)

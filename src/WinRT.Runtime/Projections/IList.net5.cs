@@ -151,6 +151,7 @@ namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+    using global::System.Diagnostics.CodeAnalysis;
 
 #if EMBED
     internal
@@ -158,7 +159,23 @@ namespace ABI.System.Collections.Generic
     public
 #endif
     static class IListMethods<T> {
-        
+
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        internal static global::System.Type implType;
+
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        public static global::System.Type InitImplType()
+        {
+            implType = typeof(IListImpl<T>);
+            return implType;
+        }
+
         public static int get_Count(IObjectReference obj)
         {
             uint size = IVectorMethods<T>.get_Size(obj);

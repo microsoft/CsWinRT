@@ -181,6 +181,7 @@ namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+    using global::System.Diagnostics.CodeAnalysis;
 
 #if EMBED
     internal
@@ -189,6 +190,22 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IReadOnlyDictionaryMethods<K, V>
     {
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        internal static global::System.Type implType;
+
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        public static global::System.Type InitImplType()
+        {
+            implType = typeof(IReadOnlyDictionaryImpl<K, V>);
+            return implType;
+        }
+
         public static int get_Count(IObjectReference obj)
         {
             uint size = ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>.get_Size(obj);

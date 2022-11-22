@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -167,6 +168,7 @@ namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+    using global::System.Diagnostics.CodeAnalysis;
 
 #if EMBED
     internal
@@ -175,6 +177,21 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IReadOnlyListMethods<T>
     {
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        internal static global::System.Type implType;
+
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        public static global::System.Type InitImplType()
+        {
+            implType = typeof(IReadOnlyListImpl<T>);
+            return implType;
+        }
         public static int get_Count(IObjectReference obj)
         {
             uint size = ABI.Windows.Foundation.Collections.IVectorViewMethods<T>.get_Size(obj);

@@ -306,6 +306,22 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IDictionaryMethods<K, V>
     {
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        internal static global::System.Type implType;
+
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                    DynamicallyAccessedMemberTypes.NonPublicMethods |
+                                    DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        public static global::System.Type InitImplType()
+        {
+            implType = typeof(IDictionaryImpl<K, V>);
+            return implType;
+        }
+
         public static int get_Count(IObjectReference obj)
         {
             uint size = IMapMethods<K, V>.get_Size(obj);
