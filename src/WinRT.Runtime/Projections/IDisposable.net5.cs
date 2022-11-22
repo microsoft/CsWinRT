@@ -21,7 +21,6 @@ namespace ABI.System
         [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
         public struct Vftbl
         {
-            private delegate int CloseDelegate(IntPtr thisPtr);
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _Close_0;
             public delegate* unmanaged[Stdcall]<IntPtr, int> Close_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_Close_0; set => _Close_0 = value; }
@@ -35,9 +34,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-
                     _Close_0 = (delegate* unmanaged<IntPtr, int>)&Do_Abi_Close_0
-
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
@@ -46,11 +43,8 @@ namespace ABI.System
 
 
             [UnmanagedCallersOnly]
-
             private static unsafe int Do_Abi_Close_0(IntPtr thisPtr)
             {
-
-
                 try
                 {
                     global::WinRT.ComWrappersSupport.FindObject<global::System.IDisposable>(thisPtr).Dispose();
