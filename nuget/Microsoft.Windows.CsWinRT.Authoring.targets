@@ -233,10 +233,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <!-- Transform the fetched xml nodes -->
     <PropertyGroup>      
-      <Transformed1>$([System.String]::Copy('$(Flat_Peeked_Depends1)').Replace('CsWinRT','$(AssemblyName)'))</Transformed1>
-      <Transformed2>$([System.String]::Copy('$(Flat_Peeked_Depends2)').Replace('CsWinRT','$(AssemblyName)'))</Transformed2>
-      <Transformed3>$([System.String]::Copy('$(Flat_Peeked_Target1)').Replace('CsWinRT','$(AssemblyName)'))</Transformed3>
-      <Transformed4>$([System.String]::Copy('$(Flat_Peeked_Target2)').Replace('CsWinRT','$(AssemblyName)'))</Transformed4>
+      <Transformed1>$([System.String]::Copy('$(Flat_Peeked_Depends1)').Replace('CsWinRT','$(AssemblyName)').Replace(".","_"))</Transformed1>
+      <Transformed2>$([System.String]::Copy('$(Flat_Peeked_Depends2)').Replace('CsWinRT','$(AssemblyName)').Replace(".","_"))</Transformed2>
+      <Transformed3>$([System.String]::Copy('$(Flat_Peeked_Target1)').Replace('CsWinRT','$(AssemblyName)').Replace(".","_"))</Transformed3>
+      <Transformed4>$([System.String]::Copy('$(Flat_Peeked_Target2)').Replace('CsWinRT','$(AssemblyName)').Replace(".","_"))</Transformed4>
     </PropertyGroup>
 
     <!-- Change the target names -->
