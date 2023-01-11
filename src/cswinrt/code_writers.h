@@ -2355,6 +2355,28 @@ IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
             target);
     }
 
+    void write_init_impl_type_function(writer& w, TypeDef const& implType)
+    {
+        w.write(R"(
+[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields)]
+internal static Type implType;
+[return: global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes |
+    global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields)]
+public static Type InitImplType() 
+{
+    implType = typeof(%);
+    return implType;
+}
+)", bind<write_type_name>(implType, typedef_name_type::ABI, false));
+    }
+
     void write_enumerable_members_using_static_abi_methods(writer& w, bool include_nongeneric, bool emit_explicit, std::string const& objref_name)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
@@ -4353,6 +4375,12 @@ remove
     void write_static_abi_class_members(writer& w, TypeDef const& iface, uint32_t const& abi_methods_start_index)
     {
         bool generic_type = distance(iface.GenericParam()) > 0;
+
+        if (generic_type)
+        {
+            write_init_impl_type_function(w, iface);
+        }
+
         auto init_call_variables = [&](writer& w)
         {
             if (generic_type)
