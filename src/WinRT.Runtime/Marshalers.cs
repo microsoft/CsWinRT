@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -1054,6 +1055,52 @@ namespace WinRT
         private static readonly Type HelperType = typeof(T).GetHelperType();
         private static Func<T, IObjectReference> _ToAbi;
         private static Func<T, IObjectReference> _CreateMarshaler;
+
+        public static Type FromAbiWithGenerics<K>(Type implementationType)
+        {
+            var genericType = implementationType.GetGenericTypeDefinition();
+            Type genericImplType = null;
+            if (genericType == typeof(IList<>))
+            {
+                genericImplType = typeof(IListImpl<K>);
+            }
+            else if (genericType == typeof(IReadOnlyList<>))
+            {
+                genericImplType = typeof(IReadOnlyListImpl<K>);
+            }
+            else if (genericType == typeof(IEnumerable<>))
+            {
+                genericImplType = typeof(IEnumerableImpl<K>);
+            }
+            else
+            {
+                return null;
+            }
+
+            ComWrappersSupport.CreateRCWTypeImpl = genericImplType;
+            return genericImplType;
+        }
+
+        public static Type FromAbiWithGenerics<K, V>(Type implementationType)
+        {
+            var genericType = implementationType.GetGenericTypeDefinition();
+            Type genericImplType = null;
+            if (genericType == typeof(IDictionary<,>))
+            {
+                genericImplType = typeof(IDictionaryImpl<K,V>);
+            }
+            else if (genericType == typeof(IReadOnlyDictionary<,>))
+            {
+                genericImplType = typeof(IReadOnlyDictionaryImpl<K,V>);
+            }
+            else
+            {
+                return null;
+            }
+
+            ComWrappersSupport.CreateRCWTypeImpl = genericImplType;
+            return genericImplType;
+        }
 
         public static T FromAbi(IntPtr ptr)
         {

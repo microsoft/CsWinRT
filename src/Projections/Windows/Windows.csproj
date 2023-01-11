@@ -1,11 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
+    <TargetFrameworks>net7.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <AssemblyName>Microsoft.Windows.SDK.NET</AssemblyName>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
+	<PublishAot>true</PublishAot>
+	  <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>

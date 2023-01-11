@@ -62,6 +62,8 @@ namespace WinRT
             {
                 if (type.IsGenericType)
                 {
+                    // how can we avoid this MGT 
+                    
                     return helperTypeAtribute.HelperType.MakeGenericType(type.GetGenericArguments());
                 }
                 else

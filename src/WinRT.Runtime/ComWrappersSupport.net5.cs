@@ -41,6 +41,11 @@ namespace WinRT
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
         internal static Type CreateRCWType;
 
+        [ThreadStatic]
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
+        internal static Type CreateRCWTypeImpl;
+
+
         private static ComWrappers _comWrappers;
         private static object _comWrappersLock = new object();
         private static ComWrappers ComWrappers
@@ -241,7 +246,6 @@ namespace WinRT
             static Type GetGenericImplType(Type implementationType)
             {
                 var genericType = implementationType.GetGenericTypeDefinition();
-
                 Type genericImplType = null;
                 if (genericType == typeof(IList<>))
                 {
@@ -268,7 +272,15 @@ namespace WinRT
                     return null;
                 }
 
-                return genericImplType.MakeGenericType(implementationType.GetGenericArguments());
+                // Avoid MakeGenericType
+                if (CreateRCWTypeImpl != null)
+                {
+                    return CreateRCWTypeImpl;
+                }
+                else
+                {
+                    return genericImplType.MakeGenericType(implementationType.GetGenericArguments());
+                }
             }
         }
     }
