@@ -298,6 +298,18 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _collectionEvent(sender, arg0, arg1);
     }
+    winrt::event_token Class::GuidEvent(TestComponentCSharp::EventWithGuid const& handler)
+    {
+        return _guidEvent.add(handler);
+    }
+    void Class::GuidEvent(winrt::event_token const& token) noexcept
+    {
+        _guidEvent.remove(token);
+    }
+    void Class::InvokeGuidEvent(winrt::guid const& correlationGuid)
+    {
+        _guidEvent(correlationGuid);
+    }
     winrt::event_token Class::NestedEvent(EventHandler<IVector<int32_t>> const& handler)
     {
         return _nestedEvent.add(handler);
@@ -334,6 +346,10 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _returnEvent(arg0);
         return arg0;
+    }
+    winrt::guid Class::TestReturnGuid(winrt::guid const& arg)
+    {
+        return arg;
     }
     int32_t Class::IntProperty()
     {

@@ -20,6 +20,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<EventHandler2> _event2;
         winrt::event<EventHandler3> _event3;
         winrt::event<EventHandlerCollection> _collectionEvent;
+        winrt::event<EventWithGuid> _guidEvent;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>>> _nestedEvent;
         winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>>> _nestedTypedEvent;
         winrt::event<TestComponentCSharp::EventWithReturn> _returnEvent;
@@ -124,6 +125,9 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event_token CollectionEvent(TestComponentCSharp::EventHandlerCollection const& handler);
         void CollectionEvent(winrt::event_token const& token) noexcept;
         void InvokeCollectionEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0, Windows::Foundation::Collections::IMap<int32_t, hstring> const& arg1);
+        winrt::event_token GuidEvent(TestComponentCSharp::EventWithGuid const& handler);
+        void GuidEvent(winrt::event_token const& token) noexcept;
+        void InvokeGuidEvent(winrt::guid const& correlationGuid);
         winrt::event_token NestedEvent(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>> const& handler);
         void NestedEvent(winrt::event_token const& token) noexcept;
         void InvokeNestedEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0);
@@ -133,6 +137,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event_token ReturnEvent(TestComponentCSharp::EventWithReturn const& handler);
         void ReturnEvent(winrt::event_token const& token) noexcept;
         int32_t InvokeReturnEvent(int32_t const& arg0);
+        winrt::guid TestReturnGuid(winrt::guid const& arg);
 
         int32_t IntProperty();
         void IntProperty(int32_t value);

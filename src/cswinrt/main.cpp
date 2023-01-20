@@ -343,7 +343,7 @@ Where <spec> is one or more of:
 
             writer eventHelperWriter("WinRT");
             write_file_header(eventHelperWriter);
-            eventHelperWriter.write("namespace WinRT\n{\n%\n}", bind([&](writer& w) {
+            eventHelperWriter.write("using System;\nnamespace WinRT\n{\n%\n}", bind([&](writer& w) {
                 for (auto&& [key, value] : typeNameToEventDefinitionMap)
                 {
                     w.write("%", value);
