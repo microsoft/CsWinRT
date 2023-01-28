@@ -394,7 +394,7 @@ namespace WinRT
                 {
                     if (Projections.IsTypeWindowsRuntimeType(iface))
                     {
-                        if (interfaceTypeToUse is null || iface.IsAssignableFrom(interfaceTypeToUse))
+                        if (interfaceTypeToUse is null || interfaceTypeToUse.IsAssignableFrom(iface))
                         {
                             interfaceTypeToUse = iface;
                         }
