@@ -12,6 +12,7 @@ namespace TestComponentCSharp
     delegate void EventHandler3(Class sender, Int32 arg0, String arg1);
     delegate void EventHandlerCollection(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0, Windows.Foundation.Collections.IMap<Int32, String> arg1);
     delegate Int32 EventWithReturn(Int32 arg);
+    delegate void EventWithGuid(Guid correlationGuid);
 
     [flags]
     enum FlagValue
@@ -184,13 +185,16 @@ namespace TestComponentCSharp
         event EventHandler3 Event3;
         void InvokeEvent3(Class sender, Int32 arg0, String arg1);
         event EventHandlerCollection CollectionEvent;
+        event EventWithGuid GuidEvent;
         void InvokeCollectionEvent(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0, Windows.Foundation.Collections.IMap<Int32, String> arg1);
+        void InvokeGuidEvent(Guid correlationGuid);
         event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IVector<Int32> > NestedEvent;
         void InvokeNestedEvent(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0);
         event Windows.Foundation.TypedEventHandler<Class, Windows.Foundation.Collections.IVector<String> > NestedTypedEvent;
         void InvokeNestedTypedEvent(Class sender, Windows.Foundation.Collections.IVector<String> arg0);
         event EventWithReturn ReturnEvent;
         Int32 InvokeReturnEvent(Int32 arg0);
+        Guid TestReturnGuid(Guid arg);
 
         Int32 IntProperty;
         event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
