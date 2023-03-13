@@ -222,7 +222,7 @@ namespace WinRT
                     }
 
                     if (iface.IsConstructedGenericType
-                        && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, out var compatibleIfaces))
+                        && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, out var compatibleIfaces))
                     {
                         foreach (var compatibleIface in compatibleIfaces)
                         {

@@ -110,6 +110,12 @@ namespace UnitTest
             AssertGuid<IList<Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
             AssertGuid<IList<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");
             AssertGuid<IList<ComposedNonBlittableStruct>>("c8477314-b257-511b-a3a1-9e4eb6385152");
+            AssertGuid<IList<IDisposable>>("1bfca4f6-2c4e-5174-9869-b39d35848fcc");
+            AssertGuid<IList<IWwwFormUrlDecoderEntry>>("2f5fb6d3-231f-57a1-9f2a-daa7e43bf075");
+            AssertGuid<IList<WwwFormUrlDecoderEntry>>("1d9ba3f5-b997-5a7d-82c4-7857ecbf3a42");
+            AssertGuid<IList<Deferral>>("a3c9b753-57ad-537f-9626-4ae5785473d4");
+            AssertGuid<IList<DateTimeOffset>>("94390dc5-e442-5870-88b6-007e232f902c");
+            AssertGuid<IList<Point>>("c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7");
         }
     }
 }
