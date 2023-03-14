@@ -561,6 +561,7 @@ And this is another one"
         [default_overload]
         Boolean Equals(Object obj);
         Int32 GetHashCode();
+        String ToString();
         Boolean Equals(CustomEquals other);
     }
 
@@ -573,6 +574,7 @@ And this is another one"
         [default_overload]
         Int32 Equals(Object obj);
         Int32 Equals(CustomEquals2 other);
+        String ToString(Int32 num);
     }
 
     [default_interface]

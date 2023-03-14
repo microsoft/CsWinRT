@@ -607,6 +607,30 @@ namespace cswinrt
         return is_expected_method(method, "GetHashCode"sv, checkParams, checkReturn, return_type_matches);
     }
 
+    // Checks for ToString().
+    bool is_object_tostring_method(MethodDef const& method, bool* return_type_matches = nullptr)
+    {
+        auto checkParams = [](method_signature signature)
+        {
+            return !signature.has_params();
+        };
+
+        auto checkReturn = [](method_signature signature)
+        {
+            if (auto return_sig = signature.return_signature())
+            {
+                if (is_param_expected_type(return_sig.Type(), fundamental_type::String))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        return is_expected_method(method, "ToString"sv, checkParams, checkReturn, return_type_matches);
+    }
+
     bool has_object_equals_method(TypeDef const& type, bool* return_type_matches = nullptr)
     {
         XLANG_ASSERT(get_category(type) == category::class_type);
@@ -644,6 +668,21 @@ namespace cswinrt
         for (auto&& method : type.MethodList())
         {
             if (is_object_hashcode_method(method, return_type_matches))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool has_object_tostring_method(TypeDef const& type, bool* return_type_matches = nullptr)
+    {
+        XLANG_ASSERT(get_category(type) == category::class_type);
+
+        for (auto&& method : type.MethodList())
+        {
+            if (is_object_tostring_method(method, return_type_matches))
             {
                 return true;
             }

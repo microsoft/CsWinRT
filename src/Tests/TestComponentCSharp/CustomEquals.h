@@ -14,6 +14,7 @@ namespace winrt::TestComponentCSharp::implementation
         void Value(int32_t value);
         bool Equals(winrt::Windows::Foundation::IInspectable const& obj);
         int32_t GetHashCode();
+        hstring ToString();
         bool Equals(winrt::TestComponentCSharp::CustomEquals const& other);
 
     private:
@@ -28,6 +29,7 @@ namespace winrt::TestComponentCSharp::implementation
         void Value(int32_t value);
         int32_t Equals(winrt::Windows::Foundation::IInspectable const& obj);
         int32_t Equals(winrt::TestComponentCSharp::CustomEquals2 const& other);
+        hstring ToString(int32_t num);
 
     private:
         int32_t value;

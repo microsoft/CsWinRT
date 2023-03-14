@@ -1079,29 +1079,11 @@ namespace cswinrt
             write_projection_return_type(w, signature);
         });
         auto return_type = raw_return_type;
-        if (method.Name() == "ToString")
-        {
-            method_spec += "new ";
-            if (signature.params().empty())
-            {
-                if (auto ret = signature.return_signature())
-                {
-                    auto semantics = get_type_semantics(ret.Type());
-                    if (auto ft = std::get_if<fundamental_type>(&semantics))
-                    {
-                        if (*ft == fundamental_type::String)
-                        {
-                            method_spec = "override ";
-                            return_type = "string";
-                        }
-                    }
-                }
-            }
-        }
 
         bool method_return_matches;
         if (is_object_equals_method(method, &method_return_matches) ||
-            is_object_hashcode_method(method, &method_return_matches))
+            is_object_hashcode_method(method, &method_return_matches) ||
+            is_object_tostring_method(method, &method_return_matches))
         {
             if (method_return_matches)
             {

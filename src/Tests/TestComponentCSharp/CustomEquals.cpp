@@ -39,6 +39,11 @@ namespace winrt::TestComponentCSharp::implementation
         return 5;
     }
 
+    hstring CustomEquals::ToString()
+    {
+        return L"CustomEquals";
+    }
+
     // Returns true if Value is the same in both.
     bool CustomEquals::Equals(winrt::TestComponentCSharp::CustomEquals const& other)
     {
@@ -63,6 +68,11 @@ namespace winrt::TestComponentCSharp::implementation
     int32_t CustomEquals2::Equals(winrt::TestComponentCSharp::CustomEquals2 const& other)
     {
         return value;
+    }
+
+    hstring CustomEquals2::ToString(int32_t num)
+    {
+        return L"CustomEquals2";
     }
 
     int32_t UnSealedCustomEquals::Value()
