@@ -2279,6 +2279,30 @@ namespace UnitTest
             using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
         }
 
+        internal class ManagedType2 : List<ManagedType2> { }
+
+        internal class ManagedType3 : List<ManagedType3>, IDisposable
+        {
+            public void Dispose()
+            {
+            }
+        }
+
+        [Fact]
+        public void CCWOfListOfManagedType2()
+        {
+            using var ccw = ComWrappersSupport.CreateCCWForObject(new ManagedType2());
+            var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
+        }
+
+        [Fact]
+        public void CCWOfListOfManagedType3()
+        {
+            using var ccw = ComWrappersSupport.CreateCCWForObject(new ManagedType3());
+            var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
+            var qiResult2 = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<IDisposable>).GetHelperType()));
+        }
+
         [Fact]
         public void WeakReferenceOfManagedObject()
         {
