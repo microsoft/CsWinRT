@@ -29,6 +29,11 @@ namespace WinRT
 
         public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
+            return CreateRcwForComObject<T>(ptr, true);
+        }
+
+        private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
+        {
             if (ptr == IntPtr.Zero)
             {
                 return default;
@@ -48,8 +53,16 @@ namespace WinRT
                 else if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
                 {
                     var inspectable = new IInspectable(identity);
-                    Type runtimeClassType = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
-                    runtimeWrapper = runtimeClassType == null ? inspectable : TypedObjectFactoryCacheForType.GetOrAdd(runtimeClassType, classType => CreateTypedRcwFactory(classType))(inspectable);
+
+                    if (typeof(T).IsSealed)
+                    {
+                        runtimeWrapper = TypedObjectFactoryCacheForType.GetOrAdd(typeof(T), classType => CreateTypedRcwFactory(classType))(inspectable);
+                    }
+                    else
+                    {
+                        Type runtimeClassType = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
+                        runtimeWrapper = runtimeClassType == null ? inspectable : TypedObjectFactoryCacheForType.GetOrAdd(runtimeClassType, classType => CreateTypedRcwFactory(classType))(inspectable);
+                    }
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {
@@ -62,17 +75,25 @@ namespace WinRT
                 return runtimeWrapperReference;
             };
 
-            RuntimeWrapperCache.AddOrUpdate(
-                identity.ThisPtr,
-                rcwFactory,
-                (ptr, oldValue) =>
-                {
-                    if (!oldValue.TryGetTarget(out keepAliveSentinel))
+            object rcw;
+            if (tryUseCache)
+            {
+                RuntimeWrapperCache.AddOrUpdate(
+                    identity.ThisPtr,
+                    rcwFactory,
+                    (ptr, oldValue) =>
                     {
-                        return rcwFactory(ptr);
-                    }
-                    return oldValue;
-                }).TryGetTarget(out object rcw);
+                        if (!oldValue.TryGetTarget(out keepAliveSentinel))
+                        {
+                            return rcwFactory(ptr);
+                        }
+                        return oldValue;
+                    }).TryGetTarget(out rcw);
+            }
+            else
+            {
+                rcwFactory(ptr).TryGetTarget(out rcw);
+            }
 
             GC.KeepAlive(keepAliveSentinel);
 
@@ -86,7 +107,9 @@ namespace WinRT
             return rcw switch
             {
                 ABI.System.Nullable nt => (T)nt.Value,
-                _ => (T)rcw
+                T castRcw => castRcw,
+                _ when tryUseCache => CreateRcwForComObject<T>(ptr, false),
+                _ => throw new ArgumentException(string.Format("Unable to create a wrapper object. The WinRT object {0} has type {1} which cannot be assigned to type {2}", ptr, rcw.GetType(), typeof(T)))
             };
         }
 
