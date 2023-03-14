@@ -96,7 +96,10 @@ namespace WinRT
                 }
             }
 
-            type = type.IsInterface ? (type.GetAuthoringMetadataType() ?? type) : type;
+            // For authoring interfaces, we use the metadata type to get the guid.
+            // For built-in system interfaces that are custom type mapped, we use the helper type to get the guid.
+            // For others, either the type itself or the helper type has the same guid and can be used.
+            type = type.IsInterface ? (type.GetAuthoringMetadataType() ?? helperType ?? type) : type;
 
             if (type.IsGenericType)
             {
