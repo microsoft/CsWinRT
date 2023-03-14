@@ -540,7 +540,7 @@ namespace WinRT
                     return;
                 }
 #else
-            int hr = obj.TryAs<IUnknownVftbl>(InterfaceIIDs.IWeakReferenceSource_IID, out var weakRefSource);
+            int hr = obj.TryAs<ABI.WinRT.Interop.IWeakReferenceSource.Vftbl>(InterfaceIIDs.IWeakReferenceSource_IID, out var weakRefSource);
             if (hr != 0)
             {
                 return;
@@ -860,6 +860,7 @@ namespace WinRT
         internal static readonly Guid IInspectable_IID = new(0xAF86E2E0, 0xB12D, 0x4c6a, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90);
         internal static readonly Guid IUnknown_IID = new(0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
         internal static readonly Guid IWeakReferenceSource_IID = new(0x00000038, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IWeakReference_IID = new(0x00000037, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
     }
 }
 

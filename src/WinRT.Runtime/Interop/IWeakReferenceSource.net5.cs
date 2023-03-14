@@ -94,6 +94,45 @@ namespace ABI.WinRT.Interop
     [Guid("00000038-0000-0000-C000-000000000046")]
     internal unsafe interface IWeakReferenceSource : global::WinRT.Interop.IWeakReferenceSource
     {
+        [Guid("00000038-0000-0000-C000-000000000046")]
+        internal struct Vftbl
+        {
+            public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+            private void* _GetWeakReference;
+            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> GetWeakReference { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_GetWeakReference; set => _GetWeakReference = value; }
+
+            public static readonly Vftbl AbiToProjectionVftable;
+            public static readonly IntPtr AbiToProjectionVftablePtr;
+
+            internal delegate int GetWeakReferenceDelegate(IntPtr thisPtr, IntPtr* weakReference);
+            private static readonly Delegate[] DelegateCache = new Delegate[1];
+            static Vftbl()
+            {
+                AbiToProjectionVftable = new Vftbl
+                {
+                    IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+                    _GetWeakReference = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new GetWeakReferenceDelegate(Do_Abi_GetWeakReference)).ToPointer(),
+                };
+                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
+                Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
+            }
+
+            private static int Do_Abi_GetWeakReference(IntPtr thisPtr, IntPtr* weakReference)
+            {
+                *weakReference = default;
+
+                try
+                {
+                    *weakReference = ComWrappersSupport.CreateCCWForObject(new global::WinRT.Interop.ManagedWeakReference(ComWrappersSupport.FindObject<object>(thisPtr))).As<ABI.WinRT.Interop.IWeakReference.Vftbl>().GetRef();
+                }
+                catch (Exception __exception__)
+                {
+                    return __exception__.HResult;
+                }
+                return 0;
+            }
+        }
+
         internal static readonly Guid IID = InterfaceIIDs.IWeakReferenceSource_IID;
 
         public static IntPtr AbiToProjectionVftablePtr;
@@ -131,6 +170,48 @@ namespace ABI.WinRT.Interop
     [Guid("00000037-0000-0000-C000-000000000046")]
     internal unsafe interface IWeakReference : global::WinRT.Interop.IWeakReference
     {
+        [Guid("00000037-0000-0000-C000-000000000046")]
+        public struct Vftbl
+        {
+            public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+            private void* _Resolve;
+            public delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int> Resolve { get => (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)_Resolve; set => _Resolve = value; }
+
+            public static readonly Vftbl AbiToProjectionVftable;
+            public static readonly IntPtr AbiToProjectionVftablePtr;
+
+            public delegate int ResolveDelegate(IntPtr thisPtr, Guid* riid, IntPtr* objectReference);
+            private static readonly Delegate[] DelegateCache = new Delegate[1];
+            static Vftbl()
+            {
+                AbiToProjectionVftable = new Vftbl
+                {
+                    IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+                    _Resolve = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ResolveDelegate(Do_Abi_Resolve)).ToPointer(),
+                };
+                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
+                Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
+            }
+
+            private static int Do_Abi_Resolve(IntPtr thisPtr, Guid* riid, IntPtr* objectReference)
+            {
+                IObjectReference _objectReference = default;
+
+                *objectReference = default;
+
+                try
+                {
+                    _objectReference = global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.IWeakReference>(thisPtr).Resolve(*riid);
+                    *objectReference = _objectReference?.GetRef() ?? IntPtr.Zero;
+                }
+                catch (Exception __exception__)
+                {
+                    return __exception__.HResult;
+                }
+                return 0;
+            }
+        }
+
         internal static readonly Guid IID = new(0x00000037, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
 
         public static IntPtr AbiToProjectionVftablePtr;
