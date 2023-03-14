@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
@@ -38,12 +39,12 @@ namespace System.Collections.Generic
     internal sealed class IDictionaryImpl<K, V> : IDictionary<K, V>, IWinRTObject
     {
         private IObjectReference _inner;
-        private Dictionary<K, (IntPtr, V)> _lookupCache;
+        private ConcurrentDictionary<K, (IntPtr, V)> _lookupCache;
 
         internal IDictionaryImpl(IObjectReference _inner)
         {
             this._inner = _inner;
-            this._lookupCache = new Dictionary<K, (IntPtr, V)>();
+            this._lookupCache = new ConcurrentDictionary<K, (IntPtr, V)>();
         }
 
         public static IDictionaryImpl<K, V> CreateRcw(IInspectable obj) => new(obj.ObjRef);
@@ -162,7 +163,7 @@ namespace ABI.Windows.Foundation.Collections
 
     internal static class IMapMethods<K, V>
     {
-        public static unsafe V Lookup(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
+        public static unsafe V Lookup(IObjectReference obj, ConcurrentDictionary<K, (IntPtr, V)> __lookupCache, K key)
         {
             var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
             var ThisPtr = _obj.ThisPtr;
@@ -328,7 +329,7 @@ namespace ABI.System.Collections.Generic
             IMapMethods<K, V>.Clear(obj);
         }
 
-        public static bool Contains(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, global::System.Collections.Generic.KeyValuePair<K, V> item)
+        public static bool Contains(IObjectReference obj, ConcurrentDictionary<K, (IntPtr, V)> __lookupCache, global::System.Collections.Generic.KeyValuePair<K, V> item)
         {
             bool hasKey = IMapMethods<K, V>.HasKey(obj, item.Key);
             if (!hasKey)
@@ -364,7 +365,7 @@ namespace ABI.System.Collections.Generic
             return true;
         }
 
-        public static V Indexer_Get(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
+        public static V Indexer_Get(IObjectReference obj, ConcurrentDictionary<K, (IntPtr, V)> __lookupCache, K key)
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
@@ -422,7 +423,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public static bool TryGetValue(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key, out V value)
+        public static bool TryGetValue(IObjectReference obj, ConcurrentDictionary<K, (IntPtr, V)> __lookupCache, K key, out V value)
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
@@ -435,17 +436,21 @@ namespace ABI.System.Collections.Generic
 
             try
             {
-                value = Lookup(obj, __lookupCache, key);
+                value = ABI.Windows.Foundation.Collections.IMapMethods<K, V>.Lookup(obj, __lookupCache, key);
                 return true;
             }
-            catch (KeyNotFoundException)
+            catch (global::System.Exception ex)  // Still may hit this case due to a race condition
             {
-                value = default!;
-                return false;
+                if (ExceptionHelpers.E_BOUNDS == ex.HResult)
+                {
+                    value = default!;
+                    return false;
+                }
+                throw;
             }
         }
 
-        private static V Lookup(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
+        private static V Lookup(IObjectReference obj, ConcurrentDictionary<K, (IntPtr, V)> __lookupCache, K key)
         {
             Debug.Assert(null != key);
 
@@ -1040,10 +1045,10 @@ namespace ABI.System.Collections.Generic
             return IDictionaryMethods<K, V>.Remove(_obj, key);
         }
 
-        internal static global::System.Collections.Generic.Dictionary<K, (IntPtr, V)> GetLookupCache(IWinRTObject _this)
+        internal static global::System.Collections.Concurrent.ConcurrentDictionary<K, (IntPtr, V)> GetLookupCache(IWinRTObject _this)
         {
-            return (Dictionary<K, (IntPtr, V)>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle,
-                () => new Dictionary<K, (IntPtr, V)>());
+            return (ConcurrentDictionary<K, (IntPtr, V)>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle,
+                () => new ConcurrentDictionary<K, (IntPtr, V)>());
         }
 
         bool global::System.Collections.Generic.IDictionary<K, V>.TryGetValue(K key, out V value)
