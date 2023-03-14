@@ -2912,5 +2912,34 @@ namespace UnitTest
             CustomExperimentClass custom = new CustomExperimentClass();
             custom.f();
         }
+
+        void OnDeviceAdded(DeviceWatcher sender, DeviceInformation args)
+        {
+        }
+
+        [Fact]
+        public void TestWeakReferenceEventsFromMultipleContexts()
+        {
+            var watcher = DeviceInformation.CreateWatcher();
+            Exception exception = null;
+
+            Thread staThread = new Thread(() =>
+            {
+                exception = Record.Exception(() => { watcher.DeviceAdded += OnDeviceAdded; });
+            });
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+            staThread.Join();
+            Assert.Null(exception);
+
+            Thread mtaThread = new Thread(() =>
+            {
+                exception = Record.Exception(() => { watcher.DeviceAdded += OnDeviceAdded; });
+            });
+            mtaThread.SetApartmentState(ApartmentState.MTA);
+            mtaThread.Start();
+            mtaThread.Join();
+            Assert.Null(exception);
+        }
     }
 }
