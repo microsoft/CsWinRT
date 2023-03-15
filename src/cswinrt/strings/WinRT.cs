@@ -540,7 +540,7 @@ namespace WinRT
                     return;
                 }
 #else
-            int hr = obj.TryAs<ABI.WinRT.Interop.IWeakReferenceSource.Vftbl>(InterfaceIIDs.IWeakReferenceSource_IID, out var weakRefSource);
+            int hr = obj.TryAs<IUnknownVftbl>(InterfaceIIDs.IWeakReferenceSource_IID, out var weakRefSource);
             if (hr != 0)
             {
                 return;

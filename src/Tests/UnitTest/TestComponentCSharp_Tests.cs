@@ -28,6 +28,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using System.Reflection;
+using Windows.Devices.Enumeration;
 using Windows.Devices.Enumeration.Pnp;
 using System.Diagnostics;
 
@@ -2917,29 +2918,38 @@ namespace UnitTest
         {
         }
 
+        void OnDeviceUpdated(DeviceWatcher sender, DeviceInformationUpdate args)
+        {
+        }
+
         [Fact]
         public void TestWeakReferenceEventsFromMultipleContexts()
         {
-            var watcher = DeviceInformation.CreateWatcher();
-            Exception exception = null;
+            SemaphoreSlim semaphore = new SemaphoreSlim(0);
+            DeviceWatcher watcher = null;
 
             Thread staThread = new Thread(() =>
             {
-                exception = Record.Exception(() => { watcher.DeviceAdded += OnDeviceAdded; });
+                Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
+
+                watcher = DeviceInformation.CreateWatcher();
+                var exception = Record.Exception(() => { watcher.Added += OnDeviceAdded; });
+                Assert.Null(exception);
+
+                Thread mtaThread = new Thread(() =>
+                {
+                    Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
+
+                    exception = Record.Exception(() => { watcher.Updated += OnDeviceUpdated; });
+                    Assert.Null(exception);
+                });
+                mtaThread.SetApartmentState(ApartmentState.MTA);
+                mtaThread.Start();
+                mtaThread.Join();
             });
             staThread.SetApartmentState(ApartmentState.STA);
             staThread.Start();
             staThread.Join();
-            Assert.Null(exception);
-
-            Thread mtaThread = new Thread(() =>
-            {
-                exception = Record.Exception(() => { watcher.DeviceAdded += OnDeviceAdded; });
-            });
-            mtaThread.SetApartmentState(ApartmentState.MTA);
-            mtaThread.Start();
-            mtaThread.Join();
-            Assert.Null(exception);
         }
     }
 }
