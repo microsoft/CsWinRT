@@ -126,38 +126,27 @@ namespace WinRT
 
         public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid)
         {
-            if (externalComObject == IntPtr.Zero)
-            {
-                return null;
-            }
-
-            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(externalComObject, ref iid, out IntPtr ptr));
-            ObjectReference<T> objRef = ObjectReference<T>.Attach(ref ptr);
-            if (IsFreeThreaded(objRef))
-            {
-                return objRef;
-            }
-            else
-            {
-                using (objRef)
-                {
-                    return new ObjectReferenceWithContext<T>(
-                        objRef.GetRef(),
-                        Context.GetContextCallback(),
-                        Context.GetContextToken(),
-                        iid);
-                }
-            }
+            return GetObjectReferenceForInterface<T>(externalComObject, iid, true);
         }
 
-        internal static ObjectReference<T> GetObjectReferenceForInterfaceWithKnownIID<T>(IntPtr externalComObject, Guid iid)
+        internal static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid, bool requireQI)
         {
             if (externalComObject == IntPtr.Zero)
             {
                 return null;
             }
 
-            ObjectReference<T> objRef = ObjectReference<T>.FromAbi(externalComObject);
+            ObjectReference<T> objRef;
+            if (requireQI)
+            {
+                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(externalComObject, ref iid, out IntPtr ptr));
+                objRef = ObjectReference<T>.Attach(ref ptr);
+            }
+            else
+            {
+                objRef = ObjectReference<T>.FromAbi(externalComObject);
+            }
+
             if (IsFreeThreaded(objRef))
             {
                 return objRef;
