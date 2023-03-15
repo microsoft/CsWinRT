@@ -150,6 +150,31 @@ namespace WinRT
             }
         }
 
+        internal static ObjectReference<T> GetObjectReferenceForInterfaceWithKnownIID<T>(IntPtr externalComObject, Guid iid)
+        {
+            if (externalComObject == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            ObjectReference<T> objRef = ObjectReference<T>.FromAbi(externalComObject);
+            if (IsFreeThreaded(objRef))
+            {
+                return objRef;
+            }
+            else
+            {
+                using (objRef)
+                {
+                    return new ObjectReferenceWithContext<T>(
+                        objRef.GetRef(),
+                        Context.GetContextCallback(),
+                        Context.GetContextToken(),
+                        iid);
+                }
+            }
+        }
+
         public static void RegisterProjectionAssembly(Assembly assembly) => TypeNameSupport.RegisterProjectionAssembly(assembly);
 
         public static void RegisterProjectionTypeBaseTypeMapping(IDictionary<string, string> typeNameToBaseTypeNameMapping) => TypeNameSupport.RegisterProjectionTypeBaseTypeMapping(typeNameToBaseTypeNameMapping);
