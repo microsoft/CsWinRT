@@ -539,7 +539,7 @@ namespace WinRT
                 {
                     // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
                     // IInspectable. As a result, we need to check for them explicitly.
-                    var iunknownObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr);
+                    var iunknownObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, weakReferenceIID, false);
                     ComWrappersHelper.Init(iunknownObjRef);
 
                     return new SingleInterfaceOptimizedObject(typeof(IWeakReference), iunknownObjRef, false);
