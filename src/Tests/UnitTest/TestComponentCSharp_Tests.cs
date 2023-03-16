@@ -30,6 +30,7 @@ using System.Reflection;
 using Windows.Devices.Enumeration.Pnp;
 using System.Diagnostics;
 using Windows.Devices.Enumeration;
+using Windows.UI.Notifications;
 
 #if NET
 using WeakRefNS = System;
@@ -3067,6 +3068,45 @@ namespace UnitTest
             staThread.SetApartmentState(ApartmentState.STA);
             staThread.Start();
             staThread.Join();
+        }
+
+        [Fact]
+        public void TestActivationFactoriesFromMultipleContexts()
+        {
+            Exception exception = null;
+
+            Thread staThread = new Thread(() =>
+            {
+                Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
+
+                exception = Record.Exception(() =>
+                {
+                    var xmlDoc = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText01);
+                    _ = new ToastNotification(xmlDoc);
+                });
+
+            });
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+            staThread.Join();
+
+            Assert.Null(exception);
+
+            Thread mtaThread = new Thread(() =>
+            {
+                Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
+
+                exception = Record.Exception(() =>
+                {
+                    var xmlDoc = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText01);
+                    _ = new ToastNotification(xmlDoc);
+                });
+            });
+            mtaThread.SetApartmentState(ApartmentState.MTA);
+            mtaThread.Start();
+            mtaThread.Join();
+
+            Assert.Null(exception);
         }
 
         [Fact]
