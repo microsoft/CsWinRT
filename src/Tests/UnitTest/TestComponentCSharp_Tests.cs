@@ -9,7 +9,6 @@ using WinRT;
 
 using Windows.Foundation;
 using Windows.UI;
-using Windows.Security.Credentials.UI;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Microsoft.UI.Xaml;
@@ -30,6 +29,7 @@ using Windows.Security.Cryptography.Core;
 using System.Reflection;
 using Windows.Devices.Enumeration.Pnp;
 using System.Diagnostics;
+using Windows.Devices.Enumeration;
 
 #if NET
 using WeakRefNS = System;
@@ -2976,6 +2976,48 @@ namespace UnitTest
         {
             CustomExperimentClass custom = new CustomExperimentClass();
             custom.f();
+        }
+
+        void OnDeviceAdded(DeviceWatcher sender, DeviceInformation args)
+        {
+        }
+
+        void OnDeviceUpdated(DeviceWatcher sender, DeviceInformationUpdate args)
+        {
+        }
+
+        [Fact]
+        public void TestWeakReferenceEventsFromMultipleContexts()
+        {
+            SemaphoreSlim semaphore = new SemaphoreSlim(0);
+            DeviceWatcher watcher = null;
+
+            Thread staThread = new Thread(() =>
+            {
+                Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
+
+                watcher = DeviceInformation.CreateWatcher();
+                var exception = Record.Exception(() => { 
+                    watcher.Added += OnDeviceAdded; 
+                });
+                Assert.Null(exception);
+
+                Thread mtaThread = new Thread(() =>
+                {
+                    Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
+
+                    exception = Record.Exception(() => { 
+                        watcher.Updated += OnDeviceUpdated; 
+                    });
+                    Assert.Null(exception);
+                });
+                mtaThread.SetApartmentState(ApartmentState.MTA);
+                mtaThread.Start();
+                mtaThread.Join();
+            });
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+            staThread.Join();
         }
     }
 }
