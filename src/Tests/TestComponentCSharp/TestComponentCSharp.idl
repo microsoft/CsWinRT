@@ -334,6 +334,7 @@ namespace TestComponentCSharp
         event Windows.Foundation.EventHandler<Microsoft.UI.Xaml.Interop.IBindableVector> BindableVectorPropertyChanged;
         
         Microsoft.UI.Xaml.Interop.IBindableObservableVector BindableObservableVectorProperty;
+        Microsoft.UI.Xaml.Interop.IBindableObservableVector GetBindableObservableVector(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);
 
         void CopyProperties(IProperties1 src);
         void CopyPropertiesViaWeakReference(IProperties1 src);
@@ -454,6 +455,18 @@ namespace TestComponentCSharp
     runtimeclass CustomBindableVectorTest : Microsoft.UI.Xaml.Interop.IBindableVector
     {
         CustomBindableVectorTest();
+    }
+
+    [default_interface]
+    runtimeclass CustomBindableObservableVectorTest : Microsoft.UI.Xaml.Interop.IBindableObservableVector
+    {
+        CustomBindableObservableVectorTest();
+    }
+
+    [default_interface]
+    runtimeclass CustomIteratorTest : Windows.Foundation.Collections.IIterator<Int32>
+    {
+        CustomIteratorTest();
     }
 
     // SupportedOSPlatform warning tests

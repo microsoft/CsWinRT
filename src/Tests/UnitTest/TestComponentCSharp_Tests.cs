@@ -1361,7 +1361,7 @@ namespace UnitTest
 
             private void OnChanged()
             {
-                VectorChanged.Invoke(this, _observation = new TObservation());
+                VectorChanged?.Invoke(this, _observation = new TObservation());
             }
 
             public event BindableVectorChangedEventHandler VectorChanged;
@@ -2575,6 +2575,39 @@ namespace UnitTest
 
             var enumerator = ((IEnumerable)vector).GetEnumerator();
             Assert.NotNull(enumerator);
+        }
+
+        [Fact]
+        public void TestBindableObservableVector()
+        {
+            CustomBindableObservableVectorTest vector = new CustomBindableObservableVectorTest();
+            Assert.Equal(1, vector.Count);
+            Assert.False(vector.IsSynchronized);
+            Assert.NotNull(vector.SyncRoot);
+            Assert.Equal(1, vector[0]);
+            vector.Clear();
+        }
+
+        [Fact]
+        public void TestNonProjectedBindableObservableVector()
+        {
+            var expected = new int[] { 0, 1, 2 };
+            var observable = new ManagedBindableObservable(expected);
+            var nativeObservable = TestObject.GetBindableObservableVector(observable);
+            Assert.Equal(3, nativeObservable.Count);
+            Assert.NotNull(nativeObservable.SyncRoot);
+            Assert.Equal(0, nativeObservable[0]);
+            nativeObservable.Clear();
+            Assert.Equal(0, nativeObservable.Count);
+        }
+
+        [Fact(Skip = "InvalidOperationException due to missing non-generic IEnumerator #1302")]
+        public void TestIterator()
+        {
+            CustomIteratorTest iterator = new CustomIteratorTest();
+            iterator.MoveNext();
+            Assert.Equal(2, iterator.Current);
+            Assert.Equal(2, ((IEnumerator)iterator).Current);
         }
 
         [Fact]

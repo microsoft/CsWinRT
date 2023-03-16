@@ -295,6 +295,7 @@ namespace winrt::TestComponentCSharp::implementation
         void BindableVectorPropertyChanged(winrt::event_token const& token) noexcept;
         Microsoft::UI::Xaml::Interop::IBindableObservableVector BindableObservableVectorProperty();
         void BindableObservableVectorProperty(Microsoft::UI::Xaml::Interop::IBindableObservableVector const& value);
+        Microsoft::UI::Xaml::Interop::IBindableObservableVector GetBindableObservableVector(Microsoft::UI::Xaml::Interop::IBindableObservableVector vector);
 
         void CopyProperties(TestComponentCSharp::IProperties1 const& src);
         void CopyPropertiesViaWeakReference(TestComponentCSharp::IProperties1 const& src);

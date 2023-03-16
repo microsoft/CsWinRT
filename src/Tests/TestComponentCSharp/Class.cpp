@@ -104,6 +104,81 @@ namespace winrt::TestComponentCSharp::implementation
         }
     };
 
+    struct bindable_observable_vector : winrt::implements<bindable_observable_vector, IBindableObservableVector, IBindableIterable, IBindableVector>
+    {
+        IBindableObservableVector _wrapped;
+
+        bindable_observable_vector(IBindableObservableVector wrapped)
+        {
+            _wrapped = wrapped;
+        }
+
+        IBindableIterator First()
+        {
+            return _wrapped.First();
+        }
+
+        WF::IInspectable GetAt(uint32_t index)
+        {
+            return _wrapped.GetAt(index);
+        }
+
+        uint32_t Size()
+        {
+            return _wrapped.Size();
+        }
+
+        IBindableVectorView GetView()
+        {
+            return _wrapped.GetView();
+        }
+
+        bool IndexOf(WF::IInspectable const& value, uint32_t& index)
+        {
+            return _wrapped.IndexOf(value, index);
+        }
+
+        void SetAt(uint32_t index, WF::IInspectable const& value)
+        {
+            return _wrapped.SetAt(index, value);
+        }
+
+        void InsertAt(uint32_t index, WF::IInspectable const& value)
+        {
+            return _wrapped.InsertAt(index, value);
+        }
+
+        void RemoveAt(uint32_t index)
+        {
+            return _wrapped.RemoveAt(index);
+        }
+
+        void Append(WF::IInspectable const& value)
+        {
+            _wrapped.Append(value);
+        }
+
+        void RemoveAtEnd()
+        {
+            _wrapped.RemoveAtEnd();
+        }
+
+        void Clear()
+        {
+            _wrapped.Clear();
+        }
+
+        winrt::event_token VectorChanged(BindableVectorChangedEventHandler const& handler)
+        {
+            return _wrapped.VectorChanged(handler);
+        }
+
+        void VectorChanged(winrt::event_token const& token) noexcept
+        {
+            _wrapped.VectorChanged(token);
+        }
+    };
+
     struct data_errors_changed_event_args : implements<data_errors_changed_event_args, IDataErrorsChangedEventArgs>
     {
         data_errors_changed_event_args(winrt::hstring name) :
@@ -1395,6 +1470,11 @@ namespace winrt::TestComponentCSharp::implementation
                 }
                 e.as<IProperties2>().ReadWriteProperty(sum);
         });
+    }
+
+    IBindableObservableVector Class::GetBindableObservableVector(IBindableObservableVector vector)
+    {
+        return winrt::make<bindable_observable_vector>(vector);
     }
 
     void Class::CopyProperties(winrt::TestComponentCSharp::IProperties1 const& src)

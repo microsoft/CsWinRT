@@ -3,6 +3,8 @@
 #include "CustomBindableIteratorTest.g.cpp"
 #include "CustomDisposableTest.g.cpp"
 #include "CustomBindableVectorTest.g.cpp"
+#include "CustomBindableObservableVectorTest.g.cpp"
+#include "CustomIteratorTest.g.cpp"
 
 namespace winrt::TestComponentCSharp::implementation
 {
@@ -74,5 +76,68 @@ namespace winrt::TestComponentCSharp::implementation
     winrt::Microsoft::UI::Xaml::Interop::IBindableIterator CustomBindableVectorTest::First()
     {
         return winrt::Microsoft::UI::Xaml::Interop::IBindableIterator();
+    }
+
+    winrt::Microsoft::UI::Xaml::Interop::IBindableIterator CustomBindableObservableVectorTest::First()
+    {
+        return winrt::Microsoft::UI::Xaml::Interop::IBindableIterator();
+    }
+    winrt::Windows::Foundation::IInspectable CustomBindableObservableVectorTest::GetAt(uint32_t index)
+    {
+        return Windows::Foundation::PropertyValue::CreateInt32(1);
+    }
+    uint32_t CustomBindableObservableVectorTest::Size()
+    {
+        return 1;
+    }
+    winrt::Microsoft::UI::Xaml::Interop::IBindableVectorView CustomBindableObservableVectorTest::GetView()
+    {
+        return winrt::Microsoft::UI::Xaml::Interop::IBindableVectorView();
+    }
+    bool CustomBindableObservableVectorTest::IndexOf(winrt::Windows::Foundation::IInspectable const& value, uint32_t& index)
+    {
+        return false;
+    }
+    void CustomBindableObservableVectorTest::SetAt(uint32_t index, winrt::Windows::Foundation::IInspectable const& value)
+    {
+    }
+    void CustomBindableObservableVectorTest::InsertAt(uint32_t index, winrt::Windows::Foundation::IInspectable const& value)
+    {
+    }
+    void CustomBindableObservableVectorTest::RemoveAt(uint32_t index)
+    {
+    }
+    void CustomBindableObservableVectorTest::Append(winrt::Windows::Foundation::IInspectable const& value)
+    {
+    }
+    void CustomBindableObservableVectorTest::RemoveAtEnd()
+    {
+    }
+    void CustomBindableObservableVectorTest::Clear()
+    {
+    }
+    winrt::event_token CustomBindableObservableVectorTest::VectorChanged(winrt::Microsoft::UI::Xaml::Interop::BindableVectorChangedEventHandler const& handler)
+    {
+        throw hresult_not_implemented();
+    }
+    void CustomBindableObservableVectorTest::VectorChanged(winrt::event_token const& token) noexcept
+    {
+    }
+
+    int32_t CustomIteratorTest::Current()
+    {
+        return 2;
+    }
+    bool CustomIteratorTest::HasCurrent()
+    {
+        return true;
+    }
+    bool CustomIteratorTest::MoveNext()
+    {
+        return true;
+    }
+    uint32_t CustomIteratorTest::GetMany(array_view<int32_t> items)
+    {
+        throw hresult_not_implemented();
     }
 }
