@@ -2568,6 +2568,13 @@ namespace UnitTest
         {
             CustomBindableVectorTest vector = new CustomBindableVectorTest();
             Assert.NotNull(vector);
+            Assert.Equal(1, vector.Count);
+            Assert.False(vector.IsSynchronized);
+            Assert.NotNull(vector.SyncRoot);
+            Assert.Equal(1, vector[0]);
+
+            var enumerator = ((IEnumerable)vector).GetEnumerator();
+            Assert.NotNull(enumerator);
         }
 
         [Fact]
