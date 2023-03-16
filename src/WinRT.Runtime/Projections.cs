@@ -104,7 +104,7 @@ namespace WinRT
 #if NET
             CustomTypeToHelperTypeMappings.Add(typeof(ICollection<>), typeof(ABI.System.Collections.Generic.ICollection<>));
             CustomTypeToHelperTypeMappings.Add(typeof(IReadOnlyCollection<>), typeof(ABI.System.Collections.Generic.IReadOnlyCollection<>));
-            CustomTypeToHelperTypeMappings.Add(typeof(ICollection), typeof(ABI.System.Collections.Generic.ICollection));
+            CustomTypeToHelperTypeMappings.Add(typeof(ICollection), typeof(ABI.System.Collections.ICollection));
 #endif
             RegisterCustomAbiTypeMappingNoLock(typeof(EventHandler), typeof(ABI.System.EventHandler));
 

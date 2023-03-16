@@ -29,7 +29,7 @@ namespace ABI.System.Collections.Generic
                         .Invoke(new object[] { _this.NativeObject });
                 }
             }
-             
+
             var iReadOnlyList = typeof(global::System.Collections.Generic.IReadOnlyList<T>);
             if (_this.IsInterfaceImplemented(iReadOnlyList.TypeHandle, false))
             {
@@ -41,7 +41,7 @@ namespace ABI.System.Collections.Generic
 
         private static global::System.Collections.Generic.IReadOnlyCollection<T> GetHelper(IWinRTObject _this)
         {
-            return (global::System.Collections.Generic.IReadOnlyCollection<T>) _this.GetOrCreateTypeHelperData(
+            return (global::System.Collections.Generic.IReadOnlyCollection<T>)_this.GetOrCreateTypeHelperData(
                 typeof(global::System.Collections.Generic.IReadOnlyCollection<T>).TypeHandle,
                 () => CreateHelper(_this));
         }
@@ -90,7 +90,7 @@ namespace ABI.System.Collections.Generic
                 () => CreateHelper(_this));
         }
 
-        int global::System.Collections.Generic.ICollection<T>.Count 
+        int global::System.Collections.Generic.ICollection<T>.Count
             => GetHelper((IWinRTObject)this).Count;
 
         bool global::System.Collections.Generic.ICollection<T>.IsReadOnly
@@ -117,7 +117,10 @@ namespace ABI.System.Collections.Generic
         global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
             => GetHelper((IWinRTObject)this).GetEnumerator();
     }
+}
 
+namespace ABI.System.Collections
+{
     [DynamicInterfaceCastableImplementation]
     interface ICollection : global::System.Collections.ICollection
     {

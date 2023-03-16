@@ -2594,6 +2594,7 @@ namespace UnitTest
             var expected = new int[] { 0, 1, 2 };
             var observable = new ManagedBindableObservable(expected);
             var nativeObservable = TestObject.GetBindableObservableVector(observable);
+            Assert.Equal(3, ((ICollection)(object)nativeObservable).Count);
             Assert.Equal(3, nativeObservable.Count);
             Assert.NotNull(nativeObservable.SyncRoot);
             Assert.Equal(0, nativeObservable[0]);

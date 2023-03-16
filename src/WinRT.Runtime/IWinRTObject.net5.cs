@@ -95,6 +95,18 @@ namespace WinRT
                     return true;
                 }
             }
+            else if (type == typeof(System.Collections.ICollection))
+            {
+                Type iList = typeof(global::System.Collections.IList);
+                if (IsInterfaceImplemented(iList.TypeHandle, false))
+                {
+                    if (QueryInterfaceCache.TryGetValue(iList.TypeHandle, out var typedObjRef) && !QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
+                    {
+                        typedObjRef.Dispose();
+                    }
+                    return true;
+                }
+            }
 
             Type helperType = type.FindHelperType();
             if (helperType is null || !helperType.IsInterface)
