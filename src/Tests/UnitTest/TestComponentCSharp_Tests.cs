@@ -2547,7 +2547,7 @@ namespace UnitTest
             Assert.NotNull(cryptoKey);
         }
 
-        [Fact(Skip="Operation not supported")]
+        [Fact]
         public void TestIBindableIterator()
         {
             CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();
