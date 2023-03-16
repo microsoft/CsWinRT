@@ -2,6 +2,8 @@
 #include "CustomBindableIteratorTest.g.h"
 #include "CustomDisposableTest.g.h"
 #include "CustomBindableVectorTest.g.h"
+#include "CustomBindableObservableVectorTest.g.h"
+#include "CustomIteratorTest.g.h"
 
 namespace winrt::TestComponentCSharp::implementation
 {
@@ -34,6 +36,35 @@ namespace winrt::TestComponentCSharp::implementation
 		int32_t Size();
 		winrt::Microsoft::UI::Xaml::Interop::IBindableIterator First();
 	};
+
+	struct CustomBindableObservableVectorTest : CustomBindableObservableVectorTestT<CustomBindableObservableVectorTest>
+	{
+		CustomBindableObservableVectorTest() = default;
+
+		winrt::Microsoft::UI::Xaml::Interop::IBindableIterator First();
+		winrt::Windows::Foundation::IInspectable GetAt(uint32_t index);
+		uint32_t Size();
+		winrt::Microsoft::UI::Xaml::Interop::IBindableVectorView GetView();
+		bool IndexOf(winrt::Windows::Foundation::IInspectable const& value, uint32_t& index);
+		void SetAt(uint32_t index, winrt::Windows::Foundation::IInspectable const& value);
+		void InsertAt(uint32_t index, winrt::Windows::Foundation::IInspectable const& value);
+		void RemoveAt(uint32_t index);
+		void Append(winrt::Windows::Foundation::IInspectable const& value);
+		void RemoveAtEnd();
+		void Clear();
+		winrt::event_token VectorChanged(winrt::Microsoft::UI::Xaml::Interop::BindableVectorChangedEventHandler const& handler);
+		void VectorChanged(winrt::event_token const& token) noexcept;
+	};
+
+	struct CustomIteratorTest : CustomIteratorTestT<CustomIteratorTest>
+	{
+		CustomIteratorTest() = default;
+
+		int32_t Current();
+		bool HasCurrent();
+		bool MoveNext();
+		uint32_t GetMany(array_view<int32_t> items);
+	};
 }
 
 namespace winrt::TestComponentCSharp::factory_implementation
@@ -51,5 +82,13 @@ namespace winrt::TestComponentCSharp::factory_implementation
 	struct CustomBindableVectorTest : CustomBindableVectorTestT<CustomBindableVectorTest, implementation::CustomBindableVectorTest>
 	{
 
+	};
+
+	struct CustomBindableObservableVectorTest : CustomBindableObservableVectorTestT<CustomBindableObservableVectorTest, implementation::CustomBindableObservableVectorTest>
+	{
+	};
+
+	struct CustomIteratorTest : CustomIteratorTestT<CustomIteratorTest, implementation::CustomIteratorTest>
+	{
 	};
 }

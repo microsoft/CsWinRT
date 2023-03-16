@@ -691,7 +691,7 @@ namespace ABI.System.Collections
 
             public void Clear()
             {
-                _vector.Clear();
+                _vector._Clear();
             }
 
             public bool IsFixedSize { get => false; }

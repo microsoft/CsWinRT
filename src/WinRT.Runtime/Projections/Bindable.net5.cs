@@ -1275,7 +1275,7 @@ namespace ABI.System.Collections
             return ObjectReference<Vftbl>.FromAbi(thisPtr);
         }
 
-        private static FromAbiHelper _VectorToList(IWinRTObject _this)
+        internal static FromAbiHelper _VectorToList(IWinRTObject _this)
         {
             return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.IList).TypeHandle,
                 () => new FromAbiHelper((global::Microsoft.UI.Xaml.Interop.IBindableVector)_this));
