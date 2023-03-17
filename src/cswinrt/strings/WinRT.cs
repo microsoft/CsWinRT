@@ -533,8 +533,8 @@ namespace WinRT
         {
             bool isFreeThreaded = Context.IsFreeThreaded(objRef);
             var entry = new BaseActivationFactoryEntry();
-            entry._contextToken = isFreeThreaded ? Context.GetContextToken() : IntPtr.Zero;
-            entry._contextCallbackPtr = isFreeThreaded ? Context.GetContextCallback() : IntPtr.Zero;
+            entry._contextToken = isFreeThreaded ? IntPtr.Zero : Context.GetContextToken();
+            entry._contextCallbackPtr = isFreeThreaded ? IntPtr.Zero : Context.GetContextCallback();
             entry._IActivationFactory = objRef;
             entry._IActivationFactoryIIDCache = new ConcurrentDictionary<Guid, IObjectReference>();
             return entry;

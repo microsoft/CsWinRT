@@ -1805,9 +1805,9 @@ remove => %;
         return result;
     }
 
-    void write_composing_factory_method(writer& w, MethodDef const& method);
+    void write_composing_factory_method(writer& w, TypeDef const& factory_type, TypeDef const& class_type, MethodDef const& method);
 
-    void write_abi_method_with_raw_return_type(writer& w, MethodDef const& method);
+    void write_abi_method_with_raw_return_type(writer& w, TypeDef const& factory_type, TypeDef const& class_type, MethodDef const& method);
 
     template<auto method_writer>
     std::string write_factory_cache_object(writer& w, TypeDef const& factory_type, TypeDef const& class_type);
@@ -2109,8 +2109,6 @@ private IObjectReference % => __% ?? Make__%();
 private static IObjectReference % => %As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 
 )",
-                    objrefname,
-                    objrefname,
                     objrefname,
                     target,
                     bind<write_type_name>(factory.type, typedef_name_type::Projected, false));
@@ -3903,7 +3901,7 @@ finally
         write_abi_method_call_marshalers(w, invoke_target, is_generic, get_abi_marshalers(w, signature, is_generic, "", raw_return_type), has_noexcept_attr);
     }
 
-    void write_abi_method_with_raw_return_type(writer& w, MethodDef const& method)
+    void write_abi_method_with_raw_return_type(writer& w, TypeDef const& factory_type, TypeDef const& class_type, MethodDef const& method)
     {
         if (is_special(method))
         {
@@ -3924,20 +3922,41 @@ finally
 
         method_signature signature{ method };
         auto [invoke_target, is_generic] = get_invoke_info(w, method);
-        w.write(R"(
-public unsafe %% %(%)
-{%}
-)",
+        if (settings.netstandard_compat)
+        {
             // In the .NET Standard 2.0 code-gen, the fully-projected signature will be available in the base class, so we need to specify new to hide it
-            settings.netstandard_compat ? "new " : "", 
+            w.write(R"(
+public unsafe new % %(%)
+{
+%
+}
+)",
             bind(write_raw_return_type, signature),
             method.Name(),
             bind_list<write_projection_parameter>(", ", signature.params()),
             bind<write_abi_method_call>(signature, invoke_target, is_generic, true, is_noexcept(method)));
+        }
+        else
+        {
+            w.write(R"(
+public unsafe % %(%)
+{
+var obj = _activationFactory._As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
+var ThisPtr = obj.ThisPtr;
+%
+}
+)",
+                bind(write_raw_return_type, signature),
+                method.Name(),
+                bind_list<write_projection_parameter>(", ", signature.params()),
+                class_type.TypeNamespace(),
+                factory_type.TypeName(),
+                bind<write_abi_method_call>(signature, invoke_target, is_generic, true, is_noexcept(method)));
+        }
     }
 
 
-    void write_composing_factory_method(writer& w, MethodDef const& method)
+    void write_composing_factory_method(writer& w, TypeDef const& factory_type, TypeDef const& class_type, MethodDef const& method)
     {
         if (is_special(method))
         {
@@ -3994,14 +4013,36 @@ public unsafe %% %(%)
             true
         };
 
-        w.write(R"(
+        if (settings.netstandard_compat)
+        {
+            w.write(R"(
 public unsafe % %(%)
-{%}
+{
+%
+}
 )",
             bind(write_raw_return_type, signature),
             method.Name(),
             bind(write_composable_constructor_params, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, is_generic, abi_marshalers, is_noexcept(method)));
+        }
+        else
+        {
+            w.write(R"(
+public unsafe % %(%)
+{
+var obj = _activationFactory._As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
+var ThisPtr = obj.ThisPtr;
+%
+}
+)",
+            bind(write_raw_return_type, signature),
+            method.Name(),
+            bind(write_composable_constructor_params, signature),
+            class_type.TypeNamespace(),
+            factory_type.TypeName(),
+            bind<write_abi_method_call_marshalers>(invoke_target, is_generic, abi_marshalers, is_noexcept(method)));
+        }
     }
     
     template<auto method_writer>
@@ -4034,25 +4075,26 @@ internal static _% Instance => _instance;
                 cache_type_name,
                 cache_type_name,
                 cache_type_name,
-                bind_each<method_writer>(factory_type.MethodList())
-                );
+                bind_each([&](writer& w, MethodDef const& m)
+                {
+                    method_writer(w, factory_type, class_type, m);
+                }, factory_type.MethodList()));
         }
         else
         {
             w.write(R"(
 internal sealed class _% : IWinRTObject
 {
-private IObjectReference _obj;
-private IntPtr ThisPtr => _obj.ThisPtr;
+private ActivationFactory<%> _activationFactory;
 public _%()
 {
-_obj = ActivationFactory<%>.As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
+_activationFactory = new ActivationFactory<%>();
 }
 
 private static _% _instance = new _%();
 internal static _% Instance => _instance;
 
-IObjectReference IWinRTObject.NativeObject => _obj;
+IObjectReference IWinRTObject.NativeObject => _activationFactory.Value;
 bool IWinRTObject.HasUnwrappableNativeObject => false;
 private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
 private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
@@ -4073,14 +4115,16 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
 }
 )",
                 cache_type_name,
+                class_type.TypeName(),
                 cache_type_name,
                 class_type.TypeName(),
-                class_type.TypeNamespace(),
                 cache_type_name,
                 cache_type_name,
                 cache_type_name,
-                cache_type_name,
-                bind_each<method_writer>(factory_type.MethodList()));
+                bind_each([&](writer& w, MethodDef const& m)
+                {
+                    method_writer(w, factory_type, class_type, m);
+                }, factory_type.MethodList()));
         }
 
         return w.write_temp("_%.Instance", cache_type_name);
