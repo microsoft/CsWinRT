@@ -7,7 +7,7 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    static class Context
+    public static class Context
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
