@@ -390,50 +390,50 @@ namespace WinRT
         }
     }
 
-    internal static class Context
-    {
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
-
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
-
-        private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
-
-        internal static IntPtr GetContextCallback()
-        {
-            Guid riid = ABI.WinRT.Interop.IContextCallback.IID;
-            Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
-            return contextCallbackPtr;
-        }
-
-        internal unsafe static IntPtr GetContextToken()
-        {
-            IntPtr contextToken;
-            Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
-            return contextToken;
-        }
-
-        // If we are free threaded, we do not need to keep track of context.
-        // This can either be if the object implements IAgileObject or the free threaded marshaler.
-        internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
-        {
-            if (objRef.TryAs(ABI.WinRT.Interop.IAgileObject.IID, out var agilePtr) >= 0)
-            {
-                Marshal.Release(agilePtr);
-                return true;
-            }
-            return false;
-        }
-
-        public static void DisposeContextCallback(IntPtr contextCallbackPtr)
-        {
-            MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
-        }
-    }
-
     internal class BaseActivationFactory
     {
+        internal static class Context
+        {
+            [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+            private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
+
+            [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+            private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
+
+            private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
+
+            internal static IntPtr GetContextCallback()
+            {
+                Guid riid = new(0x000001da, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+                Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
+                return contextCallbackPtr;
+            }
+
+            internal unsafe static IntPtr GetContextToken()
+            {
+                IntPtr contextToken;
+                Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
+                return contextToken;
+            }
+
+            // If we are free threaded, we do not need to keep track of context.
+            // This can either be if the object implements IAgileObject or the free threaded marshaler.
+            internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
+            {
+                if (objRef.TryAs(new(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90), out var agilePtr) >= 0)
+                {
+                    Marshal.Release(agilePtr);
+                    return true;
+                }
+                return false;
+            }
+
+            internal static void DisposeContextCallback(IntPtr contextCallbackPtr)
+            {
+                MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
+            }
+        }
+
         internal sealed class BaseActivationFactoryEntry : IDisposable
         {
             public IntPtr _contextToken;
@@ -571,7 +571,7 @@ namespace WinRT
         public IObjectReference _As(Guid iid)
         {
             var entry = Entry;
-            return entry._IActivationFactoryIIDCache.GetOrAdd(iid, _ => entry._IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid));
+            return entry._IActivationFactoryIIDCache.GetOrAdd(iid, g => entry._IActivationFactory.As(g));
         }
     }
 

@@ -2106,24 +2106,14 @@ private IObjectReference % => __% ?? Make__%();
             {
                 auto objrefname = bind<write_objref_type_name>(factory.type);
                 w.write(R"(
-private static volatile IObjectReference __%;
-private static IObjectReference Make__%()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref __%, %As(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);
-    return __%;
-}
-private static IObjectReference % => __% ?? Make__%();
+private static IObjectReference % => %As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 
 )",
                     objrefname,
                     objrefname,
                     objrefname,
                     target,
-                    bind<write_type_name>(factory.type, typedef_name_type::Projected, false),
-                    objrefname,
-                    objrefname,
-                    objrefname,
-                    objrefname);
+                    bind<write_type_name>(factory.type, typedef_name_type::Projected, false));
             }
         }
     }
