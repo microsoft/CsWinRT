@@ -452,6 +452,7 @@ namespace WinRT
 
         private readonly string typeNamespace;
         private readonly string typeFullName;
+        private DllModule module;
 
         private volatile BaseActivationFactoryEntry _IActivationFactoryEntry;
 
@@ -492,33 +493,30 @@ namespace WinRT
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             (var activationFactory, hr) = WinrtModule.GetActivationFactory(typeFullName);
-            if (activationFactory != null) 
+            if (activationFactory != null)
             {
-                bool isFreeThreaded = Context.IsFreeThreaded(activationFactory);
-                var entry = new BaseActivationFactoryEntry();
-                entry._contextToken = isFreeThreaded ? Context.GetContextToken() : IntPtr.Zero;
-                entry._contextCallbackPtr = isFreeThreaded ? Context.GetContextCallback() : IntPtr.Zero;
-                entry._IActivationFactory = activationFactory;
-                entry._IActivationFactoryIIDCache = new ConcurrentDictionary<Guid, IObjectReference>();
-                return entry;
+                return CreateWinRTFactoryEntryFromObjectReference(activationFactory);
+            }
+
+            // check existing module
+            if (module != null)
+            {
+                (activationFactory, _) = module.GetActivationFactory(typeFullName);
+                if (activationFactory != null)
+                {
+                    return CreateWinRTFactoryEntryFromObjectReference(activationFactory);
+                }
             }
 
             var moduleName = typeNamespace;
             while (true)
             {
-                DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
                     (activationFactory, _) = module.GetActivationFactory(typeFullName);
                     if (activationFactory != null)
                     {
-                        bool isFreeThreaded = Context.IsFreeThreaded(activationFactory);
-                        var entry = new BaseActivationFactoryEntry();
-                        entry._contextToken = isFreeThreaded ? Context.GetContextToken() : IntPtr.Zero;
-                        entry._contextCallbackPtr = isFreeThreaded ? Context.GetContextCallback() : IntPtr.Zero;
-                        entry._IActivationFactory = activationFactory;
-                        entry._IActivationFactoryIIDCache = new ConcurrentDictionary<Guid, IObjectReference>();
-                        return entry;
+                        return CreateWinRTFactoryEntryFromObjectReference(activationFactory);
                     }
                 }
 
@@ -530,6 +528,18 @@ namespace WinRT
                 moduleName = moduleName.Remove(lastSegment);
             }
         }
+
+        private static BaseActivationFactoryEntry CreateWinRTFactoryEntryFromObjectReference(ObjectReference<IActivationFactoryVftbl> objRef)
+        {
+            bool isFreeThreaded = Context.IsFreeThreaded(objRef);
+            var entry = new BaseActivationFactoryEntry();
+            entry._contextToken = isFreeThreaded ? Context.GetContextToken() : IntPtr.Zero;
+            entry._contextCallbackPtr = isFreeThreaded ? Context.GetContextCallback() : IntPtr.Zero;
+            entry._IActivationFactory = objRef;
+            entry._IActivationFactoryIIDCache = new ConcurrentDictionary<Guid, IObjectReference>();
+            return entry;
+        }
+
 #if NET
         [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode",
             Justification = "No members of the generic type are dynamically accessed in this code path.")]
