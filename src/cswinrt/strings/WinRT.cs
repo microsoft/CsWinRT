@@ -390,32 +390,92 @@ namespace WinRT
         }
     }
 
+    internal static class Context
+    {
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
+
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
+
+        private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
+
+        internal static IntPtr GetContextCallback()
+        {
+            Guid riid = ABI.WinRT.Interop.IContextCallback.IID;
+            Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
+            return contextCallbackPtr;
+        }
+
+        internal unsafe static IntPtr GetContextToken()
+        {
+            IntPtr contextToken;
+            Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
+            return contextToken;
+        }
+
+        // If we are free threaded, we do not need to keep track of context.
+        // This can either be if the object implements IAgileObject or the free threaded marshaler.
+        internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
+        {
+            if (objRef.TryAs(ABI.WinRT.Interop.IAgileObject.IID, out var agilePtr) >= 0)
+            {
+                Marshal.Release(agilePtr);
+                return true;
+            }
+            return false;
+        }
+
+        public static void DisposeContextCallback(IntPtr contextCallbackPtr)
+        {
+            MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
+        }
+    }
+
     internal class BaseActivationFactory
     {
+        internal sealed class BaseActivationFactoryEntry : IDisposable
+        {
+            public IntPtr _contextToken;
+            public IntPtr _contextCallbackPtr;
+            public ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
+            public ConcurrentDictionary<Guid, IObjectReference> _IActivationFactoryIIDCache;
+
+            public void Dispose()
+            {
+                if (_contextCallbackPtr != IntPtr.Zero)
+                {
+                    Context.DisposeContextCallback(_contextCallbackPtr);
+                }
+            }
+        }
+
         private readonly string typeNamespace;
         private readonly string typeFullName;
 
-        private volatile Tuple<IntPtr, IntPtr, ObjectReference<IActivationFactoryVftbl>> _IActivationFactory;
-        private ConcurrentDictionary<Guid, IObjectReference> _IActivationFactoryIIDCache;
+        private volatile BaseActivationFactoryEntry _IActivationFactoryEntry;
 
-        public ObjectReference<IActivationFactoryVftbl> Value 
+        private BaseActivationFactoryEntry Entry 
         {
             get
             {
                 var contextToken = Context.GetContextToken();
-                if (_IActivationFactory.Item1 == IntPtr.Zero || _IActivationFactory.Item1 == contextToken)
+                var entry = _IActivationFactoryEntry;
+                if (entry._contextToken == IntPtr.Zero || entry._contextToken == contextToken)
                 {
-                    return _IActivationFactory.Item3;
+                    return entry;
                 }
 
-                // We need to recreate the factory
-                var old =Interlocked.Exchange(ref _IActivationFactory, CreateWinRTFactory());
-                old.Item3.Dispose();
-                Context.DisposeContextCallback(old.Item2);
+                // We need to recreate the factory, because the context has changed
+                var newFactoryEntry = CreateWinRTFactoryEntry();
+                var old =Interlocked.Exchange(ref _IActivationFactoryEntry, newFactoryEntry);
+                old.Dispose();
 
-                return _IActivationFactory.Item3;
+                return newFactoryEntry;
             }
         }
+
+        public ObjectReference<IActivationFactoryVftbl> Value => Entry._IActivationFactory;
 
         public I AsInterface<I>() => Value.AsInterface<I>();
 
@@ -424,18 +484,23 @@ namespace WinRT
             this.typeNamespace = typeNamespace;
             this.typeFullName = typeFullName;
 
-            _IActivationFactory = CreateWinRTFactory();
-            _IActivationFactoryIIDCache = new ConcurrentDictionary<Guid, IObjectReference>();
+            _IActivationFactoryEntry = CreateWinRTFactoryEntry();
         }
 
-        private Tuple<IntPtr, IntPtr, ObjectReference<IActivationFactoryVftbl>> CreateWinRTFactory()
+        private BaseActivationFactoryEntry CreateWinRTFactoryEntry()
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             (var activationFactory, hr) = WinrtModule.GetActivationFactory(typeFullName);
             if (activationFactory != null) 
             {
-                return Tuple.Create(Context.GetContextToken(), Context.GetContextCallback(), activationFactory);
+                bool isFreeThreaded = Context.IsFreeThreaded(activationFactory);
+                var entry = new BaseActivationFactoryEntry();
+                entry._contextToken = isFreeThreaded ? Context.GetContextToken() : IntPtr.Zero;
+                entry._contextCallbackPtr = isFreeThreaded ? Context.GetContextCallback() : IntPtr.Zero;
+                entry._IActivationFactory = activationFactory;
+                entry._IActivationFactoryIIDCache = new ConcurrentDictionary<Guid, IObjectReference>();
+                return entry;
             }
 
             var moduleName = typeNamespace;
@@ -447,7 +512,13 @@ namespace WinRT
                     (activationFactory, _) = module.GetActivationFactory(typeFullName);
                     if (activationFactory != null)
                     {
-                        return Tuple.Create(Context.GetContextToken(), Context.GetContextCallback(), activationFactory);
+                        bool isFreeThreaded = Context.IsFreeThreaded(activationFactory);
+                        var entry = new BaseActivationFactoryEntry();
+                        entry._contextToken = isFreeThreaded ? Context.GetContextToken() : IntPtr.Zero;
+                        entry._contextCallbackPtr = isFreeThreaded ? Context.GetContextCallback() : IntPtr.Zero;
+                        entry._IActivationFactory = activationFactory;
+                        entry._IActivationFactoryIIDCache = new ConcurrentDictionary<Guid, IObjectReference>();
+                        return entry;
                     }
                 }
 
@@ -465,7 +536,7 @@ namespace WinRT
 #endif
         public unsafe ObjectReference<I> _ActivateInstance<I>()
         {
-            var activationFactory = Value;
+            var activationFactory = Entry._IActivationFactory;
             IntPtr instancePtr;
             Marshal.ThrowExceptionForHR(activationFactory.Vftbl.ActivateInstance(activationFactory.ThisPtr, &instancePtr));
             try
@@ -482,8 +553,16 @@ namespace WinRT
         [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode",
             Justification = "No members of the generic type are dynamically accessed in this code path.")]
 #endif
-        public ObjectReference<I> _As<I>() => Value.As<I>();
-        public IObjectReference _As(Guid iid) => Value.As<WinRT.Interop.IUnknownVftbl>(iid);
+        public ObjectReference<I> _As<I>()
+        {
+            return Value.As<I>();
+        }
+
+        public IObjectReference _As(Guid iid)
+        {
+            var entry = Entry;
+            return entry._IActivationFactoryIIDCache.GetOrAdd(iid, _ => entry._IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid));
+        }
     }
 
     internal sealed class ActivationFactory<T> : BaseActivationFactory
