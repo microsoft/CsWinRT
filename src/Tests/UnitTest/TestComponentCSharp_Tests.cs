@@ -2340,6 +2340,16 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestUnwrapEnum()
+        {
+            FileAccess access = FileAccess.Write;
+            using var objRef = MarshalInspectable<object>.CreateMarshaler(access);
+            var obj = MarshalInspectable<object>.FromAbi(objRef.ThisPtr);
+
+            Assert.Equal(access, (FileAccess)obj);
+        }
+
+        [Fact]
         public void TestUnwrapInspectable()
         {
             using var objRef = MarshalInspectable<object>.CreateMarshaler(TestObject);
