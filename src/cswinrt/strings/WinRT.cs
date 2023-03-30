@@ -577,12 +577,11 @@ namespace WinRT
 
     internal sealed class ActivationFactory<T> : BaseActivationFactory
     {
+        private static ActivationFactory<T> _instance;
+
         public ActivationFactory() : base(typeof(T).Namespace, typeof(T).FullName) { }
 
-        static readonly ActivationFactory<T> _factory = new ActivationFactory<T>();
-        public static new I AsInterface<I>() => _factory.Value.AsInterface<I>();
-        public static ObjectReference<I> As<I>() => _factory._As<I>();
-        public static IObjectReference As(Guid iid) => _factory._As(iid);
+        public static ActivationFactory<T> Instance => LazyInitializer.EnsureInitialized(ref _instance, () => new ActivationFactory<T>());
 
 #if NET
         [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode", 
@@ -591,8 +590,8 @@ namespace WinRT
         public static ObjectReference<I> ActivateInstance<
 #if NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.None)]
-#endif
-            I>() => _factory._ActivateInstance<I>();
+#endif 
+            I>() => Instance._ActivateInstance<I>();
     }
 
     internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
