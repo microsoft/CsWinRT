@@ -1103,10 +1103,15 @@ namespace ABI.Windows.Foundation
         {
             global::Windows.Foundation.PropertyType value;
             global::System.Type managedType = obj.GetType();
-            bool isArray = managedType.IsArray;
+            bool isArray = managedType.IsArray; 
+            bool isEnum = managedType.IsEnum;
             if (isArray)
             {
                 managedType = managedType.GetElementType();
+            }
+            else if (isEnum)
+            {
+                managedType = managedType.GetEnumUnderlyingType();
             }
             if (!NumericScalarTypes.TryGetValue(managedType, out value))
             {
