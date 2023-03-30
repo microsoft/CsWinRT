@@ -2208,6 +2208,13 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestEnumType()
+        {
+            FileMode fileMode = FileMode.Open;
+            Assert.Equal(PropertyType.Int32, Class.GetEnumUnderlyingType(fileMode));
+        }
+
+        [Fact]
         public void PrimitiveTypeInfo()
         {
             Assert.Equal(typeof(int), Class.Int32Type);
@@ -2337,16 +2344,6 @@ namespace UnitTest
             Assert.False(net.IsAlive);
             Assert.True(winrt.TryGetTarget(out _));
             GC.KeepAlive(objRef);
-        }
-
-        [Fact]
-        public void TestUnwrapEnum()
-        {
-            FileAccess access = FileAccess.Write;
-            using var objRef = MarshalInspectable<object>.CreateMarshaler(access);
-            var obj = MarshalInspectable<object>.FromAbi(objRef.ThisPtr);
-
-            Assert.Equal(access, (FileAccess)obj);
         }
 
         [Fact]
