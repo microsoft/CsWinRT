@@ -752,6 +752,11 @@ namespace WinRT
         private static ComInterfaceEntry ProvideIReferenceArray(Type arrayType)
         {
             Type type = arrayType.GetElementType();
+            if (type.IsEnum)
+            {
+                type = type.GetEnumUnderlyingType();
+            }
+
             if (type == typeof(int))
             {
                 return new ComInterfaceEntry

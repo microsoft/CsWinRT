@@ -2208,10 +2208,13 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestEnumType()
+        public void TestNonWinRTEnumType()
         {
             FileMode fileMode = FileMode.Open;
             Assert.Equal(PropertyType.Int32, Class.GetEnumUnderlyingType(fileMode));
+
+            FileMode[] fileModeArray = new FileMode[] { FileMode.Open };
+            Assert.Equal(PropertyType.Int32Array, Class.GetEnumUnderlyingType(fileModeArray));
         }
 
         [Fact]
