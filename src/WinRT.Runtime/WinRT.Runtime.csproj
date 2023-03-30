@@ -11,10 +11,10 @@
     <Company>Microsoft Corporation</Company>
     <Product>C#/WinRT</Product>
     <PackageId>WinRT.Runtime</PackageId>
-    <FileVersion>$(VersionNumber)</FileVersion>
-    <Version>$(VersionNumber)</Version>
-    <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
-    <InformationalVersion>$(VersionNumber)</InformationalVersion>
+    <FileVersion>2.0.0</FileVersion>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0</AssemblyVersion>
+    <InformationalVersion>2.0.0</InformationalVersion>
     <NeutralLanguage>en</NeutralLanguage>
     <Description>C#/WinRT Runtime v$(VersionString)</Description>
     <AssemblyTitle>C#/WinRT Runtime v$(VersionString)</AssemblyTitle>

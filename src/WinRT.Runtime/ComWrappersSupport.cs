@@ -562,7 +562,7 @@ namespace WinRT
                     return IsIReferenceTypeHelper(type);
                 if (!type.IsValueType)
                     return false;
-                return type.IsPrimitive || IsIReferenceTypeHelper(type);
+                return type.IsPrimitive || type.IsEnum || IsIReferenceTypeHelper(type);
             });
         }
 
@@ -577,6 +577,11 @@ namespace WinRT
 
         private static ComInterfaceEntry ProvideIReference(Type type)
         {
+            if (type.IsEnum)
+            {
+                type = type.GetEnumUnderlyingType();
+            }
+
             if (type == typeof(int))
             {
                 return new ComInterfaceEntry
