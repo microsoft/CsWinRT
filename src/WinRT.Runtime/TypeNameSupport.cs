@@ -427,11 +427,11 @@ namespace WinRT
 #endif
             {
                 builder.Append("Windows.Foundation.IReferenceArray`1<");
-                if (TryAppendTypeName(type.GetElementType(), builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
+                if (!TryAppendTypeName(type.GetElementType(), builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
                 {
-                    builder.Append('>');
-                    return true;
+                    return false;
                 }
+                builder.Append('>');
                 return true;
             }
 
