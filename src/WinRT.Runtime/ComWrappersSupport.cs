@@ -562,7 +562,7 @@ namespace WinRT
                     return IsIReferenceTypeHelper(type);
                 if (!type.IsValueType)
                     return false;
-                return type.IsPrimitive || IsIReferenceTypeHelper(type);
+                return type.IsPrimitive || type.IsEnum || IsIReferenceTypeHelper(type);
             });
         }
 

@@ -367,6 +367,8 @@ namespace winrt::TestComponentCSharp::implementation
         static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
         static com_array<hstring> UnboxStringArray(IInspectable const& obj);
 
+        static Windows::Foundation::PropertyType GetPropertyType(IInspectable const& obj);
+
         static Windows::UI::Xaml::Interop::TypeName Int32Type();
         static Windows::UI::Xaml::Interop::TypeName ReferenceInt32Type();
         static Windows::UI::Xaml::Interop::TypeName ThisClassType();

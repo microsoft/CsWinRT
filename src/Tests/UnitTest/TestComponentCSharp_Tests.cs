@@ -2208,6 +2208,16 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestNonWinRTEnumType()
+        {
+            FileMode fileMode = FileMode.Open;
+            Assert.Equal(PropertyType.OtherType, Class.GetPropertyType(fileMode));
+
+            FileMode[] fileModeArray = new FileMode[] { FileMode.Open };
+            Assert.Equal(PropertyType.OtherTypeArray, Class.GetPropertyType(fileModeArray));
+        }
+
+        [Fact]
         public void PrimitiveTypeInfo()
         {
             Assert.Equal(typeof(int), Class.Int32Type);
