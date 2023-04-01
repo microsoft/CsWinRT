@@ -741,7 +741,7 @@ namespace WinRT
         private static bool ShouldProvideIReferenceArray(Type type)
         {
             // Check if one dimensional array with lower bound of 0
-            return type.IsArray && type == type.GetElementType().MakeArrayType() && !type.GetElementType().IsArray;
+            return type.IsArray && type == type.GetElementType().MakeArrayType() && !type.GetElementType().IsArray && ShouldProvideIReference(type.GetElementType());
         }
 
         private static ComInterfaceEntry ProvideIReferenceArray(Type arrayType)
