@@ -64,6 +64,8 @@ namespace WinRT
 
         internal bool PreventReleaseFromTrackerSourceOnDispose { get; set; }
 
+        internal bool HasGCPressure { get; set; }
+
         internal unsafe IntPtr ReferenceTrackerPtr
         {
             get
@@ -283,6 +285,7 @@ namespace WinRT
                 }
 
                 DisposeTrackerSource();
+                ReleaseGCPressure();
                 disposed = true;
             }
         }
@@ -296,8 +299,15 @@ namespace WinRT
                     return false;
                 }
                 disposed = false;
+
                 ResurrectTrackerSource();
                 AddRef();
+
+                if (HasGCPressure)
+                {
+                    AddGCPressure();
+                }
+
                 GC.ReRegisterForFinalize(this);
                 return true;
             }
@@ -362,6 +372,20 @@ namespace WinRT
                 {
                     ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
                 }
+            }
+        }
+
+        internal void AddGCPressure()
+        {
+            GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
+            HasGCPressure = true;
+        }
+
+        internal void ReleaseGCPressure()
+        {
+            if (HasGCPressure)
+            {
+                GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
             }
         }
 
