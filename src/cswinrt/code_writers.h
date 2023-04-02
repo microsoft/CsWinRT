@@ -1917,6 +1917,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
         {
             auto cache_object = write_factory_cache_object<write_abi_method_with_raw_return_type>(w, factory_type, class_type);
             auto platform_attribute = write_platform_attribute_temp(w, factory_type);
+            auto gc_pressure_amount = get_gc_pressure_amount(class_type);
 
             for (auto&& method : factory_type.MethodList())
             {
@@ -1987,9 +1988,14 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                 w.write(R"(
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 %
-}
+%}
 )",
-                    settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
+                    settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);",
+                    [&](writer& w)
+                    {
+                        if (!gc_pressure_amount || settings.netstandard_compat) return;
+                        w.write("GC.AddMemoryPressure(%);\n", gc_pressure_amount);
+                    });
             }
         }
         else
@@ -6297,14 +6303,7 @@ private readonly % _comp;
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
-        auto gc_pressure_amount = 0;
-        if (auto gc_pressure_attr = get_attribute(type, "Windows.Foundation.Metadata", "GCPressureAttribute"))
-        {
-            auto sig = gc_pressure_attr.Value();
-            auto const& args = sig.NamedArgs();
-            auto amount = std::get<int32_t>(std::get<ElemSig::EnumValue>(std::get<ElemSig>(args[0].value.value).value).value);
-            gc_pressure_amount = amount == 0 ? 12000 : amount == 1 ? 120000 : 1200000;
-        }
+        auto gc_pressure_amount = get_gc_pressure_amount(type);
 
         w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 %% %class %%, IEquatable<%>
@@ -6361,7 +6360,6 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             default_interface_abi_name,
             bind<write_base_constructor_dispatch_netstandard>(base_semantics),
             default_interface_abi_name,
-            
             [&](writer& w)
             {
                 if (!gc_pressure_amount) return;
@@ -6470,6 +6468,8 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
+        auto gc_pressure_amount = get_gc_pressure_amount(type);
+
         auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(type)), [&](auto&& iface) { return iface; });
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
@@ -6497,7 +6497,8 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 {
 _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 %
-}
+%}
+%
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
@@ -6548,6 +6549,22 @@ private struct InterfaceTag<I>{};
                         w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
                     }
                 }),
+            [&](writer& w)
+            {
+                if (!gc_pressure_amount) return;
+                w.write("GC.AddMemoryPressure(%);\n", gc_pressure_amount);
+            },
+            [&](writer& w)
+            {
+                if (!gc_pressure_amount) return;
+                w.write(R"(~%()
+{
+GC.RemoveMemoryPressure(%);
+}
+)",
+                    type_name,
+                    gc_pressure_amount);
+            },
             // Equality operators
             type_name,
             type_name,
