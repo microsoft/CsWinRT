@@ -256,6 +256,7 @@ namespace WinRT
             {
                 _identityComObject = identityComObject;
                 _runtimeWrapper = runtimeWrapper;
+                GC.AddMemoryPressure(GC_PRESSURE_BASE);
             }
             ~RuntimeWrapperCleanup()
             {
@@ -268,6 +269,7 @@ namespace WinRT
                 else
                 {
                     ((ICollection<KeyValuePair<IntPtr, System.WeakReference<object>>>)RuntimeWrapperCache).Remove(new KeyValuePair<IntPtr, System.WeakReference<object>>(_identityComObject, _runtimeWrapper));
+                    GC.RemoveMemoryPressure(GC_PRESSURE_BASE);
                 }
             }
         }

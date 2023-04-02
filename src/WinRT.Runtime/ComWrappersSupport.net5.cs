@@ -274,6 +274,7 @@ namespace WinRT
             out IObjectReference objRef)
         {
             objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance);
+            objRef.AddGCPressure();
 
             IntPtr referenceTracker;
             {
@@ -310,7 +311,7 @@ namespace WinRT
                 if (isAggregation)
                 {
                     // Indicate the scenario is aggregation
-                    createObjectFlags |= (CreateObjectFlags)4;
+                    createObjectFlags |= CreateObjectFlags.Aggregation;
 
                     // The instance supports IReferenceTracker.
                     if (referenceTracker != default(IntPtr))
@@ -409,6 +410,8 @@ namespace WinRT
 
                     Marshal.Release(referenceTracker);
                 }
+
+                objRef.AddGCPressure();
             }
         }
     }
@@ -557,6 +560,15 @@ namespace WinRT
                 // on destruction as the CLR would do it.
                 winrtObj.NativeObject.ReleaseFromTrackerSource();
                 winrtObj.NativeObject.PreventReleaseFromTrackerSourceOnDispose = true;
+
+                // We may have added GC pressure already via the Init call, but in certain scenarios the objref that
+                // we added GC pressure on might not be the one held by the RCW. So to handle those scenarios, we add
+                // GC pressure again. The GC pressure that was initially added in Init will be released when that objref
+                // gets released thereby there is no mismatch in the pressure added / released.
+                if (!winrtObj.NativeObject.HasGCPressure)
+                {
+                    winrtObj.NativeObject.AddGCPressure();
+                }
             }
 
             return obj;
