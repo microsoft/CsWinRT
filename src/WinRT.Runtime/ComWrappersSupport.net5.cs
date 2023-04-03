@@ -414,6 +414,25 @@ namespace WinRT
                 objRef.AddGCPressure();
             }
         }
+
+        internal unsafe static void InitFromCreateObject(IObjectReference objRef)
+        {
+            if (objRef.ReferenceTrackerPtr == IntPtr.Zero)
+            {
+                Guid iid = IReferenceTrackerVftbl.IID;
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out var referenceTracker);
+                if (hr == 0)
+                {
+                    // WinUI scenario
+                    // This instance should be used to tell the
+                    // Reference Tracker runtime whenever an AddRef()/Release()
+                    // is performed on newInstance.
+                    objRef.ReferenceTrackerPtr = referenceTracker;
+                    objRef.AddRefFromTrackerSource(); // ObjRef instance
+                    Marshal.Release(referenceTracker);
+                }
+            }
+        }
     }
 
 #if EMBED
@@ -504,7 +523,7 @@ namespace WinRT
                 else if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {
                     var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IInspectable.Vftbl>(ptr);
-                    ComWrappersHelper.Init(inspectableObjRef);
+                    ComWrappersHelper.InitFromCreateObject(inspectableObjRef);
 
                     IInspectable inspectable = new IInspectable(inspectableObjRef);
 
@@ -529,7 +548,7 @@ namespace WinRT
                     // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
                     // IInspectable. As a result, we need to check for them explicitly.
                     var iunknownObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, weakReferenceIID, false);
-                    ComWrappersHelper.Init(iunknownObjRef);
+                    ComWrappersHelper.InitFromCreateObject(iunknownObjRef);
 
                     return new SingleInterfaceOptimizedObject(typeof(IWeakReference), iunknownObjRef, false);
                 }
@@ -553,13 +572,16 @@ namespace WinRT
         protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
         {
             var obj = CreateObject(externalComObject);
-            if (obj is IWinRTObject winrtObj && winrtObj.HasUnwrappableNativeObject && winrtObj.NativeObject != null)
+            if (obj is IWinRTObject winrtObj && winrtObj.NativeObject != null)
             {
-                // Handle the scenario where the CLR has already done an AddRefFromTrackerSource on the instance
-                // stored by the RCW type.  We handle it by releasing the AddRef we did and not doing an release
-                // on destruction as the CLR would do it.
-                winrtObj.NativeObject.ReleaseFromTrackerSource();
-                winrtObj.NativeObject.PreventReleaseFromTrackerSourceOnDispose = true;
+                if (winrtObj.HasUnwrappableNativeObject)
+                {
+                    // Handle the scenario where the CLR has already done an AddRefFromTrackerSource on the instance
+                    // stored by the RCW type.  We handle it by releasing the AddRef we did and not doing an release
+                    // on destruction as the CLR would do it.
+                    winrtObj.NativeObject.ReleaseFromTrackerSource();
+                    winrtObj.NativeObject.PreventReleaseFromTrackerSourceOnDispose = true;
+                }
 
                 // We may have added GC pressure already via the Init call, but in certain scenarios the objref that
                 // we added GC pressure on might not be the one held by the RCW. So to handle those scenarios, we add
