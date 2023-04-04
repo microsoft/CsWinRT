@@ -345,7 +345,7 @@ TEST(AuthoringTest, CustomTypes)
     }
 
     auto erasedProjectedArrays = testClass.GetTypeErasedProjectedArrays();
-    EXPECT_EQ(erasedProjectedArrays.Size(), 8);
+    EXPECT_EQ(erasedProjectedArrays.Size(), 7);
     for (auto obj : erasedProjectedArrays)
     {
         auto ra = obj.try_as<IPropertyValue>();

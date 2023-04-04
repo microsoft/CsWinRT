@@ -169,6 +169,32 @@ namespace WinRT
             return typeof(Delegate).IsAssignableFrom(type);
         }
 
+        internal static bool IsNullableT(this Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>);
+        }
+
+        internal static bool IsAbiNullableDelegate(this Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ABI.System.Nullable_Delegate<>);
+        }
+
+        internal static bool IsIReferenceArray(this Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Windows.Foundation.IReferenceArray<>);
+        }
+
+        internal static bool ShouldProvideIReference(this Type type)
+        {
+            return type.IsPrimitive ||
+                type == typeof(string) ||
+                type == typeof(Guid) ||
+                type == typeof(DateTimeOffset) ||
+                type == typeof(TimeSpan) ||
+                type.IsTypeOfType() ||
+                ((type.IsValueType || type.IsDelegate()) && Projections.IsTypeWindowsRuntimeType(type));
+        }
+
         internal static bool IsTypeOfType(this Type type)
         {
             return typeof(Type).IsAssignableFrom(type);

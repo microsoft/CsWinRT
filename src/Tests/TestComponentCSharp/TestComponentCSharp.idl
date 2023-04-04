@@ -392,6 +392,9 @@ namespace TestComponentCSharp
         static Object BoxedDelegate{ get; };
         static Object BoxedEnum{ get; };
 
+        static Int32 GetPropertyType(Object obj);
+        static String GetName(Object obj);
+
         // WUX.Interop.TypeName -> System.Type mapping
         static Windows.UI.Xaml.Interop.TypeName Int32Type { get; };
         static Windows.UI.Xaml.Interop.TypeName ThisClassType { get; };

@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -24,7 +25,7 @@ namespace WinRT
         /// <summary>
         /// Don't output a type name of a custom .NET type. Generate a compatible WinRT type name if needed.
         /// </summary>
-        NoCustomTypeName = 0x2
+        ForGetRuntimeClassName = 0x2,
     }
 
     internal static class TypeNameSupport
@@ -295,7 +296,7 @@ namespace WinRT
 
         /// <summary>
         /// Tracker for visited types when determining a WinRT interface to use as the type name.
-        /// Only used when GetNameForType is called with <see cref="TypeNameGenerationFlags.NoCustomTypeName"/>.
+        /// Only used when GetNameForType is called with <see cref="TypeNameGenerationFlags.ForGetRuntimeClassName"/>.
         /// </summary>
         private static readonly ThreadLocal<Stack<VisitedType>> VisitedTypes = new ThreadLocal<Stack<VisitedType>>(() => new Stack<VisitedType>());
 
@@ -310,23 +311,13 @@ namespace WinRT
             {
                 return nameBuilder.ToString();
             }
-            return null;
+            return string.Empty;
         }
 
         private static bool TryAppendSimpleTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
             if (type.IsPrimitive || type == typeof(string) || type == typeof(Guid) || type == typeof(TimeSpan))
             {
-                if ((flags & TypeNameGenerationFlags.GenerateBoxedName) != 0)
-                {
-                    builder.Append("Windows.Foundation.IReference`1<");
-                    if (!TryAppendSimpleTypeName(type, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
-                    {
-                        return false;
-                    }
-                    builder.Append('>');
-                    return true;
-                }
                 if (type == typeof(byte))
                 {
                     builder.Append("UInt8");
@@ -355,13 +346,16 @@ namespace WinRT
                 {
                     builder.Append(type.FullName);
                 }
-                else if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
-                {
-                    return TryAppendWinRTInterfaceNameForType(type, builder, flags);
-                }
                 else
                 {
-                    builder.Append(type.FullName);
+                    if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0)
+                    {
+                        return TryAppendWinRTInterfaceNameForType(type, builder, flags);
+                    }
+                    else
+                    {
+                        builder.Append(type.FullName);
+                    }
                 }
             }
             return true;
@@ -369,7 +363,7 @@ namespace WinRT
 
         private static bool TryAppendWinRTInterfaceNameForType(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
-            Debug.Assert((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0);
+            Debug.Assert((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0);
             Debug.Assert(!type.IsGenericTypeDefinition);
 
             var visitedTypes = VisitedTypes.Value;
@@ -426,13 +420,32 @@ namespace WinRT
             if (type.IsSZArray)
 #endif
             {
-                builder.Append("Windows.Foundation.IReferenceArray`1<");
-                if (TryAppendTypeName(type.GetElementType(), builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
+                var elementType = type.GetElementType();
+                if (elementType.ShouldProvideIReference())
                 {
-                    builder.Append('>');
-                    return true;
+                    builder.Append("Windows.Foundation.IReferenceArray`1<");
+                    if (TryAppendTypeName(elementType, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
+                    {
+                        builder.Append('>');
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
+                else
+                {
+                    return false;
+                }
+            }
+
+            if ((flags & TypeNameGenerationFlags.GenerateBoxedName) != 0 && type.ShouldProvideIReference())
+            {
+                builder.Append("Windows.Foundation.IReference`1<");
+                if (!TryAppendSimpleTypeName(type, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
+                {
+                    return false;
+                }
+                builder.Append('>');
+                return true;
             }
 
             if (!type.IsGenericType || type.IsGenericTypeDefinition)
@@ -440,7 +453,7 @@ namespace WinRT
                 return TryAppendSimpleTypeName(type, builder, flags);
             }
 
-            if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0 && !Projections.IsTypeWindowsRuntimeType(type))
+            if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0 && !Projections.IsTypeWindowsRuntimeType(type))
             {
                 return TryAppendWinRTInterfaceNameForType(type, builder, flags);
             }
@@ -473,7 +486,7 @@ namespace WinRT
                 }
                 first = false;
 
-                if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
+                if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0)
                 {
                     VisitedTypes.Value.Push(new VisitedType
                     {
@@ -484,7 +497,7 @@ namespace WinRT
 
                 bool success = TryAppendTypeName(argument, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName);
 
-                if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
+                if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0)
                 {
                     VisitedTypes.Value.Pop();
                 }
