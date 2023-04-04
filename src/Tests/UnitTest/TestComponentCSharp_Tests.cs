@@ -53,6 +53,13 @@ namespace UnitTest
             TestObject = new Class();
         }
 
+        public enum E { A, B, C }
+
+        public struct Estruct
+        {
+            E value;
+        }
+
 
         // Test a fix for a bug in Mono.Cecil that was affecting the IIDOptimizer when it encountered long class names 
         [Fact]
@@ -2152,6 +2159,48 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestGetPropertyType()
+        {
+            Array arr = new[] { E.A, E.B, E.C };
+            Array arr2 = new[] { new Estruct(), new Estruct() };
+            Array arr3 = new int[] { 1, 2, 3 };
+            IList<E> arr4 = new List<E>() { E.A, E.B, E.C };
+            Array arr5 = new PropertyType[] { PropertyType.UInt8, PropertyType.Int16, PropertyType.UInt16 };
+
+            Assert.Equal(-1, Class.GetPropertyType(arr));
+            Assert.Equal(-1, Class.GetPropertyType(arr2));
+            Assert.Equal((int)PropertyType.Int32Array, Class.GetPropertyType(arr3));
+            Assert.Equal(-1, Class.GetPropertyType(arr4));
+            Assert.Equal((int)PropertyType.OtherTypeArray, Class.GetPropertyType(arr5));
+            Assert.Equal(-1, Class.GetPropertyType(arr.GetValue(0)));
+            Assert.Equal(-1, Class.GetPropertyType(arr2.GetValue(0)));
+            Assert.Equal((int)PropertyType.Int32, Class.GetPropertyType(arr3.GetValue(0)));
+            Assert.Equal(-1, Class.GetPropertyType(arr4[0]));
+            Assert.Equal((int)PropertyType.OtherType, Class.GetPropertyType(arr5.GetValue(0)));
+        }
+
+        [Fact]
+        public void TestGetRuntimeClassName()
+        {
+            Array arr = new[] { E.A, E.B, E.C };
+            Array arr2 = new[] { new Estruct(), new Estruct() };
+            Array arr3 = new int[] { 1, 2, 3 };
+            IList<E> arr4 = new List<E>() { E.A, E.B, E.C };
+            Array arr5 = new PropertyType[] { PropertyType.UInt8, PropertyType.Int16, PropertyType.UInt16 };
+
+            Assert.Equal(string.Empty, Class.GetName(arr));
+            Assert.Equal(string.Empty, Class.GetName(arr2));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", Class.GetName(arr3));
+            Assert.Equal("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr4));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Windows.Foundation.PropertyType>", Class.GetName(arr5));
+            Assert.Equal(string.Empty, Class.GetName(arr.GetValue(0)));
+            Assert.Equal(string.Empty, Class.GetName(arr2.GetValue(0)));
+            Assert.Equal("Windows.Foundation.IReference`1<Int32>", Class.GetName(arr3.GetValue(0)));
+            Assert.Equal(string.Empty, Class.GetName(arr4[0]));
+            Assert.Equal("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>", Class.GetName(arr5.GetValue(0)));
+        }
+
+        [Fact]
         public void TestGeneratedRuntimeClassName_Primitive()
         {
             IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(2));
@@ -2205,16 +2254,6 @@ namespace UnitTest
             var obj = PropertyValue.CreateInt32Array(i);
             Assert.IsType<int[]>(obj);
             Assert.Equal(i, (IEnumerable<int>)obj);
-        }
-
-        [Fact]
-        public void TestNonWinRTEnumType()
-        {
-            FileMode fileMode = FileMode.Open;
-            Assert.Equal(PropertyType.OtherType, Class.GetPropertyType(fileMode));
-
-            FileMode[] fileModeArray = new FileMode[] { FileMode.Open };
-            Assert.Equal(PropertyType.OtherTypeArray, Class.GetPropertyType(fileModeArray));
         }
 
         [Fact]

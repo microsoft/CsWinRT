@@ -1528,9 +1528,18 @@ namespace winrt::TestComponentCSharp::implementation
         return obj.as<IReferenceArray<hstring>>().Value();
     }
 
-    PropertyType Class::GetPropertyType(WF::IInspectable const& obj)
+    int32_t Class::GetPropertyType(IInspectable const& obj)
     {
-        return obj.as<IPropertyValue>().Type();
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            return static_cast<int32_t>(ipv.Type());
+        }
+        return -1;
+    }
+
+    hstring Class::GetName(IInspectable const& obj)
+    {
+        return get_class_name(obj);
     }
 
     TypeName Class::Int32Type()
