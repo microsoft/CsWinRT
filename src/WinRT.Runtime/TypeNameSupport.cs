@@ -432,7 +432,7 @@ namespace WinRT
                     builder.Append('>');
                     return true;
                 }
-                return true;
+                return false;
             }
 
             if (!type.IsGenericType || type.IsGenericTypeDefinition)
