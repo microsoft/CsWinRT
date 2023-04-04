@@ -25,7 +25,7 @@ namespace WinRT
         /// <summary>
         /// Don't output a type name of a custom .NET type. Generate a compatible WinRT type name if needed.
         /// </summary>
-        ForGetRuntimeClassName = 0x1,
+        ForGetRuntimeClassName = 0x2,
     }
 
     internal static class TypeNameSupport
