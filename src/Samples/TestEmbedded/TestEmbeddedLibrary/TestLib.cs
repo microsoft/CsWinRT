@@ -70,6 +70,48 @@ namespace TestEmbeddedLibrary
                 return (int)abuff.Capacity;
             }
         }
+
+        public int Test6()
+        {
+            Alpha.Class a = new();
+
+            int success = 0;
+            var stringList = a.GetStringList();
+            if (stringList.Count == 2)
+            {
+                success++;
+            }
+
+            if (stringList[0] == "alpha" && stringList[1] == "beta")
+            {
+                success++;
+            }
+
+            var intList = a.GetIntList();
+            if (intList.Count == 4)
+            {
+                success++;
+            }
+
+            int sum = 0;
+            foreach (var i in intList)
+            {
+                sum += i;
+            }
+
+            if (sum == 10)
+            {
+                success++;
+            }
+
+            var objList = a.GetObjectList();
+            if ((objList[0] == objList[1]))
+            {
+                success++;
+            }
+
+            return success;
+        }
     }
 
 }

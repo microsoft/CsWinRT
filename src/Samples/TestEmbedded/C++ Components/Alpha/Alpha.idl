@@ -4,6 +4,10 @@ namespace Alpha
     runtimeclass Class
     {
         Class();
+
+        Windows.Foundation.Collections.IVector<String> GetStringList();
+        Windows.Foundation.Collections.IVector<Int32> GetIntList();
+        Windows.Foundation.Collections.IVectorView<Class> GetObjectList();
     }
 
     interface IAlpha
