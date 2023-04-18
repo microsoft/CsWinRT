@@ -608,8 +608,7 @@ namespace WinRT
                 return delegateType;
             }
 
-            return null;
-//            return Expression.GetDelegateType(typeArgs);
+            return Expression.GetDelegateType(typeArgs);
         }
 #endif
     }

@@ -354,7 +354,38 @@ Where <spec> is one or more of:
             }));
             eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
 
-            if (!typeNameToBaseTypeMap.empty() || !abiDelegateEntries.empty())
+            if (!typeNameToBaseTypeMap.empty())
+            {
+                writer baseTypeWriter("WinRT");
+                write_file_header(baseTypeWriter);
+                baseTypeWriter.write(R"(namespace WinRT
+{
+internal static class ProjectionTypesInitializer
+{
+internal readonly static System.Collections.Generic.Dictionary<string, string> TypeNameToBaseTypeNameMapping = new System.Collections.Generic.Dictionary<string, string>(%, System.StringComparer.Ordinal)
+{
+%
+};
+
+[System.Runtime.CompilerServices.ModuleInitializer]
+internal static void InitalizeProjectionTypes()
+{
+ComWrappersSupport.RegisterProjectionTypeBaseTypeMapping(TypeNameToBaseTypeNameMapping);
+}
+}
+})",
+typeNameToBaseTypeMap.size(),
+bind([&](writer& w) {
+                        for (auto&& [key, value] : typeNameToBaseTypeMap)
+                        {
+                            w.write(R"(["%"] = "%",)", key, value);
+                            w.write("\n");
+                        }
+    }));
+                baseTypeWriter.flush_to_file(settings.output_folder / "WinRTBaseTypeMappingHelper.cs");
+            }
+
+            if (!abiDelegateEntries.empty() && settings.netstandard_compat)
             {
                 writer baseTypeWriter("WinRT");
                 write_file_header(baseTypeWriter);
@@ -363,48 +394,18 @@ using System;
 
 namespace WinRT
 {
-internal static class ProjectionTypesInitializer
+internal static class AbiDelegatesInitializer
 {
-%
 
 [System.Runtime.CompilerServices.ModuleInitializer]
-internal static void InitalizeProjectionTypes()
+internal static void InitalizeAbiDelegates()
 {
 %
-
-#if !NET
-%
-#endif
 }
 
 %
 }
 })",
-                bind([&](writer& w) {
-                    if (!typeNameToBaseTypeMap.empty())
-                    {
-                        w.write(R"(
-internal readonly static System.Collections.Generic.Dictionary<string, string> TypeNameToBaseTypeNameMapping = new System.Collections.Generic.Dictionary<string, string>(%, System.StringComparer.Ordinal)
-{
-%
-};
-)",
-                        typeNameToBaseTypeMap.size(),
-                        bind([&](writer& w) {
-                            for (auto&& [key, value] : typeNameToBaseTypeMap)
-                            {
-                                w.write(R"(["%"] = "%",)", key, value);
-                                w.write("\n");
-                            }
-                        }));
-                    }
-                }),
-                bind([&](writer& w) {
-                    if (!typeNameToBaseTypeMap.empty())
-                    {
-                        w.write("ComWrappersSupport.RegisterProjectionTypeBaseTypeMapping(TypeNameToBaseTypeNameMapping);");
-                    }
-                }),
                 bind([&](writer& w) {
                     for (auto&& entry : abiDelegateEntries)
                     {
@@ -427,7 +428,7 @@ internal readonly static System.Collections.Generic.Dictionary<string, string> T
                         w.write("internal unsafe delegate int _invoke_IntPtr_AsyncStatus(void* thisPtr, IntPtr asyncInfo, global::Windows.Foundation.AsyncStatus asyncStatus);\n");
                     }
                 }));
-                baseTypeWriter.flush_to_file(settings.output_folder / "WinRTProjectionTypesInitializer.cs");
+                baseTypeWriter.flush_to_file(settings.output_folder / "WinRTAbiDelegateInitializer.cs");
             }
 
             if (projectionFileWritten)
