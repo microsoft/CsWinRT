@@ -231,7 +231,8 @@ namespace WinRT.Interop
     public 
 #endif 
     delegate int _remove_EventHandler(IntPtr thisPtr, EventRegistrationToken token);
- 
+
+#if !NET
     internal unsafe delegate int _get_Current_IntPtr(void* thisPtr, out IntPtr __return_value__);
     internal unsafe delegate int _get_Current_Type(void* thisPtr, out ABI.System.Type __return_value__);
 
@@ -259,5 +260,5 @@ namespace WinRT.Interop
     internal unsafe delegate int _invoke_IntPtr_Type(void* thisPtr, IntPtr sender, ABI.System.Type args);
     internal unsafe delegate int _invoke_Type_IntPtr(void* thisPtr, ABI.System.Type sender, IntPtr args);
     internal unsafe delegate int _invoke_Type_Type(void* thisPtr, ABI.System.Type sender, ABI.System.Type args);
-
+#endif
 }
