@@ -438,9 +438,6 @@ namespace ABI.WinRT.Interop
         [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
         public struct Vftbl
         {
-            public delegate int _GetErrorDetails(IntPtr thisPtr, out IntPtr description, out int error, out IntPtr restrictedDescription, out IntPtr capabilitySid);
-            public delegate int _GetReference(IntPtr thisPtr, out IntPtr reference);
-
             internal global::WinRT.Interop.IUnknownVftbl unknownVftbl;
             private void* _GetErrorDetails_0;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int> GetErrorDetails_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)_GetErrorDetails_0;
