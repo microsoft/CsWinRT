@@ -309,15 +309,15 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             IDictionary dict = ex.Data;
             if (dict != null)
             {
-                dict.Add("Description", description);
-                dict.Add("RestrictedDescription", restrictedError);
-                dict.Add("RestrictedErrorReference", restrictedErrorReference);
-                dict.Add("RestrictedCapabilitySid", restrictedCapabilitySid);
+                dict["Description"] = description;
+                dict["RestrictedDescription"] = restrictedError;
+                dict["RestrictedErrorReference"] = restrictedErrorReference;
+                dict["RestrictedCapabilitySid"] = restrictedCapabilitySid;
 
                 // Keep the error object alive so that user could retrieve error information
                 // using Data["RestrictedErrorReference"]
-                dict.Add("__RestrictedErrorObjectReference", restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject));
-                dict.Add("__HasRestrictedLanguageErrorObject", hasRestrictedLanguageErrorObject);
+                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject);
+                dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
             }
         }
 
