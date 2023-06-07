@@ -412,7 +412,7 @@ internal static void InitalizeAbiDelegates()
                         w.write("Projections.RegisterAbiDelegate(%, typeof(%));\n", entry.abi_delegate_types, entry.abi_delegate_name);
                     }
 
-                    if (settings.filter.includes("Windows"))
+                    if (settings.filter.includes("Windows.Foundation.AsyncStatus"))
                     {
                         w.write("Projections.RegisterAbiDelegate(new Type[] { typeof(void*), typeof(IntPtr), typeof(global::Windows.Foundation.AsyncStatus), typeof(int) }, typeof(_invoke_IntPtr_AsyncStatus));\n");
                     }
@@ -423,7 +423,7 @@ internal static void InitalizeAbiDelegates()
                         w.write("%\n", entry.abi_delegate_declaration);
                     }
 
-                    if (settings.filter.includes("Windows"))
+                    if (settings.filter.includes("Windows.Foundation.AsyncStatus"))
                     {
                         w.write("internal unsafe delegate int _invoke_IntPtr_AsyncStatus(void* thisPtr, IntPtr asyncInfo, global::Windows.Foundation.AsyncStatus asyncStatus);\n");
                     }

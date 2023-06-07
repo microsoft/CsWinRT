@@ -8019,6 +8019,13 @@ bind<write_event_invoke_args>(invokeMethodSig));
                             w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
                         });
                 }
+
+                // Add ABI delegates for AsyncOperationProgressHandler as it is referenced in a property of IAsyncOperationWithProgress
+                // which isn't handled separately.
+                if (typeName == "IAsyncOperationWithProgress`2" && is_abi_delegate_required_for_type(generics[1]))
+                {
+                    add_abi_delegates_for_type("Windows.Foundation", "AsyncOperationProgressHandler`2", generics, abiDelegateEntries);
+                }
             }
             else if (typeName == "TypedEventHandler`2")
             {
