@@ -7752,6 +7752,9 @@ bind<write_event_invoke_args>(invokeMethodSig));
         }
     }
 
+    // Checking for if this is an ABI delegate that will need to be code generated or
+    // whether it is one that we manually already added in Projections.cs such as for
+    // classes where the ABI type is IntPtr and we can handle generically.
     bool is_abi_delegate_required_for_type(type_semantics const& semantics)
     {
         return call(semantics,

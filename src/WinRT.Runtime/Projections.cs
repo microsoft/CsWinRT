@@ -601,6 +601,11 @@ namespace WinRT
             abiDelegateCache.TryAdd(delegateSignature, delegateType);
         }
 
+        // The .NET Standard projection can be used in both .NET Core and .NET Framework scenarios.
+        // With the latter, using Expression.GetDelegateType to create custom delegates with void* parameters
+        // doesn't seem to be supported.  So we handle that by pregenerating all the ABI delegates that we need
+        // based on the WinMD and also by allowing apps to register their own if there are any
+        // that we couldn't detect (i.e. types passed as object in WinMD).
         public static Type GetAbiDelegateType(params Type[] typeArgs)
         {
             if (abiDelegateCache.TryGetValue(typeArgs, out var delegateType))
