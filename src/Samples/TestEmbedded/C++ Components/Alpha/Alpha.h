@@ -7,6 +7,10 @@ namespace winrt::Alpha::implementation
     struct Class : ClassT<Class>
     {
         Class() = default;
+
+        winrt::Windows::Foundation::Collections::IVector<hstring> GetStringList();
+        winrt::Windows::Foundation::Collections::IVector<int> GetIntList();
+        winrt::Windows::Foundation::Collections::IVectorView<winrt::Alpha::Class> GetObjectList();
     };
 }
 

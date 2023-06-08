@@ -9,6 +9,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
@@ -541,5 +542,79 @@ namespace WinRT
             type = null;
             return false;
         }
+
+#if NET
+        internal static Type GetAbiDelegateType(params Type[] typeArgs) => Expression.GetDelegateType(typeArgs);
+#else
+        private class DelegateTypeComparer : IEqualityComparer<Type[]>
+        {
+            public bool Equals(Type[] x, Type[] y)
+            {
+                return x.SequenceEqual(y);
+            }
+
+            public int GetHashCode(Type[] obj)
+            {
+                int hashCode = 0;
+                for (int idx = 0; idx < obj.Length; idx++)
+                {
+                    hashCode ^= obj[idx].GetHashCode();
+                }
+                return hashCode;
+            }
+        }
+
+        private static readonly ConcurrentDictionary<Type[], Type> abiDelegateCache = new(new DelegateTypeComparer())
+        {
+            // IEnumerable
+            [new Type[] { typeof(void*), typeof(IntPtr).MakeByRefType(), typeof(int) }] = typeof(Interop._get_Current_IntPtr),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type).MakeByRefType(), typeof(int) }] = typeof(Interop._get_Current_Type),
+            // IList / IReadOnlyList
+            [new Type[] { typeof(void*), typeof(uint), typeof(IntPtr).MakeByRefType(), typeof(int) }] = typeof(Interop._get_At_IntPtr),
+            [new Type[] { typeof(void*), typeof(uint), typeof(ABI.System.Type).MakeByRefType(), typeof(int) }] = typeof(Interop._get_At_Type),
+            [new Type[] { typeof(void*), typeof(IntPtr), typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) }] = typeof(Interop._index_Of_IntPtr),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) }] = typeof(Interop._index_Of_Type),
+            [new Type[] { typeof(void*), typeof(uint), typeof(IntPtr), typeof(int) }] = typeof(Interop._set_At_IntPtr),
+            [new Type[] { typeof(void*), typeof(uint), typeof(ABI.System.Type), typeof(int) }] = typeof(Interop._set_At_Type),
+            [new Type[] { typeof(void*), typeof(IntPtr), typeof(int) }] = typeof(Interop._append_IntPtr),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(int) }] = typeof(Interop._append_Type),
+            // IDictionary / IReadOnlyDictionary
+            [new Type[] { typeof(void*), typeof(IntPtr), typeof(IntPtr).MakeByRefType(), typeof(int) }] = typeof(Interop._lookup_IntPtr_IntPtr),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(ABI.System.Type).MakeByRefType(), typeof(int) }] = typeof(Interop._lookup_Type_Type),
+            [new Type[] { typeof(void*), typeof(IntPtr), typeof(ABI.System.Type).MakeByRefType(), typeof(int) }] = typeof(Interop._lookup_IntPtr_Type),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(IntPtr).MakeByRefType(), typeof(int) }] = typeof(Interop._lookup_Type_IntPtr),
+            [new Type[] { typeof(void*), typeof(IntPtr), typeof(byte).MakeByRefType(), typeof(int) }] = typeof(Interop._has_key_IntPtr),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(byte).MakeByRefType(), typeof(int) }] = typeof(Interop._has_key_Type),
+            [new Type[] { typeof(void*), typeof(IntPtr), typeof(IntPtr), typeof(byte).MakeByRefType(), typeof(int) }] = typeof(Interop._insert_IntPtr_IntPtr),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(ABI.System.Type), typeof(byte).MakeByRefType(), typeof(int) }] = typeof(Interop._insert_Type_Type),
+            [new Type[] { typeof(void*), typeof(IntPtr), typeof(ABI.System.Type), typeof(byte).MakeByRefType(), typeof(int) }] = typeof(Interop._insert_IntPtr_Type),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(IntPtr), typeof(byte).MakeByRefType(), typeof(int) }] = typeof(Interop._insert_Type_IntPtr),
+            // EventHandler
+            [new Type[] { typeof(void*), typeof(IntPtr), typeof(IntPtr), typeof(int) }] = typeof(Interop._invoke_IntPtr_IntPtr),
+            [new Type[] { typeof(void*), typeof(IntPtr), typeof(ABI.System.Type), typeof(int) }] = typeof(Interop._invoke_IntPtr_Type),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(IntPtr), typeof(int) }] = typeof(Interop._invoke_Type_IntPtr),
+            [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(ABI.System.Type), typeof(int) }] = typeof(Interop._invoke_Type_Type),
+        };
+
+        public static void RegisterAbiDelegate(Type[] delegateSignature, Type delegateType)
+        {
+            abiDelegateCache.TryAdd(delegateSignature, delegateType);
+        }
+
+        // The .NET Standard projection can be used in both .NET Core and .NET Framework scenarios.
+        // With the latter, using Expression.GetDelegateType to create custom delegates with void* parameters
+        // doesn't seem to be supported.  So we handle that by pregenerating all the ABI delegates that we need
+        // based on the WinMD and also by allowing apps to register their own if there are any
+        // that we couldn't detect (i.e. types passed as object in WinMD).
+        public static Type GetAbiDelegateType(params Type[] typeArgs)
+        {
+            if (abiDelegateCache.TryGetValue(typeArgs, out var delegateType))
+            {
+                return delegateType;
+            }
+
+            return Expression.GetDelegateType(typeArgs);
+        }
+#endif
     }
 }
