@@ -34,7 +34,7 @@ namespace WinRT
         [DllImport("oleaut32.dll")]
         private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
 
-        private static delegate* unmanaged[Stdcall]<out IntPtr, int> getRestrictedErrorInfo;
+        private static delegate* unmanaged[Stdcall]<IntPtr*, int> getRestrictedErrorInfo;
         private static delegate* unmanaged[Stdcall]<IntPtr, int> setRestrictedErrorInfo;
         private static delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int> roOriginateLanguageException;
         private static delegate* unmanaged[Stdcall]<IntPtr, int> roReportUnhandledError;
@@ -56,7 +56,7 @@ namespace WinRT
 
             if (winRTErrorModule != IntPtr.Zero)
             {
-                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<out IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "GetRestrictedErrorInfo");
+                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, "GetRestrictedErrorInfo");
                 setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "SetRestrictedErrorInfo");
             }
 
@@ -90,7 +90,8 @@ namespace WinRT
             if (getRestrictedErrorInfo == null)
                 return null;
 
-            Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(out IntPtr restrictedErrorInfoPtr));
+            IntPtr restrictedErrorInfoPtr = IntPtr.Zero;
+            Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(&restrictedErrorInfoPtr));
             if (restrictedErrorInfoPtr == IntPtr.Zero)
                 return null;
 
@@ -144,16 +145,15 @@ namespace WinRT
                             }
                             else
                             {
+                                // This could also be a proxy to a managed exception.
                                 hasOtherLanguageException = true;
                             }
                         }
                     }
-                    else
+
+                    if (hr == hrLocal)
                     {
-                        if (hr == hrLocal)
-                        {
-                            restrictedErrorInfoRef.TryAs<ABI.WinRT.Interop.IErrorInfo.Vftbl>(out iErrorInfo);
-                        }
+                        restrictedErrorInfoRef.TryAs<ABI.WinRT.Interop.IErrorInfo.Vftbl>(out iErrorInfo);
                     }
                 }
             }
@@ -309,15 +309,15 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             IDictionary dict = ex.Data;
             if (dict != null)
             {
-                dict.Add("Description", description);
-                dict.Add("RestrictedDescription", restrictedError);
-                dict.Add("RestrictedErrorReference", restrictedErrorReference);
-                dict.Add("RestrictedCapabilitySid", restrictedCapabilitySid);
+                dict["Description"] = description;
+                dict["RestrictedDescription"] = restrictedError;
+                dict["RestrictedErrorReference"] = restrictedErrorReference;
+                dict["RestrictedCapabilitySid"] = restrictedCapabilitySid;
 
                 // Keep the error object alive so that user could retrieve error information
                 // using Data["RestrictedErrorReference"]
-                dict.Add("__RestrictedErrorObjectReference", restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject));
-                dict.Add("__HasRestrictedLanguageErrorObject", hasRestrictedLanguageErrorObject);
+                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject);
+                dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
             }
         }
 
@@ -353,7 +353,8 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     // HRESULT ABI return values.   However, in many cases async APIs will set the thread's restricted
                     // error info as a convention in order to provide extended debugging information for the ErrorCode
                     // property.
-                    Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(out IntPtr restrictedErrorInfoPtr));
+                    IntPtr restrictedErrorInfoPtr = IntPtr.Zero;
+                    Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(&restrictedErrorInfoPtr));
 
                     if (restrictedErrorInfoPtr != IntPtr.Zero)
                     {

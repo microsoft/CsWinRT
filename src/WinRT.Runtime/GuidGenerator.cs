@@ -160,6 +160,11 @@ namespace WinRT
             }
 #if !NET
             var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sig)).ToArray();
+
+            using (SHA1 sha = new SHA1CryptoServiceProvider())
+            {
+                return encode_guid(sha.ComputeHash(data));
+            }
 #else
             var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(sig.Length);
 
@@ -168,11 +173,9 @@ namespace WinRT
             wrt_pinterface_namespace.TryWriteBytes(dataSpan);
             var numBytes = UTF8Encoding.UTF8.GetBytes(sig, dataSpan[16..]);
             data = data[..(16 + numBytes)];
+
+            return encode_guid(SHA1.HashData(data));
 #endif
-            using (SHA1 sha = new SHA1CryptoServiceProvider())
-            {
-                return encode_guid(sha.ComputeHash(data));
-            }
         }
     }
 }
