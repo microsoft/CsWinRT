@@ -476,11 +476,11 @@ namespace ABI.System.Collections.Generic
             public IList_Delegates.GetMany_10 GetMany_10;
             public IList_Delegates.ReplaceAll_11 ReplaceAll_11;
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
-            private static readonly Type GetAt_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
-            private static readonly Type IndexOf_3_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
-            private static readonly Type SetAt_4_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
-            private static readonly Type InsertAt_5_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
-            private static readonly Type Append_7_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(int) });
+            private static readonly Type GetAt_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type IndexOf_3_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
+            private static readonly Type SetAt_4_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
+            private static readonly Type InsertAt_5_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
+            private static readonly Type Append_7_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {

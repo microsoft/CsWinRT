@@ -38,5 +38,11 @@ namespace UnitTestEmbedded
         {
             Assert.Equal(20, TestLib.Test5());
         }
+
+        [Fact]
+        public void Test6()
+        {
+            Assert.Equal(5, TestLib.Test6());
+        }
     }
 }

@@ -222,8 +222,8 @@ namespace ABI.System.Collections.Generic
             public global::System.Delegate IndexOf_2;
             public IReadOnlyList_Delegates.GetMany_3 GetMany_3;
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IReadOnlyList<T>));
-            private static readonly Type GetAt_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
-            private static readonly Type IndexOf_2_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
+            private static readonly Type GetAt_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type IndexOf_2_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
