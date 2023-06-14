@@ -453,7 +453,7 @@ namespace GuidPatch
             il.Emit(OpCodes.Pop);
 
             // Fix endianness, bytes
-            var memoryExtensions = CecilExtensions.FindTypeReference(module, "System", "MemoryExtensions", "System.Memory", false);
+            var memoryExtensions = CecilExtensions.FindTypeReference(module, "System", "MemoryExtensions", "System.Private.CoreLib", false);
 
             var reverseMethod_Generic = new MethodReference("Reverse", module.TypeSystem.Void, memoryExtensions) { };
 
