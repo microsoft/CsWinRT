@@ -8,6 +8,8 @@
     <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 

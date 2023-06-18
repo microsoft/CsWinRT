@@ -5,6 +5,8 @@
     <Platforms>x64;x86</Platforms>
     <AssemblyName>Microsoft.WinUI</AssemblyName>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
