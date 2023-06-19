@@ -30,6 +30,8 @@ namespace WinRT
         internal const int E_ELEMENTNOTENABLED = unchecked((int)0x802B001E);
         internal const int E_ELEMENTNOTAVAILABLE = unchecked((int)0x802B001F);
         internal const int ERROR_INVALID_WINDOW_HANDLE = unchecked((int)0x80070578);
+        private const int E_POINTER = unchecked((int)0x80004003);
+        private const int E_NOTIMPL = unchecked((int)0x80004001);
 
         [DllImport("oleaut32.dll")]
         private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
@@ -110,7 +112,6 @@ namespace WinRT
         {
             restoredExceptionFromGlobalState = false;
 
-            ObjectReference<ABI.WinRT.Interop.IErrorInfo.Vftbl> iErrorInfo = null;
             IObjectReference restrictedErrorInfoToSave = null;
             Exception ex;
             string description = null;
@@ -118,6 +119,7 @@ namespace WinRT
             string restrictedErrorReference = null;
             string restrictedCapabilitySid = null;
             bool hasOtherLanguageException = false;
+            string errorMessage = string.Empty;
 
             if (useGlobalErrorState)
             {
@@ -153,53 +155,79 @@ namespace WinRT
 
                     if (hr == hrLocal)
                     {
-                        restrictedErrorInfoRef.TryAs<ABI.WinRT.Interop.IErrorInfo.Vftbl>(out iErrorInfo);
+                        // For cross language WinRT exceptions, general information will be available in the description,
+                        // which is populated from IRestrictedErrorInfo::GetErrorDetails and more specific information will be available
+                        // in the resrictedError which also comes from IRestrictedErrorInfo::GetErrorDetails. If both are available, we
+                        // need to concatinate them to produce the final exception message.
+                        if (!string.IsNullOrEmpty(description))
+                        {
+                            errorMessage += description;
+
+                            if (!string.IsNullOrEmpty(restrictedError))
+                            {
+                                errorMessage += Environment.NewLine;
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(restrictedError))
+                        {
+                            errorMessage += restrictedError;
+                        }
                     }
                 }
             }
 
-            using (iErrorInfo)
+            switch (hr)
             {
-                switch (hr)
-                {
-                    case E_ILLEGAL_STATE_CHANGE:
-                    case E_ILLEGAL_METHOD_CALL:
-                    case E_ILLEGAL_DELEGATE_ASSIGNMENT:
-                    case APPMODEL_ERROR_NO_PACKAGE:
-                        ex = new InvalidOperationException(description);
-                        break;
-                    case E_XAMLPARSEFAILED:
-                        ex = new Microsoft.UI.Xaml.Markup.XamlParseException();
-                        break;
-                    case E_LAYOUTCYCLE:
-                        ex = new Microsoft.UI.Xaml.LayoutCycleException();
-                        break;
-                    case E_ELEMENTNOTAVAILABLE:
-                        ex = new Microsoft.UI.Xaml.Automation.ElementNotAvailableException();
-                        break;
-                    case E_ELEMENTNOTENABLED:
-                        ex = new Microsoft.UI.Xaml.Automation.ElementNotEnabledException();
-                        break;
-                    case ERROR_INVALID_WINDOW_HANDLE:
-                        ex = new System.Runtime.InteropServices.COMException(
+                case E_ILLEGAL_STATE_CHANGE:
+                case E_ILLEGAL_METHOD_CALL:
+                case E_ILLEGAL_DELEGATE_ASSIGNMENT:
+                case APPMODEL_ERROR_NO_PACKAGE:
+                    ex = new InvalidOperationException(errorMessage);
+                    break;
+                case E_XAMLPARSEFAILED:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Markup.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.Markup.XamlParseException();
+                    break;
+                case E_LAYOUTCYCLE:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException();
+                    break;
+                case E_ELEMENTNOTAVAILABLE:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotAvailableException();
+                    break;
+                case E_ELEMENTNOTENABLED:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotEnabledException();
+                    break;
+                case ERROR_INVALID_WINDOW_HANDLE:
+                    ex = new COMException(
 @"Invalid window handle. (0x80070578)
 Consider WindowNative, InitializeWithWindow
 See https://aka.ms/cswinrt/interop#windows-sdk", 
-                            ERROR_INVALID_WINDOW_HANDLE);
-                        break;
-                    default:
-                        ex = Marshal.GetExceptionForHR(hr, iErrorInfo?.ThisPtr ?? (IntPtr)(-1));
-                        break;
-                }
+                        ERROR_INVALID_WINDOW_HANDLE);
+                    break;
+                case RO_E_CLOSED:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new ObjectDisposedException(string.Empty, errorMessage) : new ObjectDisposedException(string.Empty);
+                    break;
+                case E_POINTER:
+                    ex = new NullReferenceException(errorMessage);
+                    break;
+                case E_NOTIMPL:
+                    ex = new NotImplementedException(errorMessage);
+                    break;
+                default:
+                    ex = new COMException(errorMessage, hr);
+                    break;
             }
 
-            ex.AddExceptionDataForRestrictedErrorInfo(
-                description,
-                restrictedError,
-                restrictedErrorReference,
-                restrictedCapabilitySid,
-                restrictedErrorInfoToSave,
-                hasOtherLanguageException);
+            if (useGlobalErrorState)
+            {
+                ex.AddExceptionDataForRestrictedErrorInfo(
+                    description,
+                    restrictedError,
+                    restrictedErrorReference,
+                    restrictedCapabilitySid,
+                    restrictedErrorInfoToSave,
+                    hasOtherLanguageException);
+            }
 
             return ex;
         }
