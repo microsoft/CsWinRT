@@ -172,7 +172,8 @@ namespace WinRT
                     {
                         // For cross language WinRT exceptions, general information will be available in the description,
                         // which is populated from IRestrictedErrorInfo::GetErrorDetails and more specific information will be available
-                        // in the resrictedError which also comes from IRestrictedErrorInfo::GetErrorDetails. If both are available, we
+                        // in the restrictedError which also comes from IRestrictedErrorInfo::GetErrorDetails. If both are available, we
+
                         // need to concatinate them to produce the final exception message.
                         if (!string.IsNullOrEmpty(description))
                         {
