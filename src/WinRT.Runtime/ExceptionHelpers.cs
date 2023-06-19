@@ -194,6 +194,7 @@ namespace WinRT
 
             switch (hr)
             {
+                case E_CHANGED_STATE:
                 case E_ILLEGAL_STATE_CHANGE:
                 case E_ILLEGAL_METHOD_CALL:
                 case E_ILLEGAL_DELEGATE_ASSIGNMENT:
@@ -271,6 +272,9 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     ex = new COMException(errorMessage, hr);
                     break;
             }
+
+            // Ensure HResult matches.
+            ex.SetHResult(hr);
 
             if (useGlobalErrorState)
             {
@@ -493,7 +497,11 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     {
         public static void SetHResult(this Exception ex, int value)
         {
+#if !NET
             ex.GetType().GetProperty("HResult").SetValue(ex, value);
+#else
+            ex.HResult = value;
+#endif
         }
 
         internal static Exception GetExceptionForHR(this Exception innerException, int hresult, string messageResource)
@@ -582,7 +590,7 @@ namespace Microsoft.UI.Xaml
 
 #if EMBED
         internal
-#else 
+#else
         public
 #endif
         class XamlParseException : Exception
