@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
@@ -18,6 +19,8 @@ namespace WinRT
     static unsafe class ExceptionHelpers
     {
         private const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
+        private const int COR_E_OPERATIONCANCELED = unchecked((int)0x8013153b);
+        private const int COR_E_ARGUMENTOUTOFRANGE = unchecked((int)0x80131502);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
         internal const int E_BOUNDS = unchecked((int)0x8000000b);
         internal const int E_CHANGED_STATE = unchecked((int)0x8000000c);
@@ -32,6 +35,18 @@ namespace WinRT
         internal const int ERROR_INVALID_WINDOW_HANDLE = unchecked((int)0x80070578);
         private const int E_POINTER = unchecked((int)0x80004003);
         private const int E_NOTIMPL = unchecked((int)0x80004001);
+        private const int E_ACCESSDENIED = unchecked((int)0x80070005);
+        private const int E_INVALIDARG = unchecked((int)0x80000003);
+        private const int E_NOINTERFACE = unchecked((int)0x80000004);
+        private const int E_OUTOFMEMORY = unchecked((int)0x80000002);
+        private const int ERROR_ARITHMETIC_OVERFLOW = unchecked((int)0x80070216);
+        private const int ERROR_FILENAME_EXCED_RANGE = unchecked((int)0x800700ce);
+        private const int ERROR_FILE_NOT_FOUND = unchecked((int)0x80070002);
+        private const int ERROR_HANDLE_EOF = unchecked((int)0x80070026);
+        private const int ERROR_PATH_NOT_FOUND = unchecked((int)0x80070003);
+        private const int ERROR_STACK_OVERFLOW = unchecked((int)0x800703e9);
+        private const int ERROR_BAD_FORMAT = unchecked((int)0x8007000b);
+        private const int ERROR_CANCELLED = unchecked((int)0x800704c7);
 
         [DllImport("oleaut32.dll")]
         private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
@@ -183,7 +198,7 @@ namespace WinRT
                 case E_ILLEGAL_METHOD_CALL:
                 case E_ILLEGAL_DELEGATE_ASSIGNMENT:
                 case APPMODEL_ERROR_NO_PACKAGE:
-                    ex = new InvalidOperationException(errorMessage);
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException();
                     break;
                 case E_XAMLPARSEFAILED:
                     ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Markup.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.Markup.XamlParseException();
@@ -208,10 +223,49 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     ex = !string.IsNullOrEmpty(errorMessage) ? new ObjectDisposedException(string.Empty, errorMessage) : new ObjectDisposedException(string.Empty);
                     break;
                 case E_POINTER:
-                    ex = new NullReferenceException(errorMessage);
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new NullReferenceException(errorMessage) : new NullReferenceException();
                     break;
                 case E_NOTIMPL:
-                    ex = new NotImplementedException(errorMessage);
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new NotImplementedException(errorMessage) : new NotImplementedException();
+                    break;
+                case E_ACCESSDENIED:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new UnauthorizedAccessException(errorMessage) : new UnauthorizedAccessException();
+                    break;
+                case E_INVALIDARG:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new ArgumentException(errorMessage) : new ArgumentException();
+                    break;
+                case E_NOINTERFACE:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidCastException(errorMessage) : new InvalidCastException();
+                    break;
+                case E_OUTOFMEMORY:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new OutOfMemoryException(errorMessage) : new OutOfMemoryException();
+                    break;
+                case E_BOUNDS:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new ArgumentOutOfRangeException(errorMessage) : new ArgumentOutOfRangeException();
+                    break;
+                case ERROR_ARITHMETIC_OVERFLOW:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new ArithmeticException(errorMessage) : new ArithmeticException();
+                    break;
+                case ERROR_FILENAME_EXCED_RANGE:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new PathTooLongException(errorMessage) : new PathTooLongException();
+                    break;
+                case ERROR_FILE_NOT_FOUND:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new FileNotFoundException(errorMessage) : new FileNotFoundException();
+                    break;
+                case ERROR_HANDLE_EOF:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new EndOfStreamException(errorMessage) : new EndOfStreamException();
+                    break;
+                case ERROR_PATH_NOT_FOUND:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new DirectoryNotFoundException(errorMessage) : new DirectoryNotFoundException();
+                    break;
+                case ERROR_STACK_OVERFLOW:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new StackOverflowException(errorMessage) : new StackOverflowException();
+                    break;
+                case ERROR_BAD_FORMAT:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new BadImageFormatException(errorMessage) : new BadImageFormatException();
+                    break;
+                case ERROR_CANCELLED:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new OperationCanceledException(errorMessage) : new OperationCanceledException();
                     break;
                 default:
                     ex = new COMException(errorMessage, hr);
@@ -291,11 +345,19 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             {
                 restrictedErrorObject.AsType<ABI.WinRT.Interop.IRestrictedErrorInfo>().GetErrorDetails(out _, out hr, out _, out _);
             }
-            if (hr == COR_E_OBJECTDISPOSED)
+
+            switch (hr)
             {
-                return RO_E_CLOSED;
+                case COR_E_OBJECTDISPOSED:
+                    return RO_E_CLOSED;
+                case COR_E_OPERATIONCANCELED:
+                    return ERROR_CANCELLED;
+                case COR_E_ARGUMENTOUTOFRANGE:
+                    return E_BOUNDS;
+
+                default:
+                    return hr;
             }
-            return hr;
         }
 
         //
