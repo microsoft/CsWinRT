@@ -21,6 +21,8 @@ namespace WinRT
         private const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
         private const int COR_E_OPERATIONCANCELED = unchecked((int)0x8013153b);
         private const int COR_E_ARGUMENTOUTOFRANGE = unchecked((int)0x80131502);
+        private const int COR_E_INDEXOUTOFRANGE = unchecked((int)0x80131508);
+        private const int COR_E_TIMEOUT = unchecked((int)0x80131505);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
         internal const int E_BOUNDS = unchecked((int)0x8000000b);
         internal const int E_CHANGED_STATE = unchecked((int)0x8000000c);
@@ -36,9 +38,9 @@ namespace WinRT
         private const int E_POINTER = unchecked((int)0x80004003);
         private const int E_NOTIMPL = unchecked((int)0x80004001);
         private const int E_ACCESSDENIED = unchecked((int)0x80070005);
-        private const int E_INVALIDARG = unchecked((int)0x80000003);
-        private const int E_NOINTERFACE = unchecked((int)0x80000004);
-        private const int E_OUTOFMEMORY = unchecked((int)0x80000002);
+        private const int E_INVALIDARG = unchecked((int)0x80070057);
+        private const int E_NOINTERFACE = unchecked((int)0x80004002);
+        private const int E_OUTOFMEMORY = unchecked((int)0x8007000e);
         private const int ERROR_ARITHMETIC_OVERFLOW = unchecked((int)0x80070216);
         private const int ERROR_FILENAME_EXCED_RANGE = unchecked((int)0x800700ce);
         private const int ERROR_FILE_NOT_FOUND = unchecked((int)0x80070002);
@@ -47,6 +49,7 @@ namespace WinRT
         private const int ERROR_STACK_OVERFLOW = unchecked((int)0x800703e9);
         private const int ERROR_BAD_FORMAT = unchecked((int)0x8007000b);
         private const int ERROR_CANCELLED = unchecked((int)0x800704c7);
+        private const int ERROR_TIMEOUT = unchecked((int)0x800705b4);
 
         [DllImport("oleaut32.dll")]
         private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
@@ -268,6 +271,10 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 case ERROR_CANCELLED:
                     ex = !string.IsNullOrEmpty(errorMessage) ? new OperationCanceledException(errorMessage) : new OperationCanceledException();
                     break;
+                case ERROR_TIMEOUT:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new TimeoutException(errorMessage) : new TimeoutException();
+                    break;
+
                 default:
                     ex = new COMException(errorMessage, hr);
                     break;
@@ -357,7 +364,10 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 case COR_E_OPERATIONCANCELED:
                     return ERROR_CANCELLED;
                 case COR_E_ARGUMENTOUTOFRANGE:
+                case COR_E_INDEXOUTOFRANGE:
                     return E_BOUNDS;
+                case COR_E_TIMEOUT:
+                    return ERROR_TIMEOUT;
 
                 default:
                     return hr;
