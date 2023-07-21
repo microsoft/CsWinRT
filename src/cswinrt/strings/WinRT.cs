@@ -367,7 +367,7 @@ namespace WinRT
     {
         public EventRegistrationToken token;
         public System.Delegate del;
-        public System.Delegate eventInvoke;
+        private readonly System.WeakReference<System.Delegate> eventInvokeWeak;
         private bool disposedValue;
         private readonly IntPtr obj;
         private readonly int index;
@@ -375,11 +375,23 @@ namespace WinRT
         private IntPtr eventInvokePtr;
         private IntPtr referenceTrackerTargetPtr;
 
+        // Called within a lock and only called once, so we can avoid locking and
+        // not check whether there was any previous target set.
+        public System.Delegate EventInvoke
+        {
+            get
+            {
+                var eventInvokeStrong = GetEventInvoke();
+                eventInvokeWeak.SetTarget(eventInvokeStrong);
+                return eventInvokeStrong;
+            }
+        }
+
         protected State(IntPtr obj, int index)
         {
             this.obj = obj;
             this.index = index;
-            eventInvoke = GetEventInvoke();
+            eventInvokeWeak = new System.WeakReference<Delegate>(null);
             cacheEntry = new System.WeakReference<State>(this);
         }
 
@@ -437,6 +449,11 @@ namespace WinRT
 
         public unsafe bool HasComReferences()
         {
+            if (!eventInvokeWeak.TryGetTarget(out var eventInvokeStrong))
+            {
+                return false;
+            }
+
             if (eventInvokePtr != default)
             {
                 IUnknownVftbl vftblIUnknown = **(IUnknownVftbl**)eventInvokePtr;
@@ -461,6 +478,7 @@ namespace WinRT
                 }
             }
 
+            GC.KeepAlive(eventInvokeStrong);
             return false;
         }
     }
@@ -611,7 +629,6 @@ namespace WinRT
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
         protected System.WeakReference<State> _state;
-        private readonly (Action<TDelegate>, Action<TDelegate>) _handlerTuple;
 
         protected EventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
@@ -623,7 +640,6 @@ namespace WinRT
             _removeHandler = removeHandler;
             _index = index;
             _state = Cache.GetState(obj, index);
-            _handlerTuple = (Subscribe, Unsubscribe);
         }
 
         protected abstract ObjectReferenceValue CreateMarshaler(TDelegate del);
@@ -650,7 +666,7 @@ namespace WinRT
                 state.del = (TDelegate)global::System.Delegate.Combine(state.del, del);
                 if (registerHandler)
                 {
-                    var eventInvoke = (TDelegate)state.eventInvoke;
+                    var eventInvoke = (TDelegate)state.EventInvoke;
                     var marshaler = CreateMarshaler(eventInvoke);
                     try
                     {
@@ -686,7 +702,7 @@ namespace WinRT
             }
         }
 
-        public (Action<TDelegate>, Action<TDelegate>) EventActions => _handlerTuple;
+        public (Action<TDelegate>, Action<TDelegate>) EventActions => (Subscribe, Unsubscribe);
 
         private void UnsubscribeFromNative(State state)
         {
