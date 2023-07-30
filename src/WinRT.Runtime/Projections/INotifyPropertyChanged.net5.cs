@@ -8,10 +8,10 @@ using WinRT;
 namespace ABI.System.ComponentModel
 {
     [DynamicInterfaceCastableImplementation]
-    [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
+    [Guid("cf75d69c-f2f4-486b-b302-bb4c09baebfa")]
     unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
-        [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
+        [Guid("cf75d69c-f2f4-486b-b302-bb4c09baebfa")]
         [StructLayout(LayoutKind.Sequential)]
         public struct Vftbl
         {

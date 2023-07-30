@@ -14,8 +14,7 @@
     <DebugSymbols>true</DebugSymbols>
     <LangVersion>preview</LangVersion>
     <NoWarn>8305;0618</NoWarn>
-    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
-    <GenerateTestProjection Condition="'$(GenerateTestProjection)' == ''">false</GenerateTestProjection>
+    <GenerateTestProjection>false</GenerateTestProjection>
     <CsWinRTGenerateProjection>$(GenerateTestProjection)</CsWinRTGenerateProjection>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
     <PlatformToolset>v143</PlatformToolset>

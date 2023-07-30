@@ -669,93 +669,6 @@ namespace cswinrt
             std::initializer_list<mapped_type> types;
         } mapped_types[] =
         {
-            // Make sure to keep this table consistent with the registrations in WinRT.Runtime/Projections.cs
-            // and the reverse mapping in WinRT.SourceGenerator/WinRTTypeWriter.cs.
-            // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
-            { "Microsoft.UI.Xaml",
-                {
-                    { "CornerRadius", "Microsoft.UI.Xaml", "CornerRadius" },
-                    { "CornerRadiusHelper" },
-                    { "Duration", "Microsoft.UI.Xaml", "Duration" },
-                    { "DurationHelper" },
-                    { "DurationType", "Microsoft.UI.Xaml", "DurationType" },
-                    { "GridLength", "Microsoft.UI.Xaml", "GridLength" },
-                    { "GridLengthHelper" },
-                    { "GridUnitType", "Microsoft.UI.Xaml", "GridUnitType" },
-                    { "ICornerRadiusHelper" },
-                    { "ICornerRadiusHelperStatics" },
-                    { "IDurationHelper" },
-                    { "IDurationHelperStatics" },
-                    { "IGridLengthHelper" },
-                    { "IGridLengthHelperStatics" },
-                    { "IThicknessHelper" },
-                    { "IThicknessHelperStatics" },
-                    { "Thickness", "Microsoft.UI.Xaml", "Thickness" },
-                    { "ThicknessHelper" },
-                    { "IXamlServiceProvider", "System", "IServiceProvider" },
-                }
-            },
-            { "Microsoft.UI.Xaml.Controls.Primitives",
-                {
-                    { "GeneratorPosition", "Microsoft.UI.Xaml.Controls.Primitives", "GeneratorPosition" },
-                    { "GeneratorPositionHelper" },
-                    { "IGeneratorPositionHelper" },
-                    { "IGeneratorPositionHelperStatics" },
-                }
-            },
-            { "Microsoft.UI.Xaml.Data",
-                {
-                    { "DataErrorsChangedEventArgs", "System.ComponentModel", "DataErrorsChangedEventArgs" },
-                    { "INotifyDataErrorInfo", "System.ComponentModel", "INotifyDataErrorInfo", true, true },
-                    { "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
-                    { "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
-                    { "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
-                }
-            },
-            { "Microsoft.UI.Xaml.Input",
-                {
-                    { "ICommand", "System.Windows.Input", "ICommand", true }
-                }
-            },
-            { "Microsoft.UI.Xaml.Interop",
-                {
-                    { "IBindableIterable", "System.Collections", "IEnumerable", true, true },
-                    { "IBindableVector", "System.Collections", "IList", true, true },
-                    { "INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true },
-                    { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },
-                    { "NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true },
-                    { "NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true },
-                }
-            },
-            { "Microsoft.UI.Xaml.Media",
-                {
-                    { "IMatrixHelper" },
-                    { "IMatrixHelperStatics" },
-                    { "Matrix", "Microsoft.UI.Xaml.Media", "Matrix" },
-                    { "MatrixHelper" },
-                }
-            },
-            { "Microsoft.UI.Xaml.Media.Animation",
-                {
-                    { "IKeyTimeHelper" },
-                    { "IKeyTimeHelperStatics" },
-                    { "IRepeatBehaviorHelper" },
-                    { "IRepeatBehaviorHelperStatics" },
-                    { "KeyTime", "Microsoft.UI.Xaml.Media.Animation", "KeyTime" },
-                    { "KeyTimeHelper" },
-                    { "RepeatBehavior", "Microsoft.UI.Xaml.Media.Animation", "RepeatBehavior" },
-                    { "RepeatBehaviorHelper" },
-                    { "RepeatBehaviorType", "Microsoft.UI.Xaml.Media.Animation", "RepeatBehaviorType" }
-                }
-            },
-            { "Microsoft.UI.Xaml.Media.Media3D",
-                {
-                    { "IMatrix3DHelper" },
-                    { "IMatrix3DHelperStatics" },
-                    { "Matrix3D", "Microsoft.UI.Xaml.Media.Media3D", "Matrix3D" },
-                    { "Matrix3DHelper" },
-                }
-            },
             { "WinRT.Interop",
                 {
                     { "HWND", "System", "IntPtr" },
@@ -816,11 +729,86 @@ namespace cswinrt
                     { "IColorHelperStatics2" },
                 }
             },
-            // Temporary, until WinUI provides TypeName
+            { "Windows.UI.Xaml",
+                {
+                    { "CornerRadius", "Windows.UI.Xaml", "CornerRadius" },
+                    { "CornerRadiusHelper" },
+                    { "Duration", "Windows.UI.Xaml", "Duration" },
+                    { "DurationHelper" },
+                    { "DurationType", "Windows.UI.Xaml", "DurationType" },
+                    { "GridLength", "Windows.UI.Xaml", "GridLength" },
+                    { "GridLengthHelper" },
+                    { "GridUnitType", "Windows.UI.Xaml", "GridUnitType" },
+                    { "ICornerRadiusHelper" },
+                    { "ICornerRadiusHelperStatics" },
+                    { "IDurationHelper" },
+                    { "IDurationHelperStatics" },
+                    { "IGridLengthHelper" },
+                    { "IGridLengthHelperStatics" },
+                    { "IThicknessHelper" },
+                    { "IThicknessHelperStatics" },
+                    { "Thickness", "Windows.UI.Xaml", "Thickness" },
+                    { "ThicknessHelper" },
+                }
+            },
+            { "Windows.UI.Xaml.Controls.Primitives",
+                {
+                    { "GeneratorPosition", "Windows.UI.Xaml.Controls.Primitives", "GeneratorPosition" },
+                    { "GeneratorPositionHelper" },
+                    { "IGeneratorPositionHelper" },
+                    { "IGeneratorPositionHelperStatics" },
+                }
+            },
+            { "Windows.UI.Xaml.Data",
+                {
+                    { "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
+                    { "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
+                    { "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
+                }
+            },
+            { "Windows.UI.Xaml.Input",
+                {
+                    { "ICommand", "System.Windows.Input", "ICommand", true }
+                }
+            },
             { "Windows.UI.Xaml.Interop",
                 {
+                    { "IBindableIterable", "System.Collections", "IEnumerable", true, true },
+                    { "IBindableVector", "System.Collections", "IList", true, true },
+                    { "INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true },
+                    { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },
+                    { "NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true },
+                    { "NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true },
                     { "TypeKind", "Windows.UI.Xaml.Interop", "TypeKind", true },
                     { "TypeName", "System", "Type", true }
+                }
+            },{ "Windows.UI.Xaml.Media",
+                {
+                    { "IMatrixHelper" },
+                    { "IMatrixHelperStatics" },
+                    { "Matrix", "Windows.UI.Xaml.Media", "Matrix" },
+                    { "MatrixHelper" },
+                }
+            },
+            { "Windows.UI.Xaml.Media.Animation",
+                {
+                    { "IKeyTimeHelper" },
+                    { "IKeyTimeHelperStatics" },
+                    { "IRepeatBehaviorHelper" },
+                    { "IRepeatBehaviorHelperStatics" },
+                    { "KeyTime", "Windows.UI.Xaml.Media.Animation", "KeyTime" },
+                    { "KeyTimeHelper" },
+                    { "RepeatBehavior", "Windows.UI.Xaml.Media.Animation", "RepeatBehavior" },
+                    { "RepeatBehaviorHelper" },
+                    { "RepeatBehaviorType", "Windows.UI.Xaml.Media.Animation", "RepeatBehaviorType" }
+                }
+            },
+            { "Windows.UI.Xaml.Media.Media3D",
+                {
+                    { "IMatrix3DHelper" },
+                    { "IMatrix3DHelperStatics" },
+                    { "Matrix3D", "Windows.UI.Xaml.Media.Media3D", "Matrix3D" },
+                    { "Matrix3DHelper" },
                 }
             },
         };
@@ -879,12 +867,39 @@ namespace cswinrt
                     { 1, "10.0.17763.0" },
                     { 2, "10.0.18362.0" },
                     { 3, "10.0.19041.0" },
+                    { 4, "10.0.20348.0" },
+                    { 5, "10.0.22000.0" },
                 }
             },
             { "Windows.AI.MachineLearning.Preview.MachineLearningPreviewContract",
                 {
                     { 1, "10.0.17134.0" },
                     { 2, "10.0.17763.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Activation.ActivatedEventsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Activation.ActivationCameraSettingsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Activation.ContactActivatedEventsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Activation.WebUISearchActivatedEventsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Background.BackgroundAlarmApplicationContract",
+                {
+                    { 1, "10.0.10240.0" },
                 }
             },
             { "Windows.ApplicationModel.Calls.Background.CallsBackgroundContract",
@@ -897,6 +912,7 @@ namespace cswinrt
                 {
                     { 4, "10.0.17763.0" },
                     { 5, "10.0.18362.0" },
+                    { 6, "10.0.20348.0" },
                 }
             },
             { "Windows.ApplicationModel.Calls.CallsVoipContract",
@@ -907,9 +923,46 @@ namespace cswinrt
                     { 4, "10.0.17763.0" },
                 }
             },
+            { "Windows.ApplicationModel.Calls.LockScreenCallContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
             { "Windows.ApplicationModel.CommunicationBlocking.CommunicationBlockingContract",
                 {
                     { 2, "10.0.17763.0" },
+                }
+            },
+            { "Windows.ApplicationModel.FullTrustAppContract",
+                {
+                    { 1, "10.0.15063.0" },
+                    { 2, "10.0.22000.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Preview.InkWorkspace.PreviewInkWorkspaceContract",
+                {
+                    { 1, "10.0.15063.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Preview.Notes.PreviewNotesContract",
+                {
+                    { 2, "10.0.15063.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Resources.Management.ResourceIndexerContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.17763.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Search.Core.SearchCoreContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Search.SearchContract",
+                {
+                    { 1, "10.0.10240.0" },
                 }
             },
             { "Windows.ApplicationModel.SocialInfo.SocialInfoContract",
@@ -924,6 +977,11 @@ namespace cswinrt
                     { 3, "10.0.17134.0" },
                 }
             },
+            { "Windows.ApplicationModel.Wallet.WalletContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
             { "Windows.Devices.Custom.CustomDeviceContract",
                 {
                     { 1, "10.0.16299.0" },
@@ -935,9 +993,25 @@ namespace cswinrt
                     { 3, "10.0.15063.0" },
                 }
             },
+            { "Windows.Devices.Portable.PortableDeviceContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Devices.Printers.Extensions.ExtensionsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.10586.0" },
+                }
+            },
             { "Windows.Devices.Printers.PrintersContract",
                 {
                     { 1, "10.0.10586.0" },
+                }
+            },
+            { "Windows.Devices.Scanners.ScannerDeviceContract",
+                {
+                    { 1, "10.0.10240.0" },
                 }
             },
             { "Windows.Devices.SmartCards.SmartCardBackgroundTriggerContract",
@@ -949,6 +1023,16 @@ namespace cswinrt
                 {
                     { 5, "10.0.16299.0" },
                     { 6, "10.0.17763.0" },
+                }
+            },
+            { "Windows.Devices.Sms.LegacySmsApiContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Embedded.DeviceLockdown.DeviceLockdownContract",
+                {
+                    { 1, "10.0.10240.0" },
                 }
             },
             { "Windows.Foundation.FoundationContract",
@@ -970,6 +1054,8 @@ namespace cswinrt
                     { 7, "10.0.17763.0" },
                     { 8, "10.0.18362.0" },
                     { 10, "10.0.19041.0" },
+                    { 12, "10.0.20348.0" },
+                    { 14, "10.0.22000.0" },
                 }
             },
             { "Windows.Foundation.VelocityIntegration.VelocityIntegrationContract",
@@ -1003,6 +1089,7 @@ namespace cswinrt
             { "Windows.Security.Isolation.IsolatedWindowsEnvironmentContract",
                 {
                     { 1, "10.0.19041.0" },
+                    { 3, "10.0.20348.0" },
                 }
             },
             { "Windows.Services.Maps.GuidanceContract",
@@ -1031,11 +1118,17 @@ namespace cswinrt
             { "Windows.Storage.Provider.CloudFilesContract",
                 {
                     { 4, "10.0.19041.0" },
+                    { 6, "10.0.20348.0" },
                 }
             },
             { "Windows.System.Profile.ProfileHardwareTokenContract",
                 {
                     { 1, "10.0.14393.0" },
+                }
+            },
+            { "Windows.System.Profile.ProfileRetailInfoContract",
+                {
+                    { 1, "10.0.20348.0" },
                 }
             },
             { "Windows.System.Profile.ProfileSharedModeContract",
@@ -1055,6 +1148,12 @@ namespace cswinrt
                     { 7, "10.0.19041.0" },
                 }
             },
+            { "Windows.UI.UIAutomation.UIAutomationContract",
+                {
+                    { 1, "10.0.20348.0" },
+                    { 2, "10.0.22000.0" },
+                }
+            },
             { "Windows.UI.ViewManagement.ViewManagementViewScalingContract",
                 {
                     { 1, "10.0.14393.0" },
@@ -1063,7 +1162,315 @@ namespace cswinrt
             { "Windows.UI.Xaml.Core.Direct.XamlDirectContract",
                 {
                     { 1, "10.0.17763.0" },
-                    { 2, "10.0.18362.0" },
+                    { 2, "10.0.18362.0" },{ 3, "10.0.20348.0" },
+                    { 5, "10.0.22000.0" },
+                }
+            },
+            // Windows.Desktop
+            { "Windows.Gaming.Input.GamingInputPreviewContract",
+                {
+                    { 1, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Gaming.Preview.GamesEnumerationContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Gaming.UI.GameChatOverlayContract",
+                {
+                    { 1, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Gaming.UI.GamingUIProviderContract",
+                {
+                    { 1, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Globalization.GlobalizationJapanesePhoneticAnalyzerContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Graphics.Printing3D.Printing3DContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Management.Deployment.Preview.DeploymentPreviewContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Management.Deployment.SharedPackageContainerContract",
+                {
+                    { 1, "10.0.22000.0" },
+                }
+            },
+            { "Windows.Management.Orchestration.OrchestrationContract",
+                {
+                    { 1, "10.0.10586.0" },
+                }
+            },
+            { "Windows.Management.Workplace.WorkplaceSettingsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Media.AppBroadcasting.AppBroadcastingContract",
+                {
+                    { 1, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Media.AppRecording.AppRecordingContract",
+                {
+                    { 1, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Media.Capture.AppBroadcastContract",
+                {
+                    { 1, "10.0.15063.0" },
+                    { 2, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Media.Capture.AppCaptureContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.10586.0" },
+                    { 3, "10.0.14393.0" },
+                    { 4, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Media.Capture.AppCaptureMetadataContract",
+                {
+                    { 1, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Media.Capture.CameraCaptureUIContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Media.Capture.GameBarContract",
+                {
+                    { 1, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Media.Devices.CallControlContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Media.MediaControlContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Media.Playlists.PlaylistsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Media.Protection.ProtectionRenewalContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Networking.NetworkOperators.LegacyNetworkOperatorsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Networking.Sockets.ControlChannelTriggerContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.15063.0" },
+                    { 3, "10.0.17134.0" },
+                }
+            },
+            { "Windows.Networking.XboxLive.XboxLiveSecureSocketsContract",
+                {
+                    { 1, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Perception.Automation.Core.PerceptionAutomationCoreContract",
+                {
+                    { 1, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Security.EnterpriseData.EnterpriseDataContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.10586.0" },
+                    { 3, "10.0.14393.0" },
+                    { 4, "10.0.15063.0" },
+                    { 5, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Security.ExchangeActiveSyncProvisioning.EasContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Services.Maps.GuidanceContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.10586.0" },
+                    { 3, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Services.Maps.LocalSearchContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.10586.0" },
+                    { 3, "10.0.15063.0" },
+                    { 4, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Storage.Provider.CloudFilesContract",
+                {
+                    { 1, "10.0.16299.0" },
+                    { 2, "10.0.17134.0" },
+                    { 3, "10.0.17763.0" },
+                }
+            },
+            { "Windows.System.Profile.ProfileHardwareTokenContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.System.Profile.ProfileRetailInfoContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.System.Profile.SystemManufacturers.SystemManufacturersContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.16299.0" },
+                }
+            },
+            { "Windows.System.UserProfile.UserProfileContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.16299.0" },
+                }
+            },
+            { "Windows.System.UserProfile.UserProfileLockScreenContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.UI.ApplicationSettings.ApplicationsSettingsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.UI.Core.AnimationMetrics.AnimationMetricsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.UI.Core.CoreWindowDialogsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.UI.Shell.SecurityAppManagerContract",
+                {
+                    { 1, "10.0.17763.0" },
+                }
+            },
+            { "Windows.UI.Xaml.Hosting.HostingContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.16299.0" },
+                    { 3, "10.0.17763.0" },
+                    { 4, "10.0.18362.0" },
+                    { 5, "10.0.22000.0" },
+                }
+            },
+            { "Windows.Web.Http.Diagnostics.HttpDiagnosticsContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.15063.0" },
+                }
+            },
+            // Windows.Mobile
+            { "Windows.ApplicationModel.Calls.CallsPhoneContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.10586.0" },
+                    { 3, "10.0.16299.0" },
+                    { 4, "10.0.17134.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Calls.CallsVoipContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.ApplicationModel.CommunicationBlocking.CommunicationBlockingContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.15063.0" },
+                }
+            },
+            { "Windows.ApplicationModel.SocialInfo.SocialInfoContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Devices.SmartCards.SmartCardBackgroundTriggerContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.14393.0" },
+                    { 3, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Devices.SmartCards.SmartCardEmulatorContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.10586.0" },
+                    { 3, "10.0.14393.0" },
+                    { 4, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Networking.NetworkOperators.NetworkOperatorsFdnContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Phone.PhoneContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.Phone.PhoneInternalContract",
+                {
+                    { 1, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Phone.StartScreen.DualSimTileContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.UI.WebUI.Core.WebUICommandBarContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            // Windows.Team
+            { "Windows.System.Profile.ProfileSharedModeContract",
+                {
+                    { 1, "10.0.10240.0" },
+                }
+            },
+            { "Windows.UI.Core.Preview.Communications.PreviewCommunicationsContract",
+                {
+                    { 1, "10.0.22000.0" },
                 }
             },
         };
