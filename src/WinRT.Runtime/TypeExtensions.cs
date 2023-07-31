@@ -134,7 +134,7 @@ namespace WinRT
 
         internal static IntPtr GetAbiToProjectionVftblPtr(
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicNestedTypes)]
 #endif
             this Type helperType)
         {
