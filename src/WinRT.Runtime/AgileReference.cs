@@ -43,7 +43,7 @@ namespace WinRT
             {
                 Marshal.ThrowExceptionForHR(Platform.RoGetAgileReference(
                     0 /*AGILEREFERENCE_DEFAULT*/,
-                    ref iid,
+                    &iid,
                     thisPtr,
                     &agileReference));
                 _agileReference = ObjectReference<IUnknownVftbl>.Attach(ref agileReference);
@@ -91,10 +91,10 @@ namespace WinRT
             try
             {
                 Marshal.ThrowExceptionForHR(Platform.CoCreateInstance(
-                    ref gitClsid,
+                    &gitClsid,
                     IntPtr.Zero,
                     1 /*CLSCTX_INPROC_SERVER*/,
-                    ref gitIid,
+                    &gitIid,
                     &gitPtr));
                 return ABI.WinRT.Interop.IGlobalInterfaceTable.FromAbi(gitPtr).AsType<ABI.WinRT.Interop.IGlobalInterfaceTable>();
             }
