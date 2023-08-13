@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using WinRT.Interop;
 
@@ -29,7 +30,7 @@ namespace WinRT
     internal sealed class Platform
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        internal static extern unsafe int CoCreateInstance(ref Guid clsid, IntPtr outer, uint clsContext, ref Guid iid, IntPtr* instance);
+        internal static extern unsafe int CoCreateInstance(Guid* clsid, IntPtr outer, uint clsContext, Guid* iid, IntPtr* instance);
 
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern int CoDecrementMTAUsage(IntPtr cookie);
@@ -42,30 +43,34 @@ namespace WinRT
         internal static extern bool FreeLibrary(IntPtr moduleHandle);
 
         [DllImport("kernel32.dll", EntryPoint = "GetProcAddress", SetLastError = true, BestFitMapping = false)]
-        internal static unsafe extern void* TryGetProcAddress(IntPtr moduleHandle, [MarshalAs(UnmanagedType.LPStr)] string functionName);
-        internal static unsafe void* GetProcAddress(IntPtr moduleHandle, string functionName)
+        internal static unsafe extern void* TryGetProcAddress(IntPtr moduleHandle, sbyte* functionName);
+
+        internal static unsafe void* GetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
         {
-            void* functionPtr = Platform.TryGetProcAddress(moduleHandle, functionName);
-            if (functionPtr == null)
+            fixed (byte* lpFunctionName = functionName)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+                void* functionPtr = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
+                if (functionPtr == null)
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+                }
+                return functionPtr;
             }
-            return functionPtr;
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern IntPtr LoadLibraryExW([MarshalAs(UnmanagedType.LPWStr)] string fileName, IntPtr fileHandle, uint flags);
+        internal static unsafe extern IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags);
 
         [DllImport("api-ms-win-core-winrt-l1-1-0.dll")]
-        internal static extern unsafe int RoGetActivationFactory(IntPtr runtimeClassId, ref Guid iid, IntPtr* factory);
+        internal static extern unsafe int RoGetActivationFactory(IntPtr runtimeClassId, Guid* iid, IntPtr* factory);
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe int WindowsCreateString([MarshalAs(UnmanagedType.LPWStr)] string sourceString,
+        internal static extern unsafe int WindowsCreateString(ushort* sourceString,
                                                   int length,
                                                   IntPtr* hstring);
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe int WindowsCreateStringReference(char* sourceString,
+        internal static extern unsafe int WindowsCreateStringReference(ushort* sourceString,
                                                   int length,
                                                   IntPtr* hstring_header,
                                                   IntPtr* hstring);
@@ -81,7 +86,7 @@ namespace WinRT
         internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
 
         [DllImport("api-ms-win-core-com-l1-1-1.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe int RoGetAgileReference(uint options, ref Guid iid, IntPtr unknown, IntPtr* agileReference);
+        internal static extern unsafe int RoGetAgileReference(uint options, Guid* iid, IntPtr unknown, IntPtr* agileReference);
     }
 
     internal struct VftblPtr
@@ -121,7 +126,9 @@ namespace WinRT
         {
             // Explicitly look for module in the same directory as this one, and
             // use altered search path to ensure any dependencies in the same directory are found.
-            var moduleHandle = Platform.LoadLibraryExW(System.IO.Path.Combine(_currentModuleDirectory, fileName), IntPtr.Zero, /* LOAD_WITH_ALTERED_SEARCH_PATH */ 8);
+            IntPtr moduleHandle = IntPtr.Zero;
+            fixed (char* lpFilePath = System.IO.Path.Combine(_currentModuleDirectory, fileName))
+                moduleHandle = Platform.LoadLibraryExW((ushort*)lpFilePath, IntPtr.Zero, /* LOAD_WITH_ALTERED_SEARCH_PATH */ 8);
 #if NET
             if (moduleHandle == IntPtr.Zero)
             {
@@ -134,7 +141,9 @@ namespace WinRT
                 return false;
             }
 
-            var getActivationFactory = Platform.TryGetProcAddress(moduleHandle, "DllGetActivationFactory");
+            void* getActivationFactory = null;
+            fixed (byte* lpFunctionName = "DllGetActivationFactory"u8)
+                getActivationFactory = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
             if (getActivationFactory == null)
             {
                 module = null;
@@ -154,7 +163,10 @@ namespace WinRT
             _moduleHandle = moduleHandle;
             _GetActivationFactory = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)getActivationFactory;
 
-            var canUnloadNow = Platform.TryGetProcAddress(_moduleHandle, "DllCanUnloadNow");
+            void* canUnloadNow = null;
+            fixed (byte* lpFunctionName = "DllCanUnloadNow"u8)
+                canUnloadNow = Platform.TryGetProcAddress(_moduleHandle, (sbyte*)lpFunctionName);
+
             if (canUnloadNow != null)
             {
                 _CanUnloadNow = (delegate* unmanaged[Stdcall]<int>)canUnloadNow;
@@ -224,7 +236,7 @@ namespace WinRT
             var module = Instance; // Ensure COM is initialized
             Guid iid = IActivationFactoryVftbl.IID;
             IntPtr instancePtr;
-            int hr = Platform.RoGetActivationFactory(hstrRuntimeClassId, ref iid, &instancePtr);
+            int hr = Platform.RoGetActivationFactory(hstrRuntimeClassId, &iid, &instancePtr);
             return (hr == 0 ? instancePtr : IntPtr.Zero, hr);
         }
 
@@ -337,7 +349,7 @@ namespace WinRT
         public static ObjectReference<I> ActivateInstance<
 #if NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.None)]
-#endif 
+#endif
             I>() => _factory._ActivateInstance<I>();
     }
 

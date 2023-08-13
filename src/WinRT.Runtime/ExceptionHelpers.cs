@@ -63,24 +63,27 @@ namespace WinRT
 
         private static bool Initialize()
         {
-            IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
-            if (winRTErrorModule != IntPtr.Zero)
+            fixed (char* moduleName = "api-ms-win-core-winrt-error-l1-1-1.dll")
             {
-                roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoOriginateLanguageException");
-                roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoReportUnhandledError");
-            }
-            else
-            {
-                winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
-            }
+                IntPtr winRTErrorModule = Platform.LoadLibraryExW((ushort*)moduleName, IntPtr.Zero, (uint)DllImportSearchPath.System32);
+                if (winRTErrorModule != IntPtr.Zero)
+                {
+                    roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoOriginateLanguageException"u8);
+                    roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoReportUnhandledError"u8);
+                }
+                else
+                {
+                    winRTErrorModule = Platform.LoadLibraryExW((ushort*)moduleName, IntPtr.Zero, (uint)DllImportSearchPath.System32);
+                }
 
-            if (winRTErrorModule != IntPtr.Zero)
-            {
-                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, "GetRestrictedErrorInfo");
-                setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "SetRestrictedErrorInfo");
-            }
+                if (winRTErrorModule != IntPtr.Zero)
+                {
+                    getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, "GetRestrictedErrorInfo"u8);
+                    setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "SetRestrictedErrorInfo"u8);
+                }
 
-            return true;
+                return true;
+            }
         }
 
         public static void ThrowExceptionForHR(int hr)
@@ -321,9 +324,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
                     IntPtr hstring;
 
-                    if (Platform.WindowsCreateString(message, message.Length, &hstring) != 0)
+                    fixed (char* lpMessage = message)
                     {
-                        hstring = IntPtr.Zero;
+                        if (Platform.WindowsCreateString((ushort*)lpMessage, message.Length, &hstring) != 0)
+                        {
+                            hstring = IntPtr.Zero;
+                        }
                     }
 
                     using var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex);
