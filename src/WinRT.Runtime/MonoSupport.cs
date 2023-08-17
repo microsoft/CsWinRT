@@ -14,9 +14,7 @@ namespace WinRT
     {
         static unsafe Lazy<bool> _usingMono = new Lazy<bool>(() =>
         {
-            IntPtr modulePtr = IntPtr.Zero;
-            fixed (char* name = "mono-2.0-bdwgc.dll")
-                modulePtr = Platform.LoadLibraryExW((ushort*)name, IntPtr.Zero, 0);
+            IntPtr modulePtr = Platform.LoadLibraryExW("mono-2.0-bdwgc.dll", IntPtr.Zero, 0);
             if (modulePtr == IntPtr.Zero) return false;
 
             if (!Platform.FreeLibrary(modulePtr))

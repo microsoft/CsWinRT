@@ -61,6 +61,12 @@ namespace WinRT
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static unsafe extern IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags);
 
+        internal static unsafe IntPtr LoadLibraryExW(string fileName, IntPtr fileHandle, uint flags)
+        {
+            fixed (char* lpFileName = fileName)
+                return LoadLibraryExW((ushort*)lpFileName, fileHandle, flags);
+        }
+
         [DllImport("api-ms-win-core-winrt-l1-1-0.dll")]
         internal static extern unsafe int RoGetActivationFactory(IntPtr runtimeClassId, Guid* iid, IntPtr* factory);
 
@@ -127,8 +133,7 @@ namespace WinRT
             // Explicitly look for module in the same directory as this one, and
             // use altered search path to ensure any dependencies in the same directory are found.
             IntPtr moduleHandle = IntPtr.Zero;
-            fixed (char* lpFilePath = System.IO.Path.Combine(_currentModuleDirectory, fileName))
-                moduleHandle = Platform.LoadLibraryExW((ushort*)lpFilePath, IntPtr.Zero, /* LOAD_WITH_ALTERED_SEARCH_PATH */ 8);
+            moduleHandle = Platform.LoadLibraryExW(System.IO.Path.Combine(_currentModuleDirectory, fileName), IntPtr.Zero, /* LOAD_WITH_ALTERED_SEARCH_PATH */ 8);
 #if NET
             if (moduleHandle == IntPtr.Zero)
             {

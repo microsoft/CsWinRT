@@ -59,25 +59,19 @@ namespace WinRT
         private static delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int> roOriginateLanguageException;
         private static delegate* unmanaged[Stdcall]<IntPtr, int> roReportUnhandledError;
 
-        private static readonly bool initialized =  Initialize();
+        private static readonly bool initialized = Initialize();
 
         private static bool Initialize()
         {
-            fixed (char* moduleName = "api-ms-win-core-winrt-error-l1-1-1.dll")
+            IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
+            if (winRTErrorModule != IntPtr.Zero)
             {
-                IntPtr winRTErrorModule = Platform.LoadLibraryExW((ushort*)moduleName, IntPtr.Zero, (uint)DllImportSearchPath.System32);
-                if (winRTErrorModule != IntPtr.Zero)
-                {
-                    roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoOriginateLanguageException"u8);
-                    roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoReportUnhandledError"u8);
-                }
-                else
-                {
-                    fixed (char* fallbackModuleName = "api-ms-win-core-winrt-error-l1-1-0.dll")
-                    {
-                        winRTErrorModule = Platform.LoadLibraryExW((ushort*)fallbackModuleName, IntPtr.Zero, (uint)DllImportSearchPath.System32);
-                    }
-                }
+                roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoOriginateLanguageException"u8);
+                roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoReportUnhandledError"u8);
+            }
+            else
+            {
+                winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
             }
 
             if (winRTErrorModule != IntPtr.Zero)
@@ -227,7 +221,7 @@ namespace WinRT
                     ex = new COMException(
 @"Invalid window handle. (0x80070578)
 Consider WindowNative, InitializeWithWindow
-See https://aka.ms/cswinrt/interop#windows-sdk", 
+See https://aka.ms/cswinrt/interop#windows-sdk",
                         ERROR_INVALID_WINDOW_HANDLE);
                     break;
                 case RO_E_CLOSED:
