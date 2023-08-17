@@ -73,17 +73,20 @@ namespace WinRT
                 }
                 else
                 {
-                    winRTErrorModule = Platform.LoadLibraryExW((ushort*)moduleName, IntPtr.Zero, (uint)DllImportSearchPath.System32);
+                    fixed (char* fallbackModuleName = "api-ms-win-core-winrt-error-l1-1-0.dll")
+                    {
+                        winRTErrorModule = Platform.LoadLibraryExW((ushort*)moduleName, IntPtr.Zero, (uint)DllImportSearchPath.System32);
+                    }
                 }
-
-                if (winRTErrorModule != IntPtr.Zero)
-                {
-                    getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, "GetRestrictedErrorInfo"u8);
-                    setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "SetRestrictedErrorInfo"u8);
-                }
-
-                return true;
             }
+
+            if (winRTErrorModule != IntPtr.Zero)
+            {
+                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, "GetRestrictedErrorInfo"u8);
+                setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "SetRestrictedErrorInfo"u8);
+            }
+
+            return true;
         }
 
         public static void ThrowExceptionForHR(int hr)
