@@ -75,7 +75,7 @@ namespace WinRT
                 {
                     fixed (char* fallbackModuleName = "api-ms-win-core-winrt-error-l1-1-0.dll")
                     {
-                        winRTErrorModule = Platform.LoadLibraryExW((ushort*)moduleName, IntPtr.Zero, (uint)DllImportSearchPath.System32);
+                        winRTErrorModule = Platform.LoadLibraryExW((ushort*)fallbackModuleName, IntPtr.Zero, (uint)DllImportSearchPath.System32);
                     }
                 }
             }
