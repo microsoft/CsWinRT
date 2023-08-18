@@ -28,6 +28,10 @@ namespace WinRT
 #endif
             Type type)
         {
+            if (Projections.FindCustomIIDForAbiType(type) is Guid customIID)
+            {
+                return customIID;
+            }
             type = type.GetGuidType();
             if (!type.IsGenericType)
             {

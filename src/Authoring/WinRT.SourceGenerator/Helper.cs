@@ -712,6 +712,8 @@ namespace Generator
         }
 
         // This should be in sync with the reverse mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
+        // TODO-WuxMux: Update this table to respect a property the defines WUX vs MUX projections.
+        // Additionally, output a module initializer that validates the MUX/WUX projection mode to ensure that things don't get out of sync.
         public static readonly Dictionary<string, MappedType> MappedCSharpTypes = new(StringComparer.Ordinal)
         {
             { "System.DateTimeOffset", new MappedType("Windows.Foundation", "DateTime", "Windows.Foundation.FoundationContract", true, false) },

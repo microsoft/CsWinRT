@@ -167,6 +167,9 @@ namespace GuidPatch
                 return new RuntimeClassSignature(type, GetSignatureParts(iface));
             }
 
+            // TODO-WuxMux: We need to intercept the WUX/MUX types here and do one of the following options:
+            // - Take an option in the IID optimizer to hard-code for one or the other (for OutputType Exe or for libraries that are one flavor only, this is reasonable)
+            // - Fall back to runtime-based IID lookup for the type (works for everything, less efficient)
             Guid? guidAttributeValue = type.ReadGuidFromAttribute(guidAttributeType, winRTRuntimeAssembly);
             if (guidAttributeValue == null)
             {
