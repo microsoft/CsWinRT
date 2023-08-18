@@ -34,7 +34,13 @@ namespace WinRT
 
         internal static unsafe int CoCreateInstance(ref Guid clsid, IntPtr outer, uint clsContext, ref Guid iid, IntPtr* instance)
         {
-            return CoCreateInstance((Guid*)Unsafe.AsPointer(ref clsid), outer, clsContext, (Guid*)Unsafe.AsPointer(ref iid), instance);
+            fixed (Guid* lpClsid = &clsid)
+            {
+                fixed (Guid* lpIid = &iid)
+                {
+                    return CoCreateInstance(lpClsid, outer, clsContext, lpIid, instance);
+                }
+            }
         }
 
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
@@ -77,7 +83,10 @@ namespace WinRT
 
         internal static unsafe int RoGetActivationFactory(IntPtr runtimeClassId, ref Guid iid, IntPtr* factory)
         {
-            return RoGetActivationFactory(runtimeClassId, (Guid*)Unsafe.AsPointer(ref iid), factory);
+            fixed (Guid* lpIid = &iid)
+            {
+                return RoGetActivationFactory(runtimeClassId, lpIid, factory);
+            }
         }
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
@@ -119,7 +128,10 @@ namespace WinRT
 
         internal static unsafe int RoGetAgileReference(uint options, ref Guid iid, IntPtr unknown, IntPtr* agileReference)
         {
-            return RoGetAgileReference(options, (Guid*)Unsafe.AsPointer(ref iid), unknown, agileReference);
+            fixed (Guid* lpIid = &iid)
+            {
+                return RoGetAgileReference(options, lpIid, unknown, agileReference);
+            }
         }
     }
 
