@@ -32,6 +32,11 @@ namespace WinRT
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern unsafe int CoCreateInstance(Guid* clsid, IntPtr outer, uint clsContext, Guid* iid, IntPtr* instance);
 
+        internal static unsafe int CoCreateInstance(ref Guid clsid, IntPtr outer, uint clsContext, ref Guid iid, IntPtr* instance)
+        {
+            return CoCreateInstance((Guid*)Unsafe.AsPointer(ref clsid), outer, clsContext, (Guid*)Unsafe.AsPointer(ref iid), instance);
+        }
+
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern int CoDecrementMTAUsage(IntPtr cookie);
 
@@ -70,16 +75,34 @@ namespace WinRT
         [DllImport("api-ms-win-core-winrt-l1-1-0.dll")]
         internal static extern unsafe int RoGetActivationFactory(IntPtr runtimeClassId, Guid* iid, IntPtr* factory);
 
+        internal static unsafe int RoGetActivationFactory(IntPtr runtimeClassId, ref Guid iid, IntPtr* factory)
+        {
+            return RoGetActivationFactory(runtimeClassId, (Guid*)Unsafe.AsPointer(ref iid), factory);
+        }
+
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe int WindowsCreateString(ushort* sourceString,
                                                   int length,
                                                   IntPtr* hstring);
+
+        internal static unsafe int WindowsCreateString(string sourceString, int length, IntPtr* hstring)
+        {
+            fixed (char* lpSourceString = sourceString)
+            {
+                return WindowsCreateString((ushort*)lpSourceString, length, hstring);
+            }
+        }
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe int WindowsCreateStringReference(ushort* sourceString,
                                                   int length,
                                                   IntPtr* hstring_header,
                                                   IntPtr* hstring);
+
+        internal static unsafe int WindowsCreateStringReference(char* sourceString, int length, IntPtr* hstring_header, IntPtr* hstring)
+        {
+            return WindowsCreateStringReference((ushort*)sourceString, length, hstring_header, hstring);
+        }
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern int WindowsDeleteString(IntPtr hstring);
@@ -93,6 +116,11 @@ namespace WinRT
 
         [DllImport("api-ms-win-core-com-l1-1-1.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe int RoGetAgileReference(uint options, Guid* iid, IntPtr unknown, IntPtr* agileReference);
+
+        internal static unsafe int RoGetAgileReference(uint options, ref Guid iid, IntPtr unknown, IntPtr* agileReference)
+        {
+            return RoGetAgileReference(options, (Guid*)Unsafe.AsPointer(ref iid), unknown, agileReference);
+        }
     }
 
     internal struct VftblPtr
