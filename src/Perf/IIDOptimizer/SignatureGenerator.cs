@@ -37,6 +37,8 @@ namespace GuidPatch
     
     sealed record UninstantiatedGeneric(GenericParameter OriginalGenericParameter) : SignaturePart;
 
+    sealed record GenericFallback(TypeReference Type) : SignaturePart;
+
     abstract record SignatureWithChildren(string GroupingName, string ThisEntitySignature, IEnumerable<SignaturePart> ChildrenSignatures) : SignaturePart;
 
     sealed record GenericSignature(Guid BaseGuid, IEnumerable<SignaturePart> GenericMemberSignatures) : 
@@ -55,12 +57,14 @@ namespace GuidPatch
     {
         private readonly AssemblyDefinition assembly;
         private readonly TypeDefinition guidAttributeType;
+        private readonly TypeDefinition wuxMuxProjectedInterfaceAttributeType;
         private readonly AssemblyDefinition winRTRuntimeAssembly;
 
-        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, AssemblyDefinition runtimeAssembly)
+        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, TypeDefinition wuxMuxProjectedInterfaceAttributeType, AssemblyDefinition runtimeAssembly)
         {
             this.assembly = assembly;
             this.guidAttributeType = guidAttributeType;
+            this.wuxMuxProjectedInterfaceAttributeType = wuxMuxProjectedInterfaceAttributeType;
             this.winRTRuntimeAssembly = runtimeAssembly;
         }
 
@@ -168,6 +172,13 @@ namespace GuidPatch
             if (TryGetDefaultInterfaceTypeForRuntimeClassType(type, out TypeReference? iface))
             {
                 return new RuntimeClassSignature(type, GetSignatureParts(iface));
+            }
+
+            // For types projected from WUX or MUX into .NET, we'll need to do a runtime lookup for the IID.
+            // TODO-WuxMux: We can instead take an option in the IID optimizer to hard-code the lookup for WUX or MUX when specified, which would be more efficient for scenarios where this is possible.
+            if (helperType?.Resolve().CustomAttributes.Any(attr => attr.AttributeType.Resolve() == wuxMuxProjectedInterfaceAttributeType) == true)
+            {
+                return new GenericFallback(type);
             }
 
             Guid? guidAttributeValue = type.ReadGuidFromAttribute(guidAttributeType, winRTRuntimeAssembly);

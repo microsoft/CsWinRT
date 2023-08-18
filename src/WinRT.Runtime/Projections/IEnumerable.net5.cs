@@ -938,7 +938,7 @@ namespace ABI.System.Collections.Generic
         // In IEnumerator<> scenarios, we use this as a helper for the implementation and don't actually use it to
         // create a CCW.
         [global::WinRT.WinRTExposedType(typeof(IBindableIteratorTypeDetails))]
-        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator
+        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator, global::Windows.UI.Xaml.Interop.IBindableIterator
         {
             private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
             private bool m_firstItem = true;
@@ -1029,6 +1029,11 @@ namespace ABI.System.Collections.Generic
             public bool MoveNext() => _MoveNext();
 
             uint global::Microsoft.UI.Xaml.Interop.IBindableIterator.GetMany(ref object[] items)
+            {
+                // Should not be called.
+                throw new NotImplementedException();
+            }
+            uint global::Windows.UI.Xaml.Interop.IBindableIterator.GetMany(ref object[] items)
             {
                 // Should not be called.
                 throw new NotImplementedException();

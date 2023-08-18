@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using WinRT.Interop;
 
 namespace WinRT
 {
@@ -19,7 +20,12 @@ namespace WinRT
     {
         public static Guid GetGUID(Type type)
         {
-            return type.GetGuidType().GUID;
+            type = type.GetGuidType();
+            if (type.GetCustomAttribute<WuxMuxProjectedTypeAttribute>() is {} wuxMuxAttribute)
+            {
+                return GetWuxMuxIID(wuxMuxAttribute);
+            }
+            return type.GUID;
         }
 
         public static Guid GetIID(
@@ -29,11 +35,25 @@ namespace WinRT
             Type type)
         {
             type = type.GetGuidType();
+            if (type.GetCustomAttribute<WuxMuxProjectedTypeAttribute>() is {} wuxMuxAttribute)
+            {
+                return GetWuxMuxIID(wuxMuxAttribute);
+            }
             if (!type.IsGenericType)
             {
                 return type.GUID;
             }
             return (Guid)type.GetField("PIID").GetValue(null);
+        }
+
+        internal static Guid GetWuxMuxIID(WuxMuxProjectedTypeAttribute wuxMuxAttribute)
+        {
+            return Projections.UiXamlModeSetting switch
+            {
+                Projections.UiXamlMode.WindowsUiXaml => wuxMuxAttribute.WuxIID,
+                Projections.UiXamlMode.MicrosoftUiXaml => wuxMuxAttribute.MuxIID,
+                _ => throw new InvalidOperationException("Invalid UI XAML mode")
+            };
         }
 
         public static string GetSignature(

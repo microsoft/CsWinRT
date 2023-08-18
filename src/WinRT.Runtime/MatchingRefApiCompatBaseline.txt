@@ -129,4 +129,9 @@ TypesMustExist : Type 'WinRT.StructTypeDetails<T, TAbi>' does not exist in the r
 MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(System.String, System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 130
+MembersMustExist : Member 'public System.Boolean WinRT.ComWrappersSupport.RegisterDelegateFactory(System.Type, System.Func<System.IntPtr, System.Object>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterComInterfaceEntries(System.Type, System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ReadOnlySpan<System.Char> WinRT.MarshalString.FromAbiUnsafe(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.ComponentModel.PropertyChangedEventHandler' in the implementation but not the reference.
+Total Issues: 135

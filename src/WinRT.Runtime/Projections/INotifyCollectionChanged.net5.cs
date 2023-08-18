@@ -3,8 +3,10 @@
 
 using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace ABI.System.Collections.Specialized
 {
@@ -37,17 +39,18 @@ namespace ABI.System.Collections.Specialized
             return eventSource.EventActions;
         }
 
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xE1, 0x55, 0x01, 0x53, 0xA5, 0x28, 0x93, 0x56, 0x87, 0xCE, 0x30, 0x72, 0x4D, 0x95, 0xA0, 0x6D }));
-
+        public static global::System.Guid IID { get; } = GuidGenerator.GetWuxMuxIID(typeof(INotifyCollectionChanged).GetCustomAttribute<WuxMuxProjectedTypeAttribute>());
         public static IntPtr AbiToProjectionVftablePtr => INotifyCollectionChanged.Vftbl.AbiToProjectionVftablePtr;
     }
 
     [DynamicInterfaceCastableImplementation]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
+    [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
     internal unsafe interface INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
+        [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;

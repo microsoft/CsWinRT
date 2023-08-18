@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -20,11 +20,14 @@ namespace Generator
         private Logger Logger { get; }
         private readonly GeneratorExecutionContext context;
         private string tempFolder;
+        private readonly TypeMapper mapper;
 
         public ComponentGenerator(GeneratorExecutionContext context)
         {
             this.context = context;
             Logger = new Logger(context);
+            mapper = new(context.AnalyzerConfigOptions.GlobalOptions.GetUiXamlMode());
+            // TODO-WuxMux: output a module initializer that validates the MUX/WUX projection mode to ensure that things don't get out of sync.
         }
 
         private string GetTempFolder(bool clearSourceFilesFromFolder = false)
@@ -152,7 +155,8 @@ namespace Generator
                     assembly,
                     version,
                     metadataBuilder,
-                    Logger);
+                    Logger,
+                    mapper);
 
                 WinRTSyntaxReceiver syntaxReceiver = (WinRTSyntaxReceiver)context.SyntaxReceiver;
                 Logger.Log("Found " + syntaxReceiver.Declarations.Count + " types");

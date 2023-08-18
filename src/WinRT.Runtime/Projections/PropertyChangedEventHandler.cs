@@ -12,6 +12,7 @@ namespace ABI.System.ComponentModel
 {
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D")]
+    [WuxMuxProjectedType(wuxIID: "50F19C16-0A22-4D8E-A089-1EA9951657D2", muxIID: "E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D")]
 #if EMBED
     internal
 #else
@@ -40,11 +41,14 @@ namespace ABI.System.ComponentModel
             var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(PropertyChangedEventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
             Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
             AbiToProjectionVftablePtr = nativeVftbl;
+            IID = Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
+                ? Guid.Parse("50F19C16-0A22-4D8E-A089-1EA9951657D2")
+                : Guid.Parse("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D");
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        private static readonly Guid IID = new(0xE3DE52F6, 0x1E32, 0x5DA6, 0xBB, 0x2D, 0xB5, 0xB6, 0x09, 0x6C, 0x96, 0x2D);
+        private static readonly Guid IID;
 
         public static unsafe IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);

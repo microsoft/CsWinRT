@@ -35,6 +35,8 @@ namespace GuidPatch
 
         sealed record RuntimeCustomSignatureStep(MethodReference method) : SignatureStep;
 
+        sealed record FallbackSignatureStep(TypeReference type) : SignatureStep;
+
         public SignatureEmitter(TypeReference describedType, MethodDefinition guidDataGetterMethod)
         {
             this.describedType = describedType;
@@ -74,6 +76,16 @@ namespace GuidPatch
                 currentStringBuilder = null;
             }
             signatureSteps.Add(new RuntimeCustomSignatureStep(customSignatureMethod));
+        }
+
+        public void PushFallback(TypeReference type)
+        {
+            if (currentStringBuilder is not null)
+            {
+                signatureSteps.Add(new StringStep(currentStringBuilder.ToString()));
+                currentStringBuilder = null;
+            }
+            signatureSteps.Add(new FallbackSignatureStep(type));
         }
 
         public void EmitGuidGetter(
@@ -277,6 +289,25 @@ namespace GuidPatch
                             // byte[] bytes = Encoding.UTF8.GetBytes(customSignatureMethod())
                             il.Emit(OpCodes.Call, utf8EncodingGetter);
                             il.Emit(OpCodes.Call, customSignatureMethod);
+                            il.Emit(OpCodes.Callvirt, encodingGetBytes);
+                            il.Emit(OpCodes.Dup);
+                            // <locals[i]> = new ReadOnlySpan<byte>(bytes);
+                            il.Emit(OpCodes.Newobj, readOnlySpanOfByteArrayCtor);
+                            il.Emit(OpCodes.Stloc, signatureParts[i]);
+                            // signatureLength += bytes.Length
+                            il.Emit(OpCodes.Ldlen);
+                            il.Emit(OpCodes.Ldloc, fullSignatureLength);
+                            il.Emit(OpCodes.Add_Ovf);
+                            il.Emit(OpCodes.Stloc, fullSignatureLength);
+                        }
+                        break;
+                    case FallbackSignatureStep(TypeReference type):
+                        {
+                            // byte[] bytes = Encoding.UTF8.GetBytes(GetSignature(typeof(type)))
+                            il.Emit(OpCodes.Call, utf8EncodingGetter);
+                            il.Emit(OpCodes.Ldtoken, type);
+                            il.Emit(OpCodes.Call, getTypeFromHandleMethod);
+                            il.Emit(OpCodes.Call, getSignatureMethod);
                             il.Emit(OpCodes.Callvirt, encodingGetBytes);
                             il.Emit(OpCodes.Dup);
                             // <locals[i]> = new ReadOnlySpan<byte>(bytes);
