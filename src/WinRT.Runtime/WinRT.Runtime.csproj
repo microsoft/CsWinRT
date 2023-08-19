@@ -23,6 +23,7 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
+    <DefineConstants>$(DefineConstants);CsWinRT_LANG_11_FEATURES</DefineConstants>
   </PropertyGroup>
     
   <ItemGroup>

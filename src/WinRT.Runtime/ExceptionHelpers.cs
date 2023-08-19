@@ -66,8 +66,16 @@ namespace WinRT
             IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
             if (winRTErrorModule != IntPtr.Zero)
             {
-                roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoOriginateLanguageException"u8);
-                roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoReportUnhandledError"u8);
+#if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
+                ReadOnlySpan<byte> langExceptionString = "RoOriginateLanguageException"u8;
+                ReadOnlySpan<byte> reportUnhandledErrorString = "RoReportUnhandledError"u8;
+#else
+                string langExceptionString = "RoOriginateLanguageException";
+                string reportUnhandledErrorString = "RoReportUnhandledError";
+#endif
+
+                roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, langExceptionString);
+                roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, reportUnhandledErrorString);
             }
             else
             {

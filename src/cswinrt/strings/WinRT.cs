@@ -56,9 +56,38 @@ namespace WinRT
         [DllImport("kernel32.dll", EntryPoint = "GetProcAddress", SetLastError = true, BestFitMapping = false)]
         internal static unsafe extern void* TryGetProcAddress(IntPtr moduleHandle, sbyte* functionName);
 
+        internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
+        {
+            fixed (byte* lpFunctionName = functionName)
+            {
+                return TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
+            }
+        }
+
+        internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, string functionName)
+        {
+            fixed (byte* lpFunctionName = Encoding.UTF8.GetBytes(functionName))
+            {
+                return TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
+            }
+        }
+
         internal static unsafe void* GetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
         {
             fixed (byte* lpFunctionName = functionName)
+            {
+                void* functionPtr = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
+                if (functionPtr == null)
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+                }
+                return functionPtr;
+            }
+        }
+
+        internal static unsafe void* GetProcAddress(IntPtr moduleHandle, string functionName)
+        {
+            fixed (byte* lpFunctionName = Encoding.UTF8.GetBytes(functionName))
             {
                 void* functionPtr = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
                 if (functionPtr == null)
@@ -187,8 +216,13 @@ namespace WinRT
             }
 
             void* getActivationFactory = null;
-            fixed (byte* lpFunctionName = "DllGetActivationFactory"u8)
-                getActivationFactory = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
+
+#if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
+            ReadOnlySpan<byte> functionName = "DllGetActivationFactory"u8;
+#else
+            string functionName = "DllGetActivationFactory";
+#endif
+            getActivationFactory = Platform.TryGetProcAddress(moduleHandle, functionName);
             if (getActivationFactory == null)
             {
                 module = null;
@@ -209,8 +243,12 @@ namespace WinRT
             _GetActivationFactory = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)getActivationFactory;
 
             void* canUnloadNow = null;
-            fixed (byte* lpFunctionName = "DllCanUnloadNow"u8)
-                canUnloadNow = Platform.TryGetProcAddress(_moduleHandle, (sbyte*)lpFunctionName);
+#if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
+            ReadOnlySpan<byte> functionName = "DllCanUnloadNow"u8;
+#else
+            string functionName = "DllCanUnloadNow";
+#endif
+            canUnloadNow = Platform.TryGetProcAddress(_moduleHandle, functionName);
 
             if (canUnloadNow != null)
             {
