@@ -87,7 +87,7 @@ namespace WinRT
 
             int byteCount;
 
-#if NETSTANDARD2_1_OR_GREATER
+#if NET
             byteCount = Encoding.UTF8.GetBytes(functionName, buffer);
 #else
             fixed (char* lpFunctionName = functionName)
