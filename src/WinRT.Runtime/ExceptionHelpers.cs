@@ -85,14 +85,14 @@ namespace WinRT
             if (winRTErrorModule != IntPtr.Zero)
             {
 #if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
-                ReadOnlySpan<byte> getRestrictedErrorInfo = "GetRestrictedErrorInfo"u8;
-                ReadOnlySpan<byte> setRestrictedErrorInfo = "SetRestrictedErrorInfo"u8;
+                ReadOnlySpan<byte> getRestrictedErrorInfoFuncName = "GetRestrictedErrorInfo"u8;
+                ReadOnlySpan<byte> setRestrictedErrorInfoFuncName = "SetRestrictedErrorInfo"u8;
 #else
-                string getRestrictedErrorInfo = "GetRestrictedErrorInfo";
-                string setRestrictedErrorInfo = "SetRestrictedErrorInfo";
+                string getRestrictedErrorInfoFuncName = "GetRestrictedErrorInfo";
+                string setRestrictedErrorInfoFuncName = "SetRestrictedErrorInfo";
 #endif
-                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, getRestrictedErrorInfo);
-                setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, setRestrictedErrorInfo);
+                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, getRestrictedErrorInfoFuncName);
+                setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, setRestrictedErrorInfoFuncName);
             }
 
             return true;

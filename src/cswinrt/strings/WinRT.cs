@@ -77,7 +77,7 @@ namespace WinRT
 #if NET6_0_OR_GREATER
                     buffer = new((byte*)NativeMemory.Alloc((nuint)exactByteCount), exactByteCount);
 #else
-                    buffer = (byte*)Marshal.AllocHGlobal(exactByteCount);
+                    buffer = new((byte*)Marshal.AllocHGlobal(exactByteCount), exactByteCount);
 #endif
                     allocated = true;
                 }
