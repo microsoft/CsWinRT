@@ -66,8 +66,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Target Name="CsWinRTPrepareProjection" DependsOnTargets="$(CsWinRTPrepareProjectionDependsOn)" Outputs="$(CsWinRTGeneratedFilesDir)">
     <PropertyGroup>
-      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$(GeneratedFilesDir)</CsWinRTGeneratedFilesDir>
-      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</CsWinRTGeneratedFilesDir>
+      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$(IntermediateOutputPath)\CsWinRT\</CsWinRTGeneratedFilesDir>
     </PropertyGroup>
   </Target>
 
@@ -81,7 +80,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
           Condition="'$(CsWinRTGenerateProjection)' == 'true'"
           Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExcludes);$(CsWinRTIncludes);$(CsWinRTExcludesPrivate);$(CsWinRTIncludesPrivate);$(CsWinRTFilters);$(CsWinRTWindowsMetadata)"
           Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
-    
+
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
       <CsWinRTResponseFilePrivateProjection>$(CsWinRTGeneratedFilesDir)cswinrt_internal.rsp</CsWinRTResponseFilePrivateProjection>
@@ -99,16 +98,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.Foundation.FoundationContract.winmd'"></CsWinRTDetectWindowsMetadata>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.winmd'"></CsWinRTDetectWindowsMetadata>
     </ItemGroup>
-    
+
     <Error Condition="'$(CsWinRTParams)$(CsWinRTFilters)$(CsWinRTWindowsMetadata)@(CsWinRTDetectWindowsMetadata)' == ''"
       Text="Windows Metadata not provided or detected.  See https://github.com/microsoft/CsWinRT/tree/master/nuget/readme.md" />
-    
+
     <PropertyGroup>
       <CsWinRTExcludes Condition="'$(CsWinRTExcludes)' == ''">Windows;Microsoft</CsWinRTExcludes>
       <CsWinRTExcludesPrivate Condition="'$(CsWinRTExcludesPrivate)' == ''">Windows;Microsoft</CsWinRTExcludesPrivate>
     </PropertyGroup>
-    
-    <!-- Inputs set by users -->      
+
+    <!-- Inputs set by users -->
     <ItemGroup>
       <CsWinRTExcludePrivateItems Include="$(CsWinRTExcludesPrivate)"/>
       <CsWinRTIncludePrivateItems Include="$(CsWinRTIncludesPrivate)"/>
@@ -118,7 +117,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTExcludeItems Include="$(CsWinRTExcludes)"/>
       <CsWinRTIncludeItems Include="$(CsWinRTIncludes)"/>
     </ItemGroup>
-    
+
     <PropertyGroup>
       <CsWinRTPrivateFilters Condition="'$(CsWinRTPrivateFilters)' == ''">
 @(CsWinRTExcludePrivateItems->'-exclude %(Identity)', '&#x0d;&#x0a;')
@@ -184,17 +183,20 @@ $(CsWinRTInternalProjection)
       <CsWinRTContinueOnError Condition="'$(DesignTimeBuild)' == 'true' OR '$(BuildingProject)' != 'true'">true</CsWinRTContinueOnError>
     </PropertyGroup>
 
+    <ItemGroup>
+      <CsWinRTFilesToDelete Include="$(CsWinRTGeneratedFilesDir)*.cs"/>
+    </ItemGroup>
+    <Delete Files="@(CsWinRTFilesToDelete)" />
     <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" />
     <WriteLinesToFile File="$(CsWinRTResponseFilePrivateProjection)" Lines="$(CsWinRTPrivateParams)" Overwrite="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommand)" ContinueOnError="$(CsWinRTContinueOnError)" />
-    
+
     <Message Text="$(CsWinRTCommandPrivateProjection)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommandPrivateProjection)" ContinueOnError="$(CsWinRTContinueOnError)" Condition="'$(CsWinRTPrivateProjection)' == 'true'"/>
 
-    <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')">
-      <UpToDateCheckInput Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" />
+    <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTResponseFile)')">
       <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="WinMDs" />
       <UpToDateCheckBuilt Include="$(CsWinRTResponseFile)" Set="WinMDs" />
     </ItemGroup>
