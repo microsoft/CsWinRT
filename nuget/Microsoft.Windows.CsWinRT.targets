@@ -66,7 +66,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Target Name="CsWinRTPrepareProjection" DependsOnTargets="$(CsWinRTPrepareProjectionDependsOn)" Outputs="$(CsWinRTGeneratedFilesDir)">
     <PropertyGroup>
-      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$(IntermediateOutputPath)\CsWinRT\</CsWinRTGeneratedFilesDir>
+      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == '' and '$(GeneratedFilesDir)' != ''">$(GeneratedFilesDir)\CsWinRT\</CsWinRTGeneratedFilesDir>
+      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files', 'CsWinRT'))</CsWinRTGeneratedFilesDir>
     </PropertyGroup>
   </Target>
 
