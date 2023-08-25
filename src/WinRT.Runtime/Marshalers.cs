@@ -93,7 +93,7 @@ namespace WinRT
                 }
                 IntPtr hstring;
                 Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
-                    (char*)Unsafe.AsPointer(ref Unsafe.AsRef(in GetPinnableReference())),
+                    (ushort*)Unsafe.AsPointer(ref Unsafe.AsRef(in GetPinnableReference())),
                     _value.Length,
                     (IntPtr*)Unsafe.AsPointer(ref _header),
                     &hstring));
@@ -133,7 +133,7 @@ namespace WinRT
                 Debug.Assert(_header == IntPtr.Zero);
                 _header = Marshal.AllocHGlobal(Unsafe.SizeOf<HSTRING_HEADER>());
                 Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
-                    chars, value.Length, (IntPtr*)_header, &hstring));
+                    (ushort*)chars, value.Length, (IntPtr*)_header, &hstring));
                 return hstring;
             }
         }
@@ -178,8 +178,11 @@ namespace WinRT
                 return IntPtr.Zero;
             }
             IntPtr handle;
-            Marshal.ThrowExceptionForHR(
-                Platform.WindowsCreateString(value, value.Length, &handle));
+            fixed (char* lpValue = value)
+            {
+                Marshal.ThrowExceptionForHR(
+                    Platform.WindowsCreateString((ushort*)lpValue, value.Length, &handle));
+            }
             return handle;
         }
 

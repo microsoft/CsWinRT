@@ -12,9 +12,9 @@ namespace WinRT
 {
     internal static class Mono
     {
-        static Lazy<bool> _usingMono = new Lazy<bool>(() =>
+        static unsafe Lazy<bool> _usingMono = new Lazy<bool>(() =>
         {
-            var modulePtr = Platform.LoadLibraryExW("mono-2.0-bdwgc.dll", IntPtr.Zero, 0);
+            IntPtr modulePtr = Platform.LoadLibraryExW("mono-2.0-bdwgc.dll", IntPtr.Zero, 0);
             if (modulePtr == IntPtr.Zero) return false;
 
             if (!Platform.FreeLibrary(modulePtr))

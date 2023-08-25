@@ -4,7 +4,7 @@
     <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
     <RootNamespace>WinRT</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>9</LangVersion>
+    <LangVersion>11.0</LangVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Authors>Microsoft Corporation</Authors>
@@ -23,6 +23,7 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
+    <DefineConstants>$(DefineConstants);CsWinRT_LANG_11_FEATURES</DefineConstants>
   </PropertyGroup>
     
   <ItemGroup>

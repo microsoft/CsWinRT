@@ -59,15 +59,23 @@ namespace WinRT
         private static delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int> roOriginateLanguageException;
         private static delegate* unmanaged[Stdcall]<IntPtr, int> roReportUnhandledError;
 
-        private static readonly bool initialized =  Initialize();
+        private static readonly bool initialized = Initialize();
 
         private static bool Initialize()
         {
             IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
             if (winRTErrorModule != IntPtr.Zero)
             {
-                roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoOriginateLanguageException");
-                roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoReportUnhandledError");
+#if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
+                ReadOnlySpan<byte> langExceptionString = "RoOriginateLanguageException"u8;
+                ReadOnlySpan<byte> reportUnhandledErrorString = "RoReportUnhandledError"u8;
+#else
+                string langExceptionString = "RoOriginateLanguageException";
+                string reportUnhandledErrorString = "RoReportUnhandledError";
+#endif
+
+                roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, langExceptionString);
+                roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, reportUnhandledErrorString);
             }
             else
             {
@@ -76,8 +84,15 @@ namespace WinRT
 
             if (winRTErrorModule != IntPtr.Zero)
             {
-                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, "GetRestrictedErrorInfo");
-                setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "SetRestrictedErrorInfo");
+#if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
+                ReadOnlySpan<byte> getRestrictedErrorInfoFuncName = "GetRestrictedErrorInfo"u8;
+                ReadOnlySpan<byte> setRestrictedErrorInfoFuncName = "SetRestrictedErrorInfo"u8;
+#else
+                string getRestrictedErrorInfoFuncName = "GetRestrictedErrorInfo";
+                string setRestrictedErrorInfoFuncName = "SetRestrictedErrorInfo";
+#endif
+                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, getRestrictedErrorInfoFuncName);
+                setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, setRestrictedErrorInfoFuncName);
             }
 
             return true;
@@ -221,7 +236,7 @@ namespace WinRT
                     ex = new COMException(
 @"Invalid window handle. (0x80070578)
 Consider WindowNative, InitializeWithWindow
-See https://aka.ms/cswinrt/interop#windows-sdk", 
+See https://aka.ms/cswinrt/interop#windows-sdk",
                         ERROR_INVALID_WINDOW_HANDLE);
                     break;
                 case RO_E_CLOSED:
@@ -321,9 +336,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
                     IntPtr hstring;
 
-                    if (Platform.WindowsCreateString(message, message.Length, &hstring) != 0)
+                    fixed (char* lpMessage = message)
                     {
-                        hstring = IntPtr.Zero;
+                        if (Platform.WindowsCreateString((ushort*)lpMessage, message.Length, &hstring) != 0)
+                        {
+                            hstring = IntPtr.Zero;
+                        }
                     }
 
                     using var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex);
