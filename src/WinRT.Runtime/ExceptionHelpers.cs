@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -95,7 +95,8 @@ namespace WinRT
                 setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, setRestrictedErrorInfoFuncName);
             }
 
-            return true;
+                return true;
+            }
         }
 
         public static void ThrowExceptionForHR(int hr)
@@ -221,16 +222,16 @@ namespace WinRT
                     ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException();
                     break;
                 case E_XAMLPARSEFAILED:
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Markup.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.Markup.XamlParseException();
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.Markup.XamlParseException(errorMessage) : new Windows.UI.Xaml.Markup.XamlParseException();
                     break;
                 case E_LAYOUTCYCLE:
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException();
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.LayoutCycleException(errorMessage) : new Windows.UI.Xaml.LayoutCycleException();
                     break;
                 case E_ELEMENTNOTAVAILABLE:
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotAvailableException();
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.Automation.ElementNotAvailableException(errorMessage) : new Windows.UI.Xaml.Automation.ElementNotAvailableException();
                     break;
                 case E_ELEMENTNOTENABLED:
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotEnabledException();
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.Automation.ElementNotEnabledException(errorMessage) : new Windows.UI.Xaml.Automation.ElementNotEnabledException();
                     break;
                 case ERROR_INVALID_WINDOW_HANDLE:
                     ex = new COMException(
@@ -551,7 +552,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
     }
 }
 
-namespace Microsoft.UI.Xaml
+namespace Windows.UI.Xaml
 {
     using System.Runtime.Serialization;
     namespace Automation

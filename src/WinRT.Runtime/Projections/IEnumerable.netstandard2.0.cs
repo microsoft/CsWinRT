@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.UI.Xaml.Interop;
+using Windows.UI.Xaml.Interop;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -348,7 +348,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator
+        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Windows.UI.Xaml.Interop.IBindableIterator
         {
             private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
             private bool m_firstItem = true;
@@ -438,7 +438,7 @@ namespace ABI.System.Collections.Generic
 
             public bool MoveNext() => _MoveNext();
 
-            uint global::Microsoft.UI.Xaml.Interop.IBindableIterator.GetMany(ref object[] items)
+            uint global::Windows.UI.Xaml.Interop.IBindableIterator.GetMany(ref object[] items)
             {
                 // Should not be called.
                 throw new NotImplementedException();

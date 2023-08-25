@@ -10,7 +10,7 @@ using WinRT.Interop;
 namespace ABI.System.Collections.Specialized
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
-    [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
+    [Guid("CF75D69C-F2F4-486B-B302-BB4C09BAEBFA")]
 #if EMBED
     internal
 #else
@@ -18,7 +18,7 @@ namespace ABI.System.Collections.Specialized
 #endif
     unsafe class INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
-        [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
+        [Guid("CF75D69C-F2F4-486B-B302-BB4C09BAEBFA")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;

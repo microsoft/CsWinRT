@@ -6,11 +6,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 
-namespace Microsoft.UI.Xaml.Data
+namespace Windows.UI.Xaml.Data
 {
     [global::WinRT.WindowsRuntimeType]
     [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
-    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Data.ICustomProperty))]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Data.ICustomProperty))]
     interface ICustomProperty
     {
         object GetValue(object target);
@@ -24,7 +24,7 @@ namespace Microsoft.UI.Xaml.Data
     }
 }
 
-namespace ABI.Microsoft.UI.Xaml.Data
+namespace ABI.Windows.UI.Xaml.Data
 {
     [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
     internal sealed unsafe class ICustomProperty
@@ -77,7 +77,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetValue(MarshalInspectable<object>.FromAbi(target)); 
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Data.ICustomProperty>(thisPtr).GetValue(MarshalInspectable<object>.FromAbi(target)); 
                     *result = MarshalInspectable<object>.FromManaged(__result);
 
                 }
@@ -95,7 +95,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).SetValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(value));
+                    global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Data.ICustomProperty>(thisPtr).SetValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(value));
                 }
                 catch (Exception __exception__)
                 {
@@ -111,7 +111,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetIndexedValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(index)); 
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Data.ICustomProperty>(thisPtr).GetIndexedValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(index)); 
                     *result = MarshalInspectable<object>.FromManaged(__result);
 
                 }
@@ -129,7 +129,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).SetIndexedValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(value), MarshalInspectable<object>.FromAbi(index));
+                    global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Data.ICustomProperty>(thisPtr).SetIndexedValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(value), MarshalInspectable<object>.FromAbi(index));
                 }
                 catch (Exception __exception__)
                 {
@@ -145,7 +145,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).CanRead; *value = (byte)(__value ? 1 : 0);
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Data.ICustomProperty>(thisPtr).CanRead; *value = (byte)(__value ? 1 : 0);
 
                 }
                 catch (Exception __exception__)
@@ -162,7 +162,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).CanWrite; *value = (byte)(__value ? 1 : 0);
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Data.ICustomProperty>(thisPtr).CanWrite; *value = (byte)(__value ? 1 : 0);
 
                 }
                 catch (Exception __exception__)
@@ -179,7 +179,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).Name; 
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Data.ICustomProperty>(thisPtr).Name; 
                     *value = MarshalString.FromManaged(__value);
 
                 }
@@ -197,7 +197,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).Type; 
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Data.ICustomProperty>(thisPtr).Type; 
                     *value = global::ABI.System.Type.FromManaged(__value);
                 }
                 catch (Exception __exception__)
@@ -221,7 +221,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public unsafe delegate int get_CanRead_7(IntPtr thisPtr, byte* value);
     }
 
-    internal sealed class ManagedCustomProperty : global::Microsoft.UI.Xaml.Data.ICustomProperty
+    internal sealed class ManagedCustomProperty : global::Windows.UI.Xaml.Data.ICustomProperty
     {
         private readonly PropertyInfo _property;
 
@@ -296,7 +296,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
         private static unsafe int Do_Abi_GetCustomProperty_0(IntPtr thisPtr, IntPtr name, IntPtr* result)
         {
-            global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
+            global::Windows.UI.Xaml.Data.ICustomProperty __result = default;
             try
             {
                 string _name = MarshalString.FromAbi(name);
@@ -310,7 +310,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     __result = new ManagedCustomProperty(propertyInfo);
                 }
                 
-                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                *result = MarshalInterface<global::Windows.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
 
             }
             catch (Exception __exception__)
@@ -323,7 +323,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
         private static unsafe int Do_Abi_GetIndexedProperty_1(IntPtr thisPtr, IntPtr name, global::ABI.System.Type type, IntPtr* result)
         {
-            global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
+            global::Windows.UI.Xaml.Data.ICustomProperty __result = default;
             try
             {
                 string _name = MarshalString.FromAbi(name);
@@ -342,7 +342,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     __result = new ManagedCustomProperty(propertyInfo);
                 }
 
-                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                *result = MarshalInterface<global::Windows.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
             }
             catch (Exception __exception__)
             {

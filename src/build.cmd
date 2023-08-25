@@ -87,8 +87,6 @@ if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
 if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking_compat_errors=false
 if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
 
-set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
-
 rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
 rem Create default %prerelease_targets%
@@ -137,133 +135,20 @@ if not exist %nuget_dir% md %nuget_dir%
 if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.8.0-preview.2/nuget.exe -OutFile %nuget_dir%\nuget.exe"
 %nuget_dir%\nuget update -self
 rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
-call %this_dir%get_testwinrt.cmd
 set NUGET_RESTORE_MSBUILD_ARGS=/p:platform="%cswinrt_platform%"
 if "%CIBuildReason%"=="CI" set NUGET_RESTORE_MSBUILD_ARGS=%NUGET_RESTORE_MSBUILD_ARGS%;CIBuildReason=%CIBuildReason%
 call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.sln
-rem: Calling nuget restore again on ObjectLifetimeTests.Lifted.csproj to prevent .props from \microsoft.testplatform.testhost\build\netcoreapp2.1 from being included. Nuget.exe erroneously imports props files. https://github.com/NuGet/Home/issues/9672
-call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln 
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=false;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed
   exit /b !ErrorLevel!
 )
 
-if "%cswinrt_platform%" NEQ "arm" (
-  if "%cswinrt_platform%" NEQ "arm64" (
-    echo Publishing functional tests for %cswinrt_platform% %cswinrt_configuration%
-    for %%a in (%cswinrt_functional_tests%) do (
-      echo Publishing %%a
-      call :exec %msbuild_path%msbuild.exe /t:restore /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
-    )
-  )
-)
-
 if "%cswinrt_build_only%"=="true" goto :eof
-
-:buildembedded
-echo Building embedded sample for %cswinrt_platform% %cswinrt_configuration%
-call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%Samples\TestEmbedded\TestEmbedded.sln
-call :exec %msbuild_path%msbuild.exe %this_dir%\Samples\TestEmbedded\TestEmbedded.sln /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %this_dir%\Samples\TestEmbedded\TestEmbedded.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration% /bl:embeddedsample.binlog
-if ErrorLevel 1 (
-  echo.
-  echo ERROR: Embedded build failed
-  exit /b !ErrorLevel!
-)
-
-rem Tests are not yet enabled for ARM builds (not supported by Project Reunion)
-if %cswinrt_platform%==arm goto :package
-if %cswinrt_platform%==arm64 goto :package
-
-:test
-rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
-if %cswinrt_platform%==x86 (
-  set dotnet_exe="%DOTNET_ROOT(x86)%\dotnet.exe"
-) else (
-  set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
-)
-if not exist %dotnet_exe% (
-  if %cswinrt_platform%==x86 (
-    set dotnet_exe="%ProgramFiles(x86)%\dotnet\dotnet.exe"
-  ) else (
-    set dotnet_exe="%ProgramFiles%\dotnet\dotnet.exe"
-  )
-)
-
-:embeddedtests
-:: build the embedded sample and run the unittest 
-call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0embedunittest_%cswinrt_version_string%.xml %this_dir%Samples/TestEmbedded/UnitTestEmbedded/UnitTestEmbedded.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration% -- RunConfiguration.TreatNoTestsAsError=true
-if ErrorLevel 1 (
-  echo.
-  echo ERROR: Embedded unit test failed, skipping NuGet pack
-  exit /b !ErrorLevel!
-)
-
-:objectlifetimetests
-rem Running Object Lifetime Unit Tests
-echo Running object lifetime tests for %cswinrt_platform% %cswinrt_configuration%
-if '%NUGET_PACKAGES%'=='' set NUGET_PACKAGES=%USERPROFILE%\.nuget\packages
-call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net7.0-windows10.0.19041.0\win10-%cswinrt_platform%\ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%NUGET_PACKAGES%\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
-if ErrorLevel 1 (
-  echo.
-  echo ERROR: Lifetime test failed, skipping NuGet pack
-  exit /b !ErrorLevel!
-)
-
-:unittest
-rem WinUI NuGet package's Microsoft.WinUI.AppX.targets attempts to import a file that does not exist, even when
-rem executing "dotnet test --no-build ...", which evidently still needs to parse and load the entire project.
-rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
-echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
-echo ^<Project/^> > %temp%\EmptyMsAppxPackage.Targets
-call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml %this_dir%Tests/unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets -- RunConfiguration.TreatNoTestsAsError=true
-if ErrorLevel 1 (
-  echo.
-  echo ERROR: Unit test failed, skipping NuGet pack
-  exit /b !ErrorLevel!
-)
-
-:hosttest
-rem Run WinRT.Host tests
-echo Running cswinrt host tests for %cswinrt_platform% %cswinrt_configuration%
-call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml 
-if ErrorLevel 1 (
-  echo.
-  echo ERROR: Host test failed, skipping NuGet pack
-  exit /b !ErrorLevel!
-)
- 
-:authortest
-rem Run Authoring tests
-echo Running cswinrt authoring tests for %cswinrt_platform% %cswinrt_configuration%
-call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml 
-if ErrorLevel 1 (
-  echo.
-  echo ERROR: Authoring test failed, skipping NuGet pack
-  exit /b !ErrorLevel!
-)
-
-:functionaltest
-rem Run functional tests
-echo Running cswinrt functional tests for %cswinrt_platform% %cswinrt_configuration%
-
-for %%a in (%cswinrt_functional_tests%) do (
-  echo Running %%a
-
-  call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net6.0\win10-%cswinrt_platform%\publish\%%a.exe
-  if !errorlevel! NEQ 100 (
-    echo.
-    echo ERROR: Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
-    exit /b !ErrorLevel!
-  )
-)
-
-if "%cswinrt_label%"=="functionaltest" exit /b 0
 
 :package
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`

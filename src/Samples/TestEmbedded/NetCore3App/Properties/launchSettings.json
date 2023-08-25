@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "NetCore3App": {
-      "commandName": "Project",
-      "nativeDebugging": true
-    }
-  }
-}

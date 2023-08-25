@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text;
 using System.Threading;
 using WinRT.Interop;
 
@@ -124,12 +125,15 @@ namespace WinRT
 
         internal static unsafe void* GetProcAddress(IntPtr moduleHandle, string functionName)
         {
-            void* functionPtr = Platform.TryGetProcAddress(moduleHandle, functionName);
-            if (functionPtr == null)
+            fixed (byte* lpFunctionName = functionName)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+                void* functionPtr = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
+                if (functionPtr == null)
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
+                }
+                return functionPtr;
             }
-            return functionPtr;
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
