@@ -122,4 +122,14 @@ namespace Generator
             return Path.Combine(context.GetGeneratedFilesDir(), fileName + ".winmd");
         }
     }
+
+    static class GeneratorHelper
+    {
+        public static bool IsWinRTType(ISymbol type)
+        {
+            bool isProjectedType = type.GetAttributes().
+                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0);
+            return isProjectedType;
+        }
+    }
 }

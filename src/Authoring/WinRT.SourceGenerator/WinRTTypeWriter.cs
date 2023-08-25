@@ -494,13 +494,6 @@ namespace Generator
             return typeRef;
         }
 
-        public bool IsWinRTType(ISymbol type)
-        {
-            bool isProjectedType = type.GetAttributes().
-                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0);
-            return isProjectedType;
-        }
-
         public string GetAssemblyForWinRTType(ISymbol type)
         {
             var winrtTypeAttribute = type.GetAttributes().
@@ -1311,7 +1304,7 @@ namespace Generator
             }
 
             var baseType = symbol.BaseType;
-            while (baseType != null && !IsWinRTType(baseType))
+            while (baseType != null && !GeneratorHelper.IsWinRTType(baseType))
             {
                 interfaces.UnionWith(baseType.Interfaces);
                 foreach (var @interface in baseType.Interfaces)
