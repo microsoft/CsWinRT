@@ -115,6 +115,8 @@ sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
     void IUriHandler.AddUriHandler(ProvideUri provideUri) => AddUriHandler(provideUri);
 }
 
+// Used to test interfaces on base class where
+// the child class has no WinRT interfaces.
 sealed partial class ManagedWarningClass2 : WarningClass 
 {
 }
