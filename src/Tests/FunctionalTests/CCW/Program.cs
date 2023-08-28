@@ -33,6 +33,7 @@ if (uriHandlerCCW == null)
 // Ensure that interfaces on the vtable / object don't get trimmed even if unused.
 Guid IID_IWarning1 = new Guid("4DB3FA26-4BB1-50EA-8362-98F49651E516");
 Guid IID_IWarningClassOverrides = new Guid("E5635CE4-D483-55AA-86D5-080DC07F0A09");
+Guid IID_IArtist = new Guid("B7233F79-63CF-5AFA-A026-E4F1924F17A1");
 
 var managedWarningClass = new ManagedWarningClass();
 ccw = MarshalInterface<IUriHandler>.CreateMarshaler(managedWarningClass);
@@ -48,9 +49,29 @@ if (warningOverrideCCW == null)
     return 105;
 }
 
+ccw.TryAs<IUnknownVftbl>(IID_IArtist, out var artistCCW);
+if (artistCCW == null)
+{
+    return 106;
+}
+
+var managedWarningClass2 = new ManagedWarningClass2();
+ccw = MarshalInspectable<object>.CreateMarshaler(managedWarningClass2);
+ccw.TryAs<IUnknownVftbl>(IID_IWarning1, out var warningCCW2);
+if (warningCCW2 == null)
+{
+    return 107;
+}
+
+ccw.TryAs<IUnknownVftbl>(IID_IWarningClassOverrides, out var warningOverrideCCW2);
+if (warningOverrideCCW2 == null)
+{
+    return 108;
+}
+
 return 100;
 
-sealed class ManagedProperties : IProperties1, IUriHandler
+sealed partial class ManagedProperties : IProperties1, IUriHandler
 {
     private readonly int _value;
 
@@ -69,12 +90,31 @@ sealed class ManagedProperties : IProperties1, IUriHandler
     void IUriHandler.AddUriHandler(ProvideUri provideUri) => AddUriHandler(provideUri);
 }
 
-sealed class ManagedWarningClass : WarningClass, IUriHandler
+sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
 {
+    public int Test => 4;
+
     public void AddUriHandler(ProvideUri provideUri)
     {
         _ = provideUri();
     }
 
+    public void Draw()
+    {
+    }
+
+    public void Draw(int _)
+    {
+    }
+
+    public int DrawTo()
+    {
+        return 0;
+    }
+
     void IUriHandler.AddUriHandler(ProvideUri provideUri) => AddUriHandler(provideUri);
+}
+
+sealed partial class ManagedWarningClass2 : WarningClass 
+{
 }

@@ -207,21 +207,6 @@ namespace Generator
         }
     }
 
-    [Generator]
-    public class WinRTAotSourceGenerator : ISourceGenerator
-    {
-        public void Execute(GeneratorExecutionContext context)
-        {
-            AotOptimizer generator = new(context);
-            generator.Generate();
-        }
-
-        public void Initialize(GeneratorInitializationContext context)
-        {
-            context.RegisterForSyntaxNotifications(() => new AotSyntaxReceiver());
-        }
-    }
-
     class WinRTSyntaxReceiver : ISyntaxReceiver
     {
         public List<MemberDeclarationSyntax> Declarations = new();
@@ -267,33 +252,6 @@ namespace Generator
         {
             // We detect whether partial types are public using symbol information later.
             return member.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword) || m.IsKind(SyntaxKind.PartialKeyword));
-        }
-    }
-
-    class AotSyntaxReceiver : ISyntaxReceiver
-    {
-        public List<ClassDeclarationSyntax> Declarations = new();
-
-        public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-        {
-            // Restrict to classes which can be instantiated and
-            // are partial allowing us to add attributes.
-            if (syntaxNode is ClassDeclarationSyntax declaration && 
-                IsConcreteClass(declaration) && 
-                IsPartial(declaration))
-            {
-                Declarations.Add(declaration);
-            }
-        }
-
-        private bool IsConcreteClass(MemberDeclarationSyntax member)
-        {
-            return !member.Modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword));
-        }
-
-        private bool IsPartial(MemberDeclarationSyntax member)
-        {
-            return member.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
         }
     }
 }

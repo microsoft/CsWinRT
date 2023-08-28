@@ -216,36 +216,43 @@ namespace WinRT
             else
             {
                 var objType = type.GetRuntimeClassCCWType() ?? type;
-                var interfaces = objType.GetInterfaces();
-                foreach (var iface in interfaces)
+                if (type.GetCustomAttribute(typeof(WinRTExposedTypeAttribute), false) is IWinRTExposedTypeDetails winrtExposedClassAttribute)
                 {
-                    if (Projections.IsTypeWindowsRuntimeType(iface))
+                    foreach (var iface in winrtExposedClassAttribute.GetExposedInterfaces())
                     {
-                        var ifaceAbiType = iface.FindHelperType();
-                        Guid iid = GuidGenerator.GetIID(ifaceAbiType);
-                        entries.Add(new ComInterfaceEntry
-                        {
-                            IID = iid,
-                            Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
-                        });
-
-                        if (!hasCustomIMarshalInterface && iid == ABI.WinRT.Interop.IMarshal.IID)
-                        {
-                            hasCustomIMarshalInterface = true;
-                        }
+                        AddInterfaceToVtable(iface);
                     }
 
-                    if (iface.IsConstructedGenericType
-                        && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, out var compatibleIfaces))
+                    var baseType = type.BaseType;
+                    if (baseType != null && baseType != typeof(object))
                     {
-                        foreach (var compatibleIface in compatibleIfaces)
+                        var winrtExposedBaseClassAttributes = baseType.GetCustomAttributes(typeof(WinRTExposedTypeAttribute), true);
+                        foreach (var winrtExposedBaseClassAttribute in winrtExposedBaseClassAttributes)
                         {
-                            var compatibleIfaceAbiType = compatibleIface.FindHelperType();
-                            entries.Add(new ComInterfaceEntry
+                            foreach (var iface in ((IWinRTExposedTypeDetails)winrtExposedBaseClassAttribute).GetExposedInterfaces())
                             {
-                                IID = GuidGenerator.GetIID(compatibleIfaceAbiType),
-                                Vtable = (IntPtr)compatibleIfaceAbiType.GetAbiToProjectionVftblPtr()
-                            });
+                                AddInterfaceToVtable(iface);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var interfaces = objType.GetInterfaces();
+                    foreach (var iface in interfaces)
+                    {
+                        if (Projections.IsTypeWindowsRuntimeType(iface))
+                        {
+                            AddInterfaceToVtable(iface);
+                        }
+
+                        if (iface.IsConstructedGenericType
+                            && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, out var compatibleIfaces))
+                        {
+                            foreach (var compatibleIface in compatibleIfaces)
+                            {
+                                AddInterfaceToVtable(compatibleIface);
+                            }
                         }
                     }
                 }
@@ -334,6 +341,22 @@ namespace WinRT
             });
 
             return entries;
+
+            void AddInterfaceToVtable(Type interfaceType)
+            {
+                var interfaceHelperType = interfaceType.FindHelperType();
+                Guid iid = GuidGenerator.GetIID(interfaceHelperType);
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = GuidGenerator.GetIID(interfaceHelperType),
+                    Vtable = (IntPtr)interfaceHelperType.GetAbiToProjectionVftblPtr()
+                });
+
+                if (!hasCustomIMarshalInterface && iid == ABI.WinRT.Interop.IMarshal.IID)
+                {
+                    hasCustomIMarshalInterface = true;
+                }
+            }
         }
 
 #if NET

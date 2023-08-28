@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -129,6 +130,13 @@ namespace Generator
         {
             bool isProjectedType = type.GetAttributes().
                 Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0);
+            return isProjectedType;
+        }
+
+        public static bool IsWinRTType(MemberDeclarationSyntax node)
+        {
+            bool isProjectedType = node.AttributeLists.SelectMany(list => list.Attributes).
+                Any(attribute => string.CompareOrdinal(attribute.Name.NormalizeWhitespace().ToFullString(), "WindowsRuntimeTypeAttribute") == 0);
             return isProjectedType;
         }
     }
