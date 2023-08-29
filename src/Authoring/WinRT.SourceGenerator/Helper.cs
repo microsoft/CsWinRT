@@ -126,16 +126,45 @@ namespace Generator
 
     static class GeneratorHelper
     {
+        private static bool IsFundamentalType(ISymbol type)
+        {
+            if (type is INamedTypeSymbol namedTypeSymbol)
+            {
+                switch (namedTypeSymbol.SpecialType)
+                {
+                    case SpecialType.System_Boolean:
+                    case SpecialType.System_String:
+                    case SpecialType.System_Single:
+                    case SpecialType.System_Double:
+                    case SpecialType.System_UInt16:
+                    case SpecialType.System_UInt32:
+                    case SpecialType.System_UInt64:
+                    case SpecialType.System_Int16:
+                    case SpecialType.System_Int32:
+                    case SpecialType.System_Int64:
+                    case SpecialType.System_Char:
+                    case SpecialType.System_Byte:
+                    case SpecialType.System_Object:
+                        return true; 
+                }
+            }
+
+            return type.ToDisplayString() == "System.Guid";
+        }
+
         public static bool IsWinRTType(ISymbol type)
         {
             bool isProjectedType = type.GetAttributes().
-                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0);
+                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0) ||
+                IsFundamentalType(type);
+
             if (!isProjectedType & type.ContainingNamespace != null)
             {
                 isProjectedType = MappedCSharpTypes.ContainsKey(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
             }
 
-            if (isProjectedType && type is INamedTypeSymbol namedType && namedType.IsGenericType)
+            // Ensure all generic parameters are WinRT types.
+            if (isProjectedType && type is INamedTypeSymbol namedType && namedType.IsGenericType && !namedType.IsDefinition)
             {
                 isProjectedType = namedType.TypeArguments.All(IsWinRTType);
             }

@@ -1,11 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 
 namespace Generator
 {
@@ -63,7 +61,7 @@ namespace Generator
             return new VtableAttribute(
                 symbol.ContainingNamespace.ToDisplayString(),
                 symbol.ContainingNamespace.IsGlobalNamespace,
-                symbol.Name, 
+                symbol.Name,
                 interfacesToAddToVtable.ToArray(),
                 hasWinRTExposedBaseType);
 
@@ -99,7 +97,7 @@ namespace Generator
                 return false;
             }
 
-            var definition = type.ConstructUnboundGenericType();
+            var definition = type.OriginalDefinition;
             if (!GeneratorHelper.IsWinRTType(definition))
             {
                 return false;
@@ -139,7 +137,7 @@ namespace Generator
                 }
             }
 
-            var baseType = type.BaseType;
+            var baseType = type.TypeArguments[0].BaseType;
             while (baseType != null)
             {
                 if (GeneratorHelper.IsWinRTType(baseType))
