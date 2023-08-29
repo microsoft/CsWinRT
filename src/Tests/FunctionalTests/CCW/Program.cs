@@ -2,6 +2,8 @@
 using TestComponentCSharp;
 using WinRT.Interop;
 using WinRT;
+using System.Collections.Generic;
+using System.Collections;
 
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
@@ -69,6 +71,22 @@ if (warningOverrideCCW2 == null)
     return 108;
 }
 
+Guid IID_IProperties1 = new Guid("4BB22177-718B-57C4-8977-CDF2621C781A");
+Guid IID_IProperties2 = new Guid("6090AE4B-83A1-5474-A8D9-AF9B8C8DBD09");
+var managedInterfaceInheritance = new ManagedInterfaceInheritance();
+ccw = MarshalInspectable<object>.CreateMarshaler(managedInterfaceInheritance);
+ccw.TryAs<IUnknownVftbl>(IID_IProperties1, out var propertiesCCW);
+if (propertiesCCW == null)
+{
+    return 109;
+}
+
+ccw.TryAs<IUnknownVftbl>(IID_IProperties2, out var properties2CCW);
+if (properties2CCW == null)
+{
+    return 110;
+}
+
 return 100;
 
 sealed partial class ManagedProperties : IProperties1, IUriHandler
@@ -119,4 +137,129 @@ sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
 // the child class has no WinRT interfaces.
 sealed partial class ManagedWarningClass2 : WarningClass 
 {
+}
+
+sealed partial class ManagedInterfaceInheritance : IProperties2
+{
+    private int _value;
+
+    public int ReadWriteProperty { get => _value; set => _value = value; }
+}
+
+sealed partial class ManagedIntList : IList<int>
+{
+    public int this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+    public int Count => throw new NotImplementedException();
+
+    public bool IsReadOnly => throw new NotImplementedException();
+
+    public void Add(int item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Clear()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Contains(int item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void CopyTo(int[] array, int arrayIndex)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerator<int> GetEnumerator()
+    {
+        throw new NotImplementedException();
+    }
+
+    public int IndexOf(int item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Insert(int index, int item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Remove(int item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void RemoveAt(int index)
+    {
+        throw new NotImplementedException();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        throw new NotImplementedException();
+    }
+}
+
+sealed partial class ManagedDerivedList : IList<TestComponent.Derived>
+{
+    public TestComponent.Derived this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+    public int Count => throw new NotImplementedException();
+
+    public bool IsReadOnly => throw new NotImplementedException();
+
+    public void Add(TestComponent.Derived item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Clear()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Contains(TestComponent.Derived item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void CopyTo(TestComponent.Derived[] array, int arrayIndex)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerator<TestComponent.Derived> GetEnumerator()
+    {
+        throw new NotImplementedException();
+    }
+
+    public int IndexOf(TestComponent.Derived item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Insert(int index, TestComponent.Derived item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Remove(TestComponent.Derived item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void RemoveAt(int index)
+    {
+        throw new NotImplementedException();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        throw new NotImplementedException();
+    }
 }

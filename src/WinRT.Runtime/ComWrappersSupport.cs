@@ -216,6 +216,8 @@ namespace WinRT
             else
             {
                 var objType = type.GetRuntimeClassCCWType() ?? type;
+                // Check whether the type itself has the attribute to make sure it is using the new source generator
+                // and just doesn't have an updated dependent projection which is.
                 if (type.GetCustomAttribute(typeof(WinRTExposedTypeAttribute), false) is IWinRTExposedTypeDetails winrtExposedClassAttribute)
                 {
                     foreach (var iface in winrtExposedClassAttribute.GetExposedInterfaces())
@@ -342,9 +344,9 @@ namespace WinRT
 
             return entries;
 
-            void AddInterfaceToVtable(Type interfaceType)
+            void AddInterfaceToVtable(Type iface)
             {
-                var interfaceHelperType = interfaceType.FindHelperType();
+                var interfaceHelperType = iface.FindHelperType();
                 Guid iid = GuidGenerator.GetIID(interfaceHelperType);
                 entries.Add(new ComInterfaceEntry
                 {

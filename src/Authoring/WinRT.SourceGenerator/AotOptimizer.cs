@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,13 +35,14 @@ namespace Generator
         {
             var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node as ClassDeclarationSyntax);
 
-            // Filter to the WinRT interfaces.
-            List<string> interfacesToAddToVtable = new();
-            foreach (var @interface in symbol.Interfaces)
+            HashSet<string> interfacesToAddToVtable = new();
+            foreach (var iface in symbol.Interfaces)
             {
-                if (GeneratorHelper.IsWinRTType(@interface))
+                AddInterfaceAndCompatibleInterfacesToVtable(iface);
+
+                foreach (var baseIface in iface.AllInterfaces)
                 {
-                    interfacesToAddToVtable.Add(@interface.ToDisplayString());
+                    AddInterfaceAndCompatibleInterfacesToVtable(baseIface);
                 }
             }
 
@@ -64,10 +66,105 @@ namespace Generator
                 symbol.Name, 
                 interfacesToAddToVtable.ToArray(),
                 hasWinRTExposedBaseType);
+
+            void AddInterfaceAndCompatibleInterfacesToVtable(INamedTypeSymbol iface)
+            {
+                if (GeneratorHelper.IsWinRTType(iface))
+                {
+                    interfacesToAddToVtable.Add(iface.ToDisplayString());
+                }
+
+                if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, out var compatibleIfaces))
+                {
+                    foreach (var compatibleIface in compatibleIfaces)
+                    {
+                        interfacesToAddToVtable.Add(compatibleIface.ToDisplayString());
+                    }
+                }
+            }
+        }
+
+        private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, Stack<INamedTypeSymbol> typeStack, out IList<INamedTypeSymbol> compatibleTypes)
+        {
+            compatibleTypes = null;
+
+            // Out of all the C# interfaces which are valid WinRT interfaces and
+            // support covariance, they all only have one generic parameter,
+            // so scoping to only handle that.
+            if (!(type.IsGenericType &&
+                type.TypeParameters.Length == 1 &&
+                type.TypeParameters[0].Variance == VarianceKind.Out &&
+                !type.TypeArguments[0].IsValueType))
+            {
+                return false;
+            }
+
+            var definition = type.ConstructUnboundGenericType();
+            if (!GeneratorHelper.IsWinRTType(definition))
+            {
+                return false;
+            }
+
+            if (typeStack == null)
+            {
+                typeStack = new Stack<INamedTypeSymbol>();
+            }
+            else
+            {
+                if (typeStack.Contains(type))
+                {
+                    return false;
+                }
+            }
+            typeStack.Push(type);
+
+            HashSet<ITypeSymbol> compatibleTypesForGeneric = new(SymbolEqualityComparer.Default);
+
+            if (GeneratorHelper.IsWinRTType(type.TypeArguments[0]))
+            {
+                compatibleTypesForGeneric.Add(type.TypeArguments[0]);
+            }
+
+            foreach (var iface in type.TypeArguments[0].AllInterfaces)
+            {
+                if (GeneratorHelper.IsWinRTType(iface))
+                {
+                    compatibleTypesForGeneric.Add(iface);
+                }
+
+                if (iface.IsGenericType
+                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, typeStack, out var compatibleIfaces))
+                {
+                    compatibleTypesForGeneric.UnionWith(compatibleIfaces);
+                }
+            }
+
+            var baseType = type.BaseType;
+            while (baseType != null)
+            {
+                if (GeneratorHelper.IsWinRTType(baseType))
+                {
+                    compatibleTypesForGeneric.Add(baseType);
+                }
+                baseType = baseType.BaseType;
+            }
+
+            typeStack.Pop();
+
+            compatibleTypes = new List<INamedTypeSymbol>(compatibleTypesForGeneric.Count);
+            foreach (var compatibleType in compatibleTypesForGeneric)
+            {
+                compatibleTypes.Add(definition.Construct(compatibleType));
+            }
+
+            return true;
         }
 
         private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, VtableAttribute vtableAttribute)
         {
+            // Even if no interfaces are on the vtable, as long as the base type is a WinRT type,
+            // we want to put the attribute as the attribute is the opt-in for the source generated
+            // vtable generation.
             if (vtableAttribute.Interfaces.Any() || vtableAttribute.HasWinRTExposedBaseType)
             {
                 var vtableEntries = string.Join(", ", vtableAttribute.Interfaces.Select((@interface) => $@"typeof({@interface})"));

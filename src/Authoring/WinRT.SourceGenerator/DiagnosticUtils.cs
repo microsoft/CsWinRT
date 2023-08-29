@@ -215,7 +215,7 @@ namespace Generator
             HashSet<ISymbol> classMethods = new();
 
             foreach (var @interface in typeSymbol.AllInterfaces.
-                        Where(symbol => WinRTTypeWriter.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
+                        Where(symbol => GeneratorHelper.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
                                         WinRTTypeWriter.ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
                 foreach (var interfaceMember in @interface.GetMembers())
