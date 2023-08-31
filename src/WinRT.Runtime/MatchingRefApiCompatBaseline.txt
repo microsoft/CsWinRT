@@ -1,0 +1,4 @@
+Compat issues with assembly WinRT.Runtime:
+TypesMustExist : Type 'WinRT.IWinRTExposedTypeDetails' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
+Total Issues: 2
