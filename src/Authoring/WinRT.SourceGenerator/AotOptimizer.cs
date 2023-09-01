@@ -1,9 +1,14 @@
-﻿using Microsoft.CodeAnalysis;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using WinRT.SourceGenerator;
 
 namespace Generator
 {
@@ -62,7 +67,7 @@ namespace Generator
                 symbol.ContainingNamespace.ToDisplayString(),
                 symbol.ContainingNamespace.IsGlobalNamespace,
                 symbol.Name,
-                interfacesToAddToVtable.ToArray(),
+                interfacesToAddToVtable.ToImmutableArray(),
                 hasWinRTExposedBaseType);
 
             void AddInterfaceAndCompatibleInterfacesToVtable(INamedTypeSymbol iface)
@@ -89,10 +94,7 @@ namespace Generator
             // Out of all the C# interfaces which are valid WinRT interfaces and
             // support covariance, they all only have one generic parameter,
             // so scoping to only handle that.
-            if (!(type.IsGenericType &&
-                type.TypeParameters.Length == 1 &&
-                type.TypeParameters[0].Variance == VarianceKind.Out &&
-                !type.TypeArguments[0].IsValueType))
+            if (type is not { IsGenericType: true, TypeParameters: [{ Variance: VarianceKind.Out, IsValueType: false }] })
             {
                 return false;
             }
@@ -170,14 +172,18 @@ namespace Generator
                 StringBuilder source = new();
                 if (!vtableAttribute.IsGlobalNamespace)
                 {
-                    source.Append($@"namespace {vtableAttribute.Namespace}{{");
+                    source.Append($$"""
+                        namespace {{vtableAttribute.Namespace}}
+                        {
+                        """);
                 }
 
-                source.Append($@"
-    [global::WinRT.WinRTExposedType({vtableEntries})]
-    partial class {vtableAttribute.ClassName}
-    {{
-    }}");
+                source.Append($$"""
+                    [global::WinRT.WinRTExposedType({{vtableEntries}})]
+                    partial class {{vtableAttribute.ClassName}}
+                    {
+                    }
+                    """);
 
                 if (!vtableAttribute.IsGlobalNamespace)
                 {
@@ -190,15 +196,15 @@ namespace Generator
         }
     }
 
-    internal readonly struct VtableAttribute
+    internal sealed record VtableAttribute
     {
         public string Namespace { get; }
         public bool IsGlobalNamespace { get; }
         public string ClassName { get; }
-        public string[] Interfaces { get; }
+        public EquatableArray<string> Interfaces { get; }
         public bool HasWinRTExposedBaseType { get; }
 
-        public VtableAttribute(string @namespace, bool isGlobalNamespace, string className, string[] interfaces, bool hasWinRTExposedBaseType)
+        public VtableAttribute(string @namespace, bool isGlobalNamespace, string className, EquatableArray<string> interfaces, bool hasWinRTExposedBaseType)
         {
             Namespace = @namespace;
             IsGlobalNamespace = isGlobalNamespace;
