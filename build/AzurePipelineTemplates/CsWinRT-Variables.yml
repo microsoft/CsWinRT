@@ -5,7 +5,7 @@ variables:
   WinRT.Runtime.AssemblyVersion: '2.0.0.0'
   Net5.SDK.Feed: 'https://dotnetcli.blob.core.windows.net/dotnet'
   Net5.SDK.Version: '5.0.408'
-  Net6.SDK.Version: '6.0.301'
+  Net6.SDK.Version: '6.0.413'
   NoSamples: 'false'
   
   # This 'coalesce' pattern allows the yml to define a default value for a variable but allows the value to be overridden at queue time.
