@@ -273,6 +273,11 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector() noexcept;
+
+        Windows::Foundation::Collections::IMap<int32_t, int32_t> GetIntToIntDictionary();
+        Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedBlittableStruct> GetStringToBlittableDictionary();
+        Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedNonBlittableStruct> GetStringToNonBlittableDictionary();
+        Windows::Foundation::Collections::IMap<TestComponentCSharp::ComposedBlittableStruct, Windows::Foundation::IInspectable> GetBlittableToObjectDictionary();
        
         // Test IIDOptimizer -- testing the windows projection covers most code paths, and these two types exercise the rest.
         Windows::Foundation::Collections::IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> GetEventArgsVector();
