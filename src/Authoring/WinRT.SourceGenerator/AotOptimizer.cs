@@ -196,21 +196,10 @@ namespace Generator
         }
     }
 
-    internal sealed record VtableAttribute
-    {
-        public string Namespace { get; }
-        public bool IsGlobalNamespace { get; }
-        public string ClassName { get; }
-        public EquatableArray<string> Interfaces { get; }
-        public bool HasWinRTExposedBaseType { get; }
-
-        public VtableAttribute(string @namespace, bool isGlobalNamespace, string className, EquatableArray<string> interfaces, bool hasWinRTExposedBaseType)
-        {
-            Namespace = @namespace;
-            IsGlobalNamespace = isGlobalNamespace;
-            ClassName = className;
-            Interfaces = interfaces;
-            HasWinRTExposedBaseType = hasWinRTExposedBaseType;
-        }
-    }
+    internal sealed record VtableAttribute(
+        string Namespace,
+        bool IsGlobalNamespace,
+        string ClassName,
+        EquatableArray<string> Interfaces,
+        bool HasWinRTExposedBaseType);
 }
