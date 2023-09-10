@@ -37,8 +37,8 @@ namespace System.Collections.Generic
 
     internal sealed class IDictionaryImpl<K, V> : IDictionary<K, V>, IWinRTObject
     {
-        private IObjectReference _inner;
-        private Dictionary<K, (IntPtr, V)> _lookupCache;
+        private readonly IObjectReference _inner;
+        private readonly Dictionary<K, (IntPtr, V)> _lookupCache;
 
         internal IDictionaryImpl(IObjectReference _inner)
         {
@@ -51,7 +51,7 @@ namespace System.Collections.Generic
         private volatile IObjectReference __iDictionaryObjRef;
         private IObjectReference Make_IDictionaryObjRef()
         {
-            global::System.Threading.Interlocked.CompareExchange(ref __iDictionaryObjRef, _inner.As<ABI.System.Collections.Generic.IDictionary<K, V>.Vftbl>(), null);
+            global::System.Threading.Interlocked.CompareExchange(ref __iDictionaryObjRef, _inner.As<IUnknownVftbl>(ABI.System.Collections.Generic.IDictionaryMethods<K, V>.PIID), null);
             return __iDictionaryObjRef;
         }
         private IObjectReference iDictionaryObjRef => __iDictionaryObjRef ?? Make_IDictionaryObjRef();
@@ -59,7 +59,7 @@ namespace System.Collections.Generic
         private volatile IObjectReference __iEnumerableObjRef;
         private IObjectReference Make_IEnumerableObjRef()
         {
-            global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, _inner.As<ABI.System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>.Vftbl>(), null);
+            global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, _inner.As<IUnknownVftbl>(ABI.System.Collections.Generic.IEnumerableMethods<KeyValuePair<K, V>>.PIID), null);
             return __iEnumerableObjRef;
         }
         private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
@@ -157,71 +157,34 @@ namespace System.Collections.Generic
 namespace ABI.Windows.Foundation.Collections
 {
     using global::System;
-    using global::System.Runtime.CompilerServices;
-    using ABI.System.Collections.Generic;
 
     internal static class IMapMethods<K, V>
     {
+        // These function pointers will be set by IDictionaryMethods<K, KAbi, V, VAbi>
+        // when it is called by the source generated type or by the fallback
+        // mechanism if the source generated type wasn't used.
+        internal unsafe static delegate*<IntPtr, Dictionary<K, (IntPtr, V)>, K, V> _Lookup;
+        internal unsafe static delegate*<IntPtr, K, bool> _HasKey;
+        internal unsafe static delegate*<IntPtr, K, V, bool> _Insert;
+        internal unsafe static delegate*<IntPtr, K, void> _Remove;
+
         public static unsafe V Lookup(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
         {
-            var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
-            var ThisPtr = _obj.ThisPtr;
-            object __key = default;
-            var __params = new object[] { ThisPtr, null, null }; 
-            try
-            {
-                __key = Marshaler<K>.CreateMarshaler2(key);
-                __params[1] = Marshaler<K>.GetAbi(__key);
-                _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
-
-                if (__lookupCache != null && __lookupCache.TryGetValue(key, out var __cachedRcw) && __cachedRcw.Item1 == (IntPtr)__params[2])
-                {
-                    return __cachedRcw.Item2;
-                }
-                else
-                {
-                    var value = Marshaler<V>.FromAbi(__params[2]);
-                    if (__lookupCache != null)
-                    {
-                        __lookupCache[key] = ((IntPtr)__params[2], value);
-                    }
-                    return value;
-                }
-            }
-            finally
-            {
-                Marshaler<K>.DisposeMarshaler(__key);
-                Marshaler<V>.DisposeAbi(__params[2]);
-            }
+            return _Lookup(obj.ThisPtr, __lookupCache, key);
         }
 
         public static unsafe bool HasKey(IObjectReference obj, K key)
         {
-            var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
-            var ThisPtr = _obj.ThisPtr;
-            object __key = default;
-            var __params = new object[] { ThisPtr, null, null };
-            try
-            {
-                __key = Marshaler<K>.CreateMarshaler2(key);
-                __params[1] = Marshaler<K>.GetAbi(__key);
-                _obj.Vftbl.HasKey_2.DynamicInvokeAbi(__params);
-                return (byte)__params[2] != 0;
-            }
-            finally
-            {
-                Marshaler<K>.DisposeMarshaler(__key);
-            }
+            return _HasKey(obj.ThisPtr, key);
         }
 
         public static unsafe global::System.Collections.Generic.IReadOnlyDictionary<K, V> GetView(IObjectReference obj)
         {
-            var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
-            var ThisPtr = _obj.ThisPtr;
+            var ThisPtr = obj.ThisPtr;
             IntPtr __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_3(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[9](ThisPtr, &__retval));
                 return MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>.FromAbi(__retval);
             }
             finally
@@ -232,43 +195,12 @@ namespace ABI.Windows.Foundation.Collections
 
         public static unsafe bool Insert(IObjectReference obj, K key, V value)
         {
-            var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
-            var ThisPtr = _obj.ThisPtr;
-            object __key = default;
-            object __value = default;
-            var __params = new object[] { ThisPtr, null, null, null };
-            try
-            {
-                __key = Marshaler<K>.CreateMarshaler2(key);
-                __params[1] = Marshaler<K>.GetAbi(__key);
-                __value = Marshaler<V>.CreateMarshaler2(value);
-                __params[2] = Marshaler<V>.GetAbi(__value);
-                _obj.Vftbl.Insert_4.DynamicInvokeAbi(__params);
-                return (byte)__params[3] != 0;
-            }
-            finally
-            {
-                Marshaler<K>.DisposeMarshaler(__key);
-                Marshaler<V>.DisposeMarshaler(__value);
-            }
+            return _Insert(obj.ThisPtr, key, value);
         }
 
         public static unsafe void Remove(IObjectReference obj, K key)
         {
-            var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
-            var ThisPtr = _obj.ThisPtr;
-            object __key = default;
-            var __params = new object[] { ThisPtr, null };
-            try
-            {
-                __key = Marshaler<K>.CreateMarshaler2(key);
-                __params[1] = Marshaler<K>.GetAbi(__key);
-                _obj.Vftbl.Remove_5.DynamicInvokeAbi(__params);
-            }
-            finally
-            {
-                Marshaler<K>.DisposeMarshaler(__key);
-            }
+            _Remove(obj.ThisPtr, key);
         }
 
         public static void Clear(IObjectReference obj)
@@ -278,21 +210,18 @@ namespace ABI.Windows.Foundation.Collections
 
         private static unsafe void _ClearHelper(IObjectReference obj)
         {
-            var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
-            var ThisPtr = _obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Clear_6(ThisPtr));
+            var ThisPtr = obj.ThisPtr;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[12](ThisPtr));
         }
 
         public static unsafe uint get_Size(IObjectReference obj)
         {
-            var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
-            var ThisPtr = _obj.ThisPtr;
+            var ThisPtr = obj.ThisPtr;
             uint __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_1(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
             return __retval;
         }
     }
-
 }
 
 namespace ABI.System.Collections.Generic
@@ -306,6 +235,19 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IDictionaryMethods<K, V>
     {
+        unsafe static IDictionaryMethods()
+        {
+            // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
+            // and due to that the function pointers haven't been initialized.
+            if (IMapMethods<K, V>._Insert == null)
+            {
+                var ensureInitializedFallback = (Func<bool>)typeof(IDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                    GetMethod("EnsureRcwHelperInitialized", BindingFlags.Public | BindingFlags.Static).
+                    CreateDelegate(typeof(Func<bool>));
+                ensureInitializedFallback();
+            }
+        }
+
         public static int get_Count(IObjectReference obj)
         {
             uint size = IMapMethods<K, V>.get_Size(obj);
@@ -484,7 +426,7 @@ namespace ABI.System.Collections.Generic
             private volatile IObjectReference __iEnumerableObjRef;
             private IObjectReference Make_IEnumerableObjRef()
             {
-                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iDictionaryObjRef.As<ABI.System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.Vftbl>(), null);
+                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iDictionaryObjRef.As<IUnknownVftbl>(ABI.System.Collections.Generic.IEnumerableMethods<global::System.Collections.Generic.KeyValuePair<K, V>>.PIID), null);
                 return __iEnumerableObjRef;
             }
             private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
@@ -580,7 +522,7 @@ namespace ABI.System.Collections.Generic
             private volatile IObjectReference __iEnumerableObjRef;
             private IObjectReference Make_IEnumerableObjRef()
             {
-                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iDictionaryObjRef.As<ABI.System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.Vftbl>(), null);
+                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iDictionaryObjRef.As<IUnknownVftbl>(ABI.System.Collections.Generic.IEnumerableMethods<global::System.Collections.Generic.KeyValuePair<K, V>>.PIID), null);
                 return __iEnumerableObjRef;
             }
             private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
@@ -669,8 +611,365 @@ namespace ABI.System.Collections.Generic
                 }
             }
         }
+
+        private static IntPtr abiToProjectionVftablePtr;
+        internal static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
+
+        internal static bool TryInitCCWVtable(IntPtr ptr)
+        {
+            return global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionVftablePtr, ptr, IntPtr.Zero) == IntPtr.Zero;
+        }
+
+        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IDictionary<K, V>));
+
+        public static V Abi_Lookup_0(IntPtr thisPtr, K key)
+        {
+            return IDictionary<K, V>.FindAdapter(thisPtr).Lookup(key);
+        }
+
+        public static bool Abi_HasKey_2(IntPtr thisPtr, K key)
+        {
+            return IDictionary<K, V>.FindAdapter(thisPtr).HasKey(key);
+        }
+
+        public static global::System.Collections.Generic.IReadOnlyDictionary<K, V> Abi_GetView_3(IntPtr thisPtr)
+        {
+            return IDictionary<K, V>.FindAdapter(thisPtr).GetView();
+        }
+
+        public static bool Abi_Insert_4(IntPtr thisPtr, K key, V value)
+        {
+            return IDictionary<K, V>.FindAdapter(thisPtr).Insert(key, value);
+        }
+
+        public static void Abi_Remove_5(IntPtr thisPtr, K key)
+        {
+            IDictionary<K, V>.FindAdapter(thisPtr)._Remove(key);
+        }
+
+        public static void Abi_Clear_6(IntPtr thisPtr)
+        {
+            IDictionary<K, V>.FindAdapter(thisPtr).Clear();
+        }
+
+        public static uint Abi_get_Size_1(IntPtr thisPtr)
+        {
+            return IDictionary<K, V>.FindAdapter(thisPtr).Size;
+        }
     }
 
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IDictionaryMethods<K, KAbi, V, VAbi> where KAbi: unmanaged where VAbi: unmanaged
+    {
+        private static bool RcwHelperInitialized { get; } = InitRcwHelper();
+
+        private unsafe static bool InitRcwHelper()
+        {
+            IMapMethods<K, V>._Lookup = &Lookup;
+            IMapMethods<K, V>._HasKey = &HasKey;
+            IMapMethods<K, V>._Insert = &Insert;
+            IMapMethods<K, V>._Remove = &Remove;
+
+            ComWrappersSupport.RegisterTypedRcwFactory(
+                typeof(global::System.Collections.Generic.IDictionary<K, V>),
+                IDictionaryImpl<K, V>.CreateRcw);
+            return true;
+        }
+
+        public static bool EnsureRcwHelperInitialized()
+        {
+            return RcwHelperInitialized;
+        }
+
+        private static unsafe V Lookup(IntPtr ptr, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
+        {
+            object __key = default;
+            VAbi valueAbi = default;
+            try
+            {
+                __key = Marshaler<K>.CreateMarshaler2(key);
+                KAbi keyAbi = (KAbi)Marshaler<K>.GetAbi(__key);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, KAbi, void*, int>**)ptr)[6](ptr, keyAbi, &valueAbi));
+
+                if (typeof(VAbi) == typeof(IntPtr))
+                {
+                    if (__lookupCache != null && __lookupCache.TryGetValue(key, out var __cachedRcw) && __cachedRcw.Item1 == (IntPtr)(object)valueAbi)
+                    {
+                        return __cachedRcw.Item2;
+                    }
+                    else
+                    {
+                        var value = Marshaler<V>.FromAbi(valueAbi);
+                        if (__lookupCache != null)
+                        {
+                            __lookupCache[key] = ((IntPtr)(object)valueAbi, value);
+                        }
+                        return value;
+                    }
+                }
+                else
+                {
+                    return Marshaler<V>.FromAbi(valueAbi);
+                }
+            }
+            finally
+            {
+                Marshaler<K>.DisposeMarshaler(__key);
+                Marshaler<V>.DisposeAbi(valueAbi);
+            }
+        }
+
+        private static unsafe bool HasKey(IntPtr ptr, K key)
+        {
+            object __key = default;
+            try
+            {
+                __key = Marshaler<K>.CreateMarshaler2(key);
+                KAbi keyAbi = (KAbi)Marshaler<K>.GetAbi(__key);
+                byte found;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, KAbi, byte*, int>**)ptr)[8](ptr, keyAbi, &found));
+                return found != 0;
+            }
+            finally
+            {
+                Marshaler<K>.DisposeMarshaler(__key);
+            }
+        }
+
+        private static unsafe bool Insert(IntPtr ptr, K key, V value)
+        {
+            object __key = default;
+            object __value = default;
+            try
+            {
+                __key = Marshaler<K>.CreateMarshaler2(key);
+                KAbi keyAbi = (KAbi)Marshaler<K>.GetAbi(__key);
+                __value = Marshaler<V>.CreateMarshaler2(value);
+                VAbi valueAbi = (VAbi)Marshaler<V>.GetAbi(__value);
+                byte replaced;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, KAbi, VAbi, byte*, int>**)ptr)[10](ptr, keyAbi, valueAbi, &replaced));
+                return replaced != 0;
+            }
+            finally
+            {
+                Marshaler<K>.DisposeMarshaler(__key);
+                Marshaler<V>.DisposeMarshaler(__value);
+            }
+        }
+
+        private static unsafe void Remove(IntPtr ptr, K key)
+        {
+            object __key = default;
+            try
+            {
+                __key = Marshaler<K>.CreateMarshaler2(key);
+                KAbi keyAbi = (KAbi)Marshaler<K>.GetAbi(__key);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, KAbi, int>**)ptr)[11](ptr, keyAbi));
+            }
+            finally
+            {
+                Marshaler<K>.DisposeMarshaler(__key);
+            }
+        }
+
+        public static unsafe bool InitCcw(
+            delegate* unmanaged[Stdcall]<IntPtr, KAbi, VAbi*, int> lookup,
+            delegate* unmanaged[Stdcall]<IntPtr, uint*, int> getSize,
+            delegate* unmanaged[Stdcall]<IntPtr, KAbi, byte*, int> hasKey,
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> getView,
+            delegate* unmanaged[Stdcall]<IntPtr, KAbi, VAbi, byte*, int> insert,
+            delegate* unmanaged[Stdcall]<IntPtr, KAbi, int> remove,
+            delegate* unmanaged[Stdcall]<IntPtr, int> clear)
+        {
+            if (IDictionaryMethods<K, V>.AbiToProjectionVftablePtr != default)
+            {
+                return false;
+            }
+
+            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 7));
+            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+            ((delegate* unmanaged[Stdcall]<IntPtr, KAbi, VAbi*, int>*)abiToProjectionVftablePtr)[6] = lookup;
+            ((delegate* unmanaged[Stdcall]<IntPtr, uint*, int>*)abiToProjectionVftablePtr)[7] = getSize;
+            ((delegate* unmanaged[Stdcall]<IntPtr, KAbi, byte*, int>*)abiToProjectionVftablePtr)[8] = hasKey;
+            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>*)abiToProjectionVftablePtr)[9] = getView;
+            ((delegate* unmanaged[Stdcall]<IntPtr, KAbi, VAbi, byte*, int>*)abiToProjectionVftablePtr)[10] = insert;
+            ((delegate* unmanaged[Stdcall]<IntPtr, KAbi, int>*)abiToProjectionVftablePtr)[11] = remove;
+            ((delegate* unmanaged[Stdcall]<IntPtr, int>*)abiToProjectionVftablePtr)[12] = clear;
+
+            if (!IDictionaryMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
+            {
+                NativeMemory.Free((void*)abiToProjectionVftablePtr);
+                return false;
+            }
+
+            return true;
+        }
+
+        private static global::System.Delegate[] DelegateCache;
+
+        internal static unsafe void InitFallbackCCWVtable()
+        {
+            global::System.Type lookup_0_Type = Projections.GetAbiDelegateType(new global::System.Type[] { typeof(IntPtr), typeof(KAbi), typeof(VAbi*), typeof(int) });
+            global::System.Type hasKey_2_Type = Projections.GetAbiDelegateType(new global::System.Type[] { typeof(IntPtr), typeof(KAbi), typeof(byte*), typeof(int) });
+            global::System.Type insert_4_Type = Projections.GetAbiDelegateType(new global::System.Type[] { typeof(IntPtr), typeof(KAbi), typeof(VAbi), typeof(byte*), typeof(int) });
+            global::System.Type remove_5_Type = Projections.GetAbiDelegateType(new global::System.Type[] { typeof(IntPtr), typeof(KAbi), typeof(int) });
+
+            DelegateCache = new global::System.Delegate[]
+            {
+                global::System.Delegate.CreateDelegate(lookup_0_Type, typeof(IDictionaryMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_Lookup_0), BindingFlags.NonPublic | BindingFlags.Static)),
+                new _get_PropertyAsUInt32_Abi(Do_Abi_get_Size_1),
+                global::System.Delegate.CreateDelegate(hasKey_2_Type, typeof(IDictionaryMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_HasKey_2), BindingFlags.NonPublic | BindingFlags.Static)),
+                new IDictionary_Delegates.GetView_3_Abi(Do_Abi_GetView_3),
+                global::System.Delegate.CreateDelegate(insert_4_Type, typeof(IDictionaryMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_Insert_4), BindingFlags.NonPublic | BindingFlags.Static)),
+                global::System.Delegate.CreateDelegate(remove_5_Type, typeof(IDictionaryMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_Remove_5), BindingFlags.NonPublic | BindingFlags.Static)),
+                new IDictionary_Delegates.Clear_6(Do_Abi_Clear_6)
+            };
+
+            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 7));
+            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache[0]);
+            ((IntPtr*)abiToProjectionVftablePtr)[7] = Marshal.GetFunctionPointerForDelegate(DelegateCache[1]);
+            ((IntPtr*)abiToProjectionVftablePtr)[8] = Marshal.GetFunctionPointerForDelegate(DelegateCache[2]);
+            ((IntPtr*)abiToProjectionVftablePtr)[9] = Marshal.GetFunctionPointerForDelegate(DelegateCache[3]);
+            ((IntPtr*)abiToProjectionVftablePtr)[10] = Marshal.GetFunctionPointerForDelegate(DelegateCache[4]);
+            ((IntPtr*)abiToProjectionVftablePtr)[11] = Marshal.GetFunctionPointerForDelegate(DelegateCache[5]);
+            ((IntPtr*)abiToProjectionVftablePtr)[12] = Marshal.GetFunctionPointerForDelegate(DelegateCache[6]);
+
+            if (!IDictionaryMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
+            {
+                NativeMemory.Free((void*)abiToProjectionVftablePtr);
+            }
+        }
+
+        private static unsafe int Do_Abi_Lookup_0(IntPtr thisPtr, KAbi key, VAbi* __return_value__)
+        {
+            V ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = IDictionary<K, V>.FindAdapter(thisPtr).Lookup(Marshaler<K>.FromAbi(key));
+                *__return_value__ = (VAbi)Marshaler<V>.FromManaged(____return_value__);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        private static unsafe int Do_Abi_HasKey_2(IntPtr thisPtr, KAbi key, byte* __return_value__)
+        {
+            bool ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = IDictionary<K, V>.FindAdapter(thisPtr).HasKey(Marshaler<K>.FromAbi(key));
+                *__return_value__ = (byte)(____return_value__ ? 1 : 0);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        private static unsafe int Do_Abi_GetView_3(IntPtr thisPtr, IntPtr* __return_value__)
+        {
+            global::System.Collections.Generic.IReadOnlyDictionary<K, V> ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = IDictionary<K, V>.FindAdapter(thisPtr).GetView();
+                *__return_value__ = MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>.FromManaged(____return_value__);
+
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        private static unsafe int Do_Abi_Insert_4(IntPtr thisPtr, KAbi key, VAbi value, byte* __return_value__)
+        {
+            bool ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = IDictionary<K, V>.FindAdapter(thisPtr).Insert(Marshaler<K>.FromAbi(key), Marshaler<V>.FromAbi(value));
+                *__return_value__ = (byte)(____return_value__ ? 1 : 0);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        private static unsafe int Do_Abi_Remove_5(IntPtr thisPtr, KAbi key)
+        {
+            try
+            {
+                IDictionary<K, V>.FindAdapter(thisPtr)._Remove(Marshaler<K>.FromAbi(key));
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        private static unsafe int Do_Abi_Clear_6(IntPtr thisPtr)
+        {
+            try
+            {
+                IDictionary<K, V>.FindAdapter(thisPtr).Clear();
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        private static unsafe int Do_Abi_get_Size_1(IntPtr thisPtr, uint* __return_value__)
+        {
+            uint ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = IDictionary<K,V>.FindAdapter(thisPtr).Size;
+                *__return_value__ = ____return_value__;
+
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+    }
 }
 
 namespace ABI.System.Collections.Generic
@@ -684,7 +983,7 @@ namespace ABI.System.Collections.Generic
     interface IDictionary<K, V> : global::System.Collections.Generic.IDictionary<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IDictionary<K, V> obj) =>
-            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(obj, PIID);
 
         public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Generic.IDictionary<K, V> obj) => 
             ComWrappersSupport.CreateCCWForObjectForMarshaling(obj, PIID);
@@ -766,217 +1065,45 @@ namespace ABI.System.Collections.Generic
             public void Clear() => _dictionary.Clear();
         }
 
-        [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
-        public unsafe struct Vftbl
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+        static IDictionary()
         {
-            internal IInspectable.Vftbl IInspectableVftbl;
-            public global::System.Delegate Lookup_0;
-            private void* _get_Size_1;
-            internal delegate* unmanaged[Stdcall]<IntPtr, out uint, int> GetSize_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)_get_Size_1; set => _get_Size_1 = (void*)value; }
-            public global::System.Delegate HasKey_2;
-            private void* _getView_3;
-            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> GetView_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_getView_3; set => _getView_3 = (void*)value; }
-            public global::System.Delegate Insert_4;
-            public global::System.Delegate Remove_5;
-            private void* _clear_6;
-            public delegate* unmanaged[Stdcall]<IntPtr, int> Clear_6 { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_clear_6; set => _clear_6 = (void*)value; }
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IDictionary<K, V>));
-            private static readonly Type Lookup_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
-            private static readonly Type HasKey_2_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });
-            private static readonly Type Insert_4_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, Marshaler<V>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });
-            private static readonly Type Remove_5_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, typeof(int) });
-
-            internal unsafe Vftbl(IntPtr thisPtr) : this()
+            if (IDictionaryMethods<K, V>.AbiToProjectionVftablePtr == default)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
-                Lookup_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], Lookup_0_Type);
-                GetSize_1 = (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)vftbl[7];
-                HasKey_2 = Marshal.GetDelegateForFunctionPointer(vftbl[8], HasKey_2_Type);
-                GetView_3 = (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)vftbl[9];
-                Insert_4 = Marshal.GetDelegateForFunctionPointer(vftbl[10], Insert_4_Type);
-                Remove_5 = Marshal.GetDelegateForFunctionPointer(vftbl[11], Remove_5_Type);
-                Clear_6 = (delegate* unmanaged[Stdcall]<IntPtr, int>)vftbl[12];
+                // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                var initFallbackCCWVtable = (Action)typeof(IDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                    GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                    CreateDelegate(typeof(Action));
+                initFallbackCCWVtable();
             }
 
-            private static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-            private static readonly Delegate[] DelegateCache = new Delegate[3];
-
-            static unsafe Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    Lookup_0 = global::System.Delegate.CreateDelegate(Lookup_0_Type, typeof(Vftbl).GetMethod("Do_Abi_Lookup_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType, Marshaler<V>.AbiType)),
-                    _get_Size_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new _get_PropertyAsUInt32(Do_Abi_get_Size_1)),
-                    HasKey_2 = global::System.Delegate.CreateDelegate(HasKey_2_Type, typeof(Vftbl).GetMethod("Do_Abi_HasKey_2", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType)),
-                    _getView_3 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IDictionary_Delegates.GetView_3(Do_Abi_GetView_3)),
-                    Insert_4 = global::System.Delegate.CreateDelegate(Insert_4_Type, typeof(Vftbl).GetMethod("Do_Abi_Insert_4", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType, Marshaler<V>.AbiType)),
-                    Remove_5 = global::System.Delegate.CreateDelegate(Remove_5_Type, typeof(Vftbl).GetMethod("Do_Abi_Remove_5", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType)),
-                    _clear_6 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IDictionary_Delegates.Clear_6(Do_Abi_Clear_6)),
-                };
-                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 7);
-                Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
-                nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Lookup_0);
-                nativeVftbl[7] = (IntPtr)AbiToProjectionVftable._get_Size_1;
-                nativeVftbl[8] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.HasKey_2);
-                nativeVftbl[9] = (IntPtr)AbiToProjectionVftable.GetView_3;
-                nativeVftbl[10] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Insert_4);
-                nativeVftbl[11] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Remove_5);
-                nativeVftbl[12] = (IntPtr)AbiToProjectionVftable.Clear_6;
-
-                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
-            }
-
-            private static ConditionalWeakTable<global::System.Collections.Generic.IDictionary<K, V>, ToAbiHelper> _adapterTable =
-                new ConditionalWeakTable<global::System.Collections.Generic.IDictionary<K, V>, ToAbiHelper>();
-
-            private static global::Windows.Foundation.Collections.IMap<K, V> FindAdapter(IntPtr thisPtr)
-            {
-                var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Generic.IDictionary<K, V>>(thisPtr);
-                return _adapterTable.GetValue(__this, (dictionary) => new ToAbiHelper(dictionary));
-            }
-
-            private static unsafe int Do_Abi_Lookup_0<KAbi, VAbi>(void* thisPtr, KAbi key, out VAbi __return_value__)
-            {
-                V ____return_value__ = default;
-
-                __return_value__ = default;
-
-                try
-                {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).Lookup(Marshaler<K>.FromAbi(key));
-                    __return_value__ = (VAbi)Marshaler<V>.FromManaged(____return_value__);
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-            private static unsafe int Do_Abi_HasKey_2<KAbi>(void* thisPtr, KAbi key, out byte __return_value__)
-            {
-                bool ____return_value__ = default;
-
-                __return_value__ = default;
-
-                try
-                {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).HasKey(Marshaler<K>.FromAbi(key));
-                    __return_value__ = (byte)(____return_value__ ? 1 : 0);
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-            private static unsafe int Do_Abi_GetView_3(IntPtr thisPtr, out IntPtr __return_value__)
-            {
-                global::System.Collections.Generic.IReadOnlyDictionary<K, V> ____return_value__ = default;
-
-                __return_value__ = default;
-
-                try
-                {
-                    ____return_value__ = FindAdapter(thisPtr).GetView();
-                    __return_value__ = MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>.FromManaged(____return_value__);
-
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-            private static unsafe int Do_Abi_Insert_4<KAbi, VAbi>(void* thisPtr, KAbi key, VAbi value, out byte __return_value__)
-            {
-                bool ____return_value__ = default;
-
-                __return_value__ = default;
-
-                try
-                {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).Insert(Marshaler<K>.FromAbi(key), Marshaler<V>.FromAbi(value));
-                    __return_value__ = (byte)(____return_value__ ? 1 : 0);
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-            private static unsafe int Do_Abi_Remove_5<KAbi>(void* thisPtr, KAbi key)
-            {
-
-
-                try
-                {
-                    FindAdapter(new IntPtr(thisPtr))._Remove(Marshaler<K>.FromAbi(key));
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-            private static unsafe int Do_Abi_Clear_6(IntPtr thisPtr)
-            {
-
-
-                try
-                {
-                    FindAdapter(thisPtr).Clear();
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-            private static unsafe int Do_Abi_get_Size_1(IntPtr thisPtr, out uint __return_value__)
-            {
-                uint ____return_value__ = default;
-
-                __return_value__ = default;
-
-                try
-                {
-                    ____return_value__ = FindAdapter(thisPtr).Size; __return_value__ = ____return_value__;
-
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
+            AbiToProjectionVftablePtr = IDictionaryMethods<K, V>.AbiToProjectionVftablePtr;
         }
-        public static ObjectReference<Vftbl> ObjRefFromAbi(IntPtr thisPtr)
+
+        private static readonly ConditionalWeakTable<global::System.Collections.Generic.IDictionary<K, V>, ToAbiHelper> _adapterTable = new();
+
+        internal static global::Windows.Foundation.Collections.IMap<K, V> FindAdapter(IntPtr thisPtr)
+        {
+            var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Generic.IDictionary<K, V>>(thisPtr);
+            return _adapterTable.GetValue(__this, (dictionary) => new ToAbiHelper(dictionary));
+        }
+
+        public static ObjectReference<IUnknownVftbl> ObjRefFromAbi(IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
             {
                 return null;
             }
-            var vftblT = new Vftbl(thisPtr);
-            return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
         }
-        public static Guid PIID = Vftbl.PIID;
+
+        public static Guid PIID = IDictionaryMethods<K,V>.PIID;
 
         global::System.Collections.Generic.ICollection<K> global::System.Collections.Generic.IDictionary<K, V>.Keys
         {
             get
             {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+                var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
                 return IDictionaryMethods<K, V>.get_Keys(_obj);
             }
         }
@@ -985,7 +1112,7 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+                var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
                 return IDictionaryMethods<K, V>.get_Values(_obj);
             }
         }
@@ -994,7 +1121,7 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+                var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
                 return IDictionaryMethods<K, V>.get_Count(_obj);
             }
         }
@@ -1003,7 +1130,7 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+                var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
                 return IDictionaryMethods<K, V>.get_IsReadOnly(_obj);
             }
         }
@@ -1012,31 +1139,31 @@ namespace ABI.System.Collections.Generic
         { 
             get
             {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+                var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
                 return IDictionaryMethods<K, V>.Indexer_Get(_obj, GetLookupCache((IWinRTObject)this), key);
             }
             set
             {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+                var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
                 IDictionaryMethods<K, V>.Indexer_Set(_obj, key, value);
             }
         }
 
         void global::System.Collections.Generic.IDictionary<K, V>.Add(K key, V value)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
             IDictionaryMethods<K, V>.Add(_obj, key, value);   
         }
 
         bool global::System.Collections.Generic.IDictionary<K, V>.ContainsKey(K key)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
             return IDictionaryMethods<K, V>.ContainsKey(_obj, key);
         }
 
         bool global::System.Collections.Generic.IDictionary<K, V>.Remove(K key)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
             return IDictionaryMethods<K, V>.Remove(_obj, key);
         }
 
@@ -1048,40 +1175,40 @@ namespace ABI.System.Collections.Generic
 
         bool global::System.Collections.Generic.IDictionary<K, V>.TryGetValue(K key, out V value)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
             return IDictionaryMethods<K, V>.TryGetValue(_obj, GetLookupCache((IWinRTObject)this), key, out value);
         }
 
         void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Add(global::System.Collections.Generic.KeyValuePair<K, V> item)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
             IDictionaryMethods<K, V>.Add(_obj, item);
         }
 
         bool global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Contains(global::System.Collections.Generic.KeyValuePair<K, V> item)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
             return IDictionaryMethods<K, V>.Contains(_obj, GetLookupCache((IWinRTObject)this), item);
         }
 
         void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.CopyTo(global::System.Collections.Generic.KeyValuePair<K, V>[] array, int arrayIndex)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
             ((IWinRTObject)this).IsInterfaceImplemented(typeof(global::System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>).TypeHandle, true);
-            var _objEnumerable = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>).TypeHandle));
+            var _objEnumerable = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>).TypeHandle);
             IDictionaryMethods<K, V>.CopyTo(_obj, _objEnumerable, array, arrayIndex);
         }
 
         bool global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Remove(global::System.Collections.Generic.KeyValuePair<K, V> item)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle);
             return IDictionaryMethods<K, V>.Remove(_obj, item);
         }
 
         global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator()
         {
             ((IWinRTObject)this).IsInterfaceImplemented(typeof(global::System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>).TypeHandle, true);
-            var _objEnumerable = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>).TypeHandle));
+            var _objEnumerable = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>).TypeHandle);
             return IEnumerableMethods<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator(_objEnumerable);
         }
 
@@ -1096,6 +1223,7 @@ namespace ABI.System.Collections.Generic
     static class IDictionary_Delegates
     {
         public unsafe delegate int GetView_3(IntPtr thisPtr, out IntPtr __return_value__);
+        internal unsafe delegate int GetView_3_Abi(IntPtr thisPtr, IntPtr* __return_value__);
         public unsafe delegate int Clear_6(IntPtr thisPtr);
     }
 }
