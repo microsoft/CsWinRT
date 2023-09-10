@@ -1440,6 +1440,27 @@ namespace cswinrt
         std::regex re(R"-((\ |:|<|>|,|\.))-");
         return std::regex_replace(typeName, re, "_");
     }
+
+    std::string get_fundamental_type_guid_signature(fundamental_type type)
+    {
+        switch (type)
+        {
+        case fundamental_type::Boolean: return "b1";
+        case fundamental_type::Char: return "c2";
+        case fundamental_type::Int8: return "i1";
+        case fundamental_type::UInt8: return "u1";
+        case fundamental_type::Int16: return "i2";
+        case fundamental_type::UInt16: return "u2";
+        case fundamental_type::Int32: return "i4";
+        case fundamental_type::UInt32: return "u4";
+        case fundamental_type::Int64: return "i8";
+        case fundamental_type::UInt64: return "u8";
+        case fundamental_type::Float: return "f4";
+        case fundamental_type::Double: return "f8";
+        case fundamental_type::String: return "string";
+        default: throw_invalid("Unknown type");
+        }
+    }
 }
 
 namespace std

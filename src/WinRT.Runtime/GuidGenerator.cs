@@ -88,8 +88,16 @@ namespace WinRT
                             }
                             if (!type.IsPrimitive)
                             {
-                                var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignature(fi.FieldType));
-                                return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
+                                var winrtTypeAttribute = type.GetCustomAttribute<WindowsRuntimeTypeAttribute>();
+                                if (winrtTypeAttribute != null && !string.IsNullOrEmpty(winrtTypeAttribute.GuidSignature))
+                                {
+                                    return winrtTypeAttribute.GuidSignature;
+                                }
+                                else
+                                {
+                                    var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignature(fi.FieldType));
+                                    return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
+                                }
                             }
                             throw new InvalidOperationException("unsupported value type");
                         }

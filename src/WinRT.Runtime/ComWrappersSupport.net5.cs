@@ -216,7 +216,9 @@ namespace WinRT
         }
 
         internal static Func<IInspectable, object> GetTypedRcwFactory([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
-        
+
+        internal static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => TypedObjectFactoryCacheForType.TryAdd(implementationType, rcwFactory);
+
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType)
         {
             if (implementationType.IsGenericType)
@@ -262,6 +264,10 @@ namespace WinRT
                 else if (genericType == typeof(IEnumerable<>))
                 {
                     genericImplType = typeof(IEnumerableImpl<>);
+                }
+                else if (genericType == typeof(IEnumerator<>))
+                {
+                    genericImplType = typeof(IEnumeratorImpl<>);
                 }
                 else
                 {
