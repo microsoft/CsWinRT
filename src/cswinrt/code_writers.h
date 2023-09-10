@@ -176,6 +176,7 @@ namespace cswinrt
 
     void write_projection_type(writer& w, type_semantics const& semantics);
     void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType);
+    void write_guid(writer& w, TypeDef const& type, bool lowerCase);
 
     void write_generic_type_name_base(writer& w, uint32_t index)
     {
@@ -2047,7 +2048,7 @@ private IObjectReference Make__%()
                         {
                             w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, GetDefaultInterfaceObjRef(%), null);)", objrefname, get_class_hierarchy_index(classType));
                         } 
-                        else if (distance(ifaceType.GenericParam()) == 0)
+                        else if (distance(ifaceType.GenericParam()) == 0 || ifaceType.TypeNamespace() == "Windows.Foundation.Collections")
                         {
 
                             w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(%.IID), null);)",
@@ -3081,11 +3082,96 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         }
     }
 
+    void write_guid_signature(writer& w, type_semantics const& semantics)
+    {
+        call(semantics,
+            [&](guid_type)
+            {
+                w.write("g16");
+            },
+            [&](object_type)
+            {
+                w.write("cinterface(IInspectable)");
+            },
+            [&](type_definition const& type)
+            {
+                switch (get_category(type))
+                {
+                case category::enum_type:
+                {
+                    w.write("enum(%;%)",
+                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+                        is_flags_enum(type) ? "u4" : "i4");
+                    break;
+                }
+                case category::struct_type:
+                {
+                    w.write("struct(%;%)",
+                        bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+                        bind_list([](writer& w, Field const& field)
+                        {
+                            write_guid_signature(w, get_type_semantics(field.Signature().Type()));
+                        }, ";", type.FieldList())
+                    );
+                    break;
+                }
+                case category::delegate_type:
+                {
+                    w.write("delegate({%})", bind<write_guid>(type, true));
+                    break;
+                }
+                case category::interface_type:
+                {
+                    w.write("{%}", bind<write_guid>(type, true));
+                    break;
+                }
+                case category::class_type:
+                {
+                    if (auto default_interface = get_default_interface(type))
+                    {
+                        w.write("rc(%;%)",
+                            bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+                            bind<write_guid_signature>(get_type_semantics(default_interface)));
+                    }
+                    else
+                    {
+                        w.write("{%}", bind<write_guid>(type, true));
+                    }
+                    break;
+                }
+                }
+            },
+            [&](generic_type_instance const& type)
+            {
+                w.write("pinterface({%};%)",
+                    bind<write_guid>(type.generic_type, true),
+                    bind_list([](writer& w, type_semantics const& genericType)
+                    {
+                        write_guid_signature(w, genericType);
+                    }, ";", type.generic_args)
+                );
+            },
+            [&](fundamental_type const& type)
+            {
+                w.write("%", get_fundamental_type_guid_signature(type));
+            },
+            [&](auto const&) {});
+    }
+
     void write_winrt_attribute(writer& w, TypeDef const& type)
     {
         std::filesystem::path db_path(type.get_database().path());
-        w.write(R"([global::WinRT.WindowsRuntimeType("%")])",
-db_path.stem().string());
+        if (get_category(type) == category::struct_type)
+        {
+            w.write(R"([global::WinRT.WindowsRuntimeType("%", "%")])",
+                db_path.stem().string(),
+                bind<write_guid_signature>(type));
+        }
+        else
+        {
+            w.write(R"([global::WinRT.WindowsRuntimeType("%")])",
+                db_path.stem().string());
+        }
     }
 
     void write_winrt_helper_type_attribute(writer& w, TypeDef const& type)
@@ -3311,6 +3397,7 @@ event % %;)",
         bool is_value_type;
         bool is_pinnable;
         bool marshal_by_object_reference_value;
+        std::vector<std::pair<std::string, std::string>> generic_parameter_instantiatons;
 
         bool is_out() const
         {
@@ -3597,6 +3684,16 @@ event % %;)",
                 }
                 return;
             }
+
+            if (!settings.netstandard_compat && 
+                !generic_parameter_instantiatons.empty() && 
+                starts_with(param_type, "global::System.Collections.Generic.IReadOnlyList<"))
+            {
+                w.write("_ = ABI.System.Collections.Generic.IReadOnlyListMethods<%, %>.EnsureRcwHelperInitialized();\n",
+                    generic_parameter_instantiatons[0].first,
+                    generic_parameter_instantiatons[0].second);
+            }
+
             is_return ?
                 w.write("return ") :
                 w.write("% = ", bind<write_escaped_identifier>(param_name));
@@ -3747,6 +3844,14 @@ event % %;)",
             },
             [&](generic_type_instance const& type)
             {
+                for (auto generic_type : type.generic_args)
+                {
+                    auto projected_type = w.write_temp("%", bind<write_projection_type>(generic_type));
+                    auto abi_type = w.write_temp("%", bind<write_abi_type>(generic_type));
+
+                    m.generic_parameter_instantiatons.push_back(std::pair<std::string, std::string>(projected_type, abi_type));
+                }
+
                 auto guard{ w.push_generic_args(type) };
                 set_typedef_marshaler(m, type.generic_type);
             },

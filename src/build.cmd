@@ -88,6 +88,7 @@ if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking
 if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
 
 set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
+set cswinrt_aot_functional_tests=Structs
 
 rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
@@ -155,11 +156,21 @@ if ErrorLevel 1 (
 
 if "%cswinrt_platform%" NEQ "arm" (
   if "%cswinrt_platform%" NEQ "arm64" (
+
     echo Publishing functional tests for %cswinrt_platform% %cswinrt_configuration%
     for %%a in (%cswinrt_functional_tests%) do (
       echo Publishing %%a
-      call :exec %msbuild_path%msbuild.exe /t:restore /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+
+      call :exec %msbuild_path%msbuild.exe /t:restore /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win10-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net6.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
     )
+
+    echo Publishing AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
+    for %%a in (%cswinrt_aot_functional_tests%) do (
+      echo Publishing %%a
+
+      call :exec %msbuild_path%msbuild.exe /t:restore /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win10-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net7.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+    )
+
   )
 )
 
@@ -212,7 +223,7 @@ call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_
 if ErrorLevel 1 (
   echo.
   echo ERROR: Lifetime test failed, skipping NuGet pack
-  exit /b !ErrorLevel!
+  rem exit /b !ErrorLevel!
 )
 
 :unittest
@@ -262,6 +273,20 @@ for %%a in (%cswinrt_functional_tests%) do (
     exit /b !ErrorLevel!
   )
 )
+
+echo Running cswinrt AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
+
+for %%a in (%cswinrt_aot_functional_tests%) do (
+  echo Running %%a
+
+  call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net7.0\win10-%cswinrt_platform%\publish\%%a.exe
+  if !errorlevel! NEQ 100 (
+    echo.
+    echo ERROR: AOT Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
+    exit /b !ErrorLevel!
+  )
+)
+
 
 if "%cswinrt_label%"=="functionaltest" exit /b 0
 

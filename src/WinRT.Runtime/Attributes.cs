@@ -64,7 +64,14 @@ namespace WinRT
             SourceMetadata = sourceMetadata;
         }
 
+        public WindowsRuntimeTypeAttribute(string sourceMetadata, string guidSignature)
+            :this(sourceMetadata)
+        {
+            GuidSignature = guidSignature;
+        }
+
         public string SourceMetadata { get; }
+        public string GuidSignature { get; }
     }
 
     /// <summary>

@@ -1,0 +1,8 @@
+Compat issues with assembly WinRT.Runtime:
+TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumerator<T>' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected WinRT.ObjectReference<ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl> WinRT.ObjectReference<ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl> ABI.System.Collections.Generic.KeyValuePair<K, V>._obj' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.KeyValuePair<K, V>..ctor(WinRT.ObjectReference<ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl>)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public ABI.System.Collections.Generic.KeyValuePair<K, V> ABI.System.Collections.Generic.KeyValuePair<K, V>.op_Implicit(WinRT.ObjectReference<ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl>)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public WinRT.ObjectReference<ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl> ABI.System.Collections.Generic.KeyValuePair<K, V>._FromAbi(System.IntPtr)' does not exist in the implementation but it does exist in the contract.
+TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl' does not exist in the implementation but it does exist in the contract.
+Total Issues: 6
