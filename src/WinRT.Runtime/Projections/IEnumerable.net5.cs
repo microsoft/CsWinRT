@@ -370,6 +370,18 @@ namespace ABI.System.Collections.Generic
             AbiToProjectionVftablePtr = IEnumerableMethods<T>.AbiToProjectionVftablePtr;
         }
 
+        // This is left here for backwards compat purposes where older generated
+        // projections can be using FindVftblType and using this to cast.
+        [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
+        public unsafe struct Vftbl
+        {
+            internal IInspectable.Vftbl IInspectableVftbl;
+
+            public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.IEnumerable<T>.AbiToProjectionVftablePtr;
+
+            public static Guid PIID = ABI.System.Collections.Generic.IEnumerable<T>.PIID;
+        }
+
         public static ObjectReference<IUnknownVftbl> ObjRefFromAbi(IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
@@ -936,6 +948,18 @@ namespace ABI.System.Collections.Generic
             }
 
             AbiToProjectionVftablePtr = IEnumeratorMethods<T>.AbiToProjectionVftablePtr;
+        }
+
+        // This is left here for backwards compat purposes where older generated
+        // projections can be using FindVftblType and using this to cast.
+        [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
+        public unsafe struct Vftbl
+        {
+            internal IInspectable.Vftbl IInspectableVftbl;
+
+            public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.IEnumerator<T>.AbiToProjectionVftablePtr;
+
+            public static Guid PIID = ABI.System.Collections.Generic.IEnumerator<T>.PIID;
         }
 
         private static readonly ConditionalWeakTable<global::System.Collections.Generic.IEnumerator<T>, ToAbiHelper> _adapterTable = new();

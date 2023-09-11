@@ -25,14 +25,13 @@ namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::WinRT.Interop;
-    using static ABI.System.Collections.IList_Delegates;
 
 #if EMBED
     internal
 #else
     public
 #endif
-    static class IKeyValuePairMethods<K, V>
+    static class KeyValuePairMethods<K, V>
     {
         // These function pointers will be set by IKeyValuePairMethods<K, KAbi, V, VAbi>
         // when it is called by the source generated type or by the fallback
@@ -64,14 +63,14 @@ namespace ABI.System.Collections.Generic
 #else
     public
 #endif
-    static class IKeyValuePairMethods<K, KAbi, V, VAbi> where KAbi : unmanaged where VAbi : unmanaged
+    static class KeyValuePairMethods<K, KAbi, V, VAbi> where KAbi : unmanaged where VAbi : unmanaged
     {
         private static bool RcwHelperInitialized { get; } = InitRcwHelper();
 
         private unsafe static bool InitRcwHelper()
         {
-            IKeyValuePairMethods<K, V>._GetKey = &get_Key;
-            IKeyValuePairMethods<K, V>._GetValue = &get_Value;
+            KeyValuePairMethods<K, V>._GetKey = &get_Key;
+            KeyValuePairMethods<K, V>._GetValue = &get_Value;
 
 #if NET
             ComWrappersSupport.RegisterTypedRcwFactory(
@@ -118,7 +117,7 @@ namespace ABI.System.Collections.Generic
             delegate* unmanaged[Stdcall]<IntPtr, KAbi*, int> getKey,
             delegate* unmanaged[Stdcall]<IntPtr, VAbi*, int> getValue)
         {
-            if (IKeyValuePairMethods<K, V>.AbiToProjectionVftablePtr != default)
+            if (KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr != default)
             {
                 return false;
             }
@@ -132,7 +131,7 @@ namespace ABI.System.Collections.Generic
             ((delegate* unmanaged[Stdcall]<IntPtr, KAbi*, int>*)abiToProjectionVftablePtr)[6] = getKey;
             ((delegate* unmanaged[Stdcall]<IntPtr, VAbi*, int>*)abiToProjectionVftablePtr)[7] = getValue;
 
-            if (!IKeyValuePairMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
+            if (!KeyValuePairMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
             {
 #if NET
                 NativeMemory.Free((void*)abiToProjectionVftablePtr);
@@ -154,8 +153,8 @@ namespace ABI.System.Collections.Generic
 
             DelegateCache = new global::System.Delegate[]
             {
-                global::System.Delegate.CreateDelegate(get_Key_0_Type, typeof(IKeyValuePairMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_get_Key_0), BindingFlags.NonPublic | BindingFlags.Static)),
-                global::System.Delegate.CreateDelegate(get_Value_1_Type, typeof(IKeyValuePairMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_get_Value_1), BindingFlags.NonPublic | BindingFlags.Static)),
+                global::System.Delegate.CreateDelegate(get_Key_0_Type, typeof(KeyValuePairMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_get_Key_0), BindingFlags.NonPublic | BindingFlags.Static)),
+                global::System.Delegate.CreateDelegate(get_Value_1_Type, typeof(KeyValuePairMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_get_Value_1), BindingFlags.NonPublic | BindingFlags.Static)),
             };
 
 #if NET
@@ -167,7 +166,7 @@ namespace ABI.System.Collections.Generic
             ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache[0]);
             ((IntPtr*)abiToProjectionVftablePtr)[7] = Marshal.GetFunctionPointerForDelegate(DelegateCache[1]);
 
-            if (!IKeyValuePairMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
+            if (!KeyValuePairMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
             {
 #if NET
                 NativeMemory.Free((void*)abiToProjectionVftablePtr);
@@ -313,16 +312,28 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static KeyValuePair()
         {
-            if (IKeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
+            if (KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
             {
                 // Handle the compat scenario where the source generator wasn't used or IDIC was used.
-                var initFallbackCCWVtable = (Action)typeof(IKeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                var initFallbackCCWVtable = (Action)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
                     GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
                     CreateDelegate(typeof(Action));
                 initFallbackCCWVtable();
             }
 
-            AbiToProjectionVftablePtr = IKeyValuePairMethods<K, V>.AbiToProjectionVftablePtr;
+            AbiToProjectionVftablePtr = KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr;
+        }
+
+        // This is left here for backwards compat purposes where older generated
+        // projections can be using FindVftblType and using this to cast.
+        [Guid("02B51929-C1C4-4A7E-8940-0312B5C18500")]
+        public unsafe struct Vftbl
+        {
+            internal IInspectable.Vftbl IInspectableVftbl;
+
+            public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.KeyValuePair<K, V>.AbiToProjectionVftablePtr;
+
+            public static Guid PIID = ABI.System.Collections.Generic.KeyValuePair<K, V>.PIID;
         }
 
         private static readonly ConditionalWeakTable<object, ToIKeyValuePair> _adapterTable = new();
@@ -362,7 +373,7 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                return IKeyValuePairMethods<K, V>._GetKey(ThisPtr);
+                return KeyValuePairMethods<K, V>._GetKey(ThisPtr);
             }
         }
 
@@ -370,7 +381,7 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                return IKeyValuePairMethods<K, V>._GetValue(ThisPtr);
+                return KeyValuePairMethods<K, V>._GetValue(ThisPtr);
             }
         }
     }
