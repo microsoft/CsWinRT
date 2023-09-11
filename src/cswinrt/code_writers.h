@@ -3398,6 +3398,7 @@ event % %;)",
         bool is_pinnable;
         bool marshal_by_object_reference_value;
         std::vector<std::pair<std::string, std::string>> generic_parameter_instantiatons;
+        std::string abi_methods_static_class_name;
 
         bool is_out() const
         {
@@ -3687,11 +3688,24 @@ event % %;)",
 
             if (!settings.netstandard_compat && 
                 !generic_parameter_instantiatons.empty() && 
-                starts_with(param_type, "global::System.Collections.Generic.IReadOnlyList<"))
+                starts_with(param_type, "global::System.Collections.Generic"))
             {
-                w.write("_ = ABI.System.Collections.Generic.IReadOnlyListMethods<%, %>.EnsureRcwHelperInitialized();\n",
-                    generic_parameter_instantiatons[0].first,
-                    generic_parameter_instantiatons[0].second);
+                if (generic_parameter_instantiatons.size() == 1)
+                {
+                    w.write("_ = %<%, %>.EnsureRcwHelperInitialized();\n",
+                        abi_methods_static_class_name,
+                        generic_parameter_instantiatons[0].first,
+                        generic_parameter_instantiatons[0].second);
+                }
+                else
+                {
+                    w.write("_ = %<%, %, %, %>.EnsureRcwHelperInitialized();\n",
+                        abi_methods_static_class_name,
+                        generic_parameter_instantiatons[0].first,
+                        generic_parameter_instantiatons[0].second,
+                        generic_parameter_instantiatons[1].first,
+                        generic_parameter_instantiatons[1].second);
+                }
             }
 
             is_return ?
@@ -3851,6 +3865,7 @@ event % %;)",
 
                     m.generic_parameter_instantiatons.push_back(std::pair<std::string, std::string>(projected_type, abi_type));
                 }
+                m.abi_methods_static_class_name = w.write_temp("%", bind<write_projection_type_for_name_type>(type.generic_type, typedef_name_type::StaticAbiClass));
 
                 auto guard{ w.push_generic_args(type) };
                 set_typedef_marshaler(m, type.generic_type);

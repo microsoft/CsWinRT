@@ -4,5 +4,6 @@ MembersMustExist : Member 'protected WinRT.ObjectReference<ABI.System.Collection
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.KeyValuePair<K, V>..ctor(WinRT.ObjectReference<ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl>)' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public ABI.System.Collections.Generic.KeyValuePair<K, V> ABI.System.Collections.Generic.KeyValuePair<K, V>.op_Implicit(WinRT.ObjectReference<ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl>)' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public WinRT.ObjectReference<ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl> ABI.System.Collections.Generic.KeyValuePair<K, V>._FromAbi(System.IntPtr)' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl' does not exist in the implementation but it does exist in the contract.
-Total Issues: 6
+MembersMustExist : Member 'public System.Delegate System.Delegate ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl.get_Key_0' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public System.Delegate System.Delegate ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl.get_Value_1' does not exist in the implementation but it does exist in the contract.
+Total Issues: 7
