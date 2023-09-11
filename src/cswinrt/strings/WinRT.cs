@@ -29,6 +29,13 @@ namespace WinRT
 
     internal sealed class Platform
     {
+        [DllImportAttribute("kernel32.dll", EntryPoint = "SetLastError", ExactSpelling = true)]
+        internal static extern void SetLastError(int errorCode);
+
+        [DllImportAttribute("kernel32.dll", EntryPoint = "GetLastError", ExactSpelling = true)]
+        internal static extern int GetLastError();
+
+
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern unsafe int CoCreateInstance(Guid* clsid, IntPtr outer, uint clsContext, Guid* iid, IntPtr* instance);
 
@@ -49,18 +56,50 @@ namespace WinRT
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern unsafe int CoIncrementMTAUsage(IntPtr* cookie);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool FreeLibrary(IntPtr moduleHandle);
+        internal static bool FreeLibrary(IntPtr moduleHandle)
+        {
+            int lastError;
+            bool returnValue;
+            int nativeReturnValue;
+            {
+                SetLastError(0);
+                nativeReturnValue = PInvoke(moduleHandle);
+                lastError = GetLastError();
+            }
 
-        [DllImport("kernel32.dll", EntryPoint = "GetProcAddress", SetLastError = true, BestFitMapping = false)]
-        internal static unsafe extern void* TryGetProcAddress(IntPtr moduleHandle, sbyte* functionName);
+            // Unmarshal - Convert native data to managed data.
+            returnValue = nativeReturnValue != 0;
+            SetLastError(lastError);
+            return returnValue;
+
+            // Local P/Invoke
+            [DllImportAttribute("kernel32.dll", EntryPoint = "FreeLibrary", ExactSpelling = true)]
+            static extern unsafe int PInvoke(IntPtr nativeModuleHandle);
+        }
+
+        internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, byte* functionName)
+        {
+            int lastError;
+            void* returnValue;
+            {
+                SetLastError(0);
+                returnValue = PInvoke(moduleHandle, functionName);
+                lastError = GetLastError();
+            }
+
+            SetLastError(lastError);
+            return returnValue;
+
+            // Local P/Invoke
+            [DllImportAttribute("kernel32.dll", EntryPoint = "GetProcAddress", ExactSpelling = true)]
+            static extern unsafe void* PInvoke(IntPtr nativeModuleHandle, byte* nativeFunctionName);
+        }
 
         internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
         {
             fixed (byte* lpFunctionName = functionName)
             {
-                return TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
+                return TryGetProcAddress(moduleHandle, lpFunctionName);
             }
         }
 
@@ -97,7 +136,7 @@ namespace WinRT
 #endif
             buffer[byteCount] = 0;
 
-            void* functionPtr = TryGetProcAddress(moduleHandle, (sbyte*)rawByte);
+            void* functionPtr = TryGetProcAddress(moduleHandle, rawByte);
 
             if (allocated)
 #if NET6_0_OR_GREATER
@@ -113,7 +152,7 @@ namespace WinRT
         {
             fixed (byte* lpFunctionName = functionName)
             {
-                void* functionPtr = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
+                void* functionPtr = Platform.TryGetProcAddress(moduleHandle, lpFunctionName);
                 if (functionPtr == null)
                 {
                     Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
@@ -132,13 +171,23 @@ namespace WinRT
             return functionPtr;
         }
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        internal static unsafe extern IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags);
-
         internal static unsafe IntPtr LoadLibraryExW(string fileName, IntPtr fileHandle, uint flags)
         {
+            int lastError;
+            IntPtr returnValue;
             fixed (char* lpFileName = fileName)
-                return LoadLibraryExW((ushort*)lpFileName, fileHandle, flags);
+            {
+                SetLastError(0);
+                returnValue = PInvoke((ushort*)lpFileName, fileHandle, flags);
+                lastError = GetLastError();
+            }
+
+            SetLastError(lastError);
+            return returnValue;
+
+            // Local P/Invoke
+            [DllImportAttribute("kernel32.dll", EntryPoint = "LoadLibraryExW", ExactSpelling = true)]
+            static extern unsafe IntPtr PInvoke(ushort* nativeFileName, IntPtr nativeFileHandle, uint nativeFlags);
         }
 
         [DllImport("api-ms-win-core-winrt-l1-1-0.dll")]
