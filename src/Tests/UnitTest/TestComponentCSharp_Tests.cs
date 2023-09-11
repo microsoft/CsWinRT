@@ -3080,7 +3080,7 @@ namespace UnitTest
             var stringToBlittableDict = TestObject.GetStringToBlittableDictionary();
             Assert.Equal(5, stringToBlittableDict["alpha"].blittable.i32);
             Assert.Equal(7, stringToBlittableDict["charlie"].blittable.i32);
-            //Assert.Equal(5, stringToBlittableDict["alpha"].blittable.i32);
+            Assert.Equal(5, stringToBlittableDict["alpha"].blittable.i32);
 
             var stringToNonBlittableDict = TestObject.GetStringToNonBlittableDictionary();
             Assert.Equal(1, stringToNonBlittableDict["String1"].blittable.i32);
