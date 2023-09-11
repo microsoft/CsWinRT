@@ -3074,7 +3074,7 @@ namespace UnitTest
         {
             var intToIntDict = TestObject.GetIntToIntDictionary();
             Assert.Equal(8, intToIntDict[2]);
-            //Assert.Equal(8, intToIntDict[2]);
+            Assert.Equal(8, intToIntDict[2]);
             Assert.Equal(12, intToIntDict[3]);
 
             var stringToBlittableDict = TestObject.GetStringToBlittableDictionary();
