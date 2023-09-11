@@ -2494,28 +2494,25 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         auto enumerableObjRefName = std::regex_replace(objref_name, std::regex("IDictionary"), "IEnumerable_global__System_Collections_Generic_KeyValuePair") + "_";
 
         w.write(R"(
-private Dictionary<%, (IntPtr, %)> _lookupCache = new Dictionary<%, (IntPtr, %)>();
-
 %ICollection<%> %Keys => %.get_Keys(%);
 %ICollection<%> %Values => %.get_Values(%);
 %int %Count => %.get_Count(%);
 %bool %IsReadOnly => %.get_IsReadOnly(%);
 %% %this[% key] 
 {
-get => %.Indexer_Get(%, _lookupCache, key);
+get => %.Indexer_Get(%, null, key);
 set => %.Indexer_Set(%, key, value);
 }
 %void %Add(% key, % value) => %.Add(%, key, value);
 %bool %ContainsKey(% key) => %.ContainsKey(%, key);
 %bool %Remove(% key) => %.Remove(%, key);
-%bool %TryGetValue(% key, out % value) => %.TryGetValue(%, _lookupCache, key, out value);
+%bool %TryGetValue(% key, out % value) => %.TryGetValue(%, null, key, out value);
 %void %Add(KeyValuePair<%, %> item) => %.Add(%, item);
 %void %Clear() => %.Clear(%);
-%bool %Contains(KeyValuePair<%, %> item) => %.Contains(%, _lookupCache, item);
+%bool %Contains(KeyValuePair<%, %> item) => %.Contains(%, null, item);
 %void %CopyTo(KeyValuePair<%, %>[] array, int arrayIndex) => %.CopyTo(%, %, array, arrayIndex);
 bool ICollection<KeyValuePair<%, %>>.Remove(KeyValuePair<%, %> item) => %.Remove(%, item);
 )",
-key, value, key, value,
 visibility, key, self, abiClass, objref_name, //Keys
 visibility, value, self, abiClass, objref_name, // Values
 visibility, icollection, abiClass, objref_name, // Count
