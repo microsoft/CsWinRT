@@ -92,8 +92,8 @@ namespace ABI.Windows.Foundation.Collections
         // These function pointers will be set by IReadOnlyListMethods<T,TAbi>
         // when it is called by the source generated type or by the fallback
         // mechanism if the source generated type wasn't used.
-        internal unsafe static delegate*<IntPtr, uint, T> _GetAt;
-        internal unsafe static delegate*<IntPtr, T, out uint, bool> _IndexOf;
+        internal unsafe static delegate*<IObjectReference, uint, T> _GetAt;
+        internal unsafe static delegate*<IObjectReference, T, out uint, bool> _IndexOf;
 
         internal static unsafe bool EnsureInitialized()
         {
@@ -112,7 +112,7 @@ namespace ABI.Windows.Foundation.Collections
         public static unsafe T GetAt(IObjectReference obj, uint index)
         {
             EnsureInitialized();
-            return _GetAt(obj.ThisPtr, index);
+            return _GetAt(obj, index);
         }
 
         public static unsafe uint get_Size(IObjectReference obj)
@@ -127,7 +127,7 @@ namespace ABI.Windows.Foundation.Collections
         public static unsafe bool IndexOf(IObjectReference obj, T value, out uint index)
         {
             EnsureInitialized();
-            return _IndexOf(obj.ThisPtr, value, out index);
+            return _IndexOf(obj, value, out index);
         }
 
         public static unsafe uint GetMany(IObjectReference obj, uint startIndex, ref T[] items)
@@ -238,7 +238,15 @@ namespace ABI.System.Collections.Generic
         private unsafe static bool InitRcwHelper()
         {
             ABI.Windows.Foundation.Collections.IVectorViewMethods<T>._GetAt = &GetAt;
-            ABI.Windows.Foundation.Collections.IVectorViewMethods<T>._IndexOf = &IndexOf;
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                ABI.Windows.Foundation.Collections.IVectorViewMethods<T>._IndexOf = &IndexOf;
+            }
+            else
+            {
+                ABI.Windows.Foundation.Collections.IVectorViewMethods<T>._IndexOf = &IndexOfDynamic;
+            }
+
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IReadOnlyList<T>),
                 IReadOnlyListImpl<T>.CreateRcw);
@@ -250,12 +258,13 @@ namespace ABI.System.Collections.Generic
             return RcwHelperInitialized;
         }
 
-        private unsafe static T GetAt(IntPtr ptr, uint index)
+        private unsafe static T GetAt(IObjectReference obj, uint index)
         {
+            var ThisPtr = obj.ThisPtr;
             TAbi result = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, void*, int>**)ptr)[6](ptr, index, &result));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, void*, int>**)ThisPtr)[6](ThisPtr, index, &result));
                 return Marshaler<T>.FromAbi(result);
             }
             finally
@@ -264,8 +273,9 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        private static unsafe bool IndexOf(IntPtr ptr, T value, out uint index)
+        private static unsafe bool IndexOf(IObjectReference obj, T value, out uint index)
         {
+            var ThisPtr = obj.ThisPtr;
             object _value = default;
             try
             {
@@ -273,13 +283,34 @@ namespace ABI.System.Collections.Generic
                 uint _index;
                 _value = Marshaler<T>.CreateMarshaler2(value);
                 TAbi abiValue = (TAbi)Marshaler<T>.GetAbi(_value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, TAbi, uint*, byte*, int>**)ptr)[8](ptr, abiValue, &_index, &found));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, TAbi, uint*, byte*, int>**)ThisPtr)[8](ThisPtr, abiValue, &_index, &found));
                 index = _index;
                 return found != 0;
             }
             finally
             {
                 Marshaler<T>.DisposeMarshaler(_value);
+            }
+        }
+
+        private static unsafe bool IndexOfDynamic(IObjectReference obj, T value, out uint index)
+        {
+            var ThisPtr = obj.ThisPtr;
+            byte found;
+            uint _index;
+            object __value = default;
+            var __params = new object[] { ThisPtr, null, (IntPtr)(void*)&_index, (IntPtr)(void*)&found };
+            try
+            {
+                __value = Marshaler<T>.CreateMarshaler2(value);
+                __params[1] = Marshaler<T>.GetAbi(__value);
+                DelegateHelper.Get(obj).IndexOf.DynamicInvokeAbi(__params);
+                index = _index;
+                return found != 0;
+            }
+            finally
+            {
+                Marshaler<T>.DisposeMarshaler(__value);
             }
         }
 
@@ -315,13 +346,12 @@ namespace ABI.System.Collections.Generic
         internal static unsafe void InitFallbackCCWVtable()
         {
             Type getAt_0_type = Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(uint), typeof(TAbi*), typeof(int) });
-            Type indexOf_2_type = Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(TAbi), typeof(uint*), typeof(byte*), typeof(int) });
 
             DelegateCache = new global::System.Delegate[]
             {
                 global::System.Delegate.CreateDelegate(getAt_0_type, typeof(IReadOnlyListMethods<T,TAbi>).GetMethod(nameof(Do_Abi_GetAt_0), BindingFlags.NonPublic | BindingFlags.Static)),
                 new _get_PropertyAsUInt32_Abi(Do_Abi_get_Size_1),
-                global::System.Delegate.CreateDelegate(indexOf_2_type, typeof(IReadOnlyListMethods<T,TAbi>).GetMethod(nameof(Do_Abi_IndexOf_2), BindingFlags.NonPublic | BindingFlags.Static)),
+                global::System.Delegate.CreateDelegate(DelegateHelper.IndexOf_2_Type, typeof(IReadOnlyListMethods<T,TAbi>).GetMethod(nameof(Do_Abi_IndexOf_2), BindingFlags.NonPublic | BindingFlags.Static)),
                 new IReadOnlyList_Delegates.GetMany_3_Abi(Do_Abi_GetMany_3)
             };
 
@@ -419,6 +449,26 @@ namespace ABI.System.Collections.Generic
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
+        }
+
+        private sealed class DelegateHelper
+        {
+            internal static Type IndexOf_2_Type = Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(TAbi), typeof(uint*), typeof(byte*), typeof(int) });
+
+            private readonly IntPtr _ptr;
+
+            private Delegate _indexOfDelegate;
+            public Delegate IndexOf => _indexOfDelegate ?? GenericDelegateHelper.CreateDelegate(_ptr, ref _indexOfDelegate, IndexOf_2_Type, 8);
+
+            private DelegateHelper(IntPtr ptr)
+            {
+                _ptr = ptr;
+            }
+
+            public static DelegateHelper Get(IObjectReference obj)
+            {
+                return (DelegateHelper)GenericDelegateHelper.DelegateTable.GetValue(obj, static (objRef) => new DelegateHelper(objRef.ThisPtr));
+            }
         }
     }
 
@@ -553,6 +603,18 @@ namespace ABI.System.Collections.Generic
             }
 
             AbiToProjectionVftablePtr = IReadOnlyListMethods<T>.AbiToProjectionVftablePtr;
+        }
+
+        // This is left here for backwards compat purposes where older generated
+        // projections can be using FindVftblType and using this to cast.
+        [Guid("BBE1FA4C-B0E3-4583-BAEF-1F1B2E483E56")]
+        public unsafe struct Vftbl
+        {
+            internal IInspectable.Vftbl IInspectableVftbl;
+
+            public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.IReadOnlyList<T>.AbiToProjectionVftablePtr;
+
+            public static Guid PIID = ABI.System.Collections.Generic.IReadOnlyList<T>.PIID;
         }
 
         private static readonly ConditionalWeakTable<global::System.Collections.Generic.IReadOnlyList<T>, ToAbiHelper> _adapterTable = new();

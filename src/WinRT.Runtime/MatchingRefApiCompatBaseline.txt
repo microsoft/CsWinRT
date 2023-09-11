@@ -11,8 +11,6 @@ MembersMustExist : Member 'public System.Collections.Generic.IEnumerator<T> ABI.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumerableMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumeratorMethods<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumeratorMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
-TypesMustExist : Type 'ABI.System.Collections.Generic.IKeyValuePairMethods<K, V>' does not exist in the reference but it does exist in the implementation.
-TypesMustExist : Type 'ABI.System.Collections.Generic.IKeyValuePairMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_Append_7(System.IntPtr, T)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_Clear_9(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public T ABI.System.Collections.Generic.IListMethods<T>.Abi_GetAt_0(System.IntPtr, System.UInt32)' does not exist in the reference but it does exist in the implementation.
@@ -39,6 +37,8 @@ MembersMustExist : Member 'protected WinRT.ObjectReference<WinRT.Interop.IUnknow
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.KeyValuePair<K, V>..ctor(WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl>)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public ABI.System.Collections.Generic.KeyValuePair<K, V> ABI.System.Collections.Generic.KeyValuePair<K, V>.op_Implicit(WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl>)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.System.Collections.Generic.KeyValuePair<K, V>._FromAbi(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, V>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.IWinRTExposedTypeDetails' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(System.String, System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
