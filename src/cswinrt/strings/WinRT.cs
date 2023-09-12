@@ -71,7 +71,7 @@ namespace WinRT
             static extern unsafe int PInvoke(IntPtr nativeModuleHandle);
         }
 
-        internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, byte* functionName)
+        internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, sbyte* functionName)
         {
             int lastError;
             void* returnValue;
@@ -86,7 +86,7 @@ namespace WinRT
 
             // Local P/Invoke
             [DllImportAttribute("kernel32.dll", EntryPoint = "GetProcAddress", ExactSpelling = true)]
-            static extern unsafe void* PInvoke(IntPtr nativeModuleHandle, byte* nativeFunctionName);
+            static extern unsafe void* PInvoke(IntPtr nativeModuleHandle, sbyte* nativeFunctionName);
         }
 #else
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -101,7 +101,7 @@ namespace WinRT
         {
             fixed (byte* lpFunctionName = functionName)
             {
-                return TryGetProcAddress(moduleHandle, lpFunctionName);
+                return TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
             }
         }
 
@@ -138,7 +138,7 @@ namespace WinRT
 #endif
             buffer[byteCount] = 0;
 
-            void* functionPtr = TryGetProcAddress(moduleHandle, rawByte);
+            void* functionPtr = TryGetProcAddress(moduleHandle, (sbyte*)rawByte);
 
             if (allocated)
 #if NET6_0_OR_GREATER
@@ -154,7 +154,7 @@ namespace WinRT
         {
             fixed (byte* lpFunctionName = functionName)
             {
-                void* functionPtr = Platform.TryGetProcAddress(moduleHandle, lpFunctionName);
+                void* functionPtr = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
                 if (functionPtr == null)
                 {
                     Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
@@ -174,14 +174,13 @@ namespace WinRT
         }
 
 #if NET6_0_OR_GREATER
-        internal static unsafe IntPtr LoadLibraryExW(string fileName, IntPtr fileHandle, uint flags)
+        internal static unsafe IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags)
         {
             int lastError;
             IntPtr returnValue;
-            fixed (char* lpFileName = fileName)
             {
                 Marshal.SetLastSystemError(0);
-                returnValue = PInvoke((ushort*)lpFileName, fileHandle, flags);
+                returnValue = PInvoke(fileName, fileHandle, flags);
                 lastError = Marshal.GetLastSystemError();
             }
 
@@ -196,6 +195,11 @@ namespace WinRT
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static unsafe extern IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags);
 #endif
+        internal static unsafe IntPtr LoadLibraryExW(string fileName, IntPtr fileHandle, uint flags)
+        {
+            fixed (char* lpFileName = fileName)
+                return LoadLibraryExW((ushort*)lpFileName, fileHandle, flags);
+        }
 
         [DllImport("api-ms-win-core-winrt-l1-1-0.dll")]
         internal static extern unsafe int RoGetActivationFactory(IntPtr runtimeClassId, Guid* iid, IntPtr* factory);
