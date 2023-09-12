@@ -2050,7 +2050,6 @@ private IObjectReference Make__%()
                         } 
                         else if (distance(ifaceType.GenericParam()) == 0 || ifaceType.TypeNamespace() == "Windows.Foundation.Collections")
                         {
-
                             w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(%.IID), null);)",
                                 objrefname,
                                 bind<write_type_name>(semantics, typedef_name_type::StaticAbiClass, true)
