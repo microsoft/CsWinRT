@@ -48,9 +48,9 @@ namespace System.Collections.Generic
         private IObjectReference iListObjRef => __iListObjRef ?? Make_IListObjRef();
 
         private volatile IObjectReference __iEnumerableObjRef;
-        private unsafe IObjectReference Make_IEnumerableObjRef()
+        private IObjectReference Make_IEnumerableObjRef()
         {
-            _ = ABI.System.Collections.Generic.IVectorMethods<T>._EnsureEnumerableInitialized();
+            _ = ABI.System.Collections.Generic.IListMethods<T>.EnsureEnumerableInitialized();
             global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, _inner.As<IUnknownVftbl>(ABI.System.Collections.Generic.IEnumerableMethods<T>.PIID), null);
             return __iEnumerableObjRef;
         }
@@ -415,6 +415,11 @@ namespace ABI.System.Collections.Generic
         }
 
         internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
+
+        internal unsafe static bool EnsureEnumerableInitialized()
+        {
+            return IVectorMethods<T>._EnsureEnumerableInitialized();
+        }
     }
 
 #if EMBED
