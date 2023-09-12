@@ -29,13 +29,6 @@ namespace WinRT
 
     internal sealed class Platform
     {
-        [DllImportAttribute("kernel32.dll", EntryPoint = "SetLastError", ExactSpelling = true)]
-        internal static extern void SetLastError(int errorCode);
-
-        [DllImportAttribute("kernel32.dll", EntryPoint = "GetLastError", ExactSpelling = true)]
-        internal static extern int GetLastError();
-
-
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern unsafe int CoCreateInstance(Guid* clsid, IntPtr outer, uint clsContext, Guid* iid, IntPtr* instance);
 
@@ -56,20 +49,21 @@ namespace WinRT
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern unsafe int CoIncrementMTAUsage(IntPtr* cookie);
 
+#if NET6_0_OR_GREATER
         internal static bool FreeLibrary(IntPtr moduleHandle)
         {
             int lastError;
             bool returnValue;
             int nativeReturnValue;
             {
-                SetLastError(0);
+                Marshal.SetLastSystemError(0);
                 nativeReturnValue = PInvoke(moduleHandle);
-                lastError = GetLastError();
+                lastError = Marshal.GetLastSystemError();
             }
 
             // Unmarshal - Convert native data to managed data.
             returnValue = nativeReturnValue != 0;
-            SetLastError(lastError);
+            Marshal.SetLastPInvokeError(lastError);
             return returnValue;
 
             // Local P/Invoke
@@ -82,18 +76,26 @@ namespace WinRT
             int lastError;
             void* returnValue;
             {
-                SetLastError(0);
+                Marshal.SetLastSystemError(0);
                 returnValue = PInvoke(moduleHandle, functionName);
-                lastError = GetLastError();
+                lastError = Marshal.GetLastSystemError();
             }
 
-            SetLastError(lastError);
+            Marshal.SetLastPInvokeError(lastError);
             return returnValue;
 
             // Local P/Invoke
             [DllImportAttribute("kernel32.dll", EntryPoint = "GetProcAddress", ExactSpelling = true)]
             static extern unsafe void* PInvoke(IntPtr nativeModuleHandle, byte* nativeFunctionName);
         }
+#else
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool FreeLibrary(IntPtr moduleHandle);
+
+        [DllImport("kernel32.dll", EntryPoint = "GetProcAddress", SetLastError = true, BestFitMapping = false)]
+        internal static unsafe extern void* TryGetProcAddress(IntPtr moduleHandle, sbyte* functionName);
+#endif
 
         internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
         {
@@ -171,24 +173,29 @@ namespace WinRT
             return functionPtr;
         }
 
+#if NET6_0_OR_GREATER
         internal static unsafe IntPtr LoadLibraryExW(string fileName, IntPtr fileHandle, uint flags)
         {
             int lastError;
             IntPtr returnValue;
             fixed (char* lpFileName = fileName)
             {
-                SetLastError(0);
+                Marshal.SetLastSystemError(0);
                 returnValue = PInvoke((ushort*)lpFileName, fileHandle, flags);
-                lastError = GetLastError();
+                lastError = Marshal.GetLastSystemError();
             }
 
-            SetLastError(lastError);
+            Marshal.SetLastPInvokeError(lastError);
             return returnValue;
 
             // Local P/Invoke
             [DllImportAttribute("kernel32.dll", EntryPoint = "LoadLibraryExW", ExactSpelling = true)]
             static extern unsafe IntPtr PInvoke(ushort* nativeFileName, IntPtr nativeFileHandle, uint nativeFlags);
         }
+#else
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static unsafe extern IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags);
+#endif
 
         [DllImport("api-ms-win-core-winrt-l1-1-0.dll")]
         internal static extern unsafe int RoGetActivationFactory(IntPtr runtimeClassId, Guid* iid, IntPtr* factory);
