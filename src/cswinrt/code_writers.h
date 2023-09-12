@@ -1862,7 +1862,7 @@ internal static % Instance => _instance;
         else
         {
             w.write(R"(
-internal sealed class _% : IWinRTObject
+internal sealed class _%
 {
 private IObjectReference _obj;
 public _%()
@@ -1872,23 +1872,6 @@ _obj = %(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 
 %
 internal static % Instance => (%)_instance;
-
-IObjectReference IWinRTObject.NativeObject => _obj;
-bool IWinRTObject.HasUnwrappableNativeObject => false;
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
-private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
-    return _queryInterfaceCache;
-}
-global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
-private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
-    return _additionalTypeData;
-}
-global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 }
 )",
                 cache_type_name,
@@ -4050,7 +4033,7 @@ internal static _% Instance => _instance;
         else
         {
             w.write(R"(
-internal sealed class _% : IWinRTObject
+internal sealed class _%
 {
 private IObjectReference _obj;
 private IntPtr ThisPtr => _obj.ThisPtr;
@@ -4061,24 +4044,6 @@ _obj = ActivationFactory<%>.As(GuidGenerator.GetIID(typeof(%.%).GetHelperType())
 
 private static _% _instance = new _%();
 internal static _% Instance => _instance;
-
-IObjectReference IWinRTObject.NativeObject => _obj;
-bool IWinRTObject.HasUnwrappableNativeObject => false;
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
-private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
-    return _queryInterfaceCache;
-}
-global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
-private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
-    return _additionalTypeData;
-}
-global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
-
 %
 }
 )",
