@@ -390,64 +390,38 @@ namespace WinRT
         }
     }
 
-    internal class BaseActivationFactory
+    internal static partial class Context
     {
-        internal static class Context
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
+
+        public unsafe static IntPtr GetContextToken()
         {
-            [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-            private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
-
-            [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-            private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
-
-            private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
-
-            internal static IntPtr GetContextCallback()
-            {
-                Guid riid = new(0x000001da, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
-                Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
-                return contextCallbackPtr;
-            }
-
-            internal unsafe static IntPtr GetContextToken()
-            {
-                IntPtr contextToken;
-                Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
-                return contextToken;
-            }
-
-            // If we are free threaded, we do not need to keep track of context.
-            // This can either be if the object implements IAgileObject or the free threaded marshaler.
-            internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
-            {
-                if (objRef.TryAs(new(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90), out var agilePtr) >= 0)
-                {
-                    Marshal.Release(agilePtr);
-                    return true;
-                }
-                return false;
-            }
-
-            internal static void DisposeContextCallback(IntPtr contextCallbackPtr)
-            {
-                MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
-            }
+            IntPtr contextToken;
+            Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
+            return contextToken;
         }
 
-        internal sealed class BaseActivationFactoryEntry : IDisposable
+        // If we are free threaded, we do not need to keep track of context.
+        // This can either be if the object implements IAgileObject or the free threaded marshaler.
+        internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
+        {
+            if (objRef.TryAs(new(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90), out var agilePtr) >= 0)
+            {
+                Marshal.Release(agilePtr);
+                return true;
+            }
+            return false;
+        }
+    }
+
+    internal class BaseActivationFactory
+    {
+        internal sealed class BaseActivationFactoryEntry
         {
             public IntPtr _contextToken;
-            public IntPtr _contextCallbackPtr;
             public ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
             public ConcurrentDictionary<Guid, IObjectReference> _IActivationFactoryIIDCache;
-
-            public void Dispose()
-            {
-                if (_contextCallbackPtr != IntPtr.Zero)
-                {
-                    Context.DisposeContextCallback(_contextCallbackPtr);
-                }
-            }
         }
 
         private readonly string typeNamespace;
@@ -469,8 +443,7 @@ namespace WinRT
 
                 // We need to recreate the factory, because the context has changed
                 var newFactoryEntry = CreateWinRTFactoryEntry();
-                var old =Interlocked.Exchange(ref _IActivationFactoryEntry, newFactoryEntry);
-                old.Dispose();
+                _IActivationFactoryEntry = newFactoryEntry;
 
                 return newFactoryEntry;
             }
@@ -534,7 +507,6 @@ namespace WinRT
             bool isFreeThreaded = Context.IsFreeThreaded(objRef);
             var entry = new BaseActivationFactoryEntry();
             entry._contextToken = isFreeThreaded ? IntPtr.Zero : Context.GetContextToken();
-            entry._contextCallbackPtr = isFreeThreaded ? IntPtr.Zero : Context.GetContextCallback();
             entry._IActivationFactory = objRef;
             entry._IActivationFactoryIIDCache = new ConcurrentDictionary<Guid, IObjectReference>();
             return entry;
@@ -582,6 +554,10 @@ namespace WinRT
         public ActivationFactory() : base(typeof(T).Namespace, typeof(T).FullName) { }
 
         public static ActivationFactory<T> Instance => LazyInitializer.EnsureInitialized(ref _instance, () => new ActivationFactory<T>());
+
+        public static new I AsInterface<I>() => Instance.Value.AsInterface<I>();
+        public static ObjectReference<I> As<I>() => Instance._As<I>();
+        public static IObjectReference As(Guid iid) => Instance._As(iid);
 
 #if NET
         [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode", 
