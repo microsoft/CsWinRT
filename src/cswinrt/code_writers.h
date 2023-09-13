@@ -4051,7 +4051,7 @@ internal sealed class _% : ABI.%.%
 {
 public _%() : base(%()) { }
 private static _% _instance = new _%();
-internal static _% Instance => _instance;
+internal static % Instance => _instance;
 %
 }
 )",
