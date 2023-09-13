@@ -109,7 +109,7 @@ namespace ABI.System.ComponentModel
             }
 
             internal static ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory Instance = 
-                new ActivationFactory()._As<ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
+                new ActivationFactory().As<ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventArgs value)

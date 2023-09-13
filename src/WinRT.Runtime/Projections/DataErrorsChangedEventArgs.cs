@@ -98,7 +98,7 @@ namespace ABI.System.ComponentModel
             }
 
             internal static ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance =
-                new ActivationFactory()._As<ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory.Vftbl>();
+                new ActivationFactory().As<ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.DataErrorsChangedEventArgs value)

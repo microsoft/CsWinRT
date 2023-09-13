@@ -202,7 +202,7 @@ namespace ABI.System.Collections.Specialized
             }
 
             internal static WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = 
-                new ActivationFactory()._As<WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory.Vftbl>();
+                new ActivationFactory().As<WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)

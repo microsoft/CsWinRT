@@ -103,7 +103,7 @@ namespace ABI.System
             }
 
             internal static WinRTUriRuntimeClassFactory Instance = 
-                new ActivationFactory()._As<WinRTUriRuntimeClassFactory.Vftbl>();
+                new ActivationFactory().As<WinRTUriRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.Uri value)
