@@ -6,10 +6,11 @@
     <Platforms>x86;x64</Platforms>
     <RuntimeIdentifiers>win10-x86;win10-x64</RuntimeIdentifiers>
     <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win10-$(Platform).pubxml</PublishProfileFullPath>
+    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64"/>
+    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64" SetTargetFramework="TargetFramework=netstandard2.0"/>
     <ProjectReference Include="..\..\..\Projections\Test\Test.csproj" />
     <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj" />
   </ItemGroup>
