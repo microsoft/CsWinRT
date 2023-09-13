@@ -3,23 +3,11 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../../'))" />
 
   <PropertyGroup>
-    <Platforms>x86;x64</Platforms>
-    <RuntimeIdentifiers>win10-x86;win10-x64</RuntimeIdentifiers>
-    <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win10-$(Platform).pubxml</PublishProfileFullPath>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>
   </PropertyGroup>
 
-  <!-- AOT is only for x64 -->
-  <PropertyGroup Condition="'$(Platform)' == 'x86'">
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Platform)' == 'x64'">
-    <TargetFrameworks>$(FunctionalTestsBuildTFMs)</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net7.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net7.0' and '$(Platform)' != 'x86'">
     <PublishAot>true</PublishAot>
   </PropertyGroup>
  
