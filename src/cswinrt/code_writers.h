@@ -1848,7 +1848,7 @@ internal sealed class _% : ABI.%.%
 {
 public _%() : base(%()) { }
 %
-internal static % Instance => _instance;
+internal static _% Instance => _instance;
 }
 )",
                 cache_type_name,
