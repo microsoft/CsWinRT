@@ -1823,7 +1823,7 @@ remove => %;
     {
         return settings.netstandard_compat ?
             w.write_temp("Factory<%, %.Vftbl>.Instance.Value", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true)) :
-            w.write_temp("Factory<%, %>.Instance.Value", class_type.TypeName(), static_type.TypeName());
+            w.write_temp("Factory<%, %>.Instance.Value", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true));
     }
 
     static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true, bool forceCCW = false)
@@ -6008,7 +6008,7 @@ internal static global::System.Guid IID { get; } = new Guid(new global::System.R
 
         return settings.netstandard_compat ?
             w.write_temp("Factory<%, %.Vftbl>.Instance.Value", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true)) :
-            w.write_temp("Factory<%, %>.Instance.Value", cache_type_name, iface.TypeName());
+            w.write_temp("Factory<%, %>.Instance.Value", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true));
     }
 
     bool write_abi_interface(writer& w, TypeDef const& type)

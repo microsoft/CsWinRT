@@ -400,32 +400,6 @@ namespace WinRT
             }
         }
 
-        public unsafe (ObjectReference<I> obj, int hr) GetActivationFactory<I>(string runtimeClassId)
-        {
-            IntPtr instancePtr = IntPtr.Zero;
-            try
-            {
-                MarshalString.Pinnable __runtimeClassId = new(runtimeClassId);
-                fixed (void* ___runtimeClassId = __runtimeClassId)
-                {
-                    int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
-                    if (hr == 0)
-                    {
-                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IActivationFactoryVftbl>(instancePtr);
-                        return (objRef.As<I>(), hr);
-                    }
-                    else
-                    {
-                        return (null, hr);
-                    }
-                }
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(instancePtr);
-            }
-        }
-
         ~DllModule()
         {
             System.Diagnostics.Debug.Assert(_CanUnloadNow == null || _CanUnloadNow() == 0); // S_OK
@@ -481,33 +455,6 @@ namespace WinRT
                     {
                         var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IActivationFactoryVftbl>(instancePtr);
                         return (objRef, hr);
-                    }
-                    else
-                    {
-                        return (null, hr);
-                    }
-                }
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(instancePtr);
-            }
-        }
-
-        public static unsafe (ObjectReference<I> obj, int hr) GetActivationFactory<I>(string runtimeClassId)
-        {
-            IntPtr instancePtr = IntPtr.Zero;
-            try
-            {
-                MarshalString.Pinnable __runtimeClassId = new(runtimeClassId);
-                fixed (void* ___runtimeClassId = __runtimeClassId)
-                {
-                    int hr;
-                    (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId));
-                    if (hr == 0)
-                    {
-                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IActivationFactoryVftbl>(instancePtr);
-                        return (objRef.As<I>(), hr);
                     }
                     else
                     {
@@ -636,8 +583,13 @@ namespace WinRT
 
     internal class BaseFactory<I>
     {
+#if NET
+        private readonly IObjectReference _factory;
+        public IObjectReference Value { get => _factory; }
+#else
         private readonly ObjectReference<I> _factory;
         public ObjectReference<I> Value { get => _factory; }
+#endif
 
         private readonly IntPtr _contextToken;
         public IntPtr ContextToken { get => _contextToken; }
@@ -646,9 +598,15 @@ namespace WinRT
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
-            (_factory, hr) = WinrtModule.GetActivationFactory<I>(typeFullName);
-            if (_factory != null) 
+            ObjectReference<IActivationFactoryVftbl> factory;
+            (factory, hr) = WinrtModule.GetActivationFactory(typeFullName);
+            if (factory != null)
             {
+#if NET
+                _factory = factory.As(GuidGenerator.GetIID(typeof(I)));
+#else
+                _factory = factory.As<I>();
+#endif
                 _contextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
                 return; 
             }
@@ -659,9 +617,14 @@ namespace WinRT
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    (_factory, _) = module.GetActivationFactory<I>(typeFullName);
-                    if (_factory != null)
+                    (factory, _) = module.GetActivationFactory(typeFullName);
+                    if (factory != null)
                     {
+#if NET
+                        _factory = factory.As(GuidGenerator.GetIID(typeof(I)));
+#else
+                        _factory = factory.As<I>();
+#endif
                         _contextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken(); 
                         return; 
                     }
