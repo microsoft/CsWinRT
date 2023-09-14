@@ -2438,8 +2438,6 @@ namespace UnitTest
                 // Object gets proxied to the apartment.
                 Assert.Equal(2, proxyObject.Commands.Count);
                 agileReference.Dispose();
-
-                proxyObject2 = agileReference2.Get();
             }
 
             public void CheckValue()
@@ -2448,9 +2446,6 @@ namespace UnitTest
                 Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
                 proxyObject = agileReference.Get();
                 Assert.Equal(2, proxyObject.Commands.Count);
-                
-                nonAgileObject2 = new Windows.UI.Popups.PopupMenu();
-                agileReference2 = nonAgileObject2.AsAgile();
 
                 valueAcquired.Set();
             }
@@ -2462,8 +2457,8 @@ namespace UnitTest
                 Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands);
             }
 
-            private Windows.UI.Popups.PopupMenu nonAgileObject, nonAgileObject2;
-            private Windows.UI.Popups.PopupMenu proxyObject, proxyObject2;
+            private Windows.UI.Popups.PopupMenu nonAgileObject;
+            private Windows.UI.Popups.PopupMenu proxyObject;
             private AgileReference<Windows.UI.Popups.PopupMenu> agileReference, agileReference2;
             private readonly AutoResetEvent objectAcquired = new AutoResetEvent(false);
             private readonly AutoResetEvent valueAcquired = new AutoResetEvent(false);
