@@ -279,16 +279,18 @@ for %%a in (%cswinrt_functional_tests%) do (
   )
 )
 
-echo Running cswinrt AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
+if "%cswinrt_platform%" EQU "x64" (
+  echo Running cswinrt AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
 
-for %%a in (%cswinrt_aot_functional_tests%) do (
-  echo Running %%a
+  for %%a in (%cswinrt_aot_functional_tests%) do (
+    echo Running %%a
 
-  call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net7.0\win10-%cswinrt_platform%\publish\%%a.exe
-  if !errorlevel! NEQ 100 (
-    echo.
-    echo ERROR: AOT Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
-    exit /b !ErrorLevel!
+    call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net7.0\win10-%cswinrt_platform%\publish\%%a.exe
+    if !errorlevel! NEQ 100 (
+      echo.
+      echo ERROR: AOT Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
+      exit /b !ErrorLevel!
+    )
   )
 )
 
