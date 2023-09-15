@@ -346,10 +346,10 @@ namespace WinRT
                 module = null;
                 return false;
             }
-            
+
             module = new DllModule(
-                fileName, 
-                moduleHandle, 
+                fileName,
+                moduleHandle,
                 getActivationFactory);
             return true;
         }
@@ -495,7 +495,7 @@ namespace WinRT
             if (_IActivationFactory != null)
             {
                 _contextToken = Context.IsFreeThreaded(_IActivationFactory) ? IntPtr.Zero : Context.GetContextToken();
-                return; 
+                return;
             }
 
             var moduleName = typeNamespace;
@@ -581,7 +581,7 @@ namespace WinRT
         public IntPtr ContextToken { get => _contextToken; }
 
         public BaseFactory(string typeNamespace, string typeFullName)
-            : this(typeNamespace, typeFullName, GuidGenerator.GetIID(typeof(I)))
+            : this(typeNamespace, typeFullName, typeof(I).GUID)
         {
         }
 
@@ -599,7 +599,7 @@ namespace WinRT
                 _factory = factory.As<I>(interfaceGuid);
 #endif
                 _contextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
-                return; 
+                return;
             }
 
             var moduleName = typeNamespace;
@@ -616,8 +616,8 @@ namespace WinRT
 #else
                         _factory = factory.As<I>(interfaceGuid);
 #endif
-                        _contextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken(); 
-                        return; 
+                        _contextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
+                        return;
                     }
                 }
 
@@ -636,9 +636,9 @@ namespace WinRT
         private static Factory<T, I> _instance;
 
 #if NET
-        internal static IObjectReference Get(Guid iid)
+        internal static IObjectReference Get()
 #else
-        internal static ObjectReference<I> Get(Guid iid)
+        internal static ObjectReference<I> Get()
 #endif
         {
             var existingInstance = _instance;
@@ -647,13 +647,13 @@ namespace WinRT
                 return existingInstance.Value;
             }
 
-            var newInstance = new Factory<T, I>(iid);
+            var newInstance = new Factory<T, I>();
             Interlocked.CompareExchange(ref _instance, newInstance, existingInstance);
             return newInstance.Value;
         }
 
-        private Factory(Guid iid)
-            : base (typeof(T).Namespace, typeof(T).FullName, iid)
+        private Factory()
+            : base(typeof(T).Namespace, typeof(T).FullName)
         {
         }
     }

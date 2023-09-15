@@ -1816,14 +1816,11 @@ remove => %;
     template<auto method_writer>
     std::string write_static_factory_class_with_raw_return_type(writer& w, std::string_view cache_type_name, TypeDef const& factory_type);
 
-    template<auto method_writer>
-    std::string write_factory_cache_object(writer& w, TypeDef const& factory_type, TypeDef const& class_type);
-
     std::string write_static_cache_object(writer& w, TypeDef const& static_type, TypeDef const& class_type)
     {
         return settings.netstandard_compat ?
-            w.write_temp("Factory<%, %.Vftbl>.Get(GuidGenerator.GetIID(typeof(%).GetHelperType()))", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true), bind<write_type_name>(static_type, typedef_name_type::Projected, true)) :
-            w.write_temp("Factory<%, %>.Get(GuidGenerator.GetIID(typeof(%).GetHelperType()))", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true), bind<write_type_name>(static_type, typedef_name_type::Projected, true));
+            w.write_temp("Factory<%, %.Vftbl>.Get()", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true)) :
+            w.write_temp("Factory<%, %>.Get()", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true));
     }
 
     static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true, bool forceCCW = false)
@@ -3922,70 +3919,6 @@ public static unsafe % %(% _obj%%)
             bind(init_call_variables),
             bind<write_abi_method_call_marshalers>(invoke_target, is_generic, abi_marshalers, is_noexcept(method)));
     }
-    
-    template<auto method_writer>
-    std::string write_factory_cache_object(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
-    {
-        std::string_view cache_type_name = factory_type.TypeName();
-        if (settings.netstandard_compat)
-        {
-            auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl", class_type.TypeNamespace(), cache_type_name);
-            auto cache_interface =
-                w.write_temp(
-                    R"(ActivationFactory<%>.Get().As<%>)",
-                    class_type.TypeName(),
-                    cache_vftbl_type);
-
-            w.write(R"(
-internal sealed class _% : ABI.%.%
-{
-public _%() : base(%()) { }
-private static _% _instance = new _%();
-internal static _% Instance => _instance;
-%
-}
-)",
-                cache_type_name,
-                class_type.TypeNamespace(),
-                cache_type_name,
-                cache_type_name,
-                cache_interface,
-                cache_type_name,
-                cache_type_name,
-                cache_type_name,
-                bind_each<method_writer>(factory_type.MethodList())
-                );
-        }
-        else
-        {
-            w.write(R"(
-internal sealed class _% : Factory
-{
-private IntPtr ThisPtr => Value.ThisPtr;
-public _%()
-    : base("%", "%.%", GuidGenerator.GetIID(typeof(%.%).GetHelperType()))
-{
-}
-
-private static _% _instance = new _%();
-internal static _% Instance => _instance;
-%
-}
-)",
-                cache_type_name,
-                cache_type_name,
-                class_type.TypeNamespace(),
-                class_type.TypeNamespace(),
-                class_type.TypeName(),
-                bind<write_type_name>(factory_type, typedef_name_type::StaticAbiClass, true),
-                cache_type_name,
-                cache_type_name,
-                cache_type_name,
-                bind_each<method_writer>(factory_type.MethodList()));
-        }
-
-        return w.write_temp("_%.Instance", cache_type_name);
-    }
 
     void write_interface_members_netstandard(writer& w, TypeDef const& type)
     {
@@ -6007,8 +5940,8 @@ internal static global::System.Guid IID { get; } = new Guid(new global::System.R
             bind_each<method_writer>(iface.MethodList()));
 
         return settings.netstandard_compat ?
-            w.write_temp("Factory<%, %.Vftbl>.Get(GuidGenerator.GetIID(typeof(%).GetHelperType()))", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true), bind<write_type_name>(iface, typedef_name_type::Projected, true)) :
-            w.write_temp("Factory<%, %>.Get(GuidGenerator.GetIID(typeof(%).GetHelperType()))", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true), bind<write_type_name>(iface, typedef_name_type::Projected, true));
+            w.write_temp("Factory<%, %.Vftbl>.Get()", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true)) :
+            w.write_temp("Factory<%, %>.Get()", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true));
     }
 
     bool write_abi_interface(writer& w, TypeDef const& type)
