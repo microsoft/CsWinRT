@@ -6298,7 +6298,7 @@ private readonly % _comp;
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
-private IObjectReference _inner = null;
+private readonly IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
 %
 
@@ -6467,7 +6467,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
 {
 private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
 
-private IObjectReference _inner = null;
+private readonly IObjectReference _inner = null;
 %
 %
 
