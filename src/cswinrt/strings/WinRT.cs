@@ -540,6 +540,33 @@ namespace WinRT
         }
     }
 
+    internal sealed class ActivationFactory<T> : BaseActivationFactory
+    {
+        private static volatile ActivationFactory<T> _instance;
+
+#if NET
+        internal static ActivationFactory<T> Get()
+#else
+        internal static ActivationFactory<T> Get()
+#endif
+        {
+            var existingInstance = _instance;
+            if (existingInstance != null && (existingInstance.ContextToken == IntPtr.Zero || existingInstance.ContextToken == Context.GetContextToken()))
+            {
+                return existingInstance;
+            }
+
+            var newInstance = new ActivationFactory<T>();
+            Interlocked.CompareExchange(ref _instance, newInstance, existingInstance);
+            return newInstance;
+        }
+
+        public ActivationFactory()
+            : base(typeof(T).Namespace, typeof(T).FullName)
+        {
+        }
+    }
+
     internal class BaseFactory<I>
     {
 #if NET
@@ -554,6 +581,11 @@ namespace WinRT
         public IntPtr ContextToken { get => _contextToken; }
 
         public BaseFactory(string typeNamespace, string typeFullName)
+            : this(typeNamespace, typeFullName, GuidGenerator.GetIID(typeof(I)))
+        {
+        }
+
+        public BaseFactory(string typeNamespace, string typeFullName, Guid interfaceGuid)
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
@@ -562,9 +594,9 @@ namespace WinRT
             if (factory != null)
             {
 #if NET
-                _factory = factory.As(GuidGenerator.GetIID(typeof(I)));
+                _factory = factory.As(interfaceGuid);
 #else
-                _factory = factory.As<I>();
+                _factory = factory.As<I>(interfaceGuid);
 #endif
                 _contextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
                 return; 
@@ -580,9 +612,9 @@ namespace WinRT
                     if (factory != null)
                     {
 #if NET
-                        _factory = factory.As(GuidGenerator.GetIID(typeof(I)));
+                        _factory = factory.As(interfaceGuid);
 #else
-                        _factory = factory.As<I>();
+                        _factory = factory.As<I>(interfaceGuid);
 #endif
                         _contextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken(); 
                         return; 
@@ -603,50 +635,25 @@ namespace WinRT
     {
         private static Factory<T, I> _instance;
 
-        internal static Factory<T, I> Instance
+#if NET
+        internal static IObjectReference Get(Guid iid)
+#else
+        internal static ObjectReference<I> Get(Guid iid)
+#endif
         {
-            get
+            var existingInstance = _instance;
+            if (existingInstance != null && (existingInstance.ContextToken == IntPtr.Zero || existingInstance.ContextToken == Context.GetContextToken()))
             {
-                var existingInstance = _instance;
-                if (existingInstance != null && (existingInstance.ContextToken == IntPtr.Zero || existingInstance.ContextToken == Context.GetContextToken()))
-                {
-                    return existingInstance;
-                }
-
-                var newInstance = new Factory<T, I>();
-                Interlocked.CompareExchange(ref _instance, newInstance, existingInstance);
-                return newInstance;
+                return existingInstance.Value;
             }
+
+            var newInstance = new Factory<T, I>(iid);
+            Interlocked.CompareExchange(ref _instance, newInstance, existingInstance);
+            return newInstance.Value;
         }
 
-        private Factory() 
-            : base (typeof(T).Namespace, typeof(T).FullName)
-        {
-        }
-    }
-
-    internal sealed class ActivationFactory<T> : BaseActivationFactory
-    {
-        private static volatile ActivationFactory<T> _instance;
-
-        internal static ActivationFactory<T> Instance
-        {
-            get
-            {
-                var existingInstance = _instance;
-                if (existingInstance != null && (existingInstance.ContextToken == IntPtr.Zero || existingInstance.ContextToken == Context.GetContextToken()))
-                {
-                    return existingInstance;
-                }
-
-                var newInstance = new ActivationFactory<T>();
-                Interlocked.CompareExchange(ref _instance, newInstance, existingInstance);
-                return newInstance;
-            }
-        }
-
-        public ActivationFactory()
-            : base(typeof(T).Namespace, typeof(T).FullName)
+        private Factory(Guid iid)
+            : base (typeof(T).Namespace, typeof(T).FullName, iid)
         {
         }
     }

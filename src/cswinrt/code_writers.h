@@ -1822,8 +1822,8 @@ remove => %;
     std::string write_static_cache_object(writer& w, TypeDef const& static_type, TypeDef const& class_type)
     {
         return settings.netstandard_compat ?
-            w.write_temp("Factory<%, %.Vftbl>.Instance.Value", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true)) :
-            w.write_temp("Factory<%, %>.Instance.Value", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true));
+            w.write_temp("Factory<%, %.Vftbl>.Get(GuidGenerator.GetIID(typeof(%).GetHelperType()))", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true), bind<write_type_name>(static_type, typedef_name_type::Projected, true)) :
+            w.write_temp("Factory<%, %>.Get(GuidGenerator.GetIID(typeof(%).GetHelperType()))", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true), bind<write_type_name>(static_type, typedef_name_type::Projected, true));
     }
 
     static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true, bool forceCCW = false)
@@ -1920,7 +1920,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         else
         {
             w.write(R"(
-public %() : this(%(ActivationFactory<%>.Instance.ActivateInstance<IUnknownVftbl>()))
+public %() : this(%(ActivationFactory<%>.Get().ActivateInstance<IUnknownVftbl>()))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 %
@@ -2228,7 +2228,7 @@ Marshal.Release(inner);
                     }
 
                     w.write(R"(
-public static %I As<I>() => ActivationFactory<%>.Instance.AsInterface<I>();
+public static %I As<I>() => ActivationFactory<%>.Get().AsInterface<I>();
 )",
                         has_base_factory ? "new " : "",
                         type.TypeName());
@@ -3932,7 +3932,7 @@ public static unsafe % %(% _obj%%)
             auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl", class_type.TypeNamespace(), cache_type_name);
             auto cache_interface =
                 w.write_temp(
-                    R"(ActivationFactory<%>.Instance.As<%>)",
+                    R"(ActivationFactory<%>.Get().As<%>)",
                     class_type.TypeName(),
                     cache_vftbl_type);
 
@@ -6007,8 +6007,8 @@ internal static global::System.Guid IID { get; } = new Guid(new global::System.R
             bind_each<method_writer>(iface.MethodList()));
 
         return settings.netstandard_compat ?
-            w.write_temp("Factory<%, %.Vftbl>.Instance.Value", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true)) :
-            w.write_temp("Factory<%, %>.Instance.Value", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true));
+            w.write_temp("Factory<%, %.Vftbl>.Get(GuidGenerator.GetIID(typeof(%).GetHelperType()))", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true), bind<write_type_name>(iface, typedef_name_type::Projected, true)) :
+            w.write_temp("Factory<%, %>.Get(GuidGenerator.GetIID(typeof(%).GetHelperType()))", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true), bind<write_type_name>(iface, typedef_name_type::Projected, true));
     }
 
     bool write_abi_interface(writer& w, TypeDef const& type)
