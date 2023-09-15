@@ -540,47 +540,6 @@ namespace WinRT
         }
     }
 
-    internal class Factory
-    {
-        private readonly IObjectReference _factory;
-        public IObjectReference Value { get => _factory; }
-
-        public Factory(string typeNamespace, string typeFullName, Guid iid)
-        {
-            // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
-            int hr;
-            ObjectReference<IActivationFactoryVftbl> factory;
-            (factory, hr) = WinrtModule.GetActivationFactory(typeFullName);
-            if (factory != null) 
-            {
-                _factory = factory.As(iid);
-                return; 
-            }
-
-            var moduleName = typeNamespace;
-            while (true)
-            {
-                DllModule module = null;
-                if (DllModule.TryLoad(moduleName + ".dll", out module))
-                {
-                    (factory, _) = module.GetActivationFactory(typeFullName);
-                    if (factory != null)
-                    {
-                        _factory = factory.As(iid);
-                        return;
-                    }
-                }
-
-                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
-                if (lastSegment <= 0)
-                {
-                    Marshal.ThrowExceptionForHR(hr);
-                }
-                moduleName = moduleName.Remove(lastSegment);
-            }
-        }
-    }
-
     internal class BaseFactory<I>
     {
 #if NET
