@@ -474,6 +474,15 @@ namespace WinRT
         }
     }
 
+#if NET6_0_OR_GREATER
+    internal interface IHasGuid
+    {
+#pragma warning disable CA2252 // This API requires opting into preview features
+        static abstract ReadOnlySpan<byte> IID { get; }
+#pragma warning restore CA2252 // This API requires opting into preview features
+    }
+#endif
+
     internal class BaseActivationFactory
     {
         private readonly ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
@@ -567,12 +576,14 @@ namespace WinRT
         }
     }
 
-    internal class BaseFactory<I>
-    {
 #if NET
+    internal class BaseFactory<I> where I : IHasGuid
+    {
         private readonly IObjectReference _factory;
         public IObjectReference Value { get => _factory; }
 #else
+    internal class BaseFactory<I>
+    {
         private readonly ObjectReference<I> _factory;
         public ObjectReference<I> Value { get => _factory; }
 #endif
@@ -581,12 +592,12 @@ namespace WinRT
         public IntPtr ContextToken { get => _contextToken; }
 
         public BaseFactory(string typeNamespace, string typeFullName)
-            : this(typeNamespace, typeFullName, typeof(I).GUID)
         {
-        }
-
-        public BaseFactory(string typeNamespace, string typeFullName, Guid interfaceGuid)
-        {
+#if NET
+            Guid interfaceGuid = MemoryMarshal.Read<Guid>(I.IID);
+#else
+            Guid interfaceGuid = typeof(I).GUID;
+#endif
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<IActivationFactoryVftbl> factory;
@@ -631,7 +642,12 @@ namespace WinRT
         }
     }
 
+
+#if NET
+    internal sealed class Factory<T, I> : BaseFactory<I> where I : IHasGuid
+#else
     internal sealed class Factory<T, I> : BaseFactory<I>
+#endif
     {
         private static Factory<T, I> _instance;
 

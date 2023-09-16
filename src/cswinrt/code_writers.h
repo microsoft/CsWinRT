@@ -1820,7 +1820,7 @@ remove => %;
     {
         return settings.netstandard_compat ?
             w.write_temp("Factory<%, %.Vftbl>.Get()", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true)) :
-            w.write_temp("Factory<%, %>.Get()", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::ABI, true));
+            w.write_temp("Factory<%, %>.Get()", class_type.TypeName(), bind<write_type_name>(static_type, typedef_name_type::StaticAbiClass, true));
     }
 
     static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true, bool forceCCW = false)
@@ -5902,29 +5902,31 @@ public static Guid PIID = Vftbl.PIID;
             }
         }
 
-        w.write(R"(% static class %
+        w.write(R"(% class %%
 {
 internal static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
 
 %
 }
-)", 
-        (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
-        bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), 
-        [&](writer& w) {
-            if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
-                write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
-                return;
-            }
-            auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
-            write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
-            abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
-            for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
-            {
-                write_static_abi_class_members(w, other_iface, abi_methods_start_index);
-                abi_methods_start_index += distance(other_iface.MethodList());
-            }
-        });
+)",
+            (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
+            bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
+            settings.netstandard_compat ? "" : " : IHasGuid",
+            bind<write_guid_bytes>(iface),
+            [&](writer& w) {
+                if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
+                    write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
+                    return;
+                }
+                auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
+                write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
+                abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
+                for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
+                {
+                    write_static_abi_class_members(w, other_iface, abi_methods_start_index);
+                    abi_methods_start_index += distance(other_iface.MethodList());
+                }
+            });
     }
 
     template<auto method_writer>
@@ -5941,7 +5943,7 @@ internal static global::System.Guid IID { get; } = new Guid(new global::System.R
 
         return settings.netstandard_compat ?
             w.write_temp("Factory<%, %.Vftbl>.Get()", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true)) :
-            w.write_temp("Factory<%, %>.Get()", cache_type_name, bind<write_type_name>(iface, typedef_name_type::ABI, true));
+            w.write_temp("Factory<%, %>.Get()", cache_type_name, bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true));
     }
 
     bool write_abi_interface(writer& w, TypeDef const& type)
@@ -5983,10 +5985,9 @@ internal interface % : %
 {
 }
 )",
-bind<write_guid_attribute>(type),
-type_name,
-bind<write_type_name>(type, typedef_name_type::CCW, false)
-);
+                    bind<write_guid_attribute>(type),
+                    type_name,
+                    bind<write_type_name>(type, typedef_name_type::CCW, false));
                 return true;
             }
         }
