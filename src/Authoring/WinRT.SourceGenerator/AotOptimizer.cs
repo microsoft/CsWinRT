@@ -22,6 +22,9 @@ namespace Generator
                 static (n, _) => GetVtableAttributeToAdd(n));
 
             context.RegisterImplementationSourceOutput(vtableAttributesToAdd, GenerateVtableAttributes);
+
+            var genericInstantionsToGenerate = vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).Collect();
+            context.RegisterImplementationSourceOutput(genericInstantionsToGenerate, GenerateCCWForGenericInstantiation);
         }
 
         // Restrict to non-projected classes which can be instantiated
@@ -39,6 +42,7 @@ namespace Generator
             var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node as ClassDeclarationSyntax);
 
             HashSet<string> interfacesToAddToVtable = new();
+            HashSet<GenericInterface> genericInterfacesToAddToVtable = new();
             foreach (var iface in symbol.Interfaces)
             {
                 AddInterfaceAndCompatibleInterfacesToVtable(iface);
@@ -68,13 +72,15 @@ namespace Generator
                 symbol.ContainingNamespace.IsGlobalNamespace,
                 symbol.Name,
                 interfacesToAddToVtable.ToImmutableArray(),
-                hasWinRTExposedBaseType);
+                hasWinRTExposedBaseType,
+                genericInterfacesToAddToVtable.ToImmutableArray());
 
             void AddInterfaceAndCompatibleInterfacesToVtable(INamedTypeSymbol iface)
             {
                 if (GeneratorHelper.IsWinRTType(iface))
                 {
                     interfacesToAddToVtable.Add(iface.ToDisplayString());
+                    AddGenericInterfaceInstantiation(iface);
                 }
 
                 if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, out var compatibleIfaces))
@@ -82,7 +88,28 @@ namespace Generator
                     foreach (var compatibleIface in compatibleIfaces)
                     {
                         interfacesToAddToVtable.Add(compatibleIface.ToDisplayString());
+                        AddGenericInterfaceInstantiation(compatibleIface);
                     }
+                }
+            }
+
+            void AddGenericInterfaceInstantiation(INamedTypeSymbol iface)
+            {
+                if (iface.IsGenericType)
+                {
+                    List<GenericParameter> genericParameters = new();
+                    foreach(var genericParameter in iface.TypeArguments)
+                    {
+                        genericParameters.Add(new GenericParameter(
+                            genericParameter.ToDisplayString(),
+                            GeneratorHelper.GetAbiType(genericParameter),
+                            genericParameter.TypeKind));
+                    }
+
+                    genericInterfacesToAddToVtable.Add(new GenericInterface(
+                        iface.ToDisplayString(),
+                        $$"""{{iface.ContainingNamespace}}.{{iface.MetadataName}}""",
+                        genericParameters.ToImmutableArray()));
                 }
             }
         }
@@ -167,39 +194,133 @@ namespace Generator
             // vtable generation.
             if (vtableAttribute.Interfaces.Any() || vtableAttribute.HasWinRTExposedBaseType)
             {
-                var vtableEntries = string.Join(", ", vtableAttribute.Interfaces.Select((@interface) => $@"typeof({@interface})"));
-                
                 StringBuilder source = new();
+                source.AppendLine("using static WinRT.TypeExtensions;\n");
                 if (!vtableAttribute.IsGlobalNamespace)
                 {
-                    source.Append($$"""
+                    source.AppendLine($$"""
                         namespace {{vtableAttribute.Namespace}}
                         {
                         """);
                 }
 
-                source.Append($$"""
-                    [global::WinRT.WinRTExposedType({{vtableEntries}})]
+                source.AppendLine($$"""
+                    [global::WinRT.WinRTExposedType(typeof({{vtableAttribute.ClassName}}WinRTTypeDetails))]
                     partial class {{vtableAttribute.ClassName}}
                     {
                     }
+
+                    internal sealed class {{vtableAttribute.ClassName}}WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+                    {
+                        public global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+                        {
                     """);
+
+                if (vtableAttribute.Interfaces.Any())
+                {
+                    foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+                    {
+                        source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
+                            genericInterface.GenericDefinition,
+                            genericInterface.GenericParameters));
+                    }
+
+                    source.AppendLine();
+                    source.AppendLine($$"""
+                                return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]
+                                {
+                        """);
+
+                    foreach (var @interface in vtableAttribute.Interfaces)
+                    {
+                        var genericStartIdx = @interface.IndexOf('<');
+                        var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
+                        if (genericStartIdx != -1)
+                        {
+                            interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
+                        }
+                        source.AppendLine($$"""
+                                                new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
+                                                {
+                                                    IID = global::WinRT.GuidGenerator.GetIID(typeof(global::{{@interface}}).GetHelperType()),
+                                                    Vtable = global::ABI.{{interfaceStaticsMethod}}.AbiToProjectionVftablePtr
+                                                },
+                                    """);
+                    }
+                    source.AppendLine($$"""
+                                };
+                                """);
+                }
+                else
+                {
+                    source.AppendLine($$"""
+                                        return global::System.Array.Empty<global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry>();
+                                """);
+                }
+
+                source.AppendLine($$"""
+                                }
+                            }
+                        """);
 
                 if (!vtableAttribute.IsGlobalNamespace)
                 {
-                    source.Append($@"}}");
+                    source.AppendLine($@"}}");
                 }
 
                 string prefix = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
                 sourceProductionContext.AddSource($"{prefix}{vtableAttribute.ClassName}.WinRTVtable.g.cs", source.ToString());
             }
         }
+
+        private static void GenerateCCWForGenericInstantiation(SourceProductionContext sourceProductionContext, ImmutableArray<GenericInterface> genericInterfaces)
+        {
+            StringBuilder source = new();
+
+            if (genericInterfaces.Any())
+            {
+                source.AppendLine($$"""
+                                    using System;
+                                    using System.Runtime.InteropServices;
+                                    using System.Runtime.CompilerServices;
+
+                                    namespace WinRT.GenericHelpers
+                                    {
+                                    """);
+            }
+
+            foreach (var genericInterface in genericInterfaces.ToImmutableHashSet())
+            {
+                source.AppendLine();
+                source.AppendLine("// " + genericInterface.Interface);
+                source.AppendLine(GenericVtableInitializerStrings.GetInstantiation(
+                    genericInterface.GenericDefinition,
+                    genericInterface.GenericParameters));
+            }
+
+            if (genericInterfaces.Any())
+            {
+                source.AppendLine("}");
+                sourceProductionContext.AddSource($"WinRTGenericInstantiation.g.cs", source.ToString());
+            }
+        }
     }
+
+    internal readonly record struct GenericParameter(
+        string ProjectedType,
+        string AbiType,
+        TypeKind TypeKind);
+
+    internal readonly record struct GenericInterface(
+        string Interface,
+        string GenericDefinition,
+        EquatableArray<GenericParameter> GenericParameters);
 
     internal sealed record VtableAttribute(
         string Namespace,
         bool IsGlobalNamespace,
         string ClassName,
         EquatableArray<string> Interfaces,
-        bool HasWinRTExposedBaseType);
+        bool HasWinRTExposedBaseType,
+        EquatableArray<GenericInterface> GenericInterfaces);
 }

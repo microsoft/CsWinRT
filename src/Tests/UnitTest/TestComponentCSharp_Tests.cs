@@ -703,7 +703,9 @@ namespace UnitTest
             Assert.Equal(events_received, events_expected);
         }
 
-        [WinRTExposedType(typeof(IUriHandler))]
+#if NET
+        [WinRTExposedType(typeof(ManagedUriHandlerWinRTTypeDetails))]
+#endif
         class ManagedUriHandler : IUriHandler
         {
             public Class TestObject { get; private set; }
@@ -719,6 +721,23 @@ namespace UnitTest
                 Assert.Equal(new Uri("http://github.com"), TestObject.UriProperty);
             }
         }
+
+#if NET
+        internal sealed class ManagedUriHandlerWinRTTypeDetails : IWinRTExposedTypeDetails
+        {
+            public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+            {
+                return new ComWrappers.ComInterfaceEntry[]
+                {
+                    new ComWrappers.ComInterfaceEntry
+                    {
+                        IID = typeof(IUriHandler).GUID,
+                        Vtable = ABI.TestComponentCSharp.IUriHandlerMethods.AbiToProjectionVftablePtr
+                    }
+                };
+            }
+        }
+#endif
 
         [Fact]
         public void TestDelegateUnwrapping()
