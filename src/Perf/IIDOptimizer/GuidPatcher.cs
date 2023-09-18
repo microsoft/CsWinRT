@@ -292,6 +292,7 @@ namespace GuidPatch
                             state = State.Ldtoken;
                             type = typeMaybe;
                             startIlIndex = i;
+                            numberOfInstructionsToOverwrite = 3;
                         }
                         break;
                     case State.Ldtoken:
@@ -362,12 +363,11 @@ namespace GuidPatch
                                     Debug.WriteLine($"Exception thrown during patching {body.Method.FullName}: {ex}");
                                 }
                             }
-                            else
-                            {
-                                state = State.Start;
-                                type = null;
-                                startIlIndex = -1;
-                            }
+
+                            // Reset after patching or if we realized this is not the signature to patch.
+                            state = State.Start;
+                            type = null;
+                            startIlIndex = -1;
                         }
                         break;
                     default:

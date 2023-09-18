@@ -7,9 +7,19 @@ using WinRT;
 
 namespace ABI.System.ComponentModel
 {
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class INotifyPropertyChangedMethods
+    {
+        public static IntPtr AbiToProjectionVftablePtr => INotifyPropertyChanged.Vftbl.AbiToProjectionVftablePtr;
+    }
+
     [DynamicInterfaceCastableImplementation]
     [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
-    unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
+    internal unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]

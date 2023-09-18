@@ -40,7 +40,7 @@ namespace ABI.System.Collections.Generic
         internal unsafe static delegate*<IntPtr, V> _GetValue;
 
         private static IntPtr abiToProjectionVftablePtr;
-        internal static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
+        public static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
 
         internal static bool TryInitCCWVtable(IntPtr ptr)
         {

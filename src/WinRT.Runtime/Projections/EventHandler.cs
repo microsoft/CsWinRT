@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -13,6 +12,118 @@ using WinRT.Interop;
 
 namespace ABI.System
 {
+    internal static class EventHandlerMethods<T>
+    {
+        internal unsafe volatile static delegate*<IObjectReference, object, T, void> _Invoke;
+
+        private static IntPtr abiToProjectionVftablePtr;
+        internal static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
+
+        internal static bool TryInitCCWVtable(IntPtr ptr)
+        {
+            return global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionVftablePtr, ptr, IntPtr.Zero) == IntPtr.Zero;
+        }
+    }
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class EventHandlerMethods<T, TAbi> where TAbi : unmanaged
+    {
+        public unsafe static bool InitRcwHelper(delegate*<IObjectReference, object, T, void> invoke)
+        {
+            if (EventHandlerMethods<T>._Invoke == null)
+            {
+                EventHandlerMethods<T>._Invoke = invoke;
+            }
+            return true;
+        }
+
+        public static unsafe bool InitCcw(
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, TAbi, int> invoke)
+        {
+            if (EventHandlerMethods<T>.AbiToProjectionVftablePtr != default)
+            {
+                return false;
+            }
+
+#if NET
+            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IUnknownVftbl) + sizeof(IntPtr)));
+#else
+            var abiToProjectionVftablePtr = Marshal.AllocCoTaskMem((sizeof(IUnknownVftbl) + sizeof(IntPtr)));
+#endif
+            *(IUnknownVftbl*)abiToProjectionVftablePtr = IUnknownVftbl.AbiToProjectionVftbl;
+            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, TAbi, int>*)abiToProjectionVftablePtr)[3] = invoke;
+
+            if (!EventHandlerMethods<T>.TryInitCCWVtable(abiToProjectionVftablePtr))
+            {
+#if NET
+                NativeMemory.Free((void*)abiToProjectionVftablePtr);
+#else
+                Marshal.FreeCoTaskMem(abiToProjectionVftablePtr);
+#endif
+                return false;
+            }
+
+            return true;
+        }
+
+        private static global::System.Delegate DelegateCache;
+
+        internal static unsafe void InitFallbackCCWVtable()
+        {
+            global::System.Type abi_invoke_type = Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(IntPtr), typeof(TAbi), typeof(int) });
+
+            DelegateCache = global::System.Delegate.CreateDelegate(abi_invoke_type, typeof(EventHandlerMethods<T, TAbi>).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.NonPublic | BindingFlags.Static));
+
+#if NET
+            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IUnknownVftbl) + sizeof(IntPtr)));
+#else
+            var abiToProjectionVftablePtr = Marshal.AllocCoTaskMem((sizeof(IUnknownVftbl) + sizeof(IntPtr)));
+#endif
+            *(IUnknownVftbl*)abiToProjectionVftablePtr = IUnknownVftbl.AbiToProjectionVftbl;
+            ((IntPtr*)abiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(DelegateCache);
+
+            if (!EventHandlerMethods<T>.TryInitCCWVtable(abiToProjectionVftablePtr))
+            {
+#if NET
+                NativeMemory.Free((void*)abiToProjectionVftablePtr);
+#else
+                Marshal.FreeCoTaskMem(abiToProjectionVftablePtr);
+#endif
+            }
+        }
+
+        public static void Abi_Invoke(IntPtr thisPtr, object sender, T args)
+        {
+#if NET
+            var invoke = ComWrappersSupport.FindObject<global::System.EventHandler<T>>(thisPtr);
+            invoke.Invoke(sender, args);
+#else
+            global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.EventHandler<T> invoke) =>
+            {
+                invoke.Invoke(sender, args);
+            });
+#endif
+        }
+
+        private static unsafe int Do_Abi_Invoke(void* thisPtr, IntPtr sender, TAbi args)
+        {
+            try
+            {
+                Abi_Invoke(new IntPtr(thisPtr), MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+    }
+
     [Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"), EditorBrowsable(EditorBrowsableState.Never)]
 #if EMBED
     internal
@@ -22,23 +133,30 @@ namespace ABI.System
     static class EventHandler<T>
     {
         public static Guid PIID = GuidGenerator.CreateIID(typeof(global::System.EventHandler<T>));
-        private static readonly global::System.Type Abi_Invoke_Type = Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int) });
 
-        private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;
+        private static global::System.Type _abi_invoke_type;
+        private static global::System.Type Abi_Invoke_Type => _abi_invoke_type ?? MakeAbiInvokeType();
+
+        private static global::System.Type MakeAbiInvokeType()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _abi_invoke_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int) }), null);
+            return _abi_invoke_type;
+        }
+
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
         static EventHandler()
         {
-            AbiInvokeDelegate = global::System.Delegate.CreateDelegate(Abi_Invoke_Type, typeof(EventHandler<T>).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(new global::System.Type[] { Marshaler<T>.AbiType })
-            );
-            AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
+            if (EventHandlerMethods<T>.AbiToProjectionVftablePtr == default)
             {
-                IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)
-            };
-            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler<T>), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
-            Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
-            AbiToProjectionVftablePtr = nativeVftbl;
+                // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                var initFallbackCCWVtable = (Action)typeof(EventHandlerMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                    GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                    CreateDelegate(typeof(Action));
+                initFallbackCCWVtable();
+            }
+
+            AbiToProjectionVftablePtr = EventHandlerMethods<T>.AbiToProjectionVftablePtr;
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
@@ -96,25 +214,37 @@ namespace ABI.System
             ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 #endif
 
-            public void Invoke(object sender, T args)
+            public unsafe void Invoke(object sender, T args)
             {
-                IntPtr ThisPtr = _nativeDelegate.ThisPtr;
-                var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, Abi_Invoke_Type);
-                ObjectReferenceValue __sender = default;
-                object __args = default;
-                var __params = new object[] { ThisPtr, null, null };
-                try
+#if NET
+                bool useDynamicInvoke = EventHandlerMethods<T>._Invoke == null && RuntimeFeature.IsDynamicCodeCompiled;
+#else
+                bool useDynamicInvoke = EventHandlerMethods<T>._Invoke == null;
+#endif
+                if (!useDynamicInvoke)
                 {
-                    __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
-                    __params[1] = MarshalInspectable<object>.GetAbi(__sender);
-                    __args = Marshaler<T>.CreateMarshaler2(args);
-                    __params[2] = Marshaler<T>.GetAbi(__args);
-                    abiInvoke.DynamicInvokeAbi(__params);
+                    EventHandlerMethods<T>._Invoke(_nativeDelegate, sender, args);
                 }
-                finally
+                else
                 {
-                    MarshalInspectable<object>.DisposeMarshaler(__sender);
-                    Marshaler<T>.DisposeMarshaler(__args);
+                    IntPtr ThisPtr = _nativeDelegate.ThisPtr;
+                    var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, Abi_Invoke_Type);
+                    ObjectReferenceValue __sender = default;
+                    object __args = default;
+                    var __params = new object[] { ThisPtr, null, null };
+                    try
+                    {
+                        __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
+                        __params[1] = MarshalInspectable<object>.GetAbi(__sender);
+                        __args = Marshaler<T>.CreateMarshaler2(args);
+                        __params[2] = Marshaler<T>.GetAbi(__args);
+                        abiInvoke.DynamicInvokeAbi(__params);
+                    }
+                    finally
+                    {
+                        MarshalInspectable<object>.DisposeMarshaler(__sender);
+                        Marshaler<T>.DisposeMarshaler(__args);
+                    }
                 }
             }
         }
@@ -125,28 +255,6 @@ namespace ABI.System
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.EventHandler<T>>.DisposeMarshaler(value);
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.EventHandler<T>>.DisposeAbi(abi);
-
-        private static unsafe int Do_Abi_Invoke<TAbi>(void* thisPtr, IntPtr sender, TAbi args)
-        {
-            try
-            {
-#if NET
-                var invoke = ComWrappersSupport.FindObject<global::System.EventHandler<T>>(new IntPtr(thisPtr));
-                invoke.Invoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
-#else
-                global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(new IntPtr(thisPtr), (global::System.EventHandler<T> invoke) =>
-                {
-                    invoke.Invoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
-                });
-#endif
-            }
-            catch (global::System.Exception __exception__)
-            {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-            }
-            return 0;
-        }
     }
 
     [Guid("c50898f6-c536-5f47-8583-8b2c2438a13b")]
@@ -296,6 +404,30 @@ namespace ABI.System
             }
             return 0;
         }
+
+#if NET
+        internal static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            return new ComWrappers.ComInterfaceEntry[]
+            {
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = IID,
+                    Vtable = AbiToProjectionVftablePtr
+                },
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
+                    Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
+                },
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = Nullable_EventHandler.IID,
+                    Vtable = Nullable_EventHandler.AbiToProjectionVftablePtr
+                }
+            };
+        }
+#endif
     }
 
     internal sealed unsafe class EventHandlerEventSource : EventSource<global::System.EventHandler>

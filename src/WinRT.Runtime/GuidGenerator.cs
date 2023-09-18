@@ -166,20 +166,28 @@ namespace WinRT
             {
                 return new Guid(sig);
             }
+            else
+            {
+                return CreateIIDForGenericType(sig);
+            }
+        }
+
+        internal static Guid CreateIIDForGenericType(string signature)
+        {
 #if !NET
-            var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sig)).ToArray();
+            var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(signature)).ToArray();
 
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {
                 return encode_guid(sha.ComputeHash(data));
             }
 #else
-            var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(sig.Length);
+            var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(signature.Length);
 
             var data = new byte[16 /* Number of bytes in a GUID */ + maxBytes];
             Span<byte> dataSpan = data;
             wrt_pinterface_namespace.TryWriteBytes(dataSpan);
-            var numBytes = UTF8Encoding.UTF8.GetBytes(sig, dataSpan[16..]);
+            var numBytes = UTF8Encoding.UTF8.GetBytes(signature, dataSpan[16..]);
             data = data[..(16 + numBytes)];
 
             return encode_guid(SHA1.HashData(data));

@@ -366,7 +366,7 @@ namespace ABI.System.Collections.Generic
         }
 
         private static IntPtr abiToProjectionVftablePtr;
-        internal static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
+        public static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
 
         internal static bool TryInitCCWVtable(IntPtr ptr)
         {
@@ -385,11 +385,17 @@ namespace ABI.System.Collections.Generic
             return IReadOnlyDictionary<K, V>.FindAdapter(thisPtr).HasKey(key);
         }
 
-        // TODO: determine whether to make Windows.Foundation.Collections.IMapView public?
-        // public static void Abi_Split_3(IntPtr thisPtr, out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
-        // {
-        //    IReadOnlyDictionary<K, V>.FindAdapter(thisPtr).Split(out first, out second);
-        // }
+        // Modified signature due to Windows.Foundation.Collections.IMapView is not public
+        public static void Abi_Split_3(IntPtr thisPtr, out IntPtr first, out IntPtr second)
+        {
+            global::Windows.Foundation.Collections.IMapView<K, V> __first;
+            global::Windows.Foundation.Collections.IMapView<K, V> __second;
+
+            IReadOnlyDictionary<K, V>.FindAdapter(thisPtr).Split(out __first, out __second);
+
+            first = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromManaged(__first);
+            second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromManaged(__second);
+        }
 
         private static unsafe int Do_Abi_get_Size_1(IntPtr thisPtr, uint* __return_value__)
         {

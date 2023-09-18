@@ -1,4 +1,8 @@
 Compat issues with assembly WinRT.Runtime:
+TypesMustExist : Type 'ABI.System.EventHandlerMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.IDisposableMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.IEnumerableMethods' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IDictionaryMethods<K, V>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_Clear_6(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Collections.Generic.IReadOnlyDictionary<K, V> ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_GetView_3(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_get_Size_1(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
@@ -7,10 +11,12 @@ MembersMustExist : Member 'public System.Boolean ABI.System.Collections.Generic.
 MembersMustExist : Member 'public V ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_Lookup_0(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_Remove_5(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IDictionaryMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IEnumerableMethods<T>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Collections.Generic.IEnumerator<T> ABI.System.Collections.Generic.IEnumerableMethods<T>.Abi_First_0(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumerableMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumeratorMethods<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumeratorMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IListMethods<T>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_Append_7(System.IntPtr, T)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_Clear_9(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public T ABI.System.Collections.Generic.IListMethods<T>.Abi_GetAt_0(System.IntPtr, System.UInt32)' does not exist in the reference but it does exist in the implementation.
@@ -24,9 +30,12 @@ MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMetho
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_ReplaceAll_11(System.IntPtr, T[])' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_SetAt_4(System.IntPtr, System.UInt32, T)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IListMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Boolean ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_HasKey_2(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public V ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_Lookup_0(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_Split_3(System.IntPtr, System.IntPtr, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IReadOnlyListMethods<T>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public T ABI.System.Collections.Generic.IReadOnlyListMethods<T>.Abi_GetAt_0(System.IntPtr, System.UInt32)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IReadOnlyListMethods<T>.Abi_GetMany_3(System.IntPtr, System.UInt32, T[])' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IReadOnlyListMethods<T>.Abi_get_Size_1(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
@@ -39,8 +48,13 @@ MembersMustExist : Member 'public ABI.System.Collections.Generic.KeyValuePair<K,
 MembersMustExist : Member 'public WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.System.Collections.Generic.KeyValuePair<K, V>._FromAbi(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, V>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Specialized.INotifyCollectionChangedMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.ComponentModel.INotifyPropertyChangedMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Windows.Input.ICommandMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.DelegateTypeDetails<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.IWinRTExposedTypeDetails' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.StructTypeDetails<T, TAbi>' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(System.String, System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 44
+Total Issues: 58
