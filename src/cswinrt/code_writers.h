@@ -1867,7 +1867,7 @@ internal sealed class _%
 private IObjectReference _obj;
 public _%()
 {
-_obj = %(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
+_obj = %(%.IID);
 }
 
 %
@@ -1877,8 +1877,7 @@ internal static % Instance => (%)_instance;
                 cache_type_name,
                 cache_type_name,
                 factoryAs,
-                class_type.TypeNamespace(),
-                cache_type_name,
+                bind<write_type_name>(class_type, typedef_name_type::StaticAbiClass, true),
                 instance,
                 cache_type_name,
                 cache_type_name);
@@ -2051,9 +2050,9 @@ private IObjectReference Make__%()
                         else if (distance(ifaceType.GenericParam()) == 0)
                         {
 
-                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);)",
+                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(global::System.Runtime.InteropServices.MemoryMarshal.Read<Guid>(%.IID)), null);)",
                                 objrefname,
-                                bind<write_type_name>(semantics, typedef_name_type::Projected, false)
+                                bind<write_type_name>(semantics, typedef_name_type::StaticAbiClass, true)
                             );
                         }
                         else
@@ -2092,7 +2091,7 @@ private IObjectReference % => __% ?? Make__%();
 private static volatile IObjectReference __%;
 private static IObjectReference Make__%()
 {
-    global::System.Threading.Interlocked.CompareExchange(ref __%, %As(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);
+    global::System.Threading.Interlocked.CompareExchange(ref __%, %As(%.IID), null);
     return __%;
 }
 private static IObjectReference % => __% ?? Make__%();
@@ -2102,7 +2101,7 @@ private static IObjectReference % => __% ?? Make__%();
                     objrefname,
                     objrefname,
                     target,
-                    bind<write_type_name>(factory.type, typedef_name_type::Projected, false),
+                    bind<write_type_name>(factory.type, typedef_name_type::StaticAbiClass, true),
                     objrefname,
                     objrefname,
                     objrefname,
@@ -4039,7 +4038,7 @@ private IObjectReference _obj;
 private IntPtr ThisPtr => _obj.ThisPtr;
 public _%()
 {
-_obj = ActivationFactory<%>.As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
+_obj = ActivationFactory<%>.As(%.IID);
 }
 
 private static _% _instance = new _%();
@@ -4050,8 +4049,7 @@ internal static _% Instance => _instance;
                 cache_type_name,
                 cache_type_name,
                 class_type.TypeName(),
-                class_type.TypeNamespace(),
-                cache_type_name,
+                bind<write_type_name>(factory_type, typedef_name_type::StaticAbiClass, true),
                 cache_type_name,
                 cache_type_name,
                 cache_type_name,
@@ -4623,6 +4621,39 @@ return eventSource.EventActions;
             get<uint32_t>(get_arg(0)),
             get<uint16_t>(get_arg(1)),
             get<uint16_t>(get_arg(2)),
+            get<uint8_t>(get_arg(3)),
+            get<uint8_t>(get_arg(4)),
+            get<uint8_t>(get_arg(5)),
+            get<uint8_t>(get_arg(6)),
+            get<uint8_t>(get_arg(7)),
+            get<uint8_t>(get_arg(8)),
+            get<uint8_t>(get_arg(9)),
+            get<uint8_t>(get_arg(10)));
+    }
+
+    void write_guid_bytes(writer& w, TypeDef const& type)
+    {
+        auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
+        if (!attribute)
+        {
+            throw_invalid("'Windows.Foundation.Metadata.GuidAttribute' attribute for type '", type.TypeNamespace(), ".", type.TypeName(), "' not found");
+        }
+
+        auto args = attribute.Value().FixedArgs();
+
+        using std::get;
+
+        auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
+
+        w.write_printf(R"(0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X)",
+            (get<uint32_t>(get_arg(0)) >> 0) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 8) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 16) & 0xFF,
+            (get<uint32_t>(get_arg(0)) >> 24) & 0xFF,
+            (get<uint16_t>(get_arg(1)) >> 0) & 0xFF,
+            (get<uint16_t>(get_arg(1)) >> 8) & 0xFF,
+            (get<uint16_t>(get_arg(2)) >> 0) & 0xFF,
+            (get<uint16_t>(get_arg(2)) >> 8) & 0xFF,
             get<uint8_t>(get_arg(3)),
             get<uint8_t>(get_arg(4)),
             get<uint8_t>(get_arg(5)),
@@ -5964,25 +5995,28 @@ public static Guid PIID = Vftbl.PIID;
 
         w.write(R"(% static class %
 {
+public static global::System.ReadOnlySpan<byte> IID => new byte[] { % };
+
 %
 }
 )", 
-        (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
-        bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), 
-        [&](writer& w) {
-            if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
-                write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
-                return;
-            }
-            auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
-            write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
-            abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
-            for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
-            {
-                write_static_abi_class_members(w, other_iface, abi_methods_start_index);
-                abi_methods_start_index += distance(other_iface.MethodList());
-            }
-        });
+            (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
+            bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
+            bind<write_guid_bytes>(iface),
+            [&](writer& w) {
+                if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
+                    write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
+                    return;
+                }
+                auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
+                write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
+                abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
+                for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
+                {
+                    write_static_abi_class_members(w, other_iface, abi_methods_start_index);
+                    abi_methods_start_index += distance(other_iface.MethodList());
+                }
+            });
     }
 
     bool write_abi_interface(writer& w, TypeDef const& type)
@@ -6161,8 +6195,8 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
                 if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
                 {
                     s();
-                    w.write("GuidGenerator.GetIID(typeof(%)) == iid",
-                        bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::ABI, false));
+                    w.write("%.IID == iid",
+                        bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::StaticAbiClass, true));
                 }
             }, type.InterfaceImpl()),
             bind([&](writer& w)
