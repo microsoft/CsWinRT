@@ -6195,8 +6195,11 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
                 if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
                 {
                     s();
-                    w.write("%.IID == iid",
-                        bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::StaticAbiClass, true));
+                    settings.netstandard_compat ?
+                        w.write("GuidGenerator.GetIID(typeof(%)) == iid",
+                            bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::ABI, false)) :
+                        w.write("global::System.Runtime.InteropServices.MemoryMarshal.Read<Guid>(%.IID) == iid",
+                            bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::StaticAbiClass, true));
                 }
             }, type.InterfaceImpl()),
             bind([&](writer& w)
