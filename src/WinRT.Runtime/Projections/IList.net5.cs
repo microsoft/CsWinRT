@@ -160,7 +160,7 @@ namespace ABI.System.Collections.Generic
         {
             // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
             // and due to that the function pointers haven't been initialized.
-            if (IVectorMethods<T>._GetAt == null)
+            if (RuntimeFeature.IsDynamicCodeCompiled && IVectorMethods<T>._GetAt == null)
             {
                 var ensureInitializedFallback = (Func<bool>)typeof(IListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
                     GetMethod("EnsureRcwHelperInitialized", BindingFlags.Public | BindingFlags.Static).
@@ -347,7 +347,7 @@ namespace ABI.System.Collections.Generic
         }
 
         private static IntPtr abiToProjectionVftablePtr;
-        internal static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
+        public static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
 
         internal static bool TryInitCCWVtable(IntPtr ptr)
         {

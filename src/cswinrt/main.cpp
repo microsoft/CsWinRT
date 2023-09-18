@@ -279,9 +279,11 @@ Where <spec> is one or more of:
                                     {
                                     case category::class_type:
                                         write_abi_class(w, type);
+                                        write_winrt_exposed_type_class(w, type);
                                         break;
                                     case category::delegate_type:
                                         write_abi_delegate(w, type);
+                                        write_winrt_exposed_type_class(w, type);
                                         break;
                                     case category::interface_type:
                                         if (settings.netstandard_compat)

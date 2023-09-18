@@ -8,6 +8,16 @@ using WinRT;
 
 namespace ABI.System.Windows.Input
 {
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class ICommandMethods
+    {
+        public static IntPtr AbiToProjectionVftablePtr => ICommand.Vftbl.AbiToProjectionVftablePtr;
+    }
+
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
     [DynamicInterfaceCastableImplementation]

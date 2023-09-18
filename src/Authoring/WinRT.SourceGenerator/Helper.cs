@@ -1,9 +1,13 @@
-﻿using Microsoft.CodeAnalysis;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Generator
 {
@@ -178,6 +182,264 @@ namespace Generator
             return isProjectedType;
         }
 
+        private static string GetAbiTypeForFundamentalType(ISymbol type)
+        {
+            if (type is INamedTypeSymbol namedTypeSymbol)
+            {
+                switch (namedTypeSymbol.SpecialType)
+                {
+                    case SpecialType.System_Boolean:
+                        return "byte";
+                    case SpecialType.System_String:
+                        return "IntPtr";
+                    case SpecialType.System_Char:
+                        return "ushort";
+                    case SpecialType.System_Object:
+                        return "IntPtr";
+                    case SpecialType.System_Single:
+                    case SpecialType.System_Double:
+                    case SpecialType.System_UInt16:
+                    case SpecialType.System_UInt32:
+                    case SpecialType.System_UInt64:
+                    case SpecialType.System_Int16:
+                    case SpecialType.System_Int32:
+                    case SpecialType.System_Int64:
+                    case SpecialType.System_Byte:
+                        return type.ToDisplayString();
+                }
+            }
+
+            return type.ToDisplayString();
+        }
+
+        public static string GetAbiType(ITypeSymbol type)
+        {
+            if (IsFundamentalType(type))
+            {
+                return GetAbiTypeForFundamentalType(type);
+            }
+
+            if (type.ToDisplayString() == "System.Type")
+            {
+                return "ABI.System.Type";
+            }
+
+            if (type.IsValueType)
+            {
+                string customTypeMapKey = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
+                if (MappedCSharpTypes.ContainsKey(customTypeMapKey))
+                {
+                    string prefix = MappedCSharpTypes[customTypeMapKey].IsBlittable() ? "" : "ABI.";
+                    return prefix + type.ToDisplayString();
+                }
+
+                var winrtHelperAttribute = type.GetAttributes().
+                    Where(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeHelperTypeAttribute") == 0).
+                    FirstOrDefault();
+                if (winrtHelperAttribute != null && 
+                    winrtHelperAttribute.ConstructorArguments.Any())
+                {
+                    return winrtHelperAttribute.ConstructorArguments[0].Value.ToString();
+                }
+                else
+                {
+                    return type.ToDisplayString();
+                }
+            }
+
+            return "IntPtr";
+        }
+
+        public static string GetMarshalerClass(string type, string abiType, TypeKind kind, bool isArray)
+        {
+            if (type == "System.String")
+            {
+                return "MarshalString";
+            }
+            else if (type == "System.Type")
+            {
+                if (isArray)
+                {
+                    return "MarshalNonBlittable<global::System.Type>";
+                }
+                else
+                {
+                    return "global::ABI.System.Type";
+                }
+            }
+            else if (type == "System.Object")
+            {
+                return "MarshalInspectable<object>";
+            }
+            else if (type.StartsWith("System.Collections.Generic.KeyValuePair<"))
+            {
+                return $$"""MarshalInterface<{{type}}>""";
+            }
+            else if (kind == TypeKind.Enum)
+            {
+                if (isArray)
+                {
+                    return $$"""MarshalBlittable<{{type}}>""";
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            else if (kind == TypeKind.Struct)
+            {
+                if (type == abiType)
+                {
+                    if (isArray)
+                    {
+                        return $$"""MarshalBlittable<{{type}}>""";
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+                else
+                {
+                    return $$"""MarshalNonBlittable<{{type}}>""";
+                }
+            }
+            else if (kind == TypeKind.Interface)
+            {
+                return $$"""MarshalInterface<{{type}}>""";
+            }
+            else if (kind == TypeKind.Class || kind == TypeKind.Delegate)
+            {
+                return "global::ABI." + type;
+            }
+
+            throw new ArgumentException();
+        }
+
+        public static string GetFromAbiMarshaler(string type, string abiType, TypeKind kind)
+        {
+            string marshalerType = GetMarshalerClass(type, abiType, kind, false);
+            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType))
+            {
+                return "";
+            }
+            else if (type == "bool")
+            {
+                return "(bool)";
+            }
+            else if (type == "char")
+            {
+                return "(char)";
+            }
+            else
+            {
+                return marshalerType + ".FromAbi";
+            }
+        }
+
+        public static string GetFromManagedMarshaler(string type, string abiType, TypeKind kind)
+        {
+            string marshalerType = GetMarshalerClass(type, abiType, kind, false);
+            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType))
+            {
+                return "";
+            }
+            else if (type == "bool")
+            {
+                return "(byte)";
+            }
+            else if (type == "char")
+            {
+                return "(ushort)";
+            }
+            else
+            {
+                return marshalerType + ".FromManaged";
+            }
+        }
+
+        public static string GetCopyManagedArrayMarshaler(string type, string abiType, TypeKind kind)
+        {
+            if (kind == TypeKind.Class || kind == TypeKind.Delegate)
+            {
+                // TODO: Classes and delegates are missing CopyManagedArray.
+                return $$"""Marshaler<{{type}}>""";
+            }
+            else
+            {
+                return GetMarshalerClass(type, abiType, kind, true);
+            }
+        }
+
+        public static string GetAbiMarshaler(string type, string abiType, TypeKind kind, string marshalerFunction, string arg)
+        {
+            string marshalerType = GetMarshalerClass(type, abiType, kind, false);
+            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType))
+            {
+                return "";
+            }
+            else if (type == "bool")
+            {
+                return "(byte)";
+            }
+            else if (type == "char")
+            {
+                return "(ushort)";
+            }
+            else
+            {
+                return $$"""{{marshalerType}}.{{marshalerFunction}}({{arg}})""";
+            }
+        }
+
+        public static string GetAbiMarshalerType(string type, string abiType, TypeKind kind, bool isArray)
+        {
+            if (type == "System.String")
+            {
+                return isArray ? "MarshalString.MarshalerArray" : "MarshalString";
+            }
+            else if (type == "System.Type")
+            {
+                if (isArray)
+                {
+                    return "MarshalNonBlittable<global::System.Type>.MarshalerArray";
+                }
+                else
+                {
+                    return "global::ABI.System.Type.Marshaler";
+                }
+            }
+            else if (type.StartsWith("System.Collections.Generic.KeyValuePair<"))
+            {
+                return isArray ? $$"""MarshalInterfaceHelper<{{type}}>.MarshalerArray""" : "ObjectReferenceValue";
+            }
+            else if (kind == TypeKind.Enum)
+            {
+                return isArray ? $$"""MarshalBlittable<{{type}}>.MarshalerArray""" : type;
+            }
+            else if (kind == TypeKind.Struct)
+            {
+                if (type == abiType)
+                {
+                    return isArray ? $$"""MarshalBlittable<{{type}}>.MarshalerArray""" : type;
+                }
+                else
+                {
+                    return isArray ? $$"""MarshalNonBlittable<{{type}}>.MarshalerArray""" : "ABI." + type;
+                }
+            }
+            else if (type == "System.Object" || kind == TypeKind.Class || kind == TypeKind.Interface || kind == TypeKind.Delegate)
+            {
+                return isArray ? $$"""MarshalInterfaceHelper<{{type}}>.MarshalerArray""" : "ObjectReferenceValue";
+            }
+
+            throw new ArgumentException();
+        }
+        public static string EscapeTypeNameForIdentifier(string typeName)
+        {
+            return Regex.Replace(typeName, """[(\ |:<>,\.)]""", "_");
+        }
+
         public readonly struct MappedType
         {
             private readonly string @namespace;
@@ -185,15 +447,17 @@ namespace Generator
             private readonly string assembly;
             private readonly bool isSystemType;
             private readonly bool isValueType;
+            private readonly bool isBlittable;
             private readonly Func<ISymbol, (string, string, string, bool, bool)> multipleMappingFunc;
 
-            public MappedType(string @namespace, string name, string assembly, bool isValueType = false)
+            public MappedType(string @namespace, string name, string assembly, bool isValueType = false, bool isBlittable = false)
             {
                 this.@namespace = @namespace;
                 this.name = name;
                 this.assembly = assembly;
                 isSystemType = string.CompareOrdinal(this.assembly, "mscorlib") == 0;
                 this.isValueType = isValueType;
+                this.isBlittable = isBlittable;
                 multipleMappingFunc = null;
             }
 
@@ -212,6 +476,11 @@ namespace Generator
                 return multipleMappingFunc != null ?
                     multipleMappingFunc(containingType) : (@namespace, name, assembly, isSystemType, isValueType);
             }
+
+            public bool IsBlittable()
+            {
+                return isValueType && isBlittable;
+            }
         }
 
         // Based on whether System.Type is used in an attribute declaration or elsewhere, we need to choose the correct custom mapping
@@ -229,15 +498,15 @@ namespace Generator
         // This should be in sync with the reverse mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
         public static readonly Dictionary<string, MappedType> MappedCSharpTypes = new(StringComparer.Ordinal)
         {
-            { "System.DateTimeOffset", new MappedType("Windows.Foundation", "DateTime", "Windows.Foundation.FoundationContract", true) },
-            { "System.Exception", new MappedType("Windows.Foundation", "HResult", "Windows.Foundation.FoundationContract", true) },
-            { "System.EventHandler`1", new MappedType("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract", true) },
+            { "System.DateTimeOffset", new MappedType("Windows.Foundation", "DateTime", "Windows.Foundation.FoundationContract", true, false) },
+            { "System.Exception", new MappedType("Windows.Foundation", "HResult", "Windows.Foundation.FoundationContract", true, false) },
+            { "System.EventHandler`1", new MappedType("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract") },
             { "System.FlagsAttribute", new MappedType("System", "FlagsAttribute", "mscorlib" ) },
             { "System.IDisposable", new MappedType("Windows.Foundation", "IClosable", "Windows.Foundation.FoundationContract") },
             { "System.IServiceProvider", new MappedType("Microsoft.UI.Xaml", "IXamlServiceProvider", "Microsoft.UI") },
             { "System.Nullable`1", new MappedType("Windows.Foundation", "IReference`1", "Windows.Foundation.FoundationContract" ) },
             { "System.Object", new MappedType("System", "Object", "mscorlib" ) },
-            { "System.TimeSpan", new MappedType("Windows.Foundation", "TimeSpan", "Windows.Foundation.FoundationContract", true) },
+            { "System.TimeSpan", new MappedType("Windows.Foundation", "TimeSpan", "Windows.Foundation.FoundationContract", true, false) },
             { "System.Uri", new MappedType("Windows.Foundation", "Uri", "Windows.Foundation.FoundationContract") },
             { "System.ComponentModel.DataErrorsChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "Microsoft.UI") },
             { "System.ComponentModel.INotifyDataErrorInfo", new MappedType("Microsoft.UI.Xaml.Data", "INotifyDataErrorInfo", "Microsoft.UI") },
@@ -251,16 +520,16 @@ namespace Generator
             { "System.Collections.Specialized.NotifyCollectionChangedAction", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedAction", "Microsoft.UI") },
             { "System.Collections.Specialized.NotifyCollectionChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "Microsoft.UI") },
             { "System.Collections.Specialized.NotifyCollectionChangedEventHandler", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler", "Microsoft.UI") },
-            { "WinRT.EventRegistrationToken", new MappedType("Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract", true) },
-            { "System.AttributeTargets", new MappedType("Windows.Foundation.Metadata", "AttributeTargets", "Windows.Foundation.FoundationContract", true) },
+            { "WinRT.EventRegistrationToken", new MappedType("Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract", true, true) },
+            { "System.AttributeTargets", new MappedType("Windows.Foundation.Metadata", "AttributeTargets", "Windows.Foundation.FoundationContract", true, true) },
             { "System.AttributeUsageAttribute", new MappedType("Windows.Foundation.Metadata", "AttributeUsageAttribute", "Windows.Foundation.FoundationContract") },
-            { "System.Numerics.Matrix3x2", new MappedType("Windows.Foundation.Numerics", "Matrix3x2", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Matrix4x4", new MappedType("Windows.Foundation.Numerics", "Matrix4x4", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Plane", new MappedType("Windows.Foundation.Numerics", "Plane", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Quaternion", new MappedType("Windows.Foundation.Numerics", "Quaternion", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Vector2", new MappedType("Windows.Foundation.Numerics", "Vector2", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Vector3", new MappedType("Windows.Foundation.Numerics", "Vector3", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Vector4", new MappedType("Windows.Foundation.Numerics", "Vector4", "Windows.Foundation.FoundationContract", true) },
+            { "System.Numerics.Matrix3x2", new MappedType("Windows.Foundation.Numerics", "Matrix3x2", "Windows.Foundation.FoundationContract", true, true) },
+            { "System.Numerics.Matrix4x4", new MappedType("Windows.Foundation.Numerics", "Matrix4x4", "Windows.Foundation.FoundationContract", true, true) },
+            { "System.Numerics.Plane", new MappedType("Windows.Foundation.Numerics", "Plane", "Windows.Foundation.FoundationContract", true, true) },
+            { "System.Numerics.Quaternion", new MappedType("Windows.Foundation.Numerics", "Quaternion", "Windows.Foundation.FoundationContract", true, true) },
+            { "System.Numerics.Vector2", new MappedType("Windows.Foundation.Numerics", "Vector2", "Windows.Foundation.FoundationContract", true, true) },
+            { "System.Numerics.Vector3", new MappedType("Windows.Foundation.Numerics", "Vector3", "Windows.Foundation.FoundationContract", true, true) },
+            { "System.Numerics.Vector4", new MappedType("Windows.Foundation.Numerics", "Vector4", "Windows.Foundation.FoundationContract", true, true) },
             { "System.Type", new MappedType(GetSystemTypeCustomMapping) },
             { "System.Collections.Generic.IEnumerable`1", new MappedType("Windows.Foundation.Collections", "IIterable`1", "Windows.Foundation.FoundationContract") },
             { "System.Collections.Generic.IEnumerator`1", new MappedType("Windows.Foundation.Collections", "IIterator`1", "Windows.Foundation.FoundationContract") },
@@ -269,7 +538,7 @@ namespace Generator
             { "System.Collections.Generic.IDictionary`2", new MappedType("Windows.Foundation.Collections", "IMap`2", "Windows.Foundation.FoundationContract") },
             { "System.Collections.Generic.IReadOnlyList`1", new MappedType("Windows.Foundation.Collections", "IVectorView`1", "Windows.Foundation.FoundationContract") },
             { "System.Collections.Generic.IList`1", new MappedType("Windows.Foundation.Collections", "IVector`1", "Windows.Foundation.FoundationContract") },
-            { "Windows.UI.Color", new MappedType("Windows.UI", "Color", "Windows.Foundation.UniversalApiContract", true) },
+            { "Windows.UI.Color", new MappedType("Windows.UI", "Color", "Windows.Foundation.UniversalApiContract", true, true) },
         };
     }
 }

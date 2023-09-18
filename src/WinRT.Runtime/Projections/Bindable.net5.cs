@@ -372,6 +372,16 @@ namespace ABI.System.Collections
     using global::System;
     using global::System.Runtime.CompilerServices;
 
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IEnumerableMethods
+    {
+        public static IntPtr AbiToProjectionVftablePtr => IEnumerable.AbiToProjectionVftablePtr;
+    }
+
     [DynamicInterfaceCastableImplementation]
     [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
     internal unsafe interface IEnumerable : global::System.Collections.IEnumerable, global::Microsoft.UI.Xaml.Interop.IBindableIterable

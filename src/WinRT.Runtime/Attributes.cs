@@ -4,6 +4,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace WinRT
 {
@@ -106,6 +107,8 @@ namespace WinRT
         public Type HelperType { get; }
     }
 
+#if NET
+
 #if EMBED
     internal
 #else
@@ -113,7 +116,7 @@ namespace WinRT
 #endif
     interface IWinRTExposedTypeDetails
     {
-        Type[] GetExposedInterfaces();
+        ComWrappers.ComInterfaceEntry[] GetExposedInterfaces();
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -123,20 +126,33 @@ namespace WinRT
 #else
     public
 #endif
-    class WinRTExposedTypeAttribute : Attribute, IWinRTExposedTypeDetails
+    sealed class WinRTExposedTypeAttribute : Attribute
     {
-        public WinRTExposedTypeAttribute(params Type[] winrtExposedInterfaces)
+        public WinRTExposedTypeAttribute()
         {
-            WinRTExposedInterfaces = winrtExposedInterfaces;
         }
 
-        public virtual Type[] GetExposedInterfaces()
+        public WinRTExposedTypeAttribute(
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+            Type winrtExposedTypeDetails)
         {
-            return WinRTExposedInterfaces;
+            WinRTExposedTypeDetails = winrtExposedTypeDetails;
         }
 
-        public Type[] WinRTExposedInterfaces { get; }
+        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            return WinRTExposedTypeDetails != null ? 
+                ((IWinRTExposedTypeDetails)Activator.CreateInstance(WinRTExposedTypeDetails)).GetExposedInterfaces() : 
+                Array.Empty<ComWrappers.ComInterfaceEntry>();
+        }
+
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+        internal Type WinRTExposedTypeDetails { get; }
     }
+
+#endif
 }
 
 namespace System.Runtime.InteropServices.WindowsRuntime
