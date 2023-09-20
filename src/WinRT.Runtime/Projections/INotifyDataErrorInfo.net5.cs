@@ -9,15 +9,20 @@ using WinRT;
 
 namespace ABI.System.ComponentModel
 {
-    [DynamicInterfaceCastableImplementation]
-    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
 #if EMBED
     internal
 #else
-    public 
-#endif 
-    unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
+    public
+#endif
+    static class INotifyDataErrorInfoMethods
+    {
+        public static IntPtr AbiToProjectionVftablePtr => INotifyDataErrorInfo.Vftbl.AbiToProjectionVftablePtr;
+    }
+
+    [DynamicInterfaceCastableImplementation]
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
+    internal unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
     {
         [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
         public struct Vftbl

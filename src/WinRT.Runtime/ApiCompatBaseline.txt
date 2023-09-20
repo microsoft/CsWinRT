@@ -8,4 +8,5 @@ MembersMustExist : Member 'public WinRT.ObjectReference<ABI.System.Collections.G
 MembersMustExist : Member 'public System.Delegate System.Delegate ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl.get_Key_0' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public System.Delegate System.Delegate ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl.get_Value_1' does not exist in the implementation but it does exist in the contract.
 TypesMustExist : Type 'ABI.System.Collections.Specialized.INotifyCollectionChanged' does not exist in the implementation but it does exist in the contract.
-Total Issues: 9
+TypesMustExist : Type 'ABI.System.ComponentModel.INotifyDataErrorInfo' does not exist in the implementation but it does exist in the contract.
+Total Issues: 10

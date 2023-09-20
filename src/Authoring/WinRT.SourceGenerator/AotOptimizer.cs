@@ -17,11 +17,13 @@ namespace Generator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
+            var isCsWinRTComponent = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => provider.IsCsWinRTComponent());
+
             var vtableAttributesToAdd = context.SyntaxProvider.CreateSyntaxProvider(
                 static (n, _) => NeedVtableAttribute(n),
                 static (n, _) => GetVtableAttributeToAdd(n));
 
-            context.RegisterImplementationSourceOutput(vtableAttributesToAdd, GenerateVtableAttributes);
+            context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect(), GenerateVtableAttributes);
 
             var genericInstantionsToGenerate = vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).Collect();
             context.RegisterImplementationSourceOutput(genericInstantionsToGenerate, GenerateCCWForGenericInstantiation);
@@ -55,7 +57,7 @@ namespace Generator
 
             bool hasWinRTExposedBaseType = false;
             var baseType = symbol.BaseType;
-            while (baseType != null)
+            while (baseType != null && baseType.SpecialType != SpecialType.System_Object)
             {
                 if (GeneratorHelper.IsWinRTType(baseType) ||
                     baseType.Interfaces.Any(GeneratorHelper.IsWinRTType))
@@ -187,24 +189,30 @@ namespace Generator
             return true;
         }
 
-        private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, VtableAttribute vtableAttribute)
+        private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, ImmutableArray<VtableAttribute> vtableAttributes)
         {
-            // Even if no interfaces are on the vtable, as long as the base type is a WinRT type,
-            // we want to put the attribute as the attribute is the opt-in for the source generated
-            // vtable generation.
-            if (vtableAttribute.Interfaces.Any() || vtableAttribute.HasWinRTExposedBaseType)
+            // Using ToImmutableHashSet to avoid duplicate entries from the use of partial classes by the developer
+            // to split out their implementation.  When they do that, we will get multiple entries here for that
+            // and try to generate the same attribute and file with the same data as we use the semantic model
+            // to get all the symbol data rather than the data at an instance of a partial class definition.
+            foreach (var vtableAttribute in vtableAttributes.ToImmutableHashSet())
             {
-                StringBuilder source = new();
-                source.AppendLine("using static WinRT.TypeExtensions;\n");
-                if (!vtableAttribute.IsGlobalNamespace)
+                // Even if no interfaces are on the vtable, as long as the base type is a WinRT type,
+                // we want to put the attribute as the attribute is the opt-in for the source generated
+                // vtable generation.
+                if (vtableAttribute.Interfaces.Any() || vtableAttribute.HasWinRTExposedBaseType)
                 {
-                    source.AppendLine($$"""
+                    StringBuilder source = new();
+                    source.AppendLine("using static WinRT.TypeExtensions;\n");
+                    if (!vtableAttribute.IsGlobalNamespace)
+                    {
+                        source.AppendLine($$"""
                         namespace {{vtableAttribute.Namespace}}
                         {
                         """);
-                }
+                    }
 
-                source.AppendLine($$"""
+                    source.AppendLine($$"""
                     [global::WinRT.WinRTExposedType(typeof({{vtableAttribute.ClassName}}WinRTTypeDetails))]
                     partial class {{vtableAttribute.ClassName}}
                     {
@@ -216,60 +224,61 @@ namespace Generator
                         {
                     """);
 
-                if (vtableAttribute.Interfaces.Any())
-                {
-                    foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+                    if (vtableAttribute.Interfaces.Any())
                     {
-                        source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
-                            genericInterface.GenericDefinition,
-                            genericInterface.GenericParameters));
-                    }
+                        foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+                        {
+                            source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
+                                genericInterface.GenericDefinition,
+                                genericInterface.GenericParameters));
+                        }
 
-                    source.AppendLine();
-                    source.AppendLine($$"""
+                        source.AppendLine();
+                        source.AppendLine($$"""
                                 return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]
                                 {
                         """);
 
-                    foreach (var @interface in vtableAttribute.Interfaces)
-                    {
-                        var genericStartIdx = @interface.IndexOf('<');
-                        var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
-                        if (genericStartIdx != -1)
+                        foreach (var @interface in vtableAttribute.Interfaces)
                         {
-                            interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
-                        }
-                        source.AppendLine($$"""
+                            var genericStartIdx = @interface.IndexOf('<');
+                            var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
+                            if (genericStartIdx != -1)
+                            {
+                                interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
+                            }
+                            source.AppendLine($$"""
                                                 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
                                                 {
                                                     IID = global::WinRT.GuidGenerator.GetIID(typeof(global::{{@interface}}).GetHelperType()),
                                                     Vtable = global::ABI.{{interfaceStaticsMethod}}.AbiToProjectionVftablePtr
                                                 },
                                     """);
-                    }
-                    source.AppendLine($$"""
+                        }
+                        source.AppendLine($$"""
                                 };
                                 """);
-                }
-                else
-                {
-                    source.AppendLine($$"""
+                    }
+                    else
+                    {
+                        source.AppendLine($$"""
                                         return global::System.Array.Empty<global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry>();
                                 """);
-                }
+                    }
 
-                source.AppendLine($$"""
+                    source.AppendLine($$"""
                                 }
                             }
                         """);
 
-                if (!vtableAttribute.IsGlobalNamespace)
-                {
-                    source.AppendLine($@"}}");
-                }
+                    if (!vtableAttribute.IsGlobalNamespace)
+                    {
+                        source.AppendLine($@"}}");
+                    }
 
-                string prefix = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
-                sourceProductionContext.AddSource($"{prefix}{vtableAttribute.ClassName}.WinRTVtable.g.cs", source.ToString());
+                    string prefix = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
+                    sourceProductionContext.AddSource($"{prefix}{vtableAttribute.ClassName}.WinRTVtable.g.cs", source.ToString());
+                }
             }
         }
 

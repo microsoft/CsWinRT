@@ -3247,12 +3247,16 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             }));
     }
 
-    // In the generated projections, we only write the vtable attribute for unsealed
-    // classes as they are the ones that can be extended and may have overridable interfaces
-    // which are marked internal so can not be specified by the child class in its own
-    // vtable attribute.  So for unsealed classes we include both overriable interfaces and
+    // This attribute decides the interfaces that are placed on the vtable.
+    // For consumption projections of classes, we only write the vtable attribute for unsealed
+    // classes as they are the ones that can be extended.  These classes may have overridable interfaces
+    // which are marked internal and due to that can not be specified by the child class in its own
+    // vtable attribute.  As a result, for unsealed classes, we include both overriable interfaces and
     // non-exclusive interfaces.
-    // We also write it for structs, enums, and delegates as they can be boxed and passed as an object.
+    // We also write it for structs and delegates as they can be boxed and passed as an C# object.
+    // Enums are handled separately as there are only two type of enums (int and uint).
+    // For authoring scenarios, we write the vtable attribute for all classes with all the interfaces (including
+    // the exclusive ones) as they are exposed acrossed the ABI as C# objects.
     bool should_write_winrt_exposed_type_attribute(writer& w, TypeDef const& type)
     {
         if (settings.netstandard_compat)
@@ -3262,9 +3266,10 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
         bool writeAttribute =
             get_category(type) == category::struct_type ||
-            (get_category(type) == category::delegate_type && distance(type.GenericParam()) == 0);
+            (get_category(type) == category::delegate_type && distance(type.GenericParam()) == 0) ||
+            settings.component && get_category(type) == category::class_type;
 
-        if (get_category(type) == category::class_type && !type.Flags().Sealed())
+        if (!settings.component && get_category(type) == category::class_type && !type.Flags().Sealed())
         {
             for (auto&& iface : type.InterfaceImpl())
             {
@@ -3286,7 +3291,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         return writeAttribute;
     }
 
-    void write_winrt_exposed_type_attribute(writer& w, TypeDef const& type)
+    void write_winrt_exposed_type_attribute(writer& w, TypeDef const& type, bool isFactory)
     {
         if (should_write_winrt_exposed_type_attribute(w, type))
         {
@@ -3298,50 +3303,84 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             }
             else
             {
-                w.write(R"([global::WinRT.WinRTExposedType(typeof(%WinRTTypeDetails))])", bind<write_type_name>(type, typedef_name_type::ABI, false));
+                w.write(R"([global::WinRT.WinRTExposedType(typeof(%%WinRTTypeDetails))])", 
+                    bind<write_type_name>(type, typedef_name_type::ABI, false),
+                    isFactory ? "ServerActivationFactory" : "");
             }
         }
     }
 
-    void write_winrt_exposed_type_class(writer& w, TypeDef const& type)
+    void write_winrt_exposed_type_class(writer& w, TypeDef const& type, bool isFactory)
     {
         if (should_write_winrt_exposed_type_attribute(w, type))
         {
             if (get_category(type) == category::class_type)
             {
                 w.write(R"(
-internal sealed class %WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+internal sealed class %%WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
 {
-    public global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
-    {
-        return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]
-        {
-            %
-        };
-    }
+public global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+{
+return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]
+{
+%
+};
+}
 }
 )",
                     bind<write_type_name>(type, typedef_name_type::ABI, false),
+                    isFactory ? "ServerActivationFactory" : "",
                     bind([&](writer& w)
                     {
-                        for (auto&& iface : type.InterfaceImpl())
+                        if (!isFactory)
                         {
-                            for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
+                            for (auto&& iface : type.InterfaceImpl())
                             {
-                                if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type))
+                                for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
+                                {
+                                    if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type) || settings.component)
+                                    {
+                                        w.write(R"(
+new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
+{
+IID = global::WinRT.GuidGenerator.GetIID(typeof(%).GetHelperType()),
+Vtable = %.AbiToProjectionVftablePtr
+},
+)",
+                                            bind<write_type_name>(type, typedef_name_type::CCW, false),
+                                            bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false)
+                                        );
+                                    }
+                                });
+                            }
+                        }
+                        else
+                        {
+                            w.write(R"(
+new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
+{
+IID = global::WinRT.GuidGenerator.GetIID(typeof(global::WinRT.Interop.IActivationFactory).GetHelperType()),
+Vtable = global::ABI.WinRT.Interop.IActivationFactoryMethods.AbiToProjectionVftablePtr
+},
+)");
+
+                            for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+                            {
+                                if ((factory.activatable || factory.statics) && factory.type)
                                 {
                                     w.write(R"(
 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
 {
-    IID = global::WinRT.GuidGenerator.GetIID(typeof(%).GetHelperType()),
-    Vtable = %.AbiToProjectionVftablePtr
+IID = global::WinRT.GuidGenerator.GetIID(typeof(%).GetHelperType()),
+Vtable = %.AbiToProjectionVftablePtr
 },
 )",
-                                        bind<write_type_name>(type, typedef_name_type::CCW, false),
-                                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false)
+                                        bind<write_type_name>(factory.type, typedef_name_type::CCW, false),
+                                        // These are exclusive internal interfaces, so just use the ABI class to get the ptr.
+                                        bind<write_type_name>(factory.type, typedef_name_type::ABI, false)
                                     );
                                 }
-                            });
+                            }
                         }
                     })
                 );
@@ -3351,14 +3390,14 @@ new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
                 w.write(R"(
 internal sealed class %WinRTTypeDetails : global::WinRT.DelegateTypeDetails<%>
 {
-    public override ComWrappers.ComInterfaceEntry GetDelegateInterface()
-    {
-        return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
-        {
-            IID = global::WinRT.GuidGenerator.GetIID(typeof(%)),
-            Vtable = %.AbiToProjectionVftablePtr
-        };
-    }
+public override ComWrappers.ComInterfaceEntry GetDelegateInterface()
+{
+return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
+{
+IID = global::WinRT.GuidGenerator.GetIID(typeof(%)),
+Vtable = %.AbiToProjectionVftablePtr
+};
+}
 }
 )",
                     bind<write_type_name>(type, typedef_name_type::ABI, false),
@@ -6082,8 +6121,9 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_authoring_metadata_type(writer& w, TypeDef const& type)
     {
-        w.write("%%%internal class % {}\n",
+        w.write("%%%%internal class % {}\n",
             bind<write_winrt_attribute>(type),
+            bind<write_winrt_exposed_type_attribute>(type, false),
             [&](writer& w)
             {
                 auto category = get_category(type);
@@ -6562,7 +6602,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         auto base_semantics = get_type_semantics(type.Extends());
         auto from_abi_new = !std::holds_alternative<object_type>(base_semantics) ? "new " : "";
 
-        w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+        w.write(R"(%%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 %internal %class %%
 {
 public %(% comp)
@@ -6588,6 +6628,7 @@ private readonly % _comp;
 )",
         bind<write_winrt_attribute>(type),
         bind<write_winrt_helper_type_attribute>(type),
+        bind<write_winrt_exposed_type_attribute>(type, false),
         default_interface_name,
         bind<write_type_custom_attributes>(type, false),
         bind<write_class_modifiers>(type),
@@ -6841,7 +6882,7 @@ private struct InterfaceTag<I>{};
 )",
             bind<write_winrt_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
-            bind<write_winrt_exposed_type_attribute>(type),
+            bind<write_winrt_exposed_type_attribute>(type, false),
             default_interface_name,
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
@@ -7091,7 +7132,7 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
 )",
             bind<write_winrt_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
-            bind<write_winrt_exposed_type_attribute>(type),
+            bind<write_winrt_exposed_type_attribute>(type, false),
             bind<write_type_custom_attributes>(type, false),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
@@ -7509,7 +7550,7 @@ public override int GetHashCode() => %;
             // struct
             bind<write_winrt_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
-            bind<write_winrt_exposed_type_attribute>(type),
+            bind<write_winrt_exposed_type_attribute>(type, false),
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
             name,
@@ -7880,6 +7921,7 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
 
         w.write(R"(
+%
 internal class % : %%
 {
 
@@ -7904,6 +7946,7 @@ return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
 %
 }
 )",
+bind<write_winrt_exposed_type_attribute>(type, true),
 factory_type_name,
 base_class,
 bind<write_factory_class_inheritance>(type),
@@ -8083,6 +8126,23 @@ bind<write_event_invoke_args>(invokeMethodSig));
             auto&& typeName = w.write_temp("%", bind<write_type_name>(classType, typedef_name_type::Projected, true)).substr(numChars);
             auto&& baseTypeName = w.write_temp("%", bind<write_type_name>(base_type, typedef_name_type::Projected, true)).substr(numChars);
             typeNameToBaseTypeMap[typeName] = baseTypeName;
+        }
+    }
+
+    void add_metadata_type_entry(TypeDef const& type, concurrency::concurrent_unordered_map<std::string, std::string>& authoredTypeNameToMetadataTypeNameMap)
+    {
+        if (settings.component)
+        {
+            if ((get_category(type) == category::class_type && is_static(type)) || 
+                (get_category(type) == category::interface_type && is_exclusive_to(type)))
+            {
+                return;
+            }
+
+            writer w("");
+            auto&& typeName = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, true));
+            auto&& metadataTypeName = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::CCW, true));
+            authoredTypeNameToMetadataTypeNameMap[typeName] = metadataTypeName;
         }
     }
 

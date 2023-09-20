@@ -542,9 +542,19 @@ namespace ABI.System.Collections
         public unsafe delegate int First_0(IntPtr thisPtr, IntPtr* result);
     }
 
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IListMethods
+    {
+        public static IntPtr AbiToProjectionVftablePtr => IList.AbiToProjectionVftablePtr;
+    }
+
     [DynamicInterfaceCastableImplementation]
     [Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
-    unsafe interface IList : global::System.Collections.IList, global::Microsoft.UI.Xaml.Interop.IBindableVector
+    internal unsafe interface IList : global::System.Collections.IList, global::Microsoft.UI.Xaml.Interop.IBindableVector
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList));
 
