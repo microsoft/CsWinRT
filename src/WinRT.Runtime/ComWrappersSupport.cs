@@ -31,7 +31,6 @@ namespace WinRT
     static partial class ComWrappersSupport
     {
         private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
-        private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
         private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new ConcurrentDictionary<Type, Func<IntPtr, object>>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
@@ -168,20 +167,7 @@ namespace WinRT
 
         public static void RegisterProjectionTypeBaseTypeMapping(IDictionary<string, string> typeNameToBaseTypeNameMapping) => TypeNameSupport.RegisterProjectionTypeBaseTypeMapping(typeNameToBaseTypeNameMapping);
 
-        internal static object GetRuntimeClassCCWTypeIfAny(object obj)
-        {
-            var type = obj.GetType();
-            var ccwType = type.GetRuntimeClassCCWType();
-            if (ccwType != null)
-            {
-                return CCWTable.GetValue(obj, obj => {
-                    var ccwConstructor = ccwType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { type }, null);
-                    return ccwConstructor.Invoke(new[] { obj });
-                });
-            }
-
-            return obj;
-        }
+        public static void RegisterAuthoringMetadataTypeLookup(Func<Type, Type?> authoringMetadataTypeLookup) => TypeExtensions.RegisterAuthoringMetadataTypeLookup(authoringMetadataTypeLookup);
 
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(Type type)
         {
@@ -193,6 +179,19 @@ namespace WinRT
             // Check whether the type itself has the attribute to make sure it is using the new source generator
             // and just doesn't have an updated dependent projection where the base class has it.
             var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+
+            // Handle scenario where it can be an authored type
+            // which means the attribute lives on the authoring metadata type.
+            if (winrtExposedClassAttribute == null)
+            {
+                var authoringMetadaType = type.GetRuntimeClassCCWType();
+                if (authoringMetadaType != null)
+                {
+                    winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+                    type = authoringMetadaType;
+                }
+            }
+
             if (winrtExposedClassAttribute != null)
             {
                 hasWinrtExposedClassAttribute = true;

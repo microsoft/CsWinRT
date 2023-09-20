@@ -260,7 +260,7 @@ namespace WinRT
             }
         }
 
-        private readonly static ConcurrentDictionary<Type, bool> IsTypeWindowsRuntimeTypeCache = new ConcurrentDictionary<Type, bool>();
+        private readonly static ConcurrentDictionary<Type, bool> IsTypeWindowsRuntimeTypeCache = new();
         public static bool IsTypeWindowsRuntimeType(Type type)
         {
             return IsTypeWindowsRuntimeTypeCache.GetOrAdd(type, (type) =>
@@ -276,7 +276,6 @@ namespace WinRT
 
         private static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
         {
-            type = type.GetAuthoringMetadataType() ?? type;
             if (type.IsConstructedGenericType)
             {
                 if(IsTypeWindowsRuntimeTypeNoArray(type.GetGenericTypeDefinition()))
@@ -297,7 +296,8 @@ namespace WinRT
                 || type == typeof(string)
                 || type == typeof(Guid)
                 || type == typeof(object)
-                || type.IsDefined(typeof(WindowsRuntimeTypeAttribute));
+                || type.IsDefined(typeof(WindowsRuntimeTypeAttribute))
+                || type.GetAuthoringMetadataType() != null;
         }
 
         // Use TryGetCompatibleWindowsRuntimeTypesForVariantType instead.
@@ -473,7 +473,13 @@ namespace WinRT
             return true;
         }
 
-        private readonly static ConcurrentDictionary<Type, Type> DefaultInterfaceTypeCache = new ConcurrentDictionary<Type, Type>();
+        private readonly static ConcurrentDictionary<Type, Type> DefaultInterfaceTypeCache = new();
+
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070",
+            Justification = "This is a fallback for compat purposes with existing projections.  " +
+            "Applications which make use of trimming will make use of updated projections that won't hit this code path.")]
+#endif
         internal static bool TryGetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass, out Type defaultInterface)
         {
             defaultInterface = DefaultInterfaceTypeCache.GetOrAdd(runtimeClass, (runtimeClass) =>
@@ -485,13 +491,17 @@ namespace WinRT
                     return null;
                 }
 
-                if (attr.DefaultInterfaceProperty != null)
+                if (attr.DefaultInterface != null)
+                {
+                    return attr.DefaultInterface;
+                }
+                else if (attr.DefaultInterfaceProperty != null)
                 {
                     return runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
                 }
                 else
                 {
-                    return attr.DefaultInterface;
+                    return null;
                 }
             });
             return defaultInterface != null;
