@@ -24,6 +24,16 @@ namespace WinRT.Interop
 
 namespace ABI.WinRT.Interop
 {
+#if EMBED 
+    internal
+#else
+    public
+#endif
+    static class IActivationFactoryMethods
+    {
+        public static IntPtr AbiToProjectionVftablePtr => IActivationFactory.Vftbl.AbiToProjectionVftablePtr;
+    }
+
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("00000035-0000-0000-C000-000000000046")]
 #if EMBED 

@@ -2,6 +2,7 @@ Compat issues with assembly WinRT.Runtime:
 TypesMustExist : Type 'ABI.System.EventHandlerMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.IDisposableMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.IEnumerableMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.IListMethods' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IDictionaryMethods<K, V>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_Clear_6(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Collections.Generic.IReadOnlyDictionary<K, V> ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_GetView_3(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
@@ -49,12 +50,15 @@ MembersMustExist : Member 'public WinRT.ObjectReference<WinRT.Interop.IUnknownVf
 TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, V>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Specialized.INotifyCollectionChangedMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.ComponentModel.INotifyDataErrorInfoMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.ComponentModel.INotifyPropertyChangedMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Windows.Input.ICommandMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.WinRT.Interop.IActivationFactoryMethods' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(System.Func<System.Type, System.Type>)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.DelegateTypeDetails<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.IWinRTExposedTypeDetails' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.StructTypeDetails<T, TAbi>' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(System.String, System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 58
+Total Issues: 62
