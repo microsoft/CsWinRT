@@ -2050,7 +2050,7 @@ private IObjectReference Make__%()
                         else if (distance(ifaceType.GenericParam()) == 0)
                         {
 
-                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(global::System.Runtime.InteropServices.MemoryMarshal.Read<Guid>(%.IID)), null);)",
+                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(%.IID), null);)",
                                 objrefname,
                                 bind<write_type_name>(semantics, typedef_name_type::StaticAbiClass, true)
                             );
@@ -5995,7 +5995,7 @@ public static Guid PIID = Vftbl.PIID;
 
         w.write(R"(% static class %
 {
-public static global::System.ReadOnlySpan<byte> IID => new byte[] { % };
+public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
 
 %
 }
@@ -6198,7 +6198,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
                     settings.netstandard_compat ?
                         w.write("GuidGenerator.GetIID(typeof(%)) == iid",
                             bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::ABI, false)) :
-                        w.write("global::System.Runtime.InteropServices.MemoryMarshal.Read<Guid>(%.IID) == iid",
+                        w.write("%.IID == iid",
                             bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::StaticAbiClass, true));
                 }
             }, type.InterfaceImpl()),

@@ -508,7 +508,6 @@ namespace WinRT
 #endif
         public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
         public IObjectReference _As(Guid iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid);
-        public IObjectReference _As(ReadOnlySpan<byte> iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(global::System.Runtime.InteropServices.MemoryMarshal.Read<Guid>(iid));
     }
 
     internal sealed class ActivationFactory<T> : BaseActivationFactory
@@ -519,7 +518,6 @@ namespace WinRT
         public static new I AsInterface<I>() => _factory.Value.AsInterface<I>();
         public static ObjectReference<I> As<I>() => _factory._As<I>();
         public static IObjectReference As(Guid iid) => _factory._As(iid);
-        public static IObjectReference As(ReadOnlySpan<byte> iid) => _factory._As(iid);
 
 #if NET
         [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode", 
