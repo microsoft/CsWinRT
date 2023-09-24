@@ -397,23 +397,9 @@ namespace ABI.System.Collections.Generic
             second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromManaged(__second);
         }
 
-        private static unsafe int Do_Abi_get_Size_1(IntPtr thisPtr, uint* __return_value__)
+        public static uint Abi_get_Size_1(IntPtr thisPtr)
         {
-            uint ____return_value__ = default;
-
-            *__return_value__ = default;
-
-            try
-            {
-                ____return_value__ = IReadOnlyDictionary<K, V>.FindAdapter(thisPtr).Size;
-                *__return_value__ = ____return_value__;
-            }
-            catch (Exception __exception__)
-            {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-            }
-            return 0;
+            return IReadOnlyDictionary<K, V>.FindAdapter(thisPtr).Size;
         }
     }
 

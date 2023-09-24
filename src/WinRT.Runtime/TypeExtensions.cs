@@ -208,9 +208,9 @@ namespace WinRT
         }
 
         private readonly static ConcurrentDictionary<Type, Type> AuthoringMetadataTypeCache = new();
-        private readonly static List<Func<Type, Type?>> AuthoringMetadaTypeLookup = new();
+        private readonly static List<Func<Type, Type>> AuthoringMetadaTypeLookup = new();
 
-        internal static void RegisterAuthoringMetadataTypeLookup(Func<Type, Type?> authoringMetadataTypeLookup)
+        internal static void RegisterAuthoringMetadataTypeLookup(Func<Type, Type> authoringMetadataTypeLookup)
         {
             AuthoringMetadaTypeLookup.Add(authoringMetadataTypeLookup);
         }
