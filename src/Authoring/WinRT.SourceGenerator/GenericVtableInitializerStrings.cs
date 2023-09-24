@@ -493,7 +493,7 @@ namespace Generator
                         &Do_Abi_GetAt_0,
                         &Do_Abi_get_Size_1,
                         &Do_Abi_IndexOf_2,
-                        &Do_Abi_GetMany_3,
+                        &Do_Abi_GetMany_3
                      );
                  }
                  
@@ -753,7 +753,7 @@ namespace Generator
                         &Do_Abi_Lookup_0,
                         &Do_Abi_get_Size_1,
                         &Do_Abi_HasKey_2,
-                        &Do_Abi_Split_3,
+                        &Do_Abi_Split_3
                      );
                  }
 

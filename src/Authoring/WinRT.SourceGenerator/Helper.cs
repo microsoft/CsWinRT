@@ -223,6 +223,59 @@ namespace Generator
             return type.ToDisplayString();
         }
 
+        public static bool IsBlittableValueType(ITypeSymbol type)
+        {
+            if (!type.IsValueType)
+            {
+                return false;
+            }
+
+            if (type.SpecialType != SpecialType.None)
+            {
+                switch (type.SpecialType)
+                {
+                    case SpecialType.System_Single:
+                    case SpecialType.System_Double:
+                    case SpecialType.System_UInt16:
+                    case SpecialType.System_UInt32:
+                    case SpecialType.System_UInt64:
+                    case SpecialType.System_Int16:
+                    case SpecialType.System_Int32:
+                    case SpecialType.System_Int64:
+                    case SpecialType.System_Byte:
+                    case SpecialType.System_SByte:
+                    case SpecialType.System_IntPtr:
+                    case SpecialType.System_UIntPtr:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            string customTypeMapKey = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
+            if (MappedCSharpTypes.ContainsKey(customTypeMapKey))
+            {
+                return MappedCSharpTypes[customTypeMapKey].IsBlittable();
+            }
+
+            if (type.TypeKind == TypeKind.Enum)
+            {
+                return true;
+            }
+            
+            if (type.TypeKind == TypeKind.Struct)
+            {
+                foreach (var typeMember in type.GetMembers())
+                {
+                    if (typeMember is IFieldSymbol field && !IsBlittableValueType(field.Type))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
         public static string GetAbiType(ITypeSymbol type)
         {
             if (IsFundamentalType(type))
@@ -230,9 +283,14 @@ namespace Generator
                 return GetAbiTypeForFundamentalType(type);
             }
 
-            if (type.ToDisplayString() == "System.Type")
+            var typeStr = type.ToDisplayString();
+            if (typeStr == "System.Type")
             {
                 return "ABI.System.Type";
+            }
+            else if (typeStr.StartsWith("System.Collections.Generic.KeyValuePair<"))
+            {
+                return "IntPtr";
             }
 
             if (type.IsValueType)
@@ -241,7 +299,7 @@ namespace Generator
                 if (MappedCSharpTypes.ContainsKey(customTypeMapKey))
                 {
                     string prefix = MappedCSharpTypes[customTypeMapKey].IsBlittable() ? "" : "ABI.";
-                    return prefix + type.ToDisplayString();
+                    return prefix + typeStr;
                 }
 
                 var winrtHelperAttribute = type.GetAttributes().
@@ -252,9 +310,16 @@ namespace Generator
                 {
                     return winrtHelperAttribute.ConstructorArguments[0].Value.ToString();
                 }
+                // Handling authoring scenario where Impl type has the attributes and
+                // if the current component is the one being authored, it may not be
+                // generated yet to check given it is the same compilation.
+                else if (!IsBlittableValueType(type))
+                {
+                    return "ABI." + typeStr;
+                }
                 else
                 {
-                    return type.ToDisplayString();
+                    return typeStr;
                 }
             }
 
@@ -263,11 +328,11 @@ namespace Generator
 
         public static string GetMarshalerClass(string type, string abiType, TypeKind kind, bool isArray)
         {
-            if (type == "System.String")
+            if (type == "System.String" || type == "string")
             {
                 return "MarshalString";
             }
-            else if (type == "System.Type")
+            else if (type == "System.Type" || type == "Type")
             {
                 if (isArray)
                 {
@@ -278,7 +343,7 @@ namespace Generator
                     return "global::ABI.System.Type";
                 }
             }
-            else if (type == "System.Object")
+            else if (type == "System.Object" || type == "object")
             {
                 return "MarshalInspectable<object>";
             }
@@ -312,7 +377,7 @@ namespace Generator
                 }
                 else
                 {
-                    return $$"""MarshalNonBlittable<{{type}}>""";
+                    return "global::ABI." + type;
                 }
             }
             else if (kind == TypeKind.Interface)

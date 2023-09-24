@@ -167,7 +167,7 @@ namespace WinRT
 
         public static void RegisterProjectionTypeBaseTypeMapping(IDictionary<string, string> typeNameToBaseTypeNameMapping) => TypeNameSupport.RegisterProjectionTypeBaseTypeMapping(typeNameToBaseTypeNameMapping);
 
-        public static void RegisterAuthoringMetadataTypeLookup(Func<Type, Type?> authoringMetadataTypeLookup) => TypeExtensions.RegisterAuthoringMetadataTypeLookup(authoringMetadataTypeLookup);
+        public static void RegisterAuthoringMetadataTypeLookup(Func<Type, Type> authoringMetadataTypeLookup) => TypeExtensions.RegisterAuthoringMetadataTypeLookup(authoringMetadataTypeLookup);
 
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(Type type)
         {
@@ -176,8 +176,8 @@ namespace WinRT
             bool hasWinrtExposedClassAttribute = false;
 
 #if NET
-            // Check whether the type itself has the attribute to make sure it is using the new source generator
-            // and just doesn't have an updated dependent projection where the base class has it.
+            // Check whether the type itself has the WinRTTypeExposed attribute and if so
+            // use the new source generator approach.
             var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
 
             // Handle scenario where it can be an authored type
@@ -199,16 +199,6 @@ namespace WinRT
 
                 if (type.IsClass)
                 {
-                    var baseType = type.BaseType;
-                    if (baseType != null && baseType != typeof(object))
-                    {
-                        var winrtExposedBaseClassAttributes = baseType.GetCustomAttributes<WinRTExposedTypeAttribute>(true);
-                        foreach (var winrtExposedBaseClassAttribute in winrtExposedBaseClassAttributes)
-                        {
-                            entries.AddRange(winrtExposedBaseClassAttribute.GetExposedInterfaces());
-                        }
-                    }
-
                     hasCustomIMarshalInterface = entries.Any(entry => entry.IID == ABI.WinRT.Interop.IMarshal.IID);
                 }
             }
@@ -217,7 +207,7 @@ namespace WinRT
                 hasWinrtExposedClassAttribute = true;
                 entries.AddRange(ABI.System.EventHandler.GetExposedInterfaces());
             }
-            else
+            else if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
             {
                 if (type.IsDelegate())

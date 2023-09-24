@@ -32,6 +32,7 @@ MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMetho
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_SetAt_4(System.IntPtr, System.UInt32, T)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IListMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_get_Size_1(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Boolean ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_HasKey_2(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public V ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_Lookup_0(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_Split_3(System.IntPtr, System.IntPtr, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
@@ -61,4 +62,4 @@ TypesMustExist : Type 'WinRT.StructTypeDetails<T, TAbi>' does not exist in the r
 MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(System.String, System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 62
+Total Issues: 63
