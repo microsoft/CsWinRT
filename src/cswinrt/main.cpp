@@ -284,7 +284,6 @@ Where <spec> is one or more of:
                                     {
                                     case category::class_type:
                                         write_abi_class(w, type);
-                                        write_winrt_exposed_type_class(w, type, false);
                                         if (settings.component && componentActivatableClasses.count(type) == 1)
                                         {
                                             write_winrt_exposed_type_class(w, type, true);
@@ -454,7 +453,7 @@ namespace WinRT
 internal static class AuthoringMetadataTypeInitializer
 {
 
-private static Type? GetMetadataTypeMapping(Type type)
+private static Type GetMetadataTypeMapping(Type type)
 {
 return type switch
 {

@@ -3247,53 +3247,42 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             }));
     }
 
-    // This attribute decides the interfaces that are placed on the vtable.
-    // For consumption projections of classes, we only write the vtable attribute for unsealed
-    // classes as they are the ones that can be extended.  These classes may have overridable interfaces
-    // which are marked internal and due to that can not be specified by the child class in its own
-    // vtable attribute.  As a result, for unsealed classes, we include both overriable interfaces and
-    // non-exclusive interfaces.
-    // We also write it for structs and delegates as they can be boxed and passed as an C# object.
-    // Enums are handled separately as there are only two type of enums (int and uint).
-    // For authoring scenarios, we write the vtable attribute for all classes with all the interfaces (including
-    // the exclusive ones) as they are exposed acrossed the ABI as C# objects.
-    bool should_write_winrt_exposed_type_attribute(writer& w, TypeDef const& type)
+    // The WinRTExposedType attribute decides the interfaces that are
+    // placed on the vtable during CCW generation.
+    // 
+    // Given structs and delegates can be boxed and passed as an object,
+    // we write this attribute to represent the interfaces they implement.
+    // 
+    // For enums, they can also be boxed, but there are only two types of
+    // enums (int and uint) allowing us to handle this directly during CCW
+    // generation.
+    // 
+    // For projection classes, they are typically just unwrapped to get the
+    // native object when passed across the ABI.  The exception to this is
+    // unsealed classes which are extended by consumers in C# code.
+    // For these classes, we generate the attribute using the source generator
+    // and put it on the class extending it and also includes the
+    // override interfaces from the unsealed base class.
+    // 
+    // For classes authored using our component authoring support, we
+    // generate the attribute on the Impl namespace metadata classes using the
+    // source generator rather than here as it allows us to better handle 
+    // covariant interfaces.  But for factory classes, we generate them here.
+    bool should_write_winrt_exposed_type_attribute(TypeDef const& type)
     {
         if (settings.netstandard_compat)
         {
             return false;
         }
 
-        bool writeAttribute =
-            get_category(type) == category::struct_type ||
-            (get_category(type) == category::delegate_type && distance(type.GenericParam()) == 0) ||
-            settings.component && get_category(type) == category::class_type;
-
-        if (!settings.component && get_category(type) == category::class_type && !type.Flags().Sealed())
-        {
-            for (auto&& iface : type.InterfaceImpl())
-            {
-                for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
-                {
-                    if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type))
-                    {
-                        writeAttribute = true;
-                    }
-                });
-
-                if (writeAttribute)
-                {
-                    break;
-                }
-            }
-        }
-
-        return writeAttribute;
+        // TODO: how to handle generic delegates
+        return get_category(type) == category::struct_type ||
+            (get_category(type) == category::delegate_type && distance(type.GenericParam()) == 0);
     }
 
     void write_winrt_exposed_type_attribute(writer& w, TypeDef const& type, bool isFactory)
     {
-        if (should_write_winrt_exposed_type_attribute(w, type))
+        if (should_write_winrt_exposed_type_attribute(type) || isFactory)
         {
             if (get_category(type) == category::struct_type)
             {
@@ -3312,12 +3301,12 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
     void write_winrt_exposed_type_class(writer& w, TypeDef const& type, bool isFactory)
     {
-        if (should_write_winrt_exposed_type_attribute(w, type))
+        if (should_write_winrt_exposed_type_attribute(type) || isFactory)
         {
-            if (get_category(type) == category::class_type)
+            if (get_category(type) == category::class_type && isFactory)
             {
                 w.write(R"(
-internal sealed class %%WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+internal sealed class %ServerActivationFactoryWinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
 {
 public global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
 {
@@ -3329,34 +3318,9 @@ return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[
 }
 )",
                     bind<write_type_name>(type, typedef_name_type::ABI, false),
-                    isFactory ? "ServerActivationFactory" : "",
                     bind([&](writer& w)
                     {
-                        if (!isFactory)
-                        {
-                            for (auto&& iface : type.InterfaceImpl())
-                            {
-                                for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
-                                {
-                                    if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type) || settings.component)
-                                    {
-                                        w.write(R"(
-new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
-{
-IID = global::WinRT.GuidGenerator.GetIID(typeof(%).GetHelperType()),
-Vtable = %.AbiToProjectionVftablePtr
-},
-)",
-                                            bind<write_type_name>(type, typedef_name_type::CCW, false),
-                                            bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false)
-                                        );
-                                    }
-                                });
-                            }
-                        }
-                        else
-                        {
-                            w.write(R"(
+                        w.write(R"(
 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
 {
 IID = global::WinRT.GuidGenerator.GetIID(typeof(global::WinRT.Interop.IActivationFactory).GetHelperType()),
@@ -3364,22 +3328,21 @@ Vtable = global::ABI.WinRT.Interop.IActivationFactoryMethods.AbiToProjectionVfta
 },
 )");
 
-                            for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+                        for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+                        {
+                            if ((factory.activatable || factory.statics) && factory.type)
                             {
-                                if ((factory.activatable || factory.statics) && factory.type)
-                                {
-                                    w.write(R"(
+                                w.write(R"(
 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
 {
 IID = global::WinRT.GuidGenerator.GetIID(typeof(%).GetHelperType()),
 Vtable = %.AbiToProjectionVftablePtr
 },
 )",
-                                        bind<write_type_name>(factory.type, typedef_name_type::CCW, false),
-                                        // These are exclusive internal interfaces, so just use the ABI class to get the ptr.
-                                        bind<write_type_name>(factory.type, typedef_name_type::ABI, false)
-                                    );
-                                }
+                                    bind<write_type_name>(factory.type, typedef_name_type::CCW, false),
+                                    // These are exclusive internal interfaces, so just use the ABI class to get the ptr.
+                                    bind<write_type_name>(factory.type, typedef_name_type::ABI, false)
+                                );
                             }
                         }
                     })
@@ -4652,6 +4615,12 @@ remove
             w.write("\nvar ThisPtr = _obj.ThisPtr;\n");   
         };
 
+        // We make the static ABI classes public for override interfaces to expose
+        // the vftbl ptr.  But we don't need the actual RCW implementation for it
+        // to be public and in the API surface.  So we use this to determine whether
+        // to make them internal.
+        bool isExclusiveInterface = is_exclusive_to(iface);
+
         for (auto&& method : iface.MethodList())
         {
             if (is_special(method))
@@ -4661,9 +4630,10 @@ remove
             method_signature signature{ method };
             auto [invoke_target, is_generic] = get_invoke_info(w, method, abi_methods_start_index);
             w.write(R"(
-public static unsafe %% %(IObjectReference %%%)
+% static unsafe %% %(IObjectReference %%%)
 {%%}
 )",
+                isExclusiveInterface ? "internal" : "public",
                 (settings.netstandard_compat && method.Name() == "ToString"sv) ? "override " : "",
                 bind<write_projection_return_type>(signature),
                 method.Name(),
@@ -4683,9 +4653,10 @@ public static unsafe %% %(IObjectReference %%%)
                 auto [invoke_target, is_generic] = get_invoke_info(w, getter, abi_methods_start_index);
                 auto signature = method_signature(getter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
-                w.write(R"(public static unsafe % get_%(IObjectReference %)
+                w.write(R"(% static unsafe % get_%(IObjectReference %)
 {%%}
 )",
+                    isExclusiveInterface ? "internal" : "public",
                     write_prop_type(w, prop),
                     prop.Name(),
                     generic_type ? "_genericObj" : "_obj",
@@ -4698,9 +4669,10 @@ public static unsafe %% %(IObjectReference %%%)
                 auto signature = method_signature(setter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 marshalers[0].param_name = "value";
-                w.write(R"(public static unsafe void set_%(IObjectReference %, % value)
+                w.write(R"(% static unsafe void set_%(IObjectReference %, % value)
 {%%}
 )",                 
+                    isExclusiveInterface ? "internal" : "public",
                     prop.Name(),
                     generic_type ? "_genericObj" : "_obj",
                     write_prop_type(w, prop),
@@ -4714,7 +4686,7 @@ public static unsafe %% %(IObjectReference %%%)
         for (auto&& evt : iface.EventList())
         {
                     w.write(R"(%
-public static unsafe (Action<%>, Action<%>) Get_%(IObjectReference %, object _thisObj)
+% static unsafe (Action<%>, Action<%>) Get_%(IObjectReference %, object _thisObj)
 {
 var eventSource = _%.GetValue(_thisObj, (key) =>
 {
@@ -4725,6 +4697,7 @@ return eventSource.EventActions;
 }
 )",
                         bind<write_event_source_table>(evt),
+                        isExclusiveInterface ? "internal" : "public",
                         bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
                         bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
                         evt.Name(),
@@ -6326,6 +6299,35 @@ public static Guid PIID = Vftbl.PIID;
             }
         }
 
+        // Derived classes need access to the vftbl ptr if they are extending unsealed types.
+        auto write_vftable_ptr = !is_exclusive_to(iface);
+        if (!write_vftable_ptr)
+        {
+            // Also write for both overridable interfaces and for default interfaces of authored types.
+            auto exclusive_to_type = get_exclusive_to_type(iface);
+            auto authored_component_interface = settings.component && settings.filter.includes(iface);
+            if (!exclusive_to_type.Flags().Sealed() || authored_component_interface)
+            {
+                for (auto&& iface_impl : exclusive_to_type.InterfaceImpl())
+                {
+                    for_typedef(w, get_type_semantics(iface_impl.Interface()), [&](auto interface_type)
+                    {
+                        if (iface == interface_type &&
+                            (is_overridable(iface_impl) || 
+                             (authored_component_interface && is_default_interface(iface_impl))))
+                        {
+                            write_vftable_ptr = true;
+                        }
+                    });
+
+                    if (write_vftable_ptr)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
         w.write(R"(% static class %
 {
 public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
@@ -6338,39 +6340,16 @@ public static global::System.Guid IID { get; } = new Guid(new global::System.Rea
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
         bind<write_guid_bytes>(iface),
         [&](writer& w) {
-            auto write_vftable_ptr = !is_exclusive_to(iface);
-            if (!write_vftable_ptr)
-            {
-                // Also write for both overridable interfaces and for default interfaces of authored types.
-                auto exclusive_to_type = get_exclusive_to_type(iface);
-                auto authored_component_interface = settings.component && settings.filter.includes(iface);
-                if (!exclusive_to_type.Flags().Sealed() || authored_component_interface)
-                {
-                    for (auto&& iface_impl : exclusive_to_type.InterfaceImpl())
-                    {
-                        for_typedef(w, get_type_semantics(iface_impl.Interface()), [&](auto interface_type)
-                        {
-                            if (iface == interface_type && 
-                                (is_overridable(iface_impl) || (authored_component_interface && is_default_interface(iface_impl))))
-                            {
-                                write_vftable_ptr = true;
-                            }
-                        });
 
-                        if (write_vftable_ptr)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
+            // TODO: Replace with interface approach currently in PR.
             if (write_vftable_ptr)
             {
                 w.write(R"(
 public static global::System.IntPtr AbiToProjectionVftablePtr => %.AbiToProjectionVftablePtr;
+public static global::System.Guid IID => new global::System.Guid("%");
 )",
-                    bind<write_type_name>(iface, typedef_name_type::ABI, false));
+                    bind<write_type_name>(iface, typedef_name_type::ABI, false),
+                    bind<write_guid>(iface, false));
             }
         },
         [&](writer& w) {
@@ -6602,8 +6581,8 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         auto base_semantics = get_type_semantics(type.Extends());
         auto from_abi_new = !std::holds_alternative<object_type>(base_semantics) ? "new " : "";
 
-        w.write(R"(%%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
-%internal %class %%
+        w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+%internal % partial class %%
 {
 public %(% comp)
 {
@@ -6628,7 +6607,6 @@ private readonly % _comp;
 )",
         bind<write_winrt_attribute>(type),
         bind<write_winrt_helper_type_attribute>(type),
-        bind<write_winrt_exposed_type_attribute>(type, false),
         default_interface_name,
         bind<write_type_custom_attributes>(type, false),
         bind<write_class_modifiers>(type),
@@ -6844,7 +6822,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(type)), [&](auto&& iface) { return iface; });
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
-        w.write(R"(%%%
+        w.write(R"(%%
 [global::WinRT.ProjectedRuntimeClass(typeof(%))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
@@ -6882,7 +6860,6 @@ private struct InterfaceTag<I>{};
 )",
             bind<write_winrt_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
-            bind<write_winrt_exposed_type_attribute>(type, false),
             default_interface_name,
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),

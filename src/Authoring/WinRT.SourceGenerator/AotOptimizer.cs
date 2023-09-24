@@ -4,6 +4,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -23,10 +24,10 @@ namespace Generator
                 static (n, _) => NeedVtableAttribute(n),
                 static (n, _) => GetVtableAttributeToAdd(n));
 
-            context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect(), GenerateVtableAttributes);
+            context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect().Combine(isCsWinRTComponent), GenerateVtableAttributes);
 
             var genericInstantionsToGenerate = vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).Collect();
-            context.RegisterImplementationSourceOutput(genericInstantionsToGenerate, GenerateCCWForGenericInstantiation);
+            context.RegisterImplementationSourceOutput(genericInstantionsToGenerate.Combine(isCsWinRTComponent), GenerateCCWForGenericInstantiation);
         }
 
         // Restrict to non-projected classes which can be instantiated
@@ -42,25 +43,46 @@ namespace Generator
         private static VtableAttribute GetVtableAttributeToAdd(GeneratorSyntaxContext context)
         {
             var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node as ClassDeclarationSyntax);
+            return GetVtableAttributeToAdd(symbol, GeneratorHelper.IsWinRTType, false);
+        }
+
+        private static string ToFullyQualifiedString(ISymbol symbol)
+        {
+            // Used to ensure class names within generics are fully qualified to avoid
+            // having issues when put in ABI namespaces.
+            var symbolDisplayString = new SymbolDisplayFormat(
+                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
+                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+                miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+
+            var qualifiedString = symbol.ToDisplayString(symbolDisplayString);
+            return qualifiedString.StartsWith("global::") ? qualifiedString[8..] : qualifiedString;
+        }
+
+        internal static VtableAttribute GetVtableAttributeToAdd(INamedTypeSymbol symbol, Func<ISymbol, bool> isWinRTType, bool isAuthoring, string authoringDefaultInterface = "")
+        {
+            bool IsNamedTypeWinRTType(INamedTypeSymbol namedType) => isWinRTType(namedType);
 
             HashSet<string> interfacesToAddToVtable = new();
             HashSet<GenericInterface> genericInterfacesToAddToVtable = new();
-            foreach (var iface in symbol.Interfaces)
+
+            if (!string.IsNullOrEmpty(authoringDefaultInterface))
+            {
+                interfacesToAddToVtable.Add(authoringDefaultInterface);
+            }
+
+            foreach (var iface in symbol.AllInterfaces)
             {
                 AddInterfaceAndCompatibleInterfacesToVtable(iface);
-
-                foreach (var baseIface in iface.AllInterfaces)
-                {
-                    AddInterfaceAndCompatibleInterfacesToVtable(baseIface);
-                }
             }
 
             bool hasWinRTExposedBaseType = false;
             var baseType = symbol.BaseType;
             while (baseType != null && baseType.SpecialType != SpecialType.System_Object)
             {
-                if (GeneratorHelper.IsWinRTType(baseType) ||
-                    baseType.Interfaces.Any(GeneratorHelper.IsWinRTType))
+                if (isWinRTType(baseType) ||
+                    baseType.Interfaces.Any(IsNamedTypeWinRTType))
                 {
                     hasWinRTExposedBaseType = true;
                     break;
@@ -70,7 +92,7 @@ namespace Generator
             }
 
             return new VtableAttribute(
-                symbol.ContainingNamespace.ToDisplayString(),
+                isAuthoring ? "ABI.Impl." + symbol.ContainingNamespace.ToDisplayString() : symbol.ContainingNamespace.ToDisplayString(),
                 symbol.ContainingNamespace.IsGlobalNamespace,
                 symbol.Name,
                 interfacesToAddToVtable.ToImmutableArray(),
@@ -79,17 +101,17 @@ namespace Generator
 
             void AddInterfaceAndCompatibleInterfacesToVtable(INamedTypeSymbol iface)
             {
-                if (GeneratorHelper.IsWinRTType(iface))
+                if (isWinRTType(iface))
                 {
-                    interfacesToAddToVtable.Add(iface.ToDisplayString());
+                    interfacesToAddToVtable.Add(ToFullyQualifiedString(iface));
                     AddGenericInterfaceInstantiation(iface);
                 }
 
-                if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, out var compatibleIfaces))
+                if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, isWinRTType, out var compatibleIfaces))
                 {
                     foreach (var compatibleIface in compatibleIfaces)
                     {
-                        interfacesToAddToVtable.Add(compatibleIface.ToDisplayString());
+                        interfacesToAddToVtable.Add(ToFullyQualifiedString(compatibleIface));
                         AddGenericInterfaceInstantiation(compatibleIface);
                     }
                 }
@@ -103,20 +125,20 @@ namespace Generator
                     foreach(var genericParameter in iface.TypeArguments)
                     {
                         genericParameters.Add(new GenericParameter(
-                            genericParameter.ToDisplayString(),
+                            ToFullyQualifiedString(genericParameter),
                             GeneratorHelper.GetAbiType(genericParameter),
                             genericParameter.TypeKind));
                     }
 
                     genericInterfacesToAddToVtable.Add(new GenericInterface(
-                        iface.ToDisplayString(),
+                        ToFullyQualifiedString(iface),
                         $$"""{{iface.ContainingNamespace}}.{{iface.MetadataName}}""",
                         genericParameters.ToImmutableArray()));
                 }
             }
         }
 
-        private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, Stack<INamedTypeSymbol> typeStack, out IList<INamedTypeSymbol> compatibleTypes)
+        private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, Stack<INamedTypeSymbol> typeStack, Func<ISymbol, bool> isWinRTType, out IList<INamedTypeSymbol> compatibleTypes)
         {
             compatibleTypes = null;
 
@@ -129,7 +151,7 @@ namespace Generator
             }
 
             var definition = type.OriginalDefinition;
-            if (!GeneratorHelper.IsWinRTType(definition))
+            if (!isWinRTType(definition))
             {
                 return false;
             }
@@ -149,20 +171,20 @@ namespace Generator
 
             HashSet<ITypeSymbol> compatibleTypesForGeneric = new(SymbolEqualityComparer.Default);
 
-            if (GeneratorHelper.IsWinRTType(type.TypeArguments[0]))
+            if (isWinRTType(type.TypeArguments[0]))
             {
                 compatibleTypesForGeneric.Add(type.TypeArguments[0]);
             }
 
             foreach (var iface in type.TypeArguments[0].AllInterfaces)
             {
-                if (GeneratorHelper.IsWinRTType(iface))
+                if (isWinRTType(iface))
                 {
                     compatibleTypesForGeneric.Add(iface);
                 }
 
                 if (iface.IsGenericType
-                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, typeStack, out var compatibleIfaces))
+                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, typeStack, isWinRTType, out var compatibleIfaces))
                 {
                     compatibleTypesForGeneric.UnionWith(compatibleIfaces);
                 }
@@ -171,7 +193,7 @@ namespace Generator
             var baseType = type.TypeArguments[0].BaseType;
             while (baseType != null)
             {
-                if (GeneratorHelper.IsWinRTType(baseType))
+                if (isWinRTType(baseType))
                 {
                     compatibleTypesForGeneric.Add(baseType);
                 }
@@ -189,7 +211,18 @@ namespace Generator
             return true;
         }
 
-        private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, ImmutableArray<VtableAttribute> vtableAttributes)
+        private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, bool isCsWinRTComponent) value)
+        {
+            if (value.isCsWinRTComponent)
+            {
+                // Handled by the WinRT component source generator.
+                return;
+            }
+
+            GenerateVtableAttributes(sourceProductionContext.AddSource, value.vtableAttributes);
+        }
+
+        internal static void GenerateVtableAttributes(Action<string, string> addSource, ImmutableArray<VtableAttribute> vtableAttributes)
         {
             // Using ToImmutableHashSet to avoid duplicate entries from the use of partial classes by the developer
             // to split out their implementation.  When they do that, we will get multiple entries here for that
@@ -247,10 +280,17 @@ namespace Generator
                             {
                                 interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
                             }
+
+                            // TODO: replace once IID propagated to manual projections
+                            // For now, special casing the Overrides interfaces which are marked internal
+                            // and the authored default interface which are under the Impl namespace.
+                            var iid = @interface.Contains("Overrides") || @interface.EndsWith("Class") ? $"global::ABI.{interfaceStaticsMethod}.IID" :
+                                $"global::WinRT.GuidGenerator.GetIID(typeof(global::{@interface}).GetHelperType())";
+
                             source.AppendLine($$"""
                                                 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
                                                 {
-                                                    IID = global::WinRT.GuidGenerator.GetIID(typeof(global::{{@interface}}).GetHelperType()),
+                                                    IID = {{iid}},
                                                     Vtable = global::ABI.{{interfaceStaticsMethod}}.AbiToProjectionVftablePtr
                                                 },
                                     """);
@@ -277,12 +317,23 @@ namespace Generator
                     }
 
                     string prefix = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
-                    sourceProductionContext.AddSource($"{prefix}{vtableAttribute.ClassName}.WinRTVtable.g.cs", source.ToString());
+                    addSource($"{prefix}{vtableAttribute.ClassName}.WinRTVtable.g.cs", source.ToString());
                 }
             }
         }
 
-        private static void GenerateCCWForGenericInstantiation(SourceProductionContext sourceProductionContext, ImmutableArray<GenericInterface> genericInterfaces)
+        private static void GenerateCCWForGenericInstantiation(SourceProductionContext sourceProductionContext, (ImmutableArray<GenericInterface> genericInterfaces, bool isCsWinRTComponent) value)
+        {
+            if (value.isCsWinRTComponent)
+            {
+                // Handled by the WinRT component source generator.
+                return;
+            }
+
+            GenerateCCWForGenericInstantiation(sourceProductionContext.AddSource, value.genericInterfaces);
+        }
+
+        internal static void GenerateCCWForGenericInstantiation(Action<string, string> addSource, ImmutableArray<GenericInterface> genericInterfaces)
         {
             StringBuilder source = new();
 
@@ -310,7 +361,7 @@ namespace Generator
             if (genericInterfaces.Any())
             {
                 source.AppendLine("}");
-                sourceProductionContext.AddSource($"WinRTGenericInstantiation.g.cs", source.ToString());
+                addSource($"WinRTGenericInstantiation.g.cs", source.ToString());
             }
         }
     }
