@@ -130,6 +130,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonValueFunctionCalls", "Tests\FunctionalTests\JsonValueFunctionCalls\JsonValueFunctionCalls.csproj", "{EE5B4B23-5D4B-4DFB-8DC9-4DBB1B735CC8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FunctionalTests", "FunctionalTests", "{5ECC38F0-16FD-47E1-B8DC-8C474008AD55}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\FunctionalTests\Directory.Build.props = Tests\FunctionalTests\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PublishProfiles", "PublishProfiles", "{6FBE79A9-9D6D-4436-9F84-797ED1C9F676}"
 	ProjectSection(SolutionItems) = preProject
@@ -156,7 +159,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DerivedClassAsBaseClass", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CCW", "Tests\FunctionalTests\CCW\CCW.csproj", "{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinAppSDK", "Projections\WinAppSDK\WinAppSDK.csproj", "{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinAppSDK", "Projections\WinAppSDK\WinAppSDK.csproj", "{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
