@@ -38,10 +38,12 @@ namespace System.Collections.Generic
     internal sealed class IDictionaryImpl<K, V> : IDictionary<K, V>, IWinRTObject
     {
         private IObjectReference _inner;
+        private Dictionary<K, (IntPtr, V)> _lookupCache;
 
         internal IDictionaryImpl(IObjectReference _inner)
         {
             this._inner = _inner;
+            this._lookupCache = new Dictionary<K, (IntPtr, V)>();
         }
 
         public static IDictionaryImpl<K, V> CreateRcw(IInspectable obj) => new(obj.ObjRef);
@@ -83,7 +85,7 @@ namespace System.Collections.Generic
 
         public V this[K key] 
         { 
-            get => ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Indexer_Get(iDictionaryObjRef, null, key);
+            get => ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Indexer_Get(iDictionaryObjRef, _lookupCache, key);
             set => ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Indexer_Set(iDictionaryObjRef, key, value);
         }
 
@@ -112,7 +114,7 @@ namespace System.Collections.Generic
 
         public bool Contains(KeyValuePair<K, V> item)
         {
-            return ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Contains(iDictionaryObjRef, null, item);
+            return ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Contains(iDictionaryObjRef, _lookupCache, item);
         }
 
         public bool ContainsKey(K key)
@@ -142,7 +144,7 @@ namespace System.Collections.Generic
 
         public bool TryGetValue(K key, [MaybeNullWhen(false)] out V value)
         {
-            return ABI.System.Collections.Generic.IDictionaryMethods<K, V>.TryGetValue(iDictionaryObjRef, null, key, out value);
+            return ABI.System.Collections.Generic.IDictionaryMethods<K, V>.TryGetValue(iDictionaryObjRef, _lookupCache, key, out value);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -160,7 +162,7 @@ namespace ABI.Windows.Foundation.Collections
 
     internal static class IMapMethods<K, V>
     {
-        public static unsafe V Lookup(IObjectReference obj, K key)
+        public static unsafe V Lookup(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
         {
             var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
             var ThisPtr = _obj.ThisPtr;
@@ -172,7 +174,19 @@ namespace ABI.Windows.Foundation.Collections
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
 
-                return Marshaler<V>.FromAbi(__params[2]);
+                if (__lookupCache != null && __lookupCache.TryGetValue(key, out var __cachedRcw) && __cachedRcw.Item1 == (IntPtr)__params[2])
+                {
+                    return __cachedRcw.Item2;
+                }
+                else
+                {
+                    var value = Marshaler<V>.FromAbi(__params[2]);
+                    if (__lookupCache != null)
+                    {
+                        __lookupCache[key] = ((IntPtr)__params[2], value);
+                    }
+                    return value;
+                }
             }
             finally
             {
@@ -320,7 +334,7 @@ namespace ABI.System.Collections.Generic
             if (!hasKey)
                 return false;
             // todo: toctou
-            V value = IMapMethods<K, V>.Lookup(obj, item.Key);
+            V value = IMapMethods<K, V>.Lookup(obj, __lookupCache, item.Key);
             return EqualityComparer<V>.Default.Equals(value, item.Value);
         }
 
@@ -354,7 +368,7 @@ namespace ABI.System.Collections.Generic
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
-            return Lookup(obj, key);
+            return Lookup(obj, __lookupCache, key);
         }
 
         public static void Indexer_Set(IObjectReference obj, K key, V value)
@@ -421,7 +435,7 @@ namespace ABI.System.Collections.Generic
 
             try
             {
-                value = Lookup(obj, key);
+                value = Lookup(obj, __lookupCache, key);
                 return true;
             }
             catch (KeyNotFoundException)
@@ -431,13 +445,13 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        private static V Lookup(IObjectReference obj, K key)
+        private static V Lookup(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
         {
             Debug.Assert(null != key);
 
             try
             {
-                return IMapMethods<K, V>.Lookup(obj, key);
+                return IMapMethods<K, V>.Lookup(obj, __lookupCache, key);
             }
             catch (global::System.Exception ex)
             {
@@ -999,7 +1013,7 @@ namespace ABI.System.Collections.Generic
             get
             {
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
-                return IDictionaryMethods<K, V>.Indexer_Get(_obj, null, key);
+                return IDictionaryMethods<K, V>.Indexer_Get(_obj, GetLookupCache((IWinRTObject)this), key);
             }
             set
             {
@@ -1026,10 +1040,16 @@ namespace ABI.System.Collections.Generic
             return IDictionaryMethods<K, V>.Remove(_obj, key);
         }
 
+        internal static global::System.Collections.Generic.Dictionary<K, (IntPtr, V)> GetLookupCache(IWinRTObject _this)
+        {
+            return (Dictionary<K, (IntPtr, V)>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle,
+                () => new Dictionary<K, (IntPtr, V)>());
+        }
+
         bool global::System.Collections.Generic.IDictionary<K, V>.TryGetValue(K key, out V value)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
-            return IDictionaryMethods<K, V>.TryGetValue(_obj, null, key, out value);
+            return IDictionaryMethods<K, V>.TryGetValue(_obj, GetLookupCache((IWinRTObject)this), key, out value);
         }
 
         void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Add(global::System.Collections.Generic.KeyValuePair<K, V> item)
@@ -1041,7 +1061,7 @@ namespace ABI.System.Collections.Generic
         bool global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Contains(global::System.Collections.Generic.KeyValuePair<K, V> item)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
-            return IDictionaryMethods<K, V>.Contains(_obj, null, item);
+            return IDictionaryMethods<K, V>.Contains(_obj, GetLookupCache((IWinRTObject)this), item);
         }
 
         void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.CopyTo(global::System.Collections.Generic.KeyValuePair<K, V>[] array, int arrayIndex)
