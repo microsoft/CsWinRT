@@ -1044,6 +1044,49 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::Class>{ *this, *this, *this });
     }
     
+    IMap<int32_t, int32_t> Class::GetIntToIntDictionary()
+    {
+        return single_threaded_map<int32_t, int32_t>(std::map<int32_t, int32_t>{ {1, 4}, { 2, 8 }, { 3, 12 } });
+    }
+    
+    IMap<hstring, TestComponentCSharp::ComposedBlittableStruct> Class::GetStringToBlittableDictionary()
+    {
+        return single_threaded_map<hstring, TestComponentCSharp::ComposedBlittableStruct>(std::map<hstring, TestComponentCSharp::ComposedBlittableStruct>
+        { 
+            { L"alpha", ComposedBlittableStruct{ 5 } }, 
+            { L"beta", ComposedBlittableStruct{ 4 } }, 
+            { L"charlie", ComposedBlittableStruct{ 7 } } 
+        });
+    }
+    
+    IMap<hstring, TestComponentCSharp::ComposedNonBlittableStruct> Class::GetStringToNonBlittableDictionary()
+    {
+        return single_threaded_map<hstring, TestComponentCSharp::ComposedNonBlittableStruct>(std::map<hstring, TestComponentCSharp::ComposedNonBlittableStruct>
+        {
+            { L"String0", ComposedNonBlittableStruct{ { 0 }, { L"String0" }, { true, false, true, false }, { 0 } } },
+            { L"String1", ComposedNonBlittableStruct{ { 1 }, { L"String1" }, { false, true, false, true }, { 1 } } },
+            { L"String2", ComposedNonBlittableStruct{ { 2 }, { L"String2" }, { true, false, true, false }, { 2 } } }
+        });
+    }
+    
+    struct ComposedBlittableStructComparer
+    {
+        bool operator() (const TestComponentCSharp::ComposedBlittableStruct& l, const TestComponentCSharp::ComposedBlittableStruct& r) const
+        {
+            return (l.blittable.i32 < r.blittable.i32);
+        }
+    };
+
+    IMap<TestComponentCSharp::ComposedBlittableStruct, WF::IInspectable> Class::GetBlittableToObjectDictionary()
+    {
+        return single_threaded_map<TestComponentCSharp::ComposedBlittableStruct, WF::IInspectable>(std::map<TestComponentCSharp::ComposedBlittableStruct, WF::IInspectable, ComposedBlittableStructComparer>
+        {
+            { ComposedBlittableStruct{ 1 }, winrt::box_value(0) },
+            { ComposedBlittableStruct{ 4 }, winrt::box_value(L"box") },
+            { ComposedBlittableStruct{ 8 }, *this }
+        });
+    }
+
     // Test IIDOptimizer
     IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> Class::GetEventArgsVector()
     {
