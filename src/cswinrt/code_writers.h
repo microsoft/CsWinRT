@@ -5995,7 +5995,7 @@ public static Guid PIID = Vftbl.PIID;
 
         w.write(R"(% static class %
 {
-public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
+internal static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
 
 %
 }
