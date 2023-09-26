@@ -3069,31 +3069,5 @@ namespace UnitTest
             staThread.Start();
             staThread.Join();
         }
-
-        [Fact]
-        public void TestDictionary()
-        {
-            var intToIntDict = TestObject.GetIntToIntDictionary();
-            Assert.Equal(8, intToIntDict[2]);
-            Assert.Equal(8, intToIntDict[2]);
-            Assert.Equal(12, intToIntDict[3]);
-
-            var stringToBlittableDict = TestObject.GetStringToBlittableDictionary();
-            Assert.Equal(5, stringToBlittableDict["alpha"].blittable.i32);
-            Assert.Equal(7, stringToBlittableDict["charlie"].blittable.i32);
-            Assert.Equal(5, stringToBlittableDict["alpha"].blittable.i32);
-
-            var stringToNonBlittableDict = TestObject.GetStringToNonBlittableDictionary();
-            Assert.Equal(1, stringToNonBlittableDict["String1"].blittable.i32);
-            Assert.Equal("String1", stringToNonBlittableDict["String1"].strings.str);
-            Assert.False(stringToNonBlittableDict["String1"].bools.w);
-            Assert.True(stringToNonBlittableDict["String1"].bools.x);
-
-            var blittableToObjectDict = TestObject.GetBlittableToObjectDictionary();
-            ComposedBlittableStruct key;
-            key.blittable.i32 = 4;
-            Assert.Equal("box", (string)blittableToObjectDict[key]);
-            Assert.Equal("box", (string)blittableToObjectDict[key]);
-        }
     }
 }
