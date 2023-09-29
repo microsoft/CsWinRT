@@ -5902,31 +5902,60 @@ public static Guid PIID = Vftbl.PIID;
             }
         }
 
-        w.write(R"(% class %%
+        if (settings.netstandard_compat)
+        {
+            w.write(R"(% class %
 {
-internal static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
+internal static global::System.Guid IID { get; } = new Guid(new byte[] { % });
 
 %
 }
 )",
-            (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
-            bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
-            settings.netstandard_compat ? "" : " : IHasGuid",
-            bind<write_guid_bytes>(iface),
-            [&](writer& w) {
-                if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
-                    write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
-                    return;
-                }
-                auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
-                write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
-                abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
-                for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
-                {
-                    write_static_abi_class_members(w, other_iface, abi_methods_start_index);
-                    abi_methods_start_index += distance(other_iface.MethodList());
-                }
-            });
+                (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
+                bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
+                bind<write_guid_bytes>(iface),
+                [&](writer& w) {
+                    if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
+                        write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
+                        return;
+                    }
+                    auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
+                    write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
+                    abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
+                    for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
+                    {
+                        write_static_abi_class_members(w, other_iface, abi_methods_start_index);
+                        abi_methods_start_index += distance(other_iface.MethodList());
+                    }
+                });
+        }
+        else
+        {
+            w.write(R"(% class % : global::WinRT.IHasGuid
+{
+static global::System.Guid IHasGuid.IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
+
+%
+}
+)",
+                (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
+                bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
+                bind<write_guid_bytes>(iface),
+                [&](writer& w) {
+                    if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
+                        write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
+                        return;
+                    }
+                    auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
+                    write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
+                    abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
+                    for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
+                    {
+                        write_static_abi_class_members(w, other_iface, abi_methods_start_index);
+                        abi_methods_start_index += distance(other_iface.MethodList());
+                    }
+                });
+        }
     }
 
     template<auto method_writer>

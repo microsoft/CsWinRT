@@ -478,7 +478,7 @@ namespace WinRT
     internal interface IHasGuid
     {
 #pragma warning disable CA2252 // This API requires opting into preview features
-        static abstract ReadOnlySpan<byte> IID { get; }
+        static abstract global::System.Guid IID { get; }
 #pragma warning restore CA2252 // This API requires opting into preview features
     }
 #endif
@@ -594,7 +594,7 @@ namespace WinRT
         public BaseFactory(string typeNamespace, string typeFullName)
         {
 #if NET
-            Guid interfaceGuid = MemoryMarshal.Read<Guid>(I.IID);
+            Guid interfaceGuid = I.IID;
 #else
             Guid interfaceGuid = typeof(I).GUID;
 #endif
