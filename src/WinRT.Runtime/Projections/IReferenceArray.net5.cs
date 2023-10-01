@@ -24,7 +24,7 @@ namespace ABI.Windows.Foundation
     internal static class BoxedArrayIReferenceArrayImpl<T>
     {
         public static readonly IntPtr AbiToProjectionVftablePtr;
-        private static readonly Delegate DelegateCache;
+        private static readonly IReferenceArray_Delegates.get_Value_0 DelegateCache;
 
         static unsafe BoxedArrayIReferenceArrayImpl()
         {

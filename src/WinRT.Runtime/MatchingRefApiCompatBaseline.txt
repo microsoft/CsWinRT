@@ -56,10 +56,11 @@ TypesMustExist : Type 'ABI.System.ComponentModel.INotifyPropertyChangedMethods' 
 TypesMustExist : Type 'ABI.System.Windows.Input.ICommandMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.IActivationFactoryMethods' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(System.Func<System.Type, System.Type>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterTypeComInterfaceEntriesLookup(System.Func<System.Type, System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]>)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.DelegateTypeDetails<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.IWinRTExposedTypeDetails' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.StructTypeDetails<T, TAbi>' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(System.String, System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 63
+Total Issues: 64

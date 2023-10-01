@@ -815,6 +815,21 @@ namespace ABI.System.Collections.Generic
         }
     }
 
+    internal sealed class IBindableIteratorTypeDetails : IWinRTExposedTypeDetails
+    {
+        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            return new ComWrappers.ComInterfaceEntry[]
+            {
+                    new ComWrappers.ComInterfaceEntry
+                    {
+                        IID = typeof(ABI.Microsoft.UI.Xaml.Interop.IBindableIterator).GUID,
+                        Vtable = ABI.Microsoft.UI.Xaml.Interop.IBindableIterator.AbiToProjectionVftablePtr
+                    }
+            };
+        }
+    }
+
     [DynamicInterfaceCastableImplementation]
     [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
     interface IEnumerator<T> : global::System.Collections.Generic.IEnumerator<T>, global::Windows.Foundation.Collections.IIterator<T>
@@ -838,6 +853,10 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerator<T>));
 
+        // Limiting projected surface to IBindableIterator as we only create a CCW for it during those scenarios.
+        // In IEnumerator<> scenarios, we use this as a helper for the implementation and don't actually use it to
+        // create a CCW.
+        [global::WinRT.WinRTExposedType(typeof(IBindableIteratorTypeDetails))]
         public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator
         {
             private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
@@ -938,7 +957,7 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static IEnumerator()
         {
-            if (IEnumeratorMethods<T>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled && IEnumeratorMethods<T>.AbiToProjectionVftablePtr == default)
             {
                 // Handle the compat scenario where the source generator wasn't used or IDIC was used.
                 var initFallbackCCWVtable = (Action)typeof(IEnumeratorMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
