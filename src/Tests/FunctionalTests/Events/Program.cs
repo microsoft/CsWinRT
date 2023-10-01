@@ -48,7 +48,7 @@ bool uriMatches = managedUriHandler.Uri == new Uri("http://github.com");
 
 return events_received == events_expected && uriMatches ? 100 : 101;
 
-class ManagedUriHandler : IUriHandler
+partial class ManagedUriHandler : IUriHandler
 {
     public Uri Uri { get; private set; }
 

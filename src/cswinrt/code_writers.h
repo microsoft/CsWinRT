@@ -3532,6 +3532,7 @@ event % %;)",
         bool marshal_by_object_reference_value;
         std::vector<std::pair<std::string, std::string>> generic_parameter_instantiatons;
         std::string abi_methods_static_class_name;
+        std::string interface_guid;
 
         bool is_out() const
         {
@@ -3635,12 +3636,14 @@ event % %;)",
             if (is_pinnable || is_object_in() || is_out() || local_type.empty())
                 return;
 
-            w.write("% = %.CreateMarshaler%%(%);\n",
+            w.write("% = %.CreateMarshaler%%(%%%);\n",
                 get_marshaler_local(w),
                 marshaler_type,
                 is_array() ? "Array" : "",
                 is_marshal_by_object_reference_value() ? "2" : "",
-                bind<write_escaped_identifier>(param_name));
+                bind<write_escaped_identifier>(param_name),
+                interface_guid != "" ? ", " : "",
+                interface_guid);
 
             if (is_generic() || is_array())
             {
@@ -3936,6 +3939,7 @@ event % %;)",
                 {
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
+                    m.interface_guid = w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(semantics, typedef_name_type::Projected, false));
                 }
                 break;
             case category::class_type:
