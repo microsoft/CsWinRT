@@ -8,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -23,6 +22,16 @@ using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfac
 
 namespace WinRT
 {
+    internal static class KeyValuePairHelper
+    {
+        internal readonly static ConcurrentDictionary<Type, ComInterfaceEntry> KeyValuePairCCW = new();
+
+        internal static void TryAddKeyValuePairCCW(Type keyValuePairType, Guid iid, IntPtr abiToProjectionVftablePtr)
+        {
+            KeyValuePairCCW.TryAdd(keyValuePairType, new ComInterfaceEntry { IID = iid, Vtable = abiToProjectionVftablePtr });
+        }
+    }
+
 #if EMBED
     internal
 #else
@@ -30,8 +39,8 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
-        private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new ConcurrentDictionary<Type, Func<IntPtr, object>>();
+        private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new();
+        private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
@@ -188,7 +197,6 @@ namespace WinRT
                 if (authoringMetadaType != null)
                 {
                     winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
-                    type = authoringMetadaType;
                 }
             }
 
@@ -206,6 +214,12 @@ namespace WinRT
             {
                 hasWinrtExposedClassAttribute = true;
                 entries.AddRange(ABI.System.EventHandler.GetExposedInterfaces());
+            }
+            else if (!type.IsEnum && GetComInterfaceEntriesForTypeFromLookupTable(type) is var lookupTableEntries && lookupTableEntries != null)
+            {
+                Console.WriteLine("found entries: " + lookupTableEntries.Count());
+                hasWinrtExposedClassAttribute = true;
+                entries.AddRange(lookupTableEntries);
             }
             else if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
@@ -272,12 +286,19 @@ namespace WinRT
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
-                var ifaceAbiType = type.FindHelperType();
-                entries.Add(new ComInterfaceEntry
+                if (KeyValuePairHelper.KeyValuePairCCW.TryGetValue(type, out var entry))
                 {
-                    IID = GuidGenerator.GetIID(ifaceAbiType),
-                    Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
-                });
+                    entries.Add(entry);
+                }
+                else
+                {
+                    var ifaceAbiType = type.FindHelperType();
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = GuidGenerator.GetIID(ifaceAbiType),
+                        Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
+                    });
+                }
             }
             else if (!hasWinrtExposedClassAttribute && type.ShouldProvideIReference())
             {

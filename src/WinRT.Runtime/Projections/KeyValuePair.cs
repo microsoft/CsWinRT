@@ -56,6 +56,8 @@ namespace ABI.System.Collections.Generic
         {
             return KeyValuePair<K, V>.FindAdapter(thisPtr).Value;
         }
+
+        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(KeyValuePair<K, V>));
     }
 
 #if EMBED
@@ -122,6 +124,7 @@ namespace ABI.System.Collections.Generic
                 return false;
             }
 
+            EnsureRcwHelperInitialized();
 #if NET
             var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 2));
 #else
@@ -140,6 +143,11 @@ namespace ABI.System.Collections.Generic
 #endif
                 return false;
             }
+
+            KeyValuePairHelper.TryAddKeyValuePairCCW(
+                typeof(global::System.Collections.Generic.KeyValuePair<K, V>),
+                KeyValuePairMethods<K, V>.PIID,
+                KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr);
 
             return true;
         }
@@ -240,6 +248,7 @@ namespace ABI.System.Collections.Generic
             {
                 return default;
             }
+
             var pair = new KeyValuePair<K, V>(_FromAbi(thisPtr));
             return new global::System.Collections.Generic.KeyValuePair<K, V>(pair.Key, pair.Value);
         }
