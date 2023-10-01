@@ -26,8 +26,18 @@ namespace Generator
 
             context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect().Combine(isCsWinRTComponent), GenerateVtableAttributes);
 
-            var genericInstantionsToGenerate = vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).Collect();
-            context.RegisterImplementationSourceOutput(genericInstantionsToGenerate.Combine(isCsWinRTComponent), GenerateCCWForGenericInstantiation);
+            var vtablesToAddOnLookupTable = context.SyntaxProvider.CreateSyntaxProvider(
+                static (n, _) => NeedVtableOnLookupTable(n),
+                static (n, _) => GetVtableAttributesToAddOnLookupTable(n));
+
+            var genericInterfacesFromVtableAttribute = vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).Collect();
+            var genericInterfacesFromVtableLookupTable = vtablesToAddOnLookupTable.SelectMany(static (vtable, _) => vtable.SelectMany(v => v.GenericInterfaces)).Collect();
+
+            context.RegisterImplementationSourceOutput(
+                genericInterfacesFromVtableAttribute.Combine(genericInterfacesFromVtableLookupTable).Combine(isCsWinRTComponent),
+                GenerateCCWForGenericInstantiation);
+
+            context.RegisterImplementationSourceOutput(vtablesToAddOnLookupTable.SelectMany(static (vtable, _) => vtable).Collect().Combine(isCsWinRTComponent), GenerateVtableLookupTable);
         }
 
         // Restrict to non-projected classes which can be instantiated
@@ -60,10 +70,8 @@ namespace Generator
             return qualifiedString.StartsWith("global::") ? qualifiedString[8..] : qualifiedString;
         }
 
-        internal static VtableAttribute GetVtableAttributeToAdd(INamedTypeSymbol symbol, Func<ISymbol, bool> isWinRTType, bool isAuthoring, string authoringDefaultInterface = "")
+        internal static VtableAttribute GetVtableAttributeToAdd(ITypeSymbol symbol, Func<ISymbol, bool> isWinRTType, bool isAuthoring, string authoringDefaultInterface = "")
         {
-            bool IsNamedTypeWinRTType(INamedTypeSymbol namedType) => isWinRTType(namedType);
-
             HashSet<string> interfacesToAddToVtable = new();
             HashSet<GenericInterface> genericInterfacesToAddToVtable = new();
 
@@ -73,33 +81,6 @@ namespace Generator
             }
 
             foreach (var iface in symbol.AllInterfaces)
-            {
-                AddInterfaceAndCompatibleInterfacesToVtable(iface);
-            }
-
-            bool hasWinRTExposedBaseType = false;
-            var baseType = symbol.BaseType;
-            while (baseType != null && baseType.SpecialType != SpecialType.System_Object)
-            {
-                if (isWinRTType(baseType) ||
-                    baseType.Interfaces.Any(IsNamedTypeWinRTType))
-                {
-                    hasWinRTExposedBaseType = true;
-                    break;
-                }
-
-                baseType = baseType.BaseType;
-            }
-
-            return new VtableAttribute(
-                isAuthoring ? "ABI.Impl." + symbol.ContainingNamespace.ToDisplayString() : symbol.ContainingNamespace.ToDisplayString(),
-                symbol.ContainingNamespace.IsGlobalNamespace,
-                symbol.Name,
-                interfacesToAddToVtable.ToImmutableArray(),
-                hasWinRTExposedBaseType,
-                genericInterfacesToAddToVtable.ToImmutableArray());
-
-            void AddInterfaceAndCompatibleInterfacesToVtable(INamedTypeSymbol iface)
             {
                 if (isWinRTType(iface))
                 {
@@ -117,13 +98,42 @@ namespace Generator
                 }
             }
 
+            if (!interfacesToAddToVtable.Any())
+            {
+                return default;
+            }
+
+            var typeName = ToFullyQualifiedString(symbol);
+            bool isGlobalNamespace = symbol.ContainingNamespace == null || symbol.ContainingNamespace.IsGlobalNamespace;
+            var @namespace = symbol.ContainingNamespace?.ToDisplayString();
+            if (!isGlobalNamespace)
+            {
+                typeName = typeName[(@namespace.Length + 1)..];
+            }
+
+            return new VtableAttribute(
+                isAuthoring ? "ABI.Impl." + @namespace : @namespace,
+                isGlobalNamespace,
+                typeName,
+                interfacesToAddToVtable.ToImmutableArray(),
+                genericInterfacesToAddToVtable.ToImmutableArray(),
+                symbol is IArrayTypeSymbol);
+
             void AddGenericInterfaceInstantiation(INamedTypeSymbol iface)
             {
                 if (iface.IsGenericType)
                 {
                     List<GenericParameter> genericParameters = new();
-                    foreach(var genericParameter in iface.TypeArguments)
+                    foreach (var genericParameter in iface.TypeArguments)
                     {
+                        // Handle initialization of nested generics as they may not be
+                        // initialized already.
+                        if (genericParameter is INamedTypeSymbol genericParameterIface && 
+                            genericParameterIface.IsGenericType)
+                        {
+                            AddGenericInterfaceInstantiation(genericParameterIface);
+                        }
+
                         genericParameters.Add(new GenericParameter(
                             ToFullyQualifiedString(genericParameter),
                             GeneratorHelper.GetAbiType(genericParameter),
@@ -222,6 +232,62 @@ namespace Generator
             GenerateVtableAttributes(sourceProductionContext.AddSource, value.vtableAttributes);
         }
 
+        internal static string GenerateVtableEntry(VtableAttribute vtableAttribute)
+        {
+            StringBuilder source = new();
+
+            if (vtableAttribute.Interfaces.Any())
+            {
+                foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+                {
+                    source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
+                        genericInterface.GenericDefinition,
+                        genericInterface.GenericParameters));
+                }
+
+                source.AppendLine();
+                source.AppendLine($$"""
+                                return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]
+                                {
+                        """);
+
+                foreach (var @interface in vtableAttribute.Interfaces)
+                {
+                    var genericStartIdx = @interface.IndexOf('<');
+                    var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
+                    if (genericStartIdx != -1)
+                    {
+                        interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
+                    }
+
+                    // TODO: replace once IID propagated to manual projections
+                    // For now, special casing the Overrides interfaces which are marked internal
+                    // and the authored default interface which are under the Impl namespace.
+                    var iid = @interface.Contains("Overrides") || @interface.EndsWith("Class") ? $"global::ABI.{interfaceStaticsMethod}.IID" :
+                        $"global::WinRT.GuidGenerator.GetIID(typeof(global::{@interface}).GetHelperType())";
+
+                    source.AppendLine($$"""
+                                                new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
+                                                {
+                                                    IID = {{iid}},
+                                                    Vtable = global::ABI.{{interfaceStaticsMethod}}.AbiToProjectionVftablePtr
+                                                },
+                                    """);
+                }
+                source.AppendLine($$"""
+                                };
+                                """);
+            }
+            else
+            {
+                source.AppendLine($$"""
+                                        return global::System.Array.Empty<global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry>();
+                                """);
+            }
+
+            return source.ToString();
+        }
+
         internal static void GenerateVtableAttributes(Action<string, string> addSource, ImmutableArray<VtableAttribute> vtableAttributes)
         {
             // Using ToImmutableHashSet to avoid duplicate entries from the use of partial classes by the developer
@@ -230,10 +296,7 @@ namespace Generator
             // to get all the symbol data rather than the data at an instance of a partial class definition.
             foreach (var vtableAttribute in vtableAttributes.ToImmutableHashSet())
             {
-                // Even if no interfaces are on the vtable, as long as the base type is a WinRT type,
-                // we want to put the attribute as the attribute is the opt-in for the source generated
-                // vtable generation.
-                if (vtableAttribute.Interfaces.Any() || vtableAttribute.HasWinRTExposedBaseType)
+                if (vtableAttribute.Interfaces.Any())
                 {
                     StringBuilder source = new();
                     source.AppendLine("using static WinRT.TypeExtensions;\n");
@@ -322,7 +385,8 @@ namespace Generator
             }
         }
 
-        private static void GenerateCCWForGenericInstantiation(SourceProductionContext sourceProductionContext, (ImmutableArray<GenericInterface> genericInterfaces, bool isCsWinRTComponent) value)
+        private static void GenerateCCWForGenericInstantiation(SourceProductionContext sourceProductionContext, 
+            ((ImmutableArray<GenericInterface> list1, ImmutableArray<GenericInterface> list2) genericInterfaces, bool isCsWinRTComponent) value)
         {
             if (value.isCsWinRTComponent)
             {
@@ -330,7 +394,7 @@ namespace Generator
                 return;
             }
 
-            GenerateCCWForGenericInstantiation(sourceProductionContext.AddSource, value.genericInterfaces);
+            GenerateCCWForGenericInstantiation(sourceProductionContext.AddSource, value.genericInterfaces.list1.AddRange(value.genericInterfaces.list2));
         }
 
         internal static void GenerateCCWForGenericInstantiation(Action<string, string> addSource, ImmutableArray<GenericInterface> genericInterfaces)
@@ -364,6 +428,213 @@ namespace Generator
                 addSource($"WinRTGenericInstantiation.g.cs", source.ToString());
             }
         }
+
+        private static bool NeedVtableOnLookupTable(SyntaxNode node)
+        {
+            return (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Arguments.Count != 0) ||
+                    node is AssignmentExpressionSyntax;
+        }
+
+        private static List<VtableAttribute> GetVtableAttributesToAddOnLookupTable(GeneratorSyntaxContext context)
+        {
+            HashSet<VtableAttribute> vtableAttributes = new();
+
+            if (context.Node is InvocationExpressionSyntax invocation)
+            {
+                var methodSymbol = context.SemanticModel.GetSymbolInfo(invocation.Expression).Symbol as IMethodSymbol;
+                // Check if function is within a CsWinRT projected class or interface.
+                if (GeneratorHelper.IsWinRTType(methodSymbol.ContainingSymbol))
+                {
+                    // Get the concrete types directly from the argument rather than
+                    // using what the method accepts, which might just be an interface, so
+                    // that we can try to include any other WinRT interfaces implemented by
+                    // that type on the CCW when it is marshaled.
+                    for (int idx = 0; idx < invocation.ArgumentList.Arguments.Count; idx++)
+                    {
+                        if (methodSymbol.Parameters[idx].RefKind != RefKind.Out)
+                        {
+                            var argumentType = context.SemanticModel.GetTypeInfo(invocation.ArgumentList.Arguments[idx].Expression);
+                            // Check if it is an WinRT array being passed as an object
+                            // which means the IList interfaces need to be put on the CCW.
+                            if (argumentType.Type is IArrayTypeSymbol arrayType)
+                            {
+                                if (methodSymbol.Parameters[idx].Type is not IArrayTypeSymbol)
+                                {
+                                    var vtableAtribute = GetVtableAttributeToAdd(arrayType, GeneratorHelper.IsWinRTType, false);
+                                    if (vtableAtribute != default)
+                                    {
+                                        vtableAttributes.Add(vtableAtribute);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                var argumentClassTypeSymbol = argumentType.Type;
+                                // Check if a generic class or delegate or it isn't a
+                                // WinRT type meaning we will need to probably create a CCW for.
+                                if (argumentClassTypeSymbol.TypeKind == TypeKind.Delegate &&
+                                    argumentClassTypeSymbol.MetadataName.Contains("`") &&
+                                    GeneratorHelper.IsWinRTType(argumentClassTypeSymbol))
+                                {
+                                    Logger.logger.Log("TODO: delegate type: " + argumentClassTypeSymbol.MetadataName);
+                                }
+
+                                if (argumentClassTypeSymbol.TypeKind == TypeKind.Class &&
+                                    (argumentClassTypeSymbol.MetadataName.Contains("`") ||
+                                    (!GeneratorHelper.IsWinRTType(argumentClassTypeSymbol) &&
+                                        !GeneratorHelper.HasWinRTExposedTypeAttribute(argumentClassTypeSymbol) &&
+                                        // If the type is defined in the same assembly as what the source generator is running on,
+                                        // we let the WinRTExposedType attribute generator handle it.
+                                        !SymbolEqualityComparer.Default.Equals(argumentClassTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly))))
+                                {
+                                    var vtableAtribute = GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, false);
+                                    if (vtableAtribute != default)
+                                    {
+                                        vtableAttributes.Add(vtableAtribute);
+                                    }
+
+                                    if (argumentClassTypeSymbol.MetadataName.Contains("`"))
+                                    {
+                                        var enumerators = argumentClassTypeSymbol.GetMembers("GetEnumerator");
+                                        foreach (var enumerator in enumerators)
+                                        {
+                                            if (enumerator is IMethodSymbol enumeratorMethod)
+                                            {
+                                                var enumeratorVtableAtribute = GetVtableAttributeToAdd(enumeratorMethod.ReturnType, GeneratorHelper.IsWinRTType, false);
+                                                if (enumeratorVtableAtribute != default)
+                                                {
+                                                    vtableAttributes.Add(enumeratorVtableAtribute);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (context.Node is AssignmentExpressionSyntax assignment)
+            {
+                // Check if property is within a CsWinRT projected class or interface.
+                if (context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol is IPropertySymbol propertySymbol &&
+                    GeneratorHelper.IsWinRTType(propertySymbol.ContainingSymbol))
+                {
+                    var argumentType = context.SemanticModel.GetTypeInfo(assignment.Right);
+
+                    // Check if it is an WinRT array being passed as an object
+                    // which means the IList interfaces need to be put on the CCW.
+                    if (argumentType.Type is IArrayTypeSymbol arrayType)
+                    {
+                        if (propertySymbol.Type is not IArrayTypeSymbol)
+                        {
+                            var vtableAtribute = GetVtableAttributeToAdd(arrayType, GeneratorHelper.IsWinRTType, false);
+                            if (vtableAtribute != default)
+                            {
+                                vtableAttributes.Add(vtableAtribute);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var argumentClassTypeSymbol = argumentType.Type;
+                        // Check if a generic class or delegate or it isn't a
+                        // WinRT type meaning we will need to probably create a CCW for.
+                        if (argumentClassTypeSymbol.TypeKind == TypeKind.Delegate &&
+                            argumentClassTypeSymbol.MetadataName.Contains("`") &&
+                            GeneratorHelper.IsWinRTType(argumentClassTypeSymbol))
+                        {
+                            Logger.logger.Log("TODO: delegate assignment type: " + argumentClassTypeSymbol.MetadataName);
+                        }
+
+                        if (argumentClassTypeSymbol.TypeKind == TypeKind.Class &&
+                            (argumentClassTypeSymbol.MetadataName.Contains("`") ||
+                            (!GeneratorHelper.IsWinRTType(argumentClassTypeSymbol) &&
+                                !GeneratorHelper.HasWinRTExposedTypeAttribute(argumentClassTypeSymbol) &&
+                                // If the type is defined in the same assembly as what the source generator is running on,
+                                // we let the WinRTExposedType attribute generator handle it.
+                                !SymbolEqualityComparer.Default.Equals(argumentClassTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly))))
+                        {
+                            var vtableAtribute = GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, false);
+                            if (vtableAtribute != default)
+                            {
+                                vtableAttributes.Add(vtableAtribute);
+                            }
+
+                            if (argumentClassTypeSymbol.MetadataName.Contains("`"))
+                            {
+                                var enumerators = argumentClassTypeSymbol.GetMembers("GetEnumerator");
+                                foreach (var enumerator in enumerators)
+                                {
+                                    if (enumerator is IMethodSymbol enumeratorMethod)
+                                    {
+                                        var enumeratorVtableAtribute = GetVtableAttributeToAdd(enumeratorMethod.ReturnType, GeneratorHelper.IsWinRTType, false);
+                                        if (enumeratorVtableAtribute != default)
+                                        {
+                                            vtableAttributes.Add(enumeratorVtableAtribute);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return vtableAttributes.ToList();
+        }
+
+        private static void GenerateVtableLookupTable(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, bool isCsWinRTComponent) value)
+        {
+            StringBuilder source = new();
+
+            if (value.vtableAttributes.Any())
+            {
+                source.AppendLine($$"""
+                                    using System;
+                                    using System.Runtime.InteropServices;
+                                    using System.Runtime.CompilerServices;
+
+                                    namespace WinRT.GenericHelpers
+                                    {
+
+                                        internal static class GlobalVtableLookup
+                                        {
+
+                                            [System.Runtime.CompilerServices.ModuleInitializer]
+                                            internal static void InitializeGlobalVtableLookup()
+                                            {
+                                                ComWrappersSupport.RegisterTypeComInterfaceEntriesLookup(LookupVtableEntries);
+                                            }
+
+                                            private static ComWrappers.ComInterfaceEntry[] LookupVtableEntries(Type type)
+                                            {
+                                    """);
+            }
+
+            foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet())
+            {
+                string className = vtableAttribute.IsGlobalNamespace ? 
+                    vtableAttribute.ClassName : $"global::{vtableAttribute.Namespace}.{vtableAttribute.ClassName}";
+                source.AppendLine($$"""
+                                if (type == typeof({{className}}))
+                                {
+                                    {{GenerateVtableEntry(vtableAttribute)}}
+                                }
+                    """);
+            }
+
+            if (value.vtableAttributes.Any())
+            {
+                source.AppendLine($$"""
+                                                return default;
+                                            }
+                                        }
+                                    }
+                                    """);
+                sourceProductionContext.AddSource($"WinRTGlobalVtableLookup.g.cs", source.ToString());
+            }
+        }
     }
 
     internal readonly record struct GenericParameter(
@@ -381,6 +652,6 @@ namespace Generator
         bool IsGlobalNamespace,
         string ClassName,
         EquatableArray<string> Interfaces,
-        bool HasWinRTExposedBaseType,
-        EquatableArray<GenericInterface> GenericInterfaces);
+        EquatableArray<GenericInterface> GenericInterfaces,
+        bool IsArray);
 }

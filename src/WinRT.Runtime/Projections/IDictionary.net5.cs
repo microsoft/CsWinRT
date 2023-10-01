@@ -1198,7 +1198,7 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static IDictionary()
         {
-            if (IDictionaryMethods<K, V>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled && IDictionaryMethods<K, V>.AbiToProjectionVftablePtr == default)
             {
                 // Handle the compat scenario where the source generator wasn't used or IDIC was used.
                 var initFallbackCCWVtable = (Action)typeof(IDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).

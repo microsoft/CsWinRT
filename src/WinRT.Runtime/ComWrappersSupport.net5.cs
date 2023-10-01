@@ -277,6 +277,26 @@ namespace WinRT
                 return genericImplType.MakeGenericType(implementationType.GetGenericArguments());
             }
         }
+
+        private readonly static List<Func<Type, ComInterfaceEntry[]>> ComInterfaceEntriesLookup = new();
+
+        public static void RegisterTypeComInterfaceEntriesLookup(Func<Type, ComInterfaceEntry[]> comInterfaceEntriesLookup) => ComInterfaceEntriesLookup.Add(comInterfaceEntriesLookup);
+
+        internal static ComInterfaceEntry[] GetComInterfaceEntriesForTypeFromLookupTable(Type type)
+        {
+            Console.WriteLine("lookup entries: " + type);
+            foreach (var func in ComInterfaceEntriesLookup)
+            {
+                var comInterfaceEntries = func(type);
+                if (comInterfaceEntries != null)
+                {
+                    Console.WriteLine("found entries: " + type);
+                    return comInterfaceEntries;
+                }
+            }
+
+            return null;
+        }
     }
 
 #if EMBED
