@@ -5961,12 +5961,11 @@ static global::System.Guid IHasGuid.IID { get; } = new Guid(new global::System.R
     template<auto method_writer>
     std::string write_static_factory_class_with_raw_return_type(writer& w, std::string_view cache_type_name, TypeDef const& iface)
     {
-        w.write(R"(% static class _%
+        w.write(R"(internal static class _%
 {
 %
 }
-)", 
-            (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
+)",
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
             bind_each<method_writer>(iface.MethodList()));
 
