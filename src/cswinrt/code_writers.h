@@ -5904,7 +5904,7 @@ public static Guid PIID = Vftbl.PIID;
 
         if (settings.netstandard_compat)
         {
-            w.write(R"(% class %
+            w.write(R"(% sealed class %
 {
 internal static global::System.Guid IID { get; } = new Guid(new byte[] { % });
 
@@ -5931,7 +5931,7 @@ internal static global::System.Guid IID { get; } = new Guid(new byte[] { % });
         }
         else
         {
-            w.write(R"(% class % : global::WinRT.IHasGuid
+            w.write(R"(% sealed class % : global::WinRT.IHasGuid
 {
 static global::System.Guid IHasGuid.IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
 
