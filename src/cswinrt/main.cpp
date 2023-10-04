@@ -174,8 +174,8 @@ Where <spec> is one or more of:
                     call(semantics,
                         [&](type_definition const& type) 
                         {
-                            if (typesVisited.find(type) != typesVisited.end() &&
-                                std::find(typesToVisit.begin(), typesToVisit.end(), type) != typesToVisit.end())
+                            if (typesVisited.find(type) == typesVisited.end() &&
+                                std::find(typesToVisit.begin(), typesToVisit.end(), type) == typesToVisit.end())
                             {
                                 typesToVisit.push_back(type);
                             }
