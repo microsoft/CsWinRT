@@ -4,6 +4,8 @@
 #include "helpers.h"
 #include "type_writers.h"
 #include "code_writers.h"
+#include <functional>
+#include <algorithm>
 #include <concurrent_unordered_map.h>
 #include <concurrent_unordered_set.h>
 
@@ -156,6 +158,137 @@ Where <spec> is one or more of:
                             {
                                 componentActivatableClasses.insert(type);
                             }
+                        }
+                    }
+                }
+            }
+
+            if (settings.embedded)
+            {
+                std::vector<TypeDef> typesToVisit;
+                std::set<TypeDef> typesVisited;
+
+                std::function<void(type_semantics semantics)> add_type_to_visit = 
+                    [&](type_semantics semantics)
+                {
+                    call(semantics,
+                        [&](type_definition const& type) 
+                        {
+                            if (typesVisited.find(type) != typesVisited.end() &&
+                                std::find(typesToVisit.begin(), typesToVisit.end(), type) != typesToVisit.end())
+                            {
+                                typesToVisit.push_back(type);
+                            }
+                        },
+                        [&](generic_type_instance const& type)
+                        {
+                            add_type_to_visit(type.generic_type);
+                            for (auto& genericArg : type.generic_args)
+                            {
+                                add_type_to_visit(genericArg);
+                            }
+                        },
+                        [&](auto const&) {}
+                    );
+                };
+
+                std::map<std::string_view, std::vector<std::string_view>> allTypes;
+                for (auto&& [ns, members] : c.namespaces())
+                {
+                    for (auto&& [name, type] : members.types)
+                    {
+                        allTypes[ns].push_back(name);
+                        if (!settings.filter.includes(type)) { continue; }
+                        typesToVisit.push_back(type);
+                    }
+                }
+
+                while (!typesToVisit.empty())
+                {
+                    TypeDef type = typesToVisit.back();
+                    typesToVisit.pop_back();
+                    typesVisited.insert(type);
+
+                    if (get_category(type) == category::class_type && !is_attribute_type(type))
+                    {
+                        auto base_type = get_type_semantics(type.Extends());
+                        if (!std::holds_alternative<object_type>(base_type))
+                        {
+                            add_type_to_visit(base_type);
+                        }
+                    }
+
+                    if (get_category(type) == category::class_type ||
+                        get_category(type) == category::interface_type)
+                    {
+                        auto methods = type.MethodList();
+                        for (auto&& method : methods)
+                        {
+                            method_signature signature{ method };
+                            for (auto&& param : signature.params())
+                            {
+                                add_type_to_visit(get_type_semantics(param.second->Type()));
+                            }
+
+                            if (signature.return_signature())
+                            {
+                                add_type_to_visit(get_type_semantics(signature.return_signature().Type()));
+                            }
+                        }
+
+                        for (auto&& property : type.PropertyList())
+                        {
+                            add_type_to_visit(get_type_semantics(property.Type().Type()));
+                        }
+
+                        for (auto&& iface : type.InterfaceImpl())
+                        {
+                            add_type_to_visit(get_type_semantics(iface.Interface()));
+                        }
+                    }
+
+                    if (get_category(type) == category::delegate_type)
+                    {
+                        method_signature signature{ get_delegate_invoke(type) };
+                        for (auto&& param : signature.params())
+                        {
+                            add_type_to_visit(get_type_semantics(param.second->Type()));
+                        }
+
+                        if (signature.return_signature())
+                        {
+                            add_type_to_visit(get_type_semantics(signature.return_signature().Type()));
+                        }
+                    }
+
+                    if ((get_category(type) == category::struct_type && !is_api_contract_type(type)) ||
+                        (get_category(type) == category::class_type && is_attribute_type(type)))
+                    {
+                        for (auto&& field : type.FieldList())
+                        {
+                            add_type_to_visit(get_type_semantics(field.Signature().Type()));
+                        }
+                    }
+                }
+
+                w.write("Types determined from analysis\n");
+                std::map<std::string_view, std::vector<std::string_view>> visitedTypesMap;
+                for (auto&& type : typesVisited)
+                {
+                    visitedTypesMap[type.TypeNamespace()].push_back(type.TypeName());
+                }
+
+                for (auto& entry : visitedTypesMap)
+                {
+                    if (allTypes[entry.first].size() == entry.second.size())
+                    {
+                        w.write("%\n", entry.first);
+                    }
+                    else
+                    {
+                        for (auto& type : entry.second)
+                        {
+                            w.write("%.%\n", entry.first, type);
                         }
                     }
                 }
