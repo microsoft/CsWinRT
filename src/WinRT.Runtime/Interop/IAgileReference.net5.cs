@@ -142,11 +142,11 @@ namespace ABI.WinRT.Interop
         {
             public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             private void* _RegisterInterfaceInGlobal;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ref Guid, out IntPtr, int> RegisterInterfaceInGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ref Guid, out IntPtr, int>)_RegisterInterfaceInGlobal;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int> RegisterInterfaceInGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)_RegisterInterfaceInGlobal;
             private void* _RevokeInterfaceFromGlobal;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int> RevokeInterfaceFromGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)_RevokeInterfaceFromGlobal;
             private void* _GetInterfaceFromGlobal;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ref Guid, out IntPtr, int> GetInterfaceFromGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ref Guid, out IntPtr, int>)_GetInterfaceFromGlobal;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int> GetInterfaceFromGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)_GetInterfaceFromGlobal;
         }
 
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
@@ -166,7 +166,8 @@ namespace ABI.WinRT.Interop
 
         public IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RegisterInterfaceInGlobal(ThisPtr, ptr, ref riid, out IntPtr cookie));
+            IntPtr cookie;
+            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RegisterInterfaceInGlobal(ThisPtr, ptr, &riid, &cookie));
             return cookie;
 
         }
@@ -178,7 +179,8 @@ namespace ABI.WinRT.Interop
 
         public IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInterfaceFromGlobal(ThisPtr, cookie, ref riid, out IntPtr ptr));
+            IntPtr ptr;
+            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInterfaceFromGlobal(ThisPtr, cookie, &riid, &ptr));
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
