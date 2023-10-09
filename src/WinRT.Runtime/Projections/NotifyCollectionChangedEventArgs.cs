@@ -119,7 +119,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _CreateInstanceWithAllParameters_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, out IntPtr, out IntPtr, int> CreateInstanceWithAllParameters_0 => (delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, out IntPtr, out IntPtr, int>)_CreateInstanceWithAllParameters_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, IntPtr*, IntPtr*, int> CreateInstanceWithAllParameters_0 => (delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, IntPtr*, IntPtr*, int>)_CreateInstanceWithAllParameters_0;
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
@@ -147,7 +147,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(newItems);
                 __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(oldItems);
                 __baseInterface = MarshalInspectable<object>.CreateMarshaler2(baseInterface);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable<object>.GetAbi(__baseInterface), out __innerInterface, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
                 innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                 return ObjectReference<IUnknownVftbl>.FromAbi(__retval);
             }
@@ -171,7 +171,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             {
                 __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(newItems);
                 __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(oldItems);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, IntPtr.Zero, out __innerInterface, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, IntPtr.Zero, &__innerInterface, &__retval));
                 return new ObjectReferenceValue(__retval);
             }
             finally

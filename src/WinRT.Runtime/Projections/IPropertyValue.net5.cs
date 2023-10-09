@@ -157,7 +157,7 @@ namespace ABI.Windows.Foundation
                 _GetRectArray_38 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetRectArray_38,
 
             };
-            var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedIPropertyValueImpl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 39);
+            var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedIPropertyValueImpl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 39);
             Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
@@ -1261,83 +1261,83 @@ namespace ABI.Windows.Foundation
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             internal void* _get_Type_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.PropertyType, int> get_Type_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.PropertyType, int>)_get_Type_0; set => _get_Type_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, global::Windows.Foundation.PropertyType*, int> get_Type_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::Windows.Foundation.PropertyType*, int>)_get_Type_0; set => _get_Type_0 = value; }
             public void* _get_IsNumericScalar_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, out byte, int> get_IsNumericScalar_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)_get_IsNumericScalar_1; set => _get_IsNumericScalar_1 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> get_IsNumericScalar_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_get_IsNumericScalar_1; set => _get_IsNumericScalar_1 = value; }
             internal void* _GetUInt8_2;
-            public delegate* unmanaged[Stdcall]<IntPtr, out byte, int> GetUInt8_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)_GetUInt8_2; set => _GetUInt8_2 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> GetUInt8_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_GetUInt8_2; set => _GetUInt8_2 = value; }
             internal void* _GetInt16_3;
-            public delegate* unmanaged[Stdcall]<IntPtr, out short, int> GetInt16_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, out short, int>)_GetInt16_3; set => _GetInt16_3 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, short*, int> GetInt16_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, short*, int>)_GetInt16_3; set => _GetInt16_3 = value; }
             internal void* _GetUInt16_4;
-            public delegate* unmanaged[Stdcall]<IntPtr, out ushort, int> GetUInt16_4 { get => (delegate* unmanaged[Stdcall]<IntPtr, out ushort, int>)_GetUInt16_4; set => _GetUInt16_4 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, ushort*, int> GetUInt16_4 { get => (delegate* unmanaged[Stdcall]<IntPtr, ushort*, int>)_GetUInt16_4; set => _GetUInt16_4 = value; }
             internal void* _GetInt32_5;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int, int> GetInt32_5 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int, int>)_GetInt32_5; set => _GetInt32_5 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int*, int> GetInt32_5 { get => (delegate* unmanaged[Stdcall]<IntPtr, int*, int>)_GetInt32_5; set => _GetInt32_5 = value; }
             internal void* _GetUInt32_6;
-            public delegate* unmanaged[Stdcall]<IntPtr, out uint, int> GetUInt32_6 { get => (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)_GetUInt32_6; set => _GetUInt32_6 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, uint*, int> GetUInt32_6 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint*, int>)_GetUInt32_6; set => _GetUInt32_6 = value; }
             internal void* _GetInt64_7;
-            public delegate* unmanaged[Stdcall]<IntPtr, out long, int> GetInt64_7 { get => (delegate* unmanaged[Stdcall]<IntPtr, out long, int>)_GetInt64_7; set => _GetInt64_7 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, long*, int> GetInt64_7 { get => (delegate* unmanaged[Stdcall]<IntPtr, long*, int>)_GetInt64_7; set => _GetInt64_7 = value; }
             internal void* _GetUInt64_8;
-            public delegate* unmanaged[Stdcall]<IntPtr, out ulong, int> GetUInt64_8 { get => (delegate* unmanaged[Stdcall]<IntPtr, out ulong, int>)_GetUInt64_8; set => _GetUInt64_8 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, ulong*, int> GetUInt64_8 { get => (delegate* unmanaged[Stdcall]<IntPtr, ulong*, int>)_GetUInt64_8; set => _GetUInt64_8 = value; }
             internal void* _GetSingle_9;
-            public delegate* unmanaged[Stdcall]<IntPtr, out float, int> GetSingle_9 { get => (delegate* unmanaged[Stdcall]<IntPtr, out float, int>)_GetSingle_9; set => _GetSingle_9 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, float*, int> GetSingle_9 { get => (delegate* unmanaged[Stdcall]<IntPtr, float*, int>)_GetSingle_9; set => _GetSingle_9 = value; }
             internal void* _GetDouble_10;
-            public delegate* unmanaged[Stdcall]<IntPtr, out double, int> GetDouble_10 { get => (delegate* unmanaged[Stdcall]<IntPtr, out double, int>)_GetDouble_10; set => _GetDouble_10 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, double*, int> GetDouble_10 { get => (delegate* unmanaged[Stdcall]<IntPtr, double*, int>)_GetDouble_10; set => _GetDouble_10 = value; }
             internal void* _GetChar16_11;
-            public delegate* unmanaged[Stdcall]<IntPtr, out ushort, int> GetChar16_11 { get => (delegate* unmanaged[Stdcall]<IntPtr, out ushort, int>)_GetChar16_11; set => _GetChar16_11 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, ushort*, int> GetChar16_11 { get => (delegate* unmanaged[Stdcall]<IntPtr, ushort*, int>)_GetChar16_11; set => _GetChar16_11 = value; }
             internal void* _GetBoolean_12;
-            public delegate* unmanaged[Stdcall]<IntPtr, out byte, int> GetBoolean_12 { get => (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)_GetBoolean_12; set => _GetBoolean_12 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> GetBoolean_12 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_GetBoolean_12; set => _GetBoolean_12 = value; }
             internal void* _GetString_13;
-            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> GetString_13 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_GetString_13; set => _GetString_13 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetString_13 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetString_13; set => _GetString_13 = value; }
             internal void* _GetGuid_14;
-            public delegate* unmanaged[Stdcall]<IntPtr, out Guid, int> GetGuid_14 { get => (delegate* unmanaged[Stdcall]<IntPtr, out Guid, int>)_GetGuid_14; set => _GetGuid_14 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, Guid*, int> GetGuid_14 { get => (delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>)_GetGuid_14; set => _GetGuid_14 = value; }
             internal void* _GetDateTime_15;
-            public delegate* unmanaged[Stdcall]<IntPtr, out global::ABI.System.DateTimeOffset, int> GetDateTime_15 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::ABI.System.DateTimeOffset, int>)_GetDateTime_15; set => _GetDateTime_15 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.DateTimeOffset*, int> GetDateTime_15 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.DateTimeOffset*, int>)_GetDateTime_15; set => _GetDateTime_15 = value; }
             internal void* _GetTimeSpan_16;
-            public delegate* unmanaged[Stdcall]<IntPtr, out global::ABI.System.TimeSpan, int> GetTimeSpan_16 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::ABI.System.TimeSpan, int>)_GetTimeSpan_16; set => _GetTimeSpan_16 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.TimeSpan*, int> GetTimeSpan_16 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.TimeSpan*, int>)_GetTimeSpan_16; set => _GetTimeSpan_16 = value; }
             internal void* _GetPoint_17;
-            public delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Point, int> GetPoint_17 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Point, int>)_GetPoint_17; set => _GetPoint_17 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, global::Windows.Foundation.Point*, int> GetPoint_17 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::Windows.Foundation.Point*, int>)_GetPoint_17; set => _GetPoint_17 = value; }
             internal void* _GetSize_18;
-            public delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Size, int> GetSize_18 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Size, int>)_GetSize_18; set => _GetSize_18 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, global::Windows.Foundation.Size*, int> GetSize_18 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::Windows.Foundation.Size*, int>)_GetSize_18; set => _GetSize_18 = value; }
             internal void* _GetRect_19;
-            public delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Rect, int> GetRect_19 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Rect, int>)_GetRect_19; set => _GetRect_19 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, global::Windows.Foundation.Rect*, int> GetRect_19 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::Windows.Foundation.Rect*, int>)_GetRect_19; set => _GetRect_19 = value; }
             internal void* _GetUInt8Array_20;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetUInt8Array_20 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetUInt8Array_20; set => _GetUInt8Array_20 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetUInt8Array_20 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetUInt8Array_20; set => _GetUInt8Array_20 = value; }
             internal void* _GetInt16Array_21;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetInt16Array_21 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetInt16Array_21; set => _GetInt16Array_21 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetInt16Array_21 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetInt16Array_21; set => _GetInt16Array_21 = value; }
             internal void* _GetUInt16Array_22;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetUInt16Array_22 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetUInt16Array_22; set => _GetUInt16Array_22 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetUInt16Array_22 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetUInt16Array_22; set => _GetUInt16Array_22 = value; }
             internal void* _GetInt32Array_23;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetInt32Array_23 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetInt32Array_23; set => _GetInt32Array_23 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetInt32Array_23 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetInt32Array_23; set => _GetInt32Array_23 = value; }
             internal void* _GetUInt32Array_24;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetUInt32Array_24 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetUInt32Array_24; set => _GetUInt32Array_24 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetUInt32Array_24 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetUInt32Array_24; set => _GetUInt32Array_24 = value; }
             internal void* _GetInt64Array_25;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetInt64Array_25 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetInt64Array_25; set => _GetInt64Array_25 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetInt64Array_25 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetInt64Array_25; set => _GetInt64Array_25 = value; }
             internal void* _GetUInt64Array_26;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetUInt64Array_26 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetUInt64Array_26; set => _GetUInt64Array_26 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetUInt64Array_26 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetUInt64Array_26; set => _GetUInt64Array_26 = value; }
             internal void* _GetSingleArray_27;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetSingleArray_27 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetSingleArray_27; set => _GetSingleArray_27 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetSingleArray_27 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetSingleArray_27; set => _GetSingleArray_27 = value; }
             internal void* _GetDoubleArray_28;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetDoubleArray_28 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetDoubleArray_28; set => _GetDoubleArray_28 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetDoubleArray_28 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetDoubleArray_28; set => _GetDoubleArray_28 = value; }
             internal void* _GetChar16Array_29;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetChar16Array_29 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetChar16Array_29; set => _GetChar16Array_29 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetChar16Array_29 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetChar16Array_29; set => _GetChar16Array_29 = value; }
             internal void* _GetBooleanArray_30;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetBooleanArray_30 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetBooleanArray_30; set => _GetBooleanArray_30 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetBooleanArray_30 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetBooleanArray_30; set => _GetBooleanArray_30 = value; }
             internal void* _GetStringArray_31;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetStringArray_31 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetStringArray_31; set => _GetStringArray_31 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetStringArray_31 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetStringArray_31; set => _GetStringArray_31 = value; }
             internal void* _GetInspectableArray_32;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetInspectableArray_32 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetInspectableArray_32; set => _GetInspectableArray_32 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetInspectableArray_32 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetInspectableArray_32; set => _GetInspectableArray_32 = value; }
             internal void* _GetGuidArray_33;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetGuidArray_33 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetGuidArray_33; set => _GetGuidArray_33 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetGuidArray_33 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetGuidArray_33; set => _GetGuidArray_33 = value; }
             internal void* _GetDateTimeArray_34;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetDateTimeArray_34 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetDateTimeArray_34; set => _GetDateTimeArray_34 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetDateTimeArray_34 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetDateTimeArray_34; set => _GetDateTimeArray_34 = value; }
             internal void* _GetTimeSpanArray_35;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetTimeSpanArray_35 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetTimeSpanArray_35; set => _GetTimeSpanArray_35 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetTimeSpanArray_35 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetTimeSpanArray_35; set => _GetTimeSpanArray_35 = value; }
             internal void* _GetPointArray_36;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetPointArray_36 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetPointArray_36; set => _GetPointArray_36 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetPointArray_36 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetPointArray_36; set => _GetPointArray_36 = value; }
             internal void* _GetSizeArray_37;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetSizeArray_37 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetSizeArray_37; set => _GetSizeArray_37 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetSizeArray_37 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetSizeArray_37; set => _GetSizeArray_37 = value; }
             internal void* _GetRectArray_38;
-            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetRectArray_38 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetRectArray_38; set => _GetRectArray_38 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int> GetRectArray_38 { get => (delegate* unmanaged[Stdcall]<IntPtr, int* , IntPtr*, int>)_GetRectArray_38; set => _GetRectArray_38 = value; }
         }
 
         unsafe byte global::Windows.Foundation.IPropertyValue.GetUInt8()
@@ -1345,7 +1345,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             byte __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8_2(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8_2(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1354,7 +1354,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             short __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16_3(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16_3(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1363,7 +1363,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             ushort __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16_4(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16_4(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1372,7 +1372,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             int __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32_5(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32_5(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1381,7 +1381,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             uint __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32_6(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32_6(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1390,7 +1390,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             long __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64_7(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64_7(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1399,7 +1399,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             ulong __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64_8(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64_8(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1408,7 +1408,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             float __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingle_9(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingle_9(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1417,7 +1417,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             double __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDouble_10(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDouble_10(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1426,7 +1426,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             ushort __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16_11(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16_11(ThisPtr, &__retval));
             return (char)__retval;
         }
 
@@ -1435,7 +1435,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             byte __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBoolean_12(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBoolean_12(ThisPtr, &__retval));
             return __retval != 0;
         }
 
@@ -1446,7 +1446,7 @@ namespace ABI.Windows.Foundation
             IntPtr __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetString_13(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetString_13(ThisPtr, &__retval));
                 return MarshalString.FromAbi(__retval);
             }
             finally
@@ -1460,7 +1460,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             Guid __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuid_14(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuid_14(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1471,7 +1471,7 @@ namespace ABI.Windows.Foundation
             global::ABI.System.DateTimeOffset __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTime_15(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTime_15(ThisPtr, &__retval));
                 return global::ABI.System.DateTimeOffset.FromAbi(__retval);
             }
             finally
@@ -1487,7 +1487,7 @@ namespace ABI.Windows.Foundation
             global::ABI.System.TimeSpan __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpan_16(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpan_16(ThisPtr, &__retval));
                 return global::ABI.System.TimeSpan.FromAbi(__retval);
             }
             finally
@@ -1501,7 +1501,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             global::Windows.Foundation.Point __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPoint_17(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPoint_17(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1510,7 +1510,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             global::Windows.Foundation.Size __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_18(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_18(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1519,7 +1519,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             global::Windows.Foundation.Rect __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRect_19(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRect_19(ThisPtr, &__retval));
             return __retval;
         }
 
@@ -1531,7 +1531,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8Array_20(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8Array_20(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<byte>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1548,7 +1548,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16Array_21(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16Array_21(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<short>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1565,7 +1565,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16Array_22(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16Array_22(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<ushort>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1582,7 +1582,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32Array_23(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32Array_23(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<int>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1599,7 +1599,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32Array_24(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32Array_24(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<uint>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1616,7 +1616,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64Array_25(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64Array_25(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<long>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1633,7 +1633,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64Array_26(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64Array_26(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<ulong>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1650,7 +1650,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingleArray_27(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingleArray_27(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<float>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1667,7 +1667,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDoubleArray_28(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDoubleArray_28(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<double>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1684,7 +1684,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16Array_29(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16Array_29(ThisPtr, &__value_length, &__value_data));
                 value = MarshalNonBlittable<char>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1701,7 +1701,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBooleanArray_30(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBooleanArray_30(ThisPtr, &__value_length, &__value_data));
                 value = MarshalNonBlittable<bool>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1718,7 +1718,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetStringArray_31(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetStringArray_31(ThisPtr, &__value_length, &__value_data));
                 value = MarshalString.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1735,7 +1735,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInspectableArray_32(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInspectableArray_32(ThisPtr, &__value_length, &__value_data));
                 value = MarshalInspectable<object>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1752,7 +1752,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuidArray_33(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuidArray_33(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<Guid>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1769,7 +1769,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTimeArray_34(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTimeArray_34(ThisPtr, &__value_length, &__value_data));
                 value = MarshalNonBlittable<global::System.DateTimeOffset>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1786,7 +1786,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpanArray_35(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpanArray_35(ThisPtr, &__value_length, &__value_data));
                 value = MarshalNonBlittable<global::System.TimeSpan>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1803,7 +1803,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPointArray_36(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPointArray_36(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<global::Windows.Foundation.Point>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1820,7 +1820,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSizeArray_37(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSizeArray_37(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<global::Windows.Foundation.Size>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1837,7 +1837,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRectArray_38(ThisPtr, out __value_length, out __value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRectArray_38(ThisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<global::Windows.Foundation.Rect>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1853,7 +1853,7 @@ namespace ABI.Windows.Foundation
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
                 byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_IsNumericScalar_1(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_IsNumericScalar_1(ThisPtr, &__retval));
                 return __retval != 0;
             }
         }
@@ -1865,7 +1865,7 @@ namespace ABI.Windows.Foundation
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
                 global::Windows.Foundation.PropertyType __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Type_0(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Type_0(ThisPtr, &__retval));
                 return __retval;
             }
         }

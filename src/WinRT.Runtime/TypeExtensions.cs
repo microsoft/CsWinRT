@@ -19,6 +19,11 @@ namespace WinRT
     {
         private readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
 
+        public static void RegisterHelperType(this Type type, Type helperType)
+        {
+            HelperTypeCache.TryAdd(type, helperType);
+        }
+
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
                                             DynamicallyAccessedMemberTypes.NonPublicMethods |
@@ -122,6 +127,13 @@ namespace WinRT
 #endif
             this Type helperType)
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return null;
+            }
+#endif
+
             Type vftblType = helperType.GetNestedType("Vftbl");
             if (vftblType is null)
             {
