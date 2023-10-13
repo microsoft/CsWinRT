@@ -3,6 +3,7 @@ if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTBuildNetSDKVersion=6.0.415
 set CsWinRTBuildNet7SDKVersion=7.0.402
+set CsWinRTBuildNet8SDKVersion=8.0.100-rc.2
 set this_dir=%~dp0
 
 :dotnet
@@ -35,13 +36,25 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
 -Version '%CsWinRTBuildNet7SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
+rem Install .NET 8 used to build projection
+powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
+&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
+-Version '%CsWinRTBuildNet8SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
+-AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
+rem do we need a special, other link for x86 version of this net7 version? reason being we use a preview version?
+powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
+&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
+-Version '%CsWinRTBuildNet8SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
+-AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson
 rem Create global.json for current .NET SDK, and with allowPrerelease=true
 set global_json=%this_dir%global.json
 echo { > %global_json%
 echo   "sdk": { >> %global_json%
-echo     "version": "%CsWinRTBuildNet7SDKVersion%", >> %global_json%
+echo     "version": "%CsWinRTBuildNet8SDKVersion%", >> %global_json%
 echo     "allowPrerelease": true >> %global_json%
 echo   } >> %global_json%
 echo } >> %global_json%
