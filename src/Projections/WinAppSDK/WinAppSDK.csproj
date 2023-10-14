@@ -4,8 +4,6 @@
     <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <AssemblyName>Microsoft.WinUI</AssemblyName>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
   <ItemGroup>
