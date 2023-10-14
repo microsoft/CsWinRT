@@ -7263,7 +7263,7 @@ public static Guid PIID = %.IID;
                 else
                 {
                     w.write(R"(
-public static IntPtr AbiToProjectionVftablePtr;
+public static readonly IntPtr AbiToProjectionVftablePtr;
 static unsafe @()
 {
 AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * %);
@@ -7989,7 +7989,7 @@ global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
 {%
 %
 %
-public static readonly IntPtr AbiToProjectionVftablePtr;
+public static %IntPtr AbiToProjectionVftablePtr;
 
 static unsafe @()
 {
@@ -8093,6 +8093,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 w.write("private static readonly Type Abi_Invoke_Type;");
             },
             settings.netstandard_compat ? "private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;" : "",
+            settings.netstandard_compat || !is_generic ? "readonly " : "",
             // class constructor
             type.TypeName(),
             [&](writer& w) 
@@ -8166,17 +8167,14 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
 if (RuntimeFeature.IsDynamicCodeCompiled && %.AbiToProjectionVftablePtr == default)
 {
 AbiInvokeDelegate = %;
-var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(global::WinRT.Interop.IDelegateVftbl)));
-*(global::WinRT.Interop.IUnknownVftbl*)abiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
-((IntPtr*)abiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate);
-
-if (!%.TryInitCCWVtable(abiToProjectionVftablePtr))
+AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@%), sizeof(global::WinRT.Interop.IDelegateVftbl));
+*(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
+((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate);
+}
+else
 {
-NativeMemory.Free((void*)abiToProjectionVftablePtr);
-}
-}
-
 AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
+}
 )",
                         !have_generic_params ? "" :
                             w.write_temp(R"( 
@@ -8219,7 +8217,8 @@ Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof
                                 w.write("new @_Delegates.Invoke(Do_Abi_Invoke)", type.TypeName());
                             }
                         },
-                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                        type.TypeName(),
+                        type_params,
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false));
                 }
             },
@@ -8374,6 +8373,11 @@ public unsafe delegate int Invoke%;
                         bind<write_abi_signature>(method));
                 }
 
+                if (settings.netstandard_compat)
+                {
+                    return;
+                }
+
                 int index = 0;
                 std::string vtableAlloc = settings.netstandard_compat ? 
                     "Marshal.AllocCoTaskMem((sizeof(IUnknownVftbl) + sizeof(IntPtr)))" : 
@@ -8391,7 +8395,12 @@ internal static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
 
 internal static bool TryInitCCWVtable(IntPtr ptr)
 {
-return global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionVftablePtr, ptr, IntPtr.Zero) == IntPtr.Zero;
+bool success = global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionVftablePtr, ptr, IntPtr.Zero) == IntPtr.Zero;
+if (success)
+{
+%.AbiToProjectionVftablePtr = abiToProjectionVftablePtr;
+}
+return success;
 }
 }
 
@@ -8431,6 +8440,7 @@ public static % Abi_Invoke(IntPtr thisPtr%%)
                             bind_list<write_projection_parameter_type>(", ", signature.params()),
                             signature.has_params() ? ", " : "",
                             bind<write_projection_return_type>(signature)),
+                    bind<write_type_name>(type, typedef_name_type::ABI, false),
                     internal_accessibility(),
                     bind<write_static_abi_class_generic_instantiation_type>(type),
                     bind_each([&](writer& w, GenericParam const& /*gp*/)

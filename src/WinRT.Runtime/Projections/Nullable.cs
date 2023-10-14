@@ -1864,9 +1864,14 @@ namespace WinRT
 
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
+            return GetExposedInterfaces(GetDelegateInterface());
+        }
+
+        public static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces(ComWrappers.ComInterfaceEntry delegateInterface)
+        {
             return new ComWrappers.ComInterfaceEntry[]
             {
-                GetDelegateInterface(),
+                delegateInterface,
                 new ComWrappers.ComInterfaceEntry
                 {
                     IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
