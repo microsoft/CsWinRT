@@ -453,24 +453,68 @@ namespace Generator
             }
         }
 
-        public static string GetAbiMarshaler(string type, string abiType, TypeKind kind, string marshalerFunction, string arg)
+        public static string GetCreateMarshaler(string type, string abiType, TypeKind kind, string arg)
         {
-            string marshalerType = GetMarshalerClass(type, abiType, kind, false);
-            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType))
+            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType) || 
+                type == "bool" || 
+                type == "char")
             {
                 return "";
             }
-            else if (type == "bool")
+            else
             {
-                return "(byte)";
+                string marshalerClass = GetMarshalerClass(type, abiType, kind, false);
+                return $$"""__{{arg}} = {{marshalerClass}}.CreateMarshaler2({{arg}});""";
             }
-            else if (type == "char")
+        }
+
+        public static string GetDisposeMarshaler(string type, string abiType, TypeKind kind, string arg)
+        {
+            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType) ||
+                type == "bool" ||
+                type == "char")
             {
-                return "(ushort)";
+                return "";
             }
             else
             {
-                return $$"""{{marshalerType}}.{{marshalerFunction}}({{arg}})""";
+                string marshalerClass = GetMarshalerClass(type, abiType, kind, false);
+                return $$"""{{marshalerClass}}.DisposeMarshaler(__{{arg}});""";
+            }
+        }
+
+        public static string GetAbiFromMarshaler(string type, string abiType, TypeKind kind, string arg)
+        {
+            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType))
+            {
+                return arg;
+            }
+            else if (type == "bool")
+            {
+                return $"(byte){arg}";
+            }
+            else if (type == "char")
+            {
+                return $"(ushort){arg}";
+            }
+            else
+            {
+                string marshalerClass = GetMarshalerClass(type, abiType, kind, false);
+                return $"{marshalerClass}.GetAbi(__{arg})";
+            }
+        }
+
+        public static string GetMarshalerDeclaration(string type, string abiType, TypeKind kind, string arg)
+        {
+            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType) ||
+                type == "bool" ||
+                type == "char")
+            {
+                return "";
+            }
+            else
+            {
+                return $"{GetAbiMarshalerType(type, abiType, kind, false)} __{arg} = default;";
             }
         }
 
