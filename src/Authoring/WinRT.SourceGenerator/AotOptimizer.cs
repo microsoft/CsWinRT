@@ -98,6 +98,14 @@ namespace Generator
                 }
             }
 
+            bool isDelegate = false;
+            if (symbol.TypeKind == TypeKind.Delegate)
+            {
+                isDelegate = true;
+                interfacesToAddToVtable.Add(ToFullyQualifiedString(symbol));
+                AddGenericInterfaceInstantiation(symbol as INamedTypeSymbol);
+            }
+
             if (!interfacesToAddToVtable.Any())
             {
                 return default;
@@ -117,7 +125,8 @@ namespace Generator
                 typeName,
                 interfacesToAddToVtable.ToImmutableArray(),
                 genericInterfacesToAddToVtable.ToImmutableArray(),
-                symbol is IArrayTypeSymbol);
+                symbol is IArrayTypeSymbol,
+                isDelegate);
 
             void AddGenericInterfaceInstantiation(INamedTypeSymbol iface)
             {
@@ -236,15 +245,29 @@ namespace Generator
         {
             StringBuilder source = new();
 
-            if (vtableAttribute.Interfaces.Any())
+            foreach (var genericInterface in vtableAttribute.GenericInterfaces)
             {
-                foreach (var genericInterface in vtableAttribute.GenericInterfaces)
-                {
-                    source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
-                        genericInterface.GenericDefinition,
-                        genericInterface.GenericParameters));
-                }
+                source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
+                    genericInterface.GenericDefinition,
+                    genericInterface.GenericParameters));
+            }
 
+            if (vtableAttribute.IsDelegate)
+            {
+                var @interface = vtableAttribute.Interfaces.First();
+                source.AppendLine();
+                source.AppendLine($$"""
+                                var delegateInterface = new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
+                                {
+                                    IID = global::WinRT.GuidGenerator.GetIID(typeof(global::{{@interface}}).GetHelperType()),
+                                    Vtable = global::ABI.{{@interface}}.AbiToProjectionVftablePtr
+                                };
+
+                                return global::WinRT.DelegateTypeDetails<{{@interface}}>.GetExposedInterfaces(delegateInterface);
+                        """);
+            }
+            else if (vtableAttribute.Interfaces.Any())
+            {
                 source.AppendLine();
                 source.AppendLine($$"""
                                 return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]
@@ -476,7 +499,8 @@ namespace Generator
                                     argumentClassTypeSymbol.MetadataName.Contains("`") &&
                                     GeneratorHelper.IsWinRTType(argumentClassTypeSymbol))
                                 {
-                                    Logger.logger.Log("TODO: delegate type: " + argumentClassTypeSymbol.MetadataName);
+                                    var argumentClassNamedTypeSymbol = argumentClassTypeSymbol as INamedTypeSymbol;
+                                    vtableAttributes.Add(GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, false));
                                 }
 
                                 if (argumentClassTypeSymbol.TypeKind == TypeKind.Class &&
@@ -521,7 +545,6 @@ namespace Generator
                     GeneratorHelper.IsWinRTType(propertySymbol.ContainingSymbol))
                 {
                     var argumentType = context.SemanticModel.GetTypeInfo(assignment.Right);
-
                     // Check if it is an WinRT array being passed as an object
                     // which means the IList interfaces need to be put on the CCW.
                     if (argumentType.Type is IArrayTypeSymbol arrayType)
@@ -537,14 +560,16 @@ namespace Generator
                     }
                     else
                     {
-                        var argumentClassTypeSymbol = argumentType.Type;
+                        // Type might be null such as for lambdas, so check converted type.
+                        var argumentClassTypeSymbol = argumentType.Type ?? argumentType.ConvertedType;
                         // Check if a generic class or delegate or it isn't a
                         // WinRT type meaning we will need to probably create a CCW for.
                         if (argumentClassTypeSymbol.TypeKind == TypeKind.Delegate &&
                             argumentClassTypeSymbol.MetadataName.Contains("`") &&
                             GeneratorHelper.IsWinRTType(argumentClassTypeSymbol))
                         {
-                            Logger.logger.Log("TODO: delegate assignment type: " + argumentClassTypeSymbol.MetadataName);
+                            var argumentClassNamedTypeSymbol = argumentClassTypeSymbol as INamedTypeSymbol;
+                            vtableAttributes.Add(GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, false));
                         }
 
                         if (argumentClassTypeSymbol.TypeKind == TypeKind.Class &&
@@ -653,5 +678,6 @@ namespace Generator
         string ClassName,
         EquatableArray<string> Interfaces,
         EquatableArray<GenericInterface> GenericInterfaces,
-        bool IsArray);
+        bool IsArray,
+        bool IsDelegate);
 }

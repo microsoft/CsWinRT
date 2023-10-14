@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 
 using Microsoft.CodeAnalysis;
+using System.Data;
+using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using WinRT.SourceGenerator;
 
 namespace Generator
@@ -60,46 +63,50 @@ namespace Generator
             {
                 return GetEventHandlerInstantiation(genericParameters[0].ProjectedType, genericParameters[0].AbiType, genericParameters[0].TypeKind);
             }
+            else if (genericInterface == "Windows.Foundation.AsyncActionWithProgressCompletedHandler`1")
+            {
+                return GetCompletedHandlerInstantiation("Windows.Foundation.AsyncActionWithProgressCompletedHandler", "Windows.Foundation.IAsyncActionWithProgress", genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.AsyncOperationCompletedHandler`1")
+            {
+                return GetCompletedHandlerInstantiation("Windows.Foundation.AsyncOperationCompletedHandler", "Windows.Foundation.IAsyncOperation", genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.AsyncOperationWithProgressCompletedHandler`2")
+            {
+                return GetCompletedHandlerInstantiation("Windows.Foundation.AsyncOperationWithProgressCompletedHandler", "Windows.Foundation.IAsyncOperationWithProgress", genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.Collections.MapChangedEventHandler`2")
+            {
+                string senderInterface = $"global::Windows.Foundation.Collections.IObservableMap<{genericParameters[0].ProjectedType}, {genericParameters[1].ProjectedType}>";
+                string changedEventArgsInterface = $"global::Windows.Foundation.Collections.IMapChangedEventArgs<{genericParameters[0].ProjectedType}>";
+                return GetChangedHandlerInstantiation("Windows.Foundation.Collections.MapChangedEventHandler", senderInterface, changedEventArgsInterface, genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.Collections.VectorChangedEventHandler`1")
+            {
+                string senderInterface = $"global::Windows.Foundation.Collections.IObservableVector<{genericParameters[0].ProjectedType}>";
+                string changedEventArgsInterface = $"global::Windows.Foundation.Collections.IVectorChangedEventArgs";
+                return GetChangedHandlerInstantiation("Windows.Foundation.Collections.VectorChangedEventHandler", senderInterface, changedEventArgsInterface, genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.AsyncActionProgressHandler`1")
+            {
+                return GetProgressHandlerInstantiation("Windows.Foundation.AsyncActionProgressHandler", "Windows.Foundation.IAsyncActionWithProgress", genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.AsyncOperationProgressHandler`2")
+            {
+                return GetProgressHandlerInstantiation("Windows.Foundation.AsyncOperationProgressHandler", "Windows.Foundation.IAsyncOperationWithProgress", genericParameters);
+            }
 
             return "";
         }
 
         public static string GetInstantiationInitFunction(string genericInterface, EquatableArray<GenericParameter> genericParameters)
         {
-            if (genericInterface == "System.Collections.Generic.IEnumerable`1")
-            {
-                return $$"""        _ = global::WinRT.GenericHelpers.IEnumerable_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[0].ProjectedType)}}.Initialized;""";
-            }
-            else if (genericInterface == "System.Collections.Generic.IList`1")
-            {
-                return $$"""        _ = global::WinRT.GenericHelpers.IList_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[0].ProjectedType)}}.Initialized;""";
-            }
-            else if (genericInterface == "System.Collections.Generic.IReadOnlyList`1")
-            {
-                return $$"""        _ = global::WinRT.GenericHelpers.IReadOnlyList_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[0].ProjectedType)}}.Initialized;""";
-            }
-            else if (genericInterface == "System.Collections.Generic.IDictionary`2")
-            {
-                return $$"""        _ = global::WinRT.GenericHelpers.IDictionary_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[0].ProjectedType)}}_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[1].ProjectedType)}}.Initialized;""";
-            }
-            else if (genericInterface == "System.Collections.Generic.IReadOnlyDictionary`2")
-            {
-                return $$"""        _ = global::WinRT.GenericHelpers.IReadOnlyDictionary_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[0].ProjectedType)}}_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[1].ProjectedType)}}.Initialized;""";
-            }
-            else if (genericInterface == "System.Collections.Generic.IEnumerator`1")
-            {
-                return $$"""        _ = global::WinRT.GenericHelpers.IEnumerator_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[0].ProjectedType)}}.Initialized;""";
-            }
-            else if (genericInterface == "System.Collections.Generic.KeyValuePair`2")
-            {
-                return $$"""        _ = global::WinRT.GenericHelpers.KeyValuePair_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[0].ProjectedType)}}_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[1].ProjectedType)}}.Initialized;""";
-            }
-            else if (genericInterface == "System.EventHandler`1")
-            {
-                return $$"""        _ = global::WinRT.GenericHelpers.EventHandler_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericParameters[0].ProjectedType)}}.Initialized;""";
-            }
-
-            return "";
+            // Get the class name from a string like System.Collections.Generic.IEnumerator`1.
+            // Splitting on the dots and the generic specifier (`) will get us the class name
+            // in the 2nd last element.
+            var interfaceName = genericInterface.Split('.', '`')[^2];
+            var genericParametersStr = string.Join("_", genericParameters.Select(genericParameter => GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType)));
+            return $$"""        _ = global::WinRT.GenericHelpers.{{interfaceName}}_{{genericParametersStr}}.Initialized;""";
         }
 
         private static string GetIEnumerableInstantiation(string genericType, string abiType)
@@ -938,24 +945,174 @@ namespace Generator
                  {
                      IntPtr ThisPtr = objRef.ThisPtr;
                      ObjectReferenceValue __sender = default;
-                     {{GeneratorHelper.GetAbiMarshalerType(genericType, abiType, typeKind, false)}} __args = default;
+                     {{GeneratorHelper.GetMarshalerDeclaration(genericType, abiType, typeKind, "args")}}
                      try
                      {
                          __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
                          IntPtr abiSender = MarshalInspectable<object>.GetAbi(__sender);
-                         __args = {{GeneratorHelper.GetAbiMarshaler(genericType, abiType, typeKind, "CreateMarshaler2", "args")}};
-                         {{abiType}} abiArgs = ({{abiType}}){{GeneratorHelper.GetAbiMarshaler(genericType, abiType, typeKind, "GetAbi", "__args")}};
-                         global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, {{abiType}}, int>**)ThisPtr)[3](ThisPtr, abiSender, abiArgs));
+                         {{GeneratorHelper.GetCreateMarshaler(genericType, abiType, typeKind, "args")}}
+                         global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, {{abiType}}, int>**)ThisPtr)[3](ThisPtr, abiSender, {{GeneratorHelper.GetAbiFromMarshaler(genericType, abiType, typeKind, "args")}}));
                      }
                      finally
                      {
                          MarshalInspectable<object>.DisposeMarshaler(__sender);
-                         {{GeneratorHelper.GetAbiMarshaler(genericType, abiType, typeKind, "DisposeMarshaler", "__args")}};
+                         {{GeneratorHelper.GetDisposeMarshaler(genericType, abiType, typeKind, "args")}}
                      }
                  }
              }
              """;
             return eventHandlerInstantiation;
+        }
+
+        private static string GetCompletedHandlerInstantiation(string completedHandler, string asyncInfoInterface, EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.{completedHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true)}>";
+            string interfaceWithGeneric = $"global::{asyncInfoInterface}<{GetGenericParametersAsString(genericParameters, ", ", false)}>";
+            string completedHandlerInstantiation = $$"""
+             internal static class {{completedHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     return {{staticMethodsClass}}.InitCcw(
+                        &Do_Abi_Invoke
+                     );
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, IntPtr asyncInfo, global::Windows.Foundation.AsyncStatus asyncStatus)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Abi_Invoke(thisPtr, MarshalInterface<{{interfaceWithGeneric}}>.FromAbi(asyncInfo), asyncStatus);
+                     }
+                     catch (global::System.Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+             }
+             """;
+            return completedHandlerInstantiation;
+        }
+
+        private static string GetChangedHandlerInstantiation(string changedHandler, string senderInterface, string changedEventArgsInterface, EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.{changedHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true)}>";
+            string changedHandlerInstantiation = $$"""
+             internal static class {{changedHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     return {{staticMethodsClass}}.InitCcw(
+                        &Do_Abi_Invoke
+                     );
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr @event)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Abi_Invoke(thisPtr, MarshalInterface<{{senderInterface}}>.FromAbi(sender), MarshalInterface<{{changedEventArgsInterface}}>.FromAbi(@event));
+                     }
+                     catch (global::System.Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+             }
+             """;
+            return changedHandlerInstantiation;
+        }
+
+        private static string GetProgressHandlerInstantiation(string progressHandler, string asyncInfoInterface, EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.{progressHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true)}>";
+            string asyncInfoInterfaceWithGeneric = $"global::{asyncInfoInterface}<{GetGenericParametersAsString(genericParameters, ", ", false)}>";
+            var progressParameter = genericParameters.Last();
+            string progressHandlerInstantiation = $$"""
+             internal static class {{progressHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     _ = {{staticMethodsClass}}.InitCcw(
+                        &Do_Abi_Invoke
+                     );
+                    _ = {{staticMethodsClass}}.InitRcwHelper(
+                        &Invoke
+                     );
+                     return true;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, IntPtr asyncInfo, {{progressParameter.AbiType}} progressInfo)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Abi_Invoke(thisPtr, MarshalInterface<{{asyncInfoInterfaceWithGeneric}}>.FromAbi(asyncInfo), {{GeneratorHelper.GetFromAbiMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind)}}(progressInfo));
+                     }
+                     catch (global::System.Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 private static unsafe void Invoke(IObjectReference objRef, {{asyncInfoInterfaceWithGeneric}} asyncInfo, {{progressParameter.ProjectedType}} progressInfo)
+                 {
+                     IntPtr ThisPtr = objRef.ThisPtr;
+                     ObjectReferenceValue __asyncInfo = default;
+                     {{GeneratorHelper.GetMarshalerDeclaration(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}}
+                     try
+                     {
+                         __asyncInfo = MarshalInterface<{{asyncInfoInterfaceWithGeneric}}>.CreateMarshaler2(asyncInfo, GuidGenerator.GetIID(typeof({{asyncInfoInterfaceWithGeneric}}).GetHelperType()));
+                         IntPtr abiAsyncInfo = MarshalInspectable<object>.GetAbi(__asyncInfo);
+                         {{GeneratorHelper.GetCreateMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}}
+                         global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, {{progressParameter.AbiType}}, int>**)ThisPtr)[3](ThisPtr, abiAsyncInfo, {{GeneratorHelper.GetAbiFromMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}}));
+                     }
+                     finally
+                     {
+                         MarshalInterface<{{asyncInfoInterfaceWithGeneric}}>.DisposeMarshaler(__asyncInfo);
+                         {{GeneratorHelper.GetDisposeMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}}
+                     }
+                 }
+             }
+             """;
+            return progressHandlerInstantiation;
+        }
+
+        private static string GetGenericParametersAsString(EquatableArray<GenericParameter> genericParameters, string separator, bool includeAbiTypes)
+        {
+            string genericParametersStr = string.Join(separator, 
+                genericParameters.Select(genericParameter =>
+                {
+                    if (includeAbiTypes)
+                    {
+                        return string.Join(
+                            separator, 
+                            GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType), 
+                            GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.AbiType));
+                    }
+                    else
+                    {
+                        return GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType);
+                    }
+                }));
+            return genericParametersStr;
         }
     }
 }
