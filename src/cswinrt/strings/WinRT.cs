@@ -577,7 +577,7 @@ namespace WinRT
     }
 
 #if NET
-    internal class BaseFactory<I> where I : IHasGuid
+    internal class BaseFactory
     {
         private readonly IObjectReference _factory;
         public IObjectReference Value { get => _factory; }
@@ -591,13 +591,8 @@ namespace WinRT
         private readonly IntPtr _contextToken;
         public IntPtr ContextToken { get => _contextToken; }
 
-        public BaseFactory(string typeNamespace, string typeFullName)
+        public BaseFactory(string typeNamespace, string typeFullName, Guid interfaceGuid)
         {
-#if NET
-            Guid interfaceGuid = I.IID;
-#else
-            Guid interfaceGuid = typeof(I).GUID;
-#endif
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<IActivationFactoryVftbl> factory;
@@ -644,7 +639,7 @@ namespace WinRT
 
 
 #if NET
-    internal sealed class Factory<T, I> : BaseFactory<I> where I : IHasGuid
+    internal sealed class Factory<T, I> : BaseFactory where I : IHasGuid
 #else
     internal sealed class Factory<T, I> : BaseFactory<I>
 #endif
@@ -669,7 +664,11 @@ namespace WinRT
         }
 
         private Factory()
-            : base(typeof(T).Namespace, typeof(T).FullName)
+#if NET
+            : base(typeof(T).Namespace, typeof(T).FullName, I.IID)
+#else
+            : base(typeof(T).Namespace, typeof(T).FullName, typeof(I).GUID)
+#endif
         {
         }
     }
