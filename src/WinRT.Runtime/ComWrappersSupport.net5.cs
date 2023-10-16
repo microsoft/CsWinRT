@@ -217,7 +217,7 @@ namespace WinRT
 
         internal static Func<IInspectable, object> GetTypedRcwFactory([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
 
-        internal static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => TypedObjectFactoryCacheForType.TryAdd(implementationType, rcwFactory);
+        public static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => TypedObjectFactoryCacheForType.TryAdd(implementationType, rcwFactory);
 
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType)
         {
@@ -284,13 +284,11 @@ namespace WinRT
 
         internal static ComInterfaceEntry[] GetComInterfaceEntriesForTypeFromLookupTable(Type type)
         {
-            Console.WriteLine("lookup entries: " + type);
             foreach (var func in ComInterfaceEntriesLookup)
             {
                 var comInterfaceEntries = func(type);
                 if (comInterfaceEntries != null)
                 {
-                    Console.WriteLine("found entries: " + type);
                     return comInterfaceEntries;
                 }
             }

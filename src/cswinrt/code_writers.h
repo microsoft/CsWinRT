@@ -3047,164 +3047,181 @@ remove => %.ErrorsChanged -= value;
 
 
 
-    void write_class_members(writer& w, TypeDef const& type, bool wrapper_type)
+    void write_class_members(writer& w, TypeDef const& type, bool wrapper_type, bool is_interface_impl_type)
     {
         std::map<std::string, std::tuple<std::string, std::string, std::string, std::string, std::string, bool, bool, bool, std::optional<std::pair<type_semantics, Property>>, std::optional<std::pair<type_semantics, Property>>>> properties;
         auto fast_abi_class_val = get_fast_abi_class_for_class(type);
 
-        for (auto&& ii : type.InterfaceImpl())
+        auto write_class_interface = [&](TypeDef const& interface_type, bool is_default_interface, bool is_overridable_interface, bool is_protected_interface, type_semantics semantics)
         {
-            auto semantics = get_type_semantics(ii.Interface());
+            auto interface_name = write_type_name_temp(w, interface_type);
+            auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
 
-            auto write_class_interface = [&](TypeDef const& interface_type)
+            auto static_iface_target = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::StaticAbiClass, true));
+            auto target = wrapper_type ? write_type_name_temp(w, interface_type, "((%) _comp)") :
+                (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
+
+            auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(interface_type) && !settings.netstandard_compat;
+            auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(type) : semantics;
+
+            if (!is_default_interface && !wrapper_type)
             {
-                auto interface_name = write_type_name_temp(w, interface_type);
-                auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
-
-                auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
-                auto static_iface_target = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::StaticAbiClass, true));
-                auto target = wrapper_type ? write_type_name_temp(w, interface_type, "((%) _comp)") :
-                    (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
-
-                auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(interface_type) && !settings.netstandard_compat;
-                auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(type) : semantics;
-
-                if (!is_default_interface && !wrapper_type)
+                if (settings.netstandard_compat || is_manually_generated_iface(interface_type))
                 {
-                    if (settings.netstandard_compat || is_manually_generated_iface(interface_type))
-                    {
-                        w.write(R"(
+                    w.write(R"(
 private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 )",
-                            interface_name,
-                            interface_name,
-                            bind<write_lazy_interface_type_name>(interface_type),
-                            bind<write_lazy_interface_type_name>(interface_type));
-                    }
+                        interface_name,
+                        interface_name,
+                        bind<write_lazy_interface_type_name>(interface_type),
+                        bind<write_lazy_interface_type_name>(interface_type));
                 }
+            }
 
-                bool call_static_method = !(settings.netstandard_compat || wrapper_type || is_manually_generated_iface(interface_type));
+            bool call_static_method = !(settings.netstandard_compat || wrapper_type || is_manually_generated_iface(interface_type));
 
-                if (auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()); mapping && mapping->has_custom_members_output)
+            if (auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()); mapping && mapping->has_custom_members_output)
+            {
+                bool is_private = is_implemented_as_private_mapped_interface(w, type, interface_type);
+                auto objref_name = w.write_temp("%", bind<write_objref_type_name>(semantics));
+                write_custom_mapped_type_members(w, target, *mapping, is_private, call_static_method, objref_name);
+                return;
+            }
+
+            auto platform_attribute = write_platform_attribute_temp(w, interface_type);
+
+            w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
+            w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
+
+            // Merge property getters/setters, since such may be defined across interfaces
+            for (auto&& prop : interface_type.PropertyList())
+            {
+                MethodDef getter, setter;
+                std::tie(getter, setter) = get_property_methods(prop);
+                auto prop_type = write_prop_type(w, prop);
+                auto is_private = getter && is_implemented_as_private_method(w, type, getter);  // for explicitly implemented interfaces, assume there is always a get.
+                auto property_name = is_private ? w.write_temp("%.%", interface_name, prop.Name()) : std::string(prop.Name());
+                auto [prop_targets, inserted] = properties.try_emplace(property_name,
+                    prop_type,
+                    getter ? target : "",
+                    getter ? platform_attribute : "",
+                    setter ? target : "",
+                    setter ? platform_attribute : "",
+                    is_overridable_interface,
+                    !is_protected_interface && !is_overridable_interface, // By default, an overridable member is protected.
+                    is_private,
+                    call_static_method && getter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt,
+                    call_static_method && setter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt
+                );
+                if (!inserted)
                 {
-                    bool is_private = is_implemented_as_private_mapped_interface(w, type, interface_type);
-                    auto objref_name = w.write_temp("%", bind<write_objref_type_name>(semantics));
-                    write_custom_mapped_type_members(w, target, *mapping, is_private, call_static_method, objref_name);
-                    return;
+                    auto& [property_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, _, getter_prop, setter_prop] = prop_targets->second;
+                    XLANG_ASSERT(property_type == prop_type);
+                    if (getter)
+                    {
+                        XLANG_ASSERT(getter_target.empty());
+                        getter_target = target;
+                        getter_platform = platform_attribute;
+                        getter_prop = call_static_method ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt;
+                    }
+                    if (setter)
+                    {
+                        XLANG_ASSERT(setter_target.empty());
+                        setter_target = target;
+                        setter_platform = platform_attribute;
+                        setter_prop = call_static_method ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt;
+                    }
+                    is_overridable |= is_overridable_interface;
+                    is_public |= !is_overridable_interface && !is_protected_interface;
+                    XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
                 }
+                // If this interface is overridable then we need to emit an explicit implementation of the property for that interface.
+                if (is_overridable_interface || !is_exclusive_to(interface_type))
+                {
+                    w.write("\n%% %.% {%%}",
+                        platform_attribute,
+                        prop_type,
+                        bind<write_type_name>(interface_type, typedef_name_type::CCW, false),
+                        prop.Name(),
+                        bind([&](writer& w)
+                        {
+                            bool base_getter{};
+                            std::string base_getter_platform_attribute{};
+                            TypeDef getter_property_iface;
+                            if (!getter)
+                            {
+                                auto property_interface = find_property_interface(w, interface_type, prop.Name());
+                                base_getter = property_interface.second;
+                                getter_property_iface = property_interface.first;
+                                base_getter_platform_attribute = write_platform_attribute_temp(w, property_interface.first);
 
+                            }
+                            if (getter || base_getter)
+                            {
+                                w.write("%get => %; ", base_getter_platform_attribute, bind([&](writer& w) {
+                                    if (call_static_method)
+                                    {
+                                        auto iface = base_getter ? getter_property_iface : prop.Parent();
+                                        w.write("%", bind<write_abi_get_property_static_method_call>(iface, prop,
+                                            w.write_temp("%", bind<write_objref_type_name>(iface))));
+                                    }
+                                    else
+                                    {
+                                        w.write("%%", is_private ? target + "." : "", prop.Name());
+                                    }
+                                    }));
+                            }
+                        }),
+                        bind([&](writer& w)
+                        {
+                            if (setter)
+                            {
+                                w.write("set => %;", bind([&](writer& w) {
+                                    if (call_static_method)
+                                    {
+                                        w.write("%", bind<write_abi_set_property_static_method_call>(prop.Parent(), prop,
+                                            w.write_temp("%", bind<write_objref_type_name>(prop.Parent()))));
+                                    }
+                                    else
+                                    {
+                                        w.write("%% = value", is_private ? target + "." : "", prop.Name());
+                                    }
+                                    }));
+                            }
+                        }));
+                }
+            }
+        };
+
+        if (is_interface_impl_type)
+        {
+            write_class_interface(type, false, false, false, type);
+        }
+
+        std::function<void(TypeDef const&)> write_class_interfaces = [&](TypeDef const& type)
+        {
+            for (auto&& ii : type.InterfaceImpl())
+            {
+                auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
                 auto is_overridable_interface = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
                 auto is_protected_interface = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
+                auto semantics = get_type_semantics(ii.Interface());
 
-                auto platform_attribute = write_platform_attribute_temp(w, interface_type);
-
-                w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
-                w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
-
-                // Merge property getters/setters, since such may be defined across interfaces
-                for (auto&& prop : interface_type.PropertyList())
+                for_typedef(w, semantics, [&](auto&& type)
                 {
-                    MethodDef getter, setter;
-                    std::tie(getter, setter) = get_property_methods(prop);
-                    auto prop_type = write_prop_type(w, prop);
-                    auto is_private = getter && is_implemented_as_private_method(w, type, getter);  // for explicitly implemented interfaces, assume there is always a get.
-                    auto property_name = is_private ? w.write_temp("%.%", interface_name, prop.Name()) : std::string(prop.Name());
-                    auto [prop_targets, inserted] = properties.try_emplace(property_name,
-                        prop_type,
-                        getter ? target : "",
-                        getter ? platform_attribute : "",
-                        setter ? target : "",
-                        setter ? platform_attribute : "",
-                        is_overridable_interface,
-                        !is_protected_interface && !is_overridable_interface, // By default, an overridable member is protected.
-                        is_private,
-                        call_static_method && getter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt,
-                        call_static_method && setter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt
-                    );
-                    if (!inserted)
+                    write_class_interface(type, is_default_interface, is_overridable_interface, is_protected_interface, is_interface_impl_type ? type : semantics);
+                    if (is_interface_impl_type)
                     {
-                        auto& [property_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, _, getter_prop, setter_prop] = prop_targets->second;
-                        XLANG_ASSERT(property_type == prop_type);
-                        if (getter)
-                        {
-                            XLANG_ASSERT(getter_target.empty());
-                            getter_target = target;
-                            getter_platform = platform_attribute;
-                            getter_prop = call_static_method ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt;
-                        }
-                        if (setter)
-                        {
-                            XLANG_ASSERT(setter_target.empty());
-                            setter_target = target;
-                            setter_platform = platform_attribute;
-                            setter_prop = call_static_method ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt;
-                        }
-                        is_overridable |= is_overridable_interface;
-                        is_public |= !is_overridable_interface && !is_protected_interface;
-                        XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
+                        write_class_interfaces(type);
                     }
-                    // If this interface is overridable then we need to emit an explicit implementation of the property for that interface.
-                    if (is_overridable_interface || !is_exclusive_to(interface_type))
-                    {
-                        w.write("\n%% %.% {%%}",
-                            platform_attribute,
-                            prop_type,
-                            bind<write_type_name>(interface_type, typedef_name_type::CCW, false),
-                            prop.Name(),
-                            bind([&](writer& w)
-                                {
-                                    bool base_getter{};
-                                    std::string base_getter_platform_attribute{};
-                                    TypeDef getter_property_iface;
-                                    if (!getter)
-                                    {
-                                        auto property_interface = find_property_interface(w, interface_type, prop.Name());
-                                        base_getter = property_interface.second;
-                                        getter_property_iface = property_interface.first;
-                                        base_getter_platform_attribute = write_platform_attribute_temp(w, property_interface.first);
-
-                                    }
-                                    if (getter || base_getter)
-                                    {
-                                        w.write("%get => %; ", base_getter_platform_attribute, bind([&](writer& w) {
-                                            if (call_static_method)
-                                            {
-                                                auto iface = base_getter ? getter_property_iface : prop.Parent();
-                                                w.write("%", bind<write_abi_get_property_static_method_call>(iface, prop,
-                                                    w.write_temp("%", bind<write_objref_type_name>(iface))));
-                                            }
-                                            else
-                                            {
-                                                w.write("%%", is_private ? target + "." : "", prop.Name());
-                                            }
-                                            }));
-                                    }
-                                }),
-                            bind([&](writer& w)
-                                {
-                                    if (setter)
-                                    {
-                                        w.write("set => %;", bind([&](writer& w) {
-                                            if (call_static_method)
-                                            {
-                                                w.write("%", bind<write_abi_set_property_static_method_call>(prop.Parent(), prop,
-                                                    w.write_temp("%", bind<write_objref_type_name>(prop.Parent()))));
-                                            }
-                                            else
-                                            {
-                                                w.write("%% = value", is_private ? target + "." : "", prop.Name());
-                                            }
-                                            }));
-                                    }
-                                }));
-                    }
-                }
-            };
-            for_typedef(w, semantics, [&](auto type)
-                {
-                    write_class_interface(type);
                 });
-        }
+            }
+        };
+
+        for_typedef(w, type, [&](auto type)
+        {
+            write_class_interfaces(type);
+        });
 
         // Write properties with merged accessors
         for (auto& [prop_name, prop_data] : properties)
@@ -6796,6 +6813,88 @@ public static Guid PIID = Vftbl.PIID;
         return true;
     }
 
+    void write_generic_interface_impl_class(writer& w, TypeDef const& iface)
+    {
+        w.write(R"(
+internal sealed class @Impl% : %, IWinRTObject
+{
+private IObjectReference _inner;
+
+internal @Impl(IObjectReference _inner)
+{
+this._inner = _inner;
+}
+
+public static @Impl% CreateRcw(IInspectable obj) => new(obj.ObjRef);
+
+%
+
+IObjectReference IWinRTObject.NativeObject => _inner;
+
+bool IWinRTObject.HasUnwrappableNativeObject => true;
+
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+{
+global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
+return _queryInterfaceCache;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+{
+global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
+return _additionalTypeData;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
+
+%
+}
+)",
+            iface.TypeName(),
+            bind<write_type_params>(iface),
+            bind<write_type_name>(iface, typedef_name_type::Projected, false),
+            iface.TypeName(),
+            iface.TypeName(),
+            bind<write_type_params>(iface),
+            [&](writer& w)
+            {
+                std::function<void(writer&, type_semantics const&)> write_objref_defintion = [&](writer& w, type_semantics const& ifaceTypeSemantics)
+                {
+                    auto objrefname = bind<write_objref_type_name>(ifaceTypeSemantics);
+
+                    w.write(R"(
+private volatile IObjectReference __%;
+private IObjectReference Make__%()
+{
+global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(%.IID), null);
+return __%;
+}
+private IObjectReference % => __% ?? Make__%();
+)",
+                        objrefname,
+                        objrefname,
+                        objrefname,
+                        bind<write_type_name>(ifaceTypeSemantics, typedef_name_type::StaticAbiClass, false),
+                        objrefname,
+                        objrefname,
+                        objrefname,
+                        objrefname);
+
+                    for_typedef(w, ifaceTypeSemantics, [&](auto type)
+                    {
+                        for (auto&& ii : type.InterfaceImpl())
+                        {
+                            write_objref_defintion(w, get_type_semantics(ii.Interface()));
+                        }
+                    });
+                };
+
+                write_objref_defintion(w, iface);
+            },
+            bind<write_class_members>(iface, false, true));
+    }
+
     void write_static_abi_classes(writer& w, TypeDef const& iface)
     {
         auto fast_abi_class_val = get_fast_abi_class_for_interface(iface);
@@ -6970,7 +7069,7 @@ private static bool RcwHelperInitialized { get; } = InitRcwHelper();
 private unsafe static bool InitRcwHelper()
 {
 %
-typeof(%).RegisterHelperType(typeof(%));
+global::WinRT.ComWrappersSupport.RegisterTypedRcwFactory(typeof(%), @Impl%.CreateRcw);
 %._RcwHelperInitialized = true;
 return true;
 }
@@ -7064,7 +7163,8 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
                     }
                 }, iface.MethodList()),
                 bind<write_type_name>(iface, typedef_name_type::Projected, false),
-                bind<write_type_name>(iface, typedef_name_type::ABI, false),
+                iface.TypeName(),
+                bind<write_type_params>(iface),
                 bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
                 [&](writer& w) {
                     if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
@@ -7113,6 +7213,8 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
                 bind_each<write_property_abi_invoke>(iface.PropertyList()),
                 bind_each<write_event_abi_invoke>(iface.EventList())
             );
+
+            write_generic_interface_impl_class(w, iface);
         }
     }
 
@@ -7432,7 +7534,7 @@ private readonly % _comp;
         from_abi_new,
         wrapped_type_name,
         wrapped_type_name,
-        bind<write_class_members>(type, true),
+        bind<write_class_members>(type, true, false),
         wrapped_type_name);
     }
 
@@ -7603,7 +7705,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
             }),
             default_interface_name,
             default_interface_name,
-            bind<write_class_members>(type, false),
+            bind<write_class_members>(type, false, false),
             bind<write_custom_query_interface_impl>(type));
     }
 
@@ -7819,7 +7921,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                         w.write("private % AsInternal(InterfaceTag<%> _) => _default;", default_interface_name, default_interface_name);
                     }
                 }),
-            bind<write_class_members>(type, false),
+            bind<write_class_members>(type, false, false),
             bind<write_custom_query_interface_impl>(type));
     }
 

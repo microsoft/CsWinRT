@@ -622,6 +622,7 @@ namespace ABI.System.Collections.Generic
         }
 
         internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IDictionary<K, V>));
+        public static Guid IID => PIID;
 
         public static V Abi_Lookup_0(IntPtr thisPtr, K key)
         {

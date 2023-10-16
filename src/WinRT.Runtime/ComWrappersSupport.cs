@@ -217,7 +217,6 @@ namespace WinRT
             }
             else if (!type.IsEnum && GetComInterfaceEntriesForTypeFromLookupTable(type) is var lookupTableEntries && lookupTableEntries != null)
             {
-                Console.WriteLine("found entries: " + lookupTableEntries.Count());
                 hasWinrtExposedClassAttribute = true;
                 entries.AddRange(lookupTableEntries);
             }
