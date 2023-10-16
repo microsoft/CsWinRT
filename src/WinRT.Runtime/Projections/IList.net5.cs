@@ -415,6 +415,7 @@ namespace ABI.System.Collections.Generic
         }
 
         internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
+        public static Guid IID => PIID;
 
         internal unsafe static bool EnsureEnumerableInitialized()
         {

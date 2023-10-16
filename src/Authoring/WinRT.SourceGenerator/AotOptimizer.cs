@@ -540,8 +540,10 @@ namespace Generator
             }
             else if (context.Node is AssignmentExpressionSyntax assignment)
             {
+                var leftSymbol = context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol;
+
                 // Check if property is within a CsWinRT projected class or interface.
-                if (context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol is IPropertySymbol propertySymbol &&
+                if (leftSymbol is IPropertySymbol propertySymbol &&
                     GeneratorHelper.IsWinRTType(propertySymbol.ContainingSymbol))
                 {
                     var argumentType = context.SemanticModel.GetTypeInfo(assignment.Right);
@@ -602,6 +604,18 @@ namespace Generator
                                 }
                             }
                         }
+                    }
+                }
+                // Handle generic events as they won't have the WinRTExposedType attribute.
+                else if (leftSymbol is IEventSymbol eventSymbol &&
+                    GeneratorHelper.IsWinRTType(eventSymbol.ContainingSymbol) &&
+                    eventSymbol.Type.MetadataName.Contains("`") &&
+                    GeneratorHelper.IsWinRTType(eventSymbol.Type))
+                {
+                    var vtableAtribute = GetVtableAttributeToAdd(eventSymbol.Type, GeneratorHelper.IsWinRTType, false);
+                    if (vtableAtribute != default)
+                    {
+                        vtableAttributes.Add(vtableAtribute);
                     }
                 }
             }

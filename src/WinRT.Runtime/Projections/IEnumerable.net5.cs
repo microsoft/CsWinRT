@@ -245,6 +245,7 @@ namespace ABI.System.Collections.Generic
         }
 
         internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerable<T>));
+        public static Guid IID => PIID;
     }
 
 #if EMBED
@@ -520,6 +521,7 @@ namespace ABI.System.Collections.Generic
         }
 
         internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerator<T>));
+        public static Guid IID => PIID;
     }
 
 #if EMBED
