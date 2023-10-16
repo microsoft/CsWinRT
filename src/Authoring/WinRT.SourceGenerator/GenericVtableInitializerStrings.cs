@@ -95,6 +95,34 @@ namespace Generator
             {
                 return GetProgressHandlerInstantiation("Windows.Foundation.AsyncOperationProgressHandler", "Windows.Foundation.IAsyncOperationWithProgress", genericParameters);
             }
+            else if (genericInterface == "Windows.Foundation.TypedEventHandler`2")
+            {
+                return GetTypedEventHandlerInstantiation(genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.IAsyncActionWithProgress`1")
+            {
+                return GetIAsyncActionWithProgressInstantiation(genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.IAsyncOperationWithProgress`2")
+            {
+                return GetIAsyncOperationWithProgressInstantiation(genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.IAsyncOperation`1")
+            {
+                return GetIAsyncOperationInstantiation(genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.Collections.IMapedChangedEventArgs`1")
+            {
+                return GetIMapedChangedEventArgsInstantiation(genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.Collections.IObservableMap`2")
+            {
+                return GetIObservableMapInstantiation(genericParameters);
+            }
+            else if (genericInterface == "Windows.Foundation.Collections.IObservableVector`1")
+            {
+                return GetIObservableVectorInstantiation(genericParameters);
+            }
 
             return "";
         }
@@ -964,10 +992,67 @@ namespace Generator
             return eventHandlerInstantiation;
         }
 
+        private static string GetTypedEventHandlerInstantiation(EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.Windows.Foundation.TypedEventHandlerMethods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string typedEventHandlerInstantiation = $$"""
+             internal static class TypedEventHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     _ = {{staticMethodsClass}}.InitCcw(
+                        &Do_Abi_Invoke
+                     );
+                     _ = {{staticMethodsClass}}.InitRcwHelper(
+                        &Invoke
+                     );
+                     return true;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, {{genericParameters[0].AbiType}} sender, {{genericParameters[1].AbiType}} args)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Abi_Invoke(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericParameters[0])}}(sender), {{GeneratorHelper.GetFromAbiMarshaler(genericParameters[1])}}(args));
+                     }
+                     catch (global::System.Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 private static unsafe void Invoke(IObjectReference objRef, {{genericParameters[0].ProjectedType}} sender, {{genericParameters[1].ProjectedType}} args)
+                 {
+                     IntPtr ThisPtr = objRef.ThisPtr;
+                     {{GeneratorHelper.GetMarshalerDeclaration(genericParameters[0], "sender")}}
+                     {{GeneratorHelper.GetMarshalerDeclaration(genericParameters[1], "args")}}
+                     try
+                     {
+                         {{GeneratorHelper.GetCreateMarshaler(genericParameters[0], "sender")}}
+                         {{GeneratorHelper.GetCreateMarshaler(genericParameters[1], "args")}}
+                         global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, {{genericParameters[0].AbiType}}, {{genericParameters[1].AbiType}}, int>**)ThisPtr)[3](ThisPtr, {{GeneratorHelper.GetAbiFromMarshaler(genericParameters[0], "sender")}}, {{GeneratorHelper.GetAbiFromMarshaler(genericParameters[1], "args")}}));
+                     }
+                     finally
+                     {
+                         {{GeneratorHelper.GetDisposeMarshaler(genericParameters[0], "sender")}}
+                         {{GeneratorHelper.GetDisposeMarshaler(genericParameters[1], "args")}}
+                     }
+                 }
+             }
+             """;
+            return typedEventHandlerInstantiation;
+        }
+
         private static string GetCompletedHandlerInstantiation(string completedHandler, string asyncInfoInterface, EquatableArray<GenericParameter> genericParameters)
         {
-            string staticMethodsClass = $"global::ABI.{completedHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true)}>";
-            string interfaceWithGeneric = $"global::{asyncInfoInterface}<{GetGenericParametersAsString(genericParameters, ", ", false)}>";
+            string staticMethodsClass = $"global::ABI.{completedHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string interfaceWithGeneric = $"global::{asyncInfoInterface}<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
             string completedHandlerInstantiation = $$"""
              internal static class {{completedHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
@@ -1002,7 +1087,7 @@ namespace Generator
 
         private static string GetChangedHandlerInstantiation(string changedHandler, string senderInterface, string changedEventArgsInterface, EquatableArray<GenericParameter> genericParameters)
         {
-            string staticMethodsClass = $"global::ABI.{changedHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true)}>";
+            string staticMethodsClass = $"global::ABI.{changedHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
             string changedHandlerInstantiation = $$"""
              internal static class {{changedHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
@@ -1037,8 +1122,8 @@ namespace Generator
 
         private static string GetProgressHandlerInstantiation(string progressHandler, string asyncInfoInterface, EquatableArray<GenericParameter> genericParameters)
         {
-            string staticMethodsClass = $"global::ABI.{progressHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true)}>";
-            string asyncInfoInterfaceWithGeneric = $"global::{asyncInfoInterface}<{GetGenericParametersAsString(genericParameters, ", ", false)}>";
+            string staticMethodsClass = $"global::ABI.{progressHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string asyncInfoInterfaceWithGeneric = $"global::{asyncInfoInterface}<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
             var progressParameter = genericParameters.Last();
             string progressHandlerInstantiation = $$"""
              internal static class {{progressHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
@@ -1095,7 +1180,477 @@ namespace Generator
             return progressHandlerInstantiation;
         }
 
-        private static string GetGenericParametersAsString(EquatableArray<GenericParameter> genericParameters, string separator, bool includeAbiTypes)
+        private static string GetIAsyncActionWithProgressInstantiation(EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.Windows.Foundation.IAsyncActionWithProgressMethods<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
+            string abiStaticMethodsClass = $"global::ABI.Windows.Foundation.IAsyncActionWithProgressMethods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string instantiation = $$"""
+             internal static class IAsyncActionWithProgress_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     return {{abiStaticMethodsClass}}.InitCcw(
+                        &Do_Abi_put_Progress_0,
+                        &Do_Abi_get_Progress_1,
+                        &Do_Abi_put_Completed_2,
+                        &Do_Abi_get_Completed_3,
+                        &Do_Abi_GetResults_4
+                     );
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_GetResults_4(IntPtr thisPtr)
+                 {
+                     try
+                     {
+                        {{staticMethodsClass}}.Do_Abi_GetResults_4(thisPtr);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_put_Progress_0(IntPtr thisPtr, IntPtr handler)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Do_Abi_put_Progress_0(thisPtr, global::ABI.Windows.Foundation.AsyncActionProgressHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(handler));
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_get_Progress_1(IntPtr thisPtr, IntPtr* __return_value__)
+                 {
+                     global::Windows.Foundation.AsyncActionProgressHandler<{{genericParameters[0].ProjectedType}}> ____return_value__ = default;
+
+                     *__return_value__ = default;
+
+                     try
+                     {
+                         ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Progress_1(thisPtr);
+                         *__return_value__ = global::ABI.Windows.Foundation.AsyncActionProgressHandler<{{genericParameters[0].ProjectedType}}>.FromManaged(____return_value__);
+
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_put_Completed_2(IntPtr thisPtr, IntPtr handler)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Do_Abi_put_Completed_2(thisPtr, global::ABI.Windows.Foundation.AsyncActionWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(handler));
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_get_Completed_3(IntPtr thisPtr, IntPtr* __return_value__)
+                 {
+                     global::Windows.Foundation.AsyncActionWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}> ____return_value__ = default;
+
+                     *__return_value__ = default;
+
+                     try
+                     {
+                         ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Completed_3(thisPtr);
+                         *__return_value__ = global::ABI.Windows.Foundation.AsyncActionWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromManaged(____return_value__);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+             }
+             """;
+            return instantiation;
+        }
+
+        private static string GetIAsyncOperationWithProgressInstantiation(EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.Windows.Foundation.IAsyncOperationWithProgressMethods<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
+            string abiStaticMethodsClass = $"global::ABI.Windows.Foundation.IAsyncOperationWithProgressMethods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string instantiation = $$"""
+             internal static class IAsyncOperationWithProgress_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     return {{abiStaticMethodsClass}}.InitCcw(
+                        &Do_Abi_put_Progress_0,
+                        &Do_Abi_get_Progress_1,
+                        &Do_Abi_put_Completed_2,
+                        &Do_Abi_get_Completed_3,
+                        &Do_Abi_GetResults_4
+                     );
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_GetResults_4(IntPtr thisPtr, {{genericParameters[0].AbiType}}* __return_value__)
+                 {
+                     {{genericParameters[0].ProjectedType}} ____return_value__ = default;
+
+                     *__return_value__ = default;
+
+                     try
+                     {
+                         ____return_value__ = {{staticMethodsClass}}.Do_Abi_GetResults_4(thisPtr);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0])}}(____return_value__);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_put_Progress_0(IntPtr thisPtr, IntPtr handler)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Do_Abi_put_Progress_0(thisPtr, global::ABI.Windows.Foundation.AsyncOperationProgressHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromAbi(handler));
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_get_Progress_1(IntPtr thisPtr, IntPtr* __return_value__)
+                 {
+                     global::Windows.Foundation.AsyncOperationProgressHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}> ____return_value__ = default;
+             
+                     *__return_value__ = default;
+             
+                     try
+                     {
+                         ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Progress_1(thisPtr);
+                         *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationProgressHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromManaged(____return_value__);
+             
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_put_Completed_2(IntPtr thisPtr, IntPtr handler)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Do_Abi_put_Completed_2(thisPtr, global::ABI.Windows.Foundation.AsyncOperationWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromAbi(handler));
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_get_Completed_3(IntPtr thisPtr, IntPtr* __return_value__)
+                 {
+                     global::Windows.Foundation.AsyncOperationWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}> ____return_value__ = default;
+             
+                     *__return_value__ = default;
+             
+                     try
+                     {
+                         ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Completed_3(thisPtr);
+                         *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromManaged(____return_value__);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+             }
+             """;
+            return instantiation;
+        }
+
+        private static string GetIAsyncOperationInstantiation(EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.Windows.Foundation.IAsyncOperationMethods<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
+            string abiStaticMethodsClass = $"global::ABI.Windows.Foundation.IAsyncOperationMethods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string instantiation = $$"""
+             internal static class IAsyncOperation_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     return {{abiStaticMethodsClass}}.InitCcw(
+                        &Do_Abi_put_Completed_0,
+                        &Do_Abi_get_Completed_1,
+                        &Do_Abi_GetResults_2
+                     );
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_GetResults_2(IntPtr thisPtr, {{genericParameters[0].AbiType}}* __return_value__)
+                 {
+                     {{genericParameters[0].ProjectedType}} ____return_value__ = default;
+
+                     *__return_value__ = default;
+
+                     try
+                     {
+                         ____return_value__ = {{staticMethodsClass}}.Do_Abi_GetResults_2(thisPtr);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0])}}(____return_value__);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_put_Completed_0(IntPtr thisPtr, IntPtr handler)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Do_Abi_put_Completed_0(thisPtr, global::ABI.Windows.Foundation.AsyncOperationCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(handler));
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_get_Completed_1(IntPtr thisPtr, IntPtr* __return_value__)
+                 {
+                     global::Windows.Foundation.AsyncOperationCompletedHandler<{{genericParameters[0].ProjectedType}}> ____return_value__ = default;
+             
+                     *__return_value__ = default;
+             
+                     try
+                     {
+                         ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Completed_1(thisPtr);
+                         *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromManaged(____return_value__);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+             }
+             """;
+            return instantiation;
+        }
+
+        private static string GetIMapedChangedEventArgsInstantiation(EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IMapedChangedEventArgsMethods<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
+            string abiStaticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IMapedChangedEventArgsMethods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string instantiation = $$"""
+             internal static class IMapedChangedEventArgs_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     return {{abiStaticMethodsClass}}.InitCcw(
+                        &Do_Abi_get_CollectionChange_0,
+                        &Do_Abi_get_Key_1
+                     );
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_get_CollectionChange_0(IntPtr thisPtr, global::Windows.Foundation.Collections.CollectionChange* __return_value__)
+                 {
+                     *__return_value__ = default;
+
+                     try
+                     {
+                         *__return_value__ = {{staticMethodsClass}}.Do_Abi_get_CollectionChange_0(thisPtr);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_get_Key_1(IntPtr thisPtr, {{genericParameters[0].AbiType}}* __return_value__)
+                 {
+                     {{genericParameters[0].ProjectedType}} ____return_value__ = default;
+
+                     *__return_value__ = default;
+
+                     try
+                     {
+                         ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Key_1(thisPtr);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0])}}(____return_value__);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+             }
+             """;
+            return instantiation;
+        }
+
+        private static string GetIObservableMapInstantiation(EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IObservableMapMethods<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
+            string abiStaticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IObservableMapMethods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string instantiation = $$"""
+             internal static class IObservableMap_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     return {{abiStaticMethodsClass}}.InitCcw(
+                        &Do_Abi_add_MapChanged_0,
+                        &Do_Abi_remove_MapChanged_1
+                     );
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_add_MapChanged_0(IntPtr thisPtr, IntPtr vhnd, global::WinRT.EventRegistrationToken* __return_value__)
+                 {
+                     *__return_value__ = default;
+                     try
+                     {
+                         *__return_value__ = {{staticMethodsClass}}.Do_Abi_add_MapChanged_0(thisPtr, global::ABI.Windows.Foundation.Collections.MapChangedEventHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromAbi(vhnd));
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_remove_MapChanged_1(IntPtr thisPtr, global::WinRT.EventRegistrationToken token)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Do_Abi_remove_MapChanged_1(thisPtr, token);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+             }
+             """;
+            return instantiation;
+        }
+
+        private static string GetIObservableVectorInstantiation(EquatableArray<GenericParameter> genericParameters)
+        {
+            string staticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IObservableVectorMethods<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
+            string abiStaticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IObservableVectorMethods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string instantiation = $$"""
+             internal static class IObservableVector_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             {
+                 private static bool _initialized = Init();
+                 internal static bool Initialized => _initialized;
+
+                 private static unsafe bool Init()
+                 {
+                     return {{abiStaticMethodsClass}}.InitCcw(
+                        &Do_Abi_add_VectorChanged_0,
+                        &Do_Abi_remove_VectorChanged_1
+                     );
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_add_VectorChanged_0(IntPtr thisPtr, IntPtr vhnd, global::WinRT.EventRegistrationToken* __return_value__)
+                 {
+                     *__return_value__ = default;
+                     try
+                     {
+                         *__return_value__ = {{staticMethodsClass}}.Do_Abi_add_VectorChanged_0(thisPtr, global::ABI.Windows.Foundation.Collections.VectorChangedEventHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(vhnd));
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+
+                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                 private static unsafe int Do_Abi_remove_VectorChanged_1(IntPtr thisPtr, global::WinRT.EventRegistrationToken token)
+                 {
+                     try
+                     {
+                         {{staticMethodsClass}}.Do_Abi_remove_VectorChanged_1(thisPtr, token);
+                     }
+                     catch (Exception __exception__)
+                     {
+                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                         return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                     }
+                     return 0;
+                 }
+             }
+             """;
+            return instantiation;
+        }
+
+        private static string GetGenericParametersAsString(EquatableArray<GenericParameter> genericParameters, string separator, bool includeAbiTypes, bool escape = true)
         {
             string genericParametersStr = string.Join(separator, 
                 genericParameters.Select(genericParameter =>
@@ -1103,13 +1658,13 @@ namespace Generator
                     if (includeAbiTypes)
                     {
                         return string.Join(
-                            separator, 
-                            GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType), 
-                            GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.AbiType));
+                            separator,
+                            escape ? GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType) : genericParameter.ProjectedType,
+                            escape ? GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.AbiType) : genericParameter.AbiType);
                     }
                     else
                     {
-                        return GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType);
+                        return escape ? GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType) : genericParameter.ProjectedType;
                     }
                 }));
             return genericParametersStr;

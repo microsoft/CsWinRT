@@ -332,7 +332,7 @@ namespace Generator
             return "IntPtr";
         }
 
-        public static string GetMarshalerClass(string type, string abiType, TypeKind kind, bool isArray)
+        public static string GetMarshalerClass(string type, string abiType, TypeKind kind, bool isArray, bool useGenericMarshaler = false)
         {
             if (type == "System.String" || type == "string")
             {
@@ -392,10 +392,18 @@ namespace Generator
             }
             else if (kind == TypeKind.Class || kind == TypeKind.Delegate)
             {
-                return "global::ABI." + type;
+                return useGenericMarshaler ? "MarshalInspectable<object>" : "global::ABI." + type;
             }
 
             throw new ArgumentException();
+        }
+
+        public static string GetFromAbiMarshaler(GenericParameter genericParameter)
+        {
+            return GetFromAbiMarshaler(
+                genericParameter.ProjectedType, 
+                genericParameter.AbiType, 
+                genericParameter.TypeKind);
         }
 
         public static string GetFromAbiMarshaler(string type, string abiType, TypeKind kind)
@@ -417,6 +425,14 @@ namespace Generator
             {
                 return marshalerType + ".FromAbi";
             }
+        }
+
+        public static string GetFromManagedMarshaler(GenericParameter genericParameter)
+        {
+            return GetFromManagedMarshaler(
+                genericParameter.ProjectedType,
+                genericParameter.AbiType,
+                genericParameter.TypeKind);
         }
 
         public static string GetFromManagedMarshaler(string type, string abiType, TypeKind kind)
@@ -453,6 +469,15 @@ namespace Generator
             }
         }
 
+        public static string GetCreateMarshaler(GenericParameter genericParameter, string arg)
+        {
+            return GetCreateMarshaler(
+                genericParameter.ProjectedType,
+                genericParameter.AbiType,
+                genericParameter.TypeKind,
+                arg);
+        }
+
         public static string GetCreateMarshaler(string type, string abiType, TypeKind kind, string arg)
         {
             if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType) || 
@@ -461,11 +486,25 @@ namespace Generator
             {
                 return "";
             }
+            else if (type == "System.String" || type == "string")
+            {
+                // TODO: Consider switching to pinning
+                return $$"""__{{arg}} = MarshalString.CreateMarshaler({{arg}});""";
+            }
             else
             {
                 string marshalerClass = GetMarshalerClass(type, abiType, kind, false);
                 return $$"""__{{arg}} = {{marshalerClass}}.CreateMarshaler2({{arg}});""";
             }
+        }
+
+        public static string GetDisposeMarshaler(GenericParameter genericParameter, string arg)
+        {
+            return GetDisposeMarshaler(
+                genericParameter.ProjectedType,
+                genericParameter.AbiType,
+                genericParameter.TypeKind,
+                arg);
         }
 
         public static string GetDisposeMarshaler(string type, string abiType, TypeKind kind, string arg)
@@ -478,9 +517,18 @@ namespace Generator
             }
             else
             {
-                string marshalerClass = GetMarshalerClass(type, abiType, kind, false);
+                string marshalerClass = GetMarshalerClass(type, abiType, kind, false, true);
                 return $$"""{{marshalerClass}}.DisposeMarshaler(__{{arg}});""";
             }
+        }
+
+        public static string GetAbiFromMarshaler(GenericParameter genericParameter, string arg)
+        {
+            return GetAbiFromMarshaler(
+                genericParameter.ProjectedType,
+                genericParameter.AbiType,
+                genericParameter.TypeKind,
+                arg);
         }
 
         public static string GetAbiFromMarshaler(string type, string abiType, TypeKind kind, string arg)
@@ -499,9 +547,18 @@ namespace Generator
             }
             else
             {
-                string marshalerClass = GetMarshalerClass(type, abiType, kind, false);
+                string marshalerClass = GetMarshalerClass(type, abiType, kind, false, true);
                 return $"{marshalerClass}.GetAbi(__{arg})";
             }
+        }
+
+        public static string GetMarshalerDeclaration(GenericParameter genericParameter, string arg)
+        {
+            return GetMarshalerDeclaration(
+                genericParameter.ProjectedType,
+                genericParameter.AbiType,
+                genericParameter.TypeKind,
+                arg);
         }
 
         public static string GetMarshalerDeclaration(string type, string abiType, TypeKind kind, string arg)
@@ -520,11 +577,11 @@ namespace Generator
 
         public static string GetAbiMarshalerType(string type, string abiType, TypeKind kind, bool isArray)
         {
-            if (type == "System.String")
+            if (type == "System.String" || type == "string")
             {
                 return isArray ? "MarshalString.MarshalerArray" : "MarshalString";
             }
-            else if (type == "System.Type")
+            else if (type == "System.Type" || type == "Type")
             {
                 if (isArray)
                 {
@@ -554,7 +611,7 @@ namespace Generator
                     return isArray ? $$"""MarshalNonBlittable<{{type}}>.MarshalerArray""" : "ABI." + type;
                 }
             }
-            else if (type == "System.Object" || kind == TypeKind.Class || kind == TypeKind.Interface || kind == TypeKind.Delegate)
+            else if (type == "System.Object" || type == "object" || kind == TypeKind.Class || kind == TypeKind.Interface || kind == TypeKind.Delegate)
             {
                 return isArray ? $$"""MarshalInterfaceHelper<{{type}}>.MarshalerArray""" : "ObjectReferenceValue";
             }
