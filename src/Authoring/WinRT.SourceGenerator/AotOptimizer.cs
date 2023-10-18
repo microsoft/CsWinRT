@@ -488,6 +488,9 @@ namespace Generator
                                     {
                                         vtableAttributes.Add(vtableAtribute);
                                     }
+
+                                    // Also add the enumerator type to the lookup table as the native caller has access to it.
+                                    vtableAttributes.Add(GetEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel));
                                 }
                             }
                             else
@@ -517,21 +520,7 @@ namespace Generator
                                         vtableAttributes.Add(vtableAtribute);
                                     }
 
-                                    if (argumentClassTypeSymbol.MetadataName.Contains("`"))
-                                    {
-                                        var enumerators = argumentClassTypeSymbol.GetMembers("GetEnumerator");
-                                        foreach (var enumerator in enumerators)
-                                        {
-                                            if (enumerator is IMethodSymbol enumeratorMethod)
-                                            {
-                                                var enumeratorVtableAtribute = GetVtableAttributeToAdd(enumeratorMethod.ReturnType, GeneratorHelper.IsWinRTType, false);
-                                                if (enumeratorVtableAtribute != default)
-                                                {
-                                                    vtableAttributes.Add(enumeratorVtableAtribute);
-                                                }
-                                            }
-                                        }
-                                    }
+                                    AddEnumeratorAdapterForEnumerableInterface(argumentClassTypeSymbol, context.SemanticModel, vtableAttributes);
                                 }
                             }
                         }
@@ -558,6 +547,9 @@ namespace Generator
                             {
                                 vtableAttributes.Add(vtableAtribute);
                             }
+
+                            // Also add the enumerator type to the lookup table as the native caller has access to it.
+                            vtableAttributes.Add(GetEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel));
                         }
                     }
                     else
@@ -588,21 +580,7 @@ namespace Generator
                                 vtableAttributes.Add(vtableAtribute);
                             }
 
-                            if (argumentClassTypeSymbol.MetadataName.Contains("`"))
-                            {
-                                var enumerators = argumentClassTypeSymbol.GetMembers("GetEnumerator");
-                                foreach (var enumerator in enumerators)
-                                {
-                                    if (enumerator is IMethodSymbol enumeratorMethod)
-                                    {
-                                        var enumeratorVtableAtribute = GetVtableAttributeToAdd(enumeratorMethod.ReturnType, GeneratorHelper.IsWinRTType, false);
-                                        if (enumeratorVtableAtribute != default)
-                                        {
-                                            vtableAttributes.Add(enumeratorVtableAtribute);
-                                        }
-                                    }
-                                }
-                            }
+                            AddEnumeratorAdapterForEnumerableInterface(argumentClassTypeSymbol, context.SemanticModel, vtableAttributes);
                         }
                     }
                 }
@@ -621,6 +599,24 @@ namespace Generator
             }
 
             return vtableAttributes.ToList();
+        }
+
+        private static VtableAttribute GetEnumeratorAdapterForType(ITypeSymbol type, SemanticModel semanticModel)
+        {
+            var enumeratorType = semanticModel.Compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1").
+                Construct(type);
+            return GetVtableAttributeToAdd(enumeratorType, GeneratorHelper.IsWinRTType, false);
+        }
+
+        private static void AddEnumeratorAdapterForEnumerableInterface(ITypeSymbol classType, SemanticModel semanticModel, HashSet<VtableAttribute> vtableAttributes)
+        {
+            foreach (var @interface in classType.AllInterfaces)
+            {
+                if (@interface.MetadataName == "IEnumerable`1")
+                {
+                    vtableAttributes.Add(GetEnumeratorAdapterForType(@interface.TypeArguments[0], semanticModel));
+                }
+            }
         }
 
         private static void GenerateVtableLookupTable(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, bool isCsWinRTComponent) value)
