@@ -241,7 +241,7 @@ namespace ABI.System.Collections.Generic
         public static global::System.Collections.Generic.IEnumerator<T> Abi_First_0(IntPtr thisPtr)
         {
             var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Generic.IEnumerable<T>>(thisPtr);
-            return __this.GetEnumerator();
+            return new ToAbiEnumeratorAdapter<T>(__this.GetEnumerator());
         }
 
         internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerable<T>));
@@ -830,6 +830,23 @@ namespace ABI.System.Collections.Generic
                     }
             };
         }
+    }
+
+    public sealed class ToAbiEnumeratorAdapter<T> : global::System.Collections.Generic.IEnumerator<T>, global::System.Collections.IEnumerator
+    {
+        private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
+
+        internal ToAbiEnumeratorAdapter(global::System.Collections.Generic.IEnumerator<T> enumerator) => m_enumerator = enumerator;
+
+        public T Current => m_enumerator.Current;
+
+        object IEnumerator.Current => m_enumerator.Current;
+
+        public void Dispose() => m_enumerator.Dispose();
+
+        public bool MoveNext() => m_enumerator.MoveNext();
+
+        public void Reset() => m_enumerator.Reset();
     }
 
     [DynamicInterfaceCastableImplementation]
