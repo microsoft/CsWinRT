@@ -490,7 +490,7 @@ namespace Generator
                                     }
 
                                     // Also add the enumerator type to the lookup table as the native caller has access to it.
-                                    vtableAttributes.Add(GetEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel));
+                                    AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel, vtableAttributes);
                                 }
                             }
                             else
@@ -549,7 +549,7 @@ namespace Generator
                             }
 
                             // Also add the enumerator type to the lookup table as the native caller has access to it.
-                            vtableAttributes.Add(GetEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel));
+                            AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel, vtableAttributes);
                         }
                     }
                     else
@@ -601,20 +601,35 @@ namespace Generator
             return vtableAttributes.ToList();
         }
 
-        private static VtableAttribute GetEnumeratorAdapterForType(ITypeSymbol type, SemanticModel semanticModel)
+        // Any of the IEnumerable interfaces on the vtable can be used to get the enumerator.  Given IEnumerable is
+        // a covariant interface, it means that we can end up getting an instance of the enumerable adapter for any one
+        // of those covariant interfaces and thereby need vtable lookup entries for all of them.
+        private static void AddEnumeratorAdapterForType(ITypeSymbol type, SemanticModel semanticModel, HashSet<VtableAttribute> vtableAttributes)
         {
-            var enumeratorType = semanticModel.Compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1").
+            var enumerableType = semanticModel.Compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1").
                 Construct(type);
-            return GetVtableAttributeToAdd(enumeratorType, GeneratorHelper.IsWinRTType, false);
+            if (TryGetCompatibleWindowsRuntimeTypesForVariantType(enumerableType, null, GeneratorHelper.IsWinRTType, out var compatibleIfaces))
+            {
+                foreach (var compatibleIface in compatibleIfaces)
+                {
+                    if (compatibleIface.MetadataName == "IEnumerable`1")
+                    {
+                        var enumeratorAdapterType = semanticModel.Compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1").
+                            Construct(compatibleIface.TypeArguments[0]);
+                        vtableAttributes.Add(GetVtableAttributeToAdd(enumeratorAdapterType, GeneratorHelper.IsWinRTType, false));
+                    }
+                }
+            }
         }
 
         private static void AddEnumeratorAdapterForEnumerableInterface(ITypeSymbol classType, SemanticModel semanticModel, HashSet<VtableAttribute> vtableAttributes)
         {
-            foreach (var @interface in classType.AllInterfaces)
+            // Type may implement multiple unique IEnumerable interfaces.
+            foreach (var iface in classType.AllInterfaces)
             {
-                if (@interface.MetadataName == "IEnumerable`1")
+                if (iface.MetadataName == "IEnumerable`1")
                 {
-                    vtableAttributes.Add(GetEnumeratorAdapterForType(@interface.TypeArguments[0], semanticModel));
+                    AddEnumeratorAdapterForType(iface.TypeArguments[0], semanticModel, vtableAttributes);
                 }
             }
         }
@@ -626,7 +641,7 @@ namespace Generator
             if (value.vtableAttributes.Any())
             {
                 source.AppendLine($$"""
-                                    using System;
+                                    using System; 
                                     using System.Runtime.InteropServices;
                                     using System.Runtime.CompilerServices;
 
