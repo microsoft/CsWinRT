@@ -594,7 +594,7 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static IReadOnlyList()
         {
-            if (IReadOnlyListMethods<T>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled && IReadOnlyListMethods<T>.AbiToProjectionVftablePtr == default)
             {
                 // Handle the compat scenario where the source generator wasn't used or IDIC was used.
                 var initFallbackCCWVtable = (Action)typeof(IReadOnlyListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).

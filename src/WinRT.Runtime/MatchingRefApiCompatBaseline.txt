@@ -55,6 +55,7 @@ MembersMustExist : Member 'public ABI.System.Collections.Generic.KeyValuePair<K,
 MembersMustExist : Member 'public WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.System.Collections.Generic.KeyValuePair<K, V>._FromAbi(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, V>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.ToAbiEnumeratorAdapter<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Specialized.INotifyCollectionChangedMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.ComponentModel.INotifyDataErrorInfoMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.ComponentModel.INotifyPropertyChangedMethods' does not exist in the reference but it does exist in the implementation.
@@ -69,4 +70,4 @@ TypesMustExist : Type 'WinRT.StructTypeDetails<T, TAbi>' does not exist in the r
 MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(System.String, System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 70
+Total Issues: 71
