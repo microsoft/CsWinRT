@@ -832,6 +832,8 @@ namespace ABI.System.Collections.Generic
         }
     }
 
+    // Used to handle the scenario where some enumerators are implemented on internal types and
+    // we can't make them AOT friendly due to we can't reference them.
     public sealed class ToAbiEnumeratorAdapter<T> : global::System.Collections.Generic.IEnumerator<T>, global::System.Collections.IEnumerator
     {
         private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
