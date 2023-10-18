@@ -34,6 +34,7 @@ namespace WinRT.Interop
         IObjectReference Resolve(Guid riid);
     }
 
+    [WinRTExposedType(typeof(ManagedWeakReferenceTypeDetails))]
     internal sealed class ManagedWeakReference : IWeakReference
     {
         private readonly WeakReference<object> _ref;
@@ -60,6 +61,21 @@ namespace WinRT.Interop
             }
 
             return ComWrappersSupport.CreateCCWForObjectForABI(target, riid);
+        }
+    }
+
+    internal sealed class ManagedWeakReferenceTypeDetails : IWinRTExposedTypeDetails
+    {
+        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            return new ComWrappers.ComInterfaceEntry[]
+            {
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = ABI.WinRT.Interop.IWeakReference.IID,
+                    Vtable = ABI.WinRT.Interop.IWeakReference.AbiToProjectionVftablePtr
+                }
+            };
         }
     }
 }
