@@ -7,9 +7,10 @@
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsTrimmable>true</IsTrimmable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net7.0' and '$(Platform)' != 'x86'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' and '$(Platform)' != 'x86'">
     <PublishAot>true</PublishAot>
   </PropertyGroup>
  

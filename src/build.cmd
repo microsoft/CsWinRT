@@ -101,7 +101,7 @@ if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking
 if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
 
 set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
-set cswinrt_aot_functional_tests=Structs
+set cswinrt_aot_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
 
 rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
@@ -175,9 +175,9 @@ if "%cswinrt_platform%" NEQ "arm" (
       echo Publishing %%a
 
       rem Do restore separately to workaround issue where specifying TargetFramework causes nuget restore to propagate it to project references causing issues.
-      call :exec %msbuild_path%msbuild.exe /t:restore %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win10-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+      call :exec %msbuild_path%msbuild.exe /t:restore %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
 
-      call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win10-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net6.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj -bl:CCWBin%%a.binlog
+      call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net6.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj -bl:CCWBin%%a.binlog
     )
   )
 )
@@ -188,7 +188,7 @@ if "%cswinrt_platform%" EQU "x64" (
     echo Publishing %%a
 
     rem No restore needed here as the previous run for .NET 6 did a restore without target framework.
-    call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win10-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net7.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+    call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net8.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
   )
 )
 
@@ -284,7 +284,7 @@ echo Running cswinrt functional tests for %cswinrt_platform% %cswinrt_configurat
 for %%a in (%cswinrt_functional_tests%) do (
   echo Running %%a
 
-  call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net6.0\win10-%cswinrt_platform%\publish\%%a.exe
+  call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net6.0\win-%cswinrt_platform%\publish\%%a.exe
   if !errorlevel! NEQ 100 (
     echo.
     echo ERROR: Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
@@ -298,7 +298,7 @@ if "%cswinrt_platform%" EQU "x64" (
   for %%a in (%cswinrt_aot_functional_tests%) do (
     echo Running %%a
 
-    call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net7.0\win10-%cswinrt_platform%\publish\%%a.exe
+    call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net8.0\win-%cswinrt_platform%\publish\%%a.exe
     if !errorlevel! NEQ 100 (
       echo.
       echo ERROR: AOT Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
