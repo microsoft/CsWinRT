@@ -54,6 +54,7 @@ steps:
         popd
       )
 
+      set CIBuildReason=CI
       benchmark.cmd
 
 # Component Detection
