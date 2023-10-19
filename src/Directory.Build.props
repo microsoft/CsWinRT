@@ -24,6 +24,8 @@
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
     <IsTargetFrameworkNet5OrGreater>false</IsTargetFrameworkNet5OrGreater>
     <IsTargetFrameworkNet5OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">true</IsTargetFrameworkNet5OrGreater>
+    <IsTargetFrameworkNet8OrGreater>false</IsTargetFrameworkNet8OrGreater>
+    <IsTargetFrameworkNet8OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">true</IsTargetFrameworkNet8OrGreater>
     <AppBuildTFMs>netcoreapp3.1;net6.0</AppBuildTFMs>
     <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netcoreapp3.1;net6.0;net7.0;net8.0</AppBuildTFMs>
     <LibBuildTFMs>netstandard2.0;net6.0;net8.0</LibBuildTFMs>

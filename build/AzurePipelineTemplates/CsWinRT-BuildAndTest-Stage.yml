@@ -5,7 +5,7 @@ stages:
   - job: BuildAndTest
     pool:
       vmImage: windows-latest
-    timeoutInMinutes: 180
+    timeoutInMinutes: 210
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
       maxParallel: 10
