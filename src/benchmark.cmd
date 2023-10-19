@@ -1,3 +1,12 @@
+rem Create global.json for current .NET SDK, and with allowPrerelease=true
+set global_json=%this_dir%global.json
+echo { > %global_json%
+echo   "sdk": { >> %global_json%
+echo     "version": "8.0.100-rc.2.23502.2", >> %global_json%
+echo     "allowPrerelease": true >> %global_json%
+echo   } >> %global_json%
+echo } >> %global_json%
+
 nuget restore TestWinRT\Test.sln
 nuget restore cswinrt.sln
 msbuild Benchmarks\Benchmarks.csproj -t:restore -t:build /p:platform=x64 /p:configuration=release /p:solutiondir=%~dp0 /p:IsDotnetBuild=false
