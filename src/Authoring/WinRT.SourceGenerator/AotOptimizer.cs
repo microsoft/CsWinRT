@@ -455,7 +455,8 @@ namespace Generator
         private static bool NeedVtableOnLookupTable(SyntaxNode node)
         {
             return (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Arguments.Count != 0) ||
-                    node is AssignmentExpressionSyntax;
+                    node is AssignmentExpressionSyntax ||
+                    node is AwaitExpressionSyntax;
         }
 
         private static List<VtableAttribute> GetVtableAttributesToAddOnLookupTable(GeneratorSyntaxContext context)
@@ -594,6 +595,19 @@ namespace Generator
                     if (vtableAtribute != default)
                     {
                         vtableAttributes.Add(vtableAtribute);
+                    }
+                }
+            }
+            else if (context.Node is AwaitExpressionSyntax awaitExpression)
+            {
+                var methodSymbol = context.SemanticModel.GetSymbolInfo(awaitExpression.Expression).Symbol as IMethodSymbol;
+                // Check if await is being called on a WinRT function.
+                if (GeneratorHelper.IsWinRTType(methodSymbol.ContainingSymbol))
+                {
+                    var completedProperty = methodSymbol.ReturnType.GetMembers("Completed")[0] as IPropertySymbol;
+                    if (completedProperty.Type.MetadataName.Contains("`"))
+                    {
+                        vtableAttributes.Add(GetVtableAttributeToAdd(completedProperty.Type, GeneratorHelper.IsWinRTType, false));
                     }
                 }
             }
