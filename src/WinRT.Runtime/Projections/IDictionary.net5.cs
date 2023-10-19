@@ -612,7 +612,7 @@ namespace ABI.System.Collections.Generic
         }
 
         private static IntPtr abiToProjectionVftablePtr;
-        internal static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
+        public static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
 
         internal static bool TryInitCCWVtable(IntPtr ptr)
         {
