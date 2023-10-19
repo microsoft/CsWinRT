@@ -20,7 +20,7 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.13.9" />
     <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.9" />
     <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.18362.2005" Condition="$(UseWinmd) == true"/>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" Condition="$(UseWinmd) == false"/>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" Condition="$(UseWinmd) == false"/>
   </ItemGroup>
     
   <ItemGroup>
