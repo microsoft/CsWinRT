@@ -10,7 +10,8 @@
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' and '$(Platform)' != 'x86'">
+  <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
+    <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
  

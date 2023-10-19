@@ -14,5 +14,9 @@
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
+
+  <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater)">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
     
 </Project>
