@@ -129,6 +129,6 @@ stages:
     dependsOn: []
     pool:
       vmImage: windows-latest
-    timeoutInMinutes: 120
+    timeoutInMinutes: 240
     steps:
     - template: CsWinRT-Benchmarks-Steps.yml
