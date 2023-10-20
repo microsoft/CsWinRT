@@ -3727,10 +3727,10 @@ event % %;)",
         if (auto ret = signature.return_signature())
         {
             abi_marshaler m{
-                "retval",
-                is_generic ? param_index : -1,
-                ret.Type().is_szarray() && !raw_return_type ? param_category::receive_array : param_category::out,
-                true
+                   "retval",
+                   is_generic ? param_index : -1,
+                   ret.Type().is_szarray() && !raw_return_type ? param_category::receive_array : param_category::out,
+                   true
             };
             param_index += m.is_array() ? 2 : 1;
             if (!raw_return_type)
@@ -4115,18 +4115,6 @@ remove
             w.write("\nvar ThisPtr = _obj.ThisPtr;\n");   
         };
 
-        auto write_raw_return_type = [](writer& w, method_signature const& sig)
-            {
-                if (auto return_sig = sig.return_signature())
-                {
-                    write_abi_type(w, get_type_semantics(return_sig.Type()));
-                }
-                else
-                {
-                    w.write("void");
-                }
-            };
-
         for (auto&& method : iface.MethodList())
         {
             if (is_special(method))
@@ -4135,18 +4123,7 @@ remove
             }
             method_signature signature{ method };
             auto [invoke_target, is_generic] = get_invoke_info(w, method, abi_methods_start_index);
-            w.write(R"(
-public static unsafe % _%(% %%%)
-{%%}
-)",
-                bind(write_raw_return_type, signature),
-                method.Name(),
-                settings.netstandard_compat ? w.write_temp("ObjectReference<%.Vftbl>", bind<write_type_name>(iface, typedef_name_type::ABI, true)) : "IObjectReference",
-                generic_type ? "_genericObj" : "_obj",
-                signature.has_params() ? ", " : "",
-                bind_list<write_projection_parameter>(", ", signature.params()),
-                bind(init_call_variables),
-                bind<write_abi_method_call>(signature, invoke_target, is_generic, true, is_noexcept(method)));
+
             w.write(R"(
 public static unsafe % %(% %%%)
 {%%}
