@@ -18,13 +18,13 @@ namespace Generator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var isCsWinRTComponent = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => provider.IsCsWinRTComponent());
+            var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent()));
 
             var vtableAttributesToAdd = context.SyntaxProvider.CreateSyntaxProvider(
                 static (n, _) => NeedVtableAttribute(n),
                 static (n, _) => GetVtableAttributeToAdd(n));
 
-            context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect().Combine(isCsWinRTComponent), GenerateVtableAttributes);
+            context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect().Combine(properties), GenerateVtableAttributes);
 
             var vtablesToAddOnLookupTable = context.SyntaxProvider.CreateSyntaxProvider(
                 static (n, _) => NeedVtableOnLookupTable(n),
@@ -34,10 +34,10 @@ namespace Generator
             var genericInterfacesFromVtableLookupTable = vtablesToAddOnLookupTable.SelectMany(static (vtable, _) => vtable.SelectMany(v => v.GenericInterfaces)).Collect();
 
             context.RegisterImplementationSourceOutput(
-                genericInterfacesFromVtableAttribute.Combine(genericInterfacesFromVtableLookupTable).Combine(isCsWinRTComponent),
+                genericInterfacesFromVtableAttribute.Combine(genericInterfacesFromVtableLookupTable).Combine(properties),
                 GenerateCCWForGenericInstantiation);
 
-            context.RegisterImplementationSourceOutput(vtablesToAddOnLookupTable.SelectMany(static (vtable, _) => vtable).Collect().Combine(isCsWinRTComponent), GenerateVtableLookupTable);
+            context.RegisterImplementationSourceOutput(vtablesToAddOnLookupTable.SelectMany(static (vtable, _) => vtable).Collect().Combine(properties), GenerateVtableLookupTable);
         }
 
         // Restrict to non-projected classes which can be instantiated
@@ -230,9 +230,9 @@ namespace Generator
             return true;
         }
 
-        private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, bool isCsWinRTComponent) value)
+        private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
         {
-            if (value.isCsWinRTComponent)
+            if (value.properties.isCsWinRTComponent || !value.properties.isCsWinRTAotOptimizerEnabled)
             {
                 // Handled by the WinRT component source generator.
                 return;
@@ -409,9 +409,9 @@ namespace Generator
         }
 
         private static void GenerateCCWForGenericInstantiation(SourceProductionContext sourceProductionContext, 
-            ((ImmutableArray<GenericInterface> list1, ImmutableArray<GenericInterface> list2) genericInterfaces, bool isCsWinRTComponent) value)
+            ((ImmutableArray<GenericInterface> list1, ImmutableArray<GenericInterface> list2) genericInterfaces, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
         {
-            if (value.isCsWinRTComponent)
+            if (value.properties.isCsWinRTComponent || !value.properties.isCsWinRTAotOptimizerEnabled)
             {
                 // Handled by the WinRT component source generator.
                 return;
@@ -465,24 +465,24 @@ namespace Generator
 
             if (context.Node is InvocationExpressionSyntax invocation)
             {
-                var methodSymbol = context.SemanticModel.GetSymbolInfo(invocation.Expression).Symbol as IMethodSymbol;
+                var invocationSymbol = context.SemanticModel.GetSymbolInfo(invocation.Expression).Symbol;
                 // Check if function is within a CsWinRT projected class or interface.
-                if (GeneratorHelper.IsWinRTType(methodSymbol.ContainingSymbol))
+                if (invocationSymbol is IMethodSymbol methodSymbol && GeneratorHelper.IsWinRTType(methodSymbol.ContainingSymbol))
                 {
                     // Get the concrete types directly from the argument rather than
                     // using what the method accepts, which might just be an interface, so
                     // that we can try to include any other WinRT interfaces implemented by
                     // that type on the CCW when it is marshaled.
-                    for (int idx = 0; idx < invocation.ArgumentList.Arguments.Count; idx++)
+                    for (int idx = 0, paramsIdx = 0; idx < invocation.ArgumentList.Arguments.Count; idx++)
                     {
-                        if (methodSymbol.Parameters[idx].RefKind != RefKind.Out)
+                        if (methodSymbol.Parameters[paramsIdx].RefKind != RefKind.Out)
                         {
                             var argumentType = context.SemanticModel.GetTypeInfo(invocation.ArgumentList.Arguments[idx].Expression);
                             // Check if it is an WinRT array being passed as an object
                             // which means the IList interfaces need to be put on the CCW.
                             if (argumentType.Type is IArrayTypeSymbol arrayType)
                             {
-                                if (methodSymbol.Parameters[idx].Type is not IArrayTypeSymbol)
+                                if (methodSymbol.Parameters[paramsIdx].Type is not IArrayTypeSymbol)
                                 {
                                     var vtableAtribute = GetVtableAttributeToAdd(arrayType, GeneratorHelper.IsWinRTType, false);
                                     if (vtableAtribute != default)
@@ -494,7 +494,7 @@ namespace Generator
                                     AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel, vtableAttributes);
                                 }
                             }
-                            else
+                            else if (argumentType.Type is not null)
                             {
                                 var argumentClassTypeSymbol = argumentType.Type;
                                 // Check if a generic class or delegate or it isn't a
@@ -525,6 +525,14 @@ namespace Generator
                                 }
                             }
                         }
+
+                        // The method parameter can be declared as params which means
+                        // an array of arguments can be passed for it and it is the
+                        // last argument.
+                        if (!methodSymbol.Parameters[paramsIdx].IsParams)
+                        {
+                            paramsIdx++;
+                        }
                     }
                 }
             }
@@ -553,7 +561,7 @@ namespace Generator
                             AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel, vtableAttributes);
                         }
                     }
-                    else
+                    else if (argumentType.Type is not null || argumentType.ConvertedType is not null)
                     {
                         // Type might be null such as for lambdas, so check converted type.
                         var argumentClassTypeSymbol = argumentType.Type ?? argumentType.ConvertedType;
@@ -602,7 +610,7 @@ namespace Generator
             {
                 var methodSymbol = context.SemanticModel.GetSymbolInfo(awaitExpression.Expression).Symbol as IMethodSymbol;
                 // Check if await is being called on a WinRT function.
-                if (GeneratorHelper.IsWinRTType(methodSymbol.ContainingSymbol))
+                if (methodSymbol != null && GeneratorHelper.IsWinRTType(methodSymbol.ContainingSymbol))
                 {
                     var completedProperty = methodSymbol.ReturnType.GetMembers("Completed")[0] as IPropertySymbol;
                     if (completedProperty.Type.MetadataName.Contains("`"))
@@ -648,8 +656,13 @@ namespace Generator
             }
         }
 
-        private static void GenerateVtableLookupTable(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, bool isCsWinRTComponent) value)
+        private static void GenerateVtableLookupTable(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
         {
+            if (!value.properties.isCsWinRTAotOptimizerEnabled)
+            {
+                return;
+            }
+
             StringBuilder source = new();
 
             if (value.vtableAttributes.Any())
