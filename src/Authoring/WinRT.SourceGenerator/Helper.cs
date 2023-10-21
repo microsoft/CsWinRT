@@ -90,6 +90,16 @@ namespace Generator
             {
                 return bool.TryParse(isCsWinRTComponentStr, out var isCsWinRTComponent) && isCsWinRTComponent;
             }
+            
+            return false;
+        }
+
+        public static bool IsCsWinRTAotOptimizerEnabled(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotOptimizerEnabled", out var isCsWinRTAotOptimizerEnabledStr))
+            {
+                return bool.TryParse(isCsWinRTAotOptimizerEnabledStr, out var isCsWinRTAotOptimizerEnabled) && isCsWinRTAotOptimizerEnabled;
+            }
 
             return false;
         }
