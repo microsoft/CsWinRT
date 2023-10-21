@@ -579,51 +579,84 @@ namespace WinRT
 #if NET
     internal class BaseFactory
     {
-        private readonly IObjectReference _factory;
+        private IObjectReference _factory;
         public IObjectReference Value { get => _factory; }
 #else
     internal class BaseFactory<I>
     {
-        private readonly ObjectReference<I> _factory;
-        public ObjectReference<I> Value { get => _factory; }
+        private ObjectReference<I> _factory;
+        public ObjectReference<I> Value 
+        { 
+            get
+            {
+                var existingInstance = _factory;
+                if (existingInstance != null && (_contextToken == IntPtr.Zero || _contextToken == Context.GetContextToken()))
+                {
+                    return existingInstance;
+                }
+
+                (var newFactory, var newToken) = InitializeFactory();
+                if (Interlocked.CompareExchange(ref _factory, newFactory, existingInstance) == existingInstance)
+                {
+                    _contextToken = newToken;
+                }
+                return newFactory;
+            }
+        }
 #endif
 
-        private readonly IntPtr _contextToken;
-        public IntPtr ContextToken { get => _contextToken; }
+        private readonly string namespaceName;
+        private readonly string typeName;
+        private readonly Guid interfaceGuid;
 
-        public BaseFactory(string typeNamespace, string typeFullName, Guid interfaceGuid)
+        private IntPtr _contextToken;
+
+        public BaseFactory(string namespaceName, string typeName, Guid interfaceGuid)
+        {
+            this.namespaceName = namespaceName;
+            this.typeName = typeName;
+            this.interfaceGuid = interfaceGuid;
+
+            (this._factory, this._contextToken) = InitializeFactory();
+        }
+
+#if NET
+        private IObjectReference InitializeFactory()
+#else
+        private (ObjectReference<I>, IntPtr) InitializeFactory()
+#endif
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<IActivationFactoryVftbl> factory;
-            (factory, hr) = WinrtModule.GetActivationFactory(typeFullName);
+            (factory, hr) = WinrtModule.GetActivationFactory(typeName);
             if (factory != null)
             {
 #if NET
-                _factory = factory.As(interfaceGuid);
+                var newFactory = factory.As(interfaceGuid);
 #else
-                _factory = factory.As<I>(interfaceGuid);
+                var newFactory = factory.As<I>(interfaceGuid);
 #endif
-                _contextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
-                return;
+                var newContextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
+                return (newFactory, newContextToken);
             }
 
-            var moduleName = typeNamespace;
+            var moduleName = namespaceName;
             while (true)
             {
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    (factory, _) = module.GetActivationFactory(typeFullName);
+                    (factory, _) = module.GetActivationFactory(typeName);
                     if (factory != null)
                     {
 #if NET
-                        _factory = factory.As(interfaceGuid);
+                        var newFactory = factory.As(interfaceGuid);
 #else
-                        _factory = factory.As<I>(interfaceGuid);
+                        var newFactory = factory.As<I>(interfaceGuid);
 #endif
-                        _contextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
-                        return;
+                        var newContextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
+                        return (newFactory, newContextToken);
                     }
                 }
 
@@ -644,25 +677,6 @@ namespace WinRT
     internal sealed class Factory<T, I> : BaseFactory<I>
 #endif
     {
-        private static Factory<T, I> _instance;
-
-#if NET
-        internal static IObjectReference Get()
-#else
-        internal static ObjectReference<I> Get()
-#endif
-        {
-            var existingInstance = _instance;
-            if (existingInstance != null && (existingInstance.ContextToken == IntPtr.Zero || existingInstance.ContextToken == Context.GetContextToken()))
-            {
-                return existingInstance.Value;
-            }
-
-            var newInstance = new Factory<T, I>();
-            Interlocked.CompareExchange(ref _instance, newInstance, existingInstance);
-            return newInstance.Value;
-        }
-
         private Factory()
 #if NET
             : base(typeof(T).Namespace, typeof(T).FullName, I.IID)
