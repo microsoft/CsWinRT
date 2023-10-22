@@ -17,9 +17,6 @@ rd /q/s "%this_dir%\C++ Components\Gamma\x86"
 rd /q/s "%this_dir%\Net6App\bin"
 rd /q/s "%this_dir%\Net6App\obj"
 
-rd /q/s "%this_dir%\NetCore3App\bin"
-rd /q/s "%this_dir%\NetCore3App\obj"
-
 rd /q/s "%this_dir%\TestEmbeddedLibrary\bin"
 rd /q/s "%this_dir%\TestEmbeddedLibrary\obj"
 
