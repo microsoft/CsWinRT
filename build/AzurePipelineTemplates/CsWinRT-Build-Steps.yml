@@ -24,23 +24,6 @@ steps:
 
       Write-Host ##vso[task.setvariable variable=PATH;]${env:Agent_TempDirectory}\procdump;${env:PATH};
 
-# Use .NET Core SDK 3.1
-- task: UseDotNet@2
-  displayName: Use .NET Core SDK 3.1
-  inputs:
-    version: 3.1.x
-    installationPath: C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\
-    performMultiLevelLookup: true
-
-- task: UseDotNet@2
-  displayName: Use .NET Core SDK 3.1
-  inputs:
-    version: 3.1.x
-    installationPath: C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\x86
-    performMultiLevelLookup: true
-  env:
-    PROCESSOR_ARCHITECTURE: x86
-
 # Install .NET 6 SDK 
 - task: PowerShell@2
   displayName: Install .NET 6 SDK

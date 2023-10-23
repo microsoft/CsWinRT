@@ -835,6 +835,7 @@ namespace UnitTest
             });
         }
 
+#if NET
         [Fact]
         public void Collections_ReadOnly_Dictionary_Call()
         {
@@ -844,6 +845,7 @@ namespace UnitTest
                 return new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(b));
             });
         }
+#endif
 
         [Fact]
         public void Collections_List_Call()
