@@ -478,8 +478,10 @@ namespace Generator
                         if (methodSymbol.Parameters[paramsIdx].RefKind != RefKind.Out)
                         {
                             var argumentType = context.SemanticModel.GetTypeInfo(invocation.ArgumentList.Arguments[idx].Expression);
-                            // Check if it is an WinRT array being passed as an object
-                            // which means the IList interfaces need to be put on the CCW.
+
+                            // This handles the case where there is an WinRT array passed
+                            // as an object. In this case, the IList interfaces of the array
+                            // type need to be put on the CCW.
                             if (argumentType.Type is IArrayTypeSymbol arrayType)
                             {
                                 if (methodSymbol.Parameters[paramsIdx].Type is not IArrayTypeSymbol)
@@ -490,15 +492,15 @@ namespace Generator
                                         vtableAttributes.Add(vtableAtribute);
                                     }
 
-                                    // Also add the enumerator type to the lookup table as the native caller has access to it.
+                                    // Also add the enumerator type to the lookup table as the native caller may call it.
                                     AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel, vtableAttributes);
                                 }
                             }
                             else if (argumentType.Type is not null)
                             {
                                 var argumentClassTypeSymbol = argumentType.Type;
-                                // Check if a generic class or delegate or it isn't a
-                                // WinRT type meaning we will need to probably create a CCW for.
+
+                                // This handles the case where a generic delegate is passed.
                                 if (argumentClassTypeSymbol.TypeKind == TypeKind.Delegate &&
                                     argumentClassTypeSymbol.MetadataName.Contains("`") &&
                                     GeneratorHelper.IsWinRTType(argumentClassTypeSymbol))
@@ -507,6 +509,14 @@ namespace Generator
                                     vtableAttributes.Add(GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, false));
                                 }
 
+                                // This handles the case where the source generator wasn't able to run
+                                // and put the WinRTExposedType attribute on the class. This can be in the
+                                // scenario where the caller defined their own generic class and
+                                // pass it as a parameter.  With generic classes, the interface itself
+                                // might be generic too and due to that we handle it here.
+                                // This also handles the case where the type being passed is from a different
+                                // library which happened to not run the AOT optimizer.  So as a best effort,
+                                // we handle it here.
                                 if (argumentClassTypeSymbol.TypeKind == TypeKind.Class &&
                                     (argumentClassTypeSymbol.MetadataName.Contains("`") ||
                                     (!GeneratorHelper.IsWinRTType(argumentClassTypeSymbol) &&
@@ -540,13 +550,15 @@ namespace Generator
             {
                 var leftSymbol = context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol;
 
-                // Check if property is within a CsWinRT projected class or interface.
+                // Check if property being assigned to is within a CsWinRT projected class or interface.
                 if (leftSymbol is IPropertySymbol propertySymbol &&
                     GeneratorHelper.IsWinRTType(propertySymbol.ContainingSymbol))
                 {
                     var argumentType = context.SemanticModel.GetTypeInfo(assignment.Right);
-                    // Check if it is an WinRT array being passed as an object
-                    // which means the IList interfaces need to be put on the CCW.
+
+                    // This handles the case where there is an WinRT array being assigned
+                    // to an object type. In this case, the IList interfaces of the array
+                    // type need to be put on the CCW.
                     if (argumentType.Type is IArrayTypeSymbol arrayType)
                     {
                         if (propertySymbol.Type is not IArrayTypeSymbol)
@@ -557,14 +569,15 @@ namespace Generator
                                 vtableAttributes.Add(vtableAtribute);
                             }
 
-                            // Also add the enumerator type to the lookup table as the native caller has access to it.
+                            // Also add the enumerator type to the lookup table as the native caller can call it.
                             AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel, vtableAttributes);
                         }
                     }
                     else if (argumentType.Type is not null || argumentType.ConvertedType is not null)
                     {
-                        // Type might be null such as for lambdas, so check converted type.
+                        // Type might be null such as for lambdas, so check converted type in that case.
                         var argumentClassTypeSymbol = argumentType.Type ?? argumentType.ConvertedType;
+
                         // Check if a generic class or delegate or it isn't a
                         // WinRT type meaning we will need to probably create a CCW for.
                         if (argumentClassTypeSymbol.TypeKind == TypeKind.Delegate &&
@@ -593,7 +606,8 @@ namespace Generator
                         }
                     }
                 }
-                // Handle generic events as they won't have the WinRTExposedType attribute.
+                // This handles the class.event += event scenario where the event
+                // can be generic and not have the have the WinRTExposedType attribute.
                 else if (leftSymbol is IEventSymbol eventSymbol &&
                     GeneratorHelper.IsWinRTType(eventSymbol.ContainingSymbol) &&
                     eventSymbol.Type.MetadataName.Contains("`") &&
@@ -606,6 +620,9 @@ namespace Generator
                     }
                 }
             }
+            // This handles the await asyncFunction() scenario where
+            // the awaiter will register a completed handler which can be
+            // a generic.
             else if (context.Node is AwaitExpressionSyntax awaitExpression)
             {
                 var methodSymbol = context.SemanticModel.GetSymbolInfo(awaitExpression.Expression).Symbol as IMethodSymbol;
