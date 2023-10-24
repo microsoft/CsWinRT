@@ -21,8 +21,9 @@ namespace Generator
             var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent()));
 
             var vtableAttributesToAdd = context.SyntaxProvider.CreateSyntaxProvider(
-                static (n, _) => NeedVtableAttribute(n),
-                static (n, _) => GetVtableAttributeToAdd(n));
+                    static (n, _) => NeedVtableAttribute(n),
+                    static (n, _) => GetVtableAttributeToAdd(n)
+                ).Where(vtableAttribute => vtableAttribute != null);
 
             context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect().Combine(properties), GenerateVtableAttributes);
 
