@@ -147,6 +147,8 @@ namespace ABI.System
             }
         }
 
+        public static unsafe global::System.Uri[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.Uri>.FromAbiArray(box, FromAbi);
+
         public static unsafe void CopyManaged(global::System.Uri o, IntPtr dest)
         {
             *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
