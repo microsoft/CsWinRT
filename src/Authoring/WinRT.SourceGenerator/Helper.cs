@@ -196,6 +196,13 @@ namespace Generator
             return isProjectedType;
         }
 
+        // Checks if the interface references any internal types (either the interface itself or within its generic types).
+        public static bool IsInternalInterfaceFromReferences(INamedTypeSymbol iface, IAssemblySymbol currentAssembly)
+        {
+            return (iface.DeclaredAccessibility == Accessibility.Internal && !SymbolEqualityComparer.Default.Equals(iface.ContainingAssembly, currentAssembly)) ||
+                (iface.IsGenericType && iface.TypeArguments.Any(typeArgument => IsInternalInterfaceFromReferences(typeArgument as INamedTypeSymbol, currentAssembly)));
+        }
+
         public static bool HasWinRTExposedTypeAttribute(ISymbol type)
         {
             return type.GetAttributes().
