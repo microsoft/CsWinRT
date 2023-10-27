@@ -203,6 +203,22 @@ namespace Generator
                 (iface.IsGenericType && iface.TypeArguments.Any(typeArgument => IsInternalInterfaceFromReferences(typeArgument as INamedTypeSymbol, currentAssembly)));
         }
 
+        // Checks whether the symbol references any generic that hasn't been instantiated.
+        // For instance, List<T> where T is a generic.
+        public static bool HasNonInstantiatedGeneric(ITypeSymbol symbol)
+        {
+            return symbol is INamedTypeSymbol namedType && 
+                (namedType.TypeKind == TypeKind.TypeParameter || 
+                 namedType.TypeArguments.Any(argument => argument.TypeKind == TypeKind.TypeParameter));
+        }
+
+        public static bool HasPrivateclass(ITypeSymbol symbol)
+        {
+            return symbol is INamedTypeSymbol namedType &&
+                (namedType.DeclaredAccessibility == Accessibility.Private ||
+                 namedType.TypeArguments.Any(argument => argument.DeclaredAccessibility == Accessibility.Private));
+        }
+
         public static bool HasWinRTExposedTypeAttribute(ISymbol type)
         {
             return type.GetAttributes().

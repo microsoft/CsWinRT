@@ -28,8 +28,9 @@ namespace Generator
             context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect().Combine(properties), GenerateVtableAttributes);
 
             var vtablesToAddOnLookupTable = context.SyntaxProvider.CreateSyntaxProvider(
-                static (n, _) => NeedVtableOnLookupTable(n),
-                static (n, _) => GetVtableAttributesToAddOnLookupTable(n));
+                    static (n, _) => NeedVtableOnLookupTable(n),
+                    static (n, _) => GetVtableAttributesToAddOnLookupTable(n)
+                ).Where(vtableAttribute => vtableAttribute != null);
 
             var genericInterfacesFromVtableAttribute = vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).Collect();
             var genericInterfacesFromVtableLookupTable = vtablesToAddOnLookupTable.SelectMany(static (vtable, _) => vtable.SelectMany(v => v.GenericInterfaces)).Collect();
@@ -73,6 +74,11 @@ namespace Generator
 
         internal static VtableAttribute GetVtableAttributeToAdd(ITypeSymbol symbol, Func<ISymbol, bool> isWinRTType, IAssemblySymbol assemblySymbol, bool isAuthoring, string authoringDefaultInterface = "")
         {
+            if (GeneratorHelper.HasNonInstantiatedGeneric(symbol) || GeneratorHelper.HasPrivateclass(symbol))
+            {
+                return default;
+            }
+
             HashSet<string> interfacesToAddToVtable = new();
             HashSet<GenericInterface> genericInterfacesToAddToVtable = new();
 
