@@ -637,7 +637,7 @@ namespace WinRT
 #else
                 var newFactory = factory.As<I>(interfaceGuid);
 #endif
-                var newContextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
+                var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
                 return (newFactory, newContextToken);
             }
 
@@ -655,7 +655,7 @@ namespace WinRT
 #else
                         var newFactory = factory.As<I>(interfaceGuid);
 #endif
-                        var newContextToken = Context.IsFreeThreaded(_factory) ? IntPtr.Zero : Context.GetContextToken();
+                        var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
                         return (newFactory, newContextToken);
                     }
                 }
