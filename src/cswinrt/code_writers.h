@@ -2123,7 +2123,7 @@ private IObjectReference % => __% ?? Make__%();
 % %(%)%
 {
 object baseInspectable = this.GetType() != typeof(%) ? this : null;
-IntPtr composed = %._%(%, %%baseInspectable, out IntPtr ptr);
+IntPtr composed = _%.%(%, %%baseInspectable, out IntPtr ptr);
 using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
 try
 {
@@ -2160,7 +2160,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 {
 bool isAggregation = this.GetType() != typeof(%);
 object baseInspectable = isAggregation ? this : null;
-IntPtr composed = %._%(%, %%baseInspectable, out IntPtr inner);
+IntPtr composed = _%.%(%, %%baseInspectable, out IntPtr inner);
 try
 {
 ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner);

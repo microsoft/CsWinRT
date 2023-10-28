@@ -579,13 +579,14 @@ namespace WinRT
 #if NET
     internal class BaseFactory
     {
-        private IObjectReference _factory;
-        public IObjectReference Value { get => _factory; }
+        private volatile IObjectReference _factory;
+        public IObjectReference Value
 #else
     internal class BaseFactory<I>
     {
-        private ObjectReference<I> _factory;
+        private volatile ObjectReference<I> _factory;
         public ObjectReference<I> Value 
+#endif
         { 
             get
             {
@@ -603,7 +604,6 @@ namespace WinRT
                 return newFactory;
             }
         }
-#endif
 
         private readonly string namespaceName;
         private readonly string typeName;
@@ -621,7 +621,7 @@ namespace WinRT
         }
 
 #if NET
-        private IObjectReference InitializeFactory()
+        private (IObjectReference, IntPtr) InitializeFactory()
 #else
         private (ObjectReference<I>, IntPtr) InitializeFactory()
 #endif
