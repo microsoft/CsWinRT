@@ -3,6 +3,13 @@ if /i "%echo_build%" == "on" @echo on
 
 set this_dir=%~dp0
 
+echo %DOTNET_ROOT%
+echo %DOTNET_ROOT(86)%
+echo %DOTNET_ROOT(x86)%
+set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
+set DOTNET_ROOT(x86)=%LocalAppData%\Microsoft\dotnet\x86
+set path=%DOTNET_ROOT%;%DOTNET_ROOT(x86)%;%path%
+
 :params
 set build_platform=%1
 set build_configuration=%2
@@ -39,7 +46,7 @@ if "%only_build%"=="true" goto :eof
 :test
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 if %build_platform%==x86 (
-  set dotnet_exe="%DOTNET_ROOT(86)%\dotnet.exe"
+  set dotnet_exe="%DOTNET_ROOT(x86)%\dotnet.exe"
 ) else (
   set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
 )

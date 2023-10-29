@@ -26,8 +26,15 @@ namespace UnitTest
     {
         private static void AssertGuid<T>(string expected)
         {
-            var actual = GuidGenerator.CreateIID(typeof(T));
-            Assert.Equal(new Guid(expected), actual);
+            try
+            {
+                var actual = GuidGenerator.CreateIID(typeof(T));
+                Assert.Equal(new Guid(expected), actual);
+            }
+            catch (Exception)
+            {
+                Assert.True(false, expected + " " + typeof(T).FullName);
+            }
         }
 
         [Fact]
