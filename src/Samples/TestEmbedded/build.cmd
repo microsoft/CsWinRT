@@ -3,9 +3,6 @@ if /i "%echo_build%" == "on" @echo on
 
 set this_dir=%~dp0
 
-echo %DOTNET_ROOT%
-echo %DOTNET_ROOT(86)%
-echo %DOTNET_ROOT(x86)%
 set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
 set DOTNET_ROOT(x86)=%LocalAppData%\Microsoft\dotnet\x86
 set path=%DOTNET_ROOT%;%DOTNET_ROOT(x86)%;%path%
