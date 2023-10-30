@@ -14,9 +14,20 @@ steps:
 - task: UseDotNet@2
   displayName: Use .NET Core SDK 3.1
   inputs:
+    packageType: runtime
     version: 3.1.x
-    installationPath: C:\Users\%username%\AppData\Local\Microsoft\dotnet\
+    installationPath: $(LocalAppData)\Microsoft\dotnet\
     performMultiLevelLookup: true
+
+- task: UseDotNet@2
+  displayName: Use .NET Core SDK 3.1
+  inputs:
+    packageType: runtime
+    version: 3.1.x
+    installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
+    performMultiLevelLookup: true
+  env:
+    PROCESSOR_ARCHITECTURE: x86
 
 # Install .NET 6 SDK 
 - task: PowerShell@2
