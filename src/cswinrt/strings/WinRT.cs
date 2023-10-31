@@ -577,7 +577,7 @@ namespace WinRT
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    (newFactory, hr) = WinrtModule.GetActivationFactory(classType.FullName);
+                    (newFactory, hr) = module.GetActivationFactory(classType.FullName);
                     if (newFactory != null)
                     {
                         var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
