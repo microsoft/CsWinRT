@@ -195,14 +195,13 @@ namespace ABI.System.Collections.Specialized
 #endif
     struct NotifyCollectionChangedEventArgs
     {
-        private sealed class ActivationFactory : BaseActivationFactory
+        private sealed class ActivationFactory : BuiltinTypeActivationFactory
         {
-            public ActivationFactory() : base("Microsoft.UI.Xaml.Interop", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
+            public ActivationFactory() : base("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
             {
             }
 
-            internal static WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = 
-                new ActivationFactory().As<WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory.Vftbl>();
+            internal static WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = new WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(new ActivationFactory().Value);
         }
 
         public static IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)

@@ -91,14 +91,14 @@ namespace ABI.System.ComponentModel
 #endif
     unsafe struct DataErrorsChangedEventArgs
     {
-        private sealed class ActivationFactory : BaseActivationFactory
+        private sealed class ActivationFactory : BuiltinTypeActivationFactory
         {
-            public ActivationFactory() : base("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs")
+            public ActivationFactory() : base("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs")
             {
             }
 
-            internal static ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance =
-                new ActivationFactory().As<ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory.Vftbl>();
+            internal static ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance = new ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory(
+                new ActivationFactory().Value);
         }
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.DataErrorsChangedEventArgs value)

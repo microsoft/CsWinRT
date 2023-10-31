@@ -96,14 +96,13 @@ namespace ABI.System
 #endif
     unsafe struct Uri
     {
-        private sealed class ActivationFactory : BaseActivationFactory
+        private sealed class ActivationFactory : BuiltinTypeActivationFactory
         {
-            public ActivationFactory() : base("Windows.Foundation", "Windows.Foundation.Uri")
+            public ActivationFactory() : base("Windows.Foundation.Uri")
             {
             }
 
-            internal static WinRTUriRuntimeClassFactory Instance = 
-                new ActivationFactory().As<WinRTUriRuntimeClassFactory.Vftbl>();
+            internal static WinRTUriRuntimeClassFactory Instance = new WinRTUriRuntimeClassFactory(new ActivationFactory().Value);
         }
 
         public static IObjectReference CreateMarshaler(global::System.Uri value)
