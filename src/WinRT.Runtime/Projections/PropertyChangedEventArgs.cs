@@ -102,14 +102,14 @@ namespace ABI.System.ComponentModel
 #endif
     unsafe struct PropertyChangedEventArgs
     {
-        private sealed class ActivationFactory : BuiltinTypeActivationFactory
+        private sealed class ActivationFactory : BaseActivationFactory
         {
-            public ActivationFactory() : base("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs")
+            public ActivationFactory() : base("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs")
             {
             }
 
-            internal static ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory Instance = new ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory(
-                new ActivationFactory().Value);
+            internal static ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory Instance = 
+                new ActivationFactory().As<ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventArgs value)

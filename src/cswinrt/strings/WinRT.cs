@@ -474,44 +474,6 @@ namespace WinRT
         }
     }
 
-    internal class BuiltinTypeActivationFactory
-    {
-        private readonly ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
-
-        public ObjectReference<IActivationFactoryVftbl> Value => _IActivationFactory;
-
-        public ObjectReference<I> As<I>() => Value.As<I>();
-        public IObjectReference As(Guid iid) => Value.As(iid);
-
-        public BuiltinTypeActivationFactory(string typeName)
-        {
-            int hr;
-            (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(typeName);
-            if (_IActivationFactory == null)
-            {
-                Marshal.ThrowExceptionForHR(hr);
-            }
-        }
-
-#if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode",
-            Justification = "No members of the generic type are dynamically accessed in this code path.")]
-#endif
-        public unsafe ObjectReference<I> ActivateInstance<I>()
-        {
-            IntPtr instancePtr;
-            Marshal.ThrowExceptionForHR(Value.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, &instancePtr));
-            try
-            {
-                return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(instancePtr);
-            }
-        }
-    }
-
 #if NET6_0_OR_GREATER
     internal interface IHasGuid
     {
@@ -523,65 +485,39 @@ namespace WinRT
 
     internal class BaseActivationFactory
     {
-        private volatile ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
+        private readonly ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
 
-        public ObjectReference<IActivationFactoryVftbl> Value
-        {
-            get
-            {
-                var existingInstance = _IActivationFactory;
-                if (existingInstance != null && (_contextToken == IntPtr.Zero || _contextToken == Context.GetContextToken()))
-                {
-                    return existingInstance;
-                }
+        public ObjectReference<IActivationFactoryVftbl> Value { get => _IActivationFactory; }
 
-                (var newFactory, var newToken) = InitializeFactory();
-                if (Interlocked.CompareExchange(ref _IActivationFactory, newFactory, existingInstance) == existingInstance)
-                {
-                    _contextToken = newToken;
-                }
-                return newFactory;
-            }
-        }
+        private readonly IntPtr _contextToken;
+        public IntPtr ContextToken { get => _contextToken; }
 
-        private readonly Type classType;
+        public I AsInterface<I>() => _IActivationFactory.AsInterface<I>();
+        public ObjectReference<I> As<I>() => _IActivationFactory.As<I>();
+        public IObjectReference As(Guid iid) => _IActivationFactory.As(iid);
 
-        private IntPtr _contextToken;
-
-        public I AsInterface<I>() => Value.AsInterface<I>();
-        public ObjectReference<I> As<I>() => Value.As<I>();
-        public IObjectReference As(Guid iid) => Value.As(iid);
-
-        public BaseActivationFactory(Type classType)
-        {
-            this.classType = classType;
-
-            (this._IActivationFactory, this._contextToken) = InitializeFactory();
-        }
-
-        private (ObjectReference<IActivationFactoryVftbl>, IntPtr) InitializeFactory()
+        public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
-            ObjectReference<IActivationFactoryVftbl> newFactory;
-            (newFactory, hr) = WinrtModule.GetActivationFactory(classType.FullName);
-            if (newFactory != null)
+            (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(typeFullName);
+            if (_IActivationFactory != null)
             {
-                var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                return (newFactory, newContextToken);
+                _contextToken = Context.IsFreeThreaded(_IActivationFactory) ? IntPtr.Zero : Context.GetContextToken();
+                return;
             }
 
-            var moduleName = classType.Namespace;
+            var moduleName = typeNamespace;
             while (true)
             {
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    (newFactory, hr) = module.GetActivationFactory(classType.FullName);
-                    if (newFactory != null)
+                    (_IActivationFactory, _) = module.GetActivationFactory(typeFullName);
+                    if (_IActivationFactory != null)
                     {
-                        var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                        return (newFactory, newContextToken);
+                        _contextToken = Context.IsFreeThreaded(_IActivationFactory) ? IntPtr.Zero : Context.GetContextToken();
+                        return;
                     }
                 }
 
@@ -601,7 +537,7 @@ namespace WinRT
         public unsafe ObjectReference<I> ActivateInstance<I>()
         {
             IntPtr instancePtr;
-            Marshal.ThrowExceptionForHR(Value.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, &instancePtr));
+            Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, &instancePtr));
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
@@ -615,20 +551,29 @@ namespace WinRT
 
     internal sealed class ActivationFactory<T> : BaseActivationFactory
     {
-        private static readonly ActivationFactory<T> _instance = new ActivationFactory<T>();
+        private static volatile ActivationFactory<T> _instance;
 
-        internal static ObjectReference<IActivationFactoryVftbl> Value => ((BaseActivationFactory)_instance).Value;
-
-        public ActivationFactory()
-            : base(typeof(T))
+#if NET
+        internal static ActivationFactory<T> Get()
+#else
+        internal static ActivationFactory<T> Get()
+#endif
         {
+            var existingInstance = _instance;
+            if (existingInstance != null && (existingInstance.ContextToken == IntPtr.Zero || existingInstance.ContextToken == Context.GetContextToken()))
+            {
+                return existingInstance;
+            }
+
+            var newInstance = new ActivationFactory<T>();
+            Interlocked.CompareExchange(ref _instance, newInstance, existingInstance);
+            return newInstance;
         }
 
-        public static ObjectReference<I> ActivateInstance<
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.None)]
-#endif
-            I>() => ((BaseActivationFactory)_instance).ActivateInstance<I>();
+        public ActivationFactory()
+            : base(typeof(T).Namespace, typeof(T).FullName)
+        {
+        }
     }
 
 #if NET
@@ -642,7 +587,7 @@ namespace WinRT
         private volatile ObjectReference<I> _factory;
         public ObjectReference<I> Value 
 #endif
-        {
+        { 
             get
             {
                 var existingInstance = _factory;
@@ -660,14 +605,16 @@ namespace WinRT
             }
         }
 
-        private readonly Type classType;
+        private readonly string namespaceName;
+        private readonly string typeName;
         private readonly Guid interfaceGuid;
 
         private IntPtr _contextToken;
 
-        public BaseFactory(Type classType, Guid interfaceGuid)
+        public BaseFactory(string namespaceName, string typeName, Guid interfaceGuid)
         {
-            this.classType = classType;
+            this.namespaceName = namespaceName;
+            this.typeName = typeName;
             this.interfaceGuid = interfaceGuid;
 
             (this._factory, this._contextToken) = InitializeFactory();
@@ -682,7 +629,7 @@ namespace WinRT
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<IActivationFactoryVftbl> factory;
-            (factory, hr) = WinrtModule.GetActivationFactory(classType.FullName);
+            (factory, hr) = WinrtModule.GetActivationFactory(typeName);
             if (factory != null)
             {
 #if NET
@@ -694,13 +641,13 @@ namespace WinRT
                 return (newFactory, newContextToken);
             }
 
-            var moduleName = classType.Namespace;
+            var moduleName = namespaceName;
             while (true)
             {
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    (factory, _) = module.GetActivationFactory(classType.FullName);
+                    (factory, _) = module.GetActivationFactory(typeName);
                     if (factory != null)
                     {
 #if NET
@@ -723,31 +670,22 @@ namespace WinRT
         }
     }
 
+
 #if NET
     internal sealed class Factory<T, I> : BaseFactory where I : IHasGuid
-    {
-        private static readonly Factory<T, I> _instance = new Factory<T, I>();
-
-        internal static IObjectReference Value => ((BaseFactory)_instance).Value;
-
-        private Factory()
-            : base(typeof(T), I.IID)
-        {
-        }
-    }
 #else
     internal sealed class Factory<T, I> : BaseFactory<I>
+#endif
     {
-        private static readonly Factory<T, I> _instance = new Factory<T, I>();
-
-        internal static ObjectReference<I> Value => ((BaseFactory<I>)_instance).Value;
-
         private Factory()
-            : base(typeof(T), typeof(I).GUID)
+#if NET
+            : base(typeof(T).Namespace, typeof(T).FullName, I.IID)
+#else
+            : base(typeof(T).Namespace, typeof(T).FullName, typeof(I).GUID)
+#endif
         {
         }
     }
-#endif
 
     internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
     {
