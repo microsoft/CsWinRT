@@ -506,17 +506,18 @@ namespace WinRT
             }
         }
 
-        private readonly Type classType;
-
+        private readonly string namespaceName;
+        private readonly string typeName;
         private IntPtr _contextToken;
 
         public I AsInterface<I>() => Value.AsInterface<I>();
         public ObjectReference<I> As<I>() => Value.As<I>();
         public IObjectReference As(Guid iid) => Value.As(iid);
 
-        public BaseActivationFactory(Type classType)
+        public BaseActivationFactory(string namespaceName, string typeName)
         {
-            this.classType = classType;
+            this.namespaceName = namespaceName;
+            this.typeName = typeName;
 
             (this._IActivationFactory, this._contextToken) = InitializeFactory();
         }
@@ -526,20 +527,20 @@ namespace WinRT
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<IActivationFactoryVftbl> newFactory;
-            (newFactory, hr) = WinrtModule.GetActivationFactory(classType.FullName);
+            (newFactory, hr) = WinrtModule.GetActivationFactory(typeName);
             if (newFactory != null)
             {
                 var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
                 return (newFactory, newContextToken);
             }
 
-            var moduleName = classType.Namespace;
+            var moduleName = namespaceName;
             while (true)
             {
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    (newFactory, hr) = module.GetActivationFactory(classType.FullName);
+                    (newFactory, hr) = module.GetActivationFactory(typeName);
                     if (newFactory != null)
                     {
                         var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
@@ -582,7 +583,7 @@ namespace WinRT
         internal static ObjectReference<IActivationFactoryVftbl> Value => ((BaseActivationFactory)_instance).Value;
 
         public ActivationFactory()
-            : base(typeof(T))
+            : base(typeof(T).Namespace, typeof(T).FullName)
         {
         }
 
