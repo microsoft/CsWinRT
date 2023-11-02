@@ -1878,6 +1878,31 @@ private static % _% => __% ?? Make__%();
         }
     }
 
+    void write_activation_factory_static_cache_definition(writer& w, TypeDef const& classType)
+    {
+        auto class_type_name = classType.TypeName();
+        w.write(R"(
+private static volatile BaseActivationFactory __%Factory;
+private static BaseActivationFactory Make__%Factory()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref __%Factory, new BaseActivationFactory("%", "%.%"), null);
+    return __%Factory;
+}
+private static BaseActivationFactory _%Factory => __%Factory ?? Make__%Factory();
+
+)",
+            class_type_name,
+            class_type_name,
+            class_type_name,
+            classType.TypeNamespace(),
+            classType.TypeNamespace(),
+            classType.TypeName(),
+            class_type_name,
+            class_type_name,
+            class_type_name,
+            class_type_name);
+    }
+
     template<auto method_writer>
     void write_static_abi_class_raw(writer& w, TypeDef const& factory_type)
     {
@@ -1992,8 +2017,10 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         }
         else
         {
+            write_activation_factory_static_cache_definition(w, class_type);
+
             w.write(R"(
-public %() : this(%(ActivationFactory<%>.ActivateInstance<IUnknownVftbl>()))
+public %() : this(%(_%Factory._ActivateInstance<IUnknownVftbl>()))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 %
@@ -2306,24 +2333,13 @@ Marshal.Release(inner);
                         });
                     }
 
-                    if (is_static(type))
-                    {
-                        w.write(R"(
+                     w.write(R"(
 public static %I As<I>() => new BaseActivationFactory("%", "%.%").AsInterface<I>();
 )",
-                            has_base_factory ? "new " : "", 
-                            type.TypeNamespace(),
-                            type.TypeNamespace(),
-                            type.TypeName());
-                    }
-                    else
-                    {
-                        w.write(R"(
-public static %I As<I>() => ActivationFactory<%>.Value.AsInterface<I>();
-)",
-                            has_base_factory ? "new " : "",
-                            type.TypeName());
-                    }
+                        has_base_factory ? "new " : "", 
+                        type.TypeNamespace(),
+                        type.TypeNamespace(),
+                        type.TypeName());
                 }
 
                 write_static_members(w, factory.type, type);

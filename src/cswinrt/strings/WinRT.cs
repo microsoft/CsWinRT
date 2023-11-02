@@ -561,7 +561,7 @@ namespace WinRT
         [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode",
             Justification = "No members of the generic type are dynamically accessed in this code path.")]
 #endif
-        public unsafe ObjectReference<I> ActivateInstance<I>()
+        public unsafe ObjectReference<I> _ActivateInstance<I>()
         {
             IntPtr instancePtr;
             Marshal.ThrowExceptionForHR(Value.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, &instancePtr));
@@ -574,24 +574,29 @@ namespace WinRT
                 MarshalInspectable<object>.DisposeAbi(instancePtr);
             }
         }
+
+        public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
+        public IObjectReference _As(Guid iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid);
     }
 
     internal sealed class ActivationFactory<T> : BaseActivationFactory
     {
         private static readonly ActivationFactory<T> _instance = new ActivationFactory<T>();
 
-        internal static ObjectReference<IActivationFactoryVftbl> Value => ((BaseActivationFactory)_instance).Value;
-
         public ActivationFactory()
             : base(typeof(T).Namespace, typeof(T).FullName)
         {
         }
 
+        public static new I AsInterface<I>() => _instance.Value.AsInterface<I>();
+        public static ObjectReference<I> As<I>() => _instance._As<I>();
+        public static IObjectReference As(Guid iid) => _instance._As(iid);
+
         public static ObjectReference<I> ActivateInstance<
 #if NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.None)]
 #endif
-            I>() => ((BaseActivationFactory)_instance).ActivateInstance<I>();
+            I>() => _instance._ActivateInstance<I>();
     }
 
 #if NET
