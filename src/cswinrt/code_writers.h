@@ -1993,7 +1993,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         else
         {
             w.write(R"(
-public %() : this(%(ActivationFactory<%>.Get().ActivateInstance<IUnknownVftbl>()))
+public %() : this(%(ActivationFactory<%>.ActivateInstance<IUnknownVftbl>()))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 %
@@ -2319,7 +2319,7 @@ public static %I As<I>() => new BaseActivationFactory("%", "%.%").AsInterface<I>
                     else
                     {
                         w.write(R"(
-public static %I As<I>() => ActivationFactory<%>.Get().AsInterface<I>();
+public static %I As<I>() => ActivationFactory<%>.Value.AsInterface<I>();
 )",
                             has_base_factory ? "new " : "",
                             type.TypeName());
