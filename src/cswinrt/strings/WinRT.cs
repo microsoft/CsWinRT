@@ -495,7 +495,7 @@ namespace WinRT
 
     internal class BaseActivationFactory
     {
-        private volatile Tuple<ObjectReference<IActivationFactoryVftbl>, IntPtr> _IActivationFactory;
+        private Tuple<ObjectReference<IActivationFactoryVftbl>, IntPtr> _IActivationFactory;
 
         public ObjectReference<IActivationFactoryVftbl> Value
         {
@@ -508,7 +508,7 @@ namespace WinRT
                 }
 
                 var newFactory = InitializeFactory();
-                _IActivationFactory = newFactory;
+                Interlocked.CompareExchange(ref _IActivationFactory, newFactory, existingInstance);
                 return newFactory.Item1;
             }
         }
@@ -578,10 +578,6 @@ namespace WinRT
             }
         }
 
-#if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode",
-            Justification = "No members of the generic type are dynamically accessed in this code path.")]
-#endif
         public ObjectReference<I> _As<I>() => Value.As<I>();
         public IObjectReference _As(Guid iid) => Value.As<WinRT.Interop.IUnknownVftbl>(iid);
     }
@@ -610,14 +606,12 @@ namespace WinRT
     internal class BaseFactory
     {
 
-        private volatile Tuple<IObjectReference, IntPtr> _factory;
-
+        private Tuple<IObjectReference, IntPtr> _factory;
         public IObjectReference Value
 #else
     internal class BaseFactory<I>
     {
-        private volatile Tuple<ObjectReference<I>, IntPtr> _factory;
-
+        private Tuple<ObjectReference<I>, IntPtr> _factory;
         public ObjectReference<I> Value 
 #endif
         {
@@ -630,7 +624,7 @@ namespace WinRT
                 }
 
                 var newFactory = InitializeFactory();
-                _factory = newFactory;
+                Interlocked.CompareExchange(ref _factory, newFactory, existingInstance);
                 return newFactory.Item1;
             }
         }
@@ -647,7 +641,7 @@ namespace WinRT
 #if NET
         private Tuple<IObjectReference, IntPtr> InitializeFactory()
 #else
-        private Tuple<ObjectReference<I>, IntPtr> InitializeFactory()
+        private Tuple<IObjectReference, IntPtr> InitializeFactory()
 #endif
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
