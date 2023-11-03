@@ -495,25 +495,29 @@ namespace WinRT
 
     internal class BaseActivationFactory
     {
-        private Tuple<ObjectReference<IActivationFactoryVftbl>, IntPtr> _IActivationFactory;
+        private volatile ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
 
         public ObjectReference<IActivationFactoryVftbl> Value
         {
             get
             {
                 var existingInstance = _IActivationFactory;
-                if (existingInstance != null && (existingInstance.Item2 == IntPtr.Zero || existingInstance.Item2 == Context.GetContextToken()))
+                if (existingInstance != null && (_contextToken == IntPtr.Zero || _contextToken == Context.GetContextToken()))
                 {
-                    return existingInstance.Item1;
+                    return existingInstance;
                 }
 
-                var newFactory = InitializeFactory();
-                Interlocked.CompareExchange(ref _IActivationFactory, newFactory, existingInstance);
-                return newFactory.Item1;
+                (var newFactory, var newToken) = InitializeFactory();
+                if (Interlocked.CompareExchange(ref _IActivationFactory, newFactory, existingInstance) == existingInstance)
+                {
+                    _contextToken = newToken;
+                }
+                return newFactory;
             }
         }
 
         private readonly string typeName;
+        private IntPtr _contextToken;
 
         public I AsInterface<I>() => Value.AsInterface<I>();
         public ObjectReference<I> As<I>() => Value.As<I>();
@@ -524,7 +528,7 @@ namespace WinRT
             this.typeName = typeName;
         }
 
-        private Tuple<ObjectReference<IActivationFactoryVftbl>, IntPtr> InitializeFactory()
+        private (ObjectReference<IActivationFactoryVftbl>, IntPtr) InitializeFactory()
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
@@ -533,7 +537,7 @@ namespace WinRT
             if (newFactory != null)
             {
                 var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                return new Tuple<ObjectReference<IActivationFactoryVftbl>, IntPtr>(newFactory, newContextToken);
+                return (newFactory, newContextToken);
             }
 
             var moduleName = typeName;
@@ -553,7 +557,7 @@ namespace WinRT
                     if (newFactory != null)
                     {
                         var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                        return new Tuple<ObjectReference<IActivationFactoryVftbl>, IntPtr>(newFactory, newContextToken);
+                        return (newFactory, newContextToken);
                     }
                 }
             }
@@ -566,8 +570,7 @@ namespace WinRT
         public unsafe ObjectReference<I> _ActivateInstance<I>()
         {
             IntPtr instancePtr;
-            var value = Value;
-            Marshal.ThrowExceptionForHR(value.Vftbl.ActivateInstance(value.ThisPtr, &instancePtr));
+            Marshal.ThrowExceptionForHR(Value.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, &instancePtr));
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
@@ -578,8 +581,8 @@ namespace WinRT
             }
         }
 
-        public ObjectReference<I> _As<I>() => Value.As<I>();
-        public IObjectReference _As(Guid iid) => Value.As<WinRT.Interop.IUnknownVftbl>(iid);
+        public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
+        public IObjectReference _As(Guid iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid);
     }
 
     internal sealed class ActivationFactory<T> : BaseActivationFactory
@@ -605,32 +608,36 @@ namespace WinRT
 #if NET
     internal class BaseFactory
     {
-
-        private Tuple<IObjectReference, IntPtr> _factory;
+        private volatile IObjectReference _factory;
         public IObjectReference Value
 #else
     internal class BaseFactory<I>
     {
-        private Tuple<ObjectReference<I>, IntPtr> _factory;
+        private volatile ObjectReference<I> _factory;
         public ObjectReference<I> Value 
 #endif
-        {
+        { 
             get
             {
                 var existingInstance = _factory;
-                if (existingInstance != null && (existingInstance.Item2 == IntPtr.Zero || existingInstance.Item2 == Context.GetContextToken()))
+                if (existingInstance != null && (_contextToken == IntPtr.Zero || _contextToken == Context.GetContextToken()))
                 {
-                    return existingInstance.Item1;
+                    return existingInstance;
                 }
 
-                var newFactory = InitializeFactory();
-                Interlocked.CompareExchange(ref _factory, newFactory, existingInstance);
-                return newFactory.Item1;
+                (var newFactory, var newToken) = InitializeFactory();
+                if (Interlocked.CompareExchange(ref _factory, newFactory, existingInstance) == existingInstance)
+                {
+                    _contextToken = newToken;
+                }
+                return newFactory;
             }
         }
 
         private readonly string typeName;
         private readonly Guid interfaceGuid;
+
+        private IntPtr _contextToken;
 
         public BaseFactory(string typeName, Guid interfaceGuid)
         {
@@ -639,9 +646,9 @@ namespace WinRT
         }
 
 #if NET
-        private Tuple<IObjectReference, IntPtr> InitializeFactory()
+        private (IObjectReference, IntPtr) InitializeFactory()
 #else
-        private Tuple<IObjectReference, IntPtr> InitializeFactory()
+        private (ObjectReference<I>, IntPtr) InitializeFactory()
 #endif
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
@@ -652,11 +659,11 @@ namespace WinRT
             {
 #if NET
                 var newContextToken = Context.IsFreeThreaded(factory) ? IntPtr.Zero : Context.GetContextToken();
-                return new Tuple<IObjectReference, IntPtr>(factory, newContextToken);
+                return (factory, newContextToken);
 #else
                 var newFactory = factory.As<I>(interfaceGuid);
                 var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                return new Tuple<ObjectReference<I>, IntPtr>(newFactory, newContextToken);
+                return (newFactory, newContextToken);
 #endif
             }
 
@@ -678,13 +685,11 @@ namespace WinRT
                     {
 #if NET
                         var newFactory = factory.As(interfaceGuid);
-                        var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                        return new Tuple<IObjectReference, IntPtr>(newFactory, newContextToken);
 #else
                         var newFactory = factory.As<I>(interfaceGuid);
-                        var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                        return new Tuple<ObjectReference<I>, IntPtr>(newFactory, newContextToken);
 #endif
+                        var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
+                        return (newFactory, newContextToken);
                     }
                 }
             }
