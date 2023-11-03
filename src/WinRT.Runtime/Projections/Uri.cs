@@ -98,7 +98,7 @@ namespace ABI.System
     {
         private sealed class ActivationFactory : BaseActivationFactory
         {
-            public ActivationFactory() : base("Windows.Foundation", "Windows.Foundation.Uri")
+            public ActivationFactory() : base("Windows.Foundation.Uri")
             {
             }
 

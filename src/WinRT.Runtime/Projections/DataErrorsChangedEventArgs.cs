@@ -93,7 +93,7 @@ namespace ABI.System.ComponentModel
     {
         private sealed class ActivationFactory : BaseActivationFactory
         {
-            public ActivationFactory() : base("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs")
+            public ActivationFactory() : base("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs")
             {
             }
 

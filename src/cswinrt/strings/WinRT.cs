@@ -460,7 +460,7 @@ namespace WinRT
             }
         }
 
-        public static unsafe (IObjectReference obj, int hr) GetActivationFactory(string runtimeClassId, Guid iid)
+        public static unsafe (ObjectReference<IUnknownVftbl> obj, int hr) GetActivationFactory(string runtimeClassId, Guid iid)
         {
             var module = Instance; // Ensure COM is initialized
             IntPtr instancePtr = IntPtr.Zero;
@@ -472,7 +472,7 @@ namespace WinRT
                     int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &iid, &instancePtr);
                     if (hr == 0)
                     {
-                        IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr);
+                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr);
                         return (objRef, hr);
                     }
                     else

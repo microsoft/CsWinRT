@@ -197,7 +197,7 @@ namespace ABI.System.Collections.Specialized
     {
         private sealed class ActivationFactory : BaseActivationFactory
         {
-            public ActivationFactory() : base("Microsoft.UI.Xaml.Interop", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
+            public ActivationFactory() : base("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
             {
             }
 
