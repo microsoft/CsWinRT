@@ -626,7 +626,7 @@ namespace WinRT
             get
             {
                 var existingInstance = _factory;
-                if (existingInstance.Item1 != null && (existingInstance.Item2 == IntPtr.Zero || existingInstance.Item2 == Context.GetContextToken()))
+                if (existingInstance != null && (existingInstance.Item2 == IntPtr.Zero || existingInstance.Item2 == Context.GetContextToken()))
                 {
                     return existingInstance.Item1;
                 }
