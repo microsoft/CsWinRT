@@ -513,16 +513,14 @@ namespace WinRT
             }
         }
 
-        private readonly string namespaceName;
         private readonly string typeName;
 
         public I AsInterface<I>() => Value.AsInterface<I>();
         public ObjectReference<I> As<I>() => Value.As<I>();
         public IObjectReference As(Guid iid) => Value.As(iid);
 
-        public BaseActivationFactory(string namespaceName, string typeName)
+        public BaseActivationFactory(string typeName)
         {
-            this.namespaceName = namespaceName;
             this.typeName = typeName;
         }
 
@@ -535,12 +533,19 @@ namespace WinRT
             if (newFactory != null)
             {
                 var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                return Tuple.Create(newFactory, newContextToken);
+                return new Tuple<ObjectReference<IActivationFactoryVftbl>, IntPtr>(newFactory, newContextToken);
             }
 
-            var moduleName = namespaceName;
+            var moduleName = typeName;
             while (true)
             {
+                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
+                if (lastSegment <= 0)
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+                moduleName = moduleName.Remove(lastSegment);
+
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
@@ -548,16 +553,9 @@ namespace WinRT
                     if (newFactory != null)
                     {
                         var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                        return Tuple.Create(newFactory, newContextToken);
+                        return new Tuple<ObjectReference<IActivationFactoryVftbl>, IntPtr>(newFactory, newContextToken);
                     }
                 }
-
-                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
-                if (lastSegment <= 0)
-                {
-                    Marshal.ThrowExceptionForHR(hr);
-                }
-                moduleName = moduleName.Remove(lastSegment);
             }
         }
 
@@ -593,7 +591,7 @@ namespace WinRT
         private static readonly ActivationFactory<T> _instance = new ActivationFactory<T>();
 
         public ActivationFactory()
-            : base(typeof(T).Namespace, typeof(T).FullName)
+            : base(typeof(T).FullName)
         {
         }
 
@@ -637,13 +635,11 @@ namespace WinRT
             }
         }
 
-        private readonly string namespaceName;
         private readonly string typeName;
         private readonly Guid interfaceGuid;
 
-        public BaseFactory(string namespaceName, string typeName, Guid interfaceGuid)
+        public BaseFactory(string typeName, Guid interfaceGuid)
         {
-            this.namespaceName = namespaceName;
             this.typeName = typeName;
             this.interfaceGuid = interfaceGuid;
         }
@@ -662,17 +658,24 @@ namespace WinRT
             {
 #if NET
                 var newContextToken = Context.IsFreeThreaded(factory) ? IntPtr.Zero : Context.GetContextToken();
-                return Tuple.Create(factory, newContextToken);
+                return new Tuple<IObjectReference, IntPtr>(factory, newContextToken);
 #else
                 var newFactory = factory.As<I>(interfaceGuid);
                 var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                return Tuple.Create(newFactory, newContextToken);
+                return new Tuple<ObjectReference<I>, IntPtr>(newFactory, newContextToken);
 #endif
             }
 
-            var moduleName = namespaceName;
+            var moduleName = typeName;
             while (true)
             {
+                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
+                if (lastSegment <= 0)
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+                moduleName = moduleName.Remove(lastSegment);
+
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
@@ -681,20 +684,15 @@ namespace WinRT
                     {
 #if NET
                         var newFactory = factory.As(interfaceGuid);
+                        var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
+                        return new Tuple<IObjectReference, IntPtr>(newFactory, newContextToken);
 #else
                         var newFactory = factory.As<I>(interfaceGuid);
-#endif
                         var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
-                        return Tuple.Create(newFactory, newContextToken);
+                        return new Tuple<ObjectReference<I>, IntPtr>(newFactory, newContextToken);
+#endif
                     }
                 }
-
-                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
-                if (lastSegment <= 0)
-                {
-                    Marshal.ThrowExceptionForHR(hr);
-                }
-                moduleName = moduleName.Remove(lastSegment);
             }
         }
     }

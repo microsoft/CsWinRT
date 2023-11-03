@@ -1851,12 +1851,11 @@ remove => %;
 
             auto statics_type_name = staticsType.TypeName();
             w.write(R"(
-private static % _% = new %("%", "%.%", %.IID);
+private static % _% = new %("%.%", %.IID);
 )",
                 factory_class_name,
                 statics_type_name,
                 factory_class_name,
-                classType.TypeNamespace(),
                 classType.TypeNamespace(),
                 classType.TypeName(),
                 bind<write_type_name>(staticsType, typedef_name_type::StaticAbiClass, true));
@@ -1867,10 +1866,9 @@ private static % _% = new %("%", "%.%", %.IID);
     {
         auto class_type_name = classType.TypeName();
         w.write(R"(
-private static BaseActivationFactory _%Factory = new BaseActivationFactory("%", "%.%");
+private static BaseActivationFactory _%Factory = new BaseActivationFactory("%.%");
 )",
             class_type_name,
-            classType.TypeNamespace(),
             classType.TypeNamespace(),
             classType.TypeName());
     }
@@ -2306,10 +2304,9 @@ Marshal.Release(inner);
                     }
 
                      w.write(R"(
-public static %I As<I>() => new BaseActivationFactory("%", "%.%").AsInterface<I>();
+public static %I As<I>() => new BaseActivationFactory("%.%").AsInterface<I>();
 )",
-                        has_base_factory ? "new " : "", 
-                        type.TypeNamespace(),
+                        has_base_factory ? "new " : "",
                         type.TypeNamespace(),
                         type.TypeName());
                 }
