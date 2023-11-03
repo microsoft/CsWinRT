@@ -432,28 +432,47 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe (IntPtr instancePtr, int hr) GetActivationFactory(IntPtr hstrRuntimeClassId)
-        {
-            var module = Instance; // Ensure COM is initialized
-            Guid iid = InterfaceIIDs.IActivationFactory_IID;
-            IntPtr instancePtr;
-            int hr = Platform.RoGetActivationFactory(hstrRuntimeClassId, &iid, &instancePtr);
-            return (hr == 0 ? instancePtr : IntPtr.Zero, hr);
-        }
-
         public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
+            var module = Instance; // Ensure COM is initialized
+            IntPtr instancePtr = IntPtr.Zero;
+            try
+            {
+                Guid iid = InterfaceIIDs.IActivationFactory_IID;
+                MarshalString.Pinnable __runtimeClassId = new(runtimeClassId);
+                fixed (void* ___runtimeClassId = __runtimeClassId)
+                {
+                    int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &iid, &instancePtr);
+                    if (hr == 0)
+                    {
+                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IActivationFactoryVftbl>(instancePtr);
+                        return (objRef, hr);
+                    }
+                    else
+                    {
+                        return (null, hr);
+                    }
+                }
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
+            }
+        }
+
+        public static unsafe (IObjectReference obj, int hr) GetActivationFactory(string runtimeClassId, Guid iid)
+        {
+            var module = Instance; // Ensure COM is initialized
             IntPtr instancePtr = IntPtr.Zero;
             try
             {
                 MarshalString.Pinnable __runtimeClassId = new(runtimeClassId);
                 fixed (void* ___runtimeClassId = __runtimeClassId)
                 {
-                    int hr;
-                    (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId));
+                    int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &iid, &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IActivationFactoryVftbl>(instancePtr);
+                        IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr);
                         return (objRef, hr);
                     }
                     else
@@ -651,17 +670,18 @@ namespace WinRT
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
-            ObjectReference<IActivationFactoryVftbl> factory;
-            (factory, hr) = WinrtModule.GetActivationFactory(typeName);
+            IObjectReference factory;
+            (factory, hr) = WinrtModule.GetActivationFactory(typeName, interfaceGuid);
             if (factory != null)
             {
 #if NET
-                var newFactory = factory.As(interfaceGuid);
+                var newContextToken = Context.IsFreeThreaded(factory) ? IntPtr.Zero : Context.GetContextToken();
+                return (factory, newContextToken);
 #else
                 var newFactory = factory.As<I>(interfaceGuid);
-#endif
                 var newContextToken = Context.IsFreeThreaded(newFactory) ? IntPtr.Zero : Context.GetContextToken();
                 return (newFactory, newContextToken);
+#endif
             }
 
             var moduleName = namespaceName;
@@ -690,23 +710,6 @@ namespace WinRT
                 }
                 moduleName = moduleName.Remove(lastSegment);
             }
-        }
-    }
-
-
-#if NET
-    internal sealed class Factory<T, I> : BaseFactory where I : IHasGuid
-#else
-    internal sealed class Factory<T, I> : BaseFactory<I>
-#endif
-    {
-        private Factory()
-#if NET
-            : base(typeof(T).Namespace, typeof(T).FullName, I.IID)
-#else
-            : base(typeof(T).Namespace, typeof(T).FullName, typeof(I).GUID)
-#endif
-        {
         }
     }
 
