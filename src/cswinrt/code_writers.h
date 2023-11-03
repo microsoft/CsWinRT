@@ -1851,30 +1851,15 @@ remove => %;
 
             auto statics_type_name = staticsType.TypeName();
             w.write(R"(
-private static volatile % __%;
-private static % Make__%()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref __%, new %("%", "%.%", %.IID), null);
-    return __%;
-}
-private static % _% => __% ?? Make__%();
-
+private static % _% = new %("%", "%.%", %.IID);
 )",
                 factory_class_name,
-                statics_type_name,
-                factory_class_name,
-                statics_type_name,
                 statics_type_name,
                 factory_class_name,
                 classType.TypeNamespace(),
                 classType.TypeNamespace(),
                 classType.TypeName(),
-                bind<write_type_name>(staticsType, typedef_name_type::StaticAbiClass, true),
-                statics_type_name,
-                factory_class_name,
-                statics_type_name,
-                statics_type_name,
-                statics_type_name);
+                bind<write_type_name>(staticsType, typedef_name_type::StaticAbiClass, true));
         }
     }
 
@@ -1882,25 +1867,12 @@ private static % _% => __% ?? Make__%();
     {
         auto class_type_name = classType.TypeName();
         w.write(R"(
-private static volatile BaseActivationFactory __%Factory;
-private static BaseActivationFactory Make__%Factory()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref __%Factory, new BaseActivationFactory("%", "%.%"), null);
-    return __%Factory;
-}
-private static BaseActivationFactory _%Factory => __%Factory ?? Make__%Factory();
-
+private static BaseActivationFactory _%Factory = new BaseActivationFactory("%", "%.%");
 )",
             class_type_name,
-            class_type_name,
-            class_type_name,
             classType.TypeNamespace(),
             classType.TypeNamespace(),
-            classType.TypeName(),
-            class_type_name,
-            class_type_name,
-            class_type_name,
-            class_type_name);
+            classType.TypeName());
     }
 
     template<auto method_writer>
