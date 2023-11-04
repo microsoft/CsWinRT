@@ -18,6 +18,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     /// Contains an implementation of the WinRT IBuffer interface that conforms to all requirements on classes that implement that interface,
     /// such as implementing additional interfaces.
     /// </summary>
+    [global::WinRT.WinRTExposedType(typeof(IBuffer), typeof(IBufferByteAccess), typeof(IMarshal))]
 #if EMBED
     internal
 #else

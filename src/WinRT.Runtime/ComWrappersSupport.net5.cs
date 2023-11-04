@@ -454,13 +454,7 @@ namespace WinRT
 
         protected override unsafe ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
         {
-            var vtableEntries = TypeVtableEntryTable.GetValue(obj.GetType(), (
-#if NET6_0_OR_GREATER
-                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
-#elif NET
-                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-#endif
-                type) => 
+            var vtableEntries = TypeVtableEntryTable.GetValue(obj.GetType(), static (type) => 
             {
                 if (IsRuntimeImplementedRCW(type))
                 {
