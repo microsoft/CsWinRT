@@ -3111,6 +3111,48 @@ db_path.stem().string());
             }));
     }
 
+    // In the generated projections, we only write the vtable attribute for unsealed
+    // classes as they are the ones that can be extended and may have overridable interfaces
+    // which are marked internal so can not be specified by the child class in its own
+    // vtable attribute.
+    void write_winrt_exposed_type_attribute(writer& w, TypeDef const& type)
+    {
+        auto delimiter{ "" };
+        auto write_delimiter = [&]()
+        {
+            w.write(delimiter);
+            delimiter = ", ";
+        };
+
+        if (get_category(type) == category::class_type && !type.Flags().Sealed())
+        {
+            bool hasInterfacesInAttribute = false;
+            auto attribute = w.write_temp(R"([global::WinRT.WinRTExposedType(%)])",
+                bind([&](writer& w)
+                {
+                    for (auto&& iface : type.InterfaceImpl())
+                    {
+                        for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
+                        {
+                            if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type))
+                            {
+                                hasInterfacesInAttribute = true;
+
+                                write_delimiter();
+                                w.write("typeof(%)", bind<write_type_name>(type, typedef_name_type::CCW, false));
+                            }
+                        });
+                    }
+            }));
+
+            // Only write attribute if there are interfaces to put on the vtable.
+            if (hasInterfacesInAttribute)
+            {
+                w.write(attribute);
+            }
+        }
+    }
+
     auto get_invoke_info(writer& w, MethodDef const& method, uint32_t const& abi_methods_start_index = INSPECTABLE_METHOD_COUNT)
     {
         TypeDef const& type = method.Parent();
@@ -6471,7 +6513,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(type)), [&](auto&& iface) { return iface; });
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
-        w.write(R"(%%
+        w.write(R"(%%%
 [global::WinRT.ProjectedRuntimeClass(typeof(%))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
@@ -6509,6 +6551,7 @@ private struct InterfaceTag<I>{};
 )",
             bind<write_winrt_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
+            bind<write_winrt_exposed_type_attribute>(type),
             default_interface_name,
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),

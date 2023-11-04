@@ -98,6 +98,38 @@ namespace WinRT
 #endif
         public Type HelperType { get; }
     }
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    interface IWinRTExposedTypeDetails
+    {
+        Type[] GetExposedInterfaces();
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Delegate | AttributeTargets.Struct | AttributeTargets.Enum, Inherited = true, AllowMultiple = false)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class WinRTExposedTypeAttribute : Attribute, IWinRTExposedTypeDetails
+    {
+        public WinRTExposedTypeAttribute(params Type[] winrtExposedInterfaces)
+        {
+            WinRTExposedInterfaces = winrtExposedInterfaces;
+        }
+
+        public virtual Type[] GetExposedInterfaces()
+        {
+            return WinRTExposedInterfaces;
+        }
+
+        public Type[] WinRTExposedInterfaces { get; }
+    }
 }
 
 namespace System.Runtime.InteropServices.WindowsRuntime
