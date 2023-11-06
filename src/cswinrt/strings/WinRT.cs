@@ -488,7 +488,18 @@ namespace WinRT
     {
         private readonly IntPtr _contextToken;
 
-        internal FactoryObjectReference(IntPtr thisPtr) : 
+        public static FactoryObjectReference<T> Attach(ref IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+            var obj = new FactoryObjectReference<T>(thisPtr);
+            thisPtr = IntPtr.Zero;
+            return obj;
+        }
+
+        internal FactoryObjectReference(IntPtr thisPtr) :
             base(thisPtr)
         {
             if (!IsFreeThreaded(this))
@@ -626,14 +637,16 @@ namespace WinRT
                     if (activationFactory != null)
                     {
                         using (activationFactory)
-#if NET
-                        using (var objRef = activationFactory.As<I>(iid))
                         {
-                            return FactoryObjectReference<I>.FromAbi(objRef.ThisPtr);
-                        }
+#if NET
+                            if (activationFactory.TryAs(iid, out IntPtr iidPtr) >= 0)
+                            {
+                                return FactoryObjectReference<I>.Attach(ref iidPtr);
+                            }
 #else
-                        return activationFactory.As<I>(iid);
+                            return activationFactory.As<I>(iid);
 #endif
+                        }
                     }
                 }
             }
