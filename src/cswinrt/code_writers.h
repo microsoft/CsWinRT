@@ -1867,11 +1867,6 @@ private static % _% = new %("%.%", %.IID);
         auto objrefname = w.write_temp("%", bind<write_objref_type_name>(classType));
         w.write(R"(
 private static volatile FactoryObjectReference<IActivationFactoryVftbl> __%;
-private static FactoryObjectReference<IActivationFactoryVftbl> Make__%()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref __%, ActivationFactory.Get("%.%"), null);
-    return __%;
-}
 private static FactoryObjectReference<IActivationFactoryVftbl> %
 {
     get
@@ -1883,7 +1878,7 @@ private static FactoryObjectReference<IActivationFactoryVftbl> %
         }
         else
         {
-            return Make__%();
+            return __% = ActivationFactory.Get("%.%");
         }
     }
 }
@@ -1891,12 +1886,9 @@ private static FactoryObjectReference<IActivationFactoryVftbl> %
             objrefname,
             objrefname,
             objrefname,
+            objrefname,
             classType.TypeNamespace(),
-            classType.TypeName(),
-            objrefname,
-            objrefname,
-            objrefname,
-            objrefname);
+            classType.TypeName());
     }
 
     void write_static_objref_definition(writer& w, std::string_view const& vftblType, TypeDef const& staticsType, TypeDef const& classType)
@@ -1933,11 +1925,6 @@ private static ObjectReference<%> % => __% ?? Make__%();
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(staticsType));
             w.write(R"(
 private static volatile FactoryObjectReference<%> __%;
-private static FactoryObjectReference<%> Make__%()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref __%, ActivationFactory.Get<%>("%.%", %.IID), null);
-    return __%;
-}
 private static FactoryObjectReference<%> %
 {
     get
@@ -1949,7 +1936,7 @@ private static FactoryObjectReference<%> %
         }
         else
         {
-            return Make__%();
+            return __% = ActivationFactory.Get<%>("%.%", %.IID);
         }
     }
 }
@@ -1959,15 +1946,11 @@ private static FactoryObjectReference<%> %
                 vftblType,
                 objrefname,
                 objrefname,
+                objrefname,
                 vftblType,
                 classType.TypeNamespace(),
                 classType.TypeName(),
-                bind<write_type_name>(staticsType, typedef_name_type::StaticAbiClass, true),
-                objrefname,
-                vftblType,
-                objrefname,
-                objrefname,
-                objrefname);
+                bind<write_type_name>(staticsType, typedef_name_type::StaticAbiClass, true));
         }
     }
 
