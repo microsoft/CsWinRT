@@ -373,7 +373,7 @@ namespace WinRT
                     int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = FactoryObjectReference<IActivationFactoryVftbl>.FromAbi(instancePtr);
+                        var objRef = FactoryObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
                         return (objRef, hr);
                     }
                     else
@@ -432,34 +432,7 @@ namespace WinRT
                     int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &iid, &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = FactoryObjectReference<I>.FromAbi(instancePtr);
-                        return (objRef, hr);
-                    }
-                    else
-                    {
-                        return (null, hr);
-                    }
-                }
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(instancePtr);
-            }
-        }
-
-        public static unsafe (ObjectReference<IUnknownVftbl> obj, int hr) GetActivationFactory(string runtimeClassId, Guid iid)
-        {
-            var module = Instance; // Ensure COM is initialized
-            IntPtr instancePtr = IntPtr.Zero;
-            try
-            {
-                MarshalString.Pinnable __runtimeClassId = new(runtimeClassId);
-                fixed (void* ___runtimeClassId = __runtimeClassId)
-                {
-                    int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &iid, &instancePtr);
-                    if (hr == 0)
-                    {
-                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr);
+                        var objRef = FactoryObjectReference<I>.Attach(ref instancePtr);
                         return (objRef, hr);
                     }
                     else
