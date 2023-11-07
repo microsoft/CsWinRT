@@ -3091,6 +3091,7 @@ namespace UnitTest
             staThread.Join();
         }
 
+#if NET
         [Fact]
         public void TestActivationFactoriesFromMultipleContexts()
         {
@@ -3129,6 +3130,7 @@ namespace UnitTest
 
             Assert.Null(exception);
         }
+#endif
 
         [Fact]
         public void TestDictionary()
