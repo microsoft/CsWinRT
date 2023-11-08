@@ -505,6 +505,8 @@ namespace WinRT
 
         // If we are free threaded, we do not need to keep track of context.
         // This can either be if the object implements IAgileObject or the free threaded marshaler.
+        // We only check IAgileObject for now as the necessary code to check the
+        // free threaded marshaler is not exposed from WinRT.Runtime.
         private unsafe static bool IsFreeThreaded(IObjectReference objRef)
         {
             if (objRef.TryAs(InterfaceIIDs.IAgileObject_IID, out var agilePtr) >= 0)
@@ -521,7 +523,7 @@ namespace WinRT
         public static unsafe ObjectReference<I> ActivateInstance<I>(IObjectReference obj)
         {
             IntPtr instancePtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>**)obj.ThisPtr)[6](obj.ThisPtr, out instancePtr));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)obj.ThisPtr)[6](obj.ThisPtr, &instancePtr));
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
