@@ -159,6 +159,14 @@ namespace ABI.System.ComponentModel
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 
+        public static unsafe MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.MarshalerArray CreateMarshalerArray(global::System.ComponentModel.DataErrorsChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.GetAbiArray(box);
+        public static unsafe global::System.ComponentModel.DataErrorsChangedEventArgs[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.ComponentModel.DataErrorsChangedEventArgs[] array, object box) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.ComponentModel.DataErrorsChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.MarshalerArray array) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
+
         public static string GetGuidSignature()
         {
             return "rc(Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})";

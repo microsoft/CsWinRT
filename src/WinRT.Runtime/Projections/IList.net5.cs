@@ -50,7 +50,6 @@ namespace System.Collections.Generic
         private volatile IObjectReference __iEnumerableObjRef;
         private IObjectReference Make_IEnumerableObjRef()
         {
-            _ = ABI.System.Collections.Generic.IListMethods<T>.EnsureEnumerableInitialized();
             global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, _inner.As<IUnknownVftbl>(ABI.System.Collections.Generic.IEnumerableMethods<T>.PIID), null);
             return __iEnumerableObjRef;
         }
@@ -160,12 +159,12 @@ namespace ABI.System.Collections.Generic
         {
             // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
             // and due to that the function pointers haven't been initialized.
-            if (RuntimeFeature.IsDynamicCodeCompiled && IVectorMethods<T>._GetAt == null)
+            if (RuntimeFeature.IsDynamicCodeCompiled && !IVectorMethods<T>._RcwHelperInitialized)
             {
-                var ensureInitializedFallback = (Func<bool>)typeof(IListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
-                    GetMethod("EnsureRcwHelperInitialized", BindingFlags.Public | BindingFlags.Static).
+                var initRcwHelperFallback = (Func<bool>)typeof(IListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                    GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
                     CreateDelegate(typeof(Func<bool>));
-                ensureInitializedFallback();
+                initRcwHelperFallback();
             }
         }
 
@@ -430,39 +429,51 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IListMethods<T, TAbi> where TAbi : unmanaged
     {
-        private static bool RcwHelperInitialized { get; } = InitRcwHelper();
-
-        private unsafe static bool InitRcwHelper()
+        public unsafe static bool InitRcwHelper(
+            delegate*<IObjectReference, uint, T> getAt,
+            delegate*<IObjectReference, global::System.Collections.Generic.IReadOnlyList<T>> getView,
+            delegate*<IObjectReference, T, out uint, bool> indexOf,
+            delegate*<IObjectReference, uint, T, void> setAt,
+            delegate*<IObjectReference, uint, T, void> insertAt,
+            delegate*<IObjectReference, T, void> append,
+            delegate*<IObjectReference, uint, T[], uint> getMany,
+            delegate*<IObjectReference, T[], void> replaceAll)
         {
-            IVectorMethods<T>._EnsureEnumerableInitialized = &IEnumerableMethods<T, TAbi>.EnsureRcwHelperInitialized;
-            IVectorMethods<T>._GetAt = &GetAt;
-            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            if (IVectorMethods<T>._RcwHelperInitialized)
             {
-                IVectorMethods<T>._IndexOf = &IndexOf;
-                IVectorMethods<T>._SetAt = &SetAt;
-                IVectorMethods<T>._InsertAt = &InsertAt;
-                IVectorMethods<T>._Append = &Append;
+                return true;
             }
-            else
-            {
-                IVectorMethods<T>._IndexOf = &IndexOfDynamic;
-                IVectorMethods<T>._SetAt = &SetAtDynamic;
-                IVectorMethods<T>._InsertAt = &InsertAtDynamic;
-                IVectorMethods<T>._Append = &AppendDynamic;
-            }
+
+            IVectorMethods<T>._GetAt = getAt;
+            IVectorMethods<T>._GetView = getView;
+            IVectorMethods<T>._IndexOf = indexOf;
+            IVectorMethods<T>._SetAt = setAt;
+            IVectorMethods<T>._InsertAt = insertAt;
+            IVectorMethods<T>._Append = append;
+            IVectorMethods<T>._GetMany = getMany;
+            IVectorMethods<T>._ReplaceAll = replaceAll;
 
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IList<T>),
                 IListImpl<T>.CreateRcw);
+            IVectorMethods<T>._RcwHelperInitialized = true;
             return true;
         }
 
-        public static bool EnsureRcwHelperInitialized()
+        private unsafe static bool InitRcwHelperFallback()
         {
-            return RcwHelperInitialized;
+            return InitRcwHelper(
+                &GetAtDynamic,
+                null,
+                &IndexOfDynamic,
+                &SetAtDynamic,
+                &InsertAtDynamic,
+                &AppendDynamic,
+                null,
+                null);
         }
 
-        private static unsafe T GetAt(IObjectReference obj, uint index)
+        private static unsafe T GetAtDynamic(IObjectReference obj, uint index)
         {
             var ThisPtr = obj.ThisPtr;
             TAbi result = default;
@@ -474,26 +485,6 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<T>.DisposeAbi(result);
-            }
-        }
-
-        private static unsafe bool IndexOf(IObjectReference obj, T value, out uint index)
-        {
-            var ThisPtr = obj.ThisPtr;
-            object __value = default;
-            try
-            {
-                byte found;
-                uint _index;
-                __value = Marshaler<T>.CreateMarshaler2(value);
-                TAbi abiValue = (TAbi)Marshaler<T>.GetAbi(__value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, TAbi, uint*, byte*, int>**)ThisPtr)[9](ThisPtr, abiValue, &_index, &found));
-                index = _index;
-                return found != 0;
-            }
-            finally
-            {
-                Marshaler<T>.DisposeMarshaler(__value);
             }
         }
 
@@ -518,22 +509,6 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        private static unsafe void SetAt(IObjectReference obj, uint index, T value)
-        {
-            var ThisPtr = obj.ThisPtr;
-            object __value = default;
-            try
-            {
-                __value = Marshaler<T>.CreateMarshaler2(value);
-                TAbi abiValue = (TAbi)Marshaler<T>.GetAbi(__value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, TAbi, int>**)ThisPtr)[10](ThisPtr, index, abiValue));
-            }
-            finally
-            {
-                Marshaler<T>.DisposeMarshaler(__value);
-            }
-        }
-
         private static unsafe void SetAtDynamic(IObjectReference obj, uint index, T value)
         {
             var ThisPtr = obj.ThisPtr;
@@ -551,22 +526,6 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        private static unsafe void InsertAt(IObjectReference obj, uint index, T value)
-        {
-            var ThisPtr = obj.ThisPtr;
-            object __value = default;
-            try
-            {
-                __value = Marshaler<T>.CreateMarshaler2(value);
-                TAbi abiValue = (TAbi)Marshaler<T>.GetAbi(__value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, TAbi, int>**)ThisPtr)[11](ThisPtr, index, abiValue));
-            }
-            finally
-            {
-                Marshaler<T>.DisposeMarshaler(__value);
-            }
-        }
-
         private static unsafe void InsertAtDynamic(IObjectReference obj, uint index, T value)
         {
             var ThisPtr = obj.ThisPtr;
@@ -577,22 +536,6 @@ namespace ABI.System.Collections.Generic
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[2] = Marshaler<T>.GetAbi(__value);
                 DelegateHelper.Get(obj).InsertAt.DynamicInvokeAbi(__params);
-            }
-            finally
-            {
-                Marshaler<T>.DisposeMarshaler(__value);
-            }
-        }
-
-        private static unsafe void Append(IObjectReference obj, T value)
-        {
-            var ThisPtr = obj.ThisPtr;
-            object __value = default;
-            try
-            {
-                __value = Marshaler<T>.CreateMarshaler2(value);
-                TAbi abiValue = (TAbi)Marshaler<T>.GetAbi(__value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, TAbi, int>**)ThisPtr)[13](ThisPtr, abiValue));
             }
             finally
             {
@@ -959,12 +902,17 @@ namespace ABI.System.Collections.Generic
         // These function pointers will be set by IListMethods<T,TAbi>
         // when it is called by the source generated type or by the fallback
         // mechanism if the source generated type wasn't used.
-        internal unsafe static delegate*<IObjectReference, uint, T> _GetAt;
-        internal unsafe static delegate*<IObjectReference, T, out uint, bool> _IndexOf;
-        internal unsafe static delegate*<IObjectReference, uint, T, void> _SetAt;
-        internal unsafe static delegate*<IObjectReference, uint, T, void> _InsertAt;
-        internal unsafe static delegate*<IObjectReference, T, void> _Append;
-        internal unsafe static delegate*<bool> _EnsureEnumerableInitialized;
+        internal volatile unsafe static delegate*<IObjectReference, uint, T> _GetAt;
+        internal volatile unsafe static delegate*<IObjectReference, global::System.Collections.Generic.IReadOnlyList<T>> _GetView;
+        internal volatile unsafe static delegate*<IObjectReference, T, out uint, bool> _IndexOf;
+        internal volatile unsafe static delegate*<IObjectReference, uint, T, void> _SetAt;
+        internal volatile unsafe static delegate*<IObjectReference, uint, T, void> _InsertAt;
+        internal volatile unsafe static delegate*<IObjectReference, T, void> _Append;
+        internal volatile unsafe static delegate*<IObjectReference, uint, T[], uint> _GetMany;
+        internal volatile unsafe static delegate*<IObjectReference, T[], void> _ReplaceAll;
+        internal volatile static bool _RcwHelperInitialized;
+        internal volatile unsafe static delegate*<bool> _EnsureEnumerableInitialized;
+
         public static unsafe uint get_Size(IObjectReference obj)
         {
             IntPtr ThisPtr = obj.ThisPtr;
@@ -980,16 +928,22 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe global::System.Collections.Generic.IReadOnlyList<T> GetView(IObjectReference obj)
         {
-            var ThisPtr = obj.ThisPtr;
-            IntPtr __retval = default;
-            try
+            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetView != null)
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[8](ThisPtr, &__retval));
-                return MarshalInterface<global::System.Collections.Generic.IReadOnlyList<T>>.FromAbi(__retval);
+                return GetView(obj);
             }
-            finally
             {
-                MarshalInterface<global::Windows.Foundation.Collections.IVectorView<T>>.DisposeAbi(__retval);
+                var ThisPtr = obj.ThisPtr;
+                IntPtr __retval = default;
+                try
+                {
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[8](ThisPtr, &__retval));
+                    return MarshalInterface<global::System.Collections.Generic.IReadOnlyList<T>>.FromAbi(__retval);
+                }
+                finally
+                {
+                    MarshalInterface<global::Windows.Foundation.Collections.IVectorView<T>>.DisposeAbi(__retval);
+                }
             }
         }
 
@@ -1033,40 +987,54 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe uint GetMany(IObjectReference obj, uint startIndex, ref T[] items)
         {
-            var ThisPtr = obj.ThisPtr;
-            object __items = default;
-            int __items_length = default;
-            IntPtr __items_data = default;
-            uint __retval = default;
-            try
+            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetMany != null)
             {
-                __items = Marshaler<T>.CreateMarshalerArray(items);
-                (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, uint*, int>**)ThisPtr)[16](ThisPtr, startIndex, __items_length, __items_data, &__retval));
-                items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
-                return __retval;
+                return _GetMany(obj, startIndex, items);
             }
-            finally
+            else
             {
-                Marshaler<T>.DisposeMarshalerArray(__items);
+                var ThisPtr = obj.ThisPtr;
+                object __items = default;
+                int __items_length = default;
+                IntPtr __items_data = default;
+                uint __retval = default;
+                try
+                {
+                    __items = Marshaler<T>.CreateMarshalerArray(items);
+                    (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, uint*, int>**)ThisPtr)[16](ThisPtr, startIndex, __items_length, __items_data, &__retval));
+                    items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
+                    return __retval;
+                }
+                finally
+                {
+                    Marshaler<T>.DisposeMarshalerArray(__items);
+                }
             }
         }
 
         public static unsafe void ReplaceAll(IObjectReference obj, T[] items)
         {
-            var ThisPtr = obj.ThisPtr;
-            object __items = default;
-            int __items_length = default;
-            IntPtr __items_data = default;
-            try
+            if (!RuntimeFeature.IsDynamicCodeCompiled || _ReplaceAll != null)
             {
-                __items = Marshaler<T>.CreateMarshalerArray(items);
-                (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int>**)ThisPtr)[17](ThisPtr, __items_length, __items_data));
+                _ReplaceAll(obj, items);
             }
-            finally
+            else
             {
-                Marshaler<T>.DisposeMarshalerArray(__items);
+                var ThisPtr = obj.ThisPtr;
+                object __items = default;
+                int __items_length = default;
+                IntPtr __items_data = default;
+                try
+                {
+                    __items = Marshaler<T>.CreateMarshalerArray(items);
+                    (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int>**)ThisPtr)[17](ThisPtr, __items_length, __items_data));
+                }
+                finally
+                {
+                    Marshaler<T>.DisposeMarshalerArray(__items);
+                }
             }
         }
     }

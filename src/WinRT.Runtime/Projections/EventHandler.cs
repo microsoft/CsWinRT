@@ -226,6 +226,14 @@ namespace ABI.System
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.EventHandler<T>>.DisposeAbi(abi);
 
+        public static unsafe MarshalInterfaceHelper<global::System.EventHandler<T>>.MarshalerArray CreateMarshalerArray(global::System.EventHandler<T>[] array) => MarshalInterfaceHelper<global::System.EventHandler<T>>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.EventHandler<T>>.GetAbiArray(box);
+        public static unsafe global::System.EventHandler<T>[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.EventHandler<T>>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.EventHandler<T>[] array, object box) => MarshalInterfaceHelper<global::System.EventHandler<T>>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.EventHandler<T>[] array) => MarshalInterfaceHelper<global::System.EventHandler<T>>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.EventHandler<T>>.MarshalerArray array) => MarshalInterfaceHelper<global::System.EventHandler<T>>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
+
         private static unsafe int Do_Abi_Invoke<TAbi>(void* thisPtr, IntPtr sender, TAbi args)
         {
             try
@@ -367,6 +375,14 @@ namespace ABI.System
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.EventHandler<object>>.DisposeMarshaler(value);
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.EventHandler<object>>.DisposeAbi(abi);
+
+        public static unsafe MarshalInterfaceHelper<global::System.EventHandler>.MarshalerArray CreateMarshalerArray(global::System.EventHandler[] array) => MarshalInterfaceHelper<global::System.EventHandler>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.EventHandler>.GetAbiArray(box);
+        public static unsafe global::System.EventHandler[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.EventHandler>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.EventHandler[] array, object box) => MarshalInterfaceHelper<global::System.EventHandler>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.EventHandler[] array) => MarshalInterfaceHelper<global::System.EventHandler>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.EventHandler>.MarshalerArray array) => MarshalInterfaceHelper<global::System.EventHandler>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
 
 #if NET
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
