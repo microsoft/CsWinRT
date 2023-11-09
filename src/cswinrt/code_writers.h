@@ -3456,7 +3456,7 @@ return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[
                         w.write(R"(
 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
 {
-IID = global::WinRT.GuidGenerator.GetIID(typeof(global::WinRT.Interop.IActivationFactory).GetHelperType()),
+IID = global::ABI.WinRT.Interop.IActivationFactoryMethods.IID,
 Vtable = global::ABI.WinRT.Interop.IActivationFactoryMethods.AbiToProjectionVftablePtr
 },
 )");
@@ -3468,11 +3468,11 @@ Vtable = global::ABI.WinRT.Interop.IActivationFactoryMethods.AbiToProjectionVfta
                                 w.write(R"(
 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
 {
-IID = global::WinRT.GuidGenerator.GetIID(typeof(%).GetHelperType()),
+IID = %.IID,
 Vtable = %.AbiToProjectionVftablePtr
 },
 )",
-                                    bind<write_type_name>(factory.type, typedef_name_type::CCW, false),
+                                    bind<write_type_name>(factory.type, typedef_name_type::StaticAbiClass, false),
                                     // These are exclusive internal interfaces, so just use the ABI class to get the ptr.
                                     bind<write_type_name>(factory.type, typedef_name_type::ABI, false)
                                 );
@@ -4102,7 +4102,14 @@ event % %;)",
                 {
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
-                    m.interface_guid = w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+                    if (settings.netstandard_compat || (type.TypeNamespace() == "Windows.Foundation" && type.TypeName() == "IReference`1"))
+                    {
+                        m.interface_guid = w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+                    }
+                    else
+                    {
+                        m.interface_guid = w.write_temp("%.IID", bind<write_type_name>(type, typedef_name_type::StaticAbiClass, true));
+                    }
                 }
 
                 // Make sure this isn't being called for a generic instance
@@ -5336,10 +5343,8 @@ return eventSource.EventActions;
         }
     }
 
-    void write_guid_attribute(writer& w, TypeDef const& type)
+    void write_guid(writer& w, TypeDef const& type, bool lowerCase)
     {
-        auto fully_qualify_guid = (type.TypeNamespace() == "Windows.Foundation.Metadata");
-
         auto attribute = get_attribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
         if (!attribute)
         {
@@ -5352,8 +5357,10 @@ return eventSource.EventActions;
 
         auto get_arg = [&](decltype(args)::size_type index) { return get<ElemSig>(args[index].value).value; };
 
-        w.write_printf(R"([%s("%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X")])",
-            fully_qualify_guid ? "global::System.Runtime.InteropServices.Guid" : "Guid",
+        w.write_printf(
+            lowerCase ?
+            R"(%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x)" :
+            R"(%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X)",
             get<uint32_t>(get_arg(0)),
             get<uint16_t>(get_arg(1)),
             get<uint16_t>(get_arg(2)),
@@ -5365,6 +5372,15 @@ return eventSource.EventActions;
             get<uint8_t>(get_arg(8)),
             get<uint8_t>(get_arg(9)),
             get<uint8_t>(get_arg(10)));
+    }
+
+    void write_guid_attribute(writer& w, TypeDef const& type)
+    {
+        auto fully_qualify_guid = (type.TypeNamespace() == "Windows.Foundation.Metadata");
+
+        w.write(R"([%("%")])",
+            fully_qualify_guid ? "global::System.Runtime.InteropServices.Guid" : "Guid",
+            bind<write_guid>(type, false));
     }
 
     void write_guid_bytes(writer& w, TypeDef const& type)
@@ -7130,8 +7146,6 @@ private IObjectReference % => __% ?? Make__%();
         bool is_generic = distance(iface.GenericParam()) > 0;
         w.write(R"(% static class %
 {
-public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
-
 %
 %
 %
@@ -7139,7 +7153,6 @@ public static global::System.Guid IID { get; } = new Guid(new global::System.Rea
 )", 
         ((is_exclusive_to(iface) && !write_vftable_ptr)|| is_projection_internal(iface)) ? "internal" : internal_accessibility(),
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
-        bind<write_guid_bytes>(iface),
         [&](writer& w) {
             if (is_generic)
             {
@@ -7196,14 +7209,26 @@ ensureInitializedFallback();
             }
         },
         [&](writer& w) {
+            if (is_generic)
+            {
+                    w.write(R"(
+public static global::System.Guid IID => GuidGenerator.CreateIID(typeof(%));
+)",
+                    bind<write_type_name>(iface, typedef_name_type::ABI, false));
+            }
+            else
+            {
+                w.write(R"(
+public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
+)",
+                    bind<write_guid_bytes>(iface));
+            }
 
-            // TODO: Replace GUID with interface approach currently in PR.
             if (write_vftable_ptr)
             {
                 if (is_generic)
                 {
                     w.write(R"(
-public static global::System.Guid IID => GuidGenerator.CreateIID(typeof(%));
 private static global::System.IntPtr abiToProjectionVftablePtr;
 public static global::System.IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
 
@@ -7216,7 +7241,6 @@ return global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionV
 %
 %
 )",
-                    bind<write_type_name>(iface, typedef_name_type::ABI, false),
                     bind_each<write_method_abi_invoke_helper>(iface.MethodList()),
                     bind_each<write_property_abi_invoke_helper>(iface.PropertyList()),
                     bind_each<write_event_abi_invoke_helper>(iface.EventList()));
@@ -7224,10 +7248,8 @@ return global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionV
                 else
                 {
                     w.write(R"(
-public static global::System.Guid IID => new global::System.Guid("%");
 public static global::System.IntPtr AbiToProjectionVftablePtr => %.AbiToProjectionVftablePtr;
 )",
-                        bind<write_guid>(iface, false),
                         bind<write_type_name>(iface, typedef_name_type::ABI, false));
                 }
             }
@@ -8007,7 +8029,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 
 % %(IObjectReference objRef)%
 {
-_inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
+_inner = objRef.As(%.IID);
 %
 }
 
@@ -8052,7 +8074,7 @@ private struct InterfaceTag<I>{};
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             bind<write_base_constructor_dispatch>(base_semantics),
-            default_interface_name,
+            bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::StaticAbiClass, true),
             bind([&](writer& w)
                 {
                     if (is_manually_gen_default_interface)
@@ -8215,13 +8237,21 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
                 {
                     is_exclusive_to_default = is_exclusive_to(type);
                 });
+
+                auto is_generic = distance(type.GenericParam()) > 0;
+                std::string iid;
+                if (settings.netstandard_compat)
+                {
+                    iid = is_generic ? w.write_temp("GuidGenerator.GetIID(%.Vftbl)", default_interface_abi_name)
+                        : w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::CCW, false));
+                }
+                else
+                {
+                    iid = w.write_temp("%.IID", bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::StaticAbiClass, true));
+                }
+
                 if (is_exclusive_to_default)
                 {
-                    auto is_generic = distance(type.GenericParam()) > 0;
-                    auto default_interface_abi_name = get_default_interface_name(w, type, true);
-                    auto iid = is_generic ? w.write_temp("GuidGenerator.GetIID(%.Vftbl)", default_interface_abi_name)
-                        : w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::CCW, false));
-
                     w.write(R"(
 public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler<%>(obj, %);
 public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInspectable<object>.CreateMarshaler2(obj, %);)",
@@ -8237,12 +8267,12 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInspectable
                     auto default_interface_name = get_default_interface_name(w, type, false);
                     w.write(R"(
 public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInterface<%>.CreateMarshaler(obj);
-public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%>.CreateMarshaler2(obj, GuidGenerator.GetIID(typeof(%).GetHelperType()));)",
+public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%>.CreateMarshaler2(obj, %);)",
                         projected_type_name,
                         default_interface_name,
                         projected_type_name,
                         default_interface_name,
-                        default_interface_name);
+                        iid);
                 }
             }),
             projected_type_name,

@@ -1124,6 +1124,7 @@ namespace Generator
         {
             string staticMethodsClass = $"global::ABI.{progressHandler}Methods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
             string asyncInfoInterfaceWithGeneric = $"global::{asyncInfoInterface}<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
+            string asyncInfoInterfaceWithGenericMethodsClass = $"global::ABI.{asyncInfoInterface}Methods<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
             var progressParameter = genericParameters.Last();
             string progressHandlerInstantiation = $$"""
              internal static class {{progressHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
@@ -1164,7 +1165,7 @@ namespace Generator
                      {{GeneratorHelper.GetMarshalerDeclaration(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}}
                      try
                      {
-                         __asyncInfo = MarshalInterface<{{asyncInfoInterfaceWithGeneric}}>.CreateMarshaler2(asyncInfo, GuidGenerator.GetIID(typeof({{asyncInfoInterfaceWithGeneric}}).GetHelperType()));
+                         __asyncInfo = MarshalInterface<{{asyncInfoInterfaceWithGeneric}}>.CreateMarshaler2(asyncInfo, {{asyncInfoInterfaceWithGenericMethodsClass}}.IID);
                          IntPtr abiAsyncInfo = MarshalInspectable<object>.GetAbi(__asyncInfo);
                          {{GeneratorHelper.GetCreateMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}}
                          global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, {{progressParameter.AbiType}}, int>**)ThisPtr)[3](ThisPtr, abiAsyncInfo, {{GeneratorHelper.GetAbiFromMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}}));

@@ -307,16 +307,10 @@ namespace Generator
                         interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
                     }
 
-                    // TODO: replace once IID propagated to manual projections
-                    // For now, special casing the Overrides interfaces which are marked internal
-                    // and the authored default interface which are under the Impl namespace.
-                    var iid = @interface.Contains("Overrides") || @interface.EndsWith("Class") ? $"global::ABI.{interfaceStaticsMethod}.IID" :
-                        $"global::WinRT.GuidGenerator.GetIID(typeof(global::{@interface}).GetHelperType())";
-
                     source.AppendLine($$"""
                                                 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
                                                 {
-                                                    IID = {{iid}},
+                                                    IID = global::ABI.{{interfaceStaticsMethod}}.IID,
                                                     Vtable = global::ABI.{{interfaceStaticsMethod}}.AbiToProjectionVftablePtr
                                                 },
                                     """);
@@ -391,16 +385,10 @@ namespace Generator
                                 interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
                             }
 
-                            // TODO: replace once IID propagated to manual projections
-                            // For now, special casing the Overrides interfaces which are marked internal
-                            // and the authored default interface which are under the Impl namespace.
-                            var iid = @interface.Contains("Overrides") || @interface.EndsWith("Class") ? $"global::ABI.{interfaceStaticsMethod}.IID" :
-                                $"global::WinRT.GuidGenerator.GetIID(typeof(global::{@interface}).GetHelperType())";
-
                             source.AppendLine($$"""
                                                 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
                                                 {
-                                                    IID = {{iid}},
+                                                    IID = global::ABI.{{interfaceStaticsMethod}}.IID,
                                                     Vtable = global::ABI.{{interfaceStaticsMethod}}.AbiToProjectionVftablePtr
                                                 },
                                     """);
