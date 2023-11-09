@@ -1435,9 +1435,21 @@ namespace cswinrt
         }
     };
 
+    struct generic_type_instantiation
+    {
+        generic_type_instance instance;
+        std::string instantiation_class_name;
+
+        // Hash / equality for the hash set.
+        bool operator==(const generic_type_instantiation& other) const
+        {
+            return instantiation_class_name == other.instantiation_class_name;
+        }
+    };
+
     std::string escape_type_name_for_identifier(std::string typeName)
     {
-        std::regex re(R"-((\ |:|<|>|,|\.))-");
+        std::regex re(R"-((\ |:|<|>|`|,|\.))-");
         return std::regex_replace(typeName, re, "_");
     }
 
@@ -1470,6 +1482,14 @@ namespace std
         size_t operator()(const cswinrt::generic_abi_delegate& entry) const
         {
             return hash<string>()(entry.abi_delegate_types);
+        }
+    };
+
+    template<>
+    struct hash<cswinrt::generic_type_instantiation> {
+        size_t operator()(const cswinrt::generic_type_instantiation& instantiation) const
+        {
+            return hash<string>()(instantiation.instantiation_class_name);
         }
     };
 }

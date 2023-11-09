@@ -100,14 +100,21 @@ namespace System.Collections.Generic
 namespace ABI.Windows.Foundation.Collections
 {
     using global::System;
+    using global::System.Runtime.CompilerServices;
 
     internal static class IMapViewMethods<K, V>
     {
         // These function pointers will be set by IReadOnlyDictionaryMethods<K, V, KAbi, VAbi>
         // when it is called by the source generated type or by the fallback
         // mechanism if the source generated type wasn't used.
-        internal unsafe static delegate*<IObjectReference, K, V> _Lookup;
-        internal unsafe static delegate*<IObjectReference, K, bool> _HasKey;
+        internal volatile unsafe static delegate*<IObjectReference, K, V> _Lookup;
+        internal volatile unsafe static delegate*<IObjectReference, K, bool> _HasKey;
+        internal volatile unsafe static delegate*<
+            IObjectReference, 
+            out global::Windows.Foundation.Collections.IMapView<K, V>,
+            out global::Windows.Foundation.Collections.IMapView<K, V>,
+            void> _Split;
+        internal volatile static bool _RcwHelperInitialized;
 
         public static unsafe V Lookup(IObjectReference obj, K key)
         {
@@ -121,20 +128,27 @@ namespace ABI.Windows.Foundation.Collections
 
         public static unsafe void Split(IObjectReference obj, out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
         {
-            var ThisPtr = obj.ThisPtr;
-
-            IntPtr __first = default;
-            IntPtr __second = default;
-            try
+            if (!RuntimeFeature.IsDynamicCodeCompiled || _Split != null)
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, IntPtr*, int>**)ThisPtr)[9](ThisPtr, &__first, &__second));
-                first = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__first);
-                second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__second);
+                _Split(obj, out first, out second);
             }
-            finally
+            else
             {
-                MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__first);
-                MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__second);
+                var ThisPtr = obj.ThisPtr;
+
+                IntPtr __first = default;
+                IntPtr __second = default;
+                try
+                {
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, IntPtr*, int>**)ThisPtr)[9](ThisPtr, &__first, &__second));
+                    first = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__first);
+                    second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__second);
+                }
+                finally
+                {
+                    MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__first);
+                    MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__second);
+                }
             }
         }
 
@@ -165,12 +179,12 @@ namespace ABI.System.Collections.Generic
         {
             // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
             // and due to that the function pointers haven't been initialized.
-            if (ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._Lookup == null)
+            if (RuntimeFeature.IsDynamicCodeCompiled && !ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._RcwHelperInitialized)
             {
-                var ensureInitializedFallback = (Func<bool>)typeof(IReadOnlyDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
-                    GetMethod("EnsureRcwHelperInitialized", BindingFlags.Public | BindingFlags.Static).
+                var initRcwHelperFallback = (Func<bool>)typeof(IReadOnlyDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                    GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
                     CreateDelegate(typeof(Func<bool>));
-                ensureInitializedFallback();
+                initRcwHelperFallback();
             }
         }
 
@@ -411,49 +425,32 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IReadOnlyDictionaryMethods<K, KAbi, V, VAbi> where KAbi : unmanaged where VAbi : unmanaged
     {
-        private static bool RcwHelperInitialized { get; } = InitRcwHelper();
-
-        private unsafe static bool InitRcwHelper()
+        public unsafe static bool InitRcwHelper(
+            delegate*<IObjectReference, K, V> lookup,
+            delegate*<IObjectReference, K, bool> hasKey,
+            delegate*<IObjectReference, 
+                      out global::System.Collections.Generic.IReadOnlyDictionary<K, V>, 
+                      out global::System.Collections.Generic.IReadOnlyDictionary<K, V>, 
+                      void> _)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            if (ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._RcwHelperInitialized)
             {
-                ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._Lookup = &Lookup;
-                ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._HasKey = &HasKey;
+                return true;
             }
-            else
-            {
-                ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._Lookup = &LookupDynamic;
-                ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._HasKey = &HasKeyDynamic;
-            }
+
+            ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._Lookup = lookup;
+            ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._HasKey = hasKey;
 
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>),
                 IReadOnlyDictionaryImpl<K, V>.CreateRcw);
+            ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._RcwHelperInitialized = true;
             return true;
         }
 
-        public static bool EnsureRcwHelperInitialized()
+        private unsafe static bool InitRcwHelperFallback()
         {
-            return RcwHelperInitialized;
-        }
-
-        private static unsafe V Lookup(IObjectReference obj, K key)
-        {
-            var ThisPtr = obj.ThisPtr;
-            object __key = default;
-            VAbi valueAbi = default;
-            try
-            {
-                __key = Marshaler<K>.CreateMarshaler2(key);
-                KAbi keyAbi = (KAbi)Marshaler<K>.GetAbi(__key);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, KAbi, void*, int>**)ThisPtr)[6](ThisPtr, keyAbi, &valueAbi));
-                return Marshaler<V>.FromAbi(valueAbi);
-            }
-            finally
-            {
-                Marshaler<K>.DisposeMarshaler(__key);
-                Marshaler<V>.DisposeAbi(valueAbi);
-            }
+            return InitRcwHelper(&LookupDynamic, &HasKeyDynamic, null);
         }
 
         private static unsafe V LookupDynamic(IObjectReference obj, K key)
@@ -473,24 +470,6 @@ namespace ABI.System.Collections.Generic
             {
                 Marshaler<K>.DisposeMarshaler(__key);
                 Marshaler<V>.DisposeAbi(valueAbi);
-            }
-        }
-
-        private static unsafe bool HasKey(IObjectReference obj, K key)
-        {
-            var ThisPtr = obj.ThisPtr;
-            object __key = default;
-            try
-            {
-                __key = Marshaler<K>.CreateMarshaler2(key);
-                KAbi keyAbi = (KAbi)Marshaler<K>.GetAbi(__key);
-                byte found;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, KAbi, byte*, int>**)ThisPtr)[8](ThisPtr, keyAbi, &found));
-                return found != 0;
-            }
-            finally
-            {
-                Marshaler<K>.DisposeMarshaler(__key);
             }
         }
 

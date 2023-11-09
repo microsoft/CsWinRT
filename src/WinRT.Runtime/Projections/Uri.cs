@@ -163,6 +163,11 @@ namespace ABI.System
             return CreateMarshaler2(value).Detach();
         }
 
+        public static unsafe MarshalInterfaceHelper<global::System.Uri>.MarshalerArray CreateMarshalerArray(global::System.Uri[] array) => MarshalInterfaceHelper<global::System.Uri>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.Uri>.GetAbiArray(box);
+        public static void CopyAbiArray(global::System.Uri[] array, object box) => MarshalInterfaceHelper<global::System.Uri>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.Uri[] array) => MarshalInterfaceHelper<global::System.Uri>.FromManagedArray(array, (o) => FromManaged(o));
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.Uri>.MarshalerArray array) => MarshalInterfaceHelper<global::System.Uri>.DisposeMarshalerArray(array);
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 

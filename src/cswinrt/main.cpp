@@ -441,6 +441,21 @@ internal static void InitalizeAbiDelegates()
                 baseTypeWriter.flush_to_file(settings.output_folder / "WinRTAbiDelegateInitializer.cs");
             }
 
+            if (!settings.netstandard_compat && has_generic_type_instantiations())
+            {
+                writer genericTypeInstantiationWriter("WinRT.GenericTypeInstantiations");
+                write_file_header(genericTypeInstantiationWriter);
+                genericTypeInstantiationWriter.write(R"(
+using System;
+
+namespace WinRT.GenericTypeInstantiations
+{
+%
+})",
+                bind<write_generic_type_instantiations>());
+                genericTypeInstantiationWriter.flush_to_file(settings.output_folder / "WinRTGenericTypeInstantiations.cs");
+            }
+
             if (!authoredTypeNameToMetadataTypeNameMap.empty() && settings.component)
             {
                 writer metadataMappingTypeWriter("WinRT");

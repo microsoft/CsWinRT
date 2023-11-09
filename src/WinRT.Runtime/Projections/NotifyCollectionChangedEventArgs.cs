@@ -271,6 +271,14 @@ namespace ABI.System.Collections.Specialized
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 
+        public static unsafe MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.MarshalerArray CreateMarshalerArray(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.GetAbiArray(box);
+        public static unsafe global::System.Collections.Specialized.NotifyCollectionChangedEventArgs[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs[] array, object box) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.MarshalerArray array) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
+
         public static string GetGuidSignature()
         {
             return "rc(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})";

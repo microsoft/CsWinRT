@@ -170,6 +170,14 @@ namespace ABI.System.ComponentModel
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 
+        public static unsafe MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.MarshalerArray CreateMarshalerArray(global::System.ComponentModel.PropertyChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.GetAbiArray(box);
+        public static unsafe global::System.ComponentModel.PropertyChangedEventArgs[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.ComponentModel.PropertyChangedEventArgs[] array, object box) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.ComponentModel.PropertyChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.MarshalerArray array) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
+
         public static string GetGuidSignature()
         {
             return "rc(Microsoft.UI.Xaml.Data.NotifyPropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})";

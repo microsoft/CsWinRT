@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation.Collections;
 using WinRT;
@@ -41,36 +42,28 @@ namespace ABI.Windows.Foundation.Collections
         // These function pointers will be set by IEnumerableMethods<T,TAbi>
         // when it is called by the source generated type or by the fallback
         // mechanism if the source generated type wasn't used.
-        internal unsafe static delegate*<bool> _EnsureEnumeratorInitialized;
-
-        internal static unsafe bool EnsureInitialized()
-        {
-            // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
-            // and due to that the function pointers haven't been initialized.
-            if (_EnsureEnumeratorInitialized == null)
-            {
-                var ensureInitializedFallback = (Func<bool>)typeof(ABI.System.Collections.Generic.IEnumerableMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
-                    GetMethod("EnsureRcwHelperInitialized", BindingFlags.Public | BindingFlags.Static).
-                    CreateDelegate(typeof(Func<bool>));
-                ensureInitializedFallback();
-            }
-            return true;
-        }
+        internal volatile unsafe static delegate*<IObjectReference, IEnumerator<T>> _First;
+        internal volatile static bool _RcwHelperInitialized;
 
         public unsafe static IEnumerator<T> First(IObjectReference obj)
         {
-            IntPtr __retval = default;
-            try
+            if (!RuntimeFeature.IsDynamicCodeCompiled || _First != null)
             {
-                var ThisPtr = obj.ThisPtr;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval));
-                EnsureInitialized();
-                _ = _EnsureEnumeratorInitialized();
-                return ABI.System.Collections.Generic.FromAbiEnumerator<T>.FromAbi(__retval);
+                return _First(obj);
             }
-            finally
+            else
             {
-                ABI.System.Collections.Generic.FromAbiEnumerator<T>.DisposeAbi(__retval);
+                IntPtr __retval = default;
+                try
+                {
+                    var ThisPtr = obj.ThisPtr;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval));
+                    return ABI.System.Collections.Generic.FromAbiEnumerator<T>.FromAbi(__retval);
+                }
+                finally
+                {
+                    ABI.System.Collections.Generic.FromAbiEnumerator<T>.DisposeAbi(__retval);
+                }
             }
         }
     }
@@ -227,6 +220,11 @@ namespace ABI.System.Collections.Generic
             {
                 return iterator;
             }
+            else if (first is global::System.Collections.Generic.IEnumeratorImpl<T> ienumeratorImpl)
+            {
+                return new global::ABI.System.Collections.Generic.FromAbiEnumerator<T>(ienumeratorImpl);
+            }
+
             throw new InvalidOperationException("Unexpected type for enumerator");
         }
 
@@ -255,20 +253,20 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumerableMethods<T, TAbi> where TAbi : unmanaged
     {
-        internal static bool RcwHelperInitialized { get; } = InitRcwHelper();
+        public unsafe static bool InitRcwHelper(delegate*<IObjectReference, global::System.Collections.Generic.IEnumerator<T>> first)
+        {
+            if (ABI.Windows.Foundation.Collections.IIterableMethods<T>._RcwHelperInitialized)
+            {
+                return true;
+            }
 
-        internal unsafe static bool InitRcwHelper()
-        {         
-            ABI.Windows.Foundation.Collections.IIterableMethods<T>._EnsureEnumeratorInitialized = &IEnumeratorMethods<T, TAbi>.EnsureRcwHelperInitialized;
+            ABI.Windows.Foundation.Collections.IIterableMethods<T>._First = first;
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IEnumerable<T>),
                 IEnumerableImpl<T>.CreateRcw);
-            return true;
-        }
 
-        public static bool EnsureRcwHelperInitialized()
-        {
-            return RcwHelperInitialized;
+            ABI.Windows.Foundation.Collections.IIterableMethods<T>._RcwHelperInitialized = true;
+            return true;
         }
 
         public static unsafe bool InitCcw(
@@ -420,7 +418,9 @@ namespace ABI.System.Collections.Generic
         // These function pointers will be set by IEnumeratorMethods<T,TAbi>
         // when it is called by the source generated type or by the fallback
         // mechanism if the source generated type wasn't used.
-        internal unsafe static delegate*<IntPtr, T> _GetCurrent;
+        internal volatile unsafe static delegate*<IObjectReference, T> _GetCurrent;
+        internal volatile unsafe static delegate*<IObjectReference, T[], uint> _GetMany;
+        internal volatile static bool _RcwHelperInitialized;
 
         public static unsafe bool MoveNext(IObjectReference obj)
         {
@@ -432,29 +432,36 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe uint GetMany(IObjectReference obj, ref T[] items)
         {
-            var ThisPtr = obj.ThisPtr;
-
-            object __items = default;
-            int __items_length = default;
-            IntPtr __items_data = default;
-            uint __retval = default;
-            try
+            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetMany != null)
             {
-                __items = Marshaler<T>.CreateMarshalerArray(items);
-                (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int>**)ThisPtr)[9](ThisPtr, __items_length, __items_data, &__retval));
-                items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
-                return __retval;
+                return _GetMany(obj, items);
             }
-            finally
+            else
             {
-                Marshaler<T>.DisposeMarshalerArray(__items);
+                var ThisPtr = obj.ThisPtr;
+
+                object __items = default;
+                int __items_length = default;
+                IntPtr __items_data = default;
+                uint __retval = default;
+                try
+                {
+                    __items = Marshaler<T>.CreateMarshalerArray(items);
+                    (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int>**)ThisPtr)[9](ThisPtr, __items_length, __items_data, &__retval));
+                    items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
+                    return __retval;
+                }
+                finally
+                {
+                    Marshaler<T>.DisposeMarshalerArray(__items);
+                }
             }
         }
 
         public static unsafe T get_Current(IObjectReference obj)
         {
-            return _GetCurrent(obj.ThisPtr);
+            return _GetCurrent(obj);
         }
 
         public static unsafe bool get_HasCurrent(IObjectReference obj)
@@ -473,6 +480,19 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumeratorMethods<T>
     {
+        unsafe static IEnumeratorMethods()
+        {
+            // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
+            // and due to that the function pointers haven't been initialized.
+            if (RuntimeFeature.IsDynamicCodeCompiled && !IIteratorMethods<T>._RcwHelperInitialized)
+            {
+                var initRcwHelperFallback = (Func<bool>)typeof(IEnumeratorMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                    GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
+                    CreateDelegate(typeof(Func<bool>));
+                initRcwHelperFallback();
+            }
+        }
+
         public static T get_Current(IObjectReference obj)
         {
             return IIteratorMethods<T>.get_Current(obj);
@@ -531,28 +551,37 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumeratorMethods<T, TAbi> where TAbi : unmanaged
     {
-        private static bool RcwHelperInitialized { get; } = InitRcwHelper();
-
-        private unsafe static bool InitRcwHelper()
+        public unsafe static bool InitRcwHelper(
+            delegate*<IObjectReference, T> getCurrent,
+            delegate*<IObjectReference, T[], uint> getMany)
         {
-            IIteratorMethods<T>._GetCurrent = &get_Current;
+            if (IIteratorMethods<T>._RcwHelperInitialized)
+            {
+                return true;
+            }
+
+            IIteratorMethods<T>._GetCurrent = getCurrent;
+            IIteratorMethods<T>._GetMany = getMany;
+
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IEnumerator<T>),
                 IEnumeratorImpl<T>.CreateRcw);
+            IIteratorMethods<T>._RcwHelperInitialized = true;
             return true;
         }
 
-        public static bool EnsureRcwHelperInitialized()
+        private unsafe static bool InitRcwHelperFallback()
         {
-            return RcwHelperInitialized;
+            return InitRcwHelper(&get_Current, null);
         }
 
-        private unsafe static T get_Current(IntPtr ptr)
+        private unsafe static T get_Current(IObjectReference obj)
         {
+            var ThisPtr = obj.ThisPtr;
             TAbi result = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)ptr)[6](ptr, &result));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)ThisPtr)[6](ThisPtr, &result));
                 return Marshaler<T>.FromAbi(result);
             }
             finally
