@@ -4204,7 +4204,7 @@ event % %;)",
                     // with the actual types so that we can use them later outside of this context.
                     if (is_generic_instantiation_class)
                     {
-                        for (int idx = 0; idx < type.generic_args.size(); idx++)
+                        for (size_t idx = 0; idx < type.generic_args.size(); idx++)
                         {
                             auto& generic_arg_semantic = type.generic_args[idx];
                             if (auto gti = std::get_if<generic_type_index>(&generic_arg_semantic))
@@ -4217,7 +4217,7 @@ event % %;)",
                     {
                         // Make sure we are not including declarations of generic interfaces themselves
                         // but rather when they are instantiated.
-                        for (int idx = 0; idx < type.generic_args.size(); idx++)
+                        for (size_t idx = 0; idx < type.generic_args.size(); idx++)
                         {
                             auto& generic_arg_semantic = type.generic_args[idx];
                             if (auto gti = std::get_if<generic_type_index>(&generic_arg_semantic))
@@ -10131,7 +10131,7 @@ var ThisPtr = _obj.ThisPtr;
     generic_type_instance ConvertGenericTypeInstanceToConcreteType(writer& w, const generic_type_instance& generic_instance)
     {
         generic_type_instance converted = generic_instance;
-        for (int idx = 0; idx < generic_instance.generic_args.size(); idx++)
+        for (size_t idx = 0; idx < generic_instance.generic_args.size(); idx++)
         {
             auto& semantics = generic_instance.generic_args[idx];
             if (auto gti = std::get_if<generic_type_index>(&semantics))
