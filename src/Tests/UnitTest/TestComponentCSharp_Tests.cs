@@ -704,6 +704,7 @@ namespace UnitTest
             Assert.Equal(events_received, events_expected);
         }
 
+        [WinRTExposedType(typeof(IUriHandler))]
         class ManagedUriHandler : IUriHandler
         {
             public Class TestObject { get; private set; }

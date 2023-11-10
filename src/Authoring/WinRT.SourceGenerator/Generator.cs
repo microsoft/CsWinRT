@@ -197,7 +197,7 @@ namespace Generator
                 return;
             }
 
-            ComponentGenerator generator = new ComponentGenerator(context);
+            ComponentGenerator generator = new(context);
             generator.Generate();
         }
 
