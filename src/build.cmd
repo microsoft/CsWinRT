@@ -174,13 +174,22 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+if "%cswinrt_platform%" NEQ "arm" (
+  if "%cswinrt_platform%" NEQ "arm64" (
+    echo Restore functional tests for %cswinrt_platform% %cswinrt_configuration%
+    for %%a in (%cswinrt_functional_tests%) do (
+      echo Restoring %%a
+
+      rem Do restore separately to workaround issue where specifying TargetFramework causes nuget restore to propagate it to project references causing issues.
+      call :exec %msbuild_path%msbuild.exe /t:restore %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+    )
+  )
+)
+
 if "%run_functional_tests%" EQU "true" (
   echo Publishing functional tests for %cswinrt_platform% %cswinrt_configuration%
   for %%a in (%cswinrt_functional_tests%) do (
     echo Publishing %%a
-
-    rem Do restore separately to workaround issue where specifying TargetFramework causes nuget restore to propagate it to project references causing issues.
-    call :exec %msbuild_path%msbuild.exe /t:restore %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
 
     call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net6.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj -bl:CCWBin%%a.binlog
   )
