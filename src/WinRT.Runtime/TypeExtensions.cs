@@ -222,11 +222,6 @@ namespace WinRT
             AuthoringMetadaTypeLookup.Add(authoringMetadataTypeLookup);
         }
 
-#if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
-            Justification = "This is a fallback for compat purposes with existing projections.  " +
-            "Applications which make use of trimming will make use of updated projections that won't hit this code path.")]
-#endif
         internal static Type GetAuthoringMetadataType(this Type type)
         {
             return AuthoringMetadataTypeCache.GetOrAdd(type,
@@ -238,10 +233,30 @@ namespace WinRT
                         return lookupFunc(type);
                     }
 
-                    // Fallback code path for back compat with previously generated projections.
-                    var ccwTypeName = $"ABI.Impl.{type.FullName}";
-                    return type.Assembly.GetType(ccwTypeName, false);
+#if NET
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        return null;
+                    }
+                    else
+#endif
+                    {
+                        // Fallback code path for back compat with previously generated projections
+                        // running without AOT.
+                        return GetAuthoringMetadataTypeFallback(type);
+                    }
                 });
+        }
+
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+            Justification = "This is a fallback for compat purposes with existing projections.  " +
+            "Applications making use of updated projections won't hit this code path.")]
+#endif
+        private static Type GetAuthoringMetadataTypeFallback(Type type)
+        {
+            var ccwTypeName = $"ABI.Impl.{type.FullName}";
+            return type.Assembly.GetType(ccwTypeName, false);
         }
     }
 }
