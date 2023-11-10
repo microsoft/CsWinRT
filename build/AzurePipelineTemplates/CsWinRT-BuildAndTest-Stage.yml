@@ -120,6 +120,7 @@ stages:
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src
         script: |
+          set CIBuildReason=CI
           set cswinrt_label=functionaltest
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
