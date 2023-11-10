@@ -96,15 +96,7 @@ namespace ABI.System
 #endif
     unsafe struct Uri
     {
-        private sealed class ActivationFactory : BaseActivationFactory
-        {
-            public ActivationFactory() : base("Windows.Foundation", "Windows.Foundation.Uri")
-            {
-            }
-
-            internal static WinRTUriRuntimeClassFactory Instance = 
-                new ActivationFactory()._As<WinRTUriRuntimeClassFactory.Vftbl>();
-        }
+        private static WinRTUriRuntimeClassFactory Instance = ActivationFactory.Get("Windows.Foundation.Uri");
 
         public static IObjectReference CreateMarshaler(global::System.Uri value)
         {
@@ -113,7 +105,7 @@ namespace ABI.System
                 return null;
             }
 
-            return ActivationFactory.Instance.CreateUri(value.OriginalString);
+            return Instance.CreateUri(value.OriginalString);
         }
 
         public static ObjectReferenceValue CreateMarshaler2(global::System.Uri value)
@@ -123,7 +115,7 @@ namespace ABI.System
                 return new ObjectReferenceValue();
             }
 
-            return ActivationFactory.Instance.CreateUriForMarshaling(value.OriginalString);
+            return Instance.CreateUriForMarshaling(value.OriginalString);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;

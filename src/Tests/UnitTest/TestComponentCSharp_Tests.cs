@@ -30,6 +30,7 @@ using System.Reflection;
 using Windows.Devices.Enumeration.Pnp;
 using System.Diagnostics;
 using Windows.Devices.Enumeration;
+using Windows.UI.Notifications;
 
 #if NET
 using WeakRefNS = System;
@@ -76,12 +77,12 @@ namespace UnitTest
 
         [Fact]
         public void TestEventArgsVector()
-        { 
+        {
             var eventArgsVector = TestObject.GetEventArgsVector();
             Assert.Equal(1, eventArgsVector.Count);
             foreach (var dataErrorChangedEventArgs in eventArgsVector)
             {
-                var propName  = dataErrorChangedEventArgs.PropertyName;
+                var propName = dataErrorChangedEventArgs.PropertyName;
                 Assert.Equal("name", propName);
             }
         }
@@ -92,7 +93,7 @@ namespace UnitTest
             var provideUriVector = TestObject.GetNonGenericDelegateVector();
 
             Assert.Equal(1, provideUriVector.Count);
-            
+
             foreach (var provideUri in provideUriVector)
             {
                 Uri delegateTarget = provideUri.Invoke();
@@ -197,11 +198,11 @@ namespace UnitTest
             Assert.True(buffLen4.Length == 4);
             Assert.Throws<ArgumentException>(() => buffLen4.GetByte(5)); // shouldn't have a 5th element
             Assert.True(buffLen4.GetByte(0) == 0x02); // make sure we got the 2nd element of the array
-            
+
             arrayLen3.CopyTo(buffLen4); // Array to Buffer copying
             Assert.True(buffLen4.Length == 4);
             Assert.True(buffLen4.GetByte(0) == 0x01); // make sure we updated the first few 
-            Assert.True(buffLen4.GetByte(1) == 0x02); 
+            Assert.True(buffLen4.GetByte(1) == 0x02);
             Assert.True(buffLen4.GetByte(2) == 0x03);
             Assert.True(buffLen4.GetByte(3) == 0x14); // and kept the last one 
 
@@ -263,14 +264,14 @@ namespace UnitTest
         public void TestBufferAsStreamUsingAsBuffer()
         {
             var arr = new byte[] { 0x01, 0x02 };
-            Stream stream = arr.AsBuffer().AsStream();            
+            Stream stream = arr.AsBuffer().AsStream();
             Assert.True(stream != null);
             Assert.True(stream.Length == 2);
         }
 
         [Fact]
         public void TestBufferAsStreamWithEmptyBuffer1()
-        { 
+        {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             Stream stream = buffer.AsStream();
             Assert.True(stream != null);
@@ -392,7 +393,7 @@ namespace UnitTest
 
         [Fact]
         public void TestEmptyBufferCopyTo()
-        { 
+        {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             byte[] array = { };
             buffer.CopyTo(array);
@@ -527,7 +528,7 @@ namespace UnitTest
         {
             var arr1 = new byte[] { 0x01, 0x02 };
             var buff = arr1.AsBuffer();
-            var arr2 = buff.ToArray(0,2);
+            var arr2 = buff.ToArray(0, 2);
             Assert.True(arr1[0] == arr2[0]);
             Assert.True(arr1[1] == arr2[1]);
         }
@@ -576,7 +577,7 @@ namespace UnitTest
         [Fact]
         public void TestWriteBuffer()
         {
-            Assert.True(InvokeWriteBufferAsync().Wait(1000)); 
+            Assert.True(InvokeWriteBufferAsync().Wait(1000));
         }
 
         [Fact]
@@ -900,10 +901,10 @@ namespace UnitTest
         public void TestValueSetArrays()
         {
             var map = new Dictionary<string, long[]>
-            { 
+            {
                 ["foo"] = new long[] { 1, 2, 3 },
-                ["hello"] = new long[0], 
-                ["world"] = new long[] { 1, 2, 3 }, 
+                ["hello"] = new long[0],
+                ["world"] = new long[] { 1, 2, 3 },
                 ["bar"] = new long[0]
             };
             var valueSet = new Windows.Foundation.Collections.ValueSet();
@@ -924,10 +925,10 @@ namespace UnitTest
             var cls1 = new Class();
 
             var cls2 = new Class(42);
-            Assert.Equal(42, cls2.IntProperty); 
+            Assert.Equal(42, cls2.IntProperty);
 
             var cls3 = new Class(42, "foo");
-            Assert.Equal(42, cls3.IntProperty); 
+            Assert.Equal(42, cls3.IntProperty);
             Assert.Equal("foo", cls3.StringProperty);
         }
 
@@ -1975,11 +1976,25 @@ namespace UnitTest
         [Fact]
         public void TestMatrix3DTypeMapping()
         {
-            var matrix3D = new Matrix3D {
-                M11 = 11, M12 = 12, M13 = 13, M14 = 14,
-                M21 = 21, M22 = 22, M23 = 23, M24 = 24,
-                M31 = 31, M32 = 32, M33 = 33, M34 = 34,
-                OffsetX = 41, OffsetY = 42, OffsetZ = 43,M44 = 44 };
+            var matrix3D = new Matrix3D
+            {
+                M11 = 11,
+                M12 = 12,
+                M13 = 13,
+                M14 = 14,
+                M21 = 21,
+                M22 = 22,
+                M23 = 23,
+                M24 = 24,
+                M31 = 31,
+                M32 = 32,
+                M33 = 33,
+                M34 = 34,
+                OffsetX = 41,
+                OffsetY = 42,
+                OffsetZ = 43,
+                M44 = 44
+            };
 
             TestObject.Matrix3DProperty = matrix3D;
             Assert.Equal(matrix3D.M11, TestObject.Matrix3DProperty.M11);
@@ -2028,10 +2043,22 @@ namespace UnitTest
         {
             var matrix4x4 = new Matrix4x4
             {
-                M11 = 11, M12 = 12, M13 = 13, M14 = 14,
-                M21 = 21, M22 = 22, M23 = 23, M24 = 24,
-                M31 = 31, M32 = 32, M33 = 33, M34 = 34,
-                M41 = 41, M42 = 42, M43 = 43, M44 = 44
+                M11 = 11,
+                M12 = 12,
+                M13 = 13,
+                M14 = 14,
+                M21 = 21,
+                M22 = 22,
+                M23 = 23,
+                M24 = 24,
+                M31 = 31,
+                M32 = 32,
+                M33 = 33,
+                M34 = 34,
+                M41 = 41,
+                M42 = 42,
+                M43 = 43,
+                M44 = 44
             };
             TestObject.Matrix4x4Property = matrix4x4;
             Assert.Equal(matrix4x4.M11, TestObject.Matrix4x4Property.M11);
@@ -2307,7 +2334,7 @@ namespace UnitTest
         {
             var del = Class.BoxedDelegate;
             Assert.IsType<ProvideUri>(del);
-            var provideUriDel = (ProvideUri) del;
+            var provideUriDel = (ProvideUri)del;
             Assert.Equal(new Uri("http://microsoft.com"), provideUriDel());
         }
 
@@ -2438,8 +2465,6 @@ namespace UnitTest
                 // Object gets proxied to the apartment.
                 Assert.Equal(2, proxyObject.Commands.Count);
                 agileReference.Dispose();
-
-                proxyObject2 = agileReference2.Get();
             }
 
             public void CheckValue()
@@ -2448,9 +2473,6 @@ namespace UnitTest
                 Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
                 proxyObject = agileReference.Get();
                 Assert.Equal(2, proxyObject.Commands.Count);
-                
-                nonAgileObject2 = new Windows.UI.Popups.PopupMenu();
-                agileReference2 = nonAgileObject2.AsAgile();
 
                 valueAcquired.Set();
             }
@@ -2462,8 +2484,8 @@ namespace UnitTest
                 Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands);
             }
 
-            private Windows.UI.Popups.PopupMenu nonAgileObject, nonAgileObject2;
-            private Windows.UI.Popups.PopupMenu proxyObject, proxyObject2;
+            private Windows.UI.Popups.PopupMenu nonAgileObject;
+            private Windows.UI.Popups.PopupMenu proxyObject;
             private AgileReference<Windows.UI.Popups.PopupMenu> agileReference, agileReference2;
             private readonly AutoResetEvent objectAcquired = new AutoResetEvent(false);
             private readonly AutoResetEvent valueAcquired = new AutoResetEvent(false);
@@ -2533,8 +2555,8 @@ namespace UnitTest
 
             static void TestObject() => MakeObject();
 
-            static (IInitializeWithWindow, IWindowNative) MakeImports() 
-            { 
+            static (IInitializeWithWindow, IWindowNative) MakeImports()
+            {
                 var obj = MakeObject();
                 var initializeWithWindow = obj.As<IInitializeWithWindow>();
                 var windowNative = obj.As<IWindowNative>();
@@ -2544,7 +2566,7 @@ namespace UnitTest
             static void TestImports()
             {
                 var (initializeWithWindow, windowNative) = MakeImports();
-                
+
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
 
@@ -2856,7 +2878,7 @@ namespace UnitTest
             {
                 proc.Kill();
             }
-            catch(Exception)
+            catch (Exception)
             {
             }
         }
@@ -2935,7 +2957,7 @@ namespace UnitTest
             // Types
             var a = new WarningAttribute();    // warning CA1416
             Assert.NotNull(a);
-            var w = new WarningStruct{ i32 = 0 }; // warning CA1416
+            var w = new WarningStruct { i32 = 0 }; // warning CA1416
             Assert.Equal(0, w.i32);     // warning CA1416
             var v = WarningEnum.Value;
             Assert.NotEqual(WarningEnum.WarningValue, v);   // warning CA1416
@@ -3046,8 +3068,8 @@ namespace UnitTest
                 Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
 
                 watcher = DeviceInformation.CreateWatcher();
-                var exception = Record.Exception(() => { 
-                    watcher.Added += OnDeviceAdded; 
+                var exception = Record.Exception(() => {
+                    watcher.Added += OnDeviceAdded;
                 });
                 Assert.Null(exception);
 
@@ -3055,8 +3077,8 @@ namespace UnitTest
                 {
                     Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
 
-                    exception = Record.Exception(() => { 
-                        watcher.Updated += OnDeviceUpdated; 
+                    exception = Record.Exception(() => {
+                        watcher.Updated += OnDeviceUpdated;
                     });
                     Assert.Null(exception);
                 });
@@ -3068,6 +3090,47 @@ namespace UnitTest
             staThread.Start();
             staThread.Join();
         }
+
+#if NET
+        [Fact]
+        public void TestActivationFactoriesFromMultipleContexts()
+        {
+            Exception exception = null;
+
+            Thread staThread = new Thread(() =>
+            {
+                Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
+
+                exception = Record.Exception(() =>
+                {
+                    var xmlDoc = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText01);
+                    _ = new ToastNotification(xmlDoc);
+                });
+
+            });
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+            staThread.Join();
+
+            Assert.Null(exception);
+
+            Thread mtaThread = new Thread(() =>
+            {
+                Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
+
+                exception = Record.Exception(() =>
+                {
+                    var xmlDoc = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText01);
+                    _ = new ToastNotification(xmlDoc);
+                });
+            });
+            mtaThread.SetApartmentState(ApartmentState.MTA);
+            mtaThread.Start();
+            mtaThread.Join();
+
+            Assert.Null(exception);
+        }
+#endif
 
         [Fact]
         public void TestDictionary()

@@ -24,7 +24,7 @@ namespace WinRT.Interop
 #endif
     interface IAgileObject
     {
-        public static readonly Guid IID = new(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90);
+        public static readonly Guid IID = InterfaceIIDs.IAgileObject_IID;
     }
 
     [WindowsRuntimeType]

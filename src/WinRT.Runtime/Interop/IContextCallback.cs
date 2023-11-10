@@ -39,7 +39,7 @@ namespace ABI.WinRT.Interop
     [Guid("000001da-0000-0000-C000-000000000046")]
     internal sealed unsafe class IContextCallback : global::WinRT.Interop.IContextCallback
     {
-        internal static readonly Guid IID = new(0x000001da, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IID = InterfaceIIDs.IContextCallback_IID;
 
         [Guid("000001da-0000-0000-C000-000000000046")]
         public struct Vftbl
