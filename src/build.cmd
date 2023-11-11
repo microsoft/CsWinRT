@@ -196,12 +196,14 @@ if "%run_functional_tests%" EQU "true" (
 )
 
 if "%cswinrt_platform%" EQU "x64" (
-  echo Publishing AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
-  for %%a in (%cswinrt_aot_functional_tests%) do (
-    echo Publishing %%a
+  if /I "%cswinrt_configuration%" EQU "release" (
+    echo Publishing AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
+    for %%a in (%cswinrt_aot_functional_tests%) do (
+      echo Publishing %%a
 
-    rem No restore needed here as the previous run for .NET 6 did a restore without target framework.
-    call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net8.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+      rem No restore needed here as the previous run for .NET 6 did a restore without target framework.
+      call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net8.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+    )
   )
 )
 
@@ -254,7 +256,7 @@ call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_
 if ErrorLevel 1 (
   echo.
   echo ERROR: Lifetime test failed, skipping NuGet pack
-  rem exit /b !ErrorLevel!
+  exit /b !ErrorLevel!
 )
 
 :unittest
@@ -308,16 +310,18 @@ if "%run_functional_tests%" EQU "true" (
 )
 
 if "%cswinrt_platform%" EQU "x64" (
-  echo Running cswinrt AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
+  if /I "%cswinrt_configuration%" EQU "release" (
+    echo Running cswinrt AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
 
-  for %%a in (%cswinrt_aot_functional_tests%) do (
-    echo Running %%a
+    for %%a in (%cswinrt_aot_functional_tests%) do (
+      echo Running %%a
 
-    call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net8.0\win-%cswinrt_platform%\publish\%%a.exe
-    if !errorlevel! NEQ 100 (
-      echo.
-      echo ERROR: AOT Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
-      exit /b !ErrorLevel!
+      call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net8.0\win-%cswinrt_platform%\publish\%%a.exe
+      if !errorlevel! NEQ 100 (
+        echo.
+        echo ERROR: AOT Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
+        exit /b !ErrorLevel!
+      )
     )
   )
 )
