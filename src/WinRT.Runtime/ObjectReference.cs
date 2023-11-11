@@ -50,8 +50,8 @@ namespace WinRT
         {
             get
             {
-                VftblIUnknown.AddRef(ThisPtr);
-                return VftblIUnknown.Release(ThisPtr);
+                Marshal.AddRef(ThisPtr);
+                return (uint)Marshal.Release(ThisPtr);
             }
         }
 
@@ -76,7 +76,7 @@ namespace WinRT
                 _referenceTrackerPtr = value;
                 if (_referenceTrackerPtr != IntPtr.Zero)
                 {
-                    ReferenceTracker.IUnknownVftbl.AddRef(_referenceTrackerPtr);
+                    Marshal.AddRef(_referenceTrackerPtr);
                     AddRefFromTrackerSource();
                 }
             }
@@ -145,7 +145,7 @@ namespace WinRT
             {
                 Guid iid = typeof(TInterface).GUID;
                 IntPtr comPtr = IntPtr.Zero;
-                Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, &iid, &comPtr));
+                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ThisPtr, ref iid, out comPtr));
                 try
                 {
                     return (TInterface)Marshal.GetObjectForIUnknown(comPtr);
@@ -180,7 +180,7 @@ namespace WinRT
             objRef = null;
             ThrowIfDisposed();
             IntPtr thatPtr = IntPtr.Zero;
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr);
+            int hr = Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr);
             if (hr >= 0)
             {
                 if (IsAggregated)
@@ -217,7 +217,7 @@ namespace WinRT
             ppv = IntPtr.Zero;
             ThrowIfDisposed();
             IntPtr thatPtr = IntPtr.Zero;
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr);
+            int hr = Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr);
             if (hr >= 0)
             {
                 ppv = thatPtr;
@@ -305,7 +305,7 @@ namespace WinRT
 
         protected virtual unsafe void AddRef(bool refFromTrackerSource)
         {
-            VftblIUnknown.AddRef(ThisPtr);
+            Marshal.AddRef(ThisPtr);
             if(refFromTrackerSource)
             {
                 AddRefFromTrackerSource();
@@ -320,13 +320,13 @@ namespace WinRT
         protected virtual unsafe void Release()
         {
             ReleaseFromTrackerSource();
-            VftblIUnknown.Release(ThisPtr);
+            Marshal.Release(ThisPtr);
         }
 
         private protected unsafe void ReleaseWithoutContext()
         {
             ReleaseFromTrackerSource();
-            VftblIUnknownFromOriginalContext.Release(ThisPtrFromOriginalContext);
+            Marshal.Release(ThisPtrFromOriginalContext);
         }
 
         internal unsafe bool IsReferenceToManagedObject
@@ -357,7 +357,7 @@ namespace WinRT
         {
             if (ReferenceTrackerPtr != IntPtr.Zero)
             {
-                ReferenceTracker.IUnknownVftbl.AddRef(ReferenceTrackerPtr);
+                Marshal.AddRef(ReferenceTrackerPtr);
                 if (!PreventReleaseFromTrackerSourceOnDispose)
                 {
                     ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
@@ -373,7 +373,7 @@ namespace WinRT
                 {
                     ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
                 }
-                ReferenceTracker.IUnknownVftbl.Release(ReferenceTrackerPtr);
+                Marshal.Release(ReferenceTrackerPtr);
             }
         }
 
@@ -391,7 +391,7 @@ namespace WinRT
         public unsafe ObjectReferenceValue AsValue(Guid iid)
         {
             IntPtr thatPtr = IntPtr.Zero;
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr));
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr));
             if (IsAggregated)
             {
                 Marshal.Release(thatPtr);
@@ -451,8 +451,8 @@ namespace WinRT
             {
                 return null;
             }
+            Marshal.AddRef(thisPtr);
             var obj = new ObjectReference<T>(thisPtr, vftblT);
-            obj.VftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
         }
 
@@ -646,7 +646,7 @@ namespace WinRT
             objRef = null;
 
             IntPtr thatPtr = IntPtr.Zero;
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, &iid, &thatPtr);
+            int hr = Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr);
             if (hr >= 0)
             {
                 if (IsAggregated)
@@ -710,7 +710,7 @@ namespace WinRT
             // If the ptr is not owned by this instance, do an AddRef.
             if (preventReleaseOnDispose && ptr != IntPtr.Zero)
             {
-                (**(IUnknownVftbl**)ptr).AddRef(ptr);
+                Marshal.AddRef(ptr);
             }
 
             // Release tracker source reference as it is no longer a managed ref maintained by RCW.
@@ -731,7 +731,7 @@ namespace WinRT
 
             if (!preventReleaseOnDispose && ptr != IntPtr.Zero)
             {
-                (**(IUnknownVftbl**)ptr).Release(ptr);
+                Marshal.Release(ptr);
             }
         }
     }
