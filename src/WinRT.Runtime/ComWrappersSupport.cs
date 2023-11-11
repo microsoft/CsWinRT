@@ -12,6 +12,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WinRT.Interop;
 
 #if NET
@@ -871,14 +872,23 @@ namespace WinRT
 
         internal sealed class InspectableInfo
         {
-            private readonly Lazy<string> runtimeClassName;
+            private readonly Type _type;
 
             public Guid[] IIDs { get; }
-            public string RuntimeClassName => runtimeClassName.Value;
+
+            private volatile string _runtimeClassName;
+
+            private string MakeRuntimeClassName()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref _runtimeClassName, TypeNameSupport.GetNameForType(_type, TypeNameGenerationFlags.GenerateBoxedName | TypeNameGenerationFlags.ForGetRuntimeClassName), null);
+                return _runtimeClassName;
+            }
+
+            public string RuntimeClassName => _runtimeClassName ?? MakeRuntimeClassName();
 
             internal InspectableInfo(Type type, Guid[] iids)
             {
-                runtimeClassName = new Lazy<string>(() => TypeNameSupport.GetNameForType(type, TypeNameGenerationFlags.GenerateBoxedName | TypeNameGenerationFlags.ForGetRuntimeClassName));
+                _type = type;
                 IIDs = iids;
             }
         }
