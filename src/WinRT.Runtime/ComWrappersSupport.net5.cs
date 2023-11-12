@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WinRT.Interop;
 using static System.Runtime.InteropServices.ComWrappers;
 
@@ -278,19 +279,40 @@ namespace WinRT
             }
         }
 
-        private readonly static List<Func<Type, ComInterfaceEntry[]>> ComInterfaceEntriesLookup = new();
+        private static readonly ReaderWriterLockSlim ComInterfaceEntriesLookupRwLock = new();
+        private static readonly List<Func<Type, ComInterfaceEntry[]>> ComInterfaceEntriesLookup = new();
 
-        public static void RegisterTypeComInterfaceEntriesLookup(Func<Type, ComInterfaceEntry[]> comInterfaceEntriesLookup) => ComInterfaceEntriesLookup.Add(comInterfaceEntriesLookup);
+        public static void RegisterTypeComInterfaceEntriesLookup(Func<Type, ComInterfaceEntry[]> comInterfaceEntriesLookup)
+        {
+            ComInterfaceEntriesLookupRwLock.EnterWriteLock();
+            try
+            {
+                ComInterfaceEntriesLookup.Add(comInterfaceEntriesLookup);
+            }
+            finally
+            {
+                ComInterfaceEntriesLookupRwLock.ExitWriteLock();
+            }
+        }
 
         internal static ComInterfaceEntry[] GetComInterfaceEntriesForTypeFromLookupTable(Type type)
         {
-            foreach (var func in ComInterfaceEntriesLookup)
+            ComInterfaceEntriesLookupRwLock.EnterReadLock();
+
+            try
             {
-                var comInterfaceEntries = func(type);
-                if (comInterfaceEntries != null)
+                foreach (var func in ComInterfaceEntriesLookup)
                 {
-                    return comInterfaceEntries;
+                    var comInterfaceEntries = func(type);
+                    if (comInterfaceEntries != null)
+                    {
+                        return comInterfaceEntries;
+                    }
                 }
+            }
+            finally
+            {
+                ComInterfaceEntriesLookupRwLock.ExitReadLock();
             }
 
             return null;
