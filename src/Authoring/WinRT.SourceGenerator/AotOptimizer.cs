@@ -562,7 +562,7 @@ namespace Generator
                     if (GeneratorHelper.IsWinRTType(methodSymbol.ReturnType))
                     {
                         var completedProperty = methodSymbol.ReturnType.GetMembers("Completed").FirstOrDefault() as IPropertySymbol;
-                        if (completedProperty?.Type.MetadataName.Contains("`") ?? false)
+                        if (completedProperty != null && completedProperty.Type.MetadataName.Contains("Async") && completedProperty.Type.MetadataName.Contains("`"))
                         {
                             vtableAttributes.Add(GetVtableAttributeToAdd(completedProperty.Type, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false));
                         }
