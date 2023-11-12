@@ -467,8 +467,7 @@ namespace Generator
         private static bool NeedVtableOnLookupTable(SyntaxNode node)
         {
             return (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Arguments.Count != 0) ||
-                    node is AssignmentExpressionSyntax ||
-                    node is AwaitExpressionSyntax;
+                    node is AssignmentExpressionSyntax;
         }
 
         private static List<VtableAttribute> GetVtableAttributesToAddOnLookupTable(GeneratorSyntaxContext context)
@@ -556,6 +555,18 @@ namespace Generator
                             paramsIdx++;
                         }
                     }
+                    
+                    // This handles the async calls scenario where
+                    // the awaiter will register a completed handler which can be
+                    // a generic.
+                    if (GeneratorHelper.IsWinRTType(methodSymbol.ReturnType))
+                    {
+                        var completedProperty = methodSymbol.ReturnType.GetMembers("Completed").FirstOrDefault() as IPropertySymbol;
+                        if (completedProperty?.Type.MetadataName.Contains("`") ?? false)
+                        {
+                            vtableAttributes.Add(GetVtableAttributeToAdd(completedProperty.Type, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false));
+                        }
+                    }
                 }
             }
             else if (context.Node is AssignmentExpressionSyntax assignment)
@@ -629,22 +640,6 @@ namespace Generator
                     if (vtableAtribute != default)
                     {
                         vtableAttributes.Add(vtableAtribute);
-                    }
-                }
-            }
-            // This handles the await asyncFunction() scenario where
-            // the awaiter will register a completed handler which can be
-            // a generic.
-            else if (context.Node is AwaitExpressionSyntax awaitExpression)
-            {
-                var methodSymbol = context.SemanticModel.GetSymbolInfo(awaitExpression.Expression).Symbol as IMethodSymbol;
-                // Check if await is being called on a WinRT function.
-                if (methodSymbol != null && GeneratorHelper.IsWinRTType(methodSymbol.ContainingSymbol))
-                {
-                    var completedProperty = methodSymbol.ReturnType.GetMembers("Completed")[0] as IPropertySymbol;
-                    if (completedProperty.Type.MetadataName.Contains("`"))
-                    {
-                        vtableAttributes.Add(GetVtableAttributeToAdd(completedProperty.Type, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false));
                     }
                 }
             }
