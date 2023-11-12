@@ -57,6 +57,28 @@ foreach (var port in ports)
     }
 }
 
+var folderPath = System.IO.Path.GetDirectoryName(AppContext.BaseDirectory);
+Windows.Storage.StorageFile file = await Windows.Storage.StorageFile.GetFileFromPathAsync(folderPath + "\\Async.exe");
+var handle = System.IO.WindowsRuntimeStorageExtensions.CreateSafeFileHandle(file, System.IO.FileAccess.Read);
+if (handle is null)
+{
+    return 107;
+}
+handle.Close();
+
+handle = null;
+var getFolderFromPathAsync = Windows.Storage.StorageFolder.GetFolderFromPathAsync(folderPath);
+getFolderFromPathAsync.Completed += (s, e) => 
+{
+    handle = System.IO.WindowsRuntimeStorageExtensions.CreateSafeFileHandle(s.GetResults(), "Async.pdb", System.IO.FileMode.Open, System.IO.FileAccess.Read);
+};
+await Task.Delay(1000);
+if (handle is null)
+{
+    return 108;
+}
+handle.Close();
+
 return 100;
 
 static async Task<int> InvokeAddAsync(Class instance, int lhs, int rhs)
