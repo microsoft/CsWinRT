@@ -311,16 +311,13 @@ namespace WinRT
             }
 
             // Get instance for this thread
-            StringBuilder? nameBuilder = nameForTypeBuilderInstance ?? new StringBuilder();
+            StringBuilder? nameBuilder = nameForTypeBuilderInstance ??= new StringBuilder();
             nameBuilder.Clear();
             if (TryAppendTypeName(type, nameBuilder, flags))
             {
-                var name = nameBuilder.ToString();
-                nameForTypeBuilderInstance = nameBuilder;
-                return name;
+                return nameBuilder.ToString();
             }
 
-            nameForTypeBuilderInstance = nameBuilder;
             return string.Empty;
         }
 
