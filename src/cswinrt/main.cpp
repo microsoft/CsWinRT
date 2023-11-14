@@ -296,10 +296,11 @@ Where <spec> is one or more of:
                                     case category::interface_type:
                                         if (settings.netstandard_compat)
                                         {
+                                            write_static_abi_classes(w, type);
                                             write_abi_interface_netstandard(w, type);
                                         }
                                         else
-                                        {   
+                                        {
                                             write_static_abi_classes(w, type);
                                             write_abi_interface(w, type);
                                         }

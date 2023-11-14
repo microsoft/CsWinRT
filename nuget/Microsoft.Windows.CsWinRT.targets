@@ -205,6 +205,7 @@ $(CsWinRTInternalProjection)
 
     <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTResponseFile)')">
       <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="WinMDs" />
+      <UpToDateCheckInput Include="$(CsWinRTExe)" Set="WinMDs" />
       <UpToDateCheckBuilt Include="$(CsWinRTResponseFile)" Set="WinMDs" />
     </ItemGroup>
 

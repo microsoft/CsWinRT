@@ -102,15 +102,7 @@ namespace ABI.System.ComponentModel
 #endif
     unsafe struct PropertyChangedEventArgs
     {
-        private sealed class ActivationFactory : BaseActivationFactory
-        {
-            public ActivationFactory() : base("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs")
-            {
-            }
-
-            internal static ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory Instance = 
-                new ActivationFactory()._As<ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
-        }
+        private static ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory Instance = ActivationFactory.Get("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs");
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventArgs value)
         {
@@ -119,7 +111,7 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            return ActivationFactory.Instance.CreateInstance(value.PropertyName, null, out _);
+            return Instance.CreateInstance(value.PropertyName, null, out _);
         }
 
         public static ObjectReferenceValue CreateMarshaler2(global::System.ComponentModel.PropertyChangedEventArgs value)
@@ -129,7 +121,7 @@ namespace ABI.System.ComponentModel
                 return new ObjectReferenceValue();
             }
 
-            return ActivationFactory.Instance.CreateInstance(value.PropertyName);
+            return Instance.CreateInstance(value.PropertyName);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;

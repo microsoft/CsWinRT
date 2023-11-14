@@ -91,15 +91,7 @@ namespace ABI.System.ComponentModel
 #endif
     unsafe struct DataErrorsChangedEventArgs
     {
-        private sealed class ActivationFactory : BaseActivationFactory
-        {
-            public ActivationFactory() : base("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs")
-            {
-            }
-
-            internal static ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance =
-                new ActivationFactory()._As<ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory.Vftbl>();
-        }
+        private static ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance = ActivationFactory.Get("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs");
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.DataErrorsChangedEventArgs value)
         {
@@ -108,7 +100,7 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            return ActivationFactory.Instance.CreateInstance(value.PropertyName);
+            return Instance.CreateInstance(value.PropertyName);
         }
 
         public static ObjectReferenceValue CreateMarshaler2(global::System.ComponentModel.DataErrorsChangedEventArgs value)
@@ -118,7 +110,7 @@ namespace ABI.System.ComponentModel
                 return new ObjectReferenceValue();
             }
 
-            return ActivationFactory.Instance.CreateInstanceForMarshaling(value.PropertyName);
+            return Instance.CreateInstanceForMarshaling(value.PropertyName);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;

@@ -262,6 +262,18 @@ namespace WinRT
     {
         public IntPtr Vftbl;
     }
+    internal static partial class Context
+    {
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
+
+        public unsafe static IntPtr GetContextToken()
+        {
+            IntPtr contextToken;
+            Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
+            return contextToken;
+        }
+    }
 
     internal unsafe sealed class DllModule
     {
@@ -322,10 +334,10 @@ namespace WinRT
                 module = null;
                 return false;
             }
-            
+
             module = new DllModule(
-                fileName, 
-                moduleHandle, 
+                fileName,
+                moduleHandle,
                 getActivationFactory);
             return true;
         }
@@ -350,7 +362,7 @@ namespace WinRT
             }
         }
 
-        public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
+        public unsafe (FactoryObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             IntPtr instancePtr = IntPtr.Zero;
             try
@@ -361,7 +373,7 @@ namespace WinRT
                     int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IActivationFactoryVftbl>(instancePtr);
+                        var objRef = FactoryObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
                         return (objRef, hr);
                     }
                     else
@@ -408,28 +420,19 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe (IntPtr instancePtr, int hr) GetActivationFactory(IntPtr hstrRuntimeClassId)
+        public static unsafe (FactoryObjectReference<I> obj, int hr) GetActivationFactory<I>(string runtimeClassId, Guid iid)
         {
             var module = Instance; // Ensure COM is initialized
-            Guid iid = IActivationFactoryVftbl.IID;
-            IntPtr instancePtr;
-            int hr = Platform.RoGetActivationFactory(hstrRuntimeClassId, &iid, &instancePtr);
-            return (hr == 0 ? instancePtr : IntPtr.Zero, hr);
-        }
-
-        public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
-        {
             IntPtr instancePtr = IntPtr.Zero;
             try
             {
                 MarshalString.Pinnable __runtimeClassId = new(runtimeClassId);
                 fixed (void* ___runtimeClassId = __runtimeClassId)
                 {
-                    int hr;
-                    (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId));
+                    int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &iid, &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IActivationFactoryVftbl>(instancePtr);
+                        var objRef = FactoryObjectReference<I>.Attach(ref instancePtr);
                         return (objRef, hr);
                     }
                     else
@@ -450,48 +453,77 @@ namespace WinRT
         }
     }
 
-    internal class BaseActivationFactory
+    internal sealed class FactoryObjectReference<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        T> : IObjectReference
     {
-        private readonly ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
+        private readonly IntPtr _contextToken;
 
-        public ObjectReference<IActivationFactoryVftbl> Value { get => _IActivationFactory; }
-
-        public I AsInterface<I>() => _IActivationFactory.AsInterface<I>();
-
-        public BaseActivationFactory(string typeNamespace, string typeFullName)
+        public static FactoryObjectReference<T> Attach(ref IntPtr thisPtr)
         {
-            // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
-            int hr;
-            (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(typeFullName);
-            if (_IActivationFactory != null) { return; }
-
-            var moduleName = typeNamespace;
-            while (true)
+            if (thisPtr == IntPtr.Zero)
             {
-                DllModule module = null;
-                if (DllModule.TryLoad(moduleName + ".dll", out module))
-                {
-                    (_IActivationFactory, _) = module.GetActivationFactory(typeFullName);
-                    if (_IActivationFactory != null) { return; }
-                }
+                return null;
+            }
+            var obj = new FactoryObjectReference<T>(thisPtr);
+            thisPtr = IntPtr.Zero;
+            return obj;
+        }
 
-                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
-                if (lastSegment <= 0)
-                {
-                    Marshal.ThrowExceptionForHR(hr);
-                }
-                moduleName = moduleName.Remove(lastSegment);
+        internal FactoryObjectReference(IntPtr thisPtr) :
+            base(thisPtr)
+        {
+            if (!IsFreeThreaded(this))
+            {
+                _contextToken = Context.GetContextToken();
             }
         }
 
-#if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode",
-            Justification = "No members of the generic type are dynamically accessed in this code path.")]
-#endif
-        public unsafe ObjectReference<I> _ActivateInstance<I>()
+        internal FactoryObjectReference(IntPtr thisPtr, IntPtr contextToken)
+            : base(thisPtr)
+        {
+            _contextToken = contextToken;
+        }
+
+        public static new unsafe FactoryObjectReference<T> FromAbi(IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+            var obj = new FactoryObjectReference<T>(thisPtr);
+            obj.VftblIUnknown.AddRef(obj.ThisPtr);
+            return obj;
+        }
+
+        public bool IsObjectInContext()
+        {
+            return _contextToken == IntPtr.Zero || _contextToken == Context.GetContextToken();
+        }
+
+        // If we are free threaded, we do not need to keep track of context.
+        // This can either be if the object implements IAgileObject or the free threaded marshaler.
+        // We only check IAgileObject for now as the necessary code to check the
+        // free threaded marshaler is not exposed from WinRT.Runtime.
+        private unsafe static bool IsFreeThreaded(IObjectReference objRef)
+        {
+            if (objRef.TryAs(InterfaceIIDs.IAgileObject_IID, out var agilePtr) >= 0)
+            {
+                Marshal.Release(agilePtr);
+                return true;
+            }
+            return false;
+        }
+    }
+
+    internal static class IActivationFactoryMethods
+    {
+        public static unsafe ObjectReference<I> ActivateInstance<I>(IObjectReference obj)
         {
             IntPtr instancePtr;
-            Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, &instancePtr));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)obj.ThisPtr)[6](obj.ThisPtr, &instancePtr));
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
@@ -501,33 +533,99 @@ namespace WinRT
                 MarshalInspectable<object>.DisposeAbi(instancePtr);
             }
         }
-
-#if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode",
-            Justification = "No members of the generic type are dynamically accessed in this code path.")]
-#endif
-        public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
-        public IObjectReference _As(Guid iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid);
     }
 
-    internal sealed class ActivationFactory<T> : BaseActivationFactory
+    internal static class ActivationFactory
     {
-        public ActivationFactory() : base(typeof(T).Namespace, typeof(T).FullName) { }
+        public static FactoryObjectReference<IActivationFactoryVftbl> Get(string typeName)
+        {
+            // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
+            int hr;
+            FactoryObjectReference<IActivationFactoryVftbl> factory;
+            (factory, hr) = WinrtModule.GetActivationFactory<IActivationFactoryVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
+            if (factory != null)
+            {
+                return factory;
+            }
 
-        static readonly ActivationFactory<T> _factory = new ActivationFactory<T>();
-        public static new I AsInterface<I>() => _factory.Value.AsInterface<I>();
-        public static ObjectReference<I> As<I>() => _factory._As<I>();
-        public static IObjectReference As(Guid iid) => _factory._As(iid);
+            var moduleName = typeName;
+            while (true)
+            {
+                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
+                if (lastSegment <= 0)
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+                moduleName = moduleName.Remove(lastSegment);
+
+                DllModule module = null;
+                if (DllModule.TryLoad(moduleName + ".dll", out module))
+                {
+                    (factory, hr) = module.GetActivationFactory(typeName);
+                    if (factory != null)
+                    {
+                        return factory;
+                    }
+                }
+            }
+        }
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091:RequiresUnreferencedCode", 
-            Justification = "No members of the generic type are dynamically accessed in this code path.")]
+        public static FactoryObjectReference<I> Get<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+#else
+        public static ObjectReference<I> Get<
 #endif
-        public static ObjectReference<I> ActivateInstance<
+        I>(string typeName, Guid iid)
+        {
+            // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
+            int hr;
+            FactoryObjectReference<I> factory;
+            (factory, hr) = WinrtModule.GetActivationFactory<I>(typeName, iid);
+            if (factory != null)
+            {
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.None)]
+                return factory;
+#else
+                using (factory)
+                {
+                    return factory.As<I>(iid);
+                }
 #endif
-            I>() => _factory._ActivateInstance<I>();
+            }
+
+            var moduleName = typeName;
+            while (true)
+            {
+                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
+                if (lastSegment <= 0)
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+                moduleName = moduleName.Remove(lastSegment);
+
+                DllModule module = null;
+                if (DllModule.TryLoad(moduleName + ".dll", out module))
+                {
+                    FactoryObjectReference<IActivationFactoryVftbl> activationFactory;
+                    (activationFactory, hr) = module.GetActivationFactory(typeName);
+                    if (activationFactory != null)
+                    {
+                        using (activationFactory)
+                        {
+#if NET
+                            if (activationFactory.TryAs(iid, out IntPtr iidPtr) >= 0)
+                            {
+                                return FactoryObjectReference<I>.Attach(ref iidPtr);
+                            }
+#else
+                            return activationFactory.As<I>(iid);
+#endif
+                        }
+                    }
+                }
+            }
+        }
     }
 
     internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
@@ -1064,9 +1162,25 @@ namespace WinRT
 
     internal static class InterfaceIIDs
     {
+#if NET
+        internal static readonly Guid IInspectable_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xE0, 0xE2, 0x86, 0xAF, 0x2D, 0xB1, 0x6A, 0x4C, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90 }));
+        internal static readonly Guid IUnknown_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
+        internal static readonly Guid IWeakReferenceSource_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
+        internal static readonly Guid IWeakReference_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x37, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
+        internal static readonly Guid IActivationFactory_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x35, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
+        internal static readonly Guid IAgileObject_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x94, 0x2B, 0xEA, 0x94, 0xCC, 0xE9, 0xE0, 0x49, 0xC0, 0xFF, 0xEE, 0x64, 0xCA, 0x8F, 0x5B, 0x90 }));
+        internal static readonly Guid IMarshal_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
+        internal static readonly Guid IContextCallback_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xDA, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
+#else
         internal static readonly Guid IInspectable_IID = new(0xAF86E2E0, 0xB12D, 0x4c6a, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90);
         internal static readonly Guid IUnknown_IID = new(0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
         internal static readonly Guid IWeakReferenceSource_IID = new(0x00000038, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IWeakReference_IID = new(0x00000037, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IActivationFactory_IID = new (0x00000035, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IAgileObject_IID = new(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90);
+        internal static readonly Guid IMarshal_IID = new(0x00000003, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IContextCallback_IID = new(0x000001da, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+#endif
     }
 }
 

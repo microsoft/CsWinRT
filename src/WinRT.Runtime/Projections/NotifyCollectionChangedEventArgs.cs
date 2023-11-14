@@ -195,15 +195,7 @@ namespace ABI.System.Collections.Specialized
 #endif
     struct NotifyCollectionChangedEventArgs
     {
-        private sealed class ActivationFactory : BaseActivationFactory
-        {
-            public ActivationFactory() : base("Microsoft.UI.Xaml.Interop", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
-            {
-            }
-
-            internal static WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = 
-                new ActivationFactory()._As<WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory.Vftbl>();
-        }
+        private static WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = ActivationFactory.Get("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs");
 
         public static IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
         {
@@ -212,7 +204,7 @@ namespace ABI.System.Collections.Specialized
                 return null;
             }
 
-            return ActivationFactory.Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex, null, out _);
+            return Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex, null, out _);
         }
 
         public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
@@ -222,7 +214,7 @@ namespace ABI.System.Collections.Specialized
                 return new ObjectReferenceValue();
             }
 
-            return ActivationFactory.Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex);
+            return Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
