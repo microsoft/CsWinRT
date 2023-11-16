@@ -300,17 +300,24 @@ namespace WinRT
         /// </summary>
         private static readonly ThreadLocal<Stack<VisitedType>> VisitedTypes = new ThreadLocal<Stack<VisitedType>>(() => new Stack<VisitedType>());
 
+        [ThreadStatic]
+        private static StringBuilder? nameForTypeBuilderInstance;
+
         public static string GetNameForType(Type type, TypeNameGenerationFlags flags)
         {
             if (type is null)
             {
                 return string.Empty;
             }
-            StringBuilder nameBuilder = new StringBuilder();
+
+            // Get instance for this thread
+            StringBuilder? nameBuilder = nameForTypeBuilderInstance ??= new StringBuilder();
+            nameBuilder.Clear();
             if (TryAppendTypeName(type, nameBuilder, flags))
             {
                 return nameBuilder.ToString();
             }
+
             return string.Empty;
         }
 
