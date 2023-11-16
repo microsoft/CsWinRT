@@ -56,7 +56,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <!--Prevent NETSDK1130 errors from winmd references-->
       <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.Extension)' == '.winmd'" />
       <ReferencePathWithRefAssemblies Remove="@(CsWinRTRemovedReferences)" 
-        Condition="'%(CsWinRTRemovedReferences.Filename)%(CsWinRTRemovedReferences.Extension)' == '%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)'" />    
+        Condition="'%(CsWinRTRemovedReferences.Filename)%(CsWinRTRemovedReferences.Extension)' == '%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)'" />
       <!--Do not publish projection source winmds, but do include implementation dlls -->
       <ReferenceCopyLocalPaths Remove="@(CsWinRTRemovedReferences)" />
       <ReferenceCopyLocalPaths Include="@(CsWinRTRemovedReferences->'%(RootDir)%(Directory)%(DestinationSubDirectory)%(Implementation)')" 
