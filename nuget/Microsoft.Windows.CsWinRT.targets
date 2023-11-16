@@ -56,9 +56,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <!--Prevent NETSDK1130 errors from winmd references-->
       <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.Extension)' == '.winmd'" />
       <ReferencePathWithRefAssemblies Remove="@(CsWinRTRemovedReferences)" 
-        Condition="'%(CsWinRTRemovedReferences.Filename)%(CsWinRTRemovedReferences.Extension)' == '%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)'" />
-      <!--Do not publish projection source winmds -->
+        Condition="'%(CsWinRTRemovedReferences.Filename)%(CsWinRTRemovedReferences.Extension)' == '%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)'" />    
+      <!--Do not publish projection source winmds, but do include implementation dlls -->
       <ReferenceCopyLocalPaths Remove="@(CsWinRTRemovedReferences)" />
+      <ReferenceCopyLocalPaths Include="@(CsWinRTRemovedReferences->'%(RootDir)%(Directory)%(DestinationSubDirectory)%(Implementation)')" 
+                               Condition="'%(CsWinRTRemovedReferences.Implementation)' != '' AND Exists('%(CsWinRTRemovedReferences.RootDir)%(CsWinRTRemovedReferences.Directory)%(CsWinRTRemovedReferences.DestinationSubDirectory)%(CsWinRTRemovedReferences.Implementation)')" />
       <!--Remove winmd references from deps.json to prevent CLR failing unit test execution-->
       <ReferenceDependencyPaths Remove="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'"/>
     </ItemGroup>
