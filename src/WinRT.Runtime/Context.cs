@@ -7,11 +7,8 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    static class Context
+    static partial class Context
     {
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
-
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
 
@@ -22,13 +19,6 @@ namespace WinRT
             Guid riid = ABI.WinRT.Interop.IContextCallback.IID;
             Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
             return contextCallbackPtr;
-        }
-
-        public unsafe static IntPtr GetContextToken()
-        {
-            IntPtr contextToken;
-            Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
-            return contextToken;
         }
 
         // Calls the given callback in the right context.

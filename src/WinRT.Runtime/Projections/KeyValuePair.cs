@@ -131,8 +131,8 @@ namespace ABI.System.Collections.Generic
             public global::System.Delegate get_Key_0;
             public global::System.Delegate get_Value_1;
             public static Guid PIID = GuidGenerator.CreateIID(typeof(KeyValuePair<K, V>));
-            private static readonly Type get_Key_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType.MakeByRefType(), typeof(int) });
-            private static readonly Type get_Value_1_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type get_Key_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type get_Value_1_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {

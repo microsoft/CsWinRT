@@ -4,7 +4,7 @@
     <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
     <RootNamespace>WinRT</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>9</LangVersion>
+    <LangVersion>11.0</LangVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Authors>Microsoft Corporation</Authors>
@@ -23,6 +23,7 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsTrimmable>true</IsTrimmable>
+    <DefineConstants>$(DefineConstants);CsWinRT_LANG_11_FEATURES</DefineConstants>
   </PropertyGroup>
     
   <ItemGroup>
@@ -51,12 +52,12 @@
     <RunApiCompatForSrc>true</RunApiCompatForSrc>
     <RunMatchingRefApiCompat>true</RunMatchingRefApiCompat>
     <ApiCompatEnforceOptionalRules>true</ApiCompatEnforceOptionalRules>
-    <CsWinRTApiCompatVersion>1.0.1</CsWinRTApiCompatVersion>
+    <CsWinRTApiCompatVersion>2.0.0</CsWinRTApiCompatVersion>
     <ApiCompatArgs>$(ApiCompatArgs) --allow-default-interface-methods</ApiCompatArgs>
     <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --allow-default-interface-methods</MatchingRefApiCompatArgs>
   </PropertyGroup> 
   
-  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" PrivateAssets="All" />
     <PackageDownload Include="Microsoft.Windows.CsWinRT" Version="[$(CsWinRTApiCompatVersion)]" />
   </ItemGroup> 
@@ -76,10 +77,10 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <Target Name="_ResolveResolvedMatchingContract" BeforeTargets="ValidateApiCompatForSrc;RunMatchingRefApiCompat" Condition="'$(TargetFramework)' == 'net5.0'">
+  <Target Name="_ResolveResolvedMatchingContract" BeforeTargets="ValidateApiCompatForSrc;RunMatchingRefApiCompat" Condition="'$(TargetFramework)' == 'net6.0'">
     <ItemGroup>
       <_ReferencePathDirectories Include="@(ReferencePath -> '%(RootDir)%(Directory)')" />
-      <ResolvedMatchingContract Include="$(NuGetPackageRoot)\Microsoft.Windows.CsWinRT\$(CsWinRTApiCompatVersion)\lib\net5.0\$(TargetFileName)">
+      <ResolvedMatchingContract Include="$(NuGetPackageRoot)\Microsoft.Windows.CsWinRT\$(CsWinRTApiCompatVersion)\lib\net6.0\$(TargetFileName)">
         <DependencyPaths>@(_ReferencePathDirectories-&gt;Distinct(), ',')</DependencyPaths>
       </ResolvedMatchingContract>
     </ItemGroup>

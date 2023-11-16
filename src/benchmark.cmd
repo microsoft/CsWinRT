@@ -1,3 +1,7 @@
+set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
+set DOTNET_ROOT(x86)=%LocalAppData%\Microsoft\dotnet\x86
+set path=%DOTNET_ROOT%;%DOTNET_ROOT(x86)%;%path%
+
 nuget restore TestWinRT\Test.sln
 nuget restore cswinrt.sln
 msbuild Benchmarks\Benchmarks.csproj -t:restore -t:build /p:platform=x64 /p:configuration=release /p:solutiondir=%~dp0 /p:IsDotnetBuild=false

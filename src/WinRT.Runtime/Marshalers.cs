@@ -93,7 +93,7 @@ namespace WinRT
                 }
                 IntPtr hstring;
                 Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
-                    (char*)Unsafe.AsPointer(ref Unsafe.AsRef(in GetPinnableReference())),
+                    (ushort*)Unsafe.AsPointer(ref Unsafe.AsRef(in GetPinnableReference())),
                     _value.Length,
                     (IntPtr*)Unsafe.AsPointer(ref _header),
                     &hstring));
@@ -133,7 +133,7 @@ namespace WinRT
                 Debug.Assert(_header == IntPtr.Zero);
                 _header = Marshal.AllocHGlobal(Unsafe.SizeOf<HSTRING_HEADER>());
                 Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
-                    chars, value.Length, (IntPtr*)_header, &hstring));
+                    (ushort*)chars, value.Length, (IntPtr*)_header, &hstring));
                 return hstring;
             }
         }
@@ -178,8 +178,11 @@ namespace WinRT
                 return IntPtr.Zero;
             }
             IntPtr handle;
-            Marshal.ThrowExceptionForHR(
-                Platform.WindowsCreateString(value, value.Length, &handle));
+            fixed (char* lpValue = value)
+            {
+                Marshal.ThrowExceptionForHR(
+                    Platform.WindowsCreateString((ushort*)lpValue, value.Length, &handle));
+            }
             return handle;
         }
 
@@ -1519,13 +1522,24 @@ namespace WinRT
             }
             else if (type.IsValueType)
             {
-                AbiType = type.FindHelperType();
-                if (AbiType != null)
+                if (type == typeof(bool))
                 {
-                    // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
-                    if (AbiType.GetMethod("FromAbi", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static) == null)
+                    AbiType = typeof(byte);
+                }
+                else if (type == typeof(char))
+                {
+                    AbiType = typeof(ushort);
+                }
+                else
+                {
+                    AbiType = type.FindHelperType();
+                    if (AbiType != null)
                     {
-                        AbiType = null;
+                        // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
+                        if (AbiType.GetMethod("FromAbi", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static) == null)
+                        {
+                            AbiType = null;
+                        }
                     }
                 }
 

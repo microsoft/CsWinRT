@@ -227,14 +227,14 @@ namespace GuidPatch
                     case StringStep(string str):
                         {
                             byte[] segmentBytes = Encoding.UTF8.GetBytes(str);
-                            var staticDataField = new FieldDefinition($"<SignatureDataPart={i}>", FieldAttributes.Private | FieldAttributes.InitOnly | FieldAttributes.Static | FieldAttributes.HasFieldRVA, CecilExtensions.GetOrCreateDataBlockType(implementationDetailsType, segmentBytes.Length))
+                            var staticDataField = new FieldDefinition($"<IIDDataField>{describedType.FullName}<SignatureDataPart={i}>", FieldAttributes.Private | FieldAttributes.InitOnly | FieldAttributes.Static | FieldAttributes.HasFieldRVA, CecilExtensions.GetOrCreateDataBlockType(implementationDetailsType, segmentBytes.Length))
                             {
                                 InitialValue = segmentBytes
                             };
-                            cacheType.Fields.Add(staticDataField);
+                            implementationDetailsType.Fields.Add(staticDataField);
 
                             // Load a ReadOnlySpan<byte> of the signature segment into the local for this step.
-                            il.Emit(OpCodes.Ldsflda, new FieldReference(staticDataField.Name, staticDataField.FieldType, selfInstantiatedCacheType));
+                            il.Emit(OpCodes.Ldsflda, new FieldReference(staticDataField.Name, staticDataField.FieldType, implementationDetailsType));
                             il.Emit(OpCodes.Ldc_I4, segmentBytes.Length);
                             il.Emit(OpCodes.Newobj, readOnlySpanOfBytePtrCtor);
                             il.Emit(OpCodes.Stloc, signatureParts[i]);
