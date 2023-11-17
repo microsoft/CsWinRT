@@ -72,6 +72,22 @@ namespace Generator
             return qualifiedString.StartsWith("global::") ? qualifiedString[8..] : qualifiedString;
         }
 
+        private static string ToVtableLookupString(ISymbol symbol)
+        {
+            if (symbol is INamedTypeSymbol namedTypeSymbol && 
+                namedTypeSymbol.TypeArguments.Length != 0)
+            {
+                return $$"""{{symbol.ContainingNamespace?.ToDisplayString()}}.{{symbol.MetadataName}}[{{string.Join(",", namedTypeSymbol.TypeArguments.Select(ToVtableLookupString))}}]""";
+            }
+            else
+            {
+                var symbolDisplayString = new SymbolDisplayFormat(
+                    globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
+                    typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
+                return symbol.ToDisplayString(symbolDisplayString);
+            }
+        }
+
         internal static VtableAttribute GetVtableAttributeToAdd(ITypeSymbol symbol, Func<ISymbol, bool> isWinRTType, IAssemblySymbol assemblySymbol, bool isAuthoring, string authoringDefaultInterface = "")
         {
             if (GeneratorHelper.HasNonInstantiatedGeneric(symbol) || GeneratorHelper.HasPrivateclass(symbol))
@@ -132,6 +148,7 @@ namespace Generator
             var typeName = ToFullyQualifiedString(symbol);
             bool isGlobalNamespace = symbol.ContainingNamespace == null || symbol.ContainingNamespace.IsGlobalNamespace;
             var @namespace = symbol.ContainingNamespace?.ToDisplayString();
+
             if (!isGlobalNamespace)
             {
                 typeName = typeName[(@namespace.Length + 1)..];
@@ -141,6 +158,7 @@ namespace Generator
                 isAuthoring ? "ABI.Impl." + @namespace : @namespace,
                 isGlobalNamespace,
                 typeName,
+                ToVtableLookupString(symbol),
                 interfacesToAddToVtable.ToImmutableArray(),
                 genericInterfacesToAddToVtable.ToImmutableArray(),
                 symbol is IArrayTypeSymbol,
@@ -711,15 +729,14 @@ namespace Generator
 
                                             private static ComWrappers.ComInterfaceEntry[] LookupVtableEntries(Type type)
                                             {
+                                                string typeName = type.ToString();
                                     """);
             }
 
             foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet())
             {
-                string className = vtableAttribute.IsGlobalNamespace ? 
-                    vtableAttribute.ClassName : $"global::{vtableAttribute.Namespace}.{vtableAttribute.ClassName}";
                 source.AppendLine($$"""
-                                if (type == typeof({{className}}))
+                                if (typeName == "{{vtableAttribute.VTableLookupClassName}}")
                                 {
                                     {{GenerateVtableEntry(vtableAttribute)}}
                                 }
@@ -753,6 +770,7 @@ namespace Generator
         string Namespace,
         bool IsGlobalNamespace,
         string ClassName,
+        string VTableLookupClassName,
         EquatableArray<string> Interfaces,
         EquatableArray<GenericInterface> GenericInterfaces,
         bool IsArray,
