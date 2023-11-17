@@ -736,7 +736,7 @@ namespace Generator
             foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet())
             {
                 source.AppendLine($$"""
-                                if (typeName == "{{vtableAttribute.VTableLookupClassName}}")
+                                if (typeName == "{{vtableAttribute.VtableLookupClassName}}")
                                 {
                                     {{GenerateVtableEntry(vtableAttribute)}}
                                 }
@@ -770,7 +770,7 @@ namespace Generator
         string Namespace,
         bool IsGlobalNamespace,
         string ClassName,
-        string VTableLookupClassName,
+        string VtableLookupClassName,
         EquatableArray<string> Interfaces,
         EquatableArray<GenericInterface> GenericInterfaces,
         bool IsArray,
