@@ -4,6 +4,7 @@ using WinRT.Interop;
 using WinRT;
 using System.Collections.Generic;
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
@@ -124,6 +125,24 @@ ccw.TryAs<IUnknownVftbl>(IID_IEnumerableIRequiredTwo, out var enumerableRequired
 if (enumerableRequiredTwo == null)
 {
     return 115;
+}
+
+var managedWarningClassList = new List<ManagedWarningClass>();
+instance.BindableIterableProperty = managedWarningClassList;
+
+// These scenarios aren't supported today on AOT, but testing to ensure they
+// compile without issues.  They should still work fine outside of AOT.
+try
+{
+    TestClass.TestNestedClass();
+    TestClass.TestGenericList<bool>();
+}
+catch(Exception)
+{
+    if (RuntimeFeature.IsDynamicCodeCompiled)
+    {
+        throw;
+    }
 }
 
 return 100;
@@ -300,5 +319,28 @@ sealed partial class ManagedDerivedList : IList<TestComponent.Derived>
     IEnumerator IEnumerable.GetEnumerator()
     {
         throw new NotImplementedException();
+    }
+}
+
+sealed class TestClass
+{
+    public static void TestNestedClass()
+    {
+        var instance = new Class();
+        var nestedClassList = new List<NestedClass>();
+        instance.BindableIterableProperty = nestedClassList;
+    }
+
+    public static void TestGenericList<T>()
+    {
+        var instance = new Class();
+        var nestedClassList = new List<T>();
+        instance.BindableIterableProperty = nestedClassList;
+    }
+
+    sealed class NestedClass : IProperties2
+    {
+        private int _value;
+        public int ReadWriteProperty { get => _value; set => _value = value; }
     }
 }

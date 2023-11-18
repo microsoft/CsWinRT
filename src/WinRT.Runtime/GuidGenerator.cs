@@ -88,18 +88,26 @@ namespace WinRT
                             }
                             if (!type.IsPrimitive)
                             {
-                                var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignature(fi.FieldType));
-                                return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
+                                var winrtTypeAttribute = type.GetCustomAttribute<WindowsRuntimeTypeAttribute>();
+                                if (winrtTypeAttribute != null && !string.IsNullOrEmpty(winrtTypeAttribute.GuidSignature))
+                                {
+                                    return winrtTypeAttribute.GuidSignature;
+                                }
+                                else
+                                {
+                                    var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignature(fi.FieldType));
+                                    return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
+                                }
                             }
                             throw new InvalidOperationException("unsupported value type");
                         }
                 }
             }
 
-            // For authoring interfaces, we use the metadata type to get the guid.
+            // For authoring interfaces, we can use the metadata type or the helper type to get the guid.
             // For built-in system interfaces that are custom type mapped, we use the helper type to get the guid.
             // For others, either the type itself or the helper type has the same guid and can be used.
-            type = type.IsInterface ? (type.GetAuthoringMetadataType() ?? helperType ?? type) : type;
+            type = type.IsInterface ? (helperType ?? type) : type;
 
             if (type.IsGenericType)
             {
@@ -158,20 +166,28 @@ namespace WinRT
             {
                 return new Guid(sig);
             }
+            else
+            {
+                return CreateIIDForGenericType(sig);
+            }
+        }
+
+        internal static Guid CreateIIDForGenericType(string signature)
+        {
 #if !NET
-            var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sig)).ToArray();
+            var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(signature)).ToArray();
 
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {
                 return encode_guid(sha.ComputeHash(data));
             }
 #else
-            var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(sig.Length);
+            var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(signature.Length);
 
             var data = new byte[16 /* Number of bytes in a GUID */ + maxBytes];
             Span<byte> dataSpan = data;
             wrt_pinterface_namespace.TryWriteBytes(dataSpan);
-            var numBytes = UTF8Encoding.UTF8.GetBytes(sig, dataSpan[16..]);
+            var numBytes = UTF8Encoding.UTF8.GetBytes(signature, dataSpan[16..]);
             data = data[..(16 + numBytes)];
 
             return encode_guid(SHA1.HashData(data));

@@ -167,6 +167,7 @@ namespace Generator
                 if (!context.ShouldGenerateWinMDOnly())
                 {
                     GenerateSources();
+                    writer.GenerateWinRTExposedClassAttributes(context);
                 }
             }
             catch (Exception e)

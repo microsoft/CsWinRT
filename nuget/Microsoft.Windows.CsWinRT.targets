@@ -15,8 +15,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
     <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
-    <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess> 
+    <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess>
+    <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' == '' and $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">true</CsWinRTAotOptimizerEnabled>
+    <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' != 'true'">false</CsWinRTAotOptimizerEnabled>
   </PropertyGroup>
+
+  <ItemGroup>
+    <CompilerVisibleProperty Include="CsWinRTAotOptimizerEnabled" />
+  </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
   

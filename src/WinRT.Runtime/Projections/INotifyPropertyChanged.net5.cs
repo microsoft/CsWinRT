@@ -7,9 +7,21 @@ using WinRT;
 
 namespace ABI.System.ComponentModel
 {
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class INotifyPropertyChangedMethods
+    {
+        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x01, 0x76, 0xB1, 0x90, 0x65, 0xB0, 0x6E, 0x58, 0x83, 0xD9, 0x9A, 0xDC, 0x3A, 0x69, 0x52, 0x84 }));
+
+        public static IntPtr AbiToProjectionVftablePtr => INotifyPropertyChanged.Vftbl.AbiToProjectionVftablePtr;
+    }
+
     [DynamicInterfaceCastableImplementation]
     [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
-    unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
+    internal unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
@@ -18,7 +30,7 @@ namespace ABI.System.ComponentModel
             internal IInspectable.Vftbl IInspectableVftbl;
 
             private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_PropertyChanged_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_PropertyChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_PropertyChanged_0; set => _add_PropertyChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> add_PropertyChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_add_PropertyChanged_0; set => _add_PropertyChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)value; }
             private delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_PropertyChanged_1;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_PropertyChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_PropertyChanged_1; set => _remove_PropertyChanged_1 = (delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
 

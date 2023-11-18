@@ -3,8 +3,10 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace WinRT
 {
@@ -120,6 +122,13 @@ namespace WinRT
 #endif
             this Type helperType)
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return null;
+            }
+#endif
+
             Type vftblType = helperType.GetNestedType("Vftbl");
             if (vftblType is null)
             {
@@ -205,19 +214,49 @@ namespace WinRT
             return type.IsClass && !type.IsArray ? type.GetAuthoringMetadataType() : null;
         }
 
-        private readonly static ConcurrentDictionary<Type, Type> AuthoringMetadataTypeCache = new ConcurrentDictionary<Type, Type>();
+        private readonly static ConcurrentDictionary<Type, Type> AuthoringMetadataTypeCache = new();
+        private readonly static List<Func<Type, Type>> AuthoringMetadaTypeLookup = new();
+
+        internal static void RegisterAuthoringMetadataTypeLookup(Func<Type, Type> authoringMetadataTypeLookup)
+        {
+            AuthoringMetadaTypeLookup.Add(authoringMetadataTypeLookup);
+        }
 
         internal static Type GetAuthoringMetadataType(this Type type)
         {
             return AuthoringMetadataTypeCache.GetOrAdd(type,
-#if NET
-                [RequiresUnreferencedCodeAttribute("If authoring a WinRT component in C# using C#/WinRT authoring support, it might require ABI helper types that might get trimmed. Avoid marking such components trimmable or ensure types don't get trimmed from it.")]
-#endif
                 (type) =>
                 {
-                    var ccwTypeName = $"ABI.Impl.{type.FullName}";
-                    return type.Assembly.GetType(ccwTypeName, false);
+                    var lookupFunc = AuthoringMetadaTypeLookup.Find(lookupFunc => lookupFunc(type) != null);
+                    if (lookupFunc != null)
+                    {
+                        return lookupFunc(type);
+                    }
+
+#if NET
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        return null;
+                    }
+                    else
+#endif
+                    {
+                        // Fallback code path for back compat with previously generated projections
+                        // running without AOT.
+                        return GetAuthoringMetadataTypeFallback(type);
+                    }
                 });
+        }
+
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+            Justification = "This is a fallback for compat purposes with existing projections.  " +
+            "Applications making use of updated projections won't hit this code path.")]
+#endif
+        private static Type GetAuthoringMetadataTypeFallback(Type type)
+        {
+            var ccwTypeName = $"ABI.Impl.{type.FullName}";
+            return type.Assembly.GetType(ccwTypeName, false);
         }
     }
 }

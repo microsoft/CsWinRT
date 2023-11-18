@@ -130,6 +130,7 @@ namespace Generator
         public string DefaultInterface;
         public string StaticInterface;
         public bool IsSynthesizedInterface;
+        public bool IsComponentType;
 
         public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions = new Dictionary<ISymbol, List<MethodDefinitionHandle>>();
         public Dictionary<ISymbol, List<EntityHandle>> MethodReferences = new Dictionary<ISymbol, List<EntityHandle>>();
@@ -149,11 +150,12 @@ namespace Generator
             IsSynthesizedInterface = true;
         }
 
-        public TypeDeclaration(ISymbol node)
+        public TypeDeclaration(ISymbol node, bool isComponentType = false)
         {
             Node = node;
             Handle = default;
             IsSynthesizedInterface = false;
+            IsComponentType = isComponentType;
         }
 
         public override string ToString()
@@ -1717,7 +1719,7 @@ namespace Generator
             }
 
             Logger.Log("defining delegate " + symbol.Name);
-            currentTypeDeclaration = new TypeDeclaration(symbol);
+            currentTypeDeclaration = new TypeDeclaration(symbol, true);
 
             base.VisitDelegateDeclaration(node);
             CheckAndMarkSymbolForAttributes(symbol);
@@ -1878,7 +1880,7 @@ namespace Generator
 
             Logger.Log("defining type: " + type.TypeKind + " " + type.ToString());
 
-            var typeDeclaration = new TypeDeclaration(type);
+            var typeDeclaration = new TypeDeclaration(type, true);
             currentTypeDeclaration = typeDeclaration;
 
             if (type.TypeKind == TypeKind.Class)
@@ -2635,6 +2637,52 @@ namespace Generator
             }
         }
 
+        public void GenerateWinRTExposedClassAttributes(GeneratorExecutionContext context)
+        {
+            static bool IsWinRTType(ISymbol symbol)
+            {
+                if (symbol is INamedTypeSymbol namedType)
+                {
+                    if (namedType.TypeKind == TypeKind.Interface)
+                    {
+                        // Interfaces which are allowed to be implemented on authored types but
+                        // aren't WinRT interfaces.
+                        return !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(namedType));
+                    }
+
+                    return namedType.SpecialType != SpecialType.System_Object &&
+                           namedType.SpecialType != SpecialType.System_Enum &&
+                           namedType.SpecialType != SpecialType.System_ValueType &&
+                           namedType.SpecialType != SpecialType.System_Delegate &&
+                           namedType.SpecialType != SpecialType.System_MulticastDelegate;
+                }
+
+                // In an authoring component, diagnostics prevents you from using non-WinRT types
+                // by the time we get to here.
+                return true;
+            }
+
+            List<VtableAttribute> vtableAttributesToAdd = new();
+            foreach (var typeDeclaration in typeDefinitionMapping.Values)
+            {
+                if (typeDeclaration.IsComponentType && 
+                    typeDeclaration.Node is INamedTypeSymbol symbol && 
+                    symbol.TypeKind == TypeKind.Class && 
+                    !symbol.IsStatic)
+                {
+                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, context.Compilation.Assembly, true, typeDeclaration.DefaultInterface));
+                }
+            }
+
+            if (vtableAttributesToAdd.Any())
+            {
+                WinRTAotSourceGenerator.GenerateVtableAttributes(context.AddSource, vtableAttributesToAdd.ToImmutableArray());
+                WinRTAotSourceGenerator.GenerateCCWForGenericInstantiation(
+                    context.AddSource,
+                    vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).ToImmutableArray());
+            }
+        }
+
         public bool IsPublic(ISymbol type)
         {
             return type.DeclaredAccessibility == Accessibility.Public ||
@@ -2658,7 +2706,7 @@ namespace Generator
             }
         }
 
-        public string QualifiedName(string @namespace, string identifier)
+        public static string QualifiedName(string @namespace, string identifier)
         {
             if (string.IsNullOrEmpty(@namespace))
             {
@@ -2681,7 +2729,7 @@ namespace Generator
             return name;
         }
 
-        public string QualifiedName(ISymbol symbol, bool includeGenerics = false)
+        public static string QualifiedName(ISymbol symbol, bool includeGenerics = false)
         {
             return QualifiedName(symbol.ContainingNamespace.ToString(), GetGenericName(symbol, includeGenerics));
         }

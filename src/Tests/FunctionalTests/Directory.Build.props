@@ -1,0 +1,18 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" >
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../../'))" />
+
+  <PropertyGroup>
+    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsTrimmable>true</IsTrimmable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
+    <IsAotCompatible>true</IsAotCompatible>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+ 
+</Project>

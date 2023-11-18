@@ -3,8 +3,8 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -54,6 +54,61 @@ namespace ABI.Windows.Foundation
             return 0;
         }
     }
+
+    internal static class BoxedValueIReferenceImpl<T, TAbi> where TAbi : unmanaged
+    {
+        public static IntPtr AbiToProjectionVftablePtr;
+        private readonly static Nullable_Delegates.GetValueDelegateAbi GetValue;
+
+        static unsafe BoxedValueIReferenceImpl()
+        {
+            if (typeof(T) == typeof(TAbi))
+            {
+                GetValue = Do_Abi_get_Value_0_Blittable;
+            }
+            else
+            {
+                GetValue = Do_Abi_get_Value_0;
+            }
+
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(BoxedValueIReferenceImpl<T, TAbi>), sizeof(IInspectable.Vftbl) + sizeof(IntPtr));
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+            ((IntPtr*)AbiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(GetValue);
+        }
+
+        private static unsafe int Do_Abi_get_Value_0(void* thisPtr, void* __return_value__)
+        {
+            *(TAbi*)__return_value__ = default;
+
+            try
+            {
+                T ____return_value__ = (T)global::WinRT.ComWrappersSupport.FindObject<object>(new IntPtr(thisPtr));
+                *(TAbi*)__return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        private static unsafe int Do_Abi_get_Value_0_Blittable(void* thisPtr, void* __return_value__)
+        {
+            *(TAbi*)__return_value__ = default;
+
+            try
+            {
+                *(TAbi*)__return_value__ = (TAbi)global::WinRT.ComWrappersSupport.FindObject<object>(new IntPtr(thisPtr));
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+    }
 }
 
 namespace ABI.System
@@ -72,7 +127,7 @@ namespace ABI.System
             return value is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(value, PIID);
         }
 
-        public static ObjectReferenceValue CreateMarshaler2(object value) => 
+        public static ObjectReferenceValue CreateMarshaler2(object value) =>
             ComWrappersSupport.CreateCCWForObjectForMarshaling(value, PIID);
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
@@ -112,7 +167,7 @@ namespace ABI.System
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate get_Value_0;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
+            public static Guid PIID = Nullable<T>.PIID;
             public static readonly global::System.Type get_Value_0_Type = Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
@@ -124,7 +179,7 @@ namespace ABI.System
             }
         }
 
-        public static Guid PIID = Vftbl.PIID;
+        public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
 
         public static implicit operator Nullable<T>(IObjectReference obj) => (obj != null) ? new Nullable<T>(obj) : null;
         public static implicit operator Nullable<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable<T>(obj) : null;
@@ -1562,56 +1617,106 @@ namespace ABI.System
         }
     }
 
+    [Guid("25230F05-B49C-57EE-8961-5373D98E1AB1")]
+    internal static class Nullable_EventHandler
+    {
+        internal static Guid IID = new(0x25230F05, 0xB49C, 0x57EE, 0x89, 0x61, 0x53, 0x73, 0xD9, 0x8E, 0x1A, 0xB1);
+
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+
+#if !NET
+        private readonly static Nullable_Delegates.GetValueDelegate _Get_Value_0;
+#endif
+
+        unsafe static Nullable_EventHandler()
+        {
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Nullable_EventHandler), sizeof(IInspectable.Vftbl) + sizeof(IntPtr));
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+#if !NET
+            ((IntPtr*)AbiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(_Get_Value_0 = Do_Abi_get_Value_0);
+#else
+            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_get_Value_0;
+#endif
+        }
+
+#if NET
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+        private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, IntPtr* __return_value__)
+        {
+            global::System.EventHandler ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = global::WinRT.ComWrappersSupport.FindObject<global::System.EventHandler>(thisPtr);
+                *__return_value__ = EventHandler.FromManaged(____return_value__);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        unsafe internal static Nullable GetValue(IInspectable inspectable)
+        {
+            IntPtr nullablePtr = IntPtr.Zero;
+            IntPtr __retval = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return new Nullable(EventHandler.FromAbi(__retval));
+            }
+            finally
+            {
+                EventHandler.DisposeAbi(__retval);
+                Marshal.Release(nullablePtr);
+            }
+        }
+    }
+
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
     internal static class Nullable_Delegate<T> where T : global::System.Delegate
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(Nullable<T>));
 
-        [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
-        public unsafe struct Vftbl
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+
+        private readonly static Nullable_Delegates.GetValueDelegate _Get_Value_0;
+
+        unsafe static Nullable_Delegate()
         {
-            internal IInspectable.Vftbl IInspectableVftbl;
-            private Nullable_Delegates.GetValueDelegate _Get_Value_0;
+            _Get_Value_0 = Do_Abi_get_Value_0;
 
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
-
-            private static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-
-            static Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    _Get_Value_0 = Do_Abi_get_Value_0
-                };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
-                nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable._Get_Value_0);
-                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
-            }
-
-            private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, IntPtr* __return_value__)
-            {
-                T ____return_value__ = default;
-
-                *__return_value__ = default;
-
-                try
-                {
-                    ____return_value__ = global::WinRT.ComWrappersSupport.FindObject<T>(thisPtr);
-                    *__return_value__ = (IntPtr)Marshaler<T>.FromManaged(____return_value__);
-                }
-                catch (global::System.Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Nullable_Delegate<T>), sizeof(IInspectable.Vftbl) + sizeof(IntPtr));
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+            ((IntPtr*)AbiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(_Get_Value_0);
         }
 
-        public static Guid PIID = Vftbl.PIID;
+        private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, IntPtr* __return_value__)
+        {
+            T ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = global::WinRT.ComWrappersSupport.FindObject<T>(thisPtr);
+                *__return_value__ = (IntPtr)Marshaler<T>.FromManaged(____return_value__);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
 
         unsafe internal static Nullable GetValue(IInspectable inspectable)
         {
@@ -1631,8 +1736,156 @@ namespace ABI.System
         }
     }
 
+    internal static class Nullable_IntEnum
+    {
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+
+#if !NET
+            private unsafe delegate int GetValueDelegate(IntPtr thisPtr, int* value);
+            private static readonly GetValueDelegate delegateCache;
+#endif
+
+        unsafe static Nullable_IntEnum()
+        {
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Nullable_IntEnum), sizeof(IInspectable.Vftbl) + sizeof(IntPtr));
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+#if !NET
+            ((IntPtr*)AbiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0);
+#else
+            ((delegate* unmanaged[Stdcall]<IntPtr, int*, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_get_Value_0;
+#endif
+        }
+
+#if NET
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+        private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, int* __return_value__)
+        {
+            *__return_value__ = default;
+
+            try
+            {
+                *__return_value__ = (int)global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        internal static Guid GetIID(global::System.Type enumType)
+        {
+            return GuidGenerator.CreateIIDForGenericType("pinterface({61c17706-2d65-11e0-9ae8-d48564015472};enum(" + enumType.FullName + ";i4))");
+        }
+    }
+
+    internal static class Nullable_FlagsEnum
+    {
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+
+#if !NET
+        private unsafe delegate int GetValueDelegate(IntPtr thisPtr, uint* value);
+        private static readonly GetValueDelegate delegateCache;
+#endif
+
+        unsafe static Nullable_FlagsEnum()
+        {
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Nullable_FlagsEnum), sizeof(IInspectable.Vftbl) + sizeof(IntPtr));
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+#if !NET
+            ((IntPtr*)AbiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0);
+#else
+            ((delegate* unmanaged[Stdcall]<IntPtr, uint*, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_get_Value_0;
+#endif
+        }
+
+#if NET
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+        private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, uint* __return_value__)
+        {
+            *__return_value__ = default;
+
+            try
+            {
+                *__return_value__ = (uint)global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        internal static Guid GetIID(global::System.Type enumType)
+        {
+            return GuidGenerator.CreateIIDForGenericType("pinterface({61c17706-2d65-11e0-9ae8-d48564015472};enum(" + enumType.FullName + ";u4))");
+        }
+    }
+
     internal static class Nullable_Delegates
     {
         public unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
+        public unsafe delegate int GetValueDelegateAbi(void* thisPtr, void* value);
     }
 }
+
+#if NET
+namespace WinRT
+{
+    public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails where T: struct where TAbi : unmanaged
+    {
+        private static readonly Guid PIID = GuidGenerator.CreateIID(typeof(ABI.System.Nullable<T>));
+
+        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            return new ComWrappers.ComInterfaceEntry[]
+            {
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
+                    Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
+                },
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = PIID,
+                    Vtable = ABI.Windows.Foundation.BoxedValueIReferenceImpl<T, TAbi>.AbiToProjectionVftablePtr
+                }
+            };
+        }
+    }
+
+    public abstract class DelegateTypeDetails<T> : IWinRTExposedTypeDetails where T : global::System.Delegate
+    {
+        private static readonly Guid PIID = GuidGenerator.CreateIID(typeof(ABI.System.Nullable<T>));
+
+        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            return GetExposedInterfaces(GetDelegateInterface());
+        }
+
+        public static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces(ComWrappers.ComInterfaceEntry delegateInterface)
+        {
+            return new ComWrappers.ComInterfaceEntry[]
+            {
+                delegateInterface,
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
+                    Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
+                },
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = PIID,
+                    Vtable = ABI.System.Nullable_Delegate<T>.AbiToProjectionVftablePtr
+                }
+            };
+        }
+
+        public abstract ComWrappers.ComInterfaceEntry GetDelegateInterface();
+    }
+}
+#endif

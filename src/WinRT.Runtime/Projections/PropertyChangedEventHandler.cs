@@ -129,6 +129,14 @@ namespace ABI.System.ComponentModel
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.DisposeAbi(abi);
 
+        public static unsafe MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.MarshalerArray CreateMarshalerArray(global::System.ComponentModel.PropertyChangedEventHandler[] array) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.GetAbiArray(box);
+        public static unsafe global::System.ComponentModel.PropertyChangedEventHandler[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.ComponentModel.PropertyChangedEventHandler[] array, object box) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.ComponentModel.PropertyChangedEventHandler[] array) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.MarshalerArray array) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
+
 #if NET
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
@@ -158,7 +166,11 @@ namespace ABI.System.ComponentModel
     internal sealed unsafe class PropertyChangedEventSource : EventSource<global::System.ComponentModel.PropertyChangedEventHandler>
     {
         internal PropertyChangedEventSource(IObjectReference obj,
+#if NET
+            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::WinRT.EventRegistrationToken*, int> addHandler,
+#else
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
+#endif
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
             : base(obj, addHandler, removeHandler)
         {

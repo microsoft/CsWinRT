@@ -46,9 +46,44 @@ var managedUriHandler = new ManagedUriHandler();
 instance.AddUriHandler(managedUriHandler);
 bool uriMatches = managedUriHandler.Uri == new Uri("http://github.com");
 
+instance.StringPropertyChanged += Instance_StringPropertyChanged;
+instance.RaiseStringChanged();
+instance.RaiseStringChanged();
+instance.StringPropertyChanged -= Instance_StringPropertyChanged;
+instance.RaiseStringChanged();
+events_expected += 2;
+
+instance.EnumStructPropertyChanged += Instance_EnumStructPropertyChanged;
+instance.RaiseEnumStructChanged();
+events_expected += 1;
+
+instance.Event0 += Instance_Event0;
+instance.InvokeEvent0();
+instance.Event0 -= Instance_Event0;
+instance.InvokeEvent0();
+// This event here from before the unsubscribe and
+// the lambda still registered at the top which is
+// fired twice.
+events_expected += 3;
+
 return events_received == events_expected && uriMatches ? 100 : 101;
 
-class ManagedUriHandler : IUriHandler
+void Instance_Event0()
+{
+    events_received++;
+}
+
+void Instance_EnumStructPropertyChanged(object sender, EnumStruct e)
+{
+    events_received++;
+}
+
+void Instance_StringPropertyChanged(Class sender, string args)
+{
+    events_received++;
+}
+
+partial class ManagedUriHandler : IUriHandler
 {
     public Uri Uri { get; private set; }
 

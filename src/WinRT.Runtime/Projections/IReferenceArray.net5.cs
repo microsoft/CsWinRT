@@ -23,35 +23,29 @@ namespace ABI.Windows.Foundation
 {
     internal static class BoxedArrayIReferenceArrayImpl<T>
     {
-        private static readonly IReferenceArray<T>.Vftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
-        private static readonly Delegate DelegateCache;
+        private static readonly IReferenceArray_Delegates.get_Value_0 DelegateCache;
 
         static unsafe BoxedArrayIReferenceArrayImpl()
         {
-            AbiToProjectionVftable = new IReferenceArray<T>.Vftbl
-            {
-                IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                _get_Value_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache = new IReferenceArray_Delegates.get_Value_0(Do_Abi_get_Value_0))
-            };
-            var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedArrayIReferenceArrayImpl<T>), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
-            Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
-            nativeVftbl[6] = (IntPtr)AbiToProjectionVftable.GetValue_0;
+            DelegateCache = new IReferenceArray_Delegates.get_Value_0(Do_Abi_get_Value_0);
 
-            AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(BoxedArrayIReferenceArrayImpl<T>), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr));
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+            ((IntPtr*)AbiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache);
         }
 
-        private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, out int ____return_value__Size, out IntPtr __return_value__)
+        private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, int* ____return_value__Size, IntPtr* __return_value__)
         {
             T[] ____return_value__ = default;
 
-            __return_value__ = default;
-            ____return_value__Size = default;
+            *__return_value__ = default;
+            *____return_value__Size = default;
 
             try
             {
                 ____return_value__ = (T[])global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
-                (____return_value__Size, __return_value__) = Marshaler<T>.FromManagedArray(____return_value__);
+                (*____return_value__Size, *__return_value__) = Marshaler<T>.FromManagedArray(____return_value__);
             }
             catch (global::System.Exception __exception__)
             {
@@ -82,8 +76,8 @@ namespace ABI.Windows.Foundation
             {
                 return null;
             }
-            var vftblT = new Vftbl(ptr);
-            var wrapper = new IReferenceArray<T>(ObjectReference<Vftbl>.FromAbi(ptr, vftblT));
+
+            var wrapper = new IReferenceArray<T>(ObjectReference<IUnknownVftbl>.FromAbi(ptr));
             return wrapper.Value;
         }
 
@@ -128,34 +122,21 @@ namespace ABI.Windows.Foundation
         public unsafe struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            internal void* _get_Value_0;
-            internal delegate* unmanaged[Stdcall]<IntPtr, out int, out IntPtr, int> GetValue_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int, out IntPtr, int>)_get_Value_0; set => _get_Value_0 = (void*)value; }
 
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IReferenceArray<T>));
-
-            internal unsafe Vftbl(IntPtr thisPtr) : this()
-            {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
-                GetValue_0 = (delegate* unmanaged[Stdcall]<IntPtr, out int, out IntPtr, int>)vftbl[6];
-            }
+            public static Guid PIID = IReferenceArray<T>.PIID;
         }
 
-        public static Guid PIID = Vftbl.PIID;
+        public static Guid PIID = GuidGenerator.CreateIID(typeof(IReferenceArray<T>));
 
-        public static implicit operator IReferenceArray<T>(IObjectReference obj) => (obj != null) ? new IReferenceArray<T>(obj) : null;
-        public static implicit operator IReferenceArray<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new IReferenceArray<T>(obj) : null;
-        private readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<IUnknownVftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+
         public A As<A>() => _obj.AsType<A>();
-        public IReferenceArray(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public IReferenceArray(ObjectReference<Vftbl> obj)
+
+        public IReferenceArray(ObjectReference<IUnknownVftbl> obj)
         {
             _obj = obj;
         }
-
 
         public unsafe T[] Value
         {
@@ -165,7 +146,7 @@ namespace ABI.Windows.Foundation
                 IntPtr __retval_data = default;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetValue_0(ThisPtr, out __retval_length, out __retval_data));
+                    ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval_length, &__retval_data));
                     return Marshaler<T>.FromAbiArray((__retval_length, __retval_data));
                 }
                 finally
@@ -178,6 +159,6 @@ namespace ABI.Windows.Foundation
 
     internal static class IReferenceArray_Delegates
     {
-        public unsafe delegate int get_Value_0(IntPtr thisPtr, out int ____return_value__Size, out IntPtr __return_value__);
+        public unsafe delegate int get_Value_0(IntPtr thisPtr, int* ____return_value__Size, IntPtr* __return_value__);
     }
 }

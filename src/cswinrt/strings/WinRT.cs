@@ -895,13 +895,21 @@ namespace WinRT
     {
         protected readonly IObjectReference _obj;
         protected readonly int _index;
+#if NET
+        readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, WinRT.EventRegistrationToken*, int> _addHandler;
+#else
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
+#endif
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
         protected System.WeakReference<State> _state;
         private readonly (Action<TDelegate>, Action<TDelegate>) _handlerTuple;
 
         protected EventSource(IObjectReference obj,
+#if NET
+            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, WinRT.EventRegistrationToken*, int> addHandler,
+#else
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+#endif
             delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
             int index = 0)
         {
@@ -943,7 +951,13 @@ namespace WinRT
                     {
                         var nativeDelegate = marshaler.GetAbi();
                         state.InitalizeReferenceTracking(nativeDelegate);
+#if NET
+                        WinRT.EventRegistrationToken token;
+                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, &token));
+                        state.token = token;
+#else
                         ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out state.token));
+#endif
                     }
                     finally
                     {
@@ -986,7 +1000,11 @@ namespace WinRT
     internal unsafe sealed class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
     {
         internal EventSource__EventHandler(IObjectReference obj,
+#if NET
+            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, WinRT.EventRegistrationToken*, int> addHandler,
+#else
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+#endif
             delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
             int index) : base(obj, addHandler, removeHandler, index)
         {

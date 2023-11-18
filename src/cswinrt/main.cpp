@@ -175,12 +175,12 @@ Where <spec> is one or more of:
 
             task_group group;
 
-            concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap;
+            concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap, authoredTypeNameToMetadataTypeNameMap;
             concurrency::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
@@ -222,6 +222,7 @@ Where <spec> is one or more of:
                                     {
                                         write_class(w, type);
                                         add_base_type_entry(type, typeNameToBaseTypeMap);
+                                        add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                     }
                                     if (settings.component && componentActivatableClasses.count(type) == 1)
                                     {
@@ -233,14 +234,17 @@ Where <spec> is one or more of:
                                 break;
                             case category::delegate_type:
                                 write_delegate(w, type);
+                                add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 break;
                             case category::enum_type:
                                 write_enum(w, type);
+                                add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 type_requires_abi = false;
                                 break;
                             case category::interface_type:
                                 write_interface(w, type);
                                 write_temp_interface_event_source_subclass(helperWriter, type, typeNameToEventDefinitionMap);
+                                add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 break;
                             case category::struct_type:
                                 if (is_api_contract_type(type))
@@ -250,6 +254,7 @@ Where <spec> is one or more of:
                                 else
                                 {
                                     write_struct(w, type);
+                                    add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                     type_requires_abi = !is_type_blittable(type);
                                 }
                                 break;
@@ -279,9 +284,14 @@ Where <spec> is one or more of:
                                     {
                                     case category::class_type:
                                         write_abi_class(w, type);
+                                        if (settings.component && componentActivatableClasses.count(type) == 1)
+                                        {
+                                            write_winrt_exposed_type_class(w, type, true);
+                                        }
                                         break;
                                     case category::delegate_type:
                                         write_abi_delegate(w, type);
+                                        write_winrt_exposed_type_class(w, type, false);
                                         break;
                                     case category::interface_type:
                                         if (settings.netstandard_compat)
@@ -431,6 +441,59 @@ internal static void InitalizeAbiDelegates()
                 }));
                 baseTypeWriter.flush_to_file(settings.output_folder / "WinRTAbiDelegateInitializer.cs");
             }
+
+            if (!settings.netstandard_compat && has_generic_type_instantiations())
+            {
+                writer genericTypeInstantiationWriter("WinRT.GenericTypeInstantiations");
+                write_file_header(genericTypeInstantiationWriter);
+                genericTypeInstantiationWriter.write(R"(
+using System;
+
+namespace WinRT.GenericTypeInstantiations
+{
+%
+})",
+                bind<write_generic_type_instantiations>());
+                genericTypeInstantiationWriter.flush_to_file(settings.output_folder / "WinRTGenericTypeInstantiations.cs");
+            }
+
+            if (!authoredTypeNameToMetadataTypeNameMap.empty() && settings.component)
+            {
+                writer metadataMappingTypeWriter("WinRT");
+                write_file_header(metadataMappingTypeWriter);
+                metadataMappingTypeWriter.write(R"(
+using System;
+
+namespace WinRT
+{
+internal static class AuthoringMetadataTypeInitializer
+{
+
+private static Type GetMetadataTypeMapping(Type type)
+{
+return type switch
+{
+%
+_ => null
+};
+}
+
+[System.Runtime.CompilerServices.ModuleInitializer]
+internal static void InitializeAuthoringTypeMapping()
+{
+ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(GetMetadataTypeMapping);
+}
+}
+})",
+                bind([&](writer& w) {
+                        for (auto&& [key, value] : authoredTypeNameToMetadataTypeNameMap)
+                        {
+                            w.write(R"(Type _ when type == typeof(%) => typeof(%),)", key, value);
+                            w.write("\n");
+                        }
+                }));
+            metadataMappingTypeWriter.flush_to_file(settings.output_folder / "AuthoringMetadataTypeMappingHelper.cs");
+        }
 
             if (projectionFileWritten)
             {

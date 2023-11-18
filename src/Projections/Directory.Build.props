@@ -9,5 +9,14 @@
   <PropertyGroup Condition="!$(IsTargetFrameworkNet5OrGreater) AND '$(TargetFramework)' != ''">
     <CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
   </PropertyGroup>
+
+  <PropertyGroup Condition="$(IsTargetFrameworkNet5OrGreater)">
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater)">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
     
 </Project>

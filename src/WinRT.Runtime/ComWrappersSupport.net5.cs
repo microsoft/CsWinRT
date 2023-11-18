@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WinRT.Interop;
 using static System.Runtime.InteropServices.ComWrappers;
 
@@ -216,7 +217,9 @@ namespace WinRT
         }
 
         internal static Func<IInspectable, object> GetTypedRcwFactory([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
-        
+
+        public static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => TypedObjectFactoryCacheForType.TryAdd(implementationType, rcwFactory);
+
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType)
         {
             if (implementationType.IsGenericType)
@@ -263,6 +266,10 @@ namespace WinRT
                 {
                     genericImplType = typeof(IEnumerableImpl<>);
                 }
+                else if (genericType == typeof(IEnumerator<>))
+                {
+                    genericImplType = typeof(IEnumeratorImpl<>);
+                }
                 else
                 {
                     return null;
@@ -270,6 +277,45 @@ namespace WinRT
 
                 return genericImplType.MakeGenericType(implementationType.GetGenericArguments());
             }
+        }
+
+        private static readonly ReaderWriterLockSlim ComInterfaceEntriesLookupRwLock = new();
+        private static readonly List<Func<Type, ComInterfaceEntry[]>> ComInterfaceEntriesLookup = new();
+
+        public static void RegisterTypeComInterfaceEntriesLookup(Func<Type, ComInterfaceEntry[]> comInterfaceEntriesLookup)
+        {
+            ComInterfaceEntriesLookupRwLock.EnterWriteLock();
+            try
+            {
+                ComInterfaceEntriesLookup.Add(comInterfaceEntriesLookup);
+            }
+            finally
+            {
+                ComInterfaceEntriesLookupRwLock.ExitWriteLock();
+            }
+        }
+
+        internal static ComInterfaceEntry[] GetComInterfaceEntriesForTypeFromLookupTable(Type type)
+        {
+            ComInterfaceEntriesLookupRwLock.EnterReadLock();
+
+            try
+            {
+                foreach (var func in ComInterfaceEntriesLookup)
+                {
+                    var comInterfaceEntries = func(type);
+                    if (comInterfaceEntries != null)
+                    {
+                        return comInterfaceEntries;
+                    }
+                }
+            }
+            finally
+            {
+                ComInterfaceEntriesLookupRwLock.ExitReadLock();
+            }
+
+            return null;
         }
     }
 

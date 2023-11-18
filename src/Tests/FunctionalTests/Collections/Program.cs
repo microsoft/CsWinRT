@@ -53,6 +53,11 @@ foreach (var hierarchyDAsHierarchyC in hierarchyDAsHierarchyCList)
     if (hierarchyDAsHierarchyC.HierarchyB_Method() != "HierarchyC.HierarchyB_Method" ||
            hierarchyDAsHierarchyC.HierarchyA_Method() != "HierarchyB.HierarchyA_Method")
     {
+        // This is set in a failure state as we are testing the TestLibrary module having
+        // an entry on the vtable lookup table without it actually being loaded or used yet.
+        // So our intention is to not actually set it.  This is just to ensure when in this
+        // scenario we don't run into other crashes from other lookup tables being registered.
+        instance.BindableIterableProperty = new List<TestLibrary.TestClass>();
         return 101;
     }
 }

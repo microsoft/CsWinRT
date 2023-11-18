@@ -8,26 +8,33 @@ using WinRT;
 
 namespace ABI.System.Windows.Input
 {
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
-    [DynamicInterfaceCastableImplementation]
 #if EMBED
     internal
 #else
     public
 #endif
-    unsafe interface ICommand : global::System.Windows.Input.ICommand
+    static class ICommandMethods
+    {
+        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x42, 0x35, 0xAF, 0xE5, 0x67, 0xCA, 0x81, 0x40, 0x99, 0x5B, 0x70, 0x9D, 0xD1, 0x37, 0x92, 0xDF }));
+
+        public static IntPtr AbiToProjectionVftablePtr => ICommand.Vftbl.AbiToProjectionVftablePtr;
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
+    [DynamicInterfaceCastableImplementation]
+    internal unsafe interface ICommand : global::System.Windows.Input.ICommand
     {
         [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _add_CanExecuteChanged_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CanExecuteChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CanExecuteChanged_0; set => _add_CanExecuteChanged_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> add_CanExecuteChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_add_CanExecuteChanged_0; set => _add_CanExecuteChanged_0 = value; }
             private void* _remove_CanExecuteChanged_1;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CanExecuteChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CanExecuteChanged_1; set => _remove_CanExecuteChanged_1 = value; }
             private void* _CanExecute_2;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out byte, int> CanExecute_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out byte, int>)_CanExecute_2; set => _CanExecute_2 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int> CanExecute_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int>)_CanExecute_2; set => _CanExecute_2 = value; }
             private void* _Execute_3;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int> Execute_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)_Execute_3; set => _Execute_3 = value; }
 
@@ -157,7 +164,7 @@ namespace ABI.System.Windows.Input
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
                 __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CanExecute_2(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter), out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CanExecute_2(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter), &__retval));
                 return __retval != 0;
             }
             finally

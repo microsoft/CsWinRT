@@ -10,14 +10,15 @@ namespace WinRT
     static partial class Context
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
+        private static extern unsafe int CoGetObjectContext(Guid* riid, IntPtr* ppv);
 
         private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
 
-        public static IntPtr GetContextCallback()
+        public static unsafe IntPtr GetContextCallback()
         {
             Guid riid = ABI.WinRT.Interop.IContextCallback.IID;
-            Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
+            IntPtr contextCallbackPtr;
+            Marshal.ThrowExceptionForHR(CoGetObjectContext(&riid, &contextCallbackPtr));
             return contextCallbackPtr;
         }
 

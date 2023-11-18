@@ -1435,10 +1435,43 @@ namespace cswinrt
         }
     };
 
+    struct generic_type_instantiation
+    {
+        generic_type_instance instance;
+        std::string instantiation_class_name;
+
+        // Hash / equality for the hash set.
+        bool operator==(const generic_type_instantiation& other) const
+        {
+            return instantiation_class_name == other.instantiation_class_name;
+        }
+    };
+
     std::string escape_type_name_for_identifier(std::string typeName)
     {
-        std::regex re(R"-((\ |:|<|>|,|\.))-");
+        std::regex re(R"-((\ |:|<|>|`|,|\.))-");
         return std::regex_replace(typeName, re, "_");
+    }
+
+    std::string get_fundamental_type_guid_signature(fundamental_type type)
+    {
+        switch (type)
+        {
+        case fundamental_type::Boolean: return "b1";
+        case fundamental_type::Char: return "c2";
+        case fundamental_type::Int8: return "i1";
+        case fundamental_type::UInt8: return "u1";
+        case fundamental_type::Int16: return "i2";
+        case fundamental_type::UInt16: return "u2";
+        case fundamental_type::Int32: return "i4";
+        case fundamental_type::UInt32: return "u4";
+        case fundamental_type::Int64: return "i8";
+        case fundamental_type::UInt64: return "u8";
+        case fundamental_type::Float: return "f4";
+        case fundamental_type::Double: return "f8";
+        case fundamental_type::String: return "string";
+        default: throw_invalid("Unknown type");
+        }
     }
 }
 
@@ -1449,6 +1482,14 @@ namespace std
         size_t operator()(const cswinrt::generic_abi_delegate& entry) const
         {
             return hash<string>()(entry.abi_delegate_types);
+        }
+    };
+
+    template<>
+    struct hash<cswinrt::generic_type_instantiation> {
+        size_t operator()(const cswinrt::generic_type_instantiation& instantiation) const
+        {
+            return hash<string>()(instantiation.instantiation_class_name);
         }
     };
 }

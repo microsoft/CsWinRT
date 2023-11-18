@@ -8,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -24,6 +23,16 @@ using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfac
 
 namespace WinRT
 {
+    internal static class KeyValuePairHelper
+    {
+        internal readonly static ConcurrentDictionary<Type, ComInterfaceEntry> KeyValuePairCCW = new();
+
+        internal static void TryAddKeyValuePairCCW(Type keyValuePairType, Guid iid, IntPtr abiToProjectionVftablePtr)
+        {
+            KeyValuePairCCW.TryAdd(keyValuePairType, new ComInterfaceEntry { IID = iid, Vtable = abiToProjectionVftablePtr });
+        }
+    }
+
 #if EMBED
     internal
 #else
@@ -31,9 +40,8 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
-        private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
-        private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new ConcurrentDictionary<Type, Func<IntPtr, object>>();
+        private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new();
+        private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
@@ -169,72 +177,75 @@ namespace WinRT
 
         public static void RegisterProjectionTypeBaseTypeMapping(IDictionary<string, string> typeNameToBaseTypeNameMapping) => TypeNameSupport.RegisterProjectionTypeBaseTypeMapping(typeNameToBaseTypeNameMapping);
 
-        internal static object GetRuntimeClassCCWTypeIfAny(object obj)
-        {
-            var type = obj.GetType();
-            var ccwType = type.GetRuntimeClassCCWType();
-            if (ccwType != null)
-            {
-                return CCWTable.GetValue(obj, obj => {
-                    var ccwConstructor = ccwType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { type }, null);
-                    return ccwConstructor.Invoke(new[] { obj });
-                });
-            }
-
-            return obj;
-        }
+        public static void RegisterAuthoringMetadataTypeLookup(Func<Type, Type> authoringMetadataTypeLookup) => TypeExtensions.RegisterAuthoringMetadataTypeLookup(authoringMetadataTypeLookup);
 
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(Type type)
         {
             var entries = new List<ComInterfaceEntry>();
             bool hasCustomIMarshalInterface = false;
+            bool hasWinrtExposedClassAttribute = false;
 
-            if (type.IsDelegate())
+#if NET
+            // Check whether the type itself has the WinRTTypeExposed attribute and if so
+            // use the new source generator approach.
+            var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+
+            // Handle scenario where it can be an authored type
+            // which means the attribute lives on the authoring metadata type.
+            if (winrtExposedClassAttribute == null)
             {
-                // Delegates have no interfaces that they implement, so adding default WinRT entries.
-                var helperType = type.FindHelperType();
-                if (helperType is object)
+                var authoringMetadaType = type.GetRuntimeClassCCWType();
+                if (authoringMetadaType != null)
                 {
-                    entries.Add(new ComInterfaceEntry
-                    {
-                        IID = GuidGenerator.GetIID(type),
-                        Vtable = helperType.GetAbiToProjectionVftblPtr()
-                    });
-                }
-
-                if (type.ShouldProvideIReference())
-                {
-                    entries.Add(IPropertyValueEntry);
-                    entries.Add(ProvideIReference(type));
+                    winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
                 }
             }
-            else
+
+            if (winrtExposedClassAttribute != null)
             {
-                var objType = type.GetRuntimeClassCCWType() ?? type;
-                // Check whether the type itself has the attribute to make sure it is using the new source generator
-                // and just doesn't have an updated dependent projection which is.
-                if (type.GetCustomAttribute(typeof(WinRTExposedTypeAttribute), false) is IWinRTExposedTypeDetails winrtExposedClassAttribute)
+                hasWinrtExposedClassAttribute = true;
+                entries.AddRange(winrtExposedClassAttribute.GetExposedInterfaces());
+
+                if (type.IsClass)
                 {
-                    foreach (var iface in winrtExposedClassAttribute.GetExposedInterfaces())
+                    hasCustomIMarshalInterface = entries.Any(entry => entry.IID == ABI.WinRT.Interop.IMarshal.IID);
+                }
+            }
+            else if (type == typeof(global::System.EventHandler))
+            {
+                hasWinrtExposedClassAttribute = true;
+                entries.AddRange(ABI.System.EventHandler.GetExposedInterfaces());
+            }
+            else if (!type.IsEnum && GetComInterfaceEntriesForTypeFromLookupTable(type) is var lookupTableEntries && lookupTableEntries != null)
+            {
+                hasWinrtExposedClassAttribute = true;
+                entries.AddRange(lookupTableEntries);
+            }
+            else if (RuntimeFeature.IsDynamicCodeCompiled)
+#endif
+            {
+                if (type.IsDelegate())
+                {
+                    // Delegates have no interfaces that they implement, so adding default WinRT entries.
+                    var helperType = type.FindHelperType();
+                    if (helperType is object)
                     {
-                        AddInterfaceToVtable(iface);
+                        entries.Add(new ComInterfaceEntry
+                        {
+                            IID = GuidGenerator.GetIID(type),
+                            Vtable = helperType.GetAbiToProjectionVftblPtr()
+                        });
                     }
 
-                    var baseType = type.BaseType;
-                    if (baseType != null && baseType != typeof(object))
+                    if (type.ShouldProvideIReference())
                     {
-                        var winrtExposedBaseClassAttributes = baseType.GetCustomAttributes(typeof(WinRTExposedTypeAttribute), true);
-                        foreach (var winrtExposedBaseClassAttribute in winrtExposedBaseClassAttributes)
-                        {
-                            foreach (var iface in ((IWinRTExposedTypeDetails)winrtExposedBaseClassAttribute).GetExposedInterfaces())
-                            {
-                                AddInterfaceToVtable(iface);
-                            }
-                        }
+                        entries.Add(IPropertyValueEntry);
+                        entries.Add(ProvideIReference(type));
                     }
                 }
                 else
                 {
+                    var objType = type.GetRuntimeClassCCWType() ?? type;
                     var interfaces = objType.GetInterfaces();
                     foreach (var iface in interfaces)
                     {
@@ -253,41 +264,48 @@ namespace WinRT
                         }
                     }
                 }
+            }
 
 #if !NET
-                // We can't easily determine from just the type
-                // if the array is an "single dimension index from zero"-array in .NET Standard 2.0,
-                // so just approximate it.
-                // (Other array types will be blocked in other code-paths anyway where we have an object.)
-                if (type.IsArray && type.GetArrayRank() == 1)
+            // We can't easily determine from just the type
+            // if the array is an "single dimension index from zero"-array in .NET Standard 2.0,
+            // so just approximate it.
+            // (Other array types will be blocked in other code-paths anyway where we have an object.)
+            if (type.IsArray && type.GetArrayRank() == 1)
 #else
-                if (type.IsSZArray)
+            if (type.IsSZArray)
 #endif
+            {
+                // We treat arrays as if they implemented IIterable<T>, IVector<T>, and IVectorView<T> (WinRT only)
+                var elementType = type.GetElementType();
+                if (elementType.ShouldProvideIReference())
                 {
-                    // We treat arrays as if they implemented IIterable<T>, IVector<T>, and IVectorView<T> (WinRT only)
-                    var elementType = type.GetElementType();
-                    if (elementType.ShouldProvideIReference())
-                    {
-                        entries.Add(IPropertyValueEntry);
-                        entries.Add(ProvideIReferenceArray(type));
-                    }
+                    entries.Add(IPropertyValueEntry);
+                    entries.Add(ProvideIReferenceArray(type));
                 }
-                else if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            {
+                if (KeyValuePairHelper.KeyValuePairCCW.TryGetValue(type, out var entry))
                 {
-                    var ifaceAbiType = objType.FindHelperType();
+                    entries.Add(entry);
+                }
+                else
+                {
+                    var ifaceAbiType = type.FindHelperType();
                     entries.Add(new ComInterfaceEntry
                     {
                         IID = GuidGenerator.GetIID(ifaceAbiType),
                         Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                     });
                 }
-                else if (type.ShouldProvideIReference())
-                {
-                    entries.Add(IPropertyValueEntry);
-                    entries.Add(ProvideIReference(type));
-                }
             }
-
+            else if (!hasWinrtExposedClassAttribute && type.ShouldProvideIReference())
+            {
+                entries.Add(IPropertyValueEntry);
+                entries.Add(ProvideIReference(type));
+            }
+            
             entries.Add(new ComInterfaceEntry
             {
                 IID = ManagedIStringableVftbl.IID,
@@ -705,6 +723,33 @@ namespace WinRT
                 {
                     IID = ABI.System.Nullable_sbyte.IID,
                     Vtable = ABI.System.Nullable_sbyte.Vftbl.AbiToProjectionVftablePtr
+                };
+            }
+            if (type.IsEnum)
+            {
+                if (type.IsDefined(typeof(FlagsAttribute)))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = ABI.System.Nullable_FlagsEnum.GetIID(type),
+                        Vtable = ABI.System.Nullable_FlagsEnum.AbiToProjectionVftablePtr
+                    };
+                }
+                else
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = ABI.System.Nullable_IntEnum.GetIID(type),
+                        Vtable = ABI.System.Nullable_IntEnum.AbiToProjectionVftablePtr
+                    };
+                }
+            }
+            if (type == typeof(EventHandler))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.Nullable_EventHandler.IID,
+                    Vtable = ABI.System.Nullable_EventHandler.AbiToProjectionVftablePtr
                 };
             }
             if (type.IsDelegate())

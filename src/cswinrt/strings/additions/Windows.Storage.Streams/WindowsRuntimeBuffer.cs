@@ -18,7 +18,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     /// Contains an implementation of the WinRT IBuffer interface that conforms to all requirements on classes that implement that interface,
     /// such as implementing additional interfaces.
     /// </summary>
-    [global::WinRT.WinRTExposedType(typeof(IBuffer), typeof(IBufferByteAccess), typeof(IMarshal))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::ABI.System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferWinRTTypeDetails))]
+#endif
 #if EMBED
     internal
 #else
@@ -309,5 +311,35 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         #endregion Implementation of IMarshal
     }  // class WindowsRuntimeBuffer
 }  // namespace
+
+#if NET
+namespace ABI.System.Runtime.InteropServices.WindowsRuntime
+{
+    internal sealed class WindowsRuntimeBufferWinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+    {
+        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            return new ComWrappers.ComInterfaceEntry[]
+            {
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = typeof(global::Windows.Storage.Streams.IBuffer).GUID,
+                    Vtable = global::ABI.Windows.Storage.Streams.IBuffer.AbiToProjectionVftablePtr
+                },
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = typeof(global::Windows.Storage.Streams.IBufferByteAccess).GUID,
+                    Vtable = global::ABI.Windows.Storage.Streams.IBufferByteAccess.Vftbl.AbiToProjectionVftablePtr
+                },
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = typeof(global::Com.IMarshal).GUID,
+                    Vtable = global::ABI.Com.IMarshal.Vftbl.AbiToProjectionVftablePtr
+                }
+            };
+        }
+    }
+}
+#endif
 
 // WindowsRuntimeBuffer.cs

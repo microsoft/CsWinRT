@@ -9,15 +9,22 @@ using WinRT;
 
 namespace ABI.System.ComponentModel
 {
-    [DynamicInterfaceCastableImplementation]
-    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
 #if EMBED
     internal
 #else
-    public 
-#endif 
-    unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
+    public
+#endif
+    static class INotifyDataErrorInfoMethods
+    {
+        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xCC, 0xC2, 0xE6, 0x0E, 0x3E, 0x27, 0x7D, 0x56, 0xBC, 0x0A, 0x1D, 0xD8, 0x7E, 0xE5, 0x1E, 0xBA }));
+
+        public static IntPtr AbiToProjectionVftablePtr => INotifyDataErrorInfo.Vftbl.AbiToProjectionVftablePtr;
+    }
+
+    [DynamicInterfaceCastableImplementation]
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
+    internal unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
     {
         [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
         public struct Vftbl
@@ -142,7 +149,7 @@ namespace ABI.System.ComponentModel
             var ThisPtr = _obj.ThisPtr;
             return (EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle,
                 () => new EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>(_obj,
-                    (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_obj.Vftbl.add_ErrorsChanged_1,
+                    _obj.Vftbl.add_ErrorsChanged_1,
                     _obj.Vftbl.remove_ErrorsChanged_2,
                     0));
         }
