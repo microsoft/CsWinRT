@@ -7,6 +7,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Threading;
 using WinRT.Interop;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
@@ -22,10 +24,10 @@ namespace WinRT
 #endif
     abstract class IObjectReference : IDisposable
     {
-        protected bool disposed;
-        private readonly IntPtr _thisPtr;
+        private IntPtr _thisPtr;
         private object _disposedLock = new object();
         private IntPtr _referenceTrackerPtr;
+        private IntPtr _contextPtr;
 
         public IntPtr ThisPtr
         {
@@ -35,6 +37,10 @@ namespace WinRT
                 return GetThisPtrForCurrentContext();
             }
         }
+
+        public bool IsFreeThreaded => _contextPtr == IntPtr.Zero;
+
+        public bool IsInCurrentContext => IsFreeThreaded || _contextPtr == Context.GetContextToken();
 
         private protected IntPtr ThisPtrFromOriginalContext
         {
@@ -100,22 +106,14 @@ namespace WinRT
             }
         }
 
-        private protected unsafe IUnknownVftbl VftblIUnknownFromOriginalContext
-        {
-            get
-            {
-                ThrowIfDisposed();
-                return **(IUnknownVftbl**)ThisPtrFromOriginalContext;
-            }
-        }
-
-        protected IObjectReference(IntPtr thisPtr)
+        protected IObjectReference(IntPtr thisPtr, IntPtr contextPtr)
         {
             if (thisPtr == IntPtr.Zero)
             {
                 throw new ArgumentNullException(nameof(thisPtr));
             }
             _thisPtr = thisPtr;
+            _contextPtr = contextPtr;
         }
 
         ~IObjectReference()
@@ -247,11 +245,11 @@ namespace WinRT
 
         protected void ThrowIfDisposed()
         {
-            if (disposed)
+            if (_thisPtr == IntPtr.Zero)
             {
                 lock (_disposedLock)
                 {
-                    if (disposed) throw new ObjectDisposedException("ObjectReference");
+                    if (_thisPtr == IntPtr.Zero) throw new ObjectDisposedException("ObjectReference");
                 }
             }
         }
@@ -266,7 +264,7 @@ namespace WinRT
         {
             lock (_disposedLock)
             {
-                if (disposed)
+                if (_thisPtr == IntPtr.Zero)
                 {
                     return;
                 }
@@ -281,25 +279,13 @@ namespace WinRT
                 {
                     Release();
                 }
+                else
+                {
+                    // No release
+                    Interlocked.Exchange(ref _thisPtr, IntPtr.Zero);
+                }
 
                 DisposeTrackerSource();
-                disposed = true;
-            }
-        }
-
-        internal bool Resurrect()
-        {
-            lock (_disposedLock)
-            {
-                if (!disposed)
-                {
-                    return false;
-                }
-                disposed = false;
-                ResurrectTrackerSource();
-                AddRef();
-                GC.ReRegisterForFinalize(this);
-                return true;
             }
         }
 
@@ -320,7 +306,12 @@ namespace WinRT
         protected virtual unsafe void Release()
         {
             ReleaseFromTrackerSource();
-            Marshal.Release(ThisPtr);
+
+            var thisPtr = Interlocked.Exchange(ref _thisPtr, IntPtr.Zero);
+            if (thisPtr != IntPtr.Zero)
+            {
+                Marshal.Release(thisPtr);
+            }
         }
 
         private protected unsafe void ReleaseWithoutContext()
@@ -333,47 +324,39 @@ namespace WinRT
         {
             get
             {
-                return VftblIUnknown.Equals(IUnknownVftbl.AbiToProjectionVftbl);
+                ThrowIfDisposed();
+                return (**(IUnknownVftbl**)ThisPtr).Equals(IUnknownVftbl.AbiToProjectionVftbl);
             }
         }
 
         internal unsafe void AddRefFromTrackerSource()
         {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
+            var referenceTrackerPtr = ReferenceTrackerPtr;
+            if (referenceTrackerPtr != IntPtr.Zero)
             {
-                ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
+                (**(IReferenceTrackerVftbl**)referenceTrackerPtr).AddRefFromTrackerSource(referenceTrackerPtr);
             }
         }
 
         internal unsafe void ReleaseFromTrackerSource()
         {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
+            var referenceTrackerPtr = ReferenceTrackerPtr;
+            if (referenceTrackerPtr != IntPtr.Zero)
             {
-                ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
-            }
-        }
-
-        private unsafe void ResurrectTrackerSource()
-        {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
-            {
-                Marshal.AddRef(ReferenceTrackerPtr);
-                if (!PreventReleaseFromTrackerSourceOnDispose)
-                {
-                    ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
-                }
+                (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(referenceTrackerPtr);
             }
         }
 
         private unsafe void DisposeTrackerSource()
         {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
+            var referenceTrackerPtr = Interlocked.Exchange(ref this._referenceTrackerPtr, IntPtr.Zero);
+            if (referenceTrackerPtr != IntPtr.Zero)
             {
                 if (!PreventReleaseFromTrackerSourceOnDispose)
                 {
-                    ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
+                    (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(referenceTrackerPtr);
                 }
-                Marshal.Release(ReferenceTrackerPtr);
+                Marshal.Release(referenceTrackerPtr);
             }
         }
 
@@ -423,26 +406,39 @@ namespace WinRT
             }
         }
 
+        ObjectReference(IntPtr thisPtr, IntPtr contextPtr, T vftblT) :
+            base(thisPtr, contextPtr)
+        {
+            _vftbl = vftblT;
+        }
+
+        private protected ObjectReference(IntPtr thisPtr, IntPtr contextPtr) :
+            this(thisPtr, contextPtr, GetVtable(thisPtr))
+        {
+        }
+
         public static ObjectReference<T> Attach(ref IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
             {
                 return null;
             }
-            var obj = new ObjectReference<T>(thisPtr);
-            thisPtr = IntPtr.Zero;
-            return obj;
-        }
 
-        ObjectReference(IntPtr thisPtr, T vftblT) :
-            base(thisPtr)
-        {
-            _vftbl = vftblT;
-        }
-
-        private protected ObjectReference(IntPtr thisPtr) :
-            this(thisPtr, GetVtable(thisPtr))
-        {
+            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
+            {
+                var obj = new ObjectReference<T>(thisPtr, IntPtr.Zero);
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
+            else
+            {
+                var obj = new ObjectReferenceWithContext<T>(
+                    thisPtr,
+                    Context.GetContextCallback(),
+                    Context.GetContextToken());
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
         }
 
         public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
@@ -451,9 +447,21 @@ namespace WinRT
             {
                 return null;
             }
+
             Marshal.AddRef(thisPtr);
-            var obj = new ObjectReference<T>(thisPtr, vftblT);
-            return obj;
+            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
+            {
+                var obj = new ObjectReference<T>(thisPtr, IntPtr.Zero, vftblT);
+                return obj;
+            }
+            else
+            {
+                var obj = new ObjectReferenceWithContext<T>(
+                    thisPtr,
+                    Context.GetContextCallback(),
+                    Context.GetContextToken());
+                return obj;
+            }
         }
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr)
@@ -536,7 +544,7 @@ namespace WinRT
         private readonly Guid _iid;
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken)
-            :base(thisPtr)
+            :base(thisPtr, contextToken)
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;

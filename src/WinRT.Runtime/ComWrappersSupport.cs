@@ -75,32 +75,42 @@ namespace WinRT
 
         // If we are free threaded, we do not need to keep track of context.
         // This can either be if the object implements IAgileObject or the free threaded marshaler.
-        internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
+        internal unsafe static bool IsFreeThreaded(IntPtr iUnknown)
         {
-            if (objRef.TryAs(InterfaceIIDs.IAgileObject_IID, out var agilePtr) >= 0)
+            Guid iid_IAgileObject = InterfaceIIDs.IAgileObject_IID;
+            if (Marshal.QueryInterface(iUnknown, ref iid_IAgileObject, out var agilePtr) >= 0)
             {
                 Marshal.Release(agilePtr);
                 return true;
             }
-            else if (objRef.TryAs(InterfaceIIDs.IMarshal_IID, out var marshalPtr) >= 0)
+            else
             {
-                try
+                Guid iid_IMarshal = InterfaceIIDs.IMarshal_IID;
+                if (Marshal.QueryInterface(iUnknown, ref iid_IMarshal, out var marshalPtr) >= 0)
                 {
-                    Guid iid_IUnknown = InterfaceIIDs.IUnknown_IID;
-                    Guid iid_unmarshalClass;
-                    Marshal.ThrowExceptionForHR((**(ABI.WinRT.Interop.IMarshal.Vftbl**)marshalPtr).GetUnmarshalClass_0(
-                        marshalPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
-                    if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
+                    try
                     {
-                        return true;
+                        Guid iid_IUnknown = InterfaceIIDs.IUnknown_IID;
+                        Guid iid_unmarshalClass;
+                        Marshal.ThrowExceptionForHR((**(ABI.WinRT.Interop.IMarshal.Vftbl**)marshalPtr).GetUnmarshalClass_0(
+                            marshalPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
+                        if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
+                        {
+                            return true;
+                        }
                     }
-                }
-                finally
-                {
-                    Marshal.Release(marshalPtr);
+                    finally
+                    {
+                        Marshal.Release(marshalPtr);
+                    }
                 }
             }
             return false;
+        }
+
+        internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
+        {
+            return IsFreeThreaded(objRef.ThisPtr);
         }
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
@@ -115,21 +125,7 @@ namespace WinRT
                 return null;
             }
 
-            ObjectReference<T> objRef = ObjectReference<T>.FromAbi(externalComObject);
-            if (IsFreeThreaded(objRef))
-            {
-                return objRef;
-            }
-            else
-            {
-                using (objRef)
-                {
-                    return new ObjectReferenceWithContext<T>(
-                        objRef.GetRef(),
-                        Context.GetContextCallback(),
-                        Context.GetContextToken());
-                }
-            }
+            return ObjectReference<T>.FromAbi(externalComObject);
         }
 
         public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid)
@@ -144,31 +140,14 @@ namespace WinRT
                 return null;
             }
 
-            ObjectReference<T> objRef;
             if (requireQI)
             {
                 Marshal.ThrowExceptionForHR(Marshal.QueryInterface(externalComObject, ref iid, out IntPtr ptr));
-                objRef = ObjectReference<T>.Attach(ref ptr);
+                return ObjectReference<T>.Attach(ref ptr);
             }
             else
             {
-                objRef = ObjectReference<T>.FromAbi(externalComObject);
-            }
-
-            if (IsFreeThreaded(objRef))
-            {
-                return objRef;
-            }
-            else
-            {
-                using (objRef)
-                {
-                    return new ObjectReferenceWithContext<T>(
-                        objRef.GetRef(),
-                        Context.GetContextCallback(),
-                        Context.GetContextToken(),
-                        iid);
-                }
+                return ObjectReference<T>.FromAbi(externalComObject);
             }
         }
 
