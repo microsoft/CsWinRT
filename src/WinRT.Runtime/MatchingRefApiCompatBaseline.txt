@@ -136,4 +136,5 @@ MembersMustExist : Member 'public System.Boolean WinRT.IObjectReference.IsInCurr
 MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference<T>.Attach(System.IntPtr, System.Guid)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference<T>.FromAbi(System.IntPtr, System.Guid)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T, System.Guid)' does not exist in the reference but it does exist in the implementation.
-Total Issues: 137
+TypesMustExist : Type 'WinRT.ActivationFactory' does not exist in the reference but it does exist in the implementation.
+Total Issues: 138
