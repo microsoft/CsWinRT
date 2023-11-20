@@ -87,10 +87,12 @@ namespace Generator
             foreach (var declaration in syntaxReceiver.Declarations)
             {
                 var model = _context.Compilation.GetSemanticModel(declaration.SyntaxTree);
+                var symbol = model.GetDeclaredSymbol(declaration);
 
                 // Check symbol information for whether it is public to properly detect partial types
-                // which can leave out modifier.
-                if (model.GetDeclaredSymbol(declaration).DeclaredAccessibility != Accessibility.Public)
+                // which can leave out modifier. Also ignore nested types not effectively public
+                if (symbol.DeclaredAccessibility != Accessibility.Public ||
+                    (symbol is ITypeSymbol typeSymbol && !typeSymbol.IsPubliclyAccessible()))
                 {
                     continue;
                 }
