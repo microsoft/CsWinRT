@@ -9,12 +9,16 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
+using WinRT;
+using WinRT.Interop;
 
 #pragma warning disable CA1416
 
@@ -1568,5 +1572,121 @@ namespace AuthoringTest
     public partial struct PartialStruct
     {
         public double Z;
+    }
+
+    public sealed class TestMixedWinRTCOMWrapper : IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2
+    {
+        public string HelloWorld()
+        {
+            return "Hello from mixed WinRT/COM";
+        }
+
+        unsafe int IInternalInterface1.GetNumber(int* value)
+        {
+            *value = 42;
+
+            return 0;
+        }
+
+        unsafe int SomeInternalType.IInternalInterface2.GetNumber(int* value)
+        {
+            *value = 123;
+
+            return 0;
+        }
+    }
+
+    public interface IPublicInterface
+    {
+        string HelloWorld();
+    }
+
+    // Internal, classic COM interface
+    [Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
+    [WindowsRuntimeType]
+    [WindowsRuntimeHelperType(typeof(IInternalInterface1))]
+    internal unsafe interface IInternalInterface1
+    {
+        int GetNumber(int* value);
+
+        [Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
+        public struct Vftbl
+        {
+            public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
+
+            private static IntPtr InitVtbl()
+            {
+                Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
+
+                lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
+                lpVtbl->GetNumber = &GetDeviceFromAbi;
+
+                return (IntPtr)lpVtbl;
+            }
+
+            private IUnknownVftbl IUnknownVftbl;
+            private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
+
+            [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+            private static int GetDeviceFromAbi(void* thisPtr, int* value)
+            {
+                try
+                {
+                    return ComWrappersSupport.FindObject<IInternalInterface1>((IntPtr)thisPtr).GetNumber(value);
+                }
+                catch (Exception e)
+                {
+                    ExceptionHelpers.SetErrorInfo(e);
+
+                    return Marshal.GetHRForException(e);
+                }
+            }
+        }
+    }
+
+    internal struct SomeInternalType
+    {
+        // Nested, classic COM interface
+        [Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
+        [WindowsRuntimeType]
+        [WindowsRuntimeHelperType(typeof(IInternalInterface2))]
+        public unsafe interface IInternalInterface2
+        {
+            int GetNumber(int* value);
+
+            [Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
+            public struct Vftbl
+            {
+                public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
+
+                private static IntPtr InitVtbl()
+                {
+                    Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
+
+                    lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
+                    lpVtbl->GetNumber = &GetDeviceFromAbi;
+
+                    return (IntPtr)lpVtbl;
+                }
+
+                private IUnknownVftbl IUnknownVftbl;
+                private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
+
+                [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+                private static int GetDeviceFromAbi(void* thisPtr, int* value)
+                {
+                    try
+                    {
+                        return ComWrappersSupport.FindObject<IInternalInterface2>((IntPtr)thisPtr).GetNumber(value);
+                    }
+                    catch (Exception e)
+                    {
+                        ExceptionHelpers.SetErrorInfo(e);
+
+                        return Marshal.GetHRForException(e);
+                    }
+                }
+            }
+        }
     }
 }
