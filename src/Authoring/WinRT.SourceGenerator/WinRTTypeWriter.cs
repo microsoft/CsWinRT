@@ -1204,11 +1204,17 @@ namespace Generator
 
         private IEnumerable<INamedTypeSymbol> GetInterfaces(INamedTypeSymbol symbol, bool includeInterfacesWithoutMappings = false)
         {
-            HashSet<INamedTypeSymbol> interfaces = new HashSet<INamedTypeSymbol>();
-            foreach (var @interface in symbol.Interfaces)
+            HashSet<INamedTypeSymbol> interfaces = new();
+
+            // Gather all interfaces that are publicly accessible. We specifically need to exclude interfaces
+            // that are not public, as eg. those might be used for additional cloaked WinRT/COM interfaces.
+            // Ignoring them here makes sure that they're not processed to be part of the .winmd file.
+            foreach (var @interface in symbol.AllInterfaces)
             {
-                interfaces.Add(@interface);
-                interfaces.UnionWith(@interface.AllInterfaces);
+                if (IsPubliclyAccessible(@interface))
+                {
+                    _ = interfaces.Add(@interface);
+                }
             }
 
             var baseType = symbol.BaseType;
@@ -2690,6 +2696,28 @@ namespace Generator
                 type is IPropertySymbol property && !property.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
                 type is IEventSymbol @event && !@event.ExplicitInterfaceImplementations.IsDefaultOrEmpty;
         }
+
+#nullable enable
+        /// <summary>
+        /// Checks whether a given type symbol is publicly accessible (ie. it's public and not nested in any non public type).
+        /// </summary>
+        /// <param name="type">The type symbol to check for public accessibility.</param>
+        /// <returns>Whether <paramref name="type"/> is publicly accessible.</returns>
+        public bool IsPubliclyAccessible(ITypeSymbol type)
+        {
+            for (ITypeSymbol? currentType = type; currentType is not null; currentType = currentType.ContainingType)
+            {
+                // If any type in the type hierarchy is not public, the type is not public.
+                // This makes sure to detect public types nested into eg. a private type.
+                if (currentType.DeclaredAccessibility is not Accessibility.Public)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+#nullable restore
 
         public void GetNamespaceAndTypename(string qualifiedName, out string @namespace, out string typename)
         {
