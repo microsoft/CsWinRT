@@ -1209,22 +1209,33 @@ namespace Generator
             // Gather all interfaces that are publicly accessible. We specifically need to exclude interfaces
             // that are not public, as eg. those might be used for additional cloaked WinRT/COM interfaces.
             // Ignoring them here makes sure that they're not processed to be part of the .winmd file.
-            foreach (var @interface in symbol.AllInterfaces)
+            void GatherPubliclyAccessibleInterfaces(ITypeSymbol symbol)
             {
-                if (@interface.IsPubliclyAccessible())
+                foreach (var @interface in symbol.Interfaces)
                 {
-                    _ = interfaces.Add(@interface);
+                    if (@interface.IsPubliclyAccessible())
+                    {
+                        _ = interfaces.Add(@interface);
+                    }
+
+                    // We're not using AllInterfaces on purpose: we only want to gather all interfaces but not
+                    // from the base type. That's handled below to skip types that are already WinRT projections.
+                    foreach (var @interface2 in @interface.AllInterfaces)
+                    {
+                        if (@interface2.IsPubliclyAccessible())
+                        {
+                            _ = interfaces.Add(@interface2);
+                        }
+                    }
                 }
             }
+
+            GatherPubliclyAccessibleInterfaces(symbol);
 
             var baseType = symbol.BaseType;
             while (baseType != null && !GeneratorHelper.IsWinRTType(baseType))
             {
-                interfaces.UnionWith(baseType.Interfaces);
-                foreach (var @interface in baseType.Interfaces)
-                {
-                    interfaces.UnionWith(@interface.AllInterfaces);
-                }
+                GatherPubliclyAccessibleInterfaces(baseType);
 
                 baseType = baseType.BaseType;
             }
