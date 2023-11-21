@@ -2696,12 +2696,19 @@ namespace Generator
             }
         }
 
-        public bool IsPublic(ISymbol type)
+        public bool IsPublic(ISymbol symbol)
         {
-            return type.DeclaredAccessibility == Accessibility.Public ||
-                type is IMethodSymbol method && !method.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
-                type is IPropertySymbol property && !property.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
-                type is IEventSymbol @event && !@event.ExplicitInterfaceImplementations.IsDefaultOrEmpty;
+            // Check that the type has either public accessibility, or is an explicit interface implementation
+            if (symbol.DeclaredAccessibility == Accessibility.Public ||
+                symbol is IMethodSymbol method && !method.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
+                symbol is IPropertySymbol property && !property.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
+                symbol is IEventSymbol @event && !@event.ExplicitInterfaceImplementations.IsDefaultOrEmpty)
+            {
+                // If we have a containing type, we also check that it's publicly accessible
+                return symbol.ContainingType is not { } containingType || containingType.IsPubliclyAccessible();
+            }
+
+            return false;
         }
 
         public void GetNamespaceAndTypename(string qualifiedName, out string @namespace, out string typename)
