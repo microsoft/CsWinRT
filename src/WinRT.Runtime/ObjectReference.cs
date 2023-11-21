@@ -106,6 +106,17 @@ namespace WinRT
             }
         }
 
+        [Obsolete]
+        protected IObjectReference(IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(thisPtr));
+            }
+            _thisPtr = thisPtr;
+            _contextPtr = ComWrappersSupport.IsFreeThreaded(thisPtr) ? IntPtr.Zero : Context.GetContextToken();
+        }
+
         protected IObjectReference(IntPtr thisPtr, IntPtr contextPtr)
         {
             if (thisPtr == IntPtr.Zero)
