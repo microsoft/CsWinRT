@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Microsoft.CodeAnalysis;
 
 #nullable enable
 
@@ -27,5 +29,26 @@ internal static class SymbolExtensions
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Checks whether a given symbol is an explicit interface implementation of a member of an internal interface (or more than one).
+    /// </summary>
+    /// <param name="symbol">The input member symbol to check.</param>
+    /// <returns>Whether <paramref name="symbol"/> is an explicit interface implementation of internal interfaces.</returns>
+    public static bool IsExplicitInterfaceImplementationOfInternalInterfaces(this ISymbol symbol)
+    {
+        static bool IsAnyContainingTypePublic(IEnumerable<ISymbol> symbols)
+        {
+            return symbols.Any(static symbol => symbol.ContainingType!.IsPubliclyAccessible());
+        }
+
+        return symbol switch
+        {
+            IMethodSymbol { ExplicitInterfaceImplementations: { Length: > 0 } methods } => !IsAnyContainingTypePublic(methods),
+            IPropertySymbol { ExplicitInterfaceImplementations: { Length: > 0 } properties } => !IsAnyContainingTypePublic(properties),
+            IEventSymbol { ExplicitInterfaceImplementations: { Length: > 0 } events } => !IsAnyContainingTypePublic(events),
+            _ => false
+        };
     }
 }
