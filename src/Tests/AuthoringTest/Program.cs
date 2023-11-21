@@ -17,6 +17,7 @@ using System.Windows.Input;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
+using Windows.Graphics.Effects;
 using WinRT;
 using WinRT.Interop;
 
@@ -1574,7 +1575,7 @@ namespace AuthoringTest
         public double Z;
     }
 
-    public sealed class TestMixedWinRTCOMWrapper : IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2
+    public sealed class TestMixedWinRTCOMWrapper : IGraphicsEffectSource, IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2
     {
         public string HelloWorld()
         {
@@ -1687,6 +1688,26 @@ namespace AuthoringTest
                     }
                 }
             }
+        }
+    }
+}
+
+namespace ABI.AuthoringTest
+{
+    internal static class IInternalInterface1Methods
+    {
+        public static Guid IID => typeof(global::AuthoringTest.IInternalInterface1).GUID;
+
+        public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.IInternalInterface1.Vftbl.AbiToProjectionVftablePtr;
+    }
+
+    internal struct SomeInternalType
+    {
+        internal static class IInternalInterface2Methods
+        {
+            public static Guid IID => typeof(global::AuthoringTest.SomeInternalType.IInternalInterface2).GUID;
+
+            public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.SomeInternalType.IInternalInterface2.Vftbl.AbiToProjectionVftablePtr;
         }
     }
 }
