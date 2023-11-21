@@ -10,6 +10,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -1626,7 +1627,7 @@ namespace AuthoringTest
             private IUnknownVftbl IUnknownVftbl;
             private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
 
-            [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
             private static int GetDeviceFromAbi(void* thisPtr, int* value)
             {
                 try
@@ -1671,7 +1672,7 @@ namespace AuthoringTest
                 private IUnknownVftbl IUnknownVftbl;
                 private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
 
-                [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+                [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                 private static int GetDeviceFromAbi(void* thisPtr, int* value)
                 {
                     try
