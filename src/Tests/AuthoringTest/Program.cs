@@ -10,7 +10,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -1602,14 +1601,14 @@ namespace AuthoringTest
     }
 
     // Internal, classic COM interface
-    [Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
+    [global::System.Runtime.InteropServices.Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
     [WindowsRuntimeType]
     [WindowsRuntimeHelperType(typeof(IInternalInterface1))]
     internal unsafe interface IInternalInterface1
     {
         int GetNumber(int* value);
 
-        [Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
+        [global::System.Runtime.InteropServices.Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
         public struct Vftbl
         {
             public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
@@ -1647,14 +1646,14 @@ namespace AuthoringTest
     internal struct SomeInternalType
     {
         // Nested, classic COM interface
-        [Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
+        [global::System.Runtime.InteropServices.Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
         [WindowsRuntimeType]
         [WindowsRuntimeHelperType(typeof(IInternalInterface2))]
         public unsafe interface IInternalInterface2
         {
             int GetNumber(int* value);
 
-            [Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
+            [global::System.Runtime.InteropServices.Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
             public struct Vftbl
             {
                 public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
