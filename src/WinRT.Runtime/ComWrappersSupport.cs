@@ -110,7 +110,10 @@ namespace WinRT
 
         internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
         {
-            return IsFreeThreaded(objRef.ThisPtr);
+            var isFreeThreaded = IsFreeThreaded(objRef.ThisPtr);
+            // ThisPtr is owned by objRef, so need to make sure objRef stays alive.
+            GC.KeepAlive(objRef);
+            return isFreeThreaded;
         }
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
@@ -466,7 +469,12 @@ namespace WinRT
             }
 
             var fromAbiMethodFunc = (Func<IntPtr, object>) fromAbiMethod.CreateDelegate(typeof(Func<IntPtr, object>));
-            return (IInspectable obj) => fromAbiMethodFunc(obj.ThisPtr);
+            return (IInspectable obj) =>
+            {
+                var fromAbiMethod = fromAbiMethodFunc(obj.ThisPtr);
+                GC.KeepAlive(obj);
+                return fromAbiMethod;
+            };
         }
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(
