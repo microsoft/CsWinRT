@@ -7,10 +7,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- Generate a RuntimeConfig -->
-    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <!-- Generate a RuntimeConfig (only for the managed, hosted scenario) -->
+    <EnableDynamicLoading Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">true</EnableDynamicLoading>
     <!-- Name the RuntimeConfig properly -->
-    <ProjectRuntimeConfigFileName>WinRT.Host.runtimeconfig.json</ProjectRuntimeConfigFileName>
+    <ProjectRuntimeConfigFileName Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">WinRT.Host.runtimeconfig.json</ProjectRuntimeConfigFileName>
     <CsWinRTDetectDependentAuthoringWinMDs Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'==''">true</CsWinRTDetectDependentAuthoringWinMDs>
     <GetCopyToOutputDirectoryItemsDependsOn>$(GetCopyToOutputDirectoryItemsDependsOn);CsWinRTAuthoring_AddManagedDependencies</GetCopyToOutputDirectoryItemsDependsOn>
   </PropertyGroup>
@@ -55,8 +55,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     
   </Target>
 
-  <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
-  <ItemGroup> 
+  <!--
+    For Project Reference consumers, copy the necessary WinRT DLLs to output directory.
+    Only include these if we are not generating native exports for NativeAOT.
+  --> 
+  <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'"> 
 
     <None Condition="Exists('$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
       <TargetPath>WinRT.Host.Shim.dll</TargetPath>
@@ -77,13 +80,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
  </ItemGroup>
 
-  <!-- Any managed dependencies of the WinRT component won't automatically be brought 
-        in by a referencing C++ app, so we manually set them to be copied here -->
+  <!--
+    Any managed dependencies of the WinRT component won't automatically be brought 
+    in by a referencing C++ app, so we manually set them to be copied here. Only
+    needed when not using NativeAOT (as there's no additional managed .dll-s there).
+   -->
   <Target Name="CsWinRTAuthoring_AddManagedDependencies"
           BeforeTargets="GetCopyToOutputDirectoryItems"
           Returns="@(AllItemsFullPathWithTargetPath)">
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
       
       <!-- Make sure all managed binaries/projections are shared across project references made by native apps -->
       <AllItemsFullPathWithTargetPath Include="@(ReferenceCopyLocalPaths)" 
@@ -101,7 +107,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
           AfterTargets="GenerateBuildRuntimeConfigurationFiles" 
           BeforeTargets="GetCopyToOutputDirectoryItems;_GetCopyToOutputDirectoryItemsFromThisProject">
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
 
       <AllItemsFullPathWithTargetPath Include="$(ProjectRuntimeConfigFilePath)">
         <TargetPath>$([System.IO.Path]::GetFileName($(ProjectRuntimeConfigFilePath)))</TargetPath>
@@ -148,8 +154,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <TargetPathWithTargetPlatformMoniker Remove="@(TargetPathWithTargetPlatformMoniker)" />
       <!-- Add the .winmd -->
       <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)$(AssemblyName).winmd">
-        <!-- implementation is NOT $(AssemblyName).dll -->
-        <Implementation>WinRT.Host.dll</Implementation>
+        <!-- implementation is NOT $(AssemblyName).dll (unless NativeAOT publishing is used) -->
+        <Implementation Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">WinRT.Host.dll</Implementation>
+        <Implementation Condition="'$(CsWinRTAotExportsEnabled)' == 'true'">$(AssemblyName).dll</Implementation>
         <!-- show to c++ compiler (native case) and dotnet sdk (managed case) -->
         <ResolveableAssembly>true</ResolveableAssembly>
         <!-- Used by the dotnet sdk -->
@@ -253,30 +260,30 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- When packing, include all necessary DLLs and the targets file for DLL copying on the native side -->
     <ItemGroup>
 
-      <Content Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
+      <Content Condition="'$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
         <Pack>true</Pack>
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>
     
       <!-- We must pack any managed DLLs the component depends on, because a native consumer won't restore them -->
-      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime'">
+      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime' and '$(CsWinRTAotExportsEnabled)' != 'true'">
         <Pack>true</Pack>
         <PackagePath>build\native</PackagePath>
       </Content>
 
       <!-- Add WinRT.Host.runtimeconfig.json to package -->
-      <Content Include="$(ProjectRuntimeConfigFilePath)">
+      <Content Condition="'$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(ProjectRuntimeConfigFilePath)">
         <Pack>true</Pack>
         <PackagePath>build\native</PackagePath>
       </Content>
 
       <!-- Store managed dlls the component needs in the target framework dir --> 
-      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)' == 'WinRT.Runtime'">
+      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)' == 'WinRT.Runtime' and '$(CsWinRTAotExportsEnabled)' != 'true'">
         <Pack>true</Pack> 
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>
 
-      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)' == 'Microsoft.Windows.NET.SDK'">
+      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)' == 'Microsoft.Windows.NET.SDK' and '$(CsWinRTAotExportsEnabled)' != 'true'">
         <Pack>true</Pack> 
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>
@@ -300,36 +307,36 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       </Content>
 
       <!-- We package a version of WinRT.Host.dll for each possible architecture -->
-      <Content Condition="Exists('$(CsWinRTPath)hosting\x64\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\x64\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\x64\native\WinRT.Host.dll') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\x64\native\WinRT.Host.dll">
         <Pack>true</Pack>
         <PackagePath>hosting\x64\native</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\x86\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\WinRT.Host.dll') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\x86\native\WinRT.Host.dll">
         <Pack>true</Pack>
         <PackagePath>hosting\x86\native</PackagePath>
       </Content> 
-      <Content Condition="Exists('$(CsWinRTPath)hosting\arm\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\arm\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\arm\native\WinRT.Host.dll') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\arm\native\WinRT.Host.dll">
         <Pack>true</Pack>
         <PackagePath>hosting\arm\native</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\arm64\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\arm64\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\arm64\native\WinRT.Host.dll') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\arm64\native\WinRT.Host.dll">
         <Pack>true</Pack>
         <PackagePath>hosting\arm64\native</PackagePath>
       </Content>
       <!-- Package the MUI for WinRT.Host error strings -->
-      <Content Condition="Exists('$(CsWinRTPath)hosting\x64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\x64\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\x64\native\en-us\WinRT.Host.dll.mui') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\x64\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>hosting\x64\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>hosting\x86\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\arm\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\arm\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\arm\native\en-us\WinRT.Host.dll.mui') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\arm\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>hosting\arm\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\arm64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\arm64\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\arm64\native\en-us\WinRT.Host.dll.mui') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\arm64\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>hosting\arm64\native\en-us</PackagePath>
       </Content>
