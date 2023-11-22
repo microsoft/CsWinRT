@@ -9448,7 +9448,7 @@ bind<write_factory_class_members>(type)
 using System;
 namespace WinRT
 {
-% static class Module
+% static partial class Module
 {
 public static unsafe IntPtr GetActivationFactory(String runtimeClassId)
 {%
