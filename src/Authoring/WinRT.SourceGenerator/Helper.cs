@@ -114,6 +114,21 @@ namespace Generator
             return false;
         }
 
+        /// <summary>
+        /// Gets whether the <c>"CsWinRTAotExportsEnabled"</c> MSBuild property is defined.
+        /// </summary>
+        /// <param name="context">The input <see cref="GeneratorExecutionContext"/> value to use.</param>
+        /// <returns>Whether the <c>"CsWinRTAotExportsEnabled"</c> MSBuild property is defined.</returns>
+        public static bool ShouldGenerateWinRTNativeExports(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTAotExportsEnabled", out var isCsWinRTAotExportsEnabledStr))
+            {
+                return bool.TryParse(isCsWinRTAotExportsEnabledStr, out var isCsWinRTAotExportsEnabled) && isCsWinRTAotExportsEnabled;
+            }
+
+            return false;
+        }
+
         public static string GetCsWinRTExe(this GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);
