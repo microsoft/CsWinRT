@@ -662,15 +662,15 @@ TEST(AuthoringTest, MixedWinRTClassicCOM)
     winrt::com_ptr<::IUnknown> internalInterface2;
     EXPECT_EQ(unknown2->QueryInterface(internalInterface2Iid, internalInterface2.put_void()), S_OK);
 
-    typedef int (*GetNumber)(void*, int*);
+    typedef int (__stdcall* GetNumber)(void*, int*);
 
     int number;
 
     // Validate the first call on IInternalInterface1
-    EXPECT_EQ(reinterpret_cast<GetNumber>(reinterpret_cast<void**>(internalInterface1.get())[3])(internalInterface1.get(), &number), S_OK);
+    EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface1.get()))[3])(internalInterface1.get(), &number), S_OK);
     EXPECT_EQ(number, 42);
 
     // Validate the second call on IInternalInterface2
-    EXPECT_EQ(reinterpret_cast<GetNumber>(reinterpret_cast<void**>(internalInterface2.get())[3])(internalInterface2.get(), &number), S_OK);
+    EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface2.get()))[3])(internalInterface2.get(), &number), S_OK);
     EXPECT_EQ(number, 123);
 }
