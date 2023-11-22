@@ -4,6 +4,7 @@
 // conflict with Storyboard::GetCurrentTime
 #undef GetCurrentTime
 
+#include <Windows.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 

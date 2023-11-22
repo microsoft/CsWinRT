@@ -1303,21 +1303,38 @@ namespace Generator
 
         private IEnumerable<INamedTypeSymbol> GetInterfaces(INamedTypeSymbol symbol, bool includeInterfacesWithoutMappings = false)
         {
-            HashSet<INamedTypeSymbol> interfaces = new HashSet<INamedTypeSymbol>();
-            foreach (var @interface in symbol.Interfaces)
+            HashSet<INamedTypeSymbol> interfaces = new();
+
+            // Gather all interfaces that are publicly accessible. We specifically need to exclude interfaces
+            // that are not public, as eg. those might be used for additional cloaked WinRT/COM interfaces.
+            // Ignoring them here makes sure that they're not processed to be part of the .winmd file.
+            void GatherPubliclyAccessibleInterfaces(ITypeSymbol symbol)
             {
-                interfaces.Add(@interface);
-                interfaces.UnionWith(@interface.AllInterfaces);
+                foreach (var @interface in symbol.Interfaces)
+                {
+                    if (@interface.IsPubliclyAccessible())
+                    {
+                        _ = interfaces.Add(@interface);
+                    }
+
+                    // We're not using AllInterfaces on purpose: we only want to gather all interfaces but not
+                    // from the base type. That's handled below to skip types that are already WinRT projections.
+                    foreach (var @interface2 in @interface.AllInterfaces)
+                    {
+                        if (@interface2.IsPubliclyAccessible())
+                        {
+                            _ = interfaces.Add(@interface2);
+                        }
+                    }
+                }
             }
+
+            GatherPubliclyAccessibleInterfaces(symbol);
 
             var baseType = symbol.BaseType;
             while (baseType != null && !IsWinRTType(baseType))
             {
-                interfaces.UnionWith(baseType.Interfaces);
-                foreach (var @interface in baseType.Interfaces)
-                {
-                    interfaces.UnionWith(@interface.AllInterfaces);
-                }
+                GatherPubliclyAccessibleInterfaces(baseType);
 
                 baseType = baseType.BaseType;
             }
@@ -2010,6 +2027,13 @@ namespace Generator
                 }
                 else
                 {
+                    // Special case: skip members that are explicitly implementing internal interfaces.
+                    // This allows implementing classic COM internal interfaces with non-WinRT signatures.
+                    if (member.IsExplicitInterfaceImplementationOfInternalInterfaces())
+                    {
+                        continue;
+                    }
+
                     if (member is IMethodSymbol method &&
                         (method.MethodKind == MethodKind.Ordinary ||
                          method.MethodKind == MethodKind.ExplicitInterfaceImplementation ||
@@ -2736,12 +2760,19 @@ namespace Generator
             }
         }
 
-        public bool IsPublic(ISymbol type)
+        public bool IsPublic(ISymbol symbol)
         {
-            return type.DeclaredAccessibility == Accessibility.Public ||
-                type is IMethodSymbol method && !method.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
-                type is IPropertySymbol property && !property.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
-                type is IEventSymbol @event && !@event.ExplicitInterfaceImplementations.IsDefaultOrEmpty;
+            // Check that the type has either public accessibility, or is an explicit interface implementation
+            if (symbol.DeclaredAccessibility == Accessibility.Public ||
+                symbol is IMethodSymbol method && !method.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
+                symbol is IPropertySymbol property && !property.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
+                symbol is IEventSymbol @event && !@event.ExplicitInterfaceImplementations.IsDefaultOrEmpty)
+            {
+                // If we have a containing type, we also check that it's publicly accessible
+                return symbol.ContainingType is not { } containingType || containingType.IsPubliclyAccessible();
+            }
+
+            return false;
         }
 
         public void GetNamespaceAndTypename(string qualifiedName, out string @namespace, out string typename)
