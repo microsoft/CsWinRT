@@ -640,3 +640,37 @@ TEST(AuthoringTest, PartialClass)
     EXPECT_EQ(partialStruct.Y, 4);
     EXPECT_EQ(partialStruct.Z, 5);
 }
+
+TEST(AuthoringTest, MixedWinRTClassicCOM)
+{
+    TestMixedWinRTCOMWrapper wrapper;
+
+    // Normal WinRT methods work as you'd expect
+    EXPECT_EQ(wrapper.HelloWorld(), L"Hello from mixed WinRT/COM");
+
+    // Verify we can grab the internal interface
+    IID internalInterface1Iid;
+    check_hresult(IIDFromString(L"{C7850559-8FF2-4E54-A237-6ED813F20CDC}", &internalInterface1Iid));
+    winrt::com_ptr<::IUnknown> unknown1 = wrapper.as<::IUnknown>();
+    winrt::com_ptr<::IUnknown> internalInterface1;
+    EXPECT_EQ(unknown1->QueryInterface(internalInterface1Iid, internalInterface1.put_void()), S_OK);
+
+    // Verify we can grab the nested public interface (in an internal type)
+    IID internalInterface2Iid;
+    check_hresult(IIDFromString(L"{8A08E18A-8D20-4E7C-9242-857BFE1E3159}", &internalInterface2Iid));
+    winrt::com_ptr<::IUnknown> unknown2 = wrapper.as<::IUnknown>();
+    winrt::com_ptr<::IUnknown> internalInterface2;
+    EXPECT_EQ(unknown2->QueryInterface(internalInterface2Iid, internalInterface2.put_void()), S_OK);
+
+    typedef int (__stdcall* GetNumber)(void*, int*);
+
+    int number;
+
+    // Validate the first call on IInternalInterface1
+    EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface1.get()))[3])(internalInterface1.get(), &number), S_OK);
+    EXPECT_EQ(number, 42);
+
+    // Validate the second call on IInternalInterface2
+    EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface2.get()))[3])(internalInterface2.get(), &number), S_OK);
+    EXPECT_EQ(number, 123);
+}
