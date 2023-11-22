@@ -1620,7 +1620,7 @@ namespace AuthoringTest
                 Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
 
                 lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
-                lpVtbl->GetNumber = &GetDeviceFromAbi;
+                lpVtbl->GetNumber = &GetNumberFromAbi;
 
                 return (IntPtr)lpVtbl;
             }
@@ -1629,7 +1629,7 @@ namespace AuthoringTest
             private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
 
             [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-            private static int GetDeviceFromAbi(void* thisPtr, int* value)
+            private static int GetNumberFromAbi(void* thisPtr, int* value)
             {
                 try
                 {
@@ -1665,7 +1665,7 @@ namespace AuthoringTest
                     Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
 
                     lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
-                    lpVtbl->GetNumber = &GetDeviceFromAbi;
+                    lpVtbl->GetNumber = &GetNumberFromAbi;
 
                     return (IntPtr)lpVtbl;
                 }
@@ -1674,7 +1674,7 @@ namespace AuthoringTest
                 private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
 
                 [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-                private static int GetDeviceFromAbi(void* thisPtr, int* value)
+                private static int GetNumberFromAbi(void* thisPtr, int* value)
                 {
                     try
                     {
