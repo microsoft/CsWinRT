@@ -18,6 +18,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess>
     <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' == '' and $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">true</CsWinRTAotOptimizerEnabled>
     <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' != 'true'">false</CsWinRTAotOptimizerEnabled>
+
+    <!--
+      If the AOT optimizer is enabled, and we're publishing with NativeAOT, automatically set CsWinRTAotExportsEnabled as well.
+      Only do this if the property is not already set by the user, so we respect any existing preference.
+    -->
+    <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' == '' and '$(CsWinRTAotOptimizerEnabled)' == 'true' and '$(PublishAot)' == 'true'">true</CsWinRTAotExportsEnabled>
+    <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">false</CsWinRTAotExportsEnabled>
   </PropertyGroup>
 
   <ItemGroup>
