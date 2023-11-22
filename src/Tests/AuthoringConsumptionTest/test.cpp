@@ -649,18 +649,18 @@ TEST(AuthoringTest, MixedWinRTClassicCOM)
     EXPECT_EQ(wrapper.HelloWorld(), L"Hello from mixed WinRT/COM");
 
     // Verify we can grab the internal interface
-    std::string internalInterface1IidText = "C7850559-8FF2-4E54-A237-6ED813F20CDC";
-    winrt::guid internalInterface1IidValue(internalInterface1IidText);
-    winrt::com_ptr<IUnknown> unknown = wrapper.as<IUnknown>();
-    winrt::com_ptr<IUnknown> internalInterface1;
-    EXPECT_EQ(unknown->QueryInterface(internalInterface1IidValue, internalInterface1.put_void()), S_OK);
+    IID internalInterface1Iid;
+    check_hresult(IIDFromString(L"{C7850559-8FF2-4E54-A237-6ED813F20CDC}", &internalInterface1Iid));
+    winrt::com_ptr<::IUnknown> unknown1 = wrapper.as<::IUnknown>();
+    winrt::com_ptr<::IUnknown> internalInterface1;
+    EXPECT_EQ(unknown1->QueryInterface(internalInterface1Iid, internalInterface1.put_void()), S_OK);
 
     // Verify we can grab the nested public interface (in an internal type)
-    std::string internalInterface2IidText = "8A08E18A-8D20-4E7C-9242-857BFE1E3159";
-    winrt::guid internalInterface2IidValue(internalInterface2IidText);
-    winrt::com_ptr<IUnknown> unknown = wrapper.as<IUnknown>();
-    winrt::com_ptr<IUnknown> internalInterface2;
-    EXPECT_EQ(unknown->QueryInterface(internalInterface2IidValue, internalInterface2.put_void()), S_OK);
+    IID internalInterface2Iid;
+    check_hresult(IIDFromString(L"{8A08E18A-8D20-4E7C-9242-857BFE1E3159}", &internalInterface2Iid));
+    winrt::com_ptr<::IUnknown> unknown2 = wrapper.as<::IUnknown>();
+    winrt::com_ptr<::IUnknown> internalInterface2;
+    EXPECT_EQ(unknown2->QueryInterface(internalInterface2Iid, internalInterface2.put_void()), S_OK);
 
     typedef int (*GetNumber)(void*, int*);
 
