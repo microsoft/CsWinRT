@@ -226,7 +226,7 @@ namespace Generator
 
                             try
                             {
-                                IntPtr obj = GetActivationFactory(MarshalString.FromAbi(activatableClassId));
+                                IntPtr obj = GetActivationFactory(MarshalString.FromAbi((IntPtr)activatableClassId));
 
                                 if ((void*)obj is null)
                                 {
@@ -239,7 +239,7 @@ namespace Generator
 
                                 return S_OK;
                             }
-                            catch (Exception e)
+                            catch (Exception ex)
                             {
                                 ExceptionHelpers.SetErrorInfo(ex);
 
