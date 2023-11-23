@@ -257,36 +257,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
   <Target Name="CsWinRTIncludeHostDlls" DependsOnTargets="CsWinRTGenerateTransitiveTargets" BeforeTargets="AfterBuild" Outputs="@(Content)">
     
-    <!-- When packing, include all necessary DLLs and the targets file for DLL copying on the native side -->
+    <!--
+      Include all assets that are shared across all configurations.
+      For instance, the .winmd file is always needed.
+    -->
     <ItemGroup>
-
-      <Content Condition="'$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
-        <Pack>true</Pack>
-        <PackagePath>lib\$(TargetFramework)</PackagePath>
-      </Content>
-    
-      <!-- We must pack any managed DLLs the component depends on, because a native consumer won't restore them -->
-      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime' and '$(CsWinRTAotExportsEnabled)' != 'true'">
-        <Pack>true</Pack>
-        <PackagePath>build\native</PackagePath>
-      </Content>
-
-      <!-- Add WinRT.Host.runtimeconfig.json to package -->
-      <Content Condition="'$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(ProjectRuntimeConfigFilePath)">
-        <Pack>true</Pack>
-        <PackagePath>build\native</PackagePath>
-      </Content>
-
-      <!-- Store managed dlls the component needs in the target framework dir --> 
-      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)' == 'WinRT.Runtime' and '$(CsWinRTAotExportsEnabled)' != 'true'">
-        <Pack>true</Pack> 
-        <PackagePath>lib\$(TargetFramework)</PackagePath>
-      </Content>
-
-      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)' == 'Microsoft.Windows.NET.SDK' and '$(CsWinRTAotExportsEnabled)' != 'true'">
-        <Pack>true</Pack> 
-        <PackagePath>lib\$(TargetFramework)</PackagePath>
-      </Content>
 
       <!-- Pack any XAML resource PRI files next to the .winmd -->
       <Content Include="$(ProjectPriFullPath)">
@@ -305,38 +280,73 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <Pack>true</Pack>
         <PackagePath>buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets</PackagePath>
       </Content>
+    </ItemGroup>
+
+    <!--
+      Include all necessary DLLs and the targets file for DLL copying on the native side.
+      These additional assets are only used when the WinRT component is a managed assembly.
+    -->
+    <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
+
+      <Content  Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
+        <Pack>true</Pack>
+        <PackagePath>lib\$(TargetFramework)</PackagePath>
+      </Content>
+    
+      <!-- We must pack any managed DLLs the component depends on, because a native consumer won't restore them -->
+      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime'">
+        <Pack>true</Pack>
+        <PackagePath>build\native</PackagePath>
+      </Content>
+
+      <!-- Add WinRT.Host.runtimeconfig.json to package -->
+      <Content Include="$(ProjectRuntimeConfigFilePath)">
+        <Pack>true</Pack>
+        <PackagePath>build\native</PackagePath>
+      </Content>
+
+      <!-- Store managed dlls the component needs in the target framework dir --> 
+      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)' == 'WinRT.Runtime'">
+        <Pack>true</Pack> 
+        <PackagePath>lib\$(TargetFramework)</PackagePath>
+      </Content>
+
+      <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)' == 'Microsoft.Windows.NET.SDK'">
+        <Pack>true</Pack> 
+        <PackagePath>lib\$(TargetFramework)</PackagePath>
+      </Content>
 
       <!-- We package a version of WinRT.Host.dll for each possible architecture -->
-      <Content Condition="Exists('$(CsWinRTPath)hosting\x64\native\WinRT.Host.dll') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\x64\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\x64\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\x64\native\WinRT.Host.dll">
         <Pack>true</Pack>
         <PackagePath>hosting\x64\native</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\WinRT.Host.dll') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\x86\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\x86\native\WinRT.Host.dll">
         <Pack>true</Pack>
         <PackagePath>hosting\x86\native</PackagePath>
       </Content> 
-      <Content Condition="Exists('$(CsWinRTPath)hosting\arm\native\WinRT.Host.dll') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\arm\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\arm\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\arm\native\WinRT.Host.dll">
         <Pack>true</Pack>
         <PackagePath>hosting\arm\native</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\arm64\native\WinRT.Host.dll') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\arm64\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\arm64\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\arm64\native\WinRT.Host.dll">
         <Pack>true</Pack>
         <PackagePath>hosting\arm64\native</PackagePath>
       </Content>
       <!-- Package the MUI for WinRT.Host error strings -->
-      <Content Condition="Exists('$(CsWinRTPath)hosting\x64\native\en-us\WinRT.Host.dll.mui') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\x64\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\x64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\x64\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>hosting\x64\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>hosting\x86\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\arm\native\en-us\WinRT.Host.dll.mui') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\arm\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\arm\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\arm\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>hosting\arm\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\arm64\native\en-us\WinRT.Host.dll.mui') and '$(CsWinRTAotExportsEnabled)' != 'true'" Include="$(CsWinRTPath)hosting\arm64\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\arm64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\arm64\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>hosting\arm64\native\en-us</PackagePath>
       </Content>
