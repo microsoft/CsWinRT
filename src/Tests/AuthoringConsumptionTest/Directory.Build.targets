@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <MsAppxPackageTargets>$(MSBuildProjectDirectory)/DoNotImport_MsAppxPackageTargets.targets</MsAppxPackageTargets>
-    <PrepareForRunDependsOn>CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
+    <PrepareForRunDependsOn Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
   </PropertyGroup>
 
   <Target Name="CopyTestAssets">
