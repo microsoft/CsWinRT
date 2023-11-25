@@ -99,7 +99,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="AuthoringConsumptionTest.exe.manifest" />
+
+    <!--
+      Only include the manifest when not using NativeAOT for the authored WinRT component.
+      For more info, see notes in the Directory.Build.props file for AuthoringTest.
+    -->
+    <Manifest Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="AuthoringConsumptionTest.exe.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
