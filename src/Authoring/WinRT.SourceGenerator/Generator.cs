@@ -216,7 +216,7 @@ namespace Generator
                         public static int DllGetActivationFactory(void* activatableClassId, void** factory)
                         {
                             const int E_INVALIDARG = unchecked((int)0x80070057);
-                            const int E_NOINTERFACE = unchecked((int)0x80004002);
+                            const int REGDB_E_CLASSNOTREG = unchecked((int)(0x80040154));
                             const int S_OK = 0;
 
                             if (activatableClassId is null || factory is null)
@@ -232,18 +232,18 @@ namespace Generator
                                 {
                                     *factory = null;
 
-                                    return E_NOINTERFACE;
+                                    return REGDB_E_CLASSNOTREG;
                                 }
 
                                 *factory = (void*)obj;
 
                                 return S_OK;
                             }
-                            catch (Exception ex)
+                            catch (Exception e)
                             {
-                                ExceptionHelpers.SetErrorInfo(ex);
+                                ExceptionHelpers.SetErrorInfo(e);
 
-                                return ExceptionHelpers.GetHRForException(ex);
+                                return ExceptionHelpers.GetHRForException(e);
                             }
                         }
 

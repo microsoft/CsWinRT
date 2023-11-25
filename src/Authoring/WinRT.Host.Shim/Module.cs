@@ -34,7 +34,7 @@ namespace WinRT.Host
                 var type = assembly.GetType("WinRT.Module");
                 if (type == null)
                 {
-                    return REGDB_E_CLASSNOTREG;
+                    return REGDB_E_READREGDB;
                 }
                 var GetActivationFactory = type.GetMethod("GetActivationFactory");
                 if (GetActivationFactory == null)
@@ -44,7 +44,7 @@ namespace WinRT.Host
                 IntPtr factory = (IntPtr)GetActivationFactory.Invoke(null, new object[] { runtimeClassId });
                 if (factory == IntPtr.Zero)
                 {
-                    return E_NOINTERFACE;
+                    return REGDB_E_CLASSNOTREG;
                 }
                 *activationFactory = factory;
                 return S_OK;
