@@ -60,14 +60,21 @@
     <None Include="Directory.Build.targets" />
     <None Include="DoNotImport_MsAppxPackageTargets.targets" />
     <None Include="packages.config" />
-    <None Include="WinRT.Host.runtimeconfig.json">
+
+    <!-- Only include the runtimeconfig.json file when not using NativeAOT -->
+    <None Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="WinRT.Host.runtimeconfig.json">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
     </None>
   </ItemGroup>
-  <ItemGroup>
+  
+  <!--
+    Skip referencing projections and other projects if in Release x64.
+    When that is true, we're using NativeAOT, so we're self-contained.
+  -->
+  <ItemGroup Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj">
       <Project>{ffa9a78b-f53f-43ee-af87-24a80f4c330a}</Project>
       <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
@@ -89,12 +96,12 @@
     </ProjectReference>
     <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
       <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AuthoringTest">
-      <HintPath>..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net6.0\AuthoringTest.winmd</HintPath>
+      <HintPath>..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net8.0\AuthoringTest.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
