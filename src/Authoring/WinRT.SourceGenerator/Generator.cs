@@ -216,7 +216,7 @@ namespace Generator
                         public static int DllGetActivationFactory(void* activatableClassId, void** factory)
                         {
                             const int E_INVALIDARG = unchecked((int)0x80070057);
-                            const int REGDB_E_CLASSNOTREG = unchecked((int)(0x80040154));
+                            const int CLASS_E_CLASSNOTAVAILABLE = unchecked((int)(0x80040111));
                             const int S_OK = 0;
 
                             if (activatableClassId is null || factory is null)
@@ -232,7 +232,7 @@ namespace Generator
                                 {
                                     *factory = null;
 
-                                    return REGDB_E_CLASSNOTREG;
+                                    return CLASS_E_CLASSNOTAVAILABLE;
                                 }
 
                                 *factory = (void*)obj;
