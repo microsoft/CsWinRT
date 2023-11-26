@@ -341,11 +341,6 @@ namespace WinRT
         }
     }
 
-    internal struct VftblPtr
-    {
-        public IntPtr Vftbl;
-    }
-
     internal static class IActivationFactoryMethods
     {
         public static unsafe ObjectReference<I> ActivateInstance<I>(IObjectReference obj)

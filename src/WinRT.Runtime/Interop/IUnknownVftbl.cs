@@ -4,6 +4,14 @@
 using System;
 using System.Runtime.InteropServices;
 
+namespace WinRT
+{
+    internal struct VftblPtr
+    {
+        public IntPtr Vftbl;
+    }
+}
+
 namespace WinRT.Interop
 {
     [Guid("00000000-0000-0000-C000-000000000046")]
