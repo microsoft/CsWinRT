@@ -131,7 +131,7 @@ namespace WinRT
 
         public unsafe ObjectReference<T> As<
 #if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
         T>(Guid iid)
         {
@@ -173,7 +173,7 @@ namespace WinRT
 
         public virtual unsafe int TryAs<
 #if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
         T>(Guid iid, out ObjectReference<T> objRef)
         {
