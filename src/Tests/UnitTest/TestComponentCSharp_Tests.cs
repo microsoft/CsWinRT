@@ -1282,6 +1282,22 @@ namespace UnitTest
         }
 
         [Fact]
+        public unsafe void TestFactoryCast_Unsafe()
+        {
+            IntPtr hstr;
+
+            // Access nonstatic class factory 
+            var instanceFactory = Class.As<IStringableInterop>();
+            instanceFactory.ToString(out hstr);
+            Assert.Equal("Class", MarshalString.FromAbiUnsafe(hstr).ToString());
+
+            // Access static class factory
+            var staticFactory = ComImports.As<IStringableInterop>();
+            staticFactory.ToString(out hstr);
+            Assert.Equal("ComImports", MarshalString.FromAbiUnsafe(hstr).ToString());
+        }
+
+        [Fact]
         public void TestFundamentalGeneric()
         {
             var ints = TestObject.GetIntVector();
