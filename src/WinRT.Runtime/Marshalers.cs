@@ -171,6 +171,37 @@ namespace WinRT
             return new string(buffer, 0, (int)length);
         }
 
+        /// <summary>
+        /// Marshals an input <c>HSTRING</c> value to a <see cref="ReadOnlySpan{T}"/> value.
+        /// </summary>
+        /// <param name="value">The input <c>HSTRING</c> value to marshal.</param>
+        /// <returns>The resulting <see cref="ReadOnlySpan{T}"/> value.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method is equivalent to <see cref="FromAbi"/>, but it does not create a new <see cref="string"/> instance.
+        /// Doing so makes it zero-allocation, but extra care should be taken by callers to ensure that the returned value
+        /// does not escape the scope where the source <c>HSTRING</c> is valid.
+        /// </para>
+        /// <para>
+        /// For instance, if this method is invoked in the scope of a method that receives the <c>HSTRING</c> value as one of
+        /// its parameters, the resulting <see cref="ReadOnlySpan{T}"/> is always valid for the scope of such method. But, if
+        /// the <c>HSTRING</c> was created by reference in a given scope, the resulting <see cref="ReadOnlySpan{T}"/> value
+        /// will also only be valid within such scope, and should not be used outside of it.
+        /// </para>
+        /// </remarks>
+        public static unsafe ReadOnlySpan<char> FromAbiUnsafe(IntPtr value)
+        {
+            if (value == IntPtr.Zero)
+            {
+                return "".AsSpan();
+            }
+
+            uint length;
+            char* buffer = Platform.WindowsGetStringRawBuffer(value, &length);
+
+            return new(buffer, (int)length);
+        }
+
         public static unsafe IntPtr FromManaged(string value)
         {
             if (value is null)
@@ -1194,7 +1225,7 @@ namespace WinRT
 
 #if EMBED
     internal
-#else 
+#else
     public
 #endif
     static class MarshalInspectable<
