@@ -131,7 +131,7 @@ namespace WinRT
             { 
                 IntPtr hstring;
                 Debug.Assert(_header == IntPtr.Zero);
-                _header = Marshal.AllocHGlobal(Unsafe.SizeOf<HSTRING_HEADER>());
+                _header = Marshal.AllocHGlobal(sizeof(HSTRING_HEADER));
                 Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
                     (ushort*)chars, value.Length, (IntPtr*)_header, &hstring));
                 return hstring;
@@ -249,7 +249,7 @@ namespace WinRT
             try
             {
                 var length = array.Length;
-                m._array = Marshal.AllocCoTaskMem(length * Marshal.SizeOf<IntPtr>());
+                m._array = Marshal.AllocCoTaskMem(length * sizeof(IntPtr));
                 m._marshalers = new MarshalString[length];
                 var elements = (IntPtr*)m._array.ToPointer();
                 for (int i = 0; i < length; i++)
@@ -317,7 +317,7 @@ namespace WinRT
             try
             {
                 var length = array.Length;
-                data = Marshal.AllocCoTaskMem(length * Marshal.SizeOf<IntPtr>());
+                data = Marshal.AllocCoTaskMem(length * sizeof(IntPtr));
                 var elements = (IntPtr*)data;
                 for (i = 0; i < length; i++)
                 {
