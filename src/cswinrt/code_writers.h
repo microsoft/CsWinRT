@@ -9450,14 +9450,16 @@ namespace WinRT
 {
 % static partial class Module
 {
-public static unsafe IntPtr GetActivationFactory(String runtimeClassId)
+public static unsafe IntPtr GetActivationFactory(% runtimeClassId)
 {%
 return IntPtr.Zero;
 }
+%
 }
 }
 )",
     internal_accessibility(),
+    settings.netstandard_compat ? "string" : "ReadOnlySpan<char>",
 bind_each([](writer& w, TypeDef const& type)
     {
         w.write(R"(
@@ -9473,7 +9475,13 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
 );
     },
     types
-        ));
+        ),
+    settings.netstandard_compat ? "// No ReadOnlySpan<char> overload available" : R"(
+public static IntPtr GetActivationFactory(string runtimeClassId)
+{
+    return GetActivationFactory(runtimeClassId.AsSpan());
+}"
+)");
     }
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)
