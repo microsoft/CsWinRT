@@ -6955,7 +6955,7 @@ AbiToProjectionVftable = new Vftbl
 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
 %
 };
-var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
+var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * %);
 %
 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 }
@@ -6983,7 +6983,7 @@ public static readonly IntPtr AbiToProjectionVftablePtr;
 %
 static unsafe Vftbl()
 {
-AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
+AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * %);
 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
 {
 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
