@@ -9684,23 +9684,25 @@ namespace WinRT
 % static partial class Module
 {
 public static unsafe IntPtr GetActivationFactory(% runtimeClassId)
-{%
-return IntPtr.Zero;
+{
+switch (runtimeClassId)
+{
+%
+default:
+    return IntPtr.Zero;
+}
 }
 %
 }
 }
 )",
     internal_accessibility(),
-    settings.netstandard_compat ? "string" : "ReadOnlySpan<char>",
+    settings.net7_0_or_greater ? "ReadOnlySpan<char>" : "string",
 bind_each([](writer& w, TypeDef const& type)
     {
         w.write(R"(
-
-if (runtimeClassId == "%.%")
-{
-return %ServerActivationFactory.Make();
-}
+case "%.%":
+    return %ServerActivationFactory.Make();
 )",
 type.TypeNamespace(),
 type.TypeName(),
@@ -9709,12 +9711,12 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
     },
     types
         ),
-    settings.netstandard_compat ? "// No ReadOnlySpan<char> overload available" : R"(
+    settings.net7_0_or_greater ? R"(
 public static IntPtr GetActivationFactory(string runtimeClassId)
 {
     return GetActivationFactory(runtimeClassId.AsSpan());
 }"
-)");
+)" : "// No ReadOnlySpan<char> overload available");
     }
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)
