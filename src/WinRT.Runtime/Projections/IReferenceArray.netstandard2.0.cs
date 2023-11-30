@@ -152,9 +152,9 @@ namespace ABI.Windows.Foundation
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
+                var vftblPtr = *(void***)thisPtr;
+                var vftbl = (IntPtr*)vftblPtr;
+                IInspectableVftbl = *(IInspectable.Vftbl*)vftblPtr;
                 get_Value_0 = Marshal.GetDelegateForFunctionPointer<IReferenceArray_Delegates.get_Value_0>(vftbl[6]);
             }
         }

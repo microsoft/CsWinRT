@@ -529,9 +529,9 @@ namespace ABI.System.Collections.Generic
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
+                var vftblPtr = *(void***)thisPtr;
+                var vftbl = (IntPtr*)vftblPtr;
+                IInspectableVftbl = *(IInspectable.Vftbl*)vftblPtr;
                 Lookup_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], Lookup_0_Type);
                 get_Size_1 = Marshal.GetDelegateForFunctionPointer<_get_PropertyAsUInt32>(vftbl[7]);
                 HasKey_2 = Marshal.GetDelegateForFunctionPointer(vftbl[8], HasKey_2_Type);
