@@ -776,7 +776,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<int>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfInt32_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<int>.AbiToProjectionVftablePtr
                 };
             }
@@ -784,7 +784,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<string>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfString_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<string>.AbiToProjectionVftablePtr
                 };
             }
@@ -792,7 +792,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<byte>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfByte_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<byte>.AbiToProjectionVftablePtr
                 };
             }
@@ -800,7 +800,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<short>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfInt16_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<short>.AbiToProjectionVftablePtr
                 };
             }
@@ -808,7 +808,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<ushort>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfUInt16_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<ushort>.AbiToProjectionVftablePtr
                 };
             }
@@ -816,7 +816,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<uint>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfUInt32_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<uint>.AbiToProjectionVftablePtr
                 };
             }
@@ -824,7 +824,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<long>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfInt64_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<long>.AbiToProjectionVftablePtr
                 };
             }
@@ -832,7 +832,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<ulong>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfUInt64_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<ulong>.AbiToProjectionVftablePtr
                 };
             }
@@ -840,7 +840,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<float>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfSingle_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<float>.AbiToProjectionVftablePtr
                 };
             }
@@ -848,7 +848,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<double>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfDouble_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<double>.AbiToProjectionVftablePtr
                 };
             }
@@ -856,7 +856,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<char>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfChar_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<char>.AbiToProjectionVftablePtr
                 };
             }
@@ -864,7 +864,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<bool>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfBoolean_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<bool>.AbiToProjectionVftablePtr
                 };
             }
@@ -872,7 +872,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<Guid>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfGuid_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<Guid>.AbiToProjectionVftablePtr
                 };
             }
@@ -880,7 +880,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<DateTimeOffset>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfDateTimeOffset_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<DateTimeOffset>.AbiToProjectionVftablePtr
                 };
             }
@@ -888,7 +888,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<TimeSpan>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfTimeSpan_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<TimeSpan>.AbiToProjectionVftablePtr
                 };
             }
@@ -896,7 +896,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<object>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfObject_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<object>.AbiToProjectionVftablePtr
                 };
             }
@@ -904,7 +904,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<Type>)),
+                    IID = InterfaceIIDs.IReferenceArrayOfType_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<Type>.AbiToProjectionVftablePtr
                 };
             }
