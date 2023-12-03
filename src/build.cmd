@@ -207,6 +207,14 @@ if "%cswinrt_platform%" EQU "x64" (
   )
 )
 
+if "%cswinrt_platform%" EQU "x64" (
+  if /I "%cswinrt_configuration%" EQU "release" (
+    echo Publishing AOT authoring tests for %cswinrt_platform% %cswinrt_configuration%
+    rem We also restore here as NAOT needs its own restore to pull in ILC
+    call :exec %msbuild_path%msbuild.exe /restore -t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\AuthoringTest\AuthoringTest.csproj
+  )
+)
+
 if "%cswinrt_build_only%"=="true" goto :eof
 
 :buildembedded
