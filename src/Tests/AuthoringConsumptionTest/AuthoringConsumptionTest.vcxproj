@@ -101,13 +101,10 @@
   </ItemGroup>
 
   <!--
-    When in Release x64, we want to test NativeAOT publishing. So we use a custom MSBuild target
-    to publish the test WinRT component (need to restore first) and then copy the .dll file.
+    When in Release x64, we want to test NativeAOT publishing. The build.cmd script is
+    already publishing the project, so we just need to copy the .dll to the output.
   -->
-  <Target
-    Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
-    Name="BuildAndReferenceManagedLibrary"
-    BeforeTargets="PrepareForBuild">
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
     <PropertyGroup>
       <NativeLibraryProjectName>AuthoringTest</NativeLibraryProjectName>
       <NativeLibraryProjectDirectory>$(MSBuildThisFileDirectory)..\$(NativeLibraryProjectName)\</NativeLibraryProjectDirectory>
@@ -116,17 +113,9 @@
       <NativeLibraryPublishedDllPath>$(NativeLibraryPublishFolder)$(NativeLibraryProjectName).dll</NativeLibraryPublishedDllPath>
     </PropertyGroup>
 
-    <!-- Publish the managed library with NativeAOT -->
-    <MSBuild Projects="$(NativeLibraryProjectFilePath)" 
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);NativeLib=Shared" 
-             Targets="Restore" />
-    <MSBuild Projects="$(NativeLibraryProjectFilePath)" 
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);NativeLib=Shared" 
-             Targets="Publish" />
-
     <!-- Copy the .dll to our output folder -->
     <Copy SourceFiles="$(NativeLibraryPublishedDllPath)" DestinationFolder="$(OutputPath)" />
-  </Target>
+  </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="AuthoringTest">
