@@ -5980,12 +5980,13 @@ return eventSource.EventActions;
         }
     };
 
-    auto get_managed_marshalers(writer& w, method_signature const& signature, bool is_generic)
+    auto get_managed_marshalers(writer& w, method_signature const& signature, bool /*is_generic*/, bool is_generic_instantiation_class)
     {
         std::vector<managed_marshaler> marshalers;
         concurrency::concurrent_unordered_set<generic_type_instantiation> generic_instantiations;
 
-        auto set_marshaler = [is_generic, &generic_instantiations](writer& w, type_semantics const& semantics, managed_marshaler& m)
+        std::function<void(writer&, type_semantics const&, managed_marshaler&)> set_marshaler = 
+            [&](writer& w, type_semantics const& semantics, managed_marshaler& m)
         {
             m.param_type = w.write_temp("%", bind<write_projection_type>(semantics));
 
@@ -6035,12 +6036,19 @@ return eventSource.EventActions;
                 {
                     set_typedef_marshaler(type);
                 },
-                [&](generic_type_index const& /*var*/)
+                [&](generic_type_index const& var)
                 {
-                    m.param_type = get_generic_abi_type(w, semantics).second;
-                    m.local_type = w.write_temp("%", bind<write_projection_type>(semantics));
-                    m.marshaler_type = w.write_temp("Marshaler<%>", m.local_type);
-                    m.abi_boxed = true;
+                    if (is_generic_instantiation_class)
+                    {
+                        set_marshaler(w, w.get_generic_arg_scope(var.index).first, m);
+                    }
+                    else
+                    {
+                        m.param_type = get_generic_abi_type(w, semantics).second;
+                        m.local_type = w.write_temp("%", bind<write_projection_type>(semantics));
+                        m.marshaler_type = w.write_temp("Marshaler<%>", m.local_type);
+                        m.abi_boxed = true;
+                    }
                 },
                 [&](generic_type_instance const& type)
                 {
@@ -6123,12 +6131,12 @@ return eventSource.EventActions;
         return std::tuple{ marshalers, managed_marshaler{}, generic_instantiations };
     }
 
-    void write_managed_method_call(writer& w, method_signature signature, std::string invoke_expression_format)
+    void write_managed_method_call(writer& w, method_signature signature, std::string invoke_expression_format, bool is_generic_instantiation_class = false)
     {
         auto generic_abi_types = get_generic_abi_types(w, signature);
         bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
             [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
-        auto managed_marshalers = get_managed_marshalers(w, signature, have_generic_params);
+        auto managed_marshalers = get_managed_marshalers(w, signature, have_generic_params, is_generic_instantiation_class);
         auto marshalers = std::get<0>(managed_marshalers);
         auto return_marshaler = std::get<1>(managed_marshalers);
         auto generic_instantiations = std::get<2>(managed_marshalers);
@@ -6231,7 +6239,8 @@ bind<write_managed_method_call>(
         type_name,
         have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
         method.Name(),
-        "(%)")));
+        "(%)"), 
+        false));
     }
 
     void write_method_abi_invoke_helper(writer& w, MethodDef const& method)
@@ -6291,7 +6300,8 @@ private static unsafe int Do_Abi_%%
                     type_name,
                     have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     prop.Name(),
-                    "%")));
+                    "%"),
+                false));
         }
 
         if (getter)
@@ -6321,7 +6331,8 @@ private static unsafe int Do_Abi_%%
                         type_name,
                         have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                         prop.Name(),
-                        "%")));
+                        "%"),
+                    false));
         }
     }
 
@@ -10317,7 +10328,7 @@ private static unsafe int Do_Abi_Invoke(%)
 
                             write_type_params(w, instance.generic_type);
                         });
-                    write_managed_method_call(w, signature, invoke);
+                    write_managed_method_call(w, signature, invoke, true);
                 });
         }
         else
