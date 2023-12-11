@@ -466,7 +466,8 @@ namespace Generator
                                     """);
             }
 
-            foreach (var genericInterface in genericInterfaces.ToImmutableHashSet())
+            var updatedGenericInterfaces = GenericVtableInitializerStrings.AddDependentGenericInterfaces(genericInterfaces.ToImmutableHashSet());
+            foreach (var genericInterface in updatedGenericInterfaces)
             {
                 source.AppendLine();
                 source.AppendLine("// " + genericInterface.Interface);

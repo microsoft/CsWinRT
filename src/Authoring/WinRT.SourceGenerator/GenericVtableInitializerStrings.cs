@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using Microsoft.CodeAnalysis;
-using System.Data;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
+using System.Reflection.Metadata;
 using WinRT.SourceGenerator;
 
 namespace Generator
@@ -125,6 +125,56 @@ namespace Generator
             }
 
             return "";
+        }
+
+        public static ImmutableHashSet<GenericInterface> AddDependentGenericInterfaces(ImmutableHashSet<GenericInterface> genericInterfaces)
+        {
+            var genericInterfacesList = genericInterfaces.ToList();
+
+            foreach (var genericInterface in genericInterfaces)
+            {
+                if (genericInterface.GenericDefinition == "Windows.Foundation.IAsyncActionWithProgress`1")
+                {
+                    AddReplacedGenericInterface(genericInterface, "Windows.Foundation.AsyncActionProgressHandler");
+                    AddReplacedGenericInterface(genericInterface, "Windows.Foundation.AsyncActionWithProgressCompletedHandler");
+                }
+                else if (genericInterface.GenericDefinition == "Windows.Foundation.IAsyncOperationWithProgress`2")
+                {
+                    AddReplacedGenericInterface(genericInterface, "Windows.Foundation.AsyncOperationProgressHandler");
+                    AddReplacedGenericInterface(genericInterface, "Windows.Foundation.AsyncOperationWithProgressCompletedHandler");
+                }
+                else if (genericInterface.GenericDefinition == "Windows.Foundation.IAsyncOperation`1")
+                {
+                    AddReplacedGenericInterface(genericInterface, "Windows.Foundation.AsyncOperationCompletedHandler");
+                }
+                else if (genericInterface.GenericDefinition == "Windows.Foundation.Collections.IObservableMap`2")
+                {
+                    AddReplacedGenericInterface(genericInterface, "Windows.Foundation.Collections.MapChangedEventHandler");
+                }
+                else if (genericInterface.GenericDefinition == "Windows.Foundation.Collections.IObservableVector`1")
+                {
+                    AddReplacedGenericInterface(genericInterface, "Windows.Foundation.Collections.VectorChangedEventHandler");
+                }
+            }
+
+            return genericInterfacesList.ToImmutableHashSet();
+
+            void AddReplacedGenericInterface(GenericInterface genericInterfaceToReplace, string newInterfaceToReplaceWith)
+            {
+                // Replace the old interface name with the new one.
+                // We know this is an generic interface, so we want to replace the string before the generics (<).
+                string newQualifiedInterfaceName = newInterfaceToReplaceWith + genericInterfaceToReplace.Interface[genericInterfaceToReplace.Interface.IndexOf('<')..];
+
+                // The metadata name includes the number of generics which we get from the last character of the one we are replacing
+                // since they are the same in the scenarios we care about.
+                string newInterfaceMetadataName = newInterfaceToReplaceWith + "`" + genericInterfaceToReplace.GenericDefinition[^1];
+
+                genericInterfacesList.Add(new GenericInterface(
+                        newQualifiedInterfaceName,
+                        newInterfaceMetadataName,
+                        genericInterfaceToReplace.GenericParameters
+                ));
+            }
         }
 
         public static string GetInstantiationInitFunction(string genericInterface, EquatableArray<GenericParameter> genericParameters)
@@ -1220,6 +1270,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_put_Progress_0(IntPtr thisPtr, IntPtr handler)
                  {
+                     _ = AsyncActionProgressHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      try
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Progress_0(thisPtr, global::ABI.Windows.Foundation.AsyncActionProgressHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(handler));
@@ -1235,6 +1286,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_get_Progress_1(IntPtr thisPtr, IntPtr* __return_value__)
                  {
+                     _ = AsyncActionProgressHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      global::Windows.Foundation.AsyncActionProgressHandler<{{genericParameters[0].ProjectedType}}> ____return_value__ = default;
 
                      *__return_value__ = default;
@@ -1256,6 +1308,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_put_Completed_2(IntPtr thisPtr, IntPtr handler)
                  {
+                     _ = AsyncActionWithProgressCompletedHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      try
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Completed_2(thisPtr, global::ABI.Windows.Foundation.AsyncActionWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(handler));
@@ -1271,6 +1324,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_get_Completed_3(IntPtr thisPtr, IntPtr* __return_value__)
                  {
+                     _ = AsyncActionWithProgressCompletedHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      global::Windows.Foundation.AsyncActionWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}> ____return_value__ = default;
 
                      *__return_value__ = default;
@@ -1336,6 +1390,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_put_Progress_0(IntPtr thisPtr, IntPtr handler)
                  {
+                     _ = AsyncOperationProgressHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      try
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Progress_0(thisPtr, global::ABI.Windows.Foundation.AsyncOperationProgressHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromAbi(handler));
@@ -1351,6 +1406,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_get_Progress_1(IntPtr thisPtr, IntPtr* __return_value__)
                  {
+                     _ = AsyncOperationProgressHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      global::Windows.Foundation.AsyncOperationProgressHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}> ____return_value__ = default;
              
                      *__return_value__ = default;
@@ -1372,6 +1428,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_put_Completed_2(IntPtr thisPtr, IntPtr handler)
                  {
+                     _ = AsyncOperationWithProgressCompletedHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      try
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Completed_2(thisPtr, global::ABI.Windows.Foundation.AsyncOperationWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromAbi(handler));
@@ -1387,6 +1444,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_get_Completed_3(IntPtr thisPtr, IntPtr* __return_value__)
                  {
+                     _ = AsyncOperationWithProgressCompletedHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      global::Windows.Foundation.AsyncOperationWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}> ____return_value__ = default;
              
                      *__return_value__ = default;
@@ -1450,6 +1508,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_put_Completed_0(IntPtr thisPtr, IntPtr handler)
                  {
+                     _ = AsyncOperationCompletedHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      try
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Completed_0(thisPtr, global::ABI.Windows.Foundation.AsyncOperationCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(handler));
@@ -1465,6 +1524,7 @@ namespace Generator
                  [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
                  private static unsafe int Do_Abi_get_Completed_1(IntPtr thisPtr, IntPtr* __return_value__)
                  {
+                     _ = AsyncOperationCompletedHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      global::Windows.Foundation.AsyncOperationCompletedHandler<{{genericParameters[0].ProjectedType}}> ____return_value__ = default;
              
                      *__return_value__ = default;
@@ -1567,6 +1627,7 @@ namespace Generator
                  private static unsafe int Do_Abi_add_MapChanged_0(IntPtr thisPtr, IntPtr vhnd, global::WinRT.EventRegistrationToken* __return_value__)
                  {
                      *__return_value__ = default;
+                     _ = MapChangedEventHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      try
                      {
                          *__return_value__ = {{staticMethodsClass}}.Do_Abi_add_MapChanged_0(thisPtr, global::ABI.Windows.Foundation.Collections.MapChangedEventHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromAbi(vhnd));
@@ -1620,6 +1681,7 @@ namespace Generator
                  private static unsafe int Do_Abi_add_VectorChanged_0(IntPtr thisPtr, IntPtr vhnd, global::WinRT.EventRegistrationToken* __return_value__)
                  {
                      *__return_value__ = default;
+                     _ = VectorChangedEventHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}.Initialized;
                      try
                      {
                          *__return_value__ = {{staticMethodsClass}}.Do_Abi_add_VectorChanged_0(thisPtr, global::ABI.Windows.Foundation.Collections.VectorChangedEventHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(vhnd));
