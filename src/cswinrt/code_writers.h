@@ -9687,6 +9687,7 @@ internal %(IObjectReference obj,
 delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, %WinRT.EventRegistrationToken%, int> addHandler,
 delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
 {
+%
 }
 
 protected override ObjectReferenceValue CreateMarshaler(% del) =>
@@ -9725,6 +9726,7 @@ genericInstantiationInitialization,
 bind<write_event_source_type_name>(eventTypeSemantics),
 settings.netstandard_compat ? "out " : "",
 settings.netstandard_compat ? "" : "*",
+genericInstantiationInitialization == "" ? "" : "_ = initialized;",
 eventTypeCode,
 abiTypeName,
 eventTypeCode,
