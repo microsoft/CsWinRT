@@ -1487,15 +1487,13 @@ namespace WinRT
     {
         static Marshaler()
         {
-            Type type = typeof(T);
-
-            // structs cannot contain arrays, and arrays may only ever appear as parameters
-            if (type.IsArray)
+            // Structs cannot contain arrays, and arrays may only ever appear as parameters
+            if (typeof(T).IsArray)
             {
                 throw new InvalidOperationException("Arrays may not be marshaled generically.");
             }
 
-            if (type == typeof(String))
+            if (typeof(T) == typeof(string))
             {
                 AbiType = typeof(IntPtr);
                 CreateMarshaler = (T value) => MarshalString.CreateMarshaler((string)(object)value);
@@ -1513,7 +1511,7 @@ namespace WinRT
                 DisposeMarshalerArray = MarshalString.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalString.DisposeAbiArray;
             }
-            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            else if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
                 AbiType = typeof(IntPtr);
                 CreateMarshaler = MarshalGeneric<T>.CreateMarshaler2;
@@ -1533,7 +1531,7 @@ namespace WinRT
                 DisposeMarshalerArray = MarshalInterface<T>.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalInterface<T>.DisposeAbiArray;
             }
-            else if (type == typeof(Type))
+            else if (typeof(T) == typeof(Type))
             {
                 AbiType = typeof(ABI.System.Type);
                 CreateMarshaler = (T value) => ABI.System.Type.CreateMarshaler((Type)(object)value);
@@ -1553,19 +1551,19 @@ namespace WinRT
                 DisposeMarshalerArray = MarshalNonBlittable<T>.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalNonBlittable<T>.DisposeAbiArray;
             }
-            else if (type.IsValueType)
+            else if (typeof(T).IsValueType)
             {
-                if (type == typeof(bool))
+                if (typeof(T) == typeof(bool))
                 {
                     AbiType = typeof(byte);
                 }
-                else if (type == typeof(char))
+                else if (typeof(T) == typeof(char))
                 {
                     AbiType = typeof(ushort);
                 }
                 else
                 {
-                    AbiType = type.FindHelperType();
+                    AbiType = typeof(T).FindHelperType();
                     if (AbiType != null)
                     {
                         // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
@@ -1579,7 +1577,7 @@ namespace WinRT
                 if (AbiType == null)
                 {
                     Func<T, object> ReturnTypedParameterFunc = (T value) => value;
-                    AbiType = type;
+                    AbiType = typeof(T);
                     CreateMarshaler = ReturnTypedParameterFunc;
                     CreateMarshaler2 = CreateMarshaler;
                     GetAbi = Marshaler.ReturnParameterFunc;
@@ -1587,10 +1585,10 @@ namespace WinRT
                     FromManaged = ReturnTypedParameterFunc;
                     DisposeMarshaler = Marshaler.EmptyFunc;
                     DisposeAbi = Marshaler.EmptyFunc;
-                    if (type.IsEnum)
+                    if (typeof(T).IsEnum)
                     {
                         // For marshaling non-blittable enum arrays via MarshalNonBlittable
-                        if (type.GetEnumUnderlyingType() == typeof(int))
+                        if (typeof(T).GetEnumUnderlyingType() == typeof(int))
                         {
                             CopyAbi = Marshaler.CopyIntEnumFunc;
                             CopyManaged = (T value, IntPtr dest) => Marshaler.CopyIntEnumFunc(value, dest);
@@ -1629,7 +1627,7 @@ namespace WinRT
                     DisposeAbiArray = MarshalNonBlittable<T>.DisposeAbiArray;
                 }
             }
-            else if (type.IsInterface)
+            else if (typeof(T).IsInterface)
             {
                 AbiType = typeof(IntPtr);
                 CreateMarshaler = (T value) => MarshalInterface<T>.CreateMarshaler2(value);
