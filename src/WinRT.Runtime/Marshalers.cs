@@ -1191,9 +1191,9 @@ namespace WinRT
 
         public static unsafe void CopyAbiArray(T[] array, object box) => MarshalInterfaceHelper<T>.CopyAbiArray(array, box, FromAbi);
 
-        public static unsafe (int length, IntPtr data) FromManagedArray(T[] array) => MarshalInterfaceHelper<T>.FromManagedArray(array, (o) => FromManaged(o));
+        public static unsafe (int length, IntPtr data) FromManagedArray(T[] array) => MarshalInterfaceHelper<T>.FromManagedArray(array, FromManaged);
 
-        public static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, (o, dest) => CopyManaged(o, dest));
+        public static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, CopyManaged);
 
         public static void DisposeMarshalerArray(object box) => MarshalInterfaceHelper<T>.DisposeMarshalerArray(box);
 
@@ -1503,15 +1503,15 @@ namespace WinRT
                 GetAbi = (object box) => MarshalString.GetAbi(box);
                 FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
                 FromManaged = (T value) => MarshalString.FromManaged((string)(object)value);
-                DisposeMarshaler = (object box) => MarshalString.DisposeMarshaler(box);
-                DisposeAbi = (object box) => MarshalString.DisposeAbi(box);
+                DisposeMarshaler = MarshalString.DisposeMarshaler;
+                DisposeAbi = MarshalString.DisposeAbi;
                 CreateMarshalerArray = (T[] array) => MarshalString.CreateMarshalerArray((string[])(object)array);
-                GetAbiArray = (object box) => MarshalString.GetAbiArray(box);
+                GetAbiArray = MarshalString.GetAbiArray;
                 FromAbiArray = (object box) => (T[])(object)MarshalString.FromAbiArray(box);
                 FromManagedArray = (T[] array) => MarshalString.FromManagedArray((string[])(object)array);
                 CopyManagedArray = (T[] array, IntPtr data) => MarshalString.CopyManagedArray((string[])(object)array, data);
-                DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
-                DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
+                DisposeMarshalerArray = MarshalString.DisposeMarshalerArray;
+                DisposeAbiArray = MarshalString.DisposeAbiArray;
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
@@ -1529,9 +1529,9 @@ namespace WinRT
                 GetAbiArray = MarshalGeneric<T>.GetAbiArray;
                 FromAbiArray = MarshalGeneric<T>.FromAbiArray;
                 FromManagedArray = MarshalGeneric<T>.FromManagedArray;
-                CopyManagedArray = (T[] array, IntPtr data) => MarshalGeneric<T>.CopyManagedArray(array, data);
-                DisposeMarshalerArray = (object box) => MarshalInterface<T>.DisposeMarshalerArray(box);
-                DisposeAbiArray = (object box) => MarshalInterface<T>.DisposeAbiArray(box);
+                CopyManagedArray = MarshalGeneric<T>.CopyManagedArray;
+                DisposeMarshalerArray = MarshalInterface<T>.DisposeMarshalerArray;
+                DisposeAbiArray = MarshalInterface<T>.DisposeAbiArray;
             }
             else if (type == typeof(Type))
             {
@@ -1546,12 +1546,12 @@ namespace WinRT
                 DisposeMarshaler = (object box) => ABI.System.Type.DisposeMarshaler((ABI.System.Type.Marshaler)box);
                 DisposeAbi = (object box) => ABI.System.Type.DisposeAbi((ABI.System.Type)box);
                 CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
-                GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
-                FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
-                FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
-                CopyManagedArray = (T[] array, IntPtr data) => MarshalNonBlittable<T>.CopyManagedArray(array, data);
-                DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
-                DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
+                GetAbiArray = MarshalNonBlittable<T>.GetAbiArray;
+                FromAbiArray = MarshalNonBlittable<T>.FromAbiArray;
+                FromManagedArray = MarshalNonBlittable<T>.FromManagedArray;
+                CopyManagedArray = MarshalNonBlittable<T>.CopyManagedArray;
+                DisposeMarshalerArray = MarshalNonBlittable<T>.DisposeMarshalerArray;
+                DisposeAbiArray = MarshalNonBlittable<T>.DisposeAbiArray;
             }
             else if (type.IsValueType)
             {
@@ -1602,12 +1602,12 @@ namespace WinRT
                         }
                     }
                     CreateMarshalerArray = (T[] array) => MarshalBlittable<T>.CreateMarshalerArray(array);
-                    GetAbiArray = (object box) => MarshalBlittable<T>.GetAbiArray(box);
-                    FromAbiArray = (object box) => MarshalBlittable<T>.FromAbiArray(box);
-                    FromManagedArray = (T[] array) => MarshalBlittable<T>.FromManagedArray(array);
-                    CopyManagedArray = (T[] array, IntPtr data) => MarshalBlittable<T>.CopyManagedArray(array, data);
-                    DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
-                    DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
+                    GetAbiArray = MarshalBlittable<T>.GetAbiArray;
+                    FromAbiArray = MarshalBlittable<T>.FromAbiArray;
+                    FromManagedArray = MarshalBlittable<T>.FromManagedArray;
+                    CopyManagedArray = MarshalBlittable<T>.CopyManagedArray;
+                    DisposeMarshalerArray = MarshalBlittable<T>.DisposeMarshalerArray;
+                    DisposeAbiArray = MarshalBlittable<T>.DisposeAbiArray;
                 }
                 else
                 {
@@ -1621,12 +1621,12 @@ namespace WinRT
                     DisposeMarshaler = MarshalNonBlittable<T>.DisposeMarshaler;
                     DisposeAbi = MarshalNonBlittable<T>.DisposeAbi;
                     CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
-                    GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
-                    FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
-                    FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
-                    CopyManagedArray = (T[] array, IntPtr data) => MarshalNonBlittable<T>.CopyManagedArray(array, data);
-                    DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
-                    DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
+                    GetAbiArray = MarshalNonBlittable<T>.GetAbiArray;
+                    FromAbiArray = MarshalNonBlittable<T>.FromAbiArray;
+                    FromManagedArray = MarshalNonBlittable<T>.FromManagedArray;
+                    CopyManagedArray = MarshalNonBlittable<T>.CopyManagedArray;
+                    DisposeMarshalerArray = MarshalNonBlittable<T>.DisposeMarshalerArray;
+                    DisposeAbiArray = MarshalNonBlittable<T>.DisposeAbiArray;
                 }
             }
             else if (type.IsInterface)
@@ -1641,12 +1641,12 @@ namespace WinRT
                 DisposeMarshaler = MarshalInterface<T>.DisposeMarshaler;
                 DisposeAbi = (object box) => MarshalInterface<T>.DisposeAbi((IntPtr)box);
                 CreateMarshalerArray = (T[] array) => MarshalInterface<T>.CreateMarshalerArray(array);
-                GetAbiArray = (object box) => MarshalInterface<T>.GetAbiArray(box);
-                FromAbiArray = (object box) => MarshalInterface<T>.FromAbiArray(box);
-                FromManagedArray = (T[] array) => MarshalInterface<T>.FromManagedArray(array);
-                CopyManagedArray = (T[] array, IntPtr data) => MarshalInterface<T>.CopyManagedArray(array, data);
-                DisposeMarshalerArray = (object box) => MarshalInterface<T>.DisposeMarshalerArray(box);
-                DisposeAbiArray = (object box) => MarshalInterface<T>.DisposeAbiArray(box);
+                GetAbiArray = MarshalInterface<T>.GetAbiArray;
+                FromAbiArray = MarshalInterface<T>.FromAbiArray;
+                FromManagedArray = MarshalInterface<T>.FromManagedArray;
+                CopyManagedArray = MarshalInterface<T>.CopyManagedArray;
+                DisposeMarshalerArray = MarshalInterface<T>.DisposeMarshalerArray;
+                DisposeAbiArray = MarshalInterface<T>.DisposeAbiArray;
             }
             else if (typeof(T) == typeof(object))
             {
@@ -1661,12 +1661,12 @@ namespace WinRT
                 DisposeMarshaler = MarshalInspectable<T>.DisposeMarshaler;
                 DisposeAbi = (object box) => MarshalInspectable<T>.DisposeAbi((IntPtr)box);
                 CreateMarshalerArray = (T[] array) => MarshalInspectable<T>.CreateMarshalerArray(array);
-                GetAbiArray = (object box) => MarshalInspectable<T>.GetAbiArray(box);
-                FromAbiArray = (object box) => MarshalInspectable<T>.FromAbiArray(box);
-                FromManagedArray = (T[] array) => MarshalInspectable<T>.FromManagedArray(array);
-                CopyManagedArray = (T[] array, IntPtr data) => MarshalInspectable<T>.CopyManagedArray(array, data);
-                DisposeMarshalerArray = (object box) => MarshalInspectable<T>.DisposeMarshalerArray(box);
-                DisposeAbiArray = (object box) => MarshalInspectable<T>.DisposeAbiArray(box);
+                GetAbiArray = MarshalInspectable<T>.GetAbiArray;
+                FromAbiArray = MarshalInspectable<T>.FromAbiArray;
+                FromManagedArray = MarshalInspectable<T>.FromManagedArray;
+                CopyManagedArray = MarshalInspectable<T>.CopyManagedArray;
+                DisposeMarshalerArray = MarshalInspectable<T>.DisposeMarshalerArray;
+                DisposeAbiArray = MarshalInspectable<T>.DisposeAbiArray;
             }
             else // delegate, class 
             {
@@ -1686,7 +1686,7 @@ namespace WinRT
                 GetAbiArray = MarshalGeneric<T>.GetAbiArray;
                 FromAbiArray = MarshalGeneric<T>.FromAbiArray;
                 FromManagedArray = MarshalGeneric<T>.FromManagedArray;
-                CopyManagedArray = (T[] array, IntPtr data) => MarshalGeneric<T>.CopyManagedArray(array, data);
+                CopyManagedArray = MarshalGeneric<T>.CopyManagedArray;
                 DisposeMarshalerArray = MarshalGeneric<T>.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalGeneric<T>.DisposeAbiArray;
             }
