@@ -10327,7 +10327,8 @@ private static unsafe int Do_Abi_Invoke(%)
                             });
 
                             write_type_params(w, instance.generic_type);
-                        });
+                        },
+                        "%");
                     write_managed_method_call(w, signature, invoke, true);
                 });
         }
