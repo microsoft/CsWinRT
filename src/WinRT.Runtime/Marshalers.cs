@@ -1417,10 +1417,10 @@ namespace WinRT
 
             if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
             {
-                return objRef.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
+                return objRef.As<IDelegateVftbl>(delegateIID);
             }
 
-            return ComWrappersSupport.CreateCCWForObject<global::WinRT.Interop.IDelegateVftbl>(o, delegateIID);
+            return ComWrappersSupport.CreateCCWForObject<IDelegateVftbl>(o, delegateIID);
         }
 
         public static ObjectReferenceValue CreateMarshaler2(object o, Guid delegateIID, bool unwrapObject = true)
@@ -1439,7 +1439,7 @@ namespace WinRT
         }
 
         public static T FromAbi<T>(IntPtr nativeDelegate)
-            where T : System.Delegate
+            where T : Delegate
         {
             if (nativeDelegate == IntPtr.Zero)
             {
@@ -1539,7 +1539,7 @@ namespace WinRT
                 GetAbi = (object box) => ABI.System.Type.GetAbi((ABI.System.Type.Marshaler)box);
                 FromAbi = (object value) => (T)(object)ABI.System.Type.FromAbi((ABI.System.Type)value);
                 CopyAbi = (object box, IntPtr dest) => ABI.System.Type.CopyAbi((ABI.System.Type.Marshaler)box, dest);
-                CopyManaged = (T value, IntPtr dest) => ABI.System.Type.CopyManaged((global::System.Type)(object)value, dest);
+                CopyManaged = (T value, IntPtr dest) => ABI.System.Type.CopyManaged((Type)(object)value, dest);
                 FromManaged = (T value) => ABI.System.Type.FromManaged((Type)(object)value);
                 DisposeMarshaler = (object box) => ABI.System.Type.DisposeMarshaler((ABI.System.Type.Marshaler)box);
                 DisposeAbi = (object box) => ABI.System.Type.DisposeAbi((ABI.System.Type)box);
