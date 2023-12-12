@@ -2660,6 +2660,14 @@ namespace UnitTest
             Assert.Equal(4, property.ReadWriteProperty);
         }
 
+        [Fact]
+        public void TestStaticPropertyImplementedAcrossInterfaces()
+        {
+            // Testing call doesn't fail.
+            WarningStatic.ReadWriteProperty = 4; // expected warning CA1416
+            _ = WarningStatic.ReadWriteProperty;
+        }
+
         // Test scenario where type reported by runtimeclass name is not a valid type (i.e. internal type).
         [Fact]
         public void TestNonProjectedRuntimeClass()

@@ -2404,17 +2404,6 @@ Marshal.Release(inner);
             std::nullopt);
     }
 
-    void write_static_property(writer& w, Property const& prop, std::string_view prop_target, std::string_view platform_attribute = ""sv)
-    {
-        auto [getter, setter] = get_property_methods(prop);
-        auto getter_target = getter ? prop_target : "";
-        auto setter_target = setter ? prop_target : "";
-        write_property(w, prop.Name(), prop.Name(), write_prop_type(w, prop),
-            getter_target, setter_target, "public "sv, "static "sv, platform_attribute, platform_attribute, 
-            !getter ? std::nullopt : std::optional(std::pair(prop.Parent(), prop)), 
-            !setter ? std::nullopt : std::optional(std::pair(prop.Parent(), prop)));
-    }
-
     void write_static_factory_event(writer& w, Event const& event, std::string_view event_target, std::string_view platform_attribute = ""sv)
     {
         write_event(w, event.Name(), event, event_target, "public "sv, ""sv, platform_attribute, std::nullopt);
@@ -2425,18 +2414,72 @@ Marshal.Release(inner);
         write_event(w, event.Name(), event, event_target, "public "sv, "static "sv, platform_attribute, std::optional(std::tuple(event.Parent(), event, true)));
     }
 
-    void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& class_type)
+    void write_static_members(writer& w, TypeDef const& class_type)
     {
-        auto vftblType = settings.netstandard_compat ?
-            w.write_temp("%.Vftbl", bind<write_type_name>(static_type, typedef_name_type::ABI, true)) :
-            "IUnknownVftbl";
-        write_static_objref_definition(w, vftblType, static_type, class_type);
-        auto cache_object = w.write_temp("%", bind<write_objref_type_name>(static_type));
+        std::map<std::string, std::tuple<std::string, std::string, std::string, std::string, std::string, std::optional<std::pair<TypeDef, Property>>, std::optional<std::pair<TypeDef, Property>>>> properties;
 
-        auto platform_attribute = write_platform_attribute_temp(w, static_type);
-        w.write_each<write_static_method>(static_type.MethodList(), cache_object, platform_attribute);
-        w.write_each<write_static_property>(static_type.PropertyList(), cache_object, platform_attribute);
-        w.write_each<write_static_event>(static_type.EventList(), cache_object, platform_attribute);
+        for (auto&& [interface_name, factory] : get_attributed_types(w, class_type))
+        {
+            if (factory.statics)
+            {
+                auto vftblType = settings.netstandard_compat ?
+                    w.write_temp("%.Vftbl", bind<write_type_name>(factory.type, typedef_name_type::ABI, true)) :
+                    "IUnknownVftbl";
+                write_static_objref_definition(w, vftblType, factory.type, class_type);
+                auto cache_object = w.write_temp("%", bind<write_objref_type_name>(factory.type));
+
+                auto platform_attribute = write_platform_attribute_temp(w, factory.type);
+                w.write_each<write_static_method>(factory.type.MethodList(), cache_object, platform_attribute);
+                w.write_each<write_static_event>(factory.type.EventList(), cache_object, platform_attribute);
+
+                // Merge property getters/setters, since such may be defined across interfaces
+                for (auto&& prop : factory.type.PropertyList())
+                {
+                    auto [getter, setter] = get_property_methods(prop);
+                    auto prop_type = write_prop_type(w, prop);
+
+                    auto [prop_targets, inserted] = properties.try_emplace(std::string(prop.Name()),
+                        prop_type,
+                        getter ? cache_object : "",
+                        getter ? platform_attribute : "",
+                        setter ? cache_object : "",
+                        setter ? platform_attribute : "",
+                        !getter ? std::nullopt : std::optional(std::pair(prop.Parent(), prop)),
+                        !setter ? std::nullopt : std::optional(std::pair(prop.Parent(), prop))
+                    );
+                    if (!inserted)
+                    {
+                        auto& [property_type, getter_target, getter_platform, setter_target, setter_platform, getter_prop, setter_prop] = prop_targets->second;
+                        XLANG_ASSERT(property_type == prop_type);
+                        if (getter)
+                        {
+                            XLANG_ASSERT(getter_target.empty());
+                            getter_target = cache_object;
+                            getter_platform = platform_attribute;
+                            getter_prop = std::optional(std::pair(prop.Parent(), prop));
+                        }
+                        if (setter)
+                        {
+                            XLANG_ASSERT(setter_target.empty());
+                            setter_target = cache_object;
+                            setter_platform = platform_attribute;
+                            setter_prop = std::optional(std::pair(prop.Parent(), prop));
+                        }
+                        XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
+                    }
+                }
+            }
+        }
+
+        // Write properties with merged accessors
+        for (auto& [prop_name, prop_data] : properties)
+        {
+            auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, getter_prop, setter_prop] = prop_data;
+            write_property(w, prop_name, prop_name, prop_type,
+                getter_target, setter_target, "public "sv, "static "sv, getter_platform, setter_platform,
+                getter_prop,
+                setter_prop);
+        }
     }
 
     void write_attributed_types(writer& w, TypeDef const& type)
@@ -2489,10 +2532,10 @@ public static %I As<I>() => ActivationFactory.Get("%.%").AsInterface<I>();
                         type.TypeNamespace(),
                         type.TypeName());
                 }
-
-                write_static_members(w, factory.type, type);
             }
         }
+
+        write_static_members(w, type);
     }
 
     void write_nongeneric_enumerable_members(writer& w, std::string_view target)
@@ -3098,6 +3141,20 @@ remove => %.ErrorsChanged -= value;
             return false;
         };
 
+        std::function<bool(TypeDef const&)> search_interfaces_from_attributes = [&](TypeDef const& type)
+        {
+            for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+            {
+                if (factory.statics && factory.type && (search_interface(factory.type) || search_interfaces(factory.type)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+
         // first search base interfaces for property getter
         if (search_interfaces(setter_iface))
         {
@@ -3113,6 +3170,11 @@ remove => %.ErrorsChanged -= value;
             auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(fixed_args[0].value).value);
             auto exclusive_to_type = setter_iface.get_cache().find_required(sys_type.name);
             if (search_interfaces(exclusive_to_type))
+            {
+                return { getter_iface, false };
+            }
+
+            if (search_interfaces_from_attributes(exclusive_to_type))
             {
                 return { getter_iface, false };
             }
