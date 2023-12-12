@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -1279,6 +1280,38 @@ namespace UnitTest
             var staticFactory = ComImports.As<IStringableInterop>();
             staticFactory.ToString(out hstr);
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
+        }
+
+        [Fact]
+        public unsafe void TestMarshalString_FromAbiUnsafe()
+        {
+            // The span must be empty and point to a null-terminated buffer (HSTRING-s are null-terminated too)
+            var span = MarshalString.FromAbiUnsafe(IntPtr.Zero);
+            Assert.Equal(0, span.Length);
+            Assert.True(MemoryMarshal.GetReference(span) == '\0');
+
+            // Same thing but with round-tripping from a null string
+            var hstr = MarshalString.FromManaged(null);
+            span = MarshalString.FromAbiUnsafe(hstr);
+            Assert.Equal(0, span.Length);
+            Assert.True(MemoryMarshal.GetReference(span) == '\0');
+            MarshalString.DisposeAbi(hstr);
+
+            // Same thing but with an empty string (equivalent to null)
+            hstr = MarshalString.FromManaged("");
+            span = MarshalString.FromAbiUnsafe(hstr);
+            Assert.Equal(0, span.Length);
+            Assert.True(MemoryMarshal.GetReference(span) == '\0');
+            MarshalString.DisposeAbi(hstr);
+
+            // Marshal from some non-null, non-empty string. We want to check that both the span has the expected content,
+            // but also that it's correctly null-terminated (outside of its bounds). This is always safe to access, like
+            // before, because the memory should point to the HSTRING buffer, which is always null-terminated as well.
+            hstr = MarshalString.FromManaged(nameof(TestMarshalString_FromAbiUnsafe));
+            span = MarshalString.FromAbiUnsafe(hstr);
+            Assert.True(span.SequenceEqual(nameof(TestMarshalString_FromAbiUnsafe)));
+            Assert.True(Unsafe.Add(ref MemoryMarshal.GetReference(span), span.Length) == '\0');
+            MarshalString.DisposeAbi(hstr);
         }
 
         [Fact]

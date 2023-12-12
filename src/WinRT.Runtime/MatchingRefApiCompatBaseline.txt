@@ -122,4 +122,5 @@ MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribut
 TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Boolean WinRT.ComWrappersSupport.RegisterDelegateFactory(System.Type, System.Func<System.IntPtr, System.Object>)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterComInterfaceEntries(System.Type, System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[])' does not exist in the reference but it does exist in the implementation.
-Total Issues: 123
+MembersMustExist : Member 'public System.ReadOnlySpan<System.Char> WinRT.MarshalString.FromAbiUnsafe(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 124
