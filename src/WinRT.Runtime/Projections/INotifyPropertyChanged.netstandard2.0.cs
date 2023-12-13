@@ -110,8 +110,8 @@ namespace ABI.System.ComponentModel
         {
             _obj = obj;
 
-            _PropertyChanged =
-                new PropertyChangedEventSource(_obj,
+            _PropertyChanged = new PropertyChangedEventSource(
+                _obj,
                 _obj.Vftbl.add_PropertyChanged_0,
                 _obj.Vftbl.remove_PropertyChanged_1);
         }

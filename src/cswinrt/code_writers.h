@@ -615,17 +615,17 @@ namespace cswinrt
             w.write(", %", bind<write_abi_type>(semantics));
             break;
         case param_category::ref:
-            w.write(", in %", bind<write_abi_type>(semantics));
+            w.write(settings.netstandard_compat ? ", in %" : ", %*", bind<write_abi_type>(semantics));
             break;
         case param_category::out:
-            w.write(", out %", bind<write_abi_type>(semantics));
+            w.write(settings.netstandard_compat ? ", out %" : ", %*", bind<write_abi_type>(semantics));
             break;
         case param_category::pass_array:
         case param_category::fill_array:
             w.write(", int, IntPtr");
             break;
         case param_category::receive_array:
-            w.write(", out int, out IntPtr");
+            w.write(settings.netstandard_compat ? ", out int, out IntPtr" : ", int*, IntPtr*");
             break;
         }
     } 
@@ -680,9 +680,18 @@ namespace cswinrt
         if (auto return_sig = signature.return_signature())
         {
             auto semantics = get_type_semantics(return_sig.Type());
-            return_sig.Type().is_szarray() ?
-                w.write(", out int, out IntPtr") :
-                w.write(", out %", bind<write_abi_type>(semantics));
+            if (settings.netstandard_compat)
+            {
+                return_sig.Type().is_szarray() ?
+                    w.write(", out int, out IntPtr") :
+                    w.write(", out %", bind<write_abi_type>(semantics));
+            }
+            else
+            {
+                return_sig.Type().is_szarray() ?
+                    w.write(", int*, IntPtr*") :
+                    w.write(", %*", bind<write_abi_type>(semantics));
+            }
         }
     }
 
@@ -3360,7 +3369,8 @@ event % %;)",
 
         bool is_ref() const
         {
-            return (category == param_category::fill_array);
+            return (category == param_category::ref) ||
+                (category == param_category::fill_array);
         }
 
         bool is_generic() const
@@ -3480,6 +3490,19 @@ event % %;)",
             return true;
         }
 
+        bool write_fixed(writer& w) const
+        {
+            if (!is_ref() || is_array())
+                return false;
+
+            w.write("fixed(%* __% = &%)\n",
+                param_type,
+                param_name,
+                param_name);
+
+            return true;
+        }
+
         void write_fixed_expression(writer& w, bool& write_delimiter) const
         {
             if (!is_pinnable)
@@ -3498,15 +3521,39 @@ event % %;)",
             {
                 if (is_array())
                 {
-                    w.write("%__%_length, %__%_data",
-                        is_out() ? "out " : "", param_name,
-                        is_out() ? "out " : "", param_name);
-                    return;
+                    if (settings.netstandard_compat)
+                    {
+                        w.write("%__%_length, %__%_data",
+                            is_out() ? "out " : "", param_name,
+                            is_out() ? "out " : "", param_name);
+                        return;
+                    }
+                    else
+                    {
+                        w.write("%__%_length, %__%_data",
+                            is_out() ? "&" : "", param_name,
+                            is_out() ? "&" : "", param_name);
+                        return;
+                    }
+                }
+
+                if (is_ref())
+                {
+                    if (settings.netstandard_compat)
+                    {
+                        w.write("in %", param_name);
+                        return;
+                    }
+                    else
+                    {
+                        w.write("__%", param_name);
+                        return;
+                    }
                 }
 
                 if (is_out())
                 {
-                    w.write("%__%", "out ", param_name);
+                    w.write("%__%", settings.netstandard_compat ? "out " :"&", param_name);
                     return;
                 }
 
@@ -3623,9 +3670,9 @@ event % %;)",
 
         void write_marshal_from_abi(writer& w) const
         {
-            if (!is_ref() && (!is_out() || local_type.empty()))
+            if (!(is_array() && is_ref()) && (!is_out() || local_type.empty()))
                 return;
-            if (is_ref())
+            if (is_array() && is_ref())
             {
                 if (!starts_with(marshaler_type, "MarshalBlittable"))
                 {
@@ -3877,6 +3924,7 @@ event % %;)",
         auto write_abi_invoke = [&](writer& w)
         {
             bool have_pinnables{};
+            bool have_fixed{};
             w.write("%",
                 bind_each([&](writer& w, abi_marshaler const& m)
                 {
@@ -3885,12 +3933,25 @@ event % %;)",
             if (have_pinnables)
             {
                 bool write_delimiter{};
-                w.write("fixed(void* %)\n{\n",
+                w.write("fixed(void* %)\n",
                     bind_each([&](writer& w, abi_marshaler const& m)
                     {
                         m.write_fixed_expression(w, write_delimiter);
                     }, marshalers));
             }
+            if (!settings.netstandard_compat)
+            {
+                w.write("%",
+                    bind_each([&](writer& w, abi_marshaler const& m)
+                        {
+                            have_fixed |= m.write_fixed(w);
+                        }, marshalers));
+            }
+            if (have_fixed || have_pinnables)
+            {
+                w.write("{\n");
+            }
+
             if (is_generic)
             {
                 w.write("%.DynamicInvokeAbi(__params);\n", invoke_target);
@@ -3918,7 +3979,7 @@ event % %;)",
             {
                 m.write_marshal_from_abi(w);
             }
-            if (have_pinnables)
+            if (have_fixed || have_pinnables)
             {
                 w.write("}\n");
             }
@@ -4941,7 +5002,8 @@ return eventSource.EventActions;
 
         bool is_ref() const
         {
-            return (category == param_category::fill_array);
+            return (category == param_category::ref) ||
+                (category == param_category::fill_array);
         }
 
         bool is_array() const
@@ -5018,9 +5080,9 @@ return eventSource.EventActions;
 
         void write_marshal_to_managed(writer& w) const
         {
-            if(is_out() || is_ref())
+            if(is_out() || (is_ref() && is_array()))
             {
-                w.write("% __%", is_out() ? "out" : "", param_name);
+                w.write("%__%", is_out() ? "out " : "", param_name);
             }
             else if (marshaler_type.empty())
             {
@@ -5067,10 +5129,10 @@ return eventSource.EventActions;
 
         void write_marshal_from_managed(writer& w) const
         {
-            if (!is_ref() && (!is_out() || local_type.empty()))
+            if (!(is_ref() && is_array()) && (!is_out() || local_type.empty()))
                 return;
             auto param_local = get_param_local(w);
-            if (is_ref())
+            if (is_ref() && is_array())
             {
                 w.write("%.CopyManagedArray(%, %);\n",
                     marshaler_type,
@@ -7698,11 +7760,14 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 }
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
                 auto invokeMethodSig = get_event_invoke_method(eventType);
+                auto addHandler =  settings.netstandard_compat ?
+                    w.write_temp("delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler") :
+                    w.write_temp("delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, WinRT.EventRegistrationToken*, int> addHandler");
                 w.write(R"(
 internal sealed unsafe class %% : EventSource<%>
 {
 internal %(IObjectReference obj,
-delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+%,
 delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
 {
 }
@@ -7739,7 +7804,8 @@ return invoke;
 bind<write_event_source_type_name>(eventTypeSemantics),
 bind<write_event_source_generic_args>(eventTypeSemantics),
 eventTypeCode, 
-bind<write_event_source_type_name>(eventTypeSemantics), 
+bind<write_event_source_type_name>(eventTypeSemantics),
+addHandler,
 eventTypeCode,
 abiTypeName,
 eventTypeCode,
