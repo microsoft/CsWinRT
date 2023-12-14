@@ -505,11 +505,13 @@ namespace TestComponentCSharp
         static void Method();
         static Int32 Property;
         static event Windows.Foundation.EventHandler<Int32> Event;
+        static Int32 ReadWriteProperty{ get; };
         [contract(Windows.Foundation.UniversalApiContract, 10)]
         {
             static void WarningMethod();
             static Int32 WarningProperty;
             static event Windows.Foundation.EventHandler<Int32> WarningEvent;
+            static Int32 ReadWriteProperty{ set; };
         }
     }
     
