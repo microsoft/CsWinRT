@@ -5,6 +5,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace ABI.System.Collections.Specialized
 {
@@ -45,11 +46,21 @@ namespace ABI.System.Collections.Specialized
     [DynamicInterfaceCastableImplementation]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
+    [WuxMuxProjectedType]
     internal unsafe interface INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
+        public static string GetGuidSignature()
+            => Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
+                ? "{CF75D69C-F2F4-486B-B302-BB4C09BAEBFA}"
+                : typeof(INotifyCollectionChanged).GUID.ToString("B");
+
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
+        [WuxMuxProjectedType]
         public struct Vftbl
         {
+            public static string GetGuidSignature()
+                => INotifyCollectionChanged.GetGuidSignature();
+
             internal IInspectable.Vftbl IInspectableVftbl;
 
             private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_CollectionChanged_0;

@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace ABI.System.ComponentModel
 {
@@ -21,12 +22,22 @@ namespace ABI.System.ComponentModel
 
     [DynamicInterfaceCastableImplementation]
     [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
+    [WuxMuxProjectedType]
     internal unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
+        public static string GetGuidSignature()
+            => Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
+                ? "{cf75d69c-f2f4-486b-b302-bb4c09baebfa}"
+                : typeof(INotifyPropertyChanged).GUID.ToString("B");
+
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
+        [WuxMuxProjectedType]
         public struct Vftbl
         {
+            public static string GetGuidSignature()
+                => INotifyPropertyChanged.GetGuidSignature();
+
             internal IInspectable.Vftbl IInspectableVftbl;
 
             private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_PropertyChanged_0;

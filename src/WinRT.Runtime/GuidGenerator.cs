@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using WinRT.Interop;
 
 namespace WinRT
 {
@@ -28,11 +29,11 @@ namespace WinRT
 #endif
             Type type)
         {
-            if (Projections.FindCustomIIDForAbiType(type) is Guid customIID)
-            {
-                return customIID;
-            }
             type = type.GetGuidType();
+            if (type.IsDefined(typeof(WuxMuxProjectedTypeAttribute)))
+            {
+                return Guid.Parse(GetSignature(type));
+            }
             if (!type.IsGenericType)
             {
                 return type.GUID;

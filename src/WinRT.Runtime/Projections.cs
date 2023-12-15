@@ -25,14 +25,28 @@ namespace WinRT
 #endif
     static class Projections
     {
-        private enum UiXamlMode
+        internal enum UiXamlMode
         {
-            Unsupported,
             MicrosoftUiXaml,
             WindowsUiXaml
         }
 
-        private static UiXamlMode UiXamlMode { get; } = AppContext.GetData("CsWinRT.UiXamlMode") is string str && Enum.TryParse<UiXamlMode>(str, out var mode) ? mode : UiXamlMode.Unsupported;
+        private static UiXamlMode GetUIXamlModeSetting()
+        {
+            if (AppContext.GetData("CsWinRT.UiXamlMode") is string str && Enum.TryParse<UiXamlMode>(str, out var mode))
+            {
+#if !NET5_0_OR_GREATER
+                if (mode == UiXamlMode.WindowsUiXaml)
+                {
+                    throw new NotSupportedException("Windows.UI.Xaml is not supported before .NET 5. Please use built-in WinRT interop for Windows.UI.Xaml experiences");
+                }
+#endif
+                return mode;
+            }
+            return UiXamlMode.MicrosoftUiXaml; // We default to MUX for back-compat with existing projects.
+        }
+
+        internal static UiXamlMode UiXamlModeSetting { get; } = GetUIXamlModeSetting();
 
         private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
 
@@ -46,7 +60,7 @@ namespace WinRT
 
         static Projections()
         {
-            // This should be in sync with cswinrt/helpers.h and the reverse mapping from WinRT.SourceGenerator/WinRTTypeWriter.cs.
+            // This should be in sync with cswinrt/helpers.h and the reverse mapping from WinRT.SourceGenerator/TypeMapper.cs.
             RegisterCustomAbiTypeMappingNoLock(typeof(bool), typeof(ABI.System.Boolean), "Boolean");
             RegisterCustomAbiTypeMappingNoLock(typeof(char), typeof(ABI.System.Char), "Char");
             RegisterCustomAbiTypeMappingNoLock(typeof(EventRegistrationToken), typeof(ABI.WinRT.EventRegistrationToken), "Windows.Foundation.EventRegistrationToken");
@@ -73,7 +87,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(TimeSpan), typeof(ABI.System.TimeSpan), "Windows.Foundation.TimeSpan");
             RegisterCustomAbiTypeMappingNoLock(typeof(Uri), typeof(ABI.System.Uri), "Windows.Foundation.Uri", isRuntimeClass: true);
 
-            if (UiXamlMode == UiXamlMode.MicrosoftUiXaml)
+            if (UiXamlModeSetting == UiXamlMode.MicrosoftUiXaml)
             {
                 RegisterCustomAbiTypeMappingNoLock(typeof(DataErrorsChangedEventArgs), typeof(ABI.System.ComponentModel.DataErrorsChangedEventArgs), "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", isRuntimeClass: true);
                 RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", isRuntimeClass: true);
@@ -89,18 +103,14 @@ namespace WinRT
                 RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventArgs), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", isRuntimeClass: true);
                 RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventHandler), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler");
                 CustomTypeToHelperTypeMappings.Add(typeof(Microsoft.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList));
-
-                // TODO-WuxMux: Add custom IIDs to the IID lookup
             }
-            else if (UiXamlMode == UiXamlMode.WindowsUiXaml)
+#if NET5_0_OR_GREATER
+            else if (UiXamlModeSetting == UiXamlMode.WindowsUiXaml)
             {
-                RegisterCustomAbiTypeMappingNoLock(typeof(DataErrorsChangedEventArgs), typeof(ABI.System.ComponentModel.DataErrorsChangedEventArgs), "Windows.UI.Xaml.Data.DataErrorsChangedEventArgs", isRuntimeClass: true);
                 RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Windows.UI.Xaml.Data.PropertyChangedEventArgs", isRuntimeClass: true);
                 RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventHandler), typeof(ABI.System.ComponentModel.PropertyChangedEventHandler), "Windows.UI.Xaml.Data.PropertyChangedEventHandler");
-                RegisterCustomAbiTypeMappingNoLock(typeof(INotifyDataErrorInfo), typeof(ABI.System.ComponentModel.INotifyDataErrorInfo), "Windows.UI.Xaml.Data.INotifyDataErrorInfo");    
                 RegisterCustomAbiTypeMappingNoLock(typeof(INotifyPropertyChanged), typeof(ABI.System.ComponentModel.INotifyPropertyChanged), "Windows.UI.Xaml.Data.INotifyPropertyChanged");
                 RegisterCustomAbiTypeMappingNoLock(typeof(ICommand), typeof(ABI.System.Windows.Input.ICommand), "Windows.UI.Xaml.Interop.ICommand");
-                RegisterCustomAbiTypeMappingNoLock(typeof(IServiceProvider), typeof(ABI.System.IServiceProvider), "Windows.UI.Xaml.IXamlServiceProvider");
                 RegisterCustomAbiTypeMappingNoLock(typeof(IEnumerable), typeof(ABI.System.Collections.IEnumerable), "Windows.UI.Xaml.Interop.IBindableIterable");
                 RegisterCustomAbiTypeMappingNoLock(typeof(IList), typeof(ABI.System.Collections.IList), "Windows.UI.Xaml.Interop.IBindableVector");
                 RegisterCustomAbiTypeMappingNoLock(typeof(INotifyCollectionChanged), typeof(ABI.System.Collections.Specialized.INotifyCollectionChanged), "Windows.UI.Xaml.Interop.INotifyCollectionChanged");
@@ -108,9 +118,8 @@ namespace WinRT
                 RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventArgs), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs), "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", isRuntimeClass: true);
                 RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventHandler), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler), "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler");
                 CustomTypeToHelperTypeMappings.Add(typeof(Windows.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList));
-            
-                // TODO-WuxMux: Add custom IIDs to the IID lookup
             }
+#endif
 
             RegisterCustomAbiTypeMappingNoLock(typeof(EventHandler<>), typeof(ABI.System.EventHandler<>), "Windows.Foundation.EventHandler`1");
 

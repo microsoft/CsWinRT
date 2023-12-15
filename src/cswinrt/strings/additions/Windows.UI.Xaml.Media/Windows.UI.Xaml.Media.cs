@@ -3,7 +3,7 @@ namespace Windows.UI.Xaml.Media
 {
     using global::Windows.Foundation;
 
-    [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
+    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Media.Matrix))]
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED

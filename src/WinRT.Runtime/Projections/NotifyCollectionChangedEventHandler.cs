@@ -41,11 +41,15 @@ namespace ABI.System.Collections.Specialized
             var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(NotifyCollectionChangedEventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
             Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
             AbiToProjectionVftablePtr = nativeVftbl;
+
+            IID = Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
+                ? Guid.Parse("ca10b37c-f382-4591-8557-5e24965279b0")
+                : typeof(global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler).GUID;
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        private static readonly Guid IID = new(0x8B0909DC, 0x2005, 0x5D93, 0xBF, 0x8A, 0x72, 0x5F, 0x01, 0x7B, 0xAA, 0x8D);
+        private static readonly Guid IID;
 
         public static unsafe IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);

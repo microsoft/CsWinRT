@@ -3,7 +3,7 @@ namespace Windows.UI.Xaml.Media.Animation
 {
     using global::Windows.Foundation;
 
-    [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
+    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Media.Animation.KeyTime))]
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
@@ -78,7 +78,7 @@ namespace Windows.UI.Xaml.Media.Animation
         }
     }
 
-    [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
+    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
 #if EMBED
     internal
 #else
@@ -91,7 +91,7 @@ namespace Windows.UI.Xaml.Media.Animation
         Forever
     }
 
-    [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
+    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Media.Animation.RepeatBehavior))]
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED

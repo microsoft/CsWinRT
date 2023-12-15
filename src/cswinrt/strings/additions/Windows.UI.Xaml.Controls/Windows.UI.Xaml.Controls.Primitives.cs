@@ -3,7 +3,7 @@ namespace Windows.UI.Xaml.Controls.Primitives
 {
     using global::Windows.Foundation;
 
-    [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
+    [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Controls.Primitives.GeneratorPosition))]
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
