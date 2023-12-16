@@ -530,9 +530,12 @@ namespace Generator
                             {
                                 var argumentClassTypeSymbol = argumentType.Type;
 
-                                // This handles the case where a generic delegate is passed as an object.
-                                // When they are not passed as an object, the marshaler makes sure
-                                // the vtable information is available.
+                                // This handles the case where a generic delegate is passed to a parameter
+                                // statically declared as an object and thereby we won't be able to detect
+                                // its actual type and handle it at compile time within the generated projection.
+                                // When it is not declared as an object parameter but rather the generic delegate
+                                // type itself, the generated marshaler code in the function makes sure the vtable
+                                // information is available.
                                 if (argumentClassTypeSymbol.TypeKind == TypeKind.Delegate &&
                                     argumentClassTypeSymbol.MetadataName.Contains("`") &&
                                     GeneratorHelper.IsWinRTType(argumentClassTypeSymbol) &&
