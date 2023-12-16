@@ -216,6 +216,11 @@ namespace WinRT
                 hasWinrtExposedClassAttribute = true;
                 entries.AddRange(ABI.System.EventHandler.GetExposedInterfaces());
             }
+            else if (ComInterfaceEntriesForType.TryGetValue(type, out var registeredEntries))
+            {
+                hasWinrtExposedClassAttribute = true;
+                entries.AddRange(registeredEntries);
+            }
             else if (!type.IsEnum && GetComInterfaceEntriesForTypeFromLookupTable(type) is var lookupTableEntries && lookupTableEntries != null)
             {
                 hasWinrtExposedClassAttribute = true;
@@ -430,6 +435,8 @@ namespace WinRT
                 };
             });
         }
+
+        public static bool RegisterDelegateFactory(Type implementationType, Func<IntPtr, object> delegateFactory) => DelegateFactoryCache.TryAdd(implementationType, delegateFactory);
 
         private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
         {

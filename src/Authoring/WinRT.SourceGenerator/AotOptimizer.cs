@@ -466,7 +466,8 @@ namespace Generator
                                     """);
             }
 
-            foreach (var genericInterface in genericInterfaces.ToImmutableHashSet())
+            var updatedGenericInterfaces = GenericVtableInitializerStrings.AddDependentGenericInterfaces(genericInterfaces.ToImmutableHashSet());
+            foreach (var genericInterface in updatedGenericInterfaces)
             {
                 source.AppendLine();
                 source.AppendLine("// " + genericInterface.Interface);
@@ -529,10 +530,16 @@ namespace Generator
                             {
                                 var argumentClassTypeSymbol = argumentType.Type;
 
-                                // This handles the case where a generic delegate is passed.
+                                // This handles the case where a generic delegate is passed to a parameter
+                                // statically declared as an object and thereby we won't be able to detect
+                                // its actual type and handle it at compile time within the generated projection.
+                                // When it is not declared as an object parameter but rather the generic delegate
+                                // type itself, the generated marshaler code in the function makes sure the vtable
+                                // information is available.
                                 if (argumentClassTypeSymbol.TypeKind == TypeKind.Delegate &&
                                     argumentClassTypeSymbol.MetadataName.Contains("`") &&
-                                    GeneratorHelper.IsWinRTType(argumentClassTypeSymbol))
+                                    GeneratorHelper.IsWinRTType(argumentClassTypeSymbol) &&
+                                    methodSymbol.Parameters[paramsIdx].Type.SpecialType == SpecialType.System_Object)
                                 {
                                     var argumentClassNamedTypeSymbol = argumentClassTypeSymbol as INamedTypeSymbol;
                                     vtableAttributes.Add(GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false));
@@ -572,19 +579,7 @@ namespace Generator
                         {
                             paramsIdx++;
                         }
-                    }
-                    
-                    // This handles the async calls scenario where
-                    // the awaiter will register a completed handler which can be
-                    // a generic.
-                    if (GeneratorHelper.IsWinRTType(methodSymbol.ReturnType))
-                    {
-                        var completedProperty = methodSymbol.ReturnType.GetMembers("Completed").FirstOrDefault() as IPropertySymbol;
-                        if (completedProperty != null && completedProperty.Type.MetadataName.Contains("Async") && completedProperty.Type.MetadataName.Contains("`"))
-                        {
-                            vtableAttributes.Add(GetVtableAttributeToAdd(completedProperty.Type, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false));
-                        }
-                    }
+                    }                    
                 }
             }
             else if (context.Node is AssignmentExpressionSyntax assignment)
@@ -619,11 +614,15 @@ namespace Generator
                         // Type might be null such as for lambdas, so check converted type in that case.
                         var argumentClassTypeSymbol = argumentType.Type ?? argumentType.ConvertedType;
 
-                        // Check if a generic class or delegate or it isn't a
+                        // Check if a generic class, or a delegate, or it isn't a
                         // WinRT type meaning we will need to probably create a CCW for.
+                        // For delegates, even if generic, the projections handle the vtable
+                        // generation as long as it is statically known.  In the cases of
+                        // assignment to object, it is not known, and that is handled here.
                         if (argumentClassTypeSymbol.TypeKind == TypeKind.Delegate &&
                             argumentClassTypeSymbol.MetadataName.Contains("`") &&
-                            GeneratorHelper.IsWinRTType(argumentClassTypeSymbol))
+                            GeneratorHelper.IsWinRTType(argumentClassTypeSymbol) &&
+                            propertySymbol.Type.SpecialType == SpecialType.System_Object)
                         {
                             var argumentClassNamedTypeSymbol = argumentClassTypeSymbol as INamedTypeSymbol;
                             vtableAttributes.Add(GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false));
@@ -645,19 +644,6 @@ namespace Generator
 
                             AddEnumeratorAdapterForEnumerableInterface(argumentClassTypeSymbol, context.SemanticModel, vtableAttributes);
                         }
-                    }
-                }
-                // This handles the class.event += event scenario where the event
-                // can be generic and not have the have the WinRTExposedType attribute.
-                else if (leftSymbol is IEventSymbol eventSymbol &&
-                    GeneratorHelper.IsWinRTType(eventSymbol.ContainingSymbol) &&
-                    eventSymbol.Type.MetadataName.Contains("`") &&
-                    GeneratorHelper.IsWinRTType(eventSymbol.Type))
-                {
-                    var vtableAtribute = GetVtableAttributeToAdd(eventSymbol.Type, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false);
-                    if (vtableAtribute != default)
-                    {
-                        vtableAttributes.Add(vtableAtribute);
                     }
                 }
             }

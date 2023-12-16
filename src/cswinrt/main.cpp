@@ -448,6 +448,8 @@ internal static void InitalizeAbiDelegates()
                 write_file_header(genericTypeInstantiationWriter);
                 genericTypeInstantiationWriter.write(R"(
 using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace WinRT.GenericTypeInstantiations
 {

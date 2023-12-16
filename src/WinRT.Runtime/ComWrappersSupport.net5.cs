@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -36,7 +37,7 @@ namespace WinRT
             }
         }
 
-        internal static readonly ConditionalWeakTable<Type, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<Type, InspectableInfo>();
+        internal static readonly ConditionalWeakTable<Type, InspectableInfo> InspectableInfoTable = new();
         
         [ThreadStatic]
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
@@ -317,6 +318,9 @@ namespace WinRT
 
             return null;
         }
+
+        private readonly static ConcurrentDictionary<Type, ComInterfaceEntry[]> ComInterfaceEntriesForType = new();
+        public static void RegisterComInterfaceEntries(Type implementationType, ComInterfaceEntry[] comInterfaceEntries) => ComInterfaceEntriesForType.TryAdd(implementationType, comInterfaceEntries);
     }
 
 #if EMBED
@@ -480,7 +484,7 @@ namespace WinRT
 #endif     
     class DefaultComWrappers : ComWrappers
     {
-        private static readonly ConditionalWeakTable<Type, VtableEntries> TypeVtableEntryTable = new ConditionalWeakTable<Type, VtableEntries>();
+        private static readonly ConditionalWeakTable<Type, VtableEntries> TypeVtableEntryTable = new();
         public static unsafe IUnknownVftbl IUnknownVftbl => Unsafe.AsRef<IUnknownVftbl>(IUnknownVftblPtr.ToPointer());
 
         internal static IntPtr IUnknownVftblPtr { get; }
