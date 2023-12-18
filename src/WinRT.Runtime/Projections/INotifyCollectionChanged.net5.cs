@@ -52,7 +52,7 @@ namespace ABI.System.Collections.Specialized
         public static string GetGuidSignature()
             => Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
                 ? "{CF75D69C-F2F4-486B-B302-BB4C09BAEBFA}"
-                : typeof(INotifyCollectionChanged).GUID.ToString("B");
+                : "{530155E1-28A5-5693-87CE-30724D95A06D}";
 
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
         [WuxMuxProjectedType]

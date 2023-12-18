@@ -18,7 +18,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         public static string GetGuidSignature()
             => Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
                 ? "{4cf68d33-e3f2-4964-b85e-945b4f7e2f21}"
-                : typeof(INotifyCollectionChangedEventArgs).GUID.ToString("B");
+                : "{DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F}";
 
         [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
         [StructLayout(LayoutKind.Sequential)]

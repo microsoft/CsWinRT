@@ -28,7 +28,7 @@ namespace ABI.System.ComponentModel
         public static string GetGuidSignature()
             => Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
                 ? "{cf75d69c-f2f4-486b-b302-bb4c09baebfa}"
-                : typeof(INotifyPropertyChanged).GUID.ToString("B");
+                : "{90B17601-B065-586E-83D9-9ADC3A695284}";
 
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]

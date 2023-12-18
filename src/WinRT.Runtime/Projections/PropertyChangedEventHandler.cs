@@ -42,7 +42,7 @@ namespace ABI.System.ComponentModel
             AbiToProjectionVftablePtr = nativeVftbl;
             IID = Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
                 ? Guid.Parse("50f19c16-0a22-4d8e-a089-1ea9951657d2")
-                : typeof(global::System.ComponentModel.PropertyChangedEventHandler).GUID;
+                : Guid.Parse("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D");
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }

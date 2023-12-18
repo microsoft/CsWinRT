@@ -44,7 +44,7 @@ namespace ABI.System.Collections.Specialized
 
             IID = Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
                 ? Guid.Parse("ca10b37c-f382-4591-8557-5e24965279b0")
-                : typeof(global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler).GUID;
+                : Guid.Parse("8B0909DC-2005-5D93-BF8A-725F017BAA8D");
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
