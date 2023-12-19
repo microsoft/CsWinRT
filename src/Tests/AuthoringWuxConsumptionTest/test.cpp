@@ -63,3 +63,13 @@ TEST(AuthoringWuxTest, PropertyChanged)
 
     EXPECT_TRUE(eventTriggered);
 }
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    winrt::init_apartment(winrt::apartment_type::single_threaded);
+    auto manager = winrt::Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
+    int result = RUN_ALL_TESTS();
+    manager.Close();
+    return result;
+}
