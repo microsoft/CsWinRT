@@ -97,10 +97,10 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
-    [Guid("4f33a9a0-5cf4-47a4-b16f-d7faaf17457e")]
+    [Guid("6dcc9c03-e0c7-4eee-8ea9-37e3406eeb1c")]
     internal sealed unsafe class WUXPropertyChangedEventArgsRuntimeClassFactory : IWinRTPropertyChangedEventArgsRuntimeClassFactory
     {
-        [Guid("4f33a9a0-5cf4-47a4-b16f-d7faaf17457e")]
+        [Guid("6dcc9c03-e0c7-4eee-8ea9-37e3406eeb1c")]
         [StructLayout(LayoutKind.Sequential)]
         public struct Vftbl
         {

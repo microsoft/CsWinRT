@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -38,28 +39,20 @@ namespace ABI.System.Collections.Specialized
             return eventSource.EventActions;
         }
 
-        public static global::System.Guid IID { get; } = Guid.Parse(INotifyCollectionChanged.Vftbl.GetGuidSignature());
+        public static global::System.Guid IID { get; } = GuidGenerator.GetWuxMuxIID(typeof(INotifyCollectionChanged).GetCustomAttribute<WuxMuxProjectedTypeAttribute>());
         public static IntPtr AbiToProjectionVftablePtr => INotifyCollectionChanged.Vftbl.AbiToProjectionVftablePtr;
     }
 
     [DynamicInterfaceCastableImplementation]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
-    [WuxMuxProjectedType]
+    [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
     internal unsafe interface INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
-        public static string GetGuidSignature()
-            => Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
-                ? "{CF75D69C-F2F4-486B-B302-BB4C09BAEBFA}"
-                : "{530155E1-28A5-5693-87CE-30724D95A06D}";
-
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
-        [WuxMuxProjectedType]
+        [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
         public struct Vftbl
         {
-            public static string GetGuidSignature()
-                => INotifyCollectionChanged.GetGuidSignature();
-
             internal IInspectable.Vftbl IInspectableVftbl;
 
             private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_CollectionChanged_0;

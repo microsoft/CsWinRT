@@ -12,22 +12,14 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
-    [WuxMuxProjectedType]
+    [WuxMuxProjectedType(wuxIID: "4cf68d33-e3f2-4964-b85e-945b4f7e2f21", muxIID: "DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
     internal sealed unsafe class INotifyCollectionChangedEventArgs
     {
-        public static string GetGuidSignature()
-            => Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
-                ? "{4cf68d33-e3f2-4964-b85e-945b4f7e2f21}"
-                : "{DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F}";
-
         [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
         [StructLayout(LayoutKind.Sequential)]
-        [WuxMuxProjectedType]
+        [WuxMuxProjectedType(wuxIID: "4cf68d33-e3f2-4964-b85e-945b4f7e2f21", muxIID: "DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
         public struct Vftbl
         {
-            public static string GetGuidSignature()
-                => INotifyCollectionChangedEventArgs.GetGuidSignature();
-
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _get_Action_0;
             public delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int> get_Action_0 => (delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int>)_get_Action_0;
