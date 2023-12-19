@@ -33,6 +33,8 @@ namespace WinRT
 
         private static UiXamlMode GetUIXamlModeSetting()
         {
+            System.Diagnostics.Debugger.Launch();
+            System.Diagnostics.Debugger.Break();
             if (AppContext.GetData("CsWinRT.UiXamlMode") is string str && Enum.TryParse<UiXamlMode>(str, out var mode))
             {
 #if !NET5_0_OR_GREATER
