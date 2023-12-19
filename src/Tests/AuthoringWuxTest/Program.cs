@@ -24,11 +24,6 @@ namespace AuthoringWuxTest
     }
     public sealed class CustomNotifyPropertyChanged : INotifyPropertyChanged
     {
-        public CustomNotifyPropertyChanged()
-        {
-            System.Diagnostics.Debugger.Launch();
-        }
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void RaisePropertyChanged(string propertyName)

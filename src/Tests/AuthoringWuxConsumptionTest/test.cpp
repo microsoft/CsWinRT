@@ -6,8 +6,6 @@ using namespace AuthoringWuxTest;
 
 TEST(AuthoringWuxTest, Collections)
 {
-    DisposableClass;
-
     DisposableClass disposed;
     disposed.Close();
     MultipleInterfaceMappingClass multipleInterfaces;

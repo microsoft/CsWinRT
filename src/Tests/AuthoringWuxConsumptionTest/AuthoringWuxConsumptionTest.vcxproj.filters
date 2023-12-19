@@ -34,6 +34,6 @@
     <None Include="DoNotImport_MsAppxPackageTargets.targets" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="AuthoringConsumptionTest.exe.manifest" />
+    <Manifest Include="AuthoringWuxConsumptionTest.exe.manifest" />
   </ItemGroup>
 </Project>
