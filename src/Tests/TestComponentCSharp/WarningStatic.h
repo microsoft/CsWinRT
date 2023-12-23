@@ -17,6 +17,8 @@ namespace winrt::TestComponentCSharp::implementation
         static void WarningProperty(int32_t value);
         static winrt::event_token WarningEvent(Windows::Foundation::EventHandler<int32_t> const& handler);
         static void WarningEvent(winrt::event_token const& token) noexcept;
+        static int32_t ReadWriteProperty();
+        static void ReadWriteProperty(int32_t value);
     };
 }
 namespace winrt::TestComponentCSharp::factory_implementation

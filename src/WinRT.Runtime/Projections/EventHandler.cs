@@ -25,6 +25,17 @@ namespace ABI.System
             if (success)
             {
                 EventHandler<T>.AbiToProjectionVftablePtr = abiToProjectionVftablePtr;
+
+#if NET
+                ComWrappersSupport.RegisterComInterfaceEntries(
+                    typeof(global::System.EventHandler<T>),
+                    DelegateTypeDetails<global::System.EventHandler<T>>.GetExposedInterfaces(
+                        new ComWrappers.ComInterfaceEntry
+                        {
+                            IID = EventHandler<T>.PIID,
+                            Vtable = abiToProjectionVftablePtr
+                        }));
+#endif
             }
             return success;
         }
@@ -127,6 +138,8 @@ namespace ABI.System
                 *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
                 ((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate);
             }
+
+            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.EventHandler<T>), CreateRcw);
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
