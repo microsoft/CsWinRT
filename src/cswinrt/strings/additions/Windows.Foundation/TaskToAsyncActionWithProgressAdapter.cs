@@ -14,7 +14,7 @@ namespace System.Threading.Tasks
 #if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-    internal sealed class TaskToAsyncActionWithProgressAdapter<TProgress>
+    internal sealed partial class TaskToAsyncActionWithProgressAdapter<TProgress>
                             : TaskToAsyncInfoAdapter<AsyncActionWithProgressCompletedHandler<TProgress>,
                                                      AsyncActionProgressHandler<TProgress>,
                                                      VoidValueTypeParameter,

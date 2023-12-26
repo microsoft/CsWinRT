@@ -662,6 +662,285 @@ namespace ABI.System.Collections.Generic
         }
     }
 
+    internal sealed class ConstantSplittableMap<K, V> : global::Windows.Foundation.Collections.IMapView<K, V>, global::System.Collections.Generic.IReadOnlyDictionary<K, V>
+    {
+        private sealed class KeyValuePairComparator : IComparer<global::System.Collections.Generic.KeyValuePair<K, V>>
+        {
+            private static readonly IComparer<K> keyComparator = Comparer<K>.Default;
+
+            public int Compare(global::System.Collections.Generic.KeyValuePair<K, V> x, global::System.Collections.Generic.KeyValuePair<K, V> y)
+            {
+                return keyComparator.Compare(x.Key, y.Key);
+            }
+        }
+
+        private static readonly KeyValuePairComparator keyValuePairComparator = new KeyValuePairComparator();
+
+        private readonly global::System.Collections.Generic.KeyValuePair<K, V>[] items;
+        private readonly int firstItemIndex;
+        private readonly int lastItemIndex;
+
+        internal ConstantSplittableMap(global::System.Collections.Generic.IReadOnlyDictionary<K, V> data)
+        {
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+
+            firstItemIndex = 0;
+            lastItemIndex = data.Count - 1;
+            items = CreateKeyValueArray(data.Count, data.GetEnumerator());
+        }
+
+        private ConstantSplittableMap(global::System.Collections.Generic.KeyValuePair<K, V>[] items, int firstItemIndex, int lastItemIndex)
+        {
+            this.items = items;
+            this.firstItemIndex = firstItemIndex;
+            this.lastItemIndex = lastItemIndex;
+        }
+
+        private global::System.Collections.Generic.KeyValuePair<K, V>[] CreateKeyValueArray(int count, global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> data)
+        {
+            global::System.Collections.Generic.KeyValuePair<K, V>[] kvArray = new global::System.Collections.Generic.KeyValuePair<K, V>[count];
+
+            int i = 0;
+            while (data.MoveNext())
+                kvArray[i++] = data.Current;
+
+            Array.Sort(kvArray, keyValuePairComparator);
+
+            return kvArray;
+        }
+
+        public uint Size => (uint)(lastItemIndex - firstItemIndex + 1);
+
+        public global::System.Collections.Generic.IEnumerable<K> Keys
+        {
+            get => new ReadOnlyDictionaryKeyCollection<K, V>(this);
+        }
+
+        public global::System.Collections.Generic.IEnumerable<V> Values
+        {
+            get => new ReadOnlyDictionaryValueCollection<K, V>(this);
+        }
+
+        public int Count => lastItemIndex - firstItemIndex + 1;
+
+        public V this[K key] => Lookup(key);
+
+        public V Lookup(K key)
+        {
+            V value;
+            bool found = TryGetValue(key, out value);
+
+            if (!found)
+            {
+                Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                e.SetHResult(ExceptionHelpers.E_BOUNDS);
+                throw e;
+            }
+
+            return value;
+        }
+
+        public bool HasKey(K key) =>
+            TryGetValue(key, out _);
+
+        public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> First() => GetEnumerator();
+
+        public void Split(out global::Windows.Foundation.Collections.IMapView<K, V> firstPartition, out global::Windows.Foundation.Collections.IMapView<K, V> secondPartition)
+        {
+            if (Count < 2)
+            {
+                firstPartition = null;
+                secondPartition = null;
+                return;
+            }
+
+            int pivot = (int)(((long)firstItemIndex + (long)lastItemIndex) / (long)2);
+
+            firstPartition = new ConstantSplittableMap<K, V>(items, firstItemIndex, pivot);
+            secondPartition = new ConstantSplittableMap<K, V>(items, pivot + 1, lastItemIndex);
+        }
+
+        public bool TryGetValue(K key, out V value)
+        {
+            var searchKey = new global::System.Collections.Generic.KeyValuePair<K, V>(key, default!);
+            int index = Array.BinarySearch(items, firstItemIndex, Count, searchKey, keyValuePairComparator);
+
+            if (index < 0)
+            {
+                value = default!;
+                return false;
+            }
+
+            value = items[index].Value;
+            return true;
+        }
+
+        public bool ContainsKey(K key)
+        {
+            return HasKey(key);
+        }
+
+        global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First()
+        {
+            var itemsAsIKeyValuePairs = new global::Windows.Foundation.Collections.IKeyValuePair<K, V>[items.Length];
+            for (var i = 0; i < items.Length; i++)
+            {
+                itemsAsIKeyValuePairs[i] = new KeyValuePair<K, V>.ToIKeyValuePair(ref items[i]);
+            }
+            return new ConstantSplittableMapEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>(itemsAsIKeyValuePairs, firstItemIndex, lastItemIndex);
+        }
+
+        public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator()
+        {
+            return new ConstantSplittableMapEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>>(items, firstItemIndex, lastItemIndex);
+        }
+
+        IEnumerator global::System.Collections.IEnumerable.GetEnumerator()
+        {
+            return new ConstantSplittableMapEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>>(items, firstItemIndex, lastItemIndex);
+        }
+    }
+
+    internal struct ConstantSplittableMapEnumerator<T> : global::System.Collections.Generic.IEnumerator<T>
+    {
+        private readonly T[] _array;
+        private readonly int _start;
+        private readonly int _end;
+        private int _current;
+
+        internal ConstantSplittableMapEnumerator(T[] items, int first, int end)
+        {
+            _array = items;
+            _start = first;
+            _end = end;
+            _current = _start - 1;
+        }
+
+        public bool MoveNext()
+        {
+            if (_current < _end)
+            {
+                _current++;
+                return true;
+            }
+            return false;
+        }
+
+        public T Current
+        {
+            get
+            {
+                if (_current < _start) throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumNotStarted);
+                if (_current > _end) throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumEnded);
+                return _array[_current];
+            }
+        }
+
+        object IEnumerator.Current => Current;
+
+        void IEnumerator.Reset() =>
+            _current = _start - 1;
+
+        public void Dispose()
+        {
+        }
+    }
+
+    internal sealed class ReadOnlyDictionaryKeyCollection<K, V> : global::System.Collections.Generic.IEnumerable<K>
+    {
+        private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
+
+        public ReadOnlyDictionaryKeyCollection(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
+        {
+            this.dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
+        }
+
+        public global::System.Collections.Generic.IEnumerator<K> GetEnumerator()
+        {
+            return new ReadOnlyDictionaryKeyEnumerator(dictionary);
+        }
+        IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private sealed class ReadOnlyDictionaryKeyEnumerator : global::System.Collections.Generic.IEnumerator<K>
+        {
+            private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
+            private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
+
+            public ReadOnlyDictionaryKeyEnumerator(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
+            {
+                this.dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
+                enumeration = dictionary.GetEnumerator();
+            }
+
+            void IDisposable.Dispose()
+            {
+                enumeration.Dispose();
+            }
+
+            public bool MoveNext()
+            {
+                return enumeration.MoveNext();
+            }
+
+            object IEnumerator.Current => Current;
+
+            public K Current => enumeration.Current.Key;
+
+            public void Reset()
+            {
+                enumeration = dictionary.GetEnumerator();
+            }
+        }
+    }
+
+    internal sealed class ReadOnlyDictionaryValueCollection<K, V> : global::System.Collections.Generic.IEnumerable<V>
+    {
+        private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
+
+        public ReadOnlyDictionaryValueCollection(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
+        {
+            this.dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
+        }
+
+        public global::System.Collections.Generic.IEnumerator<V> GetEnumerator()
+        {
+            return new ReadOnlyDictionaryValueEnumerator(dictionary);
+        }
+        global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private sealed class ReadOnlyDictionaryValueEnumerator : global::System.Collections.Generic.IEnumerator<V>
+        {
+            private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
+            private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
+
+            public ReadOnlyDictionaryValueEnumerator(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
+            {
+                this.dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
+                enumeration = dictionary.GetEnumerator();
+            }
+
+            void IDisposable.Dispose()
+            {
+                enumeration.Dispose();
+            }
+
+            public bool MoveNext()
+            {
+                return enumeration.MoveNext();
+            }
+
+            object IEnumerator.Current => Current;
+
+            public V Current => enumeration.Current.Value;
+
+            public void Reset()
+            {
+                enumeration = dictionary.GetEnumerator();
+            }
+        }
+    }
+
     [DynamicInterfaceCastableImplementation]
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
     interface IReadOnlyDictionary<K, V> : global::System.Collections.Generic.IReadOnlyDictionary<K, V>, global::Windows.Foundation.Collections.IMapView<K, V>
@@ -684,112 +963,6 @@ namespace ABI.System.Collections.Generic
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(abi);
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReadOnlyDictionary<K, V>));
-
-        private sealed class ReadOnlyDictionaryKeyCollection : global::System.Collections.Generic.IEnumerable<K>
-        {
-            private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
-
-            public ReadOnlyDictionaryKeyCollection(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
-            {
-                if (dictionary == null)
-                    throw new ArgumentNullException(nameof(dictionary));
-
-                this.dictionary = dictionary;
-            }
-
-            public global::System.Collections.Generic.IEnumerator<K> GetEnumerator()
-            {
-                return new ReadOnlyDictionaryKeyEnumerator(dictionary);
-            }
-            IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-
-            private sealed class ReadOnlyDictionaryKeyEnumerator : global::System.Collections.Generic.IEnumerator<K>
-            {
-                private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
-                private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
-
-                public ReadOnlyDictionaryKeyEnumerator(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
-                {
-                    if (dictionary == null)
-                        throw new ArgumentNullException(nameof(dictionary));
-
-                    this.dictionary = dictionary;
-                    enumeration = dictionary.GetEnumerator();
-                }
-
-                void IDisposable.Dispose()
-                {
-                    enumeration.Dispose();
-                }
-
-                public bool MoveNext()
-                {
-                    return enumeration.MoveNext();
-                }
-
-                object IEnumerator.Current => Current;
-
-                public K Current => enumeration.Current.Key;
-
-                public void Reset()
-                {
-                    enumeration = dictionary.GetEnumerator();
-                }
-            }
-        }
-
-        private sealed class ReadOnlyDictionaryValueCollection : global::System.Collections.Generic.IEnumerable<V>
-        {
-            private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
-
-            public ReadOnlyDictionaryValueCollection(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
-            {
-                if (dictionary == null)
-                    throw new ArgumentNullException(nameof(dictionary));
-
-                this.dictionary = dictionary;
-            }
-
-            public global::System.Collections.Generic.IEnumerator<V> GetEnumerator()
-            {
-                return new ReadOnlyDictionaryValueEnumerator(dictionary);
-            }
-            global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-
-            private sealed class ReadOnlyDictionaryValueEnumerator : global::System.Collections.Generic.IEnumerator<V>
-            {
-                private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
-                private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
-
-                public ReadOnlyDictionaryValueEnumerator(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
-                {
-                    if (dictionary == null)
-                        throw new ArgumentNullException(nameof(dictionary));
-
-                    this.dictionary = dictionary;
-                    enumeration = dictionary.GetEnumerator();
-                }
-
-                void IDisposable.Dispose()
-                {
-                    enumeration.Dispose();
-                }
-
-                public bool MoveNext()
-                {
-                    return enumeration.MoveNext();
-                }
-
-                object IEnumerator.Current => Current;
-
-                public V Current => enumeration.Current.Value;
-
-                public void Reset()
-                {
-                    enumeration = dictionary.GetEnumerator();
-                }
-            }
-        }
 
         public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IMapView<K, V>
         {
@@ -830,202 +1003,17 @@ namespace ABI.System.Collections.Generic
                     return;
                 }
 
-                if (!(_dictionary is ConstantSplittableMap splittableMap))
-                    splittableMap = new ConstantSplittableMap(_dictionary);
+                if (!(_dictionary is ConstantSplittableMap<K, V> splittableMap))
+                    splittableMap = new ConstantSplittableMap<K, V>(_dictionary);
 
                 splittableMap.Split(out first, out second);
-            }
-
-            private sealed class ConstantSplittableMap : global::Windows.Foundation.Collections.IMapView<K, V>, global::System.Collections.Generic.IReadOnlyDictionary<K, V>
-            {
-                private sealed class KeyValuePairComparator : IComparer<global::System.Collections.Generic.KeyValuePair<K, V>>
-                {
-                    private static readonly IComparer<K> keyComparator = Comparer<K>.Default;
-
-                    public int Compare(global::System.Collections.Generic.KeyValuePair<K, V> x, global::System.Collections.Generic.KeyValuePair<K, V> y)
-                    {
-                        return keyComparator.Compare(x.Key, y.Key);
-                    }
-                }
-
-                private static readonly KeyValuePairComparator keyValuePairComparator = new KeyValuePairComparator();
-
-                private readonly global::System.Collections.Generic.KeyValuePair<K, V>[] items;
-                private readonly int firstItemIndex;
-                private readonly int lastItemIndex;
-
-                internal ConstantSplittableMap(global::System.Collections.Generic.IReadOnlyDictionary<K, V> data)
-                {
-                    if (data == null)
-                        throw new ArgumentNullException(nameof(data));
-
-                    firstItemIndex = 0;
-                    lastItemIndex = data.Count - 1;
-                    items = CreateKeyValueArray(data.Count, data.GetEnumerator());
-                }
-
-                private ConstantSplittableMap(global::System.Collections.Generic.KeyValuePair<K, V>[] items, int firstItemIndex, int lastItemIndex)
-                {
-                    this.items = items;
-                    this.firstItemIndex = firstItemIndex;
-                    this.lastItemIndex = lastItemIndex;
-                }
-
-                private global::System.Collections.Generic.KeyValuePair<K, V>[] CreateKeyValueArray(int count, global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> data)
-                {
-                    global::System.Collections.Generic.KeyValuePair<K, V>[] kvArray = new global::System.Collections.Generic.KeyValuePair<K, V>[count];
-
-                    int i = 0;
-                    while (data.MoveNext())
-                        kvArray[i++] = data.Current;
-
-                    Array.Sort(kvArray, keyValuePairComparator);
-
-                    return kvArray;
-                }
-
-                public uint Size => (uint)(lastItemIndex - firstItemIndex + 1);
-
-                public global::System.Collections.Generic.IEnumerable<K> Keys
-                {
-                    get => new ReadOnlyDictionaryKeyCollection(this);
-                }
-
-                public global::System.Collections.Generic.IEnumerable<V> Values
-                {
-                    get => new ReadOnlyDictionaryValueCollection(this);
-                }
-
-                public int Count => lastItemIndex - firstItemIndex + 1;
-
-                public V this[K key] => Lookup(key);
-
-                public V Lookup(K key)
-                {
-                    V value;
-                    bool found = TryGetValue(key, out value);
-
-                    if (!found)
-                    {
-                        Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
-                        e.SetHResult(ExceptionHelpers.E_BOUNDS);
-                        throw e;
-                    }
-
-                    return value;
-                }
-
-                public bool HasKey(K key) =>
-                    TryGetValue(key, out _);
-
-                public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> First() => GetEnumerator();
-
-                public void Split(out global::Windows.Foundation.Collections.IMapView<K, V> firstPartition, out global::Windows.Foundation.Collections.IMapView<K, V> secondPartition)
-                {
-                    if (Count < 2)
-                    {
-                        firstPartition = null;
-                        secondPartition = null;
-                        return;
-                    }
-
-                    int pivot = (int)(((long)firstItemIndex + (long)lastItemIndex) / (long)2);
-
-                    firstPartition = new ConstantSplittableMap(items, firstItemIndex, pivot);
-                    secondPartition = new ConstantSplittableMap(items, pivot + 1, lastItemIndex);
-                }
-
-                public bool TryGetValue(K key, out V value)
-                {
-                    var searchKey = new global::System.Collections.Generic.KeyValuePair<K, V>(key, default!);
-                    int index = Array.BinarySearch(items, firstItemIndex, Count, searchKey, keyValuePairComparator);
-
-                    if (index < 0)
-                    {
-                        value = default!;
-                        return false;
-                    }
-
-                    value = items[index].Value;
-                    return true;
-                }
-
-                public bool ContainsKey(K key)
-                {
-                    return HasKey(key);
-                }
-
-                global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First()
-                {
-                    var itemsAsIKeyValuePairs = new global::Windows.Foundation.Collections.IKeyValuePair<K, V>[items.Length];
-                    for (var i = 0; i < items.Length; i++)
-                    {
-                        itemsAsIKeyValuePairs[i] = new KeyValuePair<K, V>.ToIKeyValuePair(ref items[i]);
-                    }
-                    return new Enumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>(itemsAsIKeyValuePairs, firstItemIndex, lastItemIndex);
-                }
-
-                public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator()
-                {
-                    return new Enumerator<global::System.Collections.Generic.KeyValuePair<K, V>>(items, firstItemIndex, lastItemIndex);
-                }
-
-                IEnumerator global::System.Collections.IEnumerable.GetEnumerator()
-                {
-                    return new Enumerator<global::System.Collections.Generic.KeyValuePair<K, V>>(items, firstItemIndex, lastItemIndex);
-                }
-            }
-
-            internal struct Enumerator<T> : global::System.Collections.Generic.IEnumerator<T>
-            {
-                private readonly T[] _array;
-                private readonly int _start;
-                private readonly int _end;
-                private int _current;
-
-                internal Enumerator(T[] items, int first, int end)
-                {
-                    _array = items;
-                    _start = first;
-                    _end = end;
-                    _current = _start - 1;
-                }
-
-                public bool MoveNext()
-                {
-                    if (_current < _end)
-                    {
-                        _current++;
-                        return true;
-                    }
-                    return false;
-                }
-
-                public T Current
-                {
-                    get
-                    {
-                        if (_current < _start) throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumNotStarted);
-                        if (_current > _end) throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumEnded);
-                        return _array[_current];
-                    }
-                }
-
-                object IEnumerator.Current => Current;
-
-                void IEnumerator.Reset() =>
-                    _current = _start - 1;
-
-                public void Dispose()
-                {
-                }
             }
         }
 
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static IReadOnlyDictionary()
         {
-            if (IReadOnlyDictionaryMethods<K, V>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled && IReadOnlyDictionaryMethods<K, V>.AbiToProjectionVftablePtr == default)
             {
                 // Handle the compat scenario where the source generator wasn't used or IDIC was used.
                 var initFallbackCCWVtable = (Action)typeof(IReadOnlyDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).

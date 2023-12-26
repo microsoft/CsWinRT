@@ -194,6 +194,11 @@ namespace Generator
 
         public static bool IsWinRTType(ISymbol type)
         {
+            return IsWinRTType(type, null);
+        }
+
+        public static bool IsWinRTType(ISymbol type, Func<ISymbol, bool> isAuthoringWinRTType)
+        {
             bool isProjectedType = type.GetAttributes().
                 Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0) ||
                 IsFundamentalType(type);
@@ -206,8 +211,11 @@ namespace Generator
             // Ensure all generic parameters are WinRT types.
             if (isProjectedType && type is INamedTypeSymbol namedType && namedType.IsGenericType && !namedType.IsDefinition)
             {
-                isProjectedType = namedType.TypeArguments.All(IsWinRTType);
+                isProjectedType = namedType.TypeArguments.All(t => 
+                    IsWinRTType(t, isAuthoringWinRTType) || 
+                    (isAuthoringWinRTType != null && isAuthoringWinRTType(t)));
             }
+
             return isProjectedType;
         }
 

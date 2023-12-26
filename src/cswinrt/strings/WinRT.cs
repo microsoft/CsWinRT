@@ -1130,7 +1130,7 @@ namespace WinRT
                 handlerHashCode = (uint)handler.GetHashCode();
             }
 
-            ulong tokenValue = ((ulong)(uint)typeof(T).MetadataToken << 32) | handlerHashCode;
+            ulong tokenValue = ((ulong)(uint)typeof(T).GetHashCode() << 32) | handlerHashCode;
             return new EventRegistrationToken { Value = (long)tokenValue };
         }
 

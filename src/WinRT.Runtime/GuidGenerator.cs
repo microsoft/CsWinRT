@@ -93,6 +93,12 @@ namespace WinRT
                                 {
                                     return winrtTypeAttribute.GuidSignature;
                                 }
+                                else if (winrtTypeAttribute == null && 
+                                    (winrtTypeAttribute = type.GetAuthoringMetadataType()?.GetCustomAttribute<WindowsRuntimeTypeAttribute>()) != null && 
+                                    !string.IsNullOrEmpty(winrtTypeAttribute.GuidSignature))
+                                {
+                                    return winrtTypeAttribute.GuidSignature;
+                                }
                                 else
                                 {
                                     var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignature(fi.FieldType));

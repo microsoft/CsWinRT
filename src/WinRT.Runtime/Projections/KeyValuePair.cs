@@ -364,7 +364,11 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static KeyValuePair()
         {
+#if NET
+            if (RuntimeFeature.IsDynamicCodeCompiled && KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
+#else
             if (KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
+#endif
             {
                 // Handle the compat scenario where the source generator wasn't used or IDIC was used.
                 var initFallbackCCWVtable = (Action)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).

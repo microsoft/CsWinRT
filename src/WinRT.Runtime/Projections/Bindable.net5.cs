@@ -221,6 +221,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
     internal unsafe interface IBindableVectorView : global::Microsoft.UI.Xaml.Interop.IBindableVectorView
     {
         public static readonly IntPtr AbiToProjectionVftablePtr;
+
+        internal static readonly Guid IID = new(new ReadOnlySpan<byte>(new byte[] { 0xE7, 0xD6, 0x6D, 0x34, 0x6E, 0x97, 0xC3, 0x4B, 0x81, 0x5D, 0xEC, 0xE2, 0x43, 0xBC, 0x0F, 0x33 }));
+
         static IBindableVectorView()
         {
             AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(IBindableVectorView), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 3);
@@ -924,8 +927,29 @@ namespace ABI.System.Collections
 
             public IEnumerator GetEnumerator() => _list.GetEnumerator();
 
+            internal sealed class ListToBindableVectorViewAdapterTypeDetails : IWinRTExposedTypeDetails
+            {
+                public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+                {
+                    return
+                    [
+                        new ComWrappers.ComInterfaceEntry
+                        {
+                            IID = ABI.Microsoft.UI.Xaml.Interop.IBindableVectorView.IID,
+                            Vtable = ABI.Microsoft.UI.Xaml.Interop.IBindableVectorView.AbiToProjectionVftablePtr
+                        },
+                        new ComWrappers.ComInterfaceEntry
+                        {
+                            IID = ABI.System.Collections.IEnumerableMethods.IID,
+                            Vtable = ABI.System.Collections.IEnumerableMethods.AbiToProjectionVftablePtr
+                        }
+                    ];
+                }
+            }
+
             /// A Windows Runtime IBindableVectorView implementation that wraps around a managed IList exposing
             /// it to Windows runtime interop.
+            [global::WinRT.WinRTExposedType(typeof(ListToBindableVectorViewAdapterTypeDetails))]
             internal sealed class ListToBindableVectorViewAdapter : IBindableVectorView
             {
                 private readonly global::System.Collections.IList list;

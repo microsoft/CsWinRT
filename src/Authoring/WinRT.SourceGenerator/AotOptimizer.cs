@@ -132,6 +132,13 @@ namespace Generator
                 }
             }
 
+            // KeyValueType is a value type in C#, but it is projected as a reference type in WinRT. 
+            if (symbol.TypeKind == TypeKind.Struct && symbol.MetadataName == "KeyValuePair`2")
+            {
+                interfacesToAddToVtable.Add(ToFullyQualifiedString(symbol));
+                AddGenericInterfaceInstantiation(symbol as INamedTypeSymbol);
+            }
+
             bool isDelegate = false;
             if (symbol.TypeKind == TypeKind.Delegate)
             {
@@ -162,7 +169,8 @@ namespace Generator
                 interfacesToAddToVtable.ToImmutableArray(),
                 genericInterfacesToAddToVtable.ToImmutableArray(),
                 symbol is IArrayTypeSymbol,
-                isDelegate);
+                isDelegate,
+                symbol.DeclaredAccessibility == Accessibility.Public);
 
             void AddGenericInterfaceInstantiation(INamedTypeSymbol iface)
             {
@@ -274,13 +282,12 @@ namespace Generator
 
         private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
         {
-            if (value.properties.isCsWinRTComponent || !value.properties.isCsWinRTAotOptimizerEnabled)
+            if (!value.properties.isCsWinRTAotOptimizerEnabled)
             {
-                // Handled by the WinRT component source generator.
                 return;
             }
 
-            GenerateVtableAttributes(sourceProductionContext.AddSource, value.vtableAttributes);
+            GenerateVtableAttributes(sourceProductionContext.AddSource, value.vtableAttributes, value.properties.isCsWinRTComponent);
         }
 
         internal static string GenerateVtableEntry(VtableAttribute vtableAttribute)
@@ -347,7 +354,7 @@ namespace Generator
             return source.ToString();
         }
 
-        internal static void GenerateVtableAttributes(Action<string, string> addSource, ImmutableArray<VtableAttribute> vtableAttributes)
+        internal static void GenerateVtableAttributes(Action<string, string> addSource, ImmutableArray<VtableAttribute> vtableAttributes, bool isCsWinRTComponentFromAotOptimizer)
         {
             // Using ToImmutableHashSet to avoid duplicate entries from the use of partial classes by the developer
             // to split out their implementation.  When they do that, we will get multiple entries here for that
@@ -355,7 +362,12 @@ namespace Generator
             // to get all the symbol data rather than the data at an instance of a partial class definition.
             foreach (var vtableAttribute in vtableAttributes.ToImmutableHashSet())
             {
-                if (vtableAttribute.Interfaces.Any())
+                // If this is a WinRT component project and this call is coming
+                // from the AOT optimizer, then any public types are not handled
+                // right now as they are handled by the WinRT component source generator
+                // calling this.
+                if (((isCsWinRTComponentFromAotOptimizer && !vtableAttribute.IsPublic) || !isCsWinRTComponentFromAotOptimizer) && 
+                    vtableAttribute.Interfaces.Any())
                 {
                     StringBuilder source = new();
                     source.AppendLine("using static WinRT.TypeExtensions;\n");
@@ -523,7 +535,7 @@ namespace Generator
                                     }
 
                                     // Also add the enumerator type to the lookup table as the native caller may call it.
-                                    AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel, vtableAttributes);
+                                    AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel.Compilation, GeneratorHelper.IsWinRTType, vtableAttributes);
                                 }
                             }
                             else if (argumentType.Type is not null)
@@ -567,7 +579,7 @@ namespace Generator
                                         vtableAttributes.Add(vtableAtribute);
                                     }
 
-                                    AddEnumeratorAdapterForEnumerableInterface(argumentClassTypeSymbol, context.SemanticModel, vtableAttributes);
+                                    AddEnumeratorAdapterForEnumerableInterface(argumentClassTypeSymbol, context.SemanticModel.Compilation, GeneratorHelper.IsWinRTType, vtableAttributes);
                                 }
                             }
                         }
@@ -606,7 +618,7 @@ namespace Generator
                             }
 
                             // Also add the enumerator type to the lookup table as the native caller can call it.
-                            AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel, vtableAttributes);
+                            AddEnumeratorAdapterForType(arrayType.ElementType, context.SemanticModel.Compilation, GeneratorHelper.IsWinRTType, vtableAttributes);
                         }
                     }
                     else if (argumentType.Type is not null || argumentType.ConvertedType is not null)
@@ -642,7 +654,7 @@ namespace Generator
                                 vtableAttributes.Add(vtableAtribute);
                             }
 
-                            AddEnumeratorAdapterForEnumerableInterface(argumentClassTypeSymbol, context.SemanticModel, vtableAttributes);
+                            AddEnumeratorAdapterForEnumerableInterface(argumentClassTypeSymbol, context.SemanticModel.Compilation, GeneratorHelper.IsWinRTType, vtableAttributes);
                         }
                     }
                 }
@@ -654,38 +666,74 @@ namespace Generator
         // Any of the IEnumerable interfaces on the vtable can be used to get the enumerator.  Given IEnumerable is
         // a covariant interface, it means that we can end up getting an instance of the enumerable adapter for any one
         // of those covariant interfaces and thereby need vtable lookup entries for all of them.
-        private static void AddEnumeratorAdapterForType(ITypeSymbol type, SemanticModel semanticModel, HashSet<VtableAttribute> vtableAttributes)
+        private static void AddEnumeratorAdapterForType(ITypeSymbol type, Compilation compilation, Func<ISymbol, bool> isWinRTType, HashSet<VtableAttribute> vtableAttributes)
         {
-            var enumerableType = semanticModel.Compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1").
+            var enumerableType = compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1").
                 Construct(type);
-            if (TryGetCompatibleWindowsRuntimeTypesForVariantType(enumerableType, null, GeneratorHelper.IsWinRTType, out var compatibleIfaces))
+            if (TryGetCompatibleWindowsRuntimeTypesForVariantType(enumerableType, null, isWinRTType, out var compatibleIfaces))
             {
                 foreach (var compatibleIface in compatibleIfaces)
                 {
                     if (compatibleIface.MetadataName == "IEnumerable`1" && 
-                        !GeneratorHelper.IsInternalInterfaceFromReferences(compatibleIface, semanticModel.Compilation.Assembly))
+                        !GeneratorHelper.IsInternalInterfaceFromReferences(compatibleIface, compilation.Assembly))
                     {
-                        var enumeratorAdapterType = semanticModel.Compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1").
+                        var enumeratorAdapterType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1").
                             Construct(compatibleIface.TypeArguments[0]);
-                        vtableAttributes.Add(GetVtableAttributeToAdd(enumeratorAdapterType, GeneratorHelper.IsWinRTType, semanticModel.Compilation.Assembly, false));
+                        vtableAttributes.Add(GetVtableAttributeToAdd(enumeratorAdapterType, isWinRTType, compilation.Assembly, false));
                     }
                 }
             }
         }
 
-        private static void AddEnumeratorAdapterForEnumerableInterface(ITypeSymbol classType, SemanticModel semanticModel, HashSet<VtableAttribute> vtableAttributes)
+        internal static void AddEnumeratorAdapterForEnumerableInterface(ITypeSymbol classType, Compilation compilation, Func<ISymbol, bool> isWinRTType, HashSet<VtableAttribute> vtableAttributes)
         {
             // Type may implement multiple unique IEnumerable interfaces.
             foreach (var iface in classType.AllInterfaces)
             {
                 if (iface.MetadataName == "IEnumerable`1")
                 {
-                    AddEnumeratorAdapterForType(iface.TypeArguments[0], semanticModel, vtableAttributes);
+                    AddEnumeratorAdapterForType(iface.TypeArguments[0], compilation, isWinRTType, vtableAttributes);
+                }
+            }
+        }
+
+        internal static void AddVtableAdapterTypeForKnownInterface(ITypeSymbol classType, Compilation compilation, Func<ISymbol, bool> isWinRTType, HashSet<VtableAttribute> vtableAttributes)
+        {
+            foreach (var iface in classType.AllInterfaces)
+            {
+                if (iface.MetadataName == "IEnumerable`1")
+                {
+                    AddEnumeratorAdapterForType(iface.TypeArguments[0], compilation, isWinRTType, vtableAttributes);
+                }
+                else if (iface.MetadataName == "IDictionary`2")
+                {
+                    var readOnlyDictionaryType = compilation.GetTypeByMetadataName("System.Collections.ObjectModel.ReadOnlyDictionary`2").
+                        Construct([.. iface.TypeArguments]);
+                    vtableAttributes.Add(GetVtableAttributeToAdd(readOnlyDictionaryType, isWinRTType, compilation.Assembly, false));
+
+                    var keyValuePairType = compilation.GetTypeByMetadataName("System.Collections.Generic.KeyValuePair`2").
+                        Construct([.. iface.TypeArguments]);
+                    vtableAttributes.Add(GetVtableAttributeToAdd(keyValuePairType, isWinRTType, compilation.Assembly, false));
+
+                    var constantSplittableMapType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ConstantSplittableMap`2").
+                        Construct([.. iface.TypeArguments]);
+                    vtableAttributes.Add(GetVtableAttributeToAdd(constantSplittableMapType, isWinRTType, compilation.Assembly, false));
+                }
+                else if (iface.MetadataName == "IList`1")
+                {
+                    var readOnlyCollectionType = compilation.GetTypeByMetadataName("System.Collections.ObjectModel.ReadOnlyCollection`1").
+                        Construct([.. iface.TypeArguments]);
+                    vtableAttributes.Add(GetVtableAttributeToAdd(readOnlyCollectionType, isWinRTType, compilation.Assembly, false));
                 }
             }
         }
 
         private static void GenerateVtableLookupTable(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
+        {
+            GenerateVtableLookupTable(sourceProductionContext.AddSource, value);
+        }
+
+        internal static void GenerateVtableLookupTable(Action<string, string> addSource, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value, bool isComponentGenerator = false)
         {
             if (!value.properties.isCsWinRTAotOptimizerEnabled)
             {
@@ -693,6 +741,7 @@ namespace Generator
             }
 
             StringBuilder source = new();
+            string classPrefix = isComponentGenerator ? "Authoring" : "";
 
             if (value.vtableAttributes.Any())
             {
@@ -704,7 +753,7 @@ namespace Generator
                                     namespace WinRT.GenericHelpers
                                     {
 
-                                        internal static class GlobalVtableLookup
+                                        internal static class {{classPrefix}}GlobalVtableLookup
                                         {
 
                                             [System.Runtime.CompilerServices.ModuleInitializer]
@@ -737,7 +786,7 @@ namespace Generator
                                         }
                                     }
                                     """);
-                sourceProductionContext.AddSource($"WinRTGlobalVtableLookup.g.cs", source.ToString());
+                addSource($"WinRT{classPrefix}GlobalVtableLookup.g.cs", source.ToString());
             }
         }
     }
@@ -760,5 +809,6 @@ namespace Generator
         EquatableArray<string> Interfaces,
         EquatableArray<GenericInterface> GenericInterfaces,
         bool IsArray,
-        bool IsDelegate);
+        bool IsDelegate,
+        bool IsPublic);
 }
