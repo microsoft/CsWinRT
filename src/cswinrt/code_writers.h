@@ -3492,7 +3492,7 @@ event % %;)",
 
         bool write_fixed(writer& w) const
         {
-            if (!is_ref() || is_array())
+            if (!is_ref() || is_array() || is_pinnable || is_object_in() || !marshaler_type.empty())
                 return false;
 
             w.write("fixed(%* __% = &%)\n",
