@@ -369,59 +369,76 @@ namespace ABI.System
             try
             {
                 ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr));
-                __params[0] = nullablePtr;
-                Vftbl.GetValueDelegateForFunctionPointer((*(IntPtr**)nullablePtr)[6]).DynamicInvokeAbi(__params);
-                return Marshaler<T>.FromAbi(__params[1]);
+
+                Delegate marshallingDelegate = Vftbl.GetValueDelegateForFunctionPointer((*(IntPtr**)nullablePtr)[6]);
+
+                // No need to use GC.KeepAlive here because 'nullablePtr' is already keeping
+                // the instance alive through the call. It's only needed in 'Value' below,
+                // because 'ThisPtr' is being used without anyone keeping 'this' alive too.
+                return GetValueFromAbi(nullablePtr, marshallingDelegate);
             }
             finally
             {
-                Marshaler<T>.DisposeAbi(__params[1]);
                 Marshal.Release(nullablePtr);
             }
         }
 
-        public unsafe T Value
+        public T Value
         {
             get
             {
-                Delegate marshallingDelegate = _obj.Vftbl.get_Value_0;
+                T result = GetValueFromAbi(ThisPtr, _obj.Vftbl.get_Value_0);
 
-                if (marshallingDelegate.GetType() == typeof(NullableGetValueBlittable))
-                {
-                    T result;
+                GC.KeepAlive(this);
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Shared marshalling stub to get the underlying nullable value from a given <c>IReference`1</c> native instance.
+        /// </summary>
+        /// <param name="thisPtr">The <c>IReference`1</c> native instance to get the value from.</param>
+        /// <param name="marshallingDelegate">The marshalling delegate to get the value from the ABI.</param>
+        /// <returns>The marshalled <typeparamref name="T"/> value retrieved from <paramref name="thisPtr"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if no marshalling code for <typeparamref name="T"/> is available.</exception>
+        private static unsafe T GetValueFromAbi(IntPtr thisPtr, Delegate marshallingDelegate)
+        {
+            if (marshallingDelegate.GetType() == typeof(NullableGetValueBlittable))
+            {
+                T result;
 
 #pragma warning disable CS8500 // We know that T is unmanaged
-                    Marshal.ThrowExceptionForHR(((NullableGetValueBlittable)marshallingDelegate)((void*)ThisPtr, (byte*)&result));
+                Marshal.ThrowExceptionForHR(((NullableGetValueBlittable)marshallingDelegate)((void*)thisPtr, (byte*)&result));
 #pragma warning restore CS8500
 
-                    return result;
-                }
-                
-                if (marshallingDelegate.GetType() == typeof(NullableGetValueDateTimeOffset))
-                {
-                    Marshal.ThrowExceptionForHR(((NullableGetValueDateTimeOffset)marshallingDelegate)((void*)ThisPtr, out DateTimeOffset result));
+                return result;
+            }
 
-                    return Unsafe.As<DateTimeOffset, T>(ref result);
-                }
+            if (marshallingDelegate.GetType() == typeof(NullableGetValueDateTimeOffset))
+            {
+                Marshal.ThrowExceptionForHR(((NullableGetValueDateTimeOffset)marshallingDelegate)((void*)thisPtr, out DateTimeOffset result));
+
+                return Unsafe.As<DateTimeOffset, T>(ref result);
+            }
 
 #if NET
-                if (RuntimeFeature.IsDynamicCodeSupported)
+            if (RuntimeFeature.IsDynamicCodeSupported)
 #endif
+            {
+                var __params = new object[] { thisPtr, null };
+                try
                 {
-                    var __params = new object[] { ThisPtr, null };
-                    try
-                    {
-                        _obj.Vftbl.get_Value_0.DynamicInvokeAbi(__params);
-                        return Marshaler<T>.FromAbi(__params[1]);
-                    }
-                    finally
-                    {
-                        Marshaler<T>.DisposeAbi(__params[1]);
-                    }
+                    marshallingDelegate.DynamicInvokeAbi(__params);
+                    return Marshaler<T>.FromAbi(__params[1]);
                 }
-
-                throw new NotSupportedException("Cannot retrieve the value for the current Nullable`1 instance.");
+                finally
+                {
+                    Marshaler<T>.DisposeAbi(__params[1]);
+                }
             }
+
+            throw new NotSupportedException("Cannot retrieve the value for the current Nullable`1 instance.");
         }
     }
 
