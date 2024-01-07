@@ -35,8 +35,10 @@ namespace ABI.Windows.Foundation
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
 
-        // This method is only for all blittable types
-        private static unsafe int Do_Abi_get_Value_0(void* thisPtr, byte* result)
+        // This method is only for all blittable types. Note: this method  could be an overload of
+        // the generic one below, but using a different one to simplify the reflection lookup in the
+        // fallback case below (so we can use GetMethod and find just the single match we need).
+        private static unsafe int Do_Abi_get_Value_0_Blittable(void* thisPtr, byte* result)
         {
             if (result is null)
             {
@@ -100,7 +102,7 @@ namespace ABI.Windows.Foundation
                 typeof(T) == typeof(global::Windows.Foundation.Rect) ||
                 typeof(T) == typeof(global::Windows.Foundation.Size))
             {
-                return (NullableGetValueBlittable)Do_Abi_get_Value_0;
+                return (NullableGetValueBlittable)Do_Abi_get_Value_0_Blittable;
             }
 
             if (typeof(T) == typeof(DateTimeOffset))
