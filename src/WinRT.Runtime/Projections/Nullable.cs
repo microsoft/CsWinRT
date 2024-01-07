@@ -95,6 +95,7 @@ namespace ABI.Windows.Foundation
                 typeof(T) == typeof(float) ||
                 typeof(T) == typeof(double) ||
                 typeof(T) == typeof(Guid) ||
+                typeof(T) == typeof(TimeSpan) ||
                 typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
             {
                 return (NullableGetValueBlittable)Do_Abi_get_Value_0;
@@ -103,11 +104,6 @@ namespace ABI.Windows.Foundation
             if (typeof(T) == typeof(DateTimeOffset))
             {
                 return (NullableGetValueDateTimeOffset)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(TimeSpan))
-            {
-                return (NullableGetValueTimeSpan)Do_Abi_get_Value_0;
             }
 
 #if NET
@@ -191,7 +187,6 @@ namespace ABI.System
     // Note: all blittable types have been collapsed into NullableGetValueBlittable.
     internal unsafe delegate int NullableGetValueBlittable(void* ptr, byte* result);
     internal unsafe delegate int NullableGetValueDateTimeOffset(void* ptr, out DateTimeOffset result);
-    internal unsafe delegate int NullableGetValueTimeSpan(void* ptr, out TimeSpan result);
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
@@ -273,6 +268,7 @@ namespace ABI.System
                     typeof(T) == typeof(float) ||
                     typeof(T) == typeof(double) ||
                     typeof(T) == typeof(Guid) ||
+                    typeof(T) == typeof(TimeSpan) ||
                     typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
                 {
                     return Marshal.GetDelegateForFunctionPointer<NullableGetValueBlittable>(ptr);
@@ -281,11 +277,6 @@ namespace ABI.System
                 if (typeof(T) == typeof(DateTimeOffset))
                 {
                     return Marshal.GetDelegateForFunctionPointer<NullableGetValueDateTimeOffset>(ptr);
-                }
-
-                if (typeof(T) == typeof(TimeSpan))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueTimeSpan>(ptr);
                 }
 
 #if NET
@@ -350,13 +341,6 @@ namespace ABI.System
 #pragma warning restore CS8500
 
                     return result;
-                }
-                
-                if (marshallingDelegate.GetType() == typeof(NullableGetValueTimeSpan))
-                {
-                    Marshal.ThrowExceptionForHR(((NullableGetValueTimeSpan)marshallingDelegate)((void*)ThisPtr, out TimeSpan result));
-
-                    return Unsafe.As<TimeSpan, T>(ref result);
                 }
                 
                 if (marshallingDelegate.GetType() == typeof(NullableGetValueDateTimeOffset))
