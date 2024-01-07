@@ -123,9 +123,11 @@ namespace ABI.Windows.Foundation
                 return (NullableGetValueTimeSpan)Do_Abi_get_Value_0;
             }
 
+#if NET
             // Only when not on NAOT, use LINQ expressions to get the delegate type.
             // This is not safe on AOT, so in that case we just can't get a delegate.
             if (RuntimeFeature.IsDynamicCodeCompiled)
+#endif
             {
                 Nullable<T>.Vftbl.get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
 
@@ -347,9 +349,11 @@ namespace ABI.System
                     return Marshal.GetDelegateForFunctionPointer<NullableGetValueTimeSpan>(ptr);
                 }
 
+#if NET
                 // Only when not on NAOT, use LINQ expressions to get the delegate type.
                 // This is not safe on AOT, so in that case we just can't get a delegate.
                 if (RuntimeFeature.IsDynamicCodeCompiled)
+#endif
                 {
                     get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
 
