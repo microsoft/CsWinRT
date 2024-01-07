@@ -124,7 +124,14 @@ namespace ABI.System
         static unsafe EventHandler()
         {
 #if NET
-            if (!RuntimeFeature.IsDynamicCodeCompiled || EventHandlerMethods<T>.AbiToProjectionVftablePtr != default)
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                // On NAOT, we always just use the available vtable, no matter if it's been set or not.
+                // See: https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                // We specifically need this check to be separate than that of the vtable not being null.
+                AbiToProjectionVftablePtr = EventHandlerMethods<T>.AbiToProjectionVftablePtr;
+            }
+            else if (EventHandlerMethods<T>.AbiToProjectionVftablePtr != default)
             {
                 AbiToProjectionVftablePtr = EventHandlerMethods<T>.AbiToProjectionVftablePtr;
             }
@@ -200,11 +207,16 @@ namespace ABI.System
             public unsafe void Invoke(object sender, T args)
             {
 #if NET
-                bool useDynamicInvoke = EventHandlerMethods<T>._Invoke == null && RuntimeFeature.IsDynamicCodeCompiled;
-#else
-                bool useDynamicInvoke = EventHandlerMethods<T>._Invoke == null;
+                // Standalone path for NAOT to ensure the linker trims code as expected
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    EventHandlerMethods<T>._Invoke(_nativeDelegate, sender, args);
+
+                    return;
+                }
 #endif
-                if (!useDynamicInvoke)
+
+                if (EventHandlerMethods<T>._Invoke == null)
                 {
                     EventHandlerMethods<T>._Invoke(_nativeDelegate, sender, args);
                 }

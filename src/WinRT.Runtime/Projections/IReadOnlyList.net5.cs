@@ -100,15 +100,27 @@ namespace ABI.Windows.Foundation.Collections
 
         internal static unsafe bool EnsureInitialized()
         {
-            // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
-            // and due to that the function pointers haven't been initialized.
-            if (RuntimeFeature.IsDynamicCodeCompiled && !_RcwHelperInitialized)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
             {
-                var initRcwHelperFallback = (Func<bool>) typeof(ABI.System.Collections.Generic.IReadOnlyListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
-                    GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Func<bool>));
-                initRcwHelperFallback();
+                // Simple invocation guarded by a direct runtime feature check to help the linker.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                InitFallbackCCWVTableIfNeeded();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void InitFallbackCCWVTableIfNeeded()
+                {
+                    // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
+                    // and due to that the function pointers haven't been initialized.
+                    if (!_RcwHelperInitialized)
+                    {
+                        var initRcwHelperFallback = (Func<bool>)typeof(ABI.System.Collections.Generic.IReadOnlyListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                            GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
+                            CreateDelegate(typeof(Func<bool>));
+                        initRcwHelperFallback();
+                    }
+                }
             }
+
             return true;
         }
 
@@ -586,13 +598,24 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static IReadOnlyList()
         {
-            if (RuntimeFeature.IsDynamicCodeCompiled && IReadOnlyListMethods<T>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
             {
-                // Handle the compat scenario where the source generator wasn't used or IDIC was used.
-                var initFallbackCCWVtable = (Action)typeof(IReadOnlyListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
-                    GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Action));
-                initFallbackCCWVtable();
+                // Simple invocation guarded by a direct runtime feature check to help the linker.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                InitFallbackCCWVTableIfNeeded();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void InitFallbackCCWVTableIfNeeded()
+                {
+                    if (IReadOnlyListMethods<T>.AbiToProjectionVftablePtr == default)
+                    {
+                        // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                        var initFallbackCCWVtable = (Action)typeof(IReadOnlyListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                            CreateDelegate(typeof(Action));
+                        initFallbackCCWVtable();
+                    }
+                }
             }
 
             AbiToProjectionVftablePtr = IReadOnlyListMethods<T>.AbiToProjectionVftablePtr;

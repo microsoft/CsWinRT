@@ -1250,13 +1250,24 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static IList()
         {
-            if (RuntimeFeature.IsDynamicCodeCompiled && IListMethods<T>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
             {
-                // Handle the compat scenario where the source generator wasn't used or IDIC was used.
-                var initFallbackCCWVtable = (Action)typeof(IListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
-                    GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Action));
-                initFallbackCCWVtable();
+                // Simple invocation guarded by a direct runtime feature check to help the linker.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                InitFallbackCCWVTableIfNeeded();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void InitFallbackCCWVTableIfNeeded()
+                {
+                    if (IListMethods<T>.AbiToProjectionVftablePtr == default)
+                    {
+                        // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                        var initFallbackCCWVtable = (Action)typeof(IListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                            CreateDelegate(typeof(Action));
+                        initFallbackCCWVtable();
+                    }
+                }
             }
 
             AbiToProjectionVftablePtr = IListMethods<T>.AbiToProjectionVftablePtr;

@@ -365,16 +365,25 @@ namespace ABI.System.Collections.Generic
         static KeyValuePair()
         {
 #if NET
-            if (RuntimeFeature.IsDynamicCodeCompiled && KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
-#else
-            if (KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
             {
-                // Handle the compat scenario where the source generator wasn't used or IDIC was used.
-                var initFallbackCCWVtable = (Action)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
-                    GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Action));
-                initFallbackCCWVtable();
+                // Simple invocation guarded by a direct runtime feature check to help the linker.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                InitFallbackCCWVTableIfNeeded();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void InitFallbackCCWVTableIfNeeded()
+                {
+                    if (KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
+                    {
+                        // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                        var initFallbackCCWVtable = (Action)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                            CreateDelegate(typeof(Action));
+                        initFallbackCCWVtable();
+                    }
+                }
             }
 
             AbiToProjectionVftablePtr = KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr;
