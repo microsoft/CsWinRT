@@ -406,6 +406,7 @@ namespace ABI.System
 
 #if NET
                 if (RuntimeFeature.IsDynamicCodeSupported)
+#endif
                 {
                     var __params = new object[] { ThisPtr, null };
                     try
@@ -418,7 +419,6 @@ namespace ABI.System
                         Marshaler<T>.DisposeAbi(__params[1]);
                     }
                 }
-#endif
 
                 throw new NotSupportedException("Cannot retrieve the value for the current Nullable`1 instance.");
             }
