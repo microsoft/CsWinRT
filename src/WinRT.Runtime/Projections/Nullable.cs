@@ -354,18 +354,14 @@ namespace ABI.System
                 
                 if (marshallingDelegate.GetType() == typeof(NullableGetValueTimeSpan))
                 {
-                    TimeSpan result;
-
-                    Marshal.ThrowExceptionForHR(((NullableGetValueTimeSpan)marshallingDelegate)((void*)ThisPtr, out result));
+                    Marshal.ThrowExceptionForHR(((NullableGetValueTimeSpan)marshallingDelegate)((void*)ThisPtr, out TimeSpan result));
 
                     return Unsafe.As<TimeSpan, T>(ref result);
                 }
                 
                 if (marshallingDelegate.GetType() == typeof(NullableGetValueDateTimeOffset))
                 {
-                    DateTimeOffset result;
-
-                    Marshal.ThrowExceptionForHR(((NullableGetValueDateTimeOffset)marshallingDelegate)((void*)ThisPtr, out result));
+                    Marshal.ThrowExceptionForHR(((NullableGetValueDateTimeOffset)marshallingDelegate)((void*)ThisPtr, out DateTimeOffset result));
 
                     return Unsafe.As<DateTimeOffset, T>(ref result);
                 }
