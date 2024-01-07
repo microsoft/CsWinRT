@@ -35,7 +35,7 @@ namespace ABI.Windows.Foundation
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
 
-        // This method is only for blittable types (Rect, Size, Point)
+        // This method is only for all blittable types
         private static unsafe int Do_Abi_get_Value_0(void* thisPtr, byte* result)
         {
             if (result is null)
@@ -43,8 +43,6 @@ namespace ABI.Windows.Foundation
                 // Immediately return E_POINTER if the target is null
                 return unchecked((int)0x80004003);
             }
-
-            Unsafe.WriteUnaligned<T>(result, default);
 
             try
             {
@@ -56,6 +54,8 @@ namespace ABI.Windows.Foundation
             }
             catch (global::System.Exception __exception__)
             {
+                Unsafe.WriteUnaligned<T>(result, default);
+
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
@@ -82,61 +82,22 @@ namespace ABI.Windows.Foundation
 
         internal static unsafe Delegate GetValueDelegateForAbi()
         {
-            if (typeof(T) == typeof(int))
+            if (typeof(T) == typeof(int) ||
+                typeof(T) == typeof(byte) ||
+                typeof(T) == typeof(bool) ||
+                typeof(T) == typeof(sbyte) ||
+                typeof(T) == typeof(short) ||
+                typeof(T) == typeof(ushort) ||
+                typeof(T) == typeof(char) ||
+                typeof(T) == typeof(uint) ||
+                typeof(T) == typeof(long) ||
+                typeof(T) == typeof(ulong) ||
+                typeof(T) == typeof(float) ||
+                typeof(T) == typeof(double) ||
+                typeof(T) == typeof(Guid) ||
+                typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
             {
-                return (NullableGetValueInt32)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(byte) ||
-                typeof(T) == typeof(bool))
-            {
-                return (NullableGetValueUInt8)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(sbyte))
-            {
-                return (NullableGetValueInt8)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(short))
-            {
-                return (NullableGetValueInt16)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(ushort) ||
-                typeof(T) == typeof(char))
-            {
-                return (NullableGetValueUInt16)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(uint))
-            {
-                return (NullableGetValueUInt32)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(long))
-            {
-                return (NullableGetValueInt64)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(ulong))
-            {
-                return (NullableGetValueUInt64)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(float))
-            {
-                return (NullableGetValueFloat)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(double))
-            {
-                return (NullableGetValueDouble)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T) == typeof(Guid))
-            {
-                return (NullableGetValueGuid)Do_Abi_get_Value_0;
+                return (NullableGetValueBlittable)Do_Abi_get_Value_0;
             }
 
             if (typeof(T) == typeof(DateTimeOffset))
@@ -147,11 +108,6 @@ namespace ABI.Windows.Foundation
             if (typeof(T) == typeof(TimeSpan))
             {
                 return (NullableGetValueTimeSpan)Do_Abi_get_Value_0;
-            }
-
-            if (typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
-            {
-                return (NullableGetValueBlittable)Do_Abi_get_Value_0;
             }
 
 #if NET
@@ -232,20 +188,10 @@ namespace ABI.System
     // Precomputed signatures for all supported Nullable<T> types. The result is the
     // corresponding ABI type for each supported managed T type. Keep this list and
     // the logic below in sync with the available projections in Projections.cctor().
-    internal unsafe delegate int NullableGetValueInt32(void* ptr, out int result);
-    internal unsafe delegate int NullableGetValueUInt8(void* ptr, out byte result);
-    internal unsafe delegate int NullableGetValueInt8(void* ptr, out sbyte result);
-    internal unsafe delegate int NullableGetValueInt16(void* ptr, out short result);
-    internal unsafe delegate int NullableGetValueUInt16(void* ptr, out ushort result);
-    internal unsafe delegate int NullableGetValueUInt32(void* ptr, out uint result);
-    internal unsafe delegate int NullableGetValueInt64(void* ptr, out long result);
-    internal unsafe delegate int NullableGetValueUInt64(void* ptr, out ulong result);
-    internal unsafe delegate int NullableGetValueFloat(void* ptr, out float result);
-    internal unsafe delegate int NullableGetValueDouble(void* ptr, out double result);
-    internal unsafe delegate int NullableGetValueGuid(void* ptr, out Guid result);
+    // Note: all blittable types have been collapsed into NullableGetValueBlittable.
+    internal unsafe delegate int NullableGetValueBlittable(void* ptr, byte* result);
     internal unsafe delegate int NullableGetValueDateTimeOffset(void* ptr, out DateTimeOffset result);
     internal unsafe delegate int NullableGetValueTimeSpan(void* ptr, out TimeSpan result);
-    internal unsafe delegate int NullableGetValueBlittable(void* ptr, byte* result);
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
@@ -314,61 +260,22 @@ namespace ABI.System
 
             internal static Delegate GetValueDelegateForFunctionPointer(IntPtr ptr)
             {
-                if (typeof(T) == typeof(int))
+                if (typeof(T) == typeof(int) ||
+                    typeof(T) == typeof(byte) ||
+                    typeof(T) == typeof(bool) ||
+                    typeof(T) == typeof(sbyte) ||
+                    typeof(T) == typeof(short) ||
+                    typeof(T) == typeof(ushort) ||
+                    typeof(T) == typeof(char) ||
+                    typeof(T) == typeof(uint) ||
+                    typeof(T) == typeof(long) ||
+                    typeof(T) == typeof(ulong) ||
+                    typeof(T) == typeof(float) ||
+                    typeof(T) == typeof(double) ||
+                    typeof(T) == typeof(Guid) ||
+                    typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
                 {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueInt32>(ptr);
-                }
-
-                if (typeof(T) == typeof(byte) ||
-                    typeof(T) == typeof(bool))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueUInt8>(ptr);
-                }
-
-                if (typeof(T) == typeof(sbyte))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueInt8>(ptr);
-                }
-
-                if (typeof(T) == typeof(short))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueInt16>(ptr);
-                }
-
-                if (typeof(T) == typeof(ushort) ||
-                    typeof(T) == typeof(char))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueUInt16>(ptr);
-                }
-
-                if (typeof(T) == typeof(uint))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueUInt32>(ptr);
-                }
-
-                if (typeof(T) == typeof(long))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueInt64>(ptr);
-                }
-
-                if (typeof(T) == typeof(ulong))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueUInt64>(ptr);
-                }
-
-                if (typeof(T) == typeof(float))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueFloat>(ptr);
-                }
-
-                if (typeof(T) == typeof(double))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueDouble>(ptr);
-                }
-
-                if (typeof(T) == typeof(Guid))
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueGuid>(ptr);
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueBlittable>(ptr);
                 }
 
                 if (typeof(T) == typeof(DateTimeOffset))
@@ -379,11 +286,6 @@ namespace ABI.System
                 if (typeof(T) == typeof(TimeSpan))
                 {
                     return Marshal.GetDelegateForFunctionPointer<NullableGetValueTimeSpan>(ptr);
-                }
-
-                if (typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
-                {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueBlittable>(ptr);
                 }
 
 #if NET
@@ -437,20 +339,39 @@ namespace ABI.System
         {
             get
             {
-                if (_obj.Vftbl.get_Value_0.GetType() == typeof(NullableGetValueBlittable))
+                Delegate marshallingDelegate = _obj.Vftbl.get_Value_0;
+
+                if (marshallingDelegate.GetType() == typeof(NullableGetValueBlittable))
                 {
-                    // Special case for blittable values (Rect, Size, Point). We don't have
-                    // access to the type from here, but we do know the size, and we know
-                    // that the projection is just blittable with the underlying type.
                     T result;
 
 #pragma warning disable CS8500 // We know that T is unmanaged
-                    Marshal.ThrowExceptionForHR(((NullableGetValueBlittable)_obj.Vftbl.get_Value_0)((void*)ThisPtr, (byte*)&result));
+                    Marshal.ThrowExceptionForHR(((NullableGetValueBlittable)marshallingDelegate)((void*)ThisPtr, (byte*)&result));
+#pragma warning restore CS8500
 
                     return result;
-#pragma warning restore CS8500
                 }
-                else
+                
+                if (marshallingDelegate.GetType() == typeof(NullableGetValueTimeSpan))
+                {
+                    TimeSpan result;
+
+                    Marshal.ThrowExceptionForHR(((NullableGetValueTimeSpan)marshallingDelegate)((void*)ThisPtr, out result));
+
+                    return Unsafe.As<TimeSpan, T>(ref result);
+                }
+                
+                if (marshallingDelegate.GetType() == typeof(NullableGetValueDateTimeOffset))
+                {
+                    DateTimeOffset result;
+
+                    Marshal.ThrowExceptionForHR(((NullableGetValueDateTimeOffset)marshallingDelegate)((void*)ThisPtr, out result));
+
+                    return Unsafe.As<DateTimeOffset, T>(ref result);
+                }
+
+#if NET
+                if (RuntimeFeature.IsDynamicCodeSupported)
                 {
                     var __params = new object[] { ThisPtr, null };
                     try
@@ -463,6 +384,9 @@ namespace ABI.System
                         Marshaler<T>.DisposeAbi(__params[1]);
                     }
                 }
+#endif
+
+                throw new NotSupportedException("Cannot retrieve the value for the current Nullable`1 instance.");
             }
         }
     }
