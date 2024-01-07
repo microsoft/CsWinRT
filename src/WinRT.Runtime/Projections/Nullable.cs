@@ -96,7 +96,9 @@ namespace ABI.Windows.Foundation
                 typeof(T) == typeof(double) ||
                 typeof(T) == typeof(Guid) ||
                 typeof(T) == typeof(TimeSpan) ||
-                typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
+                typeof(T) == typeof(global::Windows.Foundation.Point) ||
+                typeof(T) == typeof(global::Windows.Foundation.Rect) ||
+                typeof(T) == typeof(global::Windows.Foundation.Size))
             {
                 return (NullableGetValueBlittable)Do_Abi_get_Value_0;
             }
@@ -266,7 +268,7 @@ namespace ABI.System
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate get_Value_0;
-            public static Guid PIID = Nullable<T>.PIID;
+            public static readonly Guid PIID = Nullable<T>.PIID;
             public static global::System.Type get_Value_0_Type;
 
             internal unsafe Vftbl(IntPtr thisPtr)
@@ -293,7 +295,9 @@ namespace ABI.System
                     typeof(T) == typeof(double) ||
                     typeof(T) == typeof(Guid) ||
                     typeof(T) == typeof(TimeSpan) ||
-                    typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
+                    typeof(T) == typeof(global::Windows.Foundation.Point) ||
+                    typeof(T) == typeof(global::Windows.Foundation.Rect) ||
+                    typeof(T) == typeof(global::Windows.Foundation.Size))
                 {
                     return Marshal.GetDelegateForFunctionPointer<NullableGetValueBlittable>(ptr);
                 }
@@ -338,9 +342,9 @@ namespace ABI.System
             if (typeof(T) == typeof(Guid)) return IReferenceIIDs.IReferenceOfGuid_IID;
             if (typeof(T) == typeof(TimeSpan)) return IReferenceIIDs.IReferenceOfTimeSpan_IID;
             if (typeof(T) == typeof(DateTimeOffset)) return IReferenceIIDs.IReferenceOfDateTimeOffset_IID;
-            if (typeof(T).FullName == "Windows.Foundation.Point") return IReferenceIIDs.IReferenceOfPoint_IID;
-            if (typeof(T).FullName == "Windows.Foundation.Size") return IReferenceIIDs.IReferenceOfSize_IID;
-            if (typeof(T).FullName == "Windows.Foundation.Rect") return IReferenceIIDs.IReferenceOfRect_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
 #endif
 
             return GuidGenerator.CreateIID(typeof(Nullable<T>));
