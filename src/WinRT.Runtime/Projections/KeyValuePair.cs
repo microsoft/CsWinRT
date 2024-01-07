@@ -42,19 +42,26 @@ namespace ABI.System.Collections.Generic
 
         internal static unsafe bool EnsureInitialized()
         {
+#if NET
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            // Here we just always return true and rely on the AOT generator doing what's needed.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return true;
+            }
+#endif
+
             // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
             // and due to that the function pointers haven't been initialized.
-#if NET
-            if (RuntimeFeature.IsDynamicCodeCompiled && !_RcwHelperInitialized)
-#else
             if (!_RcwHelperInitialized)
-#endif
             {
                 var initRcwHelperFallback = (Func<bool>)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
                     GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
                     CreateDelegate(typeof(Func<bool>));
                 initRcwHelperFallback();
             }
+
             return true;
         }
 

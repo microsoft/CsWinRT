@@ -128,7 +128,16 @@ namespace ABI.Windows.Foundation.Collections
 
         public static unsafe void Split(IObjectReference obj, out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _Split != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                _Split(obj, out first, out second);
+
+                return;
+            }
+
+            if (_Split != null)
             {
                 _Split(obj, out first, out second);
             }
@@ -177,9 +186,16 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IReadOnlyDictionaryMethods()
         {
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return;
+            }
+
             // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
             // and due to that the function pointers haven't been initialized.
-            if (RuntimeFeature.IsDynamicCodeCompiled && !ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._RcwHelperInitialized)
+            if (!ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._RcwHelperInitialized)
             {
                 var initRcwHelperFallback = (Func<bool>)typeof(IReadOnlyDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
                     GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).

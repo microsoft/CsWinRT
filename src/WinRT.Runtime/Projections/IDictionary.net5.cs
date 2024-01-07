@@ -181,7 +181,14 @@ namespace ABI.Windows.Foundation.Collections
 
         public static unsafe global::System.Collections.Generic.IReadOnlyDictionary<K, V> GetView(IObjectReference obj)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetView != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return _GetView(obj);
+            }
+
+            if (_GetView != null)
             {
                 return _GetView(obj);
             }
@@ -246,9 +253,16 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IDictionaryMethods()
         {
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return;
+            }
+
             // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
             // and due to that the function pointers haven't been initialized.
-            if (RuntimeFeature.IsDynamicCodeCompiled && !IMapMethods<K, V>._RcwHelperInitialized)
+            if (!IMapMethods<K, V>._RcwHelperInitialized)
             {
                 var initRcwHelperFallback = (Func<bool>)typeof(IDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
                     GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).

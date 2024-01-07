@@ -47,7 +47,14 @@ namespace ABI.Windows.Foundation.Collections
 
         public unsafe static IEnumerator<T> First(IObjectReference obj)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _First != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return _First(obj);
+            }
+
+            if (_First != null)
             {
                 return _First(obj);
             }
@@ -443,7 +450,14 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe uint GetMany(IObjectReference obj, ref T[] items)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetMany != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return _GetMany(obj, items);
+            }
+
+            if (_GetMany != null)
             {
                 return _GetMany(obj, items);
             }
@@ -493,9 +507,16 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IEnumeratorMethods()
         {
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return;
+            }
+
             // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
             // and due to that the function pointers haven't been initialized.
-            if (RuntimeFeature.IsDynamicCodeCompiled && !IIteratorMethods<T>._RcwHelperInitialized)
+            if (!IIteratorMethods<T>._RcwHelperInitialized)
             {
                 var initRcwHelperFallback = (Func<bool>)typeof(IEnumeratorMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
                     GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).

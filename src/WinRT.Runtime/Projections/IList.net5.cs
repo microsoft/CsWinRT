@@ -157,9 +157,16 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IListMethods()
         {
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return;
+            }
+
             // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
             // and due to that the function pointers haven't been initialized.
-            if (RuntimeFeature.IsDynamicCodeCompiled && !IVectorMethods<T>._RcwHelperInitialized)
+            if (!IVectorMethods<T>._RcwHelperInitialized)
             {
                 var initRcwHelperFallback = (Func<bool>)typeof(IListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
                     GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
@@ -928,10 +935,18 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe global::System.Collections.Generic.IReadOnlyList<T> GetView(IObjectReference obj)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetView != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
-                return GetView(obj);
+                return _GetView(obj);
             }
+
+            if (_GetView != null)
+            {
+                return _GetView(obj);
+            }
+            else
             {
                 var ThisPtr = obj.ThisPtr;
                 IntPtr __retval = default;
@@ -987,7 +1002,14 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe uint GetMany(IObjectReference obj, uint startIndex, ref T[] items)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetMany != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return _GetMany(obj, startIndex, items);
+            }
+
+            if (_GetMany != null)
             {
                 return _GetMany(obj, startIndex, items);
             }
@@ -1015,7 +1037,16 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe void ReplaceAll(IObjectReference obj, T[] items)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _ReplaceAll != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                _ReplaceAll(obj, items);
+
+                return;
+            }
+
+            if (_ReplaceAll != null)
             {
                 _ReplaceAll(obj, items);
             }

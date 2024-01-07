@@ -147,7 +147,14 @@ namespace ABI.Windows.Foundation.Collections
 
         public static unsafe uint GetMany(IObjectReference obj, uint startIndex, ref T[] items)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetMany != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return _GetMany(obj, startIndex, items);
+            }
+
+            if (_GetMany != null)
             {
                 return _GetMany(obj, startIndex, items);
             }
