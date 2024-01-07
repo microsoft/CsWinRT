@@ -26,7 +26,7 @@ namespace ABI.Windows.Foundation
             AbiToProjectionVftable = new global::ABI.System.Nullable<T>.Vftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                get_Value_0 = global::System.Delegate.CreateDelegate(global::ABI.System.Nullable<T>.Vftbl.get_Value_0_Type, typeof(BoxedValueIReferenceImpl<T>).GetMethod("Do_Abi_get_Value_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType))
+                get_Value_0 = GetValueDelegateForAbi()
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedValueIReferenceImpl<T>), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
             Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
@@ -52,6 +52,89 @@ namespace ABI.Windows.Foundation
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
+        }
+
+        internal static unsafe Delegate GetValueDelegateForAbi()
+        {
+            if (typeof(T) == typeof(int))
+            {
+                return (NullableGetValueInt32)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(byte) ||
+                typeof(T) == typeof(bool))
+            {
+                return (NullableGetValueUInt8)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(sbyte))
+            {
+                return (NullableGetValueInt8)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(short))
+            {
+                return (NullableGetValueInt16)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(ushort) ||
+                typeof(T) == typeof(char))
+            {
+                return (NullableGetValueUInt16)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(uint))
+            {
+                return (NullableGetValueUInt32)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(long))
+            {
+                return (NullableGetValueInt64)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(ulong))
+            {
+                return (NullableGetValueUInt64)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(float))
+            {
+                return (NullableGetValueFloat)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(double))
+            {
+                return (NullableGetValueDouble)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(Guid))
+            {
+                return (NullableGetValueGuid)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(DateTimeOffset))
+            {
+                return (NullableGetValueDateTimeOffset)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T) == typeof(TimeSpan))
+            {
+                return (NullableGetValueTimeSpan)Do_Abi_get_Value_0;
+            }
+
+            // Only when not on NAOT, use LINQ expressions to get the delegate type.
+            // This is not safe on AOT, so in that case we just can't get a delegate.
+            if (RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                Nullable<T>.Vftbl.get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
+
+                return Delegate.CreateDelegate(
+                    Nullable<T>.Vftbl.get_Value_0_Type,
+                    typeof(BoxedValueIReferenceImpl<T>).GetMethod(nameof(Do_Abi_get_Value_0), BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(Marshaler<T>.AbiType));
+            }
+
+            throw new NotSupportedException("Failed to get the marshalling delegate for BoxedValueIReferenceImpl`1.");
         }
     }
 
@@ -113,6 +196,23 @@ namespace ABI.Windows.Foundation
 
 namespace ABI.System
 {
+    // Precomputed signatures for all supported Nullable<T> types. The result is the
+    // corresponding ABI type for each supported managed T type. Keep this list and
+    // the logic below in sync with the available projections in Projections.cctor().
+    internal unsafe delegate int NullableGetValueInt32(void* ptr, out int result);
+    internal unsafe delegate int NullableGetValueUInt8(void* ptr, out byte result);
+    internal unsafe delegate int NullableGetValueInt8(void* ptr, out sbyte result);
+    internal unsafe delegate int NullableGetValueInt16(void* ptr, out short result);
+    internal unsafe delegate int NullableGetValueUInt16(void* ptr, out ushort result);
+    internal unsafe delegate int NullableGetValueUInt32(void* ptr, out uint result);
+    internal unsafe delegate int NullableGetValueInt64(void* ptr, out long result);
+    internal unsafe delegate int NullableGetValueUInt64(void* ptr, out ulong result);
+    internal unsafe delegate int NullableGetValueFloat(void* ptr, out float result);
+    internal unsafe delegate int NullableGetValueDouble(void* ptr, out double result);
+    internal unsafe delegate int NullableGetValueGuid(void* ptr, out Guid result);
+    internal unsafe delegate int NullableGetValueDateTimeOffset(void* ptr, out DateTimeOffset result);
+    internal unsafe delegate int NullableGetValueTimeSpan(void* ptr, out TimeSpan result);
+
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
 #if EMBED
@@ -168,14 +268,95 @@ namespace ABI.System
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate get_Value_0;
             public static Guid PIID = Nullable<T>.PIID;
-            public static readonly global::System.Type get_Value_0_Type = Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            public static global::System.Type get_Value_0_Type;
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
                 var vftbl = (IntPtr*)vftblPtr.Vftbl;
                 IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
-                get_Value_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], get_Value_0_Type);
+                get_Value_0 = GetValueDelegateForFunctionPointer(vftbl[6]);
+            }
+
+            internal static Delegate GetValueDelegateForFunctionPointer(IntPtr ptr)
+            {
+                if (typeof(T) == typeof(int))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueInt32>(ptr);
+                }
+
+                if (typeof(T) == typeof(byte) ||
+                    typeof(T) == typeof(bool))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueUInt8>(ptr);
+                }
+
+                if (typeof(T) == typeof(sbyte))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueInt8>(ptr);
+                }
+
+                if (typeof(T) == typeof(short))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueInt16>(ptr);
+                }
+
+                if (typeof(T) == typeof(ushort) ||
+                    typeof(T) == typeof(char))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueUInt16>(ptr);
+                }
+
+                if (typeof(T) == typeof(uint))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueUInt32>(ptr);
+                }
+
+                if (typeof(T) == typeof(long))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueInt64>(ptr);
+                }
+
+                if (typeof(T) == typeof(ulong))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueUInt64>(ptr);
+                }
+
+                if (typeof(T) == typeof(float))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueFloat>(ptr);
+                }
+
+                if (typeof(T) == typeof(double))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueDouble>(ptr);
+                }
+
+                if (typeof(T) == typeof(Guid))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueGuid>(ptr);
+                }
+
+                if (typeof(T) == typeof(DateTimeOffset))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueDateTimeOffset>(ptr);
+                }
+
+                if (typeof(T) == typeof(TimeSpan))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueTimeSpan>(ptr);
+                }
+
+                // Only when not on NAOT, use LINQ expressions to get the delegate type.
+                // This is not safe on AOT, so in that case we just can't get a delegate.
+                if (RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
+
+                    return Marshal.GetDelegateForFunctionPointer(ptr, get_Value_0_Type);
+                }
+
+                throw new NotSupportedException("Failed to get the marshalling delegate for Nullable`1.");
             }
         }
 
@@ -201,7 +382,7 @@ namespace ABI.System
             {
                 ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out nullablePtr));
                 __params[0] = nullablePtr;
-                Marshal.GetDelegateForFunctionPointer((*(IntPtr**)nullablePtr)[6], Vftbl.get_Value_0_Type).DynamicInvokeAbi(__params);
+                Vftbl.GetValueDelegateForFunctionPointer((*(IntPtr**)nullablePtr)[6]).DynamicInvokeAbi(__params);
                 return Marshaler<T>.FromAbi(__params[1]);
             }
             finally
