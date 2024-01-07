@@ -35,6 +35,32 @@ namespace ABI.Windows.Foundation
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
 
+        // This method is only for blittable types (Rect, Size, Point)
+        private static unsafe int Do_Abi_get_Value_0(void* thisPtr, byte* result)
+        {
+            if (result is null)
+            {
+                // Immediately return E_POINTER if the target is null
+                return unchecked((int)0x80004003);
+            }
+
+            Unsafe.WriteUnaligned<T>(result, default);
+
+            try
+            {
+                T unboxedValue = (T)global::WinRT.ComWrappersSupport.FindObject<object>(new IntPtr(thisPtr));
+
+                Unsafe.WriteUnaligned(result, unboxedValue);
+
+                return 0;
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+        }
+
         private static unsafe int Do_Abi_get_Value_0<TAbi>(void* thisPtr, out TAbi __return_value__)
         {
             T ____return_value__ = default;
@@ -121,6 +147,11 @@ namespace ABI.Windows.Foundation
             if (typeof(T) == typeof(TimeSpan))
             {
                 return (NullableGetValueTimeSpan)Do_Abi_get_Value_0;
+            }
+
+            if (typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
+            {
+                return (NullableGetValueBlittable)Do_Abi_get_Value_0;
             }
 
 #if NET
@@ -214,6 +245,7 @@ namespace ABI.System
     internal unsafe delegate int NullableGetValueGuid(void* ptr, out Guid result);
     internal unsafe delegate int NullableGetValueDateTimeOffset(void* ptr, out DateTimeOffset result);
     internal unsafe delegate int NullableGetValueTimeSpan(void* ptr, out TimeSpan result);
+    internal unsafe delegate int NullableGetValueBlittable(void* ptr, byte* result);
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
@@ -349,6 +381,11 @@ namespace ABI.System
                     return Marshal.GetDelegateForFunctionPointer<NullableGetValueTimeSpan>(ptr);
                 }
 
+                if (typeof(T).FullName is "Windows.Foundation.Point" or "Windows.Foundation.Rect" or "Windows.Foundation.Size")
+                {
+                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueBlittable>(ptr);
+                }
+
 #if NET
                 // Only when not on NAOT, use LINQ expressions to get the delegate type.
                 // This is not safe on AOT, so in that case we just can't get a delegate.
@@ -400,15 +437,31 @@ namespace ABI.System
         {
             get
             {
-                var __params = new object[] { ThisPtr, null };
-                try
+                if (_obj.Vftbl.get_Value_0.GetType() == typeof(NullableGetValueBlittable))
                 {
-                    _obj.Vftbl.get_Value_0.DynamicInvokeAbi(__params);
-                    return Marshaler<T>.FromAbi(__params[1]);
+                    // Special case for blittable values (Rect, Size, Point). We don't have
+                    // access to the type from here, but we do know the size, and we know
+                    // that the projection is just blittable with the underlying type.
+                    T result;
+
+#pragma warning disable CS8500 // We know that T is unmanaged
+                    Marshal.ThrowExceptionForHR(((NullableGetValueBlittable)_obj.Vftbl.get_Value_0)((void*)ThisPtr, (byte*)&result));
+
+                    return result;
+#pragma warning restore CS8500
                 }
-                finally
+                else
                 {
-                    Marshaler<T>.DisposeAbi(__params[1]);
+                    var __params = new object[] { ThisPtr, null };
+                    try
+                    {
+                        _obj.Vftbl.get_Value_0.DynamicInvokeAbi(__params);
+                        return Marshaler<T>.FromAbi(__params[1]);
+                    }
+                    finally
+                    {
+                        Marshaler<T>.DisposeAbi(__params[1]);
+                    }
                 }
             }
         }
