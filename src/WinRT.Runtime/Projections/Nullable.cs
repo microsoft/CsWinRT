@@ -1617,6 +1617,84 @@ namespace ABI.System
         }
     }
 
+    [Guid("6ff27a1e-4b6a-59b7-b2c3-d1f2ee474593")]
+    internal static class Nullable_Exception
+    {
+        public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.HResult;i4))";
+        internal static Guid IID = new(0x6ff27a1e, 0x4b6a, 0x59b7, 0xb2, 0xc3, 0xd1, 0xf2, 0xee, 0x47, 0x45, 0x93);
+
+        [Guid("6ff27a1e-4b6a-59b7-b2c3-d1f2ee474593")]
+        public unsafe struct Vftbl
+        {
+            internal IInspectable.Vftbl IInspectableVftbl;
+            private void* _Get_Value_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, Exception*, int> Get_Value_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, Exception*, int>)_Get_Value_0; set => _Get_Value_0 = value; }
+
+            private static readonly Vftbl AbiToProjectionVftable;
+            public static readonly IntPtr AbiToProjectionVftablePtr;
+
+#if !NET
+            private unsafe delegate int GetValueDelegate(IntPtr thisPtr, Exception* value);
+            private static readonly GetValueDelegate delegateCache;
+#endif
+
+            static Vftbl()
+            {
+                AbiToProjectionVftable = new Vftbl
+                {
+                    IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
+#if !NET
+                    _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
+#else
+                    _Get_Value_0 = (delegate* unmanaged<IntPtr, Exception*, int>)&Do_Abi_get_Value_0
+#endif
+                };
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
+            }
+
+#if NET
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, Exception* __return_value__)
+            {
+                global::System.Exception ____return_value__ = default;
+
+                *__return_value__ = default;
+
+                try
+                {
+                    ____return_value__ = (global::System.Exception)global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
+                    *__return_value__ = Exception.FromManaged(____return_value__);
+                }
+                catch (global::System.Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+        }
+
+        unsafe internal static Nullable GetValue(IInspectable inspectable)
+        {
+            IntPtr nullablePtr = IntPtr.Zero;
+            Exception __retval = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Exception*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return new Nullable(Exception.FromAbi(__retval));
+            }
+            finally
+            {
+                Exception.DisposeAbi(__retval);
+                Marshal.Release(nullablePtr);
+            }
+        }
+    }
+
     [Guid("25230F05-B49C-57EE-8961-5373D98E1AB1")]
     internal static class Nullable_EventHandler
     {
@@ -1831,10 +1909,31 @@ namespace ABI.System
         public unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
         public unsafe delegate int GetValueDelegateAbi(void* thisPtr, void* value);
     }
+
+    internal static class IReferenceIIDs
+    {
+#if NET
+        internal static readonly Guid IReferenceMatrix3x2_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xfd, 0x8c, 0x35, 0x76, 0xbd, 0x2c, 0x5b, 0x52, 0xa4, 0x9e, 0x90, 0xee, 0x18, 0x24, 0x7b, 0x71 }));
+        internal static readonly Guid IReferenceMatrix4x4_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xdc, 0xff, 0xcb, 0xda, 0xef, 0x68, 0xd0, 0x5f, 0xb6, 0x57, 0x78, 0x2d, 0x0a, 0xc9, 0x80, 0x7e }));
+        internal static readonly Guid IReferencePlane_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xa1, 0x42, 0xd5, 0x46, 0xf7, 0x52, 0xe7, 0x58, 0xac, 0xfc, 0x9a, 0x6d, 0x36, 0x4d, 0xa0, 0x22 }));
+        internal static readonly Guid IReferenceQuaternion_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xbb, 0x04, 0x70, 0xb2, 0x14, 0xc0, 0xce, 0x5d, 0x9a, 0x21, 0x79, 0x9c, 0x5a, 0x3c, 0x14, 0x61 }));
+        internal static readonly Guid IReferenceVector2_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x9e, 0xa6, 0xf6, 0x48, 0x65, 0x84, 0xae, 0x57, 0x94, 0x00, 0x97, 0x64, 0x08, 0x7f, 0x65, 0xad }));
+        internal static readonly Guid IReferenceVector3_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xff, 0x70, 0xe7, 0x1e, 0x54, 0xc9, 0xca, 0x59, 0xa7, 0x54, 0x61, 0x99, 0xa9, 0xbe, 0x28, 0x2c }));
+        internal static readonly Guid IReferenceVector4_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xc9, 0x43, 0xe8, 0xa5, 0x20, 0xed, 0x39, 0x53, 0x8f, 0x8d, 0x9f, 0xe4, 0x04, 0xcf, 0x36, 0x54 }));
+#else
+        internal static readonly Guid IReferenceMatrix3x2_IID = new(0x76358cfd, 0x2cbd, 0x525b, 0xa4, 0x9e, 0x90, 0xee, 0x18, 0x24, 0x7b, 0x71);
+        internal static readonly Guid IReferenceMatrix4x4_IID = new(0xdacbffdc, 0x68ef, 0x5fd0, 0xb6, 0x57, 0x78, 0x2d, 0x0a, 0xc9, 0x80, 0x7e);
+        internal static readonly Guid IReferencePlane_IID = new(0x46d542a1, 0x52f7, 0x58e7, 0xac, 0xfc, 0x9a, 0x6d, 0x36, 0x4d, 0xa0, 0x22);
+        internal static readonly Guid IReferenceQuaternion_IID = new(0xb27004bb, 0xc014, 0x5dce, 0x9a, 0x21, 0x79, 0x9c, 0x5a, 0x3c, 0x14, 0x61);
+        internal static readonly Guid IReferenceVector2_IID = new(0x48f6a69e, 0x8465, 0x57ae, 0x94, 0x00, 0x97, 0x64, 0x08, 0x7f, 0x65, 0xad);
+        internal static readonly Guid IReferenceVector3_IID = new(0x1ee770ff, 0xc954, 0x59ca, 0xa7, 0x54, 0x61, 0x99, 0xa9, 0xbe, 0x28, 0x2c);
+        internal static readonly Guid IReferenceVector4_IID = new(0xa5e843c9, 0xed20, 0x5339, 0x8f, 0x8d, 0x9f, 0xe4, 0x04, 0xcf, 0x36, 0x54);
+#endif
+    }
 }
 
 #if NET
-namespace WinRT
+    namespace WinRT
 {
     public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails where T: struct where TAbi : unmanaged
     {
@@ -1842,8 +1941,8 @@ namespace WinRT
 
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
-            return new ComWrappers.ComInterfaceEntry[]
-            {
+            return
+            [
                 new ComWrappers.ComInterfaceEntry
                 {
                     IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
@@ -1854,7 +1953,7 @@ namespace WinRT
                     IID = PIID,
                     Vtable = ABI.Windows.Foundation.BoxedValueIReferenceImpl<T, TAbi>.AbiToProjectionVftablePtr
                 }
-            };
+            ];
         }
     }
 
@@ -1869,8 +1968,8 @@ namespace WinRT
 
         public static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces(ComWrappers.ComInterfaceEntry delegateInterface)
         {
-            return new ComWrappers.ComInterfaceEntry[]
-            {
+            return
+            [
                 delegateInterface,
                 new ComWrappers.ComInterfaceEntry
                 {
@@ -1882,7 +1981,7 @@ namespace WinRT
                     IID = PIID,
                     Vtable = ABI.System.Nullable_Delegate<T>.AbiToProjectionVftablePtr
                 }
-            };
+            ];
         }
 
         public abstract ComWrappers.ComInterfaceEntry GetDelegateInterface();
