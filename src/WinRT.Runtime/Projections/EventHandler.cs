@@ -216,7 +216,7 @@ namespace ABI.System
                 }
 #endif
 
-                if (EventHandlerMethods<T>._Invoke == null)
+                if (EventHandlerMethods<T>._Invoke != null)
                 {
                     EventHandlerMethods<T>._Invoke(_nativeDelegate, sender, args);
                 }
