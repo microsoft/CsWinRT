@@ -2,4 +2,8 @@
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
+  <PropertyGroup>
+    <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
+  </PropertyGroup>
+
 </Project>

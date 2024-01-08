@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+
+    <!-- Projections should not require runtime marshalling. -->
+    <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
   </PropertyGroup>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
