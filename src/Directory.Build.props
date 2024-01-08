@@ -34,6 +34,7 @@
     <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net6.0-windows10.0.19041.0</TestsBuildTFMs>
     <FunctionalTestsBuildTFMs>net6.0;net8.0</FunctionalTestsBuildTFMs>
     <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
+    <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
   </PropertyGroup>
 
   <PropertyGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">
