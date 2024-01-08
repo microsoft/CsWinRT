@@ -309,7 +309,7 @@ namespace Generator
             //   once from the namespace declaration and once from the member's declaration
             if (syntaxNode is NamespaceDeclarationSyntax @namespace)
             {
-                // We only include the namespace if it has a public type as otherwise it won't.
+                // We only include the namespace if it has a public type as otherwise it won't
                 // be projected.  For partial types, there would be one instance that we encounter
                 // which declares the accessibility and we will use that to determine the accessibility
                 // of the type for the purpose of determining whether to include the namespace.
