@@ -110,17 +110,23 @@ MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr>
 MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.ComponentModel.PropertyChangedEventHandler.GetAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Windows.Input.ICommandMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.IActivationFactoryMethods' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'WinRT.WinRTExposedTypeAttribute' exists on 'Windows.Foundation.Point' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WinRTExposedTypeAttribute' exists on 'Windows.Foundation.Rect' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WinRTExposedTypeAttribute' exists on 'Windows.Foundation.Size' in the implementation but not the reference.
 MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(System.Func<System.Type, System.Type>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterComInterfaceEntries(System.Type, System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean WinRT.ComWrappersSupport.RegisterDelegateFactory(System.Type, System.Func<System.IntPtr, System.Object>)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterTypeComInterfaceEntriesLookup(System.Func<System.Type, System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]>)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Boolean WinRT.ComWrappersSupport.RegisterTypedRcwFactory(System.Type, System.Func<WinRT.IInspectable, System.Object>)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.DelegateTypeDetails<T>' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'WinRT.WinRTExposedTypeAttribute' exists on 'WinRT.EventRegistrationToken' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'WinRT.EventRegistrationToken' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeTypeAttribute' exists on 'WinRT.EventRegistrationToken' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.IWinRTExposedTypeDetails' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.MarshalInspectable<T>.CopyAbiArray(T[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ReadOnlySpan<System.Char> WinRT.MarshalString.FromAbiUnsafe(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.StructTypeDetails<T, TAbi>' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(System.String, System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
-MembersMustExist : Member 'public System.Boolean WinRT.ComWrappersSupport.RegisterDelegateFactory(System.Type, System.Func<System.IntPtr, System.Object>)' does not exist in the reference but it does exist in the implementation.
-MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterComInterfaceEntries(System.Type, System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[])' does not exist in the reference but it does exist in the implementation.
-MembersMustExist : Member 'public System.ReadOnlySpan<System.Char> WinRT.MarshalString.FromAbiUnsafe(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
-Total Issues: 124
+Total Issues: 130

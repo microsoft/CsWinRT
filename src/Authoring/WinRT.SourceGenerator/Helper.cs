@@ -226,13 +226,23 @@ namespace Generator
                 (iface.IsGenericType && iface.TypeArguments.Any(typeArgument => IsInternalInterfaceFromReferences(typeArgument as INamedTypeSymbol, currentAssembly)));
         }
 
-        // Checks whether the symbol references any generic that hasn't been instantiated.
-        // For instance, List<T> where T is a generic.
-        public static bool HasNonInstantiatedGeneric(ITypeSymbol symbol)
+        // Checks whether the symbol references any generic that hasn't been instantiated
+        // and is used by a WinRT interface. For instance, List<T> where T is a generic.
+        // If the generic isn't used by any WinRT interface, this returns false as for
+        // instance, we can still generate the vtable attribute for it.
+        public static bool HasNonInstantiatedWinRTGeneric(ITypeSymbol symbol)
         {
             return symbol is INamedTypeSymbol namedType && 
-                (namedType.TypeKind == TypeKind.TypeParameter || 
-                 namedType.TypeArguments.Any(argument => argument.TypeKind == TypeKind.TypeParameter));
+                (IsArgumentTypeParameter(namedType) || 
+                 (namedType.TypeArguments.Any(IsArgumentTypeParameter) && 
+                  namedType.AllInterfaces.Any(iface => iface.TypeArguments.Any(IsArgumentTypeParameter) && 
+                  // Checks if without the non-instantiated generic, whether it would be a WinRT type.
+                  IsWinRTType(iface.OriginalDefinition, null))));
+
+            static bool IsArgumentTypeParameter(ITypeSymbol argument)
+            {
+                return argument.TypeKind == TypeKind.TypeParameter;
+            }
         }
 
         public static bool HasPrivateclass(ITypeSymbol symbol)

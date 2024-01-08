@@ -5,6 +5,9 @@ namespace Microsoft.UI.Xaml.Media.Media3D
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Media.Media3D.Matrix3D))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Matrix3D, Matrix3D>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal

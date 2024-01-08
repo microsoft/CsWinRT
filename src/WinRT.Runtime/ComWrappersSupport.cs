@@ -205,7 +205,6 @@ namespace WinRT
             {
                 hasWinrtExposedClassAttribute = true;
                 entries.AddRange(winrtExposedClassAttribute.GetExposedInterfaces());
-
                 if (type.IsClass)
                 {
                     hasCustomIMarshalInterface = entries.Any(entry => entry.IID == ABI.WinRT.Interop.IMarshal.IID);
@@ -504,11 +503,15 @@ namespace WinRT
 
             if (implementationType == typeof(ABI.System.Nullable_string))
             {
-                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_string.GetValue(obj));
+                return CreateReferenceCachingFactory(ABI.System.Nullable_string.GetValue);
             }
             else if (implementationType == typeof(ABI.System.Nullable_Type))
             {
-                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_Type.GetValue(obj));
+                return CreateReferenceCachingFactory(ABI.System.Nullable_Type.GetValue);
+            }
+            else if (implementationType == typeof(ABI.System.Nullable_Exception))
+            {
+                return CreateReferenceCachingFactory(ABI.System.Nullable_Exception.GetValue);
             }
 
             var customHelperType = Projections.FindCustomHelperTypeMapping(implementationType, true);
@@ -768,6 +771,70 @@ namespace WinRT
                     Vtable = delegateHelperType.GetAbiToProjectionVftblPtr()
                 };
             }
+            if (type == typeof(System.Numerics.Matrix3x2))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.IReferenceIIDs.IReferenceMatrix3x2_IID,
+                    Vtable = BoxedValueIReferenceImpl<System.Numerics.Matrix3x2, System.Numerics.Matrix3x2>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Matrix4x4))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.IReferenceIIDs.IReferenceMatrix4x4_IID,
+                    Vtable = BoxedValueIReferenceImpl<System.Numerics.Matrix4x4, System.Numerics.Matrix4x4>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Plane))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.IReferenceIIDs.IReferencePlane_IID,
+                    Vtable = BoxedValueIReferenceImpl<System.Numerics.Plane, System.Numerics.Plane>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Quaternion))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.IReferenceIIDs.IReferenceQuaternion_IID,
+                    Vtable = BoxedValueIReferenceImpl<System.Numerics.Quaternion, System.Numerics.Quaternion>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Vector2))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.IReferenceIIDs.IReferenceVector2_IID,
+                    Vtable = BoxedValueIReferenceImpl<System.Numerics.Vector2, System.Numerics.Vector2>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Vector3))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.IReferenceIIDs.IReferenceVector3_IID,
+                    Vtable = BoxedValueIReferenceImpl<System.Numerics.Vector3, System.Numerics.Vector3>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Vector4))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.IReferenceIIDs.IReferenceVector4_IID,
+                    Vtable = BoxedValueIReferenceImpl<System.Numerics.Vector4, System.Numerics.Vector4>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type.IsTypeOfException())
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.Nullable_Exception.IID,
+                    Vtable = ABI.System.Nullable_Exception.Vftbl.AbiToProjectionVftablePtr
+                };
+            }
 
             return new ComInterfaceEntry
             {
@@ -913,6 +980,70 @@ namespace WinRT
                 {
                     IID = IReferenceArrayIIDs.IReferenceArrayOfType_IID,
                     Vtable = BoxedArrayIReferenceArrayImpl<Type>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Matrix3x2))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = IReferenceArrayIIDs.IReferenceArrayOfMatrix3x2_IID,
+                    Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Matrix3x2>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Matrix4x4))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = IReferenceArrayIIDs.IReferenceArrayOfMatrix4x4_IID,
+                    Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Matrix4x4>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Plane))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = IReferenceArrayIIDs.IReferenceArrayOfPlane_IID,
+                    Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Plane>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Quaternion))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = IReferenceArrayIIDs.IReferenceArrayOfQuaternion_IID,
+                    Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Quaternion>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Vector2))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = IReferenceArrayIIDs.IReferenceArrayOfVector2_IID,
+                    Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Vector2>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Vector3))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = IReferenceArrayIIDs.IReferenceArrayOfVector3_IID,
+                    Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Vector3>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(System.Numerics.Vector4))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = IReferenceArrayIIDs.IReferenceArrayOfVector4_IID,
+                    Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Vector4>.AbiToProjectionVftablePtr
+                };
+            }
+            if (type.IsTypeOfException())
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = IReferenceArrayIIDs.IReferenceArrayOfException_IID,
+                    Vtable = BoxedArrayIReferenceArrayImpl<System.Exception>.AbiToProjectionVftablePtr
                 };
             }
             return new ComInterfaceEntry
