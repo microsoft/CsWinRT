@@ -369,6 +369,8 @@ namespace Generator
                 if (((isCsWinRTComponentFromAotOptimizer && !vtableAttribute.IsPublic) || !isCsWinRTComponentFromAotOptimizer) && 
                     vtableAttribute.Interfaces.Any())
                 {
+                    var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(vtableAttribute.ClassName);
+
                     StringBuilder source = new();
                     source.AppendLine("using static WinRT.TypeExtensions;\n");
                     if (!vtableAttribute.IsGlobalNamespace)
@@ -380,12 +382,12 @@ namespace Generator
                     }
 
                     source.AppendLine($$"""
-                    [global::WinRT.WinRTExposedType(typeof({{vtableAttribute.ClassName}}WinRTTypeDetails))]
+                    [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
                     partial class {{vtableAttribute.ClassName}}
                     {
                     }
 
-                    internal sealed class {{vtableAttribute.ClassName}}WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+                    internal sealed class {{escapedClassName}}WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
                     {
                         public global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
                         {
@@ -445,7 +447,7 @@ namespace Generator
                     }
 
                     string prefix = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
-                    addSource($"{prefix}{vtableAttribute.ClassName}.WinRTVtable.g.cs", source.ToString());
+                    addSource($"{prefix}{escapedClassName}.WinRTVtable.g.cs", source.ToString());
                 }
             }
         }
