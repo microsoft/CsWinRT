@@ -1941,8 +1941,8 @@ namespace ABI.System
 
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
-            return
-            [
+            return new ComWrappers.ComInterfaceEntry[]
+            {
                 new ComWrappers.ComInterfaceEntry
                 {
                     IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
@@ -1953,7 +1953,7 @@ namespace ABI.System
                     IID = PIID,
                     Vtable = ABI.Windows.Foundation.BoxedValueIReferenceImpl<T, TAbi>.AbiToProjectionVftablePtr
                 }
-            ];
+            };
         }
     }
 
@@ -1968,8 +1968,8 @@ namespace ABI.System
 
         public static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces(ComWrappers.ComInterfaceEntry delegateInterface)
         {
-            return
-            [
+            return new ComWrappers.ComInterfaceEntry[]
+            {
                 delegateInterface,
                 new ComWrappers.ComInterfaceEntry
                 {
@@ -1981,7 +1981,7 @@ namespace ABI.System
                     IID = PIID,
                     Vtable = ABI.System.Nullable_Delegate<T>.AbiToProjectionVftablePtr
                 }
-            ];
+            };
         }
 
         public abstract ComWrappers.ComInterfaceEntry GetDelegateInterface();
