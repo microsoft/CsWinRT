@@ -931,8 +931,8 @@ namespace ABI.System.Collections
             {
                 public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
                 {
-                    return
-                    [
+                    return new ComWrappers.ComInterfaceEntry[]
+                    {
                         new ComWrappers.ComInterfaceEntry
                         {
                             IID = ABI.Microsoft.UI.Xaml.Interop.IBindableVectorView.IID,
@@ -943,7 +943,7 @@ namespace ABI.System.Collections
                             IID = ABI.System.Collections.IEnumerableMethods.IID,
                             Vtable = ABI.System.Collections.IEnumerableMethods.AbiToProjectionVftablePtr
                         }
-                    ];
+                    };
                 }
             }
 
