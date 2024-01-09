@@ -63,6 +63,30 @@ namespace ABI.Windows.Foundation
             }
         }
 
+        private static unsafe int Do_Abi_get_Value_0_DateTimeOffset(void* thisPtr, DateTimeOffset* result)
+        {
+            if (result is null)
+            {
+                return unchecked((int)0x80004003);
+            }
+
+            try
+            {
+                T unboxedValue = (T)global::WinRT.ComWrappersSupport.FindObject<object>(new IntPtr(thisPtr));
+
+                Unsafe.WriteUnaligned(result, DateTimeOffset.FromManaged(Unsafe.As<T, global::System.DateTimeOffset>(ref unboxedValue)));
+
+                return 0;
+            }
+            catch (global::System.Exception __exception__)
+            {
+                Unsafe.WriteUnaligned<T>(result, default);
+
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+        }
+
         private static unsafe int Do_Abi_get_Value_0<TAbi>(void* thisPtr, out TAbi __return_value__)
         {
             T ____return_value__ = default;
@@ -107,7 +131,7 @@ namespace ABI.Windows.Foundation
 
             if (typeof(T) == typeof(DateTimeOffset))
             {
-                return (NullableGetValueDateTimeOffset)Do_Abi_get_Value_0;
+                return (NullableGetValueDateTimeOffset)Do_Abi_get_Value_0_DateTimeOffset;
             }
 
 #if NET
@@ -190,7 +214,7 @@ namespace ABI.System
     // the logic below in sync with the available projections in Projections.cctor().
     // Note: all blittable types have been collapsed into NullableGetValueBlittable.
     internal unsafe delegate int NullableGetValueBlittable(void* ptr, byte* result);
-    internal unsafe delegate int NullableGetValueDateTimeOffset(void* ptr, out DateTimeOffset result);
+    internal unsafe delegate int NullableGetValueDateTimeOffset(void* ptr, DateTimeOffset* result);
 
 #if NET
     internal static class IReferenceIIDs
@@ -419,9 +443,13 @@ namespace ABI.System
 
             if (marshallingDelegate.GetType() == typeof(NullableGetValueDateTimeOffset))
             {
-                Marshal.ThrowExceptionForHR(((NullableGetValueDateTimeOffset)marshallingDelegate)((void*)thisPtr, out DateTimeOffset result));
+                DateTimeOffset result;
 
-                return Unsafe.As<DateTimeOffset, T>(ref result);
+                Marshal.ThrowExceptionForHR(((NullableGetValueDateTimeOffset)marshallingDelegate)((void*)thisPtr, &result));
+
+                global::System.DateTimeOffset managed = DateTimeOffset.FromAbi(result);
+
+                return Unsafe.As<global::System.DateTimeOffset, T>(ref managed);
             }
 
 #if NET
