@@ -3195,19 +3195,23 @@ db_path.stem().string());
     auto get_invoke_info(writer& w, MethodDef const& method, uint32_t const& abi_methods_start_index = INSPECTABLE_METHOD_COUNT)
     {
         TypeDef const& type = method.Parent();
-        if (!settings.netstandard_compat && distance(type.GenericParam()) == 0)
+        bool signature_has_generic_parameters = abi_signature_has_generic_parameters(w, method_signature{ method });
+        if (!settings.netstandard_compat)
         {
-            return std::pair{
-                w.write_temp("(*(delegate* unmanaged[Stdcall]<%, int>**)ThisPtr)[%]",
-                    bind<write_abi_parameter_types_pointer>(method_signature { method }),
-                    get_vmethod_index(type, method) + abi_methods_start_index /* number of methods in IInspectable + previous methods if fastabi*/),
-                false
-            };
+            if (!signature_has_generic_parameters)
+            {
+                return std::pair{
+                    w.write_temp("(*(delegate* unmanaged[Stdcall]<%, int>**)ThisPtr)[%]",
+                        bind<write_abi_parameter_types_pointer>(method_signature { method }),
+                        get_vmethod_index(type, method) + abi_methods_start_index /* number of methods in IInspectable + previous methods if fastabi*/),
+                    false
+                };
+            }
         }
         auto vmethod_name = get_vmethod_name(w, type, method);
         return std::pair{
             "_obj.Vftbl." + vmethod_name,
-            abi_signature_has_generic_parameters(w, method_signature { method })};
+            signature_has_generic_parameters };
     };
 
     void write_static_class(writer& w, TypeDef const& type)
