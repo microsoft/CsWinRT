@@ -1237,11 +1237,6 @@ namespace WinRT
         T>
     {
         public static IObjectReference CreateMarshaler<V>(
-#if NET6_0_OR_GREATER
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
-#elif NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-#endif
             T o,
             Guid iid,
             bool unwrapObject = true)
@@ -1267,11 +1262,6 @@ namespace WinRT
         }
 
         public static IObjectReference CreateMarshaler(
-#if NET6_0_OR_GREATER
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
-#elif NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-#endif
             T o,
             bool unwrapObject = true)
         {
@@ -1279,11 +1269,6 @@ namespace WinRT
         }
 
         public static ObjectReferenceValue CreateMarshaler2(
-#if NET6_0_OR_GREATER
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
-#elif NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-#endif
             T o,
             Guid iid,
             bool unwrapObject = true)
@@ -1309,11 +1294,6 @@ namespace WinRT
         }
 
         public static ObjectReferenceValue CreateMarshaler2(
-#if NET6_0_OR_GREATER
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
-#elif NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-#endif
             T o, bool unwrapObject = true) => CreateMarshaler2(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
