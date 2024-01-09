@@ -124,7 +124,9 @@ namespace ABI.Windows.Foundation
                 typeof(T) == typeof(TimeSpan) ||
                 typeof(T) == typeof(global::Windows.Foundation.Point) ||
                 typeof(T) == typeof(global::Windows.Foundation.Rect) ||
-                typeof(T) == typeof(global::Windows.Foundation.Size))
+                typeof(T) == typeof(global::Windows.Foundation.Size) ||
+                (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
+                (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
             {
                 return (NullableGetValueBlittable)Do_Abi_get_Value_0_Blittable;
             }
@@ -323,7 +325,9 @@ namespace ABI.System
                     typeof(T) == typeof(TimeSpan) ||
                     typeof(T) == typeof(global::Windows.Foundation.Point) ||
                     typeof(T) == typeof(global::Windows.Foundation.Rect) ||
-                    typeof(T) == typeof(global::Windows.Foundation.Size))
+                    typeof(T) == typeof(global::Windows.Foundation.Size) ||
+                    (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
+                    (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
                 {
                     return Marshal.GetDelegateForFunctionPointer<NullableGetValueBlittable>(ptr);
                 }
