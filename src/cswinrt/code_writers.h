@@ -9649,8 +9649,7 @@ RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
 
 public static IntPtr Make()
 {
-using var marshaler = MarshalInspectable<%>.CreateMarshaler(_factory).As<ABI.WinRT.Interop.IActivationFactory.Vftbl>();
-return marshaler.GetRef();
+    return MarshalInspectable<%>.CreateMarshaler2(_factory, InterfaceIIDs.IActivationFactory_IID).Detach();
 }
 
 static readonly % _factory = new %();
