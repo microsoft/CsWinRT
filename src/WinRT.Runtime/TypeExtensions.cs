@@ -201,12 +201,18 @@ namespace WinRT
                 type == typeof(DateTimeOffset) ||
                 type == typeof(TimeSpan) ||
                 type.IsTypeOfType() ||
+                type.IsTypeOfException() ||
                 ((type.IsValueType || type.IsDelegate()) && Projections.IsTypeWindowsRuntimeType(type));
         }
 
         internal static bool IsTypeOfType(this Type type)
         {
             return typeof(Type).IsAssignableFrom(type);
+        }
+
+        internal static bool IsTypeOfException(this Type type)
+        {
+            return typeof(Exception).IsAssignableFrom(type);
         }
 
         public static Type GetRuntimeClassCCWType(this Type type)

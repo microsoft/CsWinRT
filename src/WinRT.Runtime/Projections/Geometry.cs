@@ -14,6 +14,9 @@ namespace Windows.Foundation
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.Foundation.Point))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Point, Point>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
@@ -107,6 +110,9 @@ namespace Windows.Foundation
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.Foundation.Rect))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Rect, Rect>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
@@ -432,6 +438,9 @@ namespace Windows.Foundation
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.Foundation.Size))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Size, Size>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
