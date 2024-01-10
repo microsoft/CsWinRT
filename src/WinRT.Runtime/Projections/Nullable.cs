@@ -125,6 +125,13 @@ namespace ABI.Windows.Foundation
                 typeof(T) == typeof(global::Windows.Foundation.Point) ||
                 typeof(T) == typeof(global::Windows.Foundation.Rect) ||
                 typeof(T) == typeof(global::Windows.Foundation.Size) ||
+                typeof(T) == typeof(global::System.Numerics.Matrix3x2) ||
+                typeof(T) == typeof(global::System.Numerics.Matrix4x4) ||
+                typeof(T) == typeof(global::System.Numerics.Plane) ||
+                typeof(T) == typeof(global::System.Numerics.Quaternion) ||
+                typeof(T) == typeof(global::System.Numerics.Vector2) ||
+                typeof(T) == typeof(global::System.Numerics.Vector3) ||
+                typeof(T) == typeof(global::System.Numerics.Vector4) ||
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
             {
@@ -326,6 +333,13 @@ namespace ABI.System
                     typeof(T) == typeof(global::Windows.Foundation.Point) ||
                     typeof(T) == typeof(global::Windows.Foundation.Rect) ||
                     typeof(T) == typeof(global::Windows.Foundation.Size) ||
+                    typeof(T) == typeof(global::System.Numerics.Matrix3x2) ||
+                    typeof(T) == typeof(global::System.Numerics.Matrix4x4) ||
+                    typeof(T) == typeof(global::System.Numerics.Plane) ||
+                    typeof(T) == typeof(global::System.Numerics.Quaternion) ||
+                    typeof(T) == typeof(global::System.Numerics.Vector2) ||
+                    typeof(T) == typeof(global::System.Numerics.Vector3) ||
+                    typeof(T) == typeof(global::System.Numerics.Vector4) ||
                     (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
                     (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
                 {
@@ -375,6 +389,13 @@ namespace ABI.System
             if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
             if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
             if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IReferenceIIDs.IReferenceMatrix3x2_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IReferenceIIDs.IReferenceMatrix4x4_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IReferenceIIDs.IReferencePlane_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IReferenceIIDs.IReferenceQuaternion_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IReferenceIIDs.IReferenceVector2_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceIIDs.IReferenceVector3_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceIIDs.IReferenceVector4_IID;
 #endif
 
             return GuidGenerator.CreateIID(typeof(Nullable<T>));
