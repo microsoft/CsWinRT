@@ -38,7 +38,7 @@ namespace ABI.Windows.Foundation
         // This method is only for all blittable types. Note: this method  could be an overload of
         // the generic one below, but using a different one to simplify the reflection lookup in the
         // fallback case below (so we can use GetMethod and find just the single match we need).
-        private static unsafe int Do_Abi_get_Value_0_Blittable(void* thisPtr, byte* result)
+        private static unsafe int Do_Abi_get_Value_0_Blittable(void* thisPtr, void* result)
         {
             if (result is null)
             {
@@ -128,12 +128,12 @@ namespace ABI.Windows.Foundation
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
             {
-                return (NullableGetValueBlittable)Do_Abi_get_Value_0_Blittable;
+                return (Nullable_Delegates.GetValueDelegateAbi)Do_Abi_get_Value_0_Blittable;
             }
 
             if (typeof(T) == typeof(DateTimeOffset))
             {
-                return (NullableGetValueDateTimeOffset)Do_Abi_get_Value_0_DateTimeOffset;
+                return (Nullable_Delegates.GetValueDelegateAbiDateTimeOffset)Do_Abi_get_Value_0_DateTimeOffset;
             }
 
 #if NET
@@ -211,13 +211,6 @@ namespace ABI.Windows.Foundation
 
 namespace ABI.System
 {
-    // Precomputed signatures for all supported Nullable<T> types. The result is the
-    // corresponding ABI type for each supported managed T type. Keep this list and
-    // the logic below in sync with the available projections in Projections.cctor().
-    // Note: all blittable types have been collapsed into NullableGetValueBlittable.
-    internal unsafe delegate int NullableGetValueBlittable(void* ptr, byte* result);
-    internal unsafe delegate int NullableGetValueDateTimeOffset(void* ptr, DateTimeOffset* result);
-
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
 #if EMBED
@@ -305,12 +298,12 @@ namespace ABI.System
                     (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
                     (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
                 {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueBlittable>(ptr);
+                    return Marshal.GetDelegateForFunctionPointer<Nullable_Delegates.GetValueDelegateAbi>(ptr);
                 }
 
                 if (typeof(T) == typeof(DateTimeOffset))
                 {
-                    return Marshal.GetDelegateForFunctionPointer<NullableGetValueDateTimeOffset>(ptr);
+                    return Marshal.GetDelegateForFunctionPointer<Nullable_Delegates.GetValueDelegateAbiDateTimeOffset>(ptr);
                 }
 
 #if NET
@@ -410,22 +403,22 @@ namespace ABI.System
         /// <exception cref="NotSupportedException">Thrown if no marshalling code for <typeparamref name="T"/> is available.</exception>
         private static unsafe T GetValueFromAbi(IntPtr thisPtr, Delegate marshallingDelegate)
         {
-            if (marshallingDelegate.GetType() == typeof(NullableGetValueBlittable))
+            if (marshallingDelegate.GetType() == typeof(Nullable_Delegates.GetValueDelegateAbi))
             {
                 T result;
 
 #pragma warning disable CS8500 // We know that T is unmanaged
-                Marshal.ThrowExceptionForHR(((NullableGetValueBlittable)marshallingDelegate)((void*)thisPtr, (byte*)&result));
+                Marshal.ThrowExceptionForHR(((Nullable_Delegates.GetValueDelegateAbi)marshallingDelegate)((void*)thisPtr, &result));
 #pragma warning restore CS8500
 
                 return result;
             }
 
-            if (marshallingDelegate.GetType() == typeof(NullableGetValueDateTimeOffset))
+            if (marshallingDelegate.GetType() == typeof(Nullable_Delegates.GetValueDelegateAbiDateTimeOffset))
             {
                 DateTimeOffset result;
 
-                Marshal.ThrowExceptionForHR(((NullableGetValueDateTimeOffset)marshallingDelegate)((void*)thisPtr, &result));
+                Marshal.ThrowExceptionForHR(((Nullable_Delegates.GetValueDelegateAbiDateTimeOffset)marshallingDelegate)((void*)thisPtr, &result));
 
                 global::System.DateTimeOffset managed = DateTimeOffset.FromAbi(result);
 
@@ -2131,6 +2124,7 @@ namespace ABI.System
     {
         public unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
         public unsafe delegate int GetValueDelegateAbi(void* thisPtr, void* value);
+        public unsafe delegate int GetValueDelegateAbiDateTimeOffset(void* ptr, DateTimeOffset* result);
     }
 
     internal static class IReferenceIIDs
