@@ -221,21 +221,6 @@ namespace ABI.System
 #if NET
     internal static class IReferenceIIDs
     {
-        internal static readonly Guid IReferenceOfInt32_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xBD, 0xEF, 0x8C, 0x54, 0x8A, 0xBC, 0xA0, 0x5F, 0x8D, 0xF2, 0x95, 0x74, 0x40, 0xFC, 0x8B, 0xF4 }));
-        internal static readonly Guid IReferenceOfByte_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xC8, 0x8C, 0x19, 0xE5, 0x73, 0x28, 0xF5, 0x55, 0xB0, 0xA1, 0x84, 0xFF, 0x9E, 0x4A, 0xAD, 0x62 }));
-        internal static readonly Guid IReferenceOfBoolean_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x60, 0xFD, 0x00, 0x3C, 0x50, 0x29, 0x39, 0x59, 0xA2, 0x1A, 0x2D, 0x12, 0xC5, 0xA0, 0x1B, 0x8A }));
-        internal static readonly Guid IReferenceOfSByte_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x29, 0x01, 0x50, 0x95, 0xF6, 0xFB, 0xFC, 0x5A, 0x89, 0xDF, 0x70, 0x64, 0x2D, 0x74, 0x19, 0x90 }));
-        internal static readonly Guid IReferenceOfInt16_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x1B, 0xE4, 0xC9, 0x6E, 0x09, 0x67, 0x47, 0x56, 0x99, 0x18, 0xA1, 0x27, 0x01, 0x10, 0xFC, 0x4E }));
-        internal static readonly Guid IReferenceOfUInt16_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xC3, 0xD2, 0xB7, 0x5A, 0x62, 0x6B, 0x71, 0x5E, 0xA4, 0xB6, 0x2D, 0x49, 0xC4, 0xF2, 0x38, 0xFD }));
-        internal static readonly Guid IReferenceOfChar_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xF3, 0x3E, 0x39, 0xFB, 0xAC, 0xBB, 0xD5, 0x5B, 0x91, 0x44, 0x84, 0xF2, 0x35, 0x76, 0xF4, 0x15 }));
-        internal static readonly Guid IReferenceOfUInt32_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xAF, 0xF3, 0x3E, 0x51, 0x84, 0xE7, 0x25, 0x53, 0xA9, 0x1E, 0x97, 0xC2, 0xB8, 0x11, 0x1C, 0xF3 }));
-        internal static readonly Guid IReferenceOfInt64_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x24, 0x9E, 0xDA, 0x4D, 0x9F, 0xE6, 0x6A, 0x5C, 0xA0, 0xA6, 0x93, 0x42, 0x73, 0x65, 0xAF, 0x2A }));
-        internal static readonly Guid IReferenceOfUInt64_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x76, 0xE3, 0x55, 0x67, 0xBB, 0x53, 0x8B, 0x56, 0xA1, 0x1D, 0x17, 0x23, 0x98, 0x68, 0x30, 0x9E }));
-        internal static readonly Guid IReferenceOfSingle_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xBA, 0xC2, 0x9C, 0x71, 0x76, 0x3E, 0xEF, 0x5D, 0x9F, 0x1A, 0x38, 0xD8, 0x5A, 0x14, 0x5E, 0xA8 }));
-        internal static readonly Guid IReferenceOfDouble_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x29, 0x6C, 0x2D, 0x2F, 0x73, 0x54, 0x3E, 0x5F, 0x92, 0xE7, 0x96, 0x57, 0x2B, 0xB9, 0x90, 0xE2 }));
-        internal static readonly Guid IReferenceOfGuid_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x49, 0xF6, 0x50, 0x7D, 0x2C, 0x63, 0xF9, 0x51, 0x84, 0x9A, 0xEE, 0x49, 0x42, 0x89, 0x33, 0xEA }));
-        internal static readonly Guid IReferenceOfTimeSpan_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x4C, 0x0C, 0x4D, 0x60, 0xDE, 0x91, 0x2A, 0x5C, 0x93, 0x5F, 0x36, 0x2F, 0x13, 0xEA, 0xF8, 0x00 }));
-        internal static readonly Guid IReferenceOfDateTimeOffset_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xA7, 0xD8, 0x41, 0x55, 0x7C, 0x49, 0xA4, 0x5A, 0x86, 0xFC, 0x77, 0x13, 0xAD, 0xBF, 0x2A, 0x2C }));
         internal static readonly Guid IReferenceOfPoint_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x22, 0x4C, 0xF1, 0x84, 0x0A, 0xA0, 0x72, 0x52, 0x8D, 0x3D, 0x82, 0x11, 0x2E, 0x66, 0xDF, 0x00 }));
         internal static readonly Guid IReferenceOfSize_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x86, 0x30, 0x72, 0x61, 0x53, 0x8E, 0x76, 0x52, 0x9F, 0x36, 0x2A, 0x4B, 0xB9, 0x3E, 0x2B, 0x75 }));
         internal static readonly Guid IReferenceOfRect_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x11, 0x3F, 0x42, 0x80, 0x4F, 0x05, 0xAC, 0x5E, 0xAF, 0xD3, 0x63, 0xB6, 0xCE, 0x15, 0xE7, 0x7B }));
@@ -357,21 +342,21 @@ namespace ABI.System
         private static Guid CreatePIID()
         {
 #if NET
-            if (typeof(T) == typeof(int)) return IReferenceIIDs.IReferenceOfInt32_IID;
-            if (typeof(T) == typeof(byte)) return IReferenceIIDs.IReferenceOfByte_IID;
-            if (typeof(T) == typeof(bool)) return IReferenceIIDs.IReferenceOfBoolean_IID;
-            if (typeof(T) == typeof(sbyte)) return IReferenceIIDs.IReferenceOfSByte_IID;
-            if (typeof(T) == typeof(short)) return IReferenceIIDs.IReferenceOfInt16_IID;
-            if (typeof(T) == typeof(ushort)) return IReferenceIIDs.IReferenceOfUInt16_IID;
-            if (typeof(T) == typeof(char)) return IReferenceIIDs.IReferenceOfChar_IID;
-            if (typeof(T) == typeof(uint)) return IReferenceIIDs.IReferenceOfUInt32_IID;
-            if (typeof(T) == typeof(long)) return IReferenceIIDs.IReferenceOfInt64_IID;
-            if (typeof(T) == typeof(ulong)) return IReferenceIIDs.IReferenceOfUInt64_IID;
-            if (typeof(T) == typeof(float)) return IReferenceIIDs.IReferenceOfSingle_IID;
-            if (typeof(T) == typeof(double)) return IReferenceIIDs.IReferenceOfDouble_IID;
-            if (typeof(T) == typeof(Guid)) return IReferenceIIDs.IReferenceOfGuid_IID;
-            if (typeof(T) == typeof(TimeSpan)) return IReferenceIIDs.IReferenceOfTimeSpan_IID;
-            if (typeof(T) == typeof(DateTimeOffset)) return IReferenceIIDs.IReferenceOfDateTimeOffset_IID;
+            if (typeof(T) == typeof(int)) return Nullable_int.IID;
+            if (typeof(T) == typeof(byte)) return Nullable_byte.IID;
+            if (typeof(T) == typeof(bool)) return Nullable_bool.IID;
+            if (typeof(T) == typeof(sbyte)) return Nullable_sbyte.IID;
+            if (typeof(T) == typeof(short)) return Nullable_short.IID;
+            if (typeof(T) == typeof(ushort)) return Nullable_ushort.IID;
+            if (typeof(T) == typeof(char)) return Nullable_char.IID;
+            if (typeof(T) == typeof(uint)) return Nullable_uint.IID;
+            if (typeof(T) == typeof(long)) return Nullable_long.IID;
+            if (typeof(T) == typeof(ulong)) return Nullable_ulong.IID;
+            if (typeof(T) == typeof(float)) return Nullable_float.IID;
+            if (typeof(T) == typeof(double)) return Nullable_double.IID;
+            if (typeof(T) == typeof(Guid)) return Nullable_guid.IID;
+            if (typeof(T) == typeof(TimeSpan)) return Nullable_TimeSpan.IID;
+            if (typeof(T) == typeof(DateTimeOffset)) return Nullable_DateTimeOffset.IID;
             if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
             if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
             if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
