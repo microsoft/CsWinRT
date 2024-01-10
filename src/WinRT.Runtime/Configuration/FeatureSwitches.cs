@@ -65,30 +65,16 @@ internal static class FeatureSwitches
             return true;
         }
 
-        // Get the configuration switch value, or its default
+        // Get the configuration switch value, or its default.
+        // All feature switches have a default set in the .targets file.
         if (!AppContext.TryGetSwitch(propertyName, out bool isEnabled))
         {
-            isEnabled = GetDefaultConfigurationValue(propertyName);
+            isEnabled = false;
         }
 
         // Update the cached result
         cachedResult = isEnabled ? 1 : -1;
 
         return isEnabled;
-    }
-
-    /// <summary>
-    /// Gets the default configuration value for a given feature switch.
-    /// </summary>
-    /// <param name="propertyName">The property name to retrieve the value for.</param>
-    /// <returns>The default value for the target <paramref name="propertyName"/>.</returns>
-    private static bool GetDefaultConfigurationValue(string propertyName)
-    {
-        if (propertyName == IsDynamicObjectsSupportEnabledPropertyName)
-        {
-            return true;
-        }
-
-        return false;
     }
 }
