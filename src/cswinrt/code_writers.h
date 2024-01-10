@@ -9716,7 +9716,12 @@ public static IntPtr GetActivationFactory(string runtimeClassId)
 {
     return GetActivationFactory(runtimeClassId.AsSpan());
 }"
-)" : "// No ReadOnlySpan<char> overload available");
+)" : R"(
+public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
+{
+    return GetActivationFactory(runtimeClassId.ToString());
+}"
+)");
     }
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)
