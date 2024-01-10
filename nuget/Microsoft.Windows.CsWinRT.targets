@@ -234,4 +234,14 @@ $(CsWinRTInternalProjection)
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
 
+  <!-- Automatically set the configuration switches -->
+  <ItemGroup>
+
+    <!-- CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Condition="'$(CsWinRTEnableDynamicObjectsSupport)' != ''"
+                                    Include="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT"
+                                    Value="$(CsWinRTEnableDynamicObjectsSupport)"
+                                    Trim="true" />
+  </ItemGroup>
+
 </Project>
