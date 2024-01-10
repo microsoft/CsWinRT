@@ -10320,7 +10320,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
 
     void write_generic_type_instantiation(writer& w, generic_type_instance instance, std::vector<std::string>& rcwFunctions, std::vector<std::string>& vtableFunctions)
     {
-        auto get_invoke_info = [&](MethodDef const& method)
+        auto get_invoke_info = [&](MethodDef const& method, bool isDelegate = false)
         {
             return w.write_temp("(*(delegate* unmanaged[Stdcall]<%, int>**)ThisPtr)[%]",
                 bind([&](writer& w) {
@@ -10331,7 +10331,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
 
                     write_abi_parameter_types_pointer(w, method_signature{ method });
                 }),
-                get_vmethod_index(instance.generic_type, method) + INSPECTABLE_METHOD_COUNT);
+                isDelegate ? 3 : get_vmethod_index(instance.generic_type, method) + INSPECTABLE_METHOD_COUNT);
         };
 
         if (get_category(instance.generic_type) == category::delegate_type)
@@ -10345,7 +10345,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
             {
                 rcwFunctions.emplace_back(method.Name());
 
-                auto invoke_target = get_invoke_info(method);
+                auto invoke_target = get_invoke_info(method, true);
                 w.write(R"(
 private static unsafe % %(IObjectReference _obj%%)
 {
