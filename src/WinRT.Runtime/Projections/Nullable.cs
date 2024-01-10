@@ -121,7 +121,7 @@ namespace ABI.Windows.Foundation
                 typeof(T) == typeof(float) ||
                 typeof(T) == typeof(double) ||
                 typeof(T) == typeof(Guid) ||
-                typeof(T) == typeof(TimeSpan) ||
+                typeof(T) == typeof(global::System.TimeSpan) ||
                 typeof(T) == typeof(global::Windows.Foundation.Point) ||
                 typeof(T) == typeof(global::Windows.Foundation.Rect) ||
                 typeof(T) == typeof(global::Windows.Foundation.Size) ||
@@ -131,7 +131,7 @@ namespace ABI.Windows.Foundation
                 return (Nullable_Delegates.GetValueDelegateAbi)Do_Abi_get_Value_0_Blittable;
             }
 
-            if (typeof(T) == typeof(DateTimeOffset))
+            if (typeof(T) == typeof(global::System.DateTimeOffset))
             {
                 return (Nullable_Delegates.GetValueDelegateAbiDateTimeOffset)Do_Abi_get_Value_0_DateTimeOffset;
             }
@@ -275,8 +275,8 @@ namespace ABI.System
             if (typeof(T) == typeof(float)) return Nullable_float.GetGuidSignature();
             if (typeof(T) == typeof(double)) return Nullable_double.GetGuidSignature();
             if (typeof(T) == typeof(Guid)) return Nullable_guid.GetGuidSignature();
-            if (typeof(T) == typeof(TimeSpan)) return Nullable_TimeSpan.GetGuidSignature();
-            if (typeof(T) == typeof(DateTimeOffset)) return Nullable_DateTimeOffset.GetGuidSignature();
+            if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.GetGuidSignature();
+            if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.GetGuidSignature();
             if (typeof(T) == typeof(global::Windows.Foundation.Point)) return ABI.Windows.Foundation.Point.GetGuidSignature();
             if (typeof(T) == typeof(global::Windows.Foundation.Size)) return ABI.Windows.Foundation.Size.GetGuidSignature();
             if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return ABI.Windows.Foundation.Rect.GetGuidSignature();
@@ -315,7 +315,7 @@ namespace ABI.System
                     typeof(T) == typeof(float) ||
                     typeof(T) == typeof(double) ||
                     typeof(T) == typeof(Guid) ||
-                    typeof(T) == typeof(TimeSpan) ||
+                    typeof(T) == typeof(global::System.TimeSpan) ||
                     typeof(T) == typeof(global::Windows.Foundation.Point) ||
                     typeof(T) == typeof(global::Windows.Foundation.Rect) ||
                     typeof(T) == typeof(global::Windows.Foundation.Size) ||
@@ -363,8 +363,8 @@ namespace ABI.System
             if (typeof(T) == typeof(float)) return Nullable_float.IID;
             if (typeof(T) == typeof(double)) return Nullable_double.IID;
             if (typeof(T) == typeof(Guid)) return Nullable_guid.IID;
-            if (typeof(T) == typeof(TimeSpan)) return Nullable_TimeSpan.IID;
-            if (typeof(T) == typeof(DateTimeOffset)) return Nullable_DateTimeOffset.IID;
+            if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.IID;
+            if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.IID;
             if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
             if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
             if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
