@@ -163,6 +163,18 @@ namespace GuidPatch
                 getterMethodGensToCacheTypeGens[guidDataGetterMethod.GenericParameters[i]] = cacheType.GenericParameters[i];
             }
 
+            var instantiatedCacheType = new GenericInstanceType(cacheType);
+            foreach (var arg in guidDataGetterMethod.GenericParameters)
+            {
+                instantiatedCacheType.GenericArguments.Add(arg);
+            }
+
+            var selfInstantiatedCacheType = new GenericInstanceType(cacheType);
+            foreach (var param in cacheType.GenericParameters)
+            {
+                selfInstantiatedCacheType.GenericArguments.Add(param);
+            }
+
             var cacheField = new FieldDefinition("iidData", FieldAttributes.Static | FieldAttributes.Assembly, new ArrayType(module.ImportReference(module.TypeSystem.Byte)));
             cacheType.Fields.Add(cacheField);
             implementationDetailsType.NestedTypes.Add(cacheType);
@@ -173,7 +185,7 @@ namespace GuidPatch
 
             // In the body of the getter method, return the cache data
             var getterIL = guidDataGetterMethod.Body.GetILProcessor();
-            getterIL.Emit(OpCodes.Ldsfld, new FieldReference(cacheField.Name, cacheField.FieldType, cacheType));
+            getterIL.Emit(OpCodes.Ldsfld, new FieldReference(cacheField.Name, cacheField.FieldType, instantiatedCacheType));
             getterIL.Emit(OpCodes.Newobj, readOnlySpanOfByteArrayCtor);
             getterIL.Emit(OpCodes.Ret);
 
@@ -586,7 +598,7 @@ namespace GuidPatch
             il.Emit(OpCodes.Stloc, spanTemp);
             il.Emit(OpCodes.Ldloca, spanTemp);
             il.Emit(OpCodes.Call, toArrayMethod);
-            il.Emit(OpCodes.Stsfld, new FieldReference(cacheField.Name, cacheField.FieldType, cacheType));
+            il.Emit(OpCodes.Stsfld, new FieldReference(cacheField.Name, cacheField.FieldType, selfInstantiatedCacheType));
             il.Emit(OpCodes.Ret);
         }
     }
