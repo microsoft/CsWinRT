@@ -74,8 +74,11 @@ namespace GuidPatch
             var typeDef = type.Resolve();
 
             var helperType = new TypeReference($"ABI.{typeDef.Namespace}", typeDef.Name, typeDef.Module, assembly.MainModule);
-
-            if (helperType.Resolve() is not null)
+            if (helperType.Resolve() is not null ||
+                // Handle custom mapped built-in structs such as System.Numerics.Vector3 which have their ABI type defined in WinRT.Runtime.
+                // This is handled separately due to the need for the is public check which isn't needed if in same module as in the initial case.
+                ((helperType = typeDef.GetCswinrtAbiTypeDefinition(winRTRuntimeAssembly)) is not null && 
+                  ((TypeDefinition)helperType).Attributes.HasFlag(TypeAttributes.Public)))
             {
                 if (type.IsGenericInstance)
                 {

@@ -114,6 +114,21 @@ namespace Generator
             return false;
         }
 
+        /// <summary>
+        /// Gets whether the <c>"CsWinRTAotExportsEnabled"</c> MSBuild property is defined.
+        /// </summary>
+        /// <param name="context">The input <see cref="GeneratorExecutionContext"/> value to use.</param>
+        /// <returns>Whether the <c>"CsWinRTAotExportsEnabled"</c> MSBuild property is defined.</returns>
+        public static bool ShouldGenerateWinRTNativeExports(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTAotExportsEnabled", out var isCsWinRTAotExportsEnabledStr))
+            {
+                return bool.TryParse(isCsWinRTAotExportsEnabledStr, out var isCsWinRTAotExportsEnabled) && isCsWinRTAotExportsEnabled;
+            }
+
+            return false;
+        }
+
         public static string GetCsWinRTExe(this GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);
@@ -179,6 +194,11 @@ namespace Generator
 
         public static bool IsWinRTType(ISymbol type)
         {
+            return IsWinRTType(type, null);
+        }
+
+        public static bool IsWinRTType(ISymbol type, Func<ISymbol, bool> isAuthoringWinRTType)
+        {
             bool isProjectedType = type.GetAttributes().
                 Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0) ||
                 IsFundamentalType(type);
@@ -191,8 +211,11 @@ namespace Generator
             // Ensure all generic parameters are WinRT types.
             if (isProjectedType && type is INamedTypeSymbol namedType && namedType.IsGenericType && !namedType.IsDefinition)
             {
-                isProjectedType = namedType.TypeArguments.All(IsWinRTType);
+                isProjectedType = namedType.TypeArguments.All(t => 
+                    IsWinRTType(t, isAuthoringWinRTType) || 
+                    (isAuthoringWinRTType != null && isAuthoringWinRTType(t)));
             }
+
             return isProjectedType;
         }
 
@@ -203,13 +226,23 @@ namespace Generator
                 (iface.IsGenericType && iface.TypeArguments.Any(typeArgument => IsInternalInterfaceFromReferences(typeArgument as INamedTypeSymbol, currentAssembly)));
         }
 
-        // Checks whether the symbol references any generic that hasn't been instantiated.
-        // For instance, List<T> where T is a generic.
-        public static bool HasNonInstantiatedGeneric(ITypeSymbol symbol)
+        // Checks whether the symbol references any generic that hasn't been instantiated
+        // and is used by a WinRT interface. For instance, List<T> where T is a generic.
+        // If the generic isn't used by any WinRT interface, this returns false as for
+        // instance, we can still generate the vtable attribute for it.
+        public static bool HasNonInstantiatedWinRTGeneric(ITypeSymbol symbol)
         {
             return symbol is INamedTypeSymbol namedType && 
-                (namedType.TypeKind == TypeKind.TypeParameter || 
-                 namedType.TypeArguments.Any(argument => argument.TypeKind == TypeKind.TypeParameter));
+                (IsArgumentTypeParameter(namedType) || 
+                 (namedType.TypeArguments.Any(IsArgumentTypeParameter) && 
+                  namedType.AllInterfaces.Any(iface => iface.TypeArguments.Any(IsArgumentTypeParameter) && 
+                  // Checks if without the non-instantiated generic, whether it would be a WinRT type.
+                  IsWinRTType(iface.OriginalDefinition, null))));
+
+            static bool IsArgumentTypeParameter(ITypeSymbol argument)
+            {
+                return argument.TypeKind == TypeKind.TypeParameter;
+            }
         }
 
         public static bool HasPrivateclass(ITypeSymbol symbol)

@@ -3,7 +3,7 @@ if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTBuildNetSDKVersion=6.0.415
 set CsWinRTBuildNet7SDKVersion=7.0.402
-set CsWinRTBuildNet8SDKVersion=8.0.100-rc.2.23502.2
+set CsWinRTBuildNet8SDKVersion=8.0.100
 set this_dir=%~dp0
 
 :dotnet
@@ -164,6 +164,13 @@ if "%CIBuildReason%"=="CI" set NUGET_RESTORE_MSBUILD_ARGS=%NUGET_RESTORE_MSBUILD
 call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.sln
 rem: Calling nuget restore again on ObjectLifetimeTests.Lifted.csproj to prevent .props from \microsoft.testplatform.testhost\build\netcoreapp2.1 from being included. Nuget.exe erroneously imports props files. https://github.com/NuGet/Home/issues/9672
 call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+
+if "%cswinrt_platform%" EQU "x64" (
+  if /I "%cswinrt_configuration%" EQU "release" (
+    rem We restore here as NAOT needs its own restore to pull in ILC
+    call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\AuthoringTest\AuthoringTest.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%
+  )
+)
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%

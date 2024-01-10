@@ -483,7 +483,7 @@ namespace AuthoringTest
         }
     }
 
-    internal sealed class NonProjectedDisposableClass : IDisposable
+    internal sealed partial class NonProjectedDisposableClass : IDisposable
     {
         public bool IsDisposed { get; set; }
 

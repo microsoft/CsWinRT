@@ -119,6 +119,10 @@ namespace WinRT
             {
                 return (typeof(ABI.System.Nullable_Type), 0);
             }
+            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.Foundation.HResult>".AsSpan(), StringComparison.Ordinal) == 0)
+            {
+                return (typeof(ABI.System.Nullable_Exception), 0);
+            }
             else
             {
                 var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);

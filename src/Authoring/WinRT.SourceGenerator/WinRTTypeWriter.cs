@@ -2663,8 +2663,13 @@ namespace Generator
 
         public void GenerateWinRTExposedClassAttributes(GeneratorExecutionContext context)
         {
-            static bool IsWinRTType(ISymbol symbol)
+            bool IsWinRTType(ISymbol symbol)
             {
+                if (!SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, context.Compilation.Assembly))
+                {
+                    return GeneratorHelper.IsWinRTType(symbol, IsWinRTType);
+                }
+
                 if (symbol is INamedTypeSymbol namedType)
                 {
                     if (namedType.TypeKind == TypeKind.Interface)
@@ -2687,6 +2692,8 @@ namespace Generator
             }
 
             List<VtableAttribute> vtableAttributesToAdd = new();
+            HashSet<VtableAttribute> vtableAttributesToAddOnLookupTable = new();
+
             foreach (var typeDeclaration in typeDefinitionMapping.Values)
             {
                 if (typeDeclaration.IsComponentType && 
@@ -2695,15 +2702,28 @@ namespace Generator
                     !symbol.IsStatic)
                 {
                     vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, context.Compilation.Assembly, true, typeDeclaration.DefaultInterface));
+                    WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, IsWinRTType, vtableAttributesToAddOnLookupTable);
                 }
+            }
+
+            if (vtableAttributesToAdd.Any() || vtableAttributesToAddOnLookupTable.Any())
+            {
+                WinRTAotSourceGenerator.GenerateCCWForGenericInstantiation(
+                    context.AddSource,
+                    vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).
+                        Union(vtableAttributesToAddOnLookupTable.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces)).
+                        Distinct().
+                        ToImmutableArray());
             }
 
             if (vtableAttributesToAdd.Any())
             {
-                WinRTAotSourceGenerator.GenerateVtableAttributes(context.AddSource, vtableAttributesToAdd.ToImmutableArray());
-                WinRTAotSourceGenerator.GenerateCCWForGenericInstantiation(
-                    context.AddSource,
-                    vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).ToImmutableArray());
+                WinRTAotSourceGenerator.GenerateVtableAttributes(context.AddSource, vtableAttributesToAdd.ToImmutableArray(), false);
+            }
+
+            if (vtableAttributesToAddOnLookupTable.Any())
+            {
+                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), (true, true)), true);
             }
         }
 

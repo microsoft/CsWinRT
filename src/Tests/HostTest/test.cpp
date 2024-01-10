@@ -119,7 +119,7 @@ TEST(HostTest, TargetNotFound)
 // Mapped target assembly that does not implement the given runtime class
 TEST(HostTest, ClassNotFound)
 {
-	Activate<ClassNotFound>(L"ClassNotFound.manifest", E_NOINTERFACE);
+	Activate<ClassNotFound>(L"ClassNotFound.manifest", CLASS_E_CLASSNOTAVAILABLE);
 }
 
 // .runtimeconfig.json activatableClass entry with invalid target assembly

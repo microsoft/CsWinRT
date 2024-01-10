@@ -4205,8 +4205,7 @@ event % %;)",
                 {
                     auto guard{ w.push_generic_args(generic_instantiation) };
                     auto generic_instantiation_class_name = get_generic_instantiation_class_type_name(w, generic_instantiation.generic_type);
-                    if (!starts_with(generic_instantiation_class_name, "Windows_Foundation_IReference") //&&
-                       /* get_category(generic_instantiation.generic_type) != category::delegate_type*/)
+                    if (!starts_with(generic_instantiation_class_name, "Windows_Foundation_IReference"))
                     {
                         generic_type_instances.insert(
                             generic_type_instantiation
@@ -4393,7 +4392,7 @@ event % %;)",
                 {
                     if (is_generic_instantiation_class)
                     {
-                        semantics = w.get_generic_arg_scope(var.index).first;
+                        semantics = w.get_generic_arg(var.index);
                         set_type_semantics_marshaler();
                     }
                     else
@@ -6102,7 +6101,7 @@ return eventSource.EventActions;
                 {
                     if (is_generic_instantiation_class)
                     {
-                        set_marshaler(w, w.get_generic_arg_scope(var.index).first, m);
+                        set_marshaler(w, w.get_generic_arg(var.index), m);
                     }
                     else
                     {
@@ -6117,30 +6116,33 @@ return eventSource.EventActions;
                     auto guard{ w.push_generic_args(type) };
                     set_typedef_marshaler(type.generic_type);
 
-                    if (!settings.netstandard_compat && get_category(type.generic_type) == category::delegate_type)
+                    if (!settings.netstandard_compat && (!m.is_out() || get_category(type.generic_type) == category::delegate_type))
                     {
                         auto generic_instantiation_class_name = get_generic_instantiation_class_type_name(w, type.generic_type);
-                        auto concrete_type = ConvertGenericTypeInstanceToConcreteType(w, type);
-
-                        bool has_generic_type_param = false;
-                        for (size_t idx = 0; idx < concrete_type.generic_args.size(); idx++)
+                        if (!starts_with(generic_instantiation_class_name, "Windows_Foundation_IReference"))
                         {
-                            auto& generic_arg_semantic = concrete_type.generic_args[idx];
-                            if (auto gtp = std::get_if<generic_type_param>(&generic_arg_semantic))
+                            auto concrete_type = ConvertGenericTypeInstanceToConcreteType(w, type);
+
+                            bool has_generic_type_param = false;
+                            for (size_t idx = 0; idx < concrete_type.generic_args.size(); idx++)
                             {
-                                has_generic_type_param = true;
-                                break;
-                            }
-                        }
-
-                        if (!has_generic_type_param)
-                        {
-                            generic_instantiations.insert(
-                                generic_type_instantiation
+                                auto& generic_arg_semantic = concrete_type.generic_args[idx];
+                                if (auto gtp = std::get_if<generic_type_param>(&generic_arg_semantic))
                                 {
-                                    concrete_type,
-                                    generic_instantiation_class_name
-                                });
+                                    has_generic_type_param = true;
+                                    break;
+                                }
+                            }
+
+                            if (!has_generic_type_param)
+                            {
+                                generic_instantiations.insert(
+                                    generic_type_instantiation
+                                    {
+                                        concrete_type,
+                                        generic_instantiation_class_name
+                                    });
+                            }
                         }
                     }
                 },
@@ -9679,7 +9681,7 @@ bind<write_factory_class_members>(type)
 using System;
 namespace WinRT
 {
-% static class Module
+% static partial class Module
 {
 public static unsafe IntPtr GetActivationFactory(String runtimeClassId)
 {%
