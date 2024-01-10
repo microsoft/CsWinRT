@@ -258,7 +258,31 @@ namespace ABI.System
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 
-        public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(Nullable<T>));
+        public static string GetGuidSignature() => CreateGuidSignature();
+
+        private static string CreateGuidSignature()
+        {
+            if (typeof(T) == typeof(int)) return Nullable_int.GetGuidSignature();
+            if (typeof(T) == typeof(byte)) return Nullable_byte.GetGuidSignature();
+            if (typeof(T) == typeof(bool)) return Nullable_bool.GetGuidSignature();
+            if (typeof(T) == typeof(sbyte)) return Nullable_sbyte.GetGuidSignature();
+            if (typeof(T) == typeof(short)) return Nullable_short.GetGuidSignature();
+            if (typeof(T) == typeof(ushort)) return Nullable_ushort.GetGuidSignature();
+            if (typeof(T) == typeof(char)) return Nullable_char.GetGuidSignature();
+            if (typeof(T) == typeof(uint)) return Nullable_uint.GetGuidSignature();
+            if (typeof(T) == typeof(long)) return Nullable_long.GetGuidSignature();
+            if (typeof(T) == typeof(ulong)) return Nullable_ulong.GetGuidSignature();
+            if (typeof(T) == typeof(float)) return Nullable_float.GetGuidSignature();
+            if (typeof(T) == typeof(double)) return Nullable_double.GetGuidSignature();
+            if (typeof(T) == typeof(Guid)) return Nullable_guid.GetGuidSignature();
+            if (typeof(T) == typeof(TimeSpan)) return Nullable_TimeSpan.GetGuidSignature();
+            if (typeof(T) == typeof(DateTimeOffset)) return Nullable_DateTimeOffset.GetGuidSignature();
+            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return ABI.Windows.Foundation.Point.GetGuidSignature();
+            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return ABI.Windows.Foundation.Size.GetGuidSignature();
+            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return ABI.Windows.Foundation.Rect.GetGuidSignature();
+
+            return GuidGenerator.GetSignature(typeof(Nullable<T>));
+        }
 
         [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
         public struct Vftbl
