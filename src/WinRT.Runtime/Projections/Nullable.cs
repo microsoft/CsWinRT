@@ -494,7 +494,7 @@ namespace ABI.System
     internal static class Nullable_int
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i4)";
-        internal static Guid IID = new(0x548cefbd, 0xbc8a, 0x5fa0, 0x8d, 0xf2, 0x95, 0x74, 0x40, 0xfc, 0x8b, 0xf4);
+        internal static readonly Guid IID = new(0x548cefbd, 0xbc8a, 0x5fa0, 0x8d, 0xf2, 0x95, 0x74, 0x40, 0xfc, 0x8b, 0xf4);
 
         [Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4")]
         public unsafe struct Vftbl
@@ -556,7 +556,7 @@ namespace ABI.System
             try
             {
                 int __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -571,7 +571,7 @@ namespace ABI.System
     internal static class Nullable_string
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};string)";
-        internal static Guid IID = new(0xfd416dfb, 0x2a07, 0x52eb, 0xaa, 0xe3, 0xdf, 0xce, 0x14, 0x11, 0x6c, 0x05);
+        internal static readonly Guid IID = new(0xfd416dfb, 0x2a07, 0x52eb, 0xaa, 0xe3, 0xdf, 0xce, 0x14, 0x11, 0x6c, 0x05);
 
         [Guid("fd416dfb-2a07-52eb-aae3-dfce14116c05")]
         public unsafe struct Vftbl
@@ -633,7 +633,7 @@ namespace ABI.System
             IntPtr __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(MarshalString.FromAbi(__retval));
             }
@@ -649,7 +649,7 @@ namespace ABI.System
     internal static class Nullable_byte
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u1)";
-        internal static Guid IID = new(0xe5198cc8, 0x2873, 0x55f5, 0xb0, 0xa1, 0x84, 0xff, 0x9e, 0x4a, 0xad, 0x62);
+        internal static readonly Guid IID = new(0xe5198cc8, 0x2873, 0x55f5, 0xb0, 0xa1, 0x84, 0xff, 0x9e, 0x4a, 0xad, 0x62);
 
         [Guid("e5198cc8-2873-55f5-b0a1-84ff9e4aad62")]
         public unsafe struct Vftbl
@@ -711,7 +711,7 @@ namespace ABI.System
             try
             {
                 byte __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -726,7 +726,7 @@ namespace ABI.System
     internal static class Nullable_sbyte
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i1)";
-        internal static Guid IID = new(0x95500129, 0xfbf6, 0x5afc, 0x89, 0xdf, 0x70, 0x64, 0x2d, 0x74, 0x19, 0x90);
+        internal static readonly Guid IID = new(0x95500129, 0xfbf6, 0x5afc, 0x89, 0xdf, 0x70, 0x64, 0x2d, 0x74, 0x19, 0x90);
 
         [Guid("95500129-fbf6-5afc-89df-70642d741990")]
         public unsafe struct Vftbl
@@ -788,7 +788,7 @@ namespace ABI.System
             try
             {
                 sbyte __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, sbyte*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -803,7 +803,7 @@ namespace ABI.System
     internal static class Nullable_short
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i2)";
-        internal static Guid IID = new(0x6ec9e41b, 0x6709, 0x5647, 0x99, 0x18, 0xa1, 0x27, 0x01, 0x10, 0xfc, 0x4e);
+        internal static readonly Guid IID = new(0x6ec9e41b, 0x6709, 0x5647, 0x99, 0x18, 0xa1, 0x27, 0x01, 0x10, 0xfc, 0x4e);
 
         [Guid("6ec9e41b-6709-5647-9918-a1270110fc4e")]
         public unsafe struct Vftbl
@@ -865,7 +865,7 @@ namespace ABI.System
             try
             {
                 short __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, short*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -880,7 +880,7 @@ namespace ABI.System
     internal static class Nullable_ushort
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u2)";
-        internal static Guid IID = new(0x5ab7d2c3, 0x6b62, 0x5e71, 0xa4, 0xb6, 0x2d, 0x49, 0xc4, 0xf2, 0x38, 0xfd);
+        internal static readonly Guid IID = new(0x5ab7d2c3, 0x6b62, 0x5e71, 0xa4, 0xb6, 0x2d, 0x49, 0xc4, 0xf2, 0x38, 0xfd);
 
         [Guid("5ab7d2c3-6b62-5e71-a4b6-2d49c4f238fd")]
         public unsafe struct Vftbl
@@ -942,7 +942,7 @@ namespace ABI.System
             try
             {
                 ushort __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, ushort*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -957,7 +957,7 @@ namespace ABI.System
     internal static class Nullable_uint
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u4)";
-        internal static Guid IID = new(0x513ef3af, 0xe784, 0x5325, 0xa9, 0x1e, 0x97, 0xc2, 0xb8, 0x11, 0x1c, 0xf3);
+        internal static readonly Guid IID = new(0x513ef3af, 0xe784, 0x5325, 0xa9, 0x1e, 0x97, 0xc2, 0xb8, 0x11, 0x1c, 0xf3);
 
         [Guid("513ef3af-e784-5325-a91e-97c2b8111cf3")]
         public unsafe struct Vftbl
@@ -1019,7 +1019,7 @@ namespace ABI.System
             try
             {
                 uint __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1034,7 +1034,7 @@ namespace ABI.System
     internal static class Nullable_long
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i8)";
-        internal static Guid IID = new(0x4dda9e24, 0xe69f, 0x5c6a, 0xa0, 0xa6, 0x93, 0x42, 0x73, 0x65, 0xaf, 0x2a);
+        internal static readonly Guid IID = new(0x4dda9e24, 0xe69f, 0x5c6a, 0xa0, 0xa6, 0x93, 0x42, 0x73, 0x65, 0xaf, 0x2a);
 
         [Guid("4dda9e24-e69f-5c6a-a0a6-93427365af2a")]
         public unsafe struct Vftbl
@@ -1096,7 +1096,7 @@ namespace ABI.System
             try
             {
                 long __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, long*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1111,7 +1111,7 @@ namespace ABI.System
     internal static class Nullable_ulong
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u8)";
-        internal static Guid IID = new(0x6755e376, 0x53bb, 0x568b, 0xa1, 0x1d, 0x17, 0x23, 0x98, 0x68, 0x30, 0x9e);
+        internal static readonly Guid IID = new(0x6755e376, 0x53bb, 0x568b, 0xa1, 0x1d, 0x17, 0x23, 0x98, 0x68, 0x30, 0x9e);
 
         [Guid("6755e376-53bb-568b-a11d-17239868309e")]
         public unsafe struct Vftbl
@@ -1173,7 +1173,7 @@ namespace ABI.System
             try
             {
                 ulong __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, ulong*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1188,7 +1188,7 @@ namespace ABI.System
     internal static class Nullable_float
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};f4)";
-        internal static Guid IID = new(0x719cc2ba, 0x3e76, 0x5def, 0x9f, 0x1a, 0x38, 0xd8, 0x5a, 0x14, 0x5e, 0xa8);
+        internal static readonly Guid IID = new(0x719cc2ba, 0x3e76, 0x5def, 0x9f, 0x1a, 0x38, 0xd8, 0x5a, 0x14, 0x5e, 0xa8);
 
         [Guid("719cc2ba-3e76-5def-9f1a-38d85a145ea8")]
         public unsafe struct Vftbl
@@ -1250,7 +1250,7 @@ namespace ABI.System
             try
             {
                 float __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, float*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1265,7 +1265,7 @@ namespace ABI.System
     internal static class Nullable_double
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};f8)";
-        internal static Guid IID = new(0x2f2d6c29, 0x5473, 0x5f3e, 0x92, 0xe7, 0x96, 0x57, 0x2b, 0xb9, 0x90, 0xe2);
+        internal static readonly Guid IID = new(0x2f2d6c29, 0x5473, 0x5f3e, 0x92, 0xe7, 0x96, 0x57, 0x2b, 0xb9, 0x90, 0xe2);
 
         [Guid("2f2d6c29-5473-5f3e-92e7-96572bb990e2")]
         public unsafe struct Vftbl
@@ -1327,7 +1327,7 @@ namespace ABI.System
             try
             {
                 double __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, double*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1342,7 +1342,7 @@ namespace ABI.System
     internal static class Nullable_char
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};c2)";
-        internal static Guid IID = new(0xfb393ef3, 0xbbac, 0x5bd5, 0x91, 0x44, 0x84, 0xf2, 0x35, 0x76, 0xf4, 0x15);
+        internal static readonly Guid IID = new(0xfb393ef3, 0xbbac, 0x5bd5, 0x91, 0x44, 0x84, 0xf2, 0x35, 0x76, 0xf4, 0x15);
 
         [Guid("fb393ef3-bbac-5bd5-9144-84f23576f415")]
         public unsafe struct Vftbl
@@ -1404,7 +1404,7 @@ namespace ABI.System
             try
             {
                 char __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, char*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1419,7 +1419,7 @@ namespace ABI.System
     internal static class Nullable_bool
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};b1)";
-        internal static Guid IID = new(0x3c00fd60, 0x2950, 0x5939, 0xa2, 0x1a, 0x2d, 0x12, 0xc5, 0xa0, 0x1b, 0x8a);
+        internal static readonly Guid IID = new(0x3c00fd60, 0x2950, 0x5939, 0xa2, 0x1a, 0x2d, 0x12, 0xc5, 0xa0, 0x1b, 0x8a);
 
         [Guid("3c00fd60-2950-5939-a21a-2d12c5a01b8a")]
         public unsafe struct Vftbl
@@ -1481,7 +1481,7 @@ namespace ABI.System
             try
             {
                 bool __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, bool*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1496,7 +1496,7 @@ namespace ABI.System
     internal static class Nullable_guid
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};g16)";
-        internal static Guid IID = new(0x7d50f649, 0x632c, 0x51f9, 0x84, 0x9a, 0xee, 0x49, 0x42, 0x89, 0x33, 0xea);
+        internal static readonly Guid IID = new(0x7d50f649, 0x632c, 0x51f9, 0x84, 0x9a, 0xee, 0x49, 0x42, 0x89, 0x33, 0xea);
 
         [Guid("7d50f649-632c-51f9-849a-ee49428933ea")]
         public unsafe struct Vftbl
@@ -1558,7 +1558,7 @@ namespace ABI.System
             try
             {
                 Guid __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1573,7 +1573,7 @@ namespace ABI.System
     internal static class Nullable_DateTimeOffset
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.DateTime;i8))";
-        internal static Guid IID = new(0x5541d8a7, 0x497c, 0x5aa4, 0x86, 0xfc, 0x77, 0x13, 0xad, 0xbf, 0x2a, 0x2c);
+        internal static readonly Guid IID = new(0x5541d8a7, 0x497c, 0x5aa4, 0x86, 0xfc, 0x77, 0x13, 0xad, 0xbf, 0x2a, 0x2c);
 
         [Guid("5541d8a7-497c-5aa4-86fc-7713adbf2a2c")]
         public unsafe struct Vftbl
@@ -1635,7 +1635,7 @@ namespace ABI.System
             DateTimeOffset __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, DateTimeOffset*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return DateTimeOffset.FromAbi(__retval);
             }
@@ -1651,7 +1651,7 @@ namespace ABI.System
     internal static class Nullable_TimeSpan
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.TimeSpan;i8))";
-        internal static Guid IID = new(0x604d0c4c, 0x91de, 0x5c2a, 0x93, 0x5f, 0x36, 0x2f, 0x13, 0xea, 0xf8, 0x00);
+        internal static readonly Guid IID = new(0x604d0c4c, 0x91de, 0x5c2a, 0x93, 0x5f, 0x36, 0x2f, 0x13, 0xea, 0xf8, 0x00);
 
         [Guid("604d0c4c-91de-5c2a-935f-362f13eaf800")]
         public unsafe struct Vftbl
@@ -1713,7 +1713,7 @@ namespace ABI.System
             TimeSpan __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, TimeSpan*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return TimeSpan.FromAbi(__retval);
             }
@@ -1729,7 +1729,7 @@ namespace ABI.System
     internal static class Nullable_Object
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};cinterface(IInspectable))";
-        internal static Guid IID = new(0x06dccc90, 0xa058, 0x5c88, 0x87, 0xb7, 0x6f, 0x33, 0x60, 0xa2, 0xfc, 0x16);
+        internal static readonly Guid IID = new(0x06dccc90, 0xa058, 0x5c88, 0x87, 0xb7, 0x6f, 0x33, 0x60, 0xa2, 0xfc, 0x16);
 
         [Guid("06dccc90-a058-5c88-87b7-6f3360a2fc16")]
         public unsafe struct Vftbl
@@ -1790,7 +1790,7 @@ namespace ABI.System
     internal static class Nullable_Type
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4)))";
-        internal static Guid IID = new(0x3830ad99, 0xd8da, 0x53f3, 0x98, 0x9b, 0xfc, 0x92, 0xad, 0x22, 0x27, 0x78);
+        internal static readonly Guid IID = new(0x3830ad99, 0xd8da, 0x53f3, 0x98, 0x9b, 0xfc, 0x92, 0xad, 0x22, 0x27, 0x78);
 
         [Guid("3830ad99-d8da-53f3-989b-fc92ad222778")]
         public unsafe struct Vftbl
@@ -1852,7 +1852,7 @@ namespace ABI.System
             Type __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Type*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(Type.FromAbi(__retval));
             }
@@ -1945,7 +1945,7 @@ namespace ABI.System
     [Guid("25230F05-B49C-57EE-8961-5373D98E1AB1")]
     internal static class Nullable_EventHandler
     {
-        internal static Guid IID = new(0x25230F05, 0xB49C, 0x57EE, 0x89, 0x61, 0x53, 0x73, 0xD9, 0x8E, 0x1A, 0xB1);
+        internal static readonly Guid IID = new(0x25230F05, 0xB49C, 0x57EE, 0x89, 0x61, 0x53, 0x73, 0xD9, 0x8E, 0x1A, 0xB1);
 
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
@@ -1992,7 +1992,7 @@ namespace ABI.System
             IntPtr __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(EventHandler.FromAbi(__retval));
             }
