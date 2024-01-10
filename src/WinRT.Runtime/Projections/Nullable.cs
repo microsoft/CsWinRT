@@ -277,9 +277,16 @@ namespace ABI.System
             if (typeof(T) == typeof(Guid)) return Nullable_guid.GetGuidSignature();
             if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.GetGuidSignature();
             if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.GetGuidSignature();
-            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return ABI.Windows.Foundation.Point.GetGuidSignature();
-            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return ABI.Windows.Foundation.Size.GetGuidSignature();
-            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return ABI.Windows.Foundation.Rect.GetGuidSignature();
+            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceSignatures.Point;
+            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceSignatures.Size;
+            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceSignatures.Rect;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IReferenceSignatures.Matrix3x2;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IReferenceSignatures.Matrix4x4;
+            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IReferenceSignatures.Plane;
+            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IReferenceSignatures.Quaternion;
+            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IReferenceSignatures.Vector2;
+            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceSignatures.Vector3;
+            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceSignatures.Vector4;
 
             return GuidGenerator.GetSignature(typeof(Nullable<T>));
         }
@@ -2149,6 +2156,20 @@ namespace ABI.System
         public unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
         public unsafe delegate int GetValueDelegateAbi(void* thisPtr, void* value);
         public unsafe delegate int GetValueDelegateAbiDateTimeOffset(void* ptr, DateTimeOffset* result);
+    }
+
+    internal static class IReferenceSignatures
+    {
+        public const string Point = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Point;f4;f4))";
+        public const string Size = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Size;f4;f4))";
+        public const string Rect = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Rect;f4;f4;f4;f4))";
+        public const string Matrix3x2 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Matrix3x2;f4;f4;f4;f4;f4;f4))";
+        public const string Matrix4x4 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Matrix4x4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4))";
+        public const string Plane = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Plane;struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4);f4))";
+        public const string Quaternion = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Quaternion;f4;f4;f4;f4))";
+        public const string Vector2 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector2;f4;f4))";
+        public const string Vector3 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4))";
+        public const string Vector4 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector4;f4;f4;f4;f4))";
     }
 
     internal static class IReferenceIIDs
