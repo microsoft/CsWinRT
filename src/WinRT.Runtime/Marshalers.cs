@@ -1690,26 +1690,6 @@ namespace WinRT
                 DisposeMarshalerArray = MarshalString.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalString.DisposeAbiArray;
             }
-            else if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
-            {
-                AbiType = typeof(IntPtr);
-                CreateMarshaler = MarshalGeneric<T>.CreateMarshaler2;
-                CreateMarshaler2 = MarshalGeneric<T>.CreateMarshaler2;
-                GetAbi = MarshalGeneric<T>.GetAbi;
-                CopyAbi = MarshalGeneric<T>.CopyAbi;
-                FromAbi = MarshalGeneric<T>.FromAbi;
-                FromManaged = MarshalGeneric<T>.FromManaged;
-                CopyManaged = MarshalGeneric<T>.CopyManaged;
-                DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
-                DisposeAbi = MarshalGeneric<T>.DisposeAbi;
-                CreateMarshalerArray = MarshalGeneric<T>.CreateMarshalerArray;
-                GetAbiArray = MarshalGeneric<T>.GetAbiArray;
-                FromAbiArray = MarshalGeneric<T>.FromAbiArray;
-                FromManagedArray = MarshalGeneric<T>.FromManagedArray;
-                CopyManagedArray = MarshalGenericHelper<T>.CopyManagedArray;
-                DisposeMarshalerArray = MarshalInterface<T>.DisposeMarshalerArray;
-                DisposeAbiArray = MarshalInterface<T>.DisposeAbiArray;
-            }
             else if (typeof(T) == typeof(Type))
             {
                 AbiType = typeof(ABI.System.Type);
@@ -1844,6 +1824,29 @@ namespace WinRT
                 CopyManagedArray = MarshalInspectable<T>.CopyManagedArray;
                 DisposeMarshalerArray = MarshalInspectable<T>.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalInspectable<T>.DisposeAbiArray;
+            }
+            else if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            {
+                // This check for KeyValuePair<,> types cannot be statically determined, so we move it
+                // down to still allow the linker to see more possible branches before. This should
+                // avoid constructing all of these MarshalGeneric<T> types when not actually needed.
+                AbiType = typeof(IntPtr);
+                CreateMarshaler = MarshalGeneric<T>.CreateMarshaler2;
+                CreateMarshaler2 = MarshalGeneric<T>.CreateMarshaler2;
+                GetAbi = MarshalGeneric<T>.GetAbi;
+                CopyAbi = MarshalGeneric<T>.CopyAbi;
+                FromAbi = MarshalGeneric<T>.FromAbi;
+                FromManaged = MarshalGeneric<T>.FromManaged;
+                CopyManaged = MarshalGeneric<T>.CopyManaged;
+                DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
+                DisposeAbi = MarshalGeneric<T>.DisposeAbi;
+                CreateMarshalerArray = MarshalGeneric<T>.CreateMarshalerArray;
+                GetAbiArray = MarshalGeneric<T>.GetAbiArray;
+                FromAbiArray = MarshalGeneric<T>.FromAbiArray;
+                FromManagedArray = MarshalGeneric<T>.FromManagedArray;
+                CopyManagedArray = MarshalGenericHelper<T>.CopyManagedArray;
+                DisposeMarshalerArray = MarshalInterface<T>.DisposeMarshalerArray;
+                DisposeAbiArray = MarshalInterface<T>.DisposeAbiArray;
             }
             else // delegate, class 
             {
