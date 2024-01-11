@@ -485,158 +485,193 @@ namespace WinRT
 #if NET
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
-        protected static readonly Type HelperType = typeof(T).GetHelperType();
+        protected static readonly Type HelperType;
+        protected static readonly Type AbiType;
+        protected static readonly Type MarshalerType;
+        internal static readonly bool MarshalByObjectReferenceValueSupported;
 
-        protected static readonly Type AbiType = typeof(T).GetAbiType();
-        protected static readonly Type MarshalerType = typeof(T).GetMarshalerType();
-        private static readonly bool MarshalByObjectReferenceValueSupported = typeof(T).GetMarshaler2Type() == typeof(ObjectReferenceValue);
+        public static readonly Func<T, object> CreateMarshaler;
+        public static readonly Func<object, object> GetAbi;
+        public static readonly Action<object, IntPtr> CopyAbi;
+        public static readonly Func<object, T> FromAbi;
+        public static readonly Func<T, object> FromManaged;
+        public static readonly Action<T, IntPtr> CopyManaged;
+        public static readonly Action<object> DisposeMarshaler;
+        internal static readonly Func<T, object> CreateMarshaler2;
+        internal static readonly Action<object> DisposeAbi;
+        internal static readonly Func<T[], object> CreateMarshalerArray;
+        internal static readonly Func<object, (int, IntPtr)> GetAbiArray;
+        internal static readonly Func<object, T[]> FromAbiArray;
+        internal static readonly Func<T[], (int, IntPtr)> FromManagedArray;
+        internal static readonly Action<object> DisposeMarshalerArray;
+        internal static readonly Action<object> DisposeAbiArray;
 
-        public static readonly Func<T, object> CreateMarshaler = (T value) => CreateMarshalerLazy.Value(value);
-        private static readonly Lazy<Func<T, object>> CreateMarshalerLazy = new(BindCreateMarshaler);
-        private static Func<T, object> BindCreateMarshaler()
+        static MarshalGeneric()
         {
-            var createMarshaler = HelperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            return (T arg) => createMarshaler.Invoke(null, new object[] { arg });
-        }
+            // Special case some well known projected types that are blittable.
+            // For these, we directly load the ABI type and leave everything else
+            // set to default (null). That is, we have no special marshallers.
+            if (typeof(T) == typeof(global::System.Numerics.Vector2))
+            {
+                HelperType = typeof(global::ABI.System.Numerics.Vector2);
+                AbiType = null;
+                MarshalerType = null;
+                MarshalByObjectReferenceValueSupported = false;
+            }
+            else if (typeof(T) == typeof(global::System.Numerics.Vector3))
+            {
+                HelperType = typeof(global::ABI.System.Numerics.Vector3);
+                AbiType = null;
+                MarshalerType = null;
+                MarshalByObjectReferenceValueSupported = false;
+            }
+            else if (typeof(T) == typeof(global::System.Numerics.Vector4))
+            {
+                HelperType = typeof(global::ABI.System.Numerics.Vector4);
+                AbiType = null;
+                MarshalerType = null;
+                MarshalByObjectReferenceValueSupported = false;
+            }
+            else if (typeof(T) == typeof(global::System.Numerics.Plane))
+            {
+                HelperType = typeof(global::ABI.System.Numerics.Plane);
+                AbiType = null;
+                MarshalerType = null;
+                MarshalByObjectReferenceValueSupported = false;
+            }
+            else if (typeof(T) == typeof(global::System.Numerics.Matrix3x2))
+            {
+                HelperType = typeof(global::ABI.System.Numerics.Matrix3x2);
+                AbiType = null;
+                MarshalerType = null;
+                MarshalByObjectReferenceValueSupported = false;
+            }
+            else if (typeof(T) == typeof(global::System.Numerics.Matrix4x4))
+            {
+                HelperType = typeof(global::ABI.System.Numerics.Matrix4x4);
+                AbiType = null;
+                MarshalerType = null;
+                MarshalByObjectReferenceValueSupported = false;
+            }
+            else if (typeof(T) == typeof(global::System.Numerics.Quaternion))
+            {
+                HelperType = typeof(global::ABI.System.Numerics.Quaternion);
+                AbiType = null;
+                MarshalerType = null;
+                MarshalByObjectReferenceValueSupported = false;
+            }
+            else if (typeof(T) == typeof(int) ||
+                     typeof(T) == typeof(byte) ||
+                     typeof(T) == typeof(bool) ||
+                     typeof(T) == typeof(sbyte) ||
+                     typeof(T) == typeof(short) ||
+                     typeof(T) == typeof(ushort) ||
+                     typeof(T) == typeof(char) ||
+                     typeof(T) == typeof(uint) ||
+                     typeof(T) == typeof(long) ||
+                     typeof(T) == typeof(ulong) ||
+                     typeof(T) == typeof(float) ||
+                     typeof(T) == typeof(double) ||
+                     typeof(T) == typeof(Guid))
+            {
+                // Special case some well known primitive types that we know might be constructed
+                // for this type, but not actually used. For these, we just keep all default values.
+                // No consumer would ever actually be trying to use this marshaller for these types.
+                return;
+            }
+            else if (typeof(T) == typeof(TimeSpan))
+            {
+                // Another well known projected type that we might will be constructed
+                HelperType = typeof(global::ABI.System.TimeSpan);
+                AbiType = typeof(global::ABI.System.TimeSpan);
+                MarshalerType = typeof(global::ABI.System.TimeSpan.Marshaler);
+                MarshalByObjectReferenceValueSupported = false;
+                CreateMarshaler = (Func<T, object>)(object)((Func<global::System.TimeSpan, global::ABI.System.TimeSpan.Marshaler>)global::ABI.System.TimeSpan.CreateMarshaler).WithObjectTResult();
+                CreateMarshaler2 = CreateMarshaler;
+                GetAbi = ((Func<global::ABI.System.TimeSpan.Marshaler, global::ABI.System.TimeSpan>)global::ABI.System.TimeSpan.GetAbi).WithObjectParams();
+                FromAbi = (Func<object, T>)(object)((Func<global::ABI.System.TimeSpan, global::System.TimeSpan>)global::ABI.System.TimeSpan.FromAbi).WithObjectT();
+                CopyAbi = ((Action<global::ABI.System.TimeSpan.Marshaler, nint>)global::ABI.System.TimeSpan.CopyAbi).WithObjectT1();
+                FromManaged = (Func<T, object>)(object)((Func<global::System.TimeSpan, global::ABI.System.TimeSpan>)global::ABI.System.TimeSpan.FromManaged).WithObjectTResult();
+                CopyManaged = (Action<T, nint>)(object)(Action<global::System.TimeSpan, nint>)global::ABI.System.TimeSpan.CopyManaged;
+                DisposeMarshaler = ((Action<global::ABI.System.TimeSpan.Marshaler>)global::ABI.System.TimeSpan.DisposeMarshaler).WithObjectParams();
+                DisposeAbi = ((Action<global::ABI.System.TimeSpan>)global::ABI.System.TimeSpan.DisposeAbi).WithObjectParams();
+            }
+            else if (typeof(T) == typeof(DateTimeOffset))
+            {
+                // DateTimeOffset also has a custom marshaller and is always constructed.
+                // We can do the same as with TimeSpan: just special case all delegates.
+                HelperType = typeof(global::ABI.System.DateTimeOffset);
+                AbiType = typeof(global::ABI.System.DateTimeOffset);
+                MarshalerType = typeof(global::ABI.System.DateTimeOffset.Marshaler);
+                MarshalByObjectReferenceValueSupported = false;
+                CreateMarshaler = (Func<T, object>)(object)((Func<global::System.DateTimeOffset, global::ABI.System.DateTimeOffset.Marshaler>)global::ABI.System.DateTimeOffset.CreateMarshaler).WithObjectTResult();
+                CreateMarshaler2 = CreateMarshaler;
+                GetAbi = ((Func<global::ABI.System.DateTimeOffset.Marshaler, global::ABI.System.DateTimeOffset>)global::ABI.System.DateTimeOffset.GetAbi).WithObjectParams();
+                FromAbi = (Func<object, T>)(object)((Func<global::ABI.System.DateTimeOffset, global::System.DateTimeOffset>)global::ABI.System.DateTimeOffset.FromAbi).WithObjectT();
+                CopyAbi = ((Action<global::ABI.System.DateTimeOffset.Marshaler, nint>)global::ABI.System.DateTimeOffset.CopyAbi).WithObjectT1();
+                FromManaged = (Func<T, object>)(object)((Func<global::System.DateTimeOffset, global::ABI.System.DateTimeOffset>)global::ABI.System.DateTimeOffset.FromManaged).WithObjectTResult();
+                CopyManaged = (Action<T, nint>)(object)(Action<global::System.DateTimeOffset, nint>)global::ABI.System.DateTimeOffset.CopyManaged;
+                DisposeMarshaler = ((Action<global::ABI.System.DateTimeOffset.Marshaler>)global::ABI.System.DateTimeOffset.DisposeMarshaler).WithObjectParams();
+                DisposeAbi = ((Action<global::ABI.System.DateTimeOffset>)global::ABI.System.DateTimeOffset.DisposeAbi).WithObjectParams();
+            }
+            else if (typeof(T).IsValueType)
+            {
+                // TODO
+                throw new NotImplementedException();
+            }
+            else
+            {
+                // Fallback case for all other types (could be anything, really). These would be reference types,
+                // which means we can make some assumptions on the shape of the helper type methods. Specifically,
+                // we expect the returned marshallers to be IObjectReference-s, and the ABI to be an IntPtr value.
+                HelperType = typeof(T).GetHelperType();
+                AbiType = typeof(T).GetAbiType();
+                MarshalerType = typeof(T).GetMarshalerType();
+                MarshalByObjectReferenceValueSupported = typeof(T).GetMarshaler2Type() == typeof(ObjectReferenceValue);
 
-        internal static Func<T, object> CreateMarshaler2 => MarshalByObjectReferenceValueSupported ? CreateMarshaler2Lazy.Value : CreateMarshaler;
-        private static readonly Lazy<Func<T, object>> CreateMarshaler2Lazy = new(BindCreateMarshaler2);
-        private static Func<T, object> BindCreateMarshaler2()
-        {
-            var createMarshaler = (Func<T, ObjectReferenceValue>)HelperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).
-                CreateDelegate(typeof(Func<T, ObjectReferenceValue>));
-            return (T arg) => createMarshaler(arg);
+#if NET
+                CreateMarshaler = HelperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T, IObjectReference>>();
+                CreateMarshaler2 = MarshalByObjectReferenceValueSupported
+                    ? HelperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T, ObjectReferenceValue>>().WithObjectTResult()
+                    : CreateMarshaler;
+                GetAbi = HelperType.GetMethod("GetAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<IObjectReference, nint>>().WithObjectParams();
+                CopyAbi = null; // Not used for class types
+                FromAbi = HelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<nint, T>>().WithObjectT();
+                FromManaged = HelperType.GetMethod("FromManaged", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T, nint>>().WithObjectTResult();
+                CopyManaged = null; // Also not used for class types
+                DisposeMarshaler = HelperType.GetMethod("DisposeMarshaler", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Action<IObjectReference>>().WithObjectParams();
+                DisposeAbi = HelperType.GetMethod("DisposeAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Action<nint>>().WithObjectParams();
+                CreateMarshalerArray = HelperType.GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T[], MarshalInterfaceHelper<T>.MarshalerArray>>().WithObjectTResult();
+                GetAbiArray = HelperType.GetMethod("GetAbiArray", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<object, (int, nint)>>();
+                FromAbiArray = HelperType.GetMethod("FromAbiArray", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<object, T[]>>();
+                FromManagedArray = HelperType.GetMethod("FromManagedArray", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T[], (int, nint)>>();
+                DisposeMarshalerArray = HelperType.GetMethod("DisposeMarshalerArray", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Action<MarshalInterfaceHelper<T>.MarshalerArray>>().WithObjectParams();
+                DisposeAbiArray = HelperType.GetMethod("DisposeAbiArray", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Action<object>>();
+#else
+                // TODO
+                throw new NotImplementedException();
+#endif
+            }
         }
+    }
 
-        public static readonly Func<object, object> GetAbi = MarshalByObjectReferenceValueSupported ? (object objRef) => Marshaler.GetAbi(objRef, GetAbiLazy) :
-            (object objRef) => GetAbiLazy.Value(objRef);
-        private static readonly Lazy<Func<object, object>> GetAbiLazy = new(BindGetAbi);
-        private static Func<object, object> BindGetAbi()
-        {
-            var getAbi = HelperType.GetMethod("GetAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            return (object arg) => getAbi.Invoke(null, new[] { arg });
-        }
-
-        public static readonly Action<object, IntPtr> CopyAbi = (object box, IntPtr dest) => CopyAbiLazy.Value(box, dest);
-        private static readonly Lazy<Action<object, IntPtr>> CopyAbiLazy = new(BindCopyAbi);
-        private static Action<object, IntPtr> BindCopyAbi()
-        {
-            var copyAbi = HelperType.GetMethod("CopyAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (copyAbi == null) return null;
-            return (object arg, IntPtr dest) => copyAbi.Invoke(null, new[] { arg, dest });
-        }
-
-        public static readonly Func<object, T> FromAbi = (object box) => FromAbiLazy.Value(box);
-        private static readonly Lazy<Func<object, T>> FromAbiLazy = new(BindFromAbi);
-        private static Func<object, T> BindFromAbi()
-        {
-            var fromAbi = HelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            return (object arg) => (T)fromAbi.Invoke(null, new[] { arg });
-        }
-
-        public static readonly Func<T, object> FromManaged = (T value) => FromManagedLazy.Value(value);
-        private static readonly Lazy<Func<T, object>> FromManagedLazy = new(BindFromManaged);
-        private static Func<T, object> BindFromManaged()
-        {
-            var fromManaged = HelperType.GetMethod("FromManaged", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            return (T arg) => fromManaged.Invoke(null, new object[] { arg });
-        }
-
-        public static readonly Action<T, IntPtr> CopyManaged = (T value, IntPtr dest) => CopyManagedLazy.Value(value, dest);
-        private static readonly Lazy<Action<T, IntPtr>> CopyManagedLazy = new(BindCopyManaged);
-        private static Action<T, IntPtr> BindCopyManaged()
-        {
-            var copyManaged = HelperType.GetMethod("CopyManaged", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (copyManaged == null) return null;
-            return (T arg, IntPtr dest) => copyManaged.Invoke(null, new object[] { arg, dest });
-        }
-
-        public static readonly Action<object> DisposeMarshaler = MarshalByObjectReferenceValueSupported ? (object objRef) => Marshaler.DisposeMarshaler(objRef, DisposeMarshalerLazy) : (object objRef) => DisposeMarshalerLazy.Value(objRef);
-        private static readonly Lazy<Action<object>> DisposeMarshalerLazy = new(BindDisposeMarshaler);
-        private static Action<object> BindDisposeMarshaler()
-        {
-            var disposeMarshaler = HelperType.GetMethod("DisposeMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            return (object arg) => disposeMarshaler.Invoke(null, new[] { arg });
-        }
-
-        internal static readonly Action<object> DisposeAbi = (object box) => DisposeAbiLazy.Value(box);
-        private static readonly Lazy<Action<object>> DisposeAbiLazy = new(BindDisposeAbi);
-        private static Action<object> BindDisposeAbi()
-        {
-            var disposeAbi = HelperType.GetMethod("DisposeAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (disposeAbi == null) return null;
-            return (object arg) => disposeAbi.Invoke(null, new[] { arg });
-        }
-
-        internal static readonly Func<T[], object> CreateMarshalerArray = (T[] array) => CreateMarshalerArrayLazy.Value(array);
-        private static readonly Lazy<Func<T[], object>> CreateMarshalerArrayLazy = new(BindCreateMarshalerArray);
-        private static Func<T[], object> BindCreateMarshalerArray()
-        {
-            var createMarshalerArray = HelperType.GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (createMarshalerArray == null) return null;
-            return (T[] arg) => createMarshalerArray.Invoke(null, new object[] { arg });
-        }
-
-        internal static readonly Func<object, (int, IntPtr)> GetAbiArray = (object box) => GetAbiArrayLazy.Value(box);
-        private static readonly Lazy<Func<object, (int, IntPtr)>> GetAbiArrayLazy = new(BindGetAbiArray);
-        private static Func<object, (int, IntPtr)> BindGetAbiArray()
-        {
-            var getAbiArray = HelperType.GetMethod("GetAbiArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (getAbiArray == null) return null;
-            return (object arg) => ((int, IntPtr))getAbiArray.Invoke(null, new object[] { arg });
-        }
-
-        internal static readonly Func<object, T[]> FromAbiArray = (object box) => FromAbiArrayLazy.Value(box);
-        private static readonly Lazy<Func<object, T[]>> FromAbiArrayLazy = new(BindFromAbiArray);
-        private static Func<object, T[]> BindFromAbiArray()
-        {
-            var fromAbiArray = HelperType.GetMethod("FromAbiArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (fromAbiArray == null) return null;
-            return (object arg) => (T[])fromAbiArray.Invoke(null, new[] { arg });
-        }
-
-        internal static readonly Func<T[], (int, IntPtr)> FromManagedArray = (T[] array) => FromManagedArrayLazy.Value(array);
-        private static readonly Lazy<Func<T[], (int, IntPtr)>> FromManagedArrayLazy = new(BindFromManagedArray);
-        private static Func<T[], (int, IntPtr)> BindFromManagedArray()
-        {
-            var fromManagedArray = HelperType.GetMethod("FromManagedArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (fromManagedArray == null) return null;
-            return (T[] arg) => ((int, IntPtr))fromManagedArray.Invoke(null, new object[] { arg });
-        }
-
-        internal static readonly Action<object> DisposeMarshalerArray = (object box) => DisposeMarshalerArrayLazy.Value(box);
-        private static readonly Lazy<Action<object>> DisposeMarshalerArrayLazy = new(BindDisposeMarshalerArray);
-        private static Action<object> BindDisposeMarshalerArray()
-        {
-            var disposeMarshalerArray = HelperType.GetMethod("DisposeMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (disposeMarshalerArray == null) return null;
-            return (object arg) => disposeMarshalerArray.Invoke(null, new object[] { arg });
-        }
-
-        internal static readonly Action<object> DisposeAbiArray = (object box) => DisposeAbiArrayLazy.Value(box);
-        private static readonly Lazy<Action<object>> DisposeAbiArrayLazy = new(BindDisposeAbiArray);
-        private static Action<object> BindDisposeAbiArray()
-        {
-            var disposeAbiArray = HelperType.GetMethod("DisposeAbiArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (disposeAbiArray == null) return null;
-            return (object arg) => disposeAbiArray.Invoke(null, new object[] { arg });
-        }
-
+    internal static class MarshalGenericHelper<T>
+    {
         private static unsafe void CopyManagedFallback(T value, IntPtr dest)
         {
-            if (MarshalByObjectReferenceValueSupported)
+            if (MarshalGeneric<T>.MarshalByObjectReferenceValueSupported)
             {
                 *(IntPtr*)dest.ToPointer() =
-                    (value is null) ? IntPtr.Zero : ((ObjectReferenceValue)CreateMarshaler2(value)).Detach();
+                    (value is null) ? IntPtr.Zero : ((ObjectReferenceValue)MarshalGeneric<T>.CreateMarshaler2(value)).Detach();
             }
             else
             {
                 *(IntPtr*)dest.ToPointer() =
-                    (value is null) ? IntPtr.Zero : ((IObjectReference)CreateMarshaler(value)).GetRef();
+                    (value is null) ? IntPtr.Zero : ((IObjectReference)MarshalGeneric<T>.CreateMarshaler(value)).GetRef();
             }
         }
 
-        internal static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, CopyManagedLazy.Value ?? CopyManagedFallback);
+        internal static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, MarshalGeneric<T>.CopyManaged ?? CopyManagedFallback);
     }
 
 #if EMBED
@@ -1507,7 +1542,7 @@ namespace WinRT
                 GetAbiArray = MarshalGeneric<T>.GetAbiArray;
                 FromAbiArray = MarshalGeneric<T>.FromAbiArray;
                 FromManagedArray = MarshalGeneric<T>.FromManagedArray;
-                CopyManagedArray = MarshalGeneric<T>.CopyManagedArray;
+                CopyManagedArray = MarshalGenericHelper<T>.CopyManagedArray;
                 DisposeMarshalerArray = MarshalInterface<T>.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalInterface<T>.DisposeAbiArray;
             }
@@ -1664,7 +1699,7 @@ namespace WinRT
                 GetAbiArray = MarshalGeneric<T>.GetAbiArray;
                 FromAbiArray = MarshalGeneric<T>.FromAbiArray;
                 FromManagedArray = MarshalGeneric<T>.FromManagedArray;
-                CopyManagedArray = MarshalGeneric<T>.CopyManagedArray;
+                CopyManagedArray = MarshalGenericHelper<T>.CopyManagedArray;
                 DisposeMarshalerArray = MarshalGeneric<T>.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalGeneric<T>.DisposeAbiArray;
             }

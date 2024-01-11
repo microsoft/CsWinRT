@@ -25,6 +25,63 @@ namespace WinRT
         {
             Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
         }
+
+        // These methods below can be used to efficiently change the signature of arbitrary delegate types
+        // to one that has just 'object' as any of the type arguments, without the need to generate a new
+        // closure and display class. The C# compiler will lower the method group expression over one of
+        // the extension methods below into a direct constructor call of the new delegate types, passing
+        // a function pointer for the target delegate, along with any target, if present. This is more
+        // compact in binary size (and better in perf) than eg. 'return (object arg) => function(arg)';
+
+        public static Func<object, TResult> WithObjectT<T, TResult>(this Func<T, TResult> function)
+        {
+            return function.InvokeWithObjectT;
+        }
+
+        public static Func<T, object> WithObjectTResult<T, TResult>(this Func<T, TResult> function)
+        {
+            return function.InvokeWithObjectTResult;
+        }
+
+        public static Func<object, object> WithObjectParams<T, TResult>(this Func<T, TResult> func)
+        {
+            return func.InvokeWithObjectParams;
+        }
+
+        public static Action<object> WithObjectParams<T>(this Action<T> action)
+        {
+            return action.InvokeWithObjectParams;
+        }
+
+        public static Action<object, T2> WithObjectT1<T1, T2>(this Action<T1, T2> action)
+        {
+            return action.InvokeWithObjectT1;
+        }
+
+        private static object InvokeWithObjectTResult<T, TResult>(this Func<T, TResult> func, T arg)
+        {
+            return func.Invoke(arg);
+        }
+
+        private static TResult InvokeWithObjectT<T, TResult>(this Func<T, TResult> func, object arg)
+        {
+            return func.Invoke((T)arg);
+        }
+
+        private static object InvokeWithObjectParams<T, TResult>(this Func<T, TResult> func, object arg)
+        {
+            return func.Invoke((T)arg);
+        }
+
+        private static void InvokeWithObjectParams<T>(this Action<T> func, object arg)
+        {
+            func.Invoke((T)arg);
+        }
+
+        private static void InvokeWithObjectT1<T1, T2>(this Action<T1, T2> action, object arg1, T2 arg2)
+        {
+            action.Invoke((T1)arg1, arg2);
+        }
     }
 
     internal sealed class Platform
