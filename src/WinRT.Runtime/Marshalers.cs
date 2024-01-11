@@ -562,11 +562,9 @@ namespace WinRT
             }
             else if (typeof(T) == typeof(int) ||
                      typeof(T) == typeof(byte) ||
-                     typeof(T) == typeof(bool) ||
                      typeof(T) == typeof(sbyte) ||
                      typeof(T) == typeof(short) ||
                      typeof(T) == typeof(ushort) ||
-                     typeof(T) == typeof(char) ||
                      typeof(T) == typeof(uint) ||
                      typeof(T) == typeof(long) ||
                      typeof(T) == typeof(ulong) ||
@@ -577,6 +575,19 @@ namespace WinRT
                 // Special case some well known primitive types that we know might be constructed
                 // for this type, but not actually used. For these, we just keep all default values.
                 // No consumer would ever actually be trying to use this marshaller for these types.
+                return;
+            }
+            else if (typeof(T) == typeof(bool))
+            {
+                // Same as above, but we do have an ABI type
+                AbiType = typeof(byte);
+
+                return;
+            }
+            else if (typeof(T) == typeof(char))
+            {
+                AbiType = typeof(ushort);
+
                 return;
             }
             else if (typeof(T) == typeof(TimeSpan))
@@ -799,15 +810,18 @@ namespace WinRT
                 return Enum.GetUnderlyingType(typeof(T));
             }
 
+            // These 3 types are true non blittable types that are valid to use here
+            if (typeof(T) == typeof(bool)) return typeof(byte);
+            if (typeof(T) == typeof(char)) return typeof(ushort);
+            if (typeof(T) == typeof(DateTimeOffset)) return typeof(global::ABI.System.DateTimeOffset);
+
             // These types are actually blittable, but this marshaller is still constructed elsewhere.
             // Just return null instead of using MarshalGeneric<T>, to avoid constructing that too.
             if (typeof(T) == typeof(int) ||
                 typeof(T) == typeof(byte) ||
-                typeof(T) == typeof(bool) ||
                 typeof(T) == typeof(sbyte) ||
                 typeof(T) == typeof(short) ||
                 typeof(T) == typeof(ushort) ||
-                typeof(T) == typeof(char) ||
                 typeof(T) == typeof(uint) ||
                 typeof(T) == typeof(long) ||
                 typeof(T) == typeof(ulong) ||
@@ -827,11 +841,6 @@ namespace WinRT
                 typeof(T) == typeof(global::System.Numerics.Vector4))
             {
                 return null;
-            }
-
-            if (typeof(T) == typeof(DateTimeOffset))
-            {
-                return typeof(global::ABI.System.DateTimeOffset);
             }
 
             // Fallback path with the original logic
