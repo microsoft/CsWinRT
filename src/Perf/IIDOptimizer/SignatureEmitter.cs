@@ -163,16 +163,24 @@ namespace GuidPatch
                 getterMethodGensToCacheTypeGens[guidDataGetterMethod.GenericParameters[i]] = cacheType.GenericParameters[i];
             }
 
-            var instantiatedCacheType = new GenericInstanceType(cacheType);
-            foreach (var arg in guidDataGetterMethod.GenericParameters)
-            {
-                instantiatedCacheType.GenericArguments.Add(arg);
-            }
+            TypeReference instantiatedCacheType = cacheType;
+            TypeReference selfInstantiatedCacheType = cacheType;
 
-            var selfInstantiatedCacheType = new GenericInstanceType(cacheType);
-            foreach (var param in cacheType.GenericParameters)
+            if (cacheType.GenericParameters.Count != 0)
             {
-                selfInstantiatedCacheType.GenericArguments.Add(param);
+                var instantiatedCacheTypeTemp = new GenericInstanceType(cacheType);
+                foreach (var arg in guidDataGetterMethod.GenericParameters)
+                {
+                    instantiatedCacheTypeTemp.GenericArguments.Add(arg);
+                }
+                instantiatedCacheType = instantiatedCacheTypeTemp;
+
+                var selfInstantiatedCacheTypeTemp = new GenericInstanceType(cacheType);
+                foreach (var param in cacheType.GenericParameters)
+                {
+                    selfInstantiatedCacheTypeTemp.GenericArguments.Add(param);
+                }
+                selfInstantiatedCacheType = selfInstantiatedCacheTypeTemp;
             }
 
             var cacheField = new FieldDefinition("iidData", FieldAttributes.Static | FieldAttributes.Assembly, new ArrayType(module.ImportReference(module.TypeSystem.Byte)));
