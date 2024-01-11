@@ -487,7 +487,7 @@ namespace WinRT
             _contextToken = contextToken;
         }
 
-        public static new unsafe FactoryObjectReference<T> FromAbi(IntPtr thisPtr)
+        public static unsafe FactoryObjectReference<T> FromAbi(IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
             {

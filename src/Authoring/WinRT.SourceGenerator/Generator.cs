@@ -309,6 +309,10 @@ namespace Generator
             //   once from the namespace declaration and once from the member's declaration
             if (syntaxNode is NamespaceDeclarationSyntax @namespace)
             {
+                // We only include the namespace if it has a public type as otherwise it won't
+                // be projected.  For partial types, there would be one instance that we encounter
+                // which declares the accessibility and we will use that to determine the accessibility
+                // of the type for the purpose of determining whether to include the namespace.
                 if (HasSomePublicTypes(syntaxNode))
                 {
                     Namespaces.Add(@namespace);
@@ -318,7 +322,7 @@ namespace Generator
                 return;
             }
 
-            if (syntaxNode is not MemberDeclarationSyntax declaration || !IsPublic(declaration))
+            if (syntaxNode is not MemberDeclarationSyntax declaration || !IsPublicOrPartial(declaration))
             {
                 return;
             }
@@ -334,6 +338,11 @@ namespace Generator
         }
 
         private bool IsPublic(MemberDeclarationSyntax member)
+        {
+            return member.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword));
+        }
+
+        private bool IsPublicOrPartial(MemberDeclarationSyntax member)
         {
             // We detect whether partial types are public using symbol information later.
             return member.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword) || m.IsKind(SyntaxKind.PartialKeyword));

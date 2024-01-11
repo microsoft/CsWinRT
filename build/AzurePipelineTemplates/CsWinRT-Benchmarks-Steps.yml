@@ -14,9 +14,20 @@ steps:
 - task: UseDotNet@2
   displayName: Use .NET Core SDK 3.1
   inputs:
+    packageType: runtime
     version: 3.1.x
-    installationPath: C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\
+    installationPath: $(LocalAppData)\Microsoft\dotnet\
     performMultiLevelLookup: true
+
+- task: UseDotNet@2
+  displayName: Use .NET Core SDK 3.1
+  inputs:
+    packageType: runtime
+    version: 3.1.x
+    installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
+    performMultiLevelLookup: true
+  env:
+    PROCESSOR_ARCHITECTURE: x86
 
 # Install .NET 6 SDK 
 - task: PowerShell@2
@@ -68,11 +79,3 @@ steps:
     SourceFolder: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
     Contents: '*'
     TargetFolder: $(Build.ArtifactStagingDirectory)\benchmarks
-
-# Publish Results
-- task: PublishBuildArtifacts@1
-  displayName: Publish Results
-  condition: always()
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\benchmarks
-    ArtifactName: benchmarks
