@@ -790,7 +790,53 @@ namespace WinRT
 #endif
     class MarshalNonBlittable<T> : MarshalGeneric<T>
     {
-        private static readonly new Type AbiType = typeof(T).IsEnum ? Enum.GetUnderlyingType(typeof(T)) : MarshalGeneric<T>.AbiType;
+        private static readonly new Type AbiType = GetAbiType();
+
+        private static Type GetAbiType()
+        {
+            if (typeof(T).IsEnum)
+            {
+                return Enum.GetUnderlyingType(typeof(T));
+            }
+
+            // These types are actually blittable, but this marshaller is still constructed elsewhere.
+            // Just return null instead of using MarshalGeneric<T>, to avoid constructing that too.
+            if (typeof(T) == typeof(int) ||
+                typeof(T) == typeof(byte) ||
+                typeof(T) == typeof(bool) ||
+                typeof(T) == typeof(sbyte) ||
+                typeof(T) == typeof(short) ||
+                typeof(T) == typeof(ushort) ||
+                typeof(T) == typeof(char) ||
+                typeof(T) == typeof(uint) ||
+                typeof(T) == typeof(long) ||
+                typeof(T) == typeof(ulong) ||
+                typeof(T) == typeof(float) ||
+                typeof(T) == typeof(double) ||
+                typeof(T) == typeof(Guid) ||
+                typeof(T) == typeof(global::System.TimeSpan) ||
+                typeof(T) == typeof(global::Windows.Foundation.Point) ||
+                typeof(T) == typeof(global::Windows.Foundation.Rect) ||
+                typeof(T) == typeof(global::Windows.Foundation.Size) ||
+                typeof(T) == typeof(global::System.Numerics.Matrix3x2) ||
+                typeof(T) == typeof(global::System.Numerics.Matrix4x4) ||
+                typeof(T) == typeof(global::System.Numerics.Plane) ||
+                typeof(T) == typeof(global::System.Numerics.Quaternion) ||
+                typeof(T) == typeof(global::System.Numerics.Vector2) ||
+                typeof(T) == typeof(global::System.Numerics.Vector3) ||
+                typeof(T) == typeof(global::System.Numerics.Vector4))
+            {
+                return null;
+            }
+
+            if (typeof(T) == typeof(DateTimeOffset))
+            {
+                return typeof(global::ABI.System.DateTimeOffset);
+            }
+
+            // Fallback path with the original logic
+            return typeof(T).GetAbiType();
+        }
 
         public struct MarshalerArray
         {
