@@ -1720,6 +1720,42 @@ namespace WinRT
                 {
                     AbiType = typeof(ushort);
                 }
+                else if (typeof(T) == typeof(int) ||
+                         typeof(T) == typeof(byte) ||
+                         typeof(T) == typeof(sbyte) ||
+                         typeof(T) == typeof(short) ||
+                         typeof(T) == typeof(ushort) ||
+                         typeof(T) == typeof(uint) ||
+                         typeof(T) == typeof(long) ||
+                         typeof(T) == typeof(ulong) ||
+                         typeof(T) == typeof(float) ||
+                         typeof(T) == typeof(double) ||
+                         typeof(T) == typeof(Guid) ||
+                         typeof(T) == typeof(global::Windows.Foundation.Point) ||
+                         typeof(T) == typeof(global::Windows.Foundation.Rect) ||
+                         typeof(T) == typeof(global::Windows.Foundation.Size) ||
+                         typeof(T) == typeof(global::System.Numerics.Matrix3x2) ||
+                         typeof(T) == typeof(global::System.Numerics.Matrix4x4) ||
+                         typeof(T) == typeof(global::System.Numerics.Plane) ||
+                         typeof(T) == typeof(global::System.Numerics.Quaternion) ||
+                         typeof(T) == typeof(global::System.Numerics.Vector2) ||
+                         typeof(T) == typeof(global::System.Numerics.Vector3) ||
+                         typeof(T) == typeof(global::System.Numerics.Vector4))
+                {
+                    // Manually handle well known primitive types and common types, as well
+                    // as two common projected types (below). This allows the linker to trim
+                    // all the non-taken branch below, which it wouldn't otherwise do, because
+                    // the path below with the fallback logic to check for ABI types is dynamic.
+                    AbiType = null;
+                }
+                else if (typeof(T) == typeof(global::System.TimeSpan))
+                {
+                    AbiType = typeof(global::ABI.System.TimeSpan);
+                }
+                else if (typeof(T) == typeof(global::System.DateTimeOffset))
+                {
+                    AbiType = typeof(global::ABI.System.DateTimeOffset);
+                }
                 else
                 {
                     AbiType = typeof(T).FindHelperType();
