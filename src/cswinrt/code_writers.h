@@ -9715,12 +9715,12 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
 public static IntPtr GetActivationFactory(string runtimeClassId)
 {
     return GetActivationFactory(runtimeClassId.AsSpan());
-}"
+}
 )" : R"(
 public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
 {
     return GetActivationFactory(runtimeClassId.ToString());
-}"
+}
 )");
     }
 
