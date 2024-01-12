@@ -810,9 +810,10 @@ namespace WinRT
                 return Enum.GetUnderlyingType(typeof(T));
             }
 
-            // These 3 types are true non blittable types that are valid to use here
+            // These 4 types are true non blittable types that are valid to use here
             if (typeof(T) == typeof(bool)) return typeof(byte);
             if (typeof(T) == typeof(char)) return typeof(ushort);
+            if (typeof(T) == typeof(global::System.TimeSpan)) return typeof(global::ABI.System.TimeSpan);
             if (typeof(T) == typeof(DateTimeOffset)) return typeof(global::ABI.System.DateTimeOffset);
 
             // These types are actually blittable, but this marshaller is still constructed elsewhere.
@@ -828,7 +829,6 @@ namespace WinRT
                 typeof(T) == typeof(float) ||
                 typeof(T) == typeof(double) ||
                 typeof(T) == typeof(Guid) ||
-                typeof(T) == typeof(global::System.TimeSpan) ||
                 typeof(T) == typeof(global::Windows.Foundation.Point) ||
                 typeof(T) == typeof(global::Windows.Foundation.Rect) ||
                 typeof(T) == typeof(global::Windows.Foundation.Size) ||
