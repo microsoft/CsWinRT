@@ -32,6 +32,20 @@ namespace WinRT
         // the extension methods below into a direct constructor call of the new delegate types, passing
         // a function pointer for the target delegate, along with any target, if present. This is more
         // compact in binary size (and better in perf) than eg. 'return (object arg) => function(arg)';
+        //
+        // We have both some general purpose generic versions, as well two specialized variants to handle
+        // the ObjectReferenceValue marshalling with arbitrary inputs, when marshalling reference types.
+        // Once again, this just allows us to attach additional logic without needing a display class.
+
+        public static Func<object, object> WithMarshaler2Support(this Func<IObjectReference, IntPtr> function)
+        {
+            return function.InvokeWithMarshaler2Support;
+        }
+
+        public static Action<object> WithMarshaler2Support(this Action<IObjectReference> action)
+        {
+            return action.InvokeWithMarshaler2Support;
+        }
 
         public static Func<object, TResult> WithObjectT<T, TResult>(this Func<T, TResult> function)
         {
@@ -56,6 +70,28 @@ namespace WinRT
         public static Action<object, T2> WithObjectT1<T1, T2>(this Action<T1, T2> action)
         {
             return action.InvokeWithObjectT1;
+        }
+
+        private static object InvokeWithMarshaler2Support(this Func<IObjectReference, IntPtr> func, object arg)
+        {
+            if (arg is ObjectReferenceValue objectReferenceValue)
+            {
+                return objectReferenceValue.GetAbi();
+            }
+
+            return func.Invoke((IObjectReference)arg);
+        }
+
+        private static void InvokeWithMarshaler2Support(this Action<IObjectReference> action, object arg)
+        {
+            if (arg is ObjectReferenceValue objectReferenceValue)
+            {
+                objectReferenceValue.Dispose();
+            }
+            else
+            {
+                action((IObjectReference)arg);
+            }
         }
 
         private static object InvokeWithObjectTResult<T, TResult>(this Func<T, TResult> func, T arg)

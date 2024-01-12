@@ -688,12 +688,12 @@ namespace WinRT
                 CreateMarshaler2 = MarshalByObjectReferenceValueSupported
                     ? HelperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T, ObjectReferenceValue>>().WithObjectTResult()
                     : CreateMarshaler;
-                GetAbi = HelperType.GetMethod("GetAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<IObjectReference, IntPtr>>().WithObjectParams();
+                GetAbi = HelperType.GetMethod("GetAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<IObjectReference, IntPtr>>().WithMarshaler2Support();
                 CopyAbi = null; // Not used for class types
                 FromAbi = HelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<IntPtr, T>>().WithObjectT();
                 FromManaged = HelperType.GetMethod("FromManaged", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T, IntPtr>>().WithObjectTResult();
                 CopyManaged = null; // Also not used for class types
-                DisposeMarshaler = HelperType.GetMethod("DisposeMarshaler", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Action<IObjectReference>>().WithObjectParams();
+                DisposeMarshaler = HelperType.GetMethod("DisposeMarshaler", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Action<IObjectReference>>().WithMarshaler2Support();
                 DisposeAbi = HelperType.GetMethod("DisposeAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Action<IntPtr>>().WithObjectParams();
                 CreateMarshalerArray = HelperType.GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T[], MarshalInterfaceHelper<T>.MarshalerArray>>().WithObjectTResult();
                 GetAbiArray = HelperType.GetMethod("GetAbiArray", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<object, (int, IntPtr)>>();
