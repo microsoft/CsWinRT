@@ -658,7 +658,7 @@ namespace WinRT
                 MarshalGenericFallback<T> fallback = new(HelperType);
 
                 CreateMarshaler = fallback.CreateMarshaler;
-                CreateMarshaler2 = CreateMarshaler2 = MarshalByObjectReferenceValueSupported ? fallback.CreateMarshaler2 : CreateMarshaler;
+                CreateMarshaler2 = MarshalByObjectReferenceValueSupported ? fallback.CreateMarshaler2 : CreateMarshaler;
                 GetAbi = fallback.GetAbi;
                 CopyAbi = fallback.CopyAbi;
                 FromAbi = fallback.FromAbi;
@@ -769,7 +769,18 @@ namespace WinRT
 
         public object CreateMarshaler2(T arg) => _createMarshaler2.Invoke(null, new object[] { arg });
 
-        public object GetAbi(object arg) => _getAbi.Invoke(null, new[] { arg });
+        public object GetAbi(object arg)
+        {
+            // In the fallback case (ie. when MarshalGenericFallback<T> is used), we can't know whether the input
+            // marshaller will actually be an ObjectReferenceValue or not (which could be any other type). So to
+            // handle all possible cases, we just special case the value marshaller and get the ABI directly.
+            if (arg is ObjectReferenceValue objectReferenceValue)
+            {
+                return objectReferenceValue.GetAbi();
+            }
+
+            return _getAbi.Invoke(null, new[] { arg });
+        }
 
         public void CopyAbi(object arg, IntPtr dest) => _copyAbi.Invoke(null, new[] { arg, dest });
 
@@ -779,7 +790,18 @@ namespace WinRT
 
         public void CopyManaged(T arg, IntPtr dest) => _copyManaged.Invoke(null, new object[] { arg, dest });
 
-        public void DisposeMarshaler(object arg) => _disposeMarshaler.Invoke(null, new[] { arg });
+        public void DisposeMarshaler(object arg)
+        {
+            // Same special casing for ObjectReferenceValue as above.
+            if (arg is ObjectReferenceValue objectReferenceValue)
+            {
+                objectReferenceValue.Dispose();
+            }
+            else
+            {
+                _disposeMarshaler.Invoke(null, new[] { arg });
+            }
+        }
 
         public void DisposeAbi(object arg) => _disposeAbi.Invoke(null, new[] { arg });
 
@@ -1664,18 +1686,6 @@ namespace WinRT
             (object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
         internal static unsafe Action<object, IntPtr> CopyUIntEnumFunc =
             (object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
-        internal static Action<object, Lazy<Action<object>>> DisposeMarshaler = (object arg, Lazy<Action<object>> genericDisposeMarshaler) =>
-        {
-            if (arg is ObjectReferenceValue objectReferenceValue)
-            {
-                objectReferenceValue.Dispose();
-            }
-            else
-            {
-                genericDisposeMarshaler.Value(arg);
-            }
-        };
-        internal static Func<object, Lazy<Func<object, object>>, object> GetAbi = (object arg, Lazy<Func<object, object>> genericGetAbi) => arg is ObjectReferenceValue objectReferenceValue ? objectReferenceValue.GetAbi() : genericGetAbi.Value(arg);
     }
 
 #if EMBED
