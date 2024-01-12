@@ -580,15 +580,36 @@ namespace WinRT
             else if (typeof(T) == typeof(bool))
             {
                 // Same as above, but we do have an ABI type
+                HelperType = typeof(global::ABI.System.Boolean);
                 AbiType = typeof(byte);
+                MarshalerType = typeof(bool);
+                MarshalByObjectReferenceValueSupported = false;
+                CreateMarshaler = (Func<T, object>)(object)((Func<bool, bool>)global::ABI.System.Boolean.CreateMarshaler).WithObjectTResult();
+                CreateMarshaler2 = CreateMarshaler;
+                GetAbi = ((Func<bool, byte>)global::ABI.System.Boolean.GetAbi).WithObjectParams();
+                FromAbi = (Func<object, T>)(object)((Func<byte, bool>)global::ABI.System.Boolean.FromAbi).WithObjectT();
+                CopyAbi = ((Action<bool, IntPtr>)global::ABI.System.Boolean.CopyAbi).WithObjectT1();
+                FromManaged = (Func<T, object>)(object)((Func<bool, byte>)global::ABI.System.Boolean.FromManaged).WithObjectTResult();
+                CopyManaged = (Action<T, IntPtr>)(object)(Action<bool, IntPtr>)global::ABI.System.Boolean.CopyManaged;
+                DisposeMarshaler = ((Action<bool>)global::ABI.System.Boolean.DisposeMarshaler).WithObjectParams();
+                DisposeAbi = ((Action<byte>)global::ABI.System.Boolean.DisposeAbi).WithObjectParams();
 
-                return;
             }
             else if (typeof(T) == typeof(char))
             {
+                HelperType = typeof(global::ABI.System.Char);
                 AbiType = typeof(ushort);
-
-                return;
+                MarshalerType = typeof(char);
+                MarshalByObjectReferenceValueSupported = false;
+                CreateMarshaler = (Func<T, object>)(object)((Func<char, char>)global::ABI.System.Char.CreateMarshaler).WithObjectTResult();
+                CreateMarshaler2 = CreateMarshaler;
+                GetAbi = ((Func<char, ushort>)global::ABI.System.Char.GetAbi).WithObjectParams();
+                FromAbi = (Func<object, T>)(object)((Func<ushort, char>)global::ABI.System.Char.FromAbi).WithObjectT();
+                CopyAbi = ((Action<char, IntPtr>)global::ABI.System.Char.CopyAbi).WithObjectT1();
+                FromManaged = (Func<T, object>)(object)((Func<char, ushort>)global::ABI.System.Char.FromManaged).WithObjectTResult();
+                CopyManaged = (Action<T, IntPtr>)(object)(Action<char, IntPtr>)global::ABI.System.Char.CopyManaged;
+                DisposeMarshaler = ((Action<char>)global::ABI.System.Char.DisposeMarshaler).WithObjectParams();
+                DisposeAbi = ((Action<ushort>)global::ABI.System.Char.DisposeAbi).WithObjectParams();
             }
             else if (typeof(T) == typeof(TimeSpan))
             {
