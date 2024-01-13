@@ -2064,7 +2064,7 @@ namespace ABI.System
 
         public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
 
-        unsafe internal static Nullable GetValue(IInspectable inspectable)
+        public static unsafe Nullable GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             IntPtr __retval = default;

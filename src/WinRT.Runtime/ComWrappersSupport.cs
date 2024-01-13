@@ -445,13 +445,13 @@ namespace WinRT
 
         private static Func<IInspectable, object> CreateAbiNullableTFactory(
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)]
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
             Type implementationType)
         {
             // This method is only called when 'implementationType' has been validated to be some ABI.System.Nullable_Delegate<T>.
             // As such, we know that the type definitely has a method with signature 'static Nullable GetValue(IInspectable)'.
-            var getValueMethod = implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic);
+            var getValueMethod = implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.Public);
 
             return (Func<IInspectable, object>)getValueMethod.CreateDelegate(typeof(Func<IInspectable, object>));
         }
