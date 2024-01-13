@@ -47,6 +47,11 @@ namespace WinRT
             return action.InvokeWithMarshaler2Support;
         }
 
+        public static Action<T, IntPtr> WithTypedT1<T>(this Action<object, IntPtr> action)
+        {
+            return action.InvokeWithTypedT1;
+        }
+
         public static Func<object, TResult> WithObjectT<T, TResult>(this Func<T, TResult> function)
         {
             return function.InvokeWithObjectT;
@@ -97,6 +102,11 @@ namespace WinRT
         private static void InvokeWithObjectParams<T>(this Action<T> func, object arg)
         {
             func.Invoke((T)arg);
+        }
+
+        private static void InvokeWithTypedT1<T>(this Action<object, IntPtr> action, T arg1, IntPtr arg2)
+        {
+            action.Invoke(arg1, arg2);
         }
     }
 

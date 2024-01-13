@@ -1712,11 +1712,11 @@ namespace WinRT
 
         internal static unsafe void CopyIntEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
 
-        internal static unsafe void CopyIntEnum<T>(T value, IntPtr dest) => *(int*)dest.ToPointer() = (int)(object)value;
+        internal static unsafe void CopyIntEnumDirect(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)value;
 
         internal static unsafe void CopyUIntEnum(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
 
-        internal static unsafe void CopyUIntEnum<T>(T value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)(object)value;
+        internal static unsafe void CopyUIntEnumDirect(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)value;
     }
 
 #if EMBED
@@ -1904,13 +1904,13 @@ namespace WinRT
                         // For marshaling non-blittable enum arrays via MarshalNonBlittable
                         if (typeof(T).GetEnumUnderlyingType() == typeof(int))
                         {
-                            CopyAbi = Marshaler.CopyIntEnum;
-                            CopyManaged = Marshaler.CopyIntEnum;
+                            CopyAbi = Marshaler.CopyIntEnumFunc;
+                            CopyManaged = Marshaler.CopyIntEnumDirectFunc.WithTypedT1<T>();
                         }
                         else
                         {
-                            CopyAbi = Marshaler.CopyUIntEnum;
-                            CopyManaged = Marshaler.CopyUIntEnum;
+                            CopyAbi = Marshaler.CopyUIntEnumFunc;
+                            CopyManaged = Marshaler.CopyUIntEnumDirectFunc.WithTypedT1<T>();
                         }
                     }
                     CreateMarshalerArray = (T[] array) => MarshalBlittable<T>.CreateMarshalerArray(array);
