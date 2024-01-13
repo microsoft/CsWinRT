@@ -1708,15 +1708,21 @@ namespace WinRT
 
     internal static class Marshaler
     {
-        internal static Func<object, object> ReturnParameterFunc = (object box) => box;
+        internal static readonly Func<object, object> ReturnParameterFunc = ReturnParameter;
+        internal static readonly Action<object, IntPtr> CopyIntEnumFunc = CopyIntEnum;
+        internal static readonly Action<object, IntPtr> CopyIntEnumDirectFunc = CopyIntEnumDirect;
+        internal static readonly Action<object, IntPtr> CopyUIntEnumFunc = CopyUIntEnum;
+        internal static readonly Action<object, IntPtr> CopyUIntEnumDirectFunc = CopyUIntEnumDirect;
 
-        internal static unsafe void CopyIntEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
+        private static object ReturnParameter(object arg) => arg;
 
-        internal static unsafe void CopyIntEnumDirect(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)value;
+        private static unsafe void CopyIntEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
 
-        internal static unsafe void CopyUIntEnum(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
+        private static unsafe void CopyIntEnumDirect(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)value;
 
-        internal static unsafe void CopyUIntEnumDirect(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)value;
+        private static unsafe void CopyUIntEnum(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
+
+        private static unsafe void CopyUIntEnumDirect(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)value;
     }
 
 #if EMBED
