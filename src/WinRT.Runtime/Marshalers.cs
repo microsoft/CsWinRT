@@ -1449,19 +1449,23 @@ namespace WinRT
 
         private static Func<T, IObjectReference> BindCreateMarshaler()
         {
-            var vftblType = HelperType.FindVftblType();
             Guid iid = GuidGenerator.GetIID(HelperType);
-            if (vftblType is not null)
+#if NET
+            if (RuntimeFeature.IsDynamicCodeCompiled)
+#endif
             {
-                var methodInfo = typeof(MarshalInspectable<T>).GetMethod("CreateMarshaler", new Type[] { typeof(T), typeof(Guid), typeof(bool) }).
-                    MakeGenericMethod(vftblType);
-                var createMarshaler = (Func<T, Guid, bool, IObjectReference>) methodInfo.CreateDelegate(typeof(Func<T, Guid, bool, IObjectReference>));
-                return obj => createMarshaler(obj, iid, true);
+                var vftblType = HelperType.FindVftblType();
+                
+                if (vftblType is not null)
+                {
+                    var methodInfo = typeof(MarshalInspectable<T>).GetMethod("CreateMarshaler", new Type[] { typeof(T), typeof(Guid), typeof(bool) }).
+                        MakeGenericMethod(vftblType);
+                    var createMarshaler = (Func<T, Guid, bool, IObjectReference>)methodInfo.CreateDelegate(typeof(Func<T, Guid, bool, IObjectReference>));
+                    return obj => createMarshaler(obj, iid, true);
+                }
             }
-            else
-            {
-                return obj => MarshalInspectable<T>.CreateMarshaler<IUnknownVftbl>(obj, iid, true);
-            }
+
+            return obj => MarshalInspectable<T>.CreateMarshaler<IUnknownVftbl>(obj, iid, true);
         }
     }
 
