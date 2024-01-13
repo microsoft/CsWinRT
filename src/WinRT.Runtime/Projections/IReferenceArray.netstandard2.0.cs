@@ -118,7 +118,7 @@ namespace ABI.Windows.Foundation
             return wrapper.Value;
         }
 
-        internal static object GetValue(IInspectable inspectable)
+        public static object GetValue(IInspectable inspectable)
         {
             var array = new IReferenceArray<T>(inspectable.ObjRef);
             return array.Value;

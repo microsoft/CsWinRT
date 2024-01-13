@@ -117,7 +117,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.NonPublicMethods |
                 DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
@@ -141,7 +140,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.NonPublicMethods |
                 DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
@@ -165,7 +163,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.NonPublicMethods |
                 DynamicallyAccessedMemberTypes.PublicNestedTypes)]
 #endif
             Type abiType)
@@ -177,7 +174,6 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicMethods |
-            DynamicallyAccessedMemberTypes.NonPublicMethods |
             DynamicallyAccessedMemberTypes.PublicNestedTypes |
             DynamicallyAccessedMemberTypes.PublicFields)]
 #endif

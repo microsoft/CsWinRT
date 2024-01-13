@@ -439,7 +439,7 @@ namespace WinRT
 
         private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
         {
-            var getValueMethod = implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic);
+            var getValueMethod = implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.Public);
             return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
         }
 
@@ -481,7 +481,7 @@ namespace WinRT
 
         private static Func<IInspectable, object> CreateCustomTypeMappingFactory(Type customTypeHelperType)
         {
-            var fromAbiMethod = customTypeHelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            var fromAbiMethod = customTypeHelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static);
             if (fromAbiMethod is null)
             {
                 throw new MissingMethodException();

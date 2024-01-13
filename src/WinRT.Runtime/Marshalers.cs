@@ -1082,8 +1082,7 @@ namespace WinRT
             DynamicallyAccessedMemberTypes.PublicFields | 
             DynamicallyAccessedMemberTypes.NonPublicFields | 
             DynamicallyAccessedMemberTypes.PublicNestedTypes |
-            DynamicallyAccessedMemberTypes.PublicMethods |
-            DynamicallyAccessedMemberTypes.NonPublicMethods)]
+            DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
         private static readonly Type HelperType = typeof(T).GetHelperType();
         private static Func<T, IObjectReference> _ToAbi;
@@ -1254,7 +1253,7 @@ namespace WinRT
             Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
             if (helperType != null)
             {
-                var createMarshaler = helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                var createMarshaler = helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.Static);
                 return (IObjectReference) createMarshaler.Invoke(null, new[] { (object) o });
             }
 
@@ -1286,7 +1285,7 @@ namespace WinRT
             Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
             if (helperType != null)
             {
-                var createMarshaler = helperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                var createMarshaler = helperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.Static);
                 return ((ObjectReferenceValue)createMarshaler.Invoke(null, new[] { (object)o }));
             }
 
@@ -1547,7 +1546,7 @@ namespace WinRT
                     if (AbiType != null)
                     {
                         // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
-                        if (AbiType.GetMethod("FromAbi", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static) == null)
+                        if (AbiType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static) == null)
                         {
                             AbiType = null;
                         }
