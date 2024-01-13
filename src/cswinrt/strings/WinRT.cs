@@ -1066,11 +1066,21 @@ namespace WinRT
             // Get a registration token, making sure that we haven't already used the value.  This should be quite
             // rare, but in the case it does happen, just keep trying until we find one that's unused.
             EventRegistrationToken token = GetPreferredToken(handler);
+
+#if NET6_0_OR_GREATER
+            // When on .NET 6+, just iterate on TryAdd, which allows skipping the extra
+            // lookup on the last iteration (as the handler is added rigth away instead).
+            while (!m_tokens.TryAdd(token, handler))
+            {
+                token = new EventRegistrationToken { Value = token.Value + 1 };
+            }
+#else
             while (m_tokens.ContainsKey(token))
             {
                 token = new EventRegistrationToken { Value = token.Value + 1 };
             }
             m_tokens[token] = handler;
+#endif
 
             return token;
         }
