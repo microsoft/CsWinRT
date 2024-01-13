@@ -1709,10 +1709,14 @@ namespace WinRT
     internal static class Marshaler
     {
         internal static Func<object, object> ReturnParameterFunc = (object box) => box;
-        internal static unsafe Action<object, IntPtr> CopyIntEnumFunc = 
-            (object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
-        internal static unsafe Action<object, IntPtr> CopyUIntEnumFunc =
-            (object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
+
+        internal static unsafe void CopyIntEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
+
+        internal static unsafe void CopyIntEnum<T>(T value, IntPtr dest) => *(int*)dest.ToPointer() = (int)(object)value;
+
+        internal static unsafe void CopyUIntEnum(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
+
+        internal static unsafe void CopyUIntEnum<T>(T value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)(object)value;
     }
 
 #if EMBED
@@ -1900,13 +1904,13 @@ namespace WinRT
                         // For marshaling non-blittable enum arrays via MarshalNonBlittable
                         if (typeof(T).GetEnumUnderlyingType() == typeof(int))
                         {
-                            CopyAbi = Marshaler.CopyIntEnumFunc;
-                            CopyManaged = (T value, IntPtr dest) => Marshaler.CopyIntEnumFunc(value, dest);
+                            CopyAbi = Marshaler.CopyIntEnum;
+                            CopyManaged = Marshaler.CopyIntEnum;
                         }
                         else
                         {
-                            CopyAbi = Marshaler.CopyUIntEnumFunc;
-                            CopyManaged = (T value, IntPtr dest) => Marshaler.CopyUIntEnumFunc(value, dest);
+                            CopyAbi = Marshaler.CopyUIntEnum;
+                            CopyManaged = Marshaler.CopyUIntEnum;
                         }
                     }
                     CreateMarshalerArray = (T[] array) => MarshalBlittable<T>.CreateMarshalerArray(array);
