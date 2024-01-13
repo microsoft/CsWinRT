@@ -705,12 +705,12 @@ namespace WinRT
                 MarshalGenericFallback<T> fallback = new(HelperType);
 
                 CreateMarshaler = fallback.CreateMarshaler;
-                CreateMarshaler2 = CreateMarshaler2 = MarshalByObjectReferenceValueSupported ? fallback.CreateMarshaler2 : CreateMarshaler;
+                CreateMarshaler2 = MarshalByObjectReferenceValueSupported ? fallback.CreateMarshaler2 : CreateMarshaler;
                 GetAbi = fallback.GetAbi;
-                CopyAbi = fallback.CopyAbi;
+                CopyAbi = null;
                 FromAbi = fallback.FromAbi;
                 FromManaged = fallback.FromManaged;
-                CopyManaged = fallback.CopyManaged;
+                CopyManaged = null;
                 DisposeMarshaler = fallback.DisposeMarshaler;
                 DisposeAbi = fallback.DisposeAbi;
                 CreateMarshalerArray = fallback.CreateMarshalerArray;
