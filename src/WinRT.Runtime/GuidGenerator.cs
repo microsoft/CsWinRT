@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -127,17 +126,9 @@ namespace WinRT
                 return "delegate({" + GetGUID(type) + "})";
             }
 
-#if NET
-            if (RuntimeFeature.IsDynamicCodeCompiled)
-#endif
+            if (type.IsClass && Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
             {
-                // Using TryGetDefaultInterfaceTypeForRuntimeClassType is just a fallback path for legacy projections,
-                // which is not supported for AOT. Because of that, if we are in fact running on NativeAOT, we can
-                // just allow trimming out this entire path, as it should never be reached in that case anyway.
-                if (type.IsClass && Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
-                {
-                    return "rc(" + type.FullName + ";" + GetSignature(iface) + ")";
-                }
+                return "rc(" + type.FullName + ";" + GetSignature(iface) + ")";
             }
 
             return "{" + type.GUID.ToString() + "}";
