@@ -562,14 +562,17 @@ namespace WinRT
                 HelperType = typeof(global::ABI.System.Boolean);
                 AbiType = typeof(byte);
                 MarshalerType = typeof(bool);
-                // MarshalByObjectReferenceValueSupported = false; (same as default value, we can always skip this field write)
-                CreateMarshaler = (Func<T, object>)(object)ABI.System.NonBlittableMarshallingStubs.Boolean_CreateMarshaler;
+
+                // Note: we're deliberately using object creation expressions here to create the delegates, rather than using
+                // method group expressions. This prevents Roslyn from generating a class to store a cached instance. This is
+                // not needed, because we're executing each of these paths once, and already caching the resulting delegates.
+                CreateMarshaler = (Func<T, object>)(object)new Func<bool, object>(ABI.System.NonBlittableMarshallingStubs.Boolean_CreateMarshaler);
                 CreateMarshaler2 = CreateMarshaler;
-                GetAbi = ABI.System.NonBlittableMarshallingStubs.Boolean_GetAbi;
-                FromAbi = (Func<object, T>)(object)ABI.System.NonBlittableMarshallingStubs.Boolean_FromAbi;
-                CopyAbi = ABI.System.NonBlittableMarshallingStubs.Boolean_CopyAbi;
-                FromManaged = (Func<T, object>)(object)ABI.System.NonBlittableMarshallingStubs.Boolean_FromManaged;
-                CopyManaged = (Action<T, IntPtr>)(object)ABI.System.Boolean.CopyManaged;
+                GetAbi = new Func<object, object>(ABI.System.NonBlittableMarshallingStubs.Boolean_GetAbi);
+                FromAbi = (Func<object, T>)(object)new Func<object, bool>(ABI.System.NonBlittableMarshallingStubs.Boolean_FromAbi);
+                CopyAbi = new Action<object, IntPtr>(ABI.System.NonBlittableMarshallingStubs.Boolean_CopyAbi);
+                FromManaged = (Func<T, object>)(object)new Func<bool, object>(ABI.System.NonBlittableMarshallingStubs.Boolean_FromManaged);
+                CopyManaged = (Action<T, IntPtr>)(object)new Action<bool, IntPtr>(ABI.System.Boolean.CopyManaged);
                 DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
                 DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
             }
@@ -578,13 +581,13 @@ namespace WinRT
                 HelperType = typeof(global::ABI.System.Char);
                 AbiType = typeof(ushort);
                 MarshalerType = typeof(char);
-                CreateMarshaler = (Func<T, object>)(object)ABI.System.NonBlittableMarshallingStubs.Char_CreateMarshaler;
+                CreateMarshaler = (Func<T, object>)(object)new Func<char, object>(ABI.System.NonBlittableMarshallingStubs.Char_CreateMarshaler);
                 CreateMarshaler2 = CreateMarshaler;
-                GetAbi = ABI.System.NonBlittableMarshallingStubs.Char_GetAbi;
-                FromAbi = (Func<object, T>)(object)ABI.System.NonBlittableMarshallingStubs.Char_FromAbi;
-                CopyAbi = ABI.System.NonBlittableMarshallingStubs.Char_CopyAbi;
-                FromManaged = (Func<T, object>)(object)ABI.System.NonBlittableMarshallingStubs.Char_FromManaged;
-                CopyManaged = (Action<T, IntPtr>)(object)ABI.System.Char.CopyManaged;
+                GetAbi = new Func<object, object>(ABI.System.NonBlittableMarshallingStubs.Char_GetAbi);
+                FromAbi = (Func<object, T>)(object)new Func<object, char>(ABI.System.NonBlittableMarshallingStubs.Char_FromAbi);
+                CopyAbi = new Action<object, IntPtr>(ABI.System.NonBlittableMarshallingStubs.Char_CopyAbi);
+                FromManaged = (Func<T, object>)(object)new Func<char, object>(ABI.System.NonBlittableMarshallingStubs.Char_FromManaged);
+                CopyManaged = (Action<T, IntPtr>)(object)new Action<char, IntPtr>(ABI.System.Char.CopyManaged);
                 DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
                 DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
             }
@@ -594,13 +597,13 @@ namespace WinRT
                 HelperType = typeof(global::ABI.System.TimeSpan);
                 AbiType = typeof(global::ABI.System.TimeSpan);
                 MarshalerType = typeof(global::ABI.System.TimeSpan.Marshaler);
-                CreateMarshaler = (Func<T, object>)(object)ABI.System.NonBlittableMarshallingStubs.TimeSpan_CreateMarshaler;
+                CreateMarshaler = (Func<T, object>)(object)new Func<TimeSpan, object>(ABI.System.NonBlittableMarshallingStubs.TimeSpan_CreateMarshaler);
                 CreateMarshaler2 = CreateMarshaler;
-                GetAbi = ABI.System.NonBlittableMarshallingStubs.TimeSpan_GetAbi;
-                FromAbi = (Func<object, T>)(object)ABI.System.NonBlittableMarshallingStubs.TimeSpan_FromAbi;
-                CopyAbi = ABI.System.NonBlittableMarshallingStubs.TimeSpan_CopyAbi;
-                FromManaged = (Func<T, object>)(object)ABI.System.NonBlittableMarshallingStubs.TimeSpan_FromManaged;
-                CopyManaged = (Action<T, IntPtr>)(object)ABI.System.TimeSpan.CopyManaged;
+                GetAbi = new Func<object, object>(ABI.System.NonBlittableMarshallingStubs.TimeSpan_GetAbi);
+                FromAbi = (Func<object, T>)(object)new Func<object, TimeSpan>(ABI.System.NonBlittableMarshallingStubs.TimeSpan_FromAbi);
+                CopyAbi = new Action<object, IntPtr>(ABI.System.NonBlittableMarshallingStubs.TimeSpan_CopyAbi);
+                FromManaged = (Func<T, object>)(object)new Func<TimeSpan, object>(ABI.System.NonBlittableMarshallingStubs.TimeSpan_FromManaged);
+                CopyManaged = (Action<T, IntPtr>)(object)new Action<TimeSpan, IntPtr>(ABI.System.TimeSpan.CopyManaged);
                 DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
                 DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
             }
@@ -611,13 +614,13 @@ namespace WinRT
                 HelperType = typeof(global::ABI.System.DateTimeOffset);
                 AbiType = typeof(global::ABI.System.DateTimeOffset);
                 MarshalerType = typeof(global::ABI.System.DateTimeOffset.Marshaler);
-                CreateMarshaler = (Func<T, object>)(object)ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_CreateMarshaler;
+                CreateMarshaler = (Func<T, object>)(object)new Func<DateTimeOffset, object>(ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_CreateMarshaler);
                 CreateMarshaler2 = CreateMarshaler;
-                GetAbi = ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_GetAbi;
-                FromAbi = (Func<object, T>)(object)ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_FromAbi;
-                CopyAbi = ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_CopyAbi;
-                FromManaged = (Func<T, object>)(object)ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_FromManaged;
-                CopyManaged = (Action<T, IntPtr>)(object)ABI.System.DateTimeOffset.CopyManaged;
+                GetAbi = new Func<object, object>(ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_GetAbi);
+                FromAbi = (Func<object, T>)(object)new Func<object, DateTimeOffset>(ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_FromAbi);
+                CopyAbi = new Action<object, IntPtr>(ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_CopyAbi);
+                FromManaged = (Func<T, object>)(object)new Func<DateTimeOffset, object>(ABI.System.NonBlittableMarshallingStubs.DateTimeOffset_FromManaged);
+                CopyManaged = (Action<T, IntPtr>)(object)new Action<DateTimeOffset, IntPtr>(ABI.System.DateTimeOffset.CopyManaged);
                 DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
                 DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
             }
