@@ -57,19 +57,9 @@ namespace WinRT
             return function.InvokeWithObjectTResult;
         }
 
-        public static Func<object, object> WithObjectParams<T, TResult>(this Func<T, TResult> func)
-        {
-            return func.InvokeWithObjectParams;
-        }
-
         public static Action<object> WithObjectParams<T>(this Action<T> action)
         {
             return action.InvokeWithObjectParams;
-        }
-
-        public static Action<object, T2> WithObjectT1<T1, T2>(this Action<T1, T2> action)
-        {
-            return action.InvokeWithObjectT1;
         }
 
         private static object InvokeWithMarshaler2Support(this Func<IObjectReference, IntPtr> func, object arg)
@@ -104,19 +94,9 @@ namespace WinRT
             return func.Invoke((T)arg);
         }
 
-        private static object InvokeWithObjectParams<T, TResult>(this Func<T, TResult> func, object arg)
-        {
-            return func.Invoke((T)arg);
-        }
-
         private static void InvokeWithObjectParams<T>(this Action<T> func, object arg)
         {
             func.Invoke((T)arg);
-        }
-
-        private static void InvokeWithObjectT1<T1, T2>(this Action<T1, T2> action, object arg1, T2 arg2)
-        {
-            action.Invoke((T1)arg1, arg2);
         }
     }
 
