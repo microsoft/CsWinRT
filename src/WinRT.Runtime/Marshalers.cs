@@ -514,51 +514,30 @@ namespace WinRT
             if (typeof(T) == typeof(global::System.Numerics.Vector2))
             {
                 HelperType = typeof(global::ABI.System.Numerics.Vector2);
-                AbiType = null;
-                MarshalerType = null;
-                MarshalByObjectReferenceValueSupported = false;
             }
             else if (typeof(T) == typeof(global::System.Numerics.Vector3))
             {
                 HelperType = typeof(global::ABI.System.Numerics.Vector3);
-                AbiType = null;
-                MarshalerType = null;
-                MarshalByObjectReferenceValueSupported = false;
             }
             else if (typeof(T) == typeof(global::System.Numerics.Vector4))
             {
                 HelperType = typeof(global::ABI.System.Numerics.Vector4);
-                AbiType = null;
-                MarshalerType = null;
-                MarshalByObjectReferenceValueSupported = false;
             }
             else if (typeof(T) == typeof(global::System.Numerics.Plane))
             {
                 HelperType = typeof(global::ABI.System.Numerics.Plane);
-                AbiType = null;
-                MarshalerType = null;
-                MarshalByObjectReferenceValueSupported = false;
             }
             else if (typeof(T) == typeof(global::System.Numerics.Matrix3x2))
             {
                 HelperType = typeof(global::ABI.System.Numerics.Matrix3x2);
-                AbiType = null;
-                MarshalerType = null;
-                MarshalByObjectReferenceValueSupported = false;
             }
             else if (typeof(T) == typeof(global::System.Numerics.Matrix4x4))
             {
                 HelperType = typeof(global::ABI.System.Numerics.Matrix4x4);
-                AbiType = null;
-                MarshalerType = null;
-                MarshalByObjectReferenceValueSupported = false;
             }
             else if (typeof(T) == typeof(global::System.Numerics.Quaternion))
             {
                 HelperType = typeof(global::ABI.System.Numerics.Quaternion);
-                AbiType = null;
-                MarshalerType = null;
-                MarshalByObjectReferenceValueSupported = false;
             }
             else if (typeof(T) == typeof(int) ||
                      typeof(T) == typeof(byte) ||
@@ -583,7 +562,7 @@ namespace WinRT
                 HelperType = typeof(global::ABI.System.Boolean);
                 AbiType = typeof(byte);
                 MarshalerType = typeof(bool);
-                MarshalByObjectReferenceValueSupported = false;
+                // MarshalByObjectReferenceValueSupported = false; (same as default value, we can always skip this field write)
                 CreateMarshaler = (Func<T, object>)(object)((Func<bool, bool>)global::ABI.System.Boolean.CreateMarshaler).WithObjectTResult();
                 CreateMarshaler2 = CreateMarshaler;
                 GetAbi = ((Func<bool, byte>)global::ABI.System.Boolean.GetAbi).WithObjectParams();
@@ -593,14 +572,12 @@ namespace WinRT
                 CopyManaged = (Action<T, IntPtr>)(object)(Action<bool, IntPtr>)global::ABI.System.Boolean.CopyManaged;
                 DisposeMarshaler = ((Action<bool>)global::ABI.System.Boolean.DisposeMarshaler).WithObjectParams();
                 DisposeAbi = ((Action<byte>)global::ABI.System.Boolean.DisposeAbi).WithObjectParams();
-
             }
             else if (typeof(T) == typeof(char))
             {
                 HelperType = typeof(global::ABI.System.Char);
                 AbiType = typeof(ushort);
                 MarshalerType = typeof(char);
-                MarshalByObjectReferenceValueSupported = false;
                 CreateMarshaler = (Func<T, object>)(object)((Func<char, char>)global::ABI.System.Char.CreateMarshaler).WithObjectTResult();
                 CreateMarshaler2 = CreateMarshaler;
                 GetAbi = ((Func<char, ushort>)global::ABI.System.Char.GetAbi).WithObjectParams();
@@ -617,7 +594,6 @@ namespace WinRT
                 HelperType = typeof(global::ABI.System.TimeSpan);
                 AbiType = typeof(global::ABI.System.TimeSpan);
                 MarshalerType = typeof(global::ABI.System.TimeSpan.Marshaler);
-                MarshalByObjectReferenceValueSupported = false;
                 CreateMarshaler = (Func<T, object>)(object)((Func<global::System.TimeSpan, global::ABI.System.TimeSpan.Marshaler>)global::ABI.System.TimeSpan.CreateMarshaler).WithObjectTResult();
                 CreateMarshaler2 = CreateMarshaler;
                 GetAbi = ((Func<global::ABI.System.TimeSpan.Marshaler, global::ABI.System.TimeSpan>)global::ABI.System.TimeSpan.GetAbi).WithObjectParams();
@@ -635,7 +611,6 @@ namespace WinRT
                 HelperType = typeof(global::ABI.System.DateTimeOffset);
                 AbiType = typeof(global::ABI.System.DateTimeOffset);
                 MarshalerType = typeof(global::ABI.System.DateTimeOffset.Marshaler);
-                MarshalByObjectReferenceValueSupported = false;
                 CreateMarshaler = (Func<T, object>)(object)((Func<global::System.DateTimeOffset, global::ABI.System.DateTimeOffset.Marshaler>)global::ABI.System.DateTimeOffset.CreateMarshaler).WithObjectTResult();
                 CreateMarshaler2 = CreateMarshaler;
                 GetAbi = ((Func<global::ABI.System.DateTimeOffset.Marshaler, global::ABI.System.DateTimeOffset>)global::ABI.System.DateTimeOffset.GetAbi).WithObjectParams();
@@ -682,17 +657,16 @@ namespace WinRT
                 AbiType = typeof(T).GetAbiType();
                 MarshalerType = typeof(T).GetMarshalerType();
                 MarshalByObjectReferenceValueSupported = typeof(T).GetMarshaler2Type() == typeof(ObjectReferenceValue);
-
 #if NET
                 CreateMarshaler = HelperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T, IObjectReference>>();
                 CreateMarshaler2 = MarshalByObjectReferenceValueSupported
                     ? HelperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T, ObjectReferenceValue>>().WithObjectTResult()
                     : CreateMarshaler;
                 GetAbi = HelperType.GetMethod("GetAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<IObjectReference, IntPtr>>().WithMarshaler2Support();
-                CopyAbi = null; // Not used for class types
+                // CopyAbi = null; (Not used for class types)
                 FromAbi = HelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<IntPtr, T>>().WithObjectT();
                 FromManaged = HelperType.GetMethod("FromManaged", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T, IntPtr>>().WithObjectTResult();
-                CopyManaged = null; // Also not used for class types
+                // CopyManaged = null; (Also not used for class types)
                 DisposeMarshaler = HelperType.GetMethod("DisposeMarshaler", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Action<IObjectReference>>().WithMarshaler2Support();
                 DisposeAbi = HelperType.GetMethod("DisposeAbi", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Action<IntPtr>>().WithObjectParams();
                 CreateMarshalerArray = HelperType.GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.Static)?.CreateDelegate<Func<T[], MarshalInterfaceHelper<T>.MarshalerArray>>().WithObjectTResult();
@@ -707,10 +681,10 @@ namespace WinRT
                 CreateMarshaler = fallback.CreateMarshaler;
                 CreateMarshaler2 = MarshalByObjectReferenceValueSupported ? fallback.CreateMarshaler2 : CreateMarshaler;
                 GetAbi = fallback.GetAbi;
-                CopyAbi = null;
+                // CopyAbi = null;
                 FromAbi = fallback.FromAbi;
                 FromManaged = fallback.FromManaged;
-                CopyManaged = null;
+                // CopyManaged = null;
                 DisposeMarshaler = fallback.DisposeMarshaler;
                 DisposeAbi = fallback.DisposeAbi;
                 CreateMarshalerArray = fallback.CreateMarshalerArray;
