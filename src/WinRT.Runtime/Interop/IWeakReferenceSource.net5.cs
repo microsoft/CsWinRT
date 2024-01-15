@@ -138,6 +138,13 @@ namespace ABI.WinRT.Interop
 
         global::WinRT.Interop.IWeakReference global::WinRT.Interop.IWeakReferenceSource.GetWeakReference()
         {
+            if (!FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
+            {
+                throw new NotSupportedException(
+                    """Support for IDynamicInterfaceCastable functionality is disabled. If it is required, make sure that """ +
+                    """the "CsWinRTEnableDynamicInterfaceCastableSupport" MSBuild property is not being set to 'false' anywhere.""");
+            }
+
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::WinRT.Interop.IWeakReferenceSource).TypeHandle);
             return IWeakReferenceSourceMethods.GetWeakReference(_obj);
         }
@@ -184,6 +191,13 @@ namespace ABI.WinRT.Interop
 
         IObjectReference global::WinRT.Interop.IWeakReference.Resolve(Guid riid)
         {
+            if (!FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
+            {
+                throw new NotSupportedException(
+                    """Support for IDynamicInterfaceCastable functionality is disabled. If it is required, make sure that """ +
+                    """the "CsWinRTEnableDynamicInterfaceCastableSupport" MSBuild property is not being set to 'false' anywhere.""");
+            }
+
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::WinRT.Interop.IWeakReference).TypeHandle);
             var ThisPtr = _obj.ThisPtr;
 

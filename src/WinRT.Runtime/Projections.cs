@@ -103,10 +103,17 @@ namespace WinRT
             CustomTypeToHelperTypeMappings.Add(typeof(Microsoft.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList));
 
 #if NET
-            CustomTypeToHelperTypeMappings.Add(typeof(ICollection<>), typeof(ABI.System.Collections.Generic.ICollection<>));
-            CustomTypeToHelperTypeMappings.Add(typeof(IReadOnlyCollection<>), typeof(ABI.System.Collections.Generic.IReadOnlyCollection<>));
-            CustomTypeToHelperTypeMappings.Add(typeof(ICollection), typeof(ABI.System.Collections.ICollection));
+            // All of these custom type mappings rely on IDynamicInterfaceCastable support, and will just not work if that's disabled.
+            // In that scenario, we can avoid registering these types in the first place (since they would not be functional anyway).
+            // This further imporves trimming and allows all of the transitive dependencies of these types to also be removed.
+            if (FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
+            {
+                CustomTypeToHelperTypeMappings.Add(typeof(ICollection<>), typeof(ABI.System.Collections.Generic.ICollection<>));
+                CustomTypeToHelperTypeMappings.Add(typeof(IReadOnlyCollection<>), typeof(ABI.System.Collections.Generic.IReadOnlyCollection<>));
+                CustomTypeToHelperTypeMappings.Add(typeof(ICollection), typeof(ABI.System.Collections.ICollection));
+            }
 #endif
+
             RegisterCustomAbiTypeMappingNoLock(typeof(EventHandler), typeof(ABI.System.EventHandler));
 
             CustomTypeToAbiTypeNameMappings.Add(typeof(System.Type), "Windows.UI.Xaml.Interop.TypeName");

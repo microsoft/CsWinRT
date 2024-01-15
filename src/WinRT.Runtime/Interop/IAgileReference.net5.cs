@@ -96,6 +96,14 @@ namespace ABI.WinRT.Interop
         [UnmanagedCallersOnly]
         private static int Do_Abi_Resolve(IntPtr thisPtr, Guid* riid, IntPtr* objectReference)
         {
+            if (!FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
+            {
+                *objectReference = default;
+
+                // COR_E_NOTSUPPORTED
+                return unchecked((int)0x80131515);
+            }
+
             IObjectReference _objectReference = default;
 
             *objectReference = default;
@@ -114,6 +122,13 @@ namespace ABI.WinRT.Interop
 
         IObjectReference global::WinRT.Interop.IAgileReference.Resolve(Guid riid)
         {
+            if (!FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
+            {
+                throw new NotSupportedException(
+                    """Support for IDynamicInterfaceCastable functionality is disabled. If it is required, make sure that """ +
+                    """the "CsWinRTEnableDynamicInterfaceCastableSupport" MSBuild property is not being set to 'false' anywhere.""");
+            }
+
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::WinRT.Interop.IAgileReference).TypeHandle);
             return IAgileReferenceMethods.Resolve(_obj, riid);
         }
