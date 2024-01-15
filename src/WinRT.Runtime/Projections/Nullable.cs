@@ -416,7 +416,6 @@ namespace ABI.System
         internal static unsafe T GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
-            var __params = new object[] { IntPtr.Zero, null };
             try
             {
                 ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr));
