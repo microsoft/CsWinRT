@@ -23,6 +23,13 @@ namespace WinRT
 
         bool IsInterfaceImplementedFallback(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {
+            if (!FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
+            {
+                throw new NotSupportedException(
+                    """Support for IDynamicInterfaceCastable functionality is disabled. If it is required, make sure that """ +
+                    """the "CsWinRTEnableDynamicInterfaceCastableSupport" MSBuild property is not being set to 'false' anywhere.""");
+            }
+
             if (QueryInterfaceCache.ContainsKey(interfaceType))
             {
                 return true;
@@ -152,6 +159,13 @@ namespace WinRT
 
         RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
         {
+            if (!FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
+            {
+                throw new NotSupportedException(
+                    """Support for IDynamicInterfaceCastable functionality is disabled. If it is required, make sure that """ +
+                    """the "CsWinRTEnableDynamicInterfaceCastableSupport" MSBuild property is not being set to 'false' anywhere.""");
+            }
+
             var type = Type.GetTypeFromHandle(interfaceType);
             var helperType = type.GetHelperType();
             if (helperType.IsInterface)
@@ -171,6 +185,13 @@ namespace WinRT
 
         IObjectReference GetObjectReferenceForTypeFallback(RuntimeTypeHandle type)
         {
+            if (!FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
+            {
+                throw new NotSupportedException(
+                    """Support for IDynamicInterfaceCastable functionality is disabled. If it is required, make sure that """ +
+                    """the "CsWinRTEnableDynamicInterfaceCastableSupport" MSBuild property is not being set to 'false' anywhere.""");
+            }
+
             if (IsInterfaceImplemented(type, true))
             {
                 return QueryInterfaceCache[type];
@@ -189,11 +210,6 @@ namespace WinRT
         {
             if (NativeObject.Resurrect())
             {
-                foreach (var cached in QueryInterfaceCache)
-                {
-                    cached.Value.Resurrect();
-                }
-
                 // Delegates store their agile reference as an additional type data.
                 // These should be recreated when instances are resurrect.
                 if (AdditionalTypeData.TryGetValue(typeof(AgileReference).TypeHandle, out var agileObj))
