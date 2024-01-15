@@ -22,14 +22,24 @@ namespace WinRT;
 internal static class FeatureSwitches
 {
     /// <summary>
-    /// The configuration property name for <see cref="IsDebugOutputEnabled"/>.
+    /// The configuration property name for <see cref="IsDynamicObjectsSupportEnabled"/>.
     /// </summary>
     private const string IsDynamicObjectsSupportEnabledPropertyName = "CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT";
+
+    /// <summary>
+    /// The configuration property name for <see cref="IsDynamicInterfaceCastableSupportEnabled"/>.
+    /// </summary>
+    private const string IsDynamicInterfaceCastableSupportEnabledPropertyName = "CSWINRT_DYNAMIC_INTERFACE_CASTABLE_SUPPORT";
 
     /// <summary>
     /// The backing field for <see cref="IsDynamicObjectsSupportEnabled"/>.
     /// </summary>
     private static int _isDynamicObjectsSupportEnabled;
+
+    /// <summary>
+    /// The backing field for <see cref="IsDynamicInterfaceCastableSupportEnabled"/>.
+    /// </summary>
+    private static int _isDynamicInterfaceCastableSupportEnabled;
 
     /// <summary>
     /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -38,6 +48,15 @@ internal static class FeatureSwitches
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => GetConfigurationValue(IsDynamicObjectsSupportEnabledPropertyName, ref _isDynamicObjectsSupportEnabled);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether or not support for <see cref="System.Runtime.InteropServices.IDynamicInterfaceCastable"/> is enabled (defaults to <see langword="true"/>).
+    /// </summary>
+    public static bool IsDynamicInterfaceCastableSupportEnabled
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => GetConfigurationValue(IsDynamicInterfaceCastableSupportEnabledPropertyName, ref _isDynamicInterfaceCastableSupportEnabled);
     }
 
     /// <summary>

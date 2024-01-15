@@ -234,9 +234,10 @@ $(CsWinRTInternalProjection)
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
 
-  <!-- Default values for all custom CsWinRT runtimem feature switches -->
+  <!-- Default values for all custom CsWinRT runtime feature switches -->
   <PropertyGroup>
     <CsWinRTEnableDynamicObjectsSupport Condition="'$(CsWinRTEnableDynamicObjectsSupport)' == ''">true</CsWinRTEnableDynamicObjectsSupport>
+    <CsWinRTEnableDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableDynamicInterfaceCastableSupport>
   </PropertyGroup>
 
   <!--
@@ -248,6 +249,11 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT"
                                     Value="$(CsWinRTEnableDynamicObjectsSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_DYNAMIC_INTERFACE_CASTABLE_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_DYNAMIC_INTERFACE_CASTABLE_SUPPORT"
+                                    Value="$(CsWinRTEnableDynamicInterfaceCastableSupport)"
                                     Trim="true" />
   </ItemGroup>
 
