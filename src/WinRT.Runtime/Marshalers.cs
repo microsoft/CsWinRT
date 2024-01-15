@@ -539,6 +539,18 @@ namespace WinRT
             {
                 HelperType = typeof(global::ABI.System.Numerics.Quaternion);
             }
+            else if (typeof(T) == typeof(global::Windows.Foundation.Size))
+            {
+                HelperType = typeof(global::ABI.Windows.Foundation.Size);
+            }
+            else if (typeof(T) == typeof(global::Windows.Foundation.Point))
+            {
+                HelperType = typeof(global::ABI.Windows.Foundation.Point);
+            }
+            else if (typeof(T) == typeof(global::Windows.Foundation.Rect))
+            {
+                HelperType = typeof(global::ABI.Windows.Foundation.Rect);
+            }
             else if (typeof(T) == typeof(int) ||
                      typeof(T) == typeof(byte) ||
                      typeof(T) == typeof(sbyte) ||
