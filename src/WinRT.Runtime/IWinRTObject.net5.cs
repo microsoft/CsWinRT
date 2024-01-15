@@ -25,9 +25,7 @@ namespace WinRT
         {
             if (!FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
             {
-                throw new NotSupportedException(
-                    """Support for IDynamicInterfaceCastable functionality is disabled. If it is required, make sure that """ +
-                    """the "CsWinRTEnableDynamicInterfaceCastableSupport" MSBuild property is not being set to 'false' anywhere.""");
+                return false;
             }
 
             if (QueryInterfaceCache.ContainsKey(interfaceType))
@@ -159,6 +157,9 @@ namespace WinRT
 
         RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
         {
+            // If the feature switch is disabled, this method shouldn't really ever be called, as it should
+            // only be invoked by the IDIC mechanism after a successful call to IsInterfaceImplemented. But
+            // when the feature switch is disabled, that method will just always return false for all types.
             if (!FeatureSwitches.IsDynamicInterfaceCastableSupportEnabled)
             {
                 throw new NotSupportedException(
