@@ -65,8 +65,9 @@ namespace WinRT
         /// <returns>The resulting resource string (or just the key, if the feature switch is set).</returns>
         private static string GetResourceString([CallerMemberName] string? resourceKey = null)
         {
-            // TODO: feature check
-            if (false)
+            // If the feature switch is set, just return the resource key itself.
+            // This allows trimming the resource manager and embedded resources.
+            if (FeatureSwitches.UseExceptionResourceKeys)
             {
                 return resourceKey!;
             }
