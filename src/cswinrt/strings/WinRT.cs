@@ -1049,7 +1049,7 @@ namespace WinRT
         private static readonly int TypeOfTHashCode = typeof(T).GetHashCode();
 
         // Note this dictionary is also used as the synchronization object for this table
-        private readonly Dictionary<int, T> m_tokens = new Dictionary<int, T>();
+        private readonly Dictionary<int, object> m_tokens = new Dictionary<int, object>();
 
         public EventRegistrationToken AddEventHandler(T handler)
         {
@@ -1174,18 +1174,25 @@ namespace WinRT
 #if NET6_0_OR_GREATER
                 // On .NET 6 and above, we can use a single lookup to both check whether the token
                 // exists in the table, remove it, and also retrieve the removed handler to return.
-                if (m_tokens.Remove((int)token.Value, out handler))
+                if (m_tokens.Remove((int)token.Value, out object obj))
                 {
+                    handler = Unsafe.As<T>(obj);
+
                     return true;
                 }
 #else
-                if (m_tokens.TryGetValue((int)token.Value, out handler))
+                if (m_tokens.TryGetValue((int)token.Value, out object obj))
                 {
                     m_tokens.Remove((int)token.Value);
+
+                    handler = Unsafe.As<T>(obj);
+
                     return true;
                 }
 #endif                
             }
+
+            handler = null;
 
             return false;
         }
