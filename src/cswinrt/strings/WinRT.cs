@@ -1070,7 +1070,15 @@ namespace WinRT
         private readonly Dictionary<int, object> m_tokens = new Dictionary<int, object>();
 
         // The current counter used for the low 32 bits of the registration tokens.
-        private int m_low32Bits = 0x42424242;
+        // We explicit use [int.MinValue, int.MaxValue] as the range, as this value
+        // is expected to eventually wrap around, and we don't want to lose the
+        // additional possible range of negative values (there's no reason for that).
+        private int m_low32Bits =
+#if NET6_0_OR_GREATER
+            Random.Shared.Next(int.MinValue, int.MaxValue);
+#else
+            new Random().Next(int.MinValue, int.MaxValue);
+#endif
 
         public EventRegistrationToken AddEventHandler(T handler)
         {
@@ -1184,7 +1192,7 @@ namespace WinRT
 
                     return true;
                 }
-#endif                
+#endif
             }
 
             handler = null;
