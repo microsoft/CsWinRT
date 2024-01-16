@@ -1130,7 +1130,7 @@ namespace WinRT
         {
             // If the token doesn't have the upper 32 bits set to the hashcode of the delegate
             // type in use, we know that the token cannot possibly have a registered handler.
-            if ((uint)(((ulong)token.Value >> 32) & 0x00000000FFFFFFFFU) != (uint)TypeOfTHashCode)
+            if ((int)((ulong)token.Value >> 32) != TypeOfTHashCode)
             {
                 handler = null;
 
