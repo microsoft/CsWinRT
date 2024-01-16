@@ -1046,7 +1046,25 @@ namespace WinRT
         /// <summary>
         /// The hashcode of the delegate type, being set in the upper 32 bits of the registration tokens.
         /// </summary>
-        private static readonly int TypeOfTHashCode = typeof(T).GetHashCode();
+        private static readonly int TypeOfTHashCode = GetTypeOfTHashCode();
+
+        private static int GetTypeOfTHashCode()
+        {
+            int hashCode = typeof(T).GetHashCode();
+
+            // There is a minimal but non-zero chance that the hashcode of the T type argument will be 0.
+            // If that is the case, it means that it is possible for an event registration token to just
+            // be 0, which will happen when the low 32 bits also wrap around and go through 0. Such a
+            // registration token is not valid as per the WinRT spec, see:
+            // https://learn.microsoft.com/uwp/api/windows.foundation.eventregistrationtoken.value.
+            // To work around this, we just check for this edge case and return a magic constant instead.
+            if (hashCode == 0)
+            {
+                return 0x5FC74196;
+            }
+
+            return hashCode;
+        }
 
         // Note this dictionary is also used as the synchronization object for this table
         private readonly Dictionary<int, object> m_tokens = new Dictionary<int, object>();
