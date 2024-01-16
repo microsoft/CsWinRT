@@ -462,6 +462,11 @@ namespace WinRT
             };
         }
 
+        internal static void AddToBoxedValueCache(object obj, IInspectable inspectable)
+        {
+            _boxedValueReferenceCache.Add(obj, inspectable);
+        }
+
         private static Func<IInspectable, object> CreateCustomTypeMappingFactory(Type customTypeHelperType)
         {
             var fromAbiMethod = customTypeHelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static);
@@ -544,12 +549,24 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
-        internal static Type GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
+        internal static Type GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType, out bool isNullable)
         {
+            isNullable = false;
             string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
             Type implementationType = null;
             if (!string.IsNullOrEmpty(runtimeClassName))
             {
+                // Check if this is a nullable type where there are no references to the nullable version, but
+                // there is to the actual type.
+                if (runtimeClassName.StartsWith("Windows.Foundation.IReference`1<", StringComparison.Ordinal))
+                {
+                    // runtimeClassName is of format Windows.Foundation.IReference`1<type>.
+                    runtimeClassName = runtimeClassName.Substring(32, runtimeClassName.Length - 33);
+                    implementationType = TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName);
+                    isNullable = true;
+                    return implementationType;
+                }
+
                 implementationType = TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName);
             }
 
@@ -570,6 +587,18 @@ namespace WinRT
                 {
                     return staticallyDeterminedType;
                 }
+            }
+
+            // Check if this is a nullable type where there are no references to the nullable version, but
+            // there is to the actual type.
+            if (implementationType == null && 
+                !string.IsNullOrEmpty(runtimeClassName) && 
+                runtimeClassName.StartsWith("Windows.Foundation.IReference`1<", StringComparison.Ordinal))
+            {
+                // runtimeClassName is of format Windows.Foundation.IReference`1<type>.
+                runtimeClassName = runtimeClassName.Substring(32, runtimeClassName.Length - 33);
+                implementationType = TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName);
+                isNullable = true;
             }
 
             return implementationType;
