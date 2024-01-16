@@ -1101,20 +1101,29 @@ namespace WinRT
             // This implementation is sufficiently random that code cannot simply guess the value to take a dependency
             // upon it. (Simply applying the hash-value algorithm directly won't work in the case of collisions,
             // where we'll use a different token value).
-            int tokenLow32Bits = m_low32Bits++;
+            int tokenLow32Bits;
 
 #if NET6_0_OR_GREATER
-            // When on .NET 6+, just iterate on TryAdd, which allows skipping the extra
-            // lookup on the last iteration (as the handler is added rigth away instead).
-            while (!m_tokens.TryAdd(tokenLow32Bits, handler))
+            do
             {
-                tokenLow32Bits++;
+                // When on .NET 6+, just iterate on TryAdd, which allows skipping the extra
+                // lookup on the last iteration (as the handler is added rigth away instead).
+                //
+                // We're doing this do-while loop here and incrementing 'm_low32Bits' on every failed insertion to work
+                // around one possible (theoretical) performance problem. Suppose the candidate token was somehow already
+                // used (not entirely clear when that would happen in practice). Incrementing only the local value from the
+                // loop would mean we could "race past" the value in 'm_low32Bits', meaning that all subsequent registrations
+                // would then also go through unnecessary extra lookups as the value of those lower 32 bits "catches up" to
+                // the one that ended up being used here. So we can avoid that by simply incrementing both of them every time.
+                tokenLow32Bits = m_low32Bits++;
             }
+            while (!m_tokens.TryAdd(tokenLow32Bits, handler));
 #else
-            while (m_tokens.ContainsKey(tokenLow32Bits))
+            do
             {
-                tokenLow32Bits++;
+                tokenLow32Bits = m_low32Bits++;
             }
+            while (m_tokens.ContainsKey(tokenLow32Bits));
             m_tokens[tokenLow32Bits] = handler;
 #endif
             // The real event registration token is composed this way:
