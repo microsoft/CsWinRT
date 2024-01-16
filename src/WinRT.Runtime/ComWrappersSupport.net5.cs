@@ -578,7 +578,7 @@ namespace WinRT
                         return ComWrappersSupport.GetTypedRcwFactory(ComWrappersSupport.CreateRCWType)(inspectable);
                     }
 
-                    Type runtimeClassType = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
+                    Type runtimeClassType = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType, out var isNullable);
                     if (runtimeClassType == null)
                     {
                         // If the external IInspectable has not implemented GetRuntimeClassName,
@@ -586,7 +586,14 @@ namespace WinRT
                         return inspectable;
                     }
 
-                    return ComWrappersSupport.GetTypedRcwFactory(runtimeClassType)(inspectable);
+                    if (isNullable)
+                    {
+                        return ABI.System.NullableObject.GetValue(runtimeClassType, inspectable);
+                    }
+                    else
+                    {
+                        return ComWrappersSupport.GetTypedRcwFactory(runtimeClassType)(inspectable);
+                    }
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref weakReferenceIID, out ptr) == 0)
                 {
