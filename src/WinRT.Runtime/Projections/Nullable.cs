@@ -385,6 +385,7 @@ namespace ABI.System
             if (typeof(T) == typeof(float)) return Nullable_float.IID;
             if (typeof(T) == typeof(double)) return Nullable_double.IID;
             if (typeof(T) == typeof(Guid)) return Nullable_guid.IID;
+            if (typeof(T) == typeof(global::System.Type)) return Nullable_Type.IID;
             if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.IID;
             if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.IID;
             if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
@@ -2125,6 +2126,23 @@ namespace ABI.System
         {
             return GuidGenerator.CreateIIDForGenericType("pinterface({61c17706-2d65-11e0-9ae8-d48564015472};enum(" + enumType.FullName + ";i4))");
         }
+
+        internal static unsafe object GetValue(global::System.Type enumType, IInspectable inspectable)
+        {
+            var IID = GetIID(enumType);
+            IntPtr nullablePtr = IntPtr.Zero;
+            try
+            {
+                int __retval = default;
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return Enum.ToObject(enumType, __retval);
+            }
+            finally
+            {
+                Marshal.Release(nullablePtr);
+            }
+        }
     }
 
     internal static class Nullable_FlagsEnum
@@ -2170,6 +2188,23 @@ namespace ABI.System
         {
             return GuidGenerator.CreateIIDForGenericType("pinterface({61c17706-2d65-11e0-9ae8-d48564015472};enum(" + enumType.FullName + ";u4))");
         }
+
+        internal static unsafe object GetValue(global::System.Type enumType, IInspectable inspectable)
+        {
+            var IID = GetIID(enumType);
+            IntPtr nullablePtr = IntPtr.Zero;
+            try
+            {
+                uint __retval = default;
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return Enum.ToObject(enumType, __retval);
+            }
+            finally
+            {
+                Marshal.Release(nullablePtr);
+            }
+        }
     }
 
     internal static class Nullable_Delegates
@@ -2177,6 +2212,52 @@ namespace ABI.System
         public unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
         public unsafe delegate int GetValueDelegateAbi(void* thisPtr, void* value);
         public unsafe delegate int GetValueDelegateAbiDateTimeOffset(void* ptr, DateTimeOffset* result);
+    }
+
+    internal static class NullableObject
+    {
+        public static object GetValue(global::System.Type type, IInspectable inspectable)
+        {
+            object obj = GetValue(type, inspectable);
+            ComWrappersSupport.AddToBoxedValueCache(obj, inspectable);
+            return obj;
+
+            static object GetValue(global::System.Type type, IInspectable inspectable)
+            {
+                if (type == typeof(string)) return Nullable_string.GetValue(inspectable);
+                if (type == typeof(int)) return Nullable_int.GetValue(inspectable);
+                if (type == typeof(byte)) return Nullable_byte.GetValue(inspectable);
+                if (type == typeof(bool)) return Nullable_bool.GetValue(inspectable);
+                if (type == typeof(sbyte)) return Nullable_sbyte.GetValue(inspectable);
+                if (type == typeof(short)) return Nullable_short.GetValue(inspectable);
+                if (type == typeof(ushort)) return Nullable_ushort.GetValue(inspectable);
+                if (type == typeof(char)) return Nullable_char.GetValue(inspectable);
+                if (type == typeof(uint)) return Nullable_uint.GetValue(inspectable);
+                if (type == typeof(long)) return Nullable_long.GetValue(inspectable);
+                if (type == typeof(ulong)) return Nullable_ulong.GetValue(inspectable);
+                if (type == typeof(float)) return Nullable_float.GetValue(inspectable);
+                if (type == typeof(double)) return Nullable_double.GetValue(inspectable);
+                if (type == typeof(Guid)) return Nullable_guid.GetValue(inspectable);
+                if (type == typeof(global::System.Type)) return Nullable_Type.GetValue(inspectable);
+                if (type == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.GetValue(inspectable);
+                if (type == typeof(global::System.Exception)) return Nullable_Exception.GetValue(inspectable);
+                if (type == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.GetValue(inspectable);
+                if (type == typeof(global::Windows.Foundation.Point)) return Nullable<global::Windows.Foundation.Point>.GetValue(inspectable);
+                if (type == typeof(global::Windows.Foundation.Size)) return Nullable<global::Windows.Foundation.Size>.GetValue(inspectable);
+                if (type == typeof(global::Windows.Foundation.Rect)) return Nullable<global::Windows.Foundation.Rect>.GetValue(inspectable);
+                if (type == typeof(global::System.Numerics.Matrix3x2)) return Nullable<global::System.Numerics.Matrix3x2>.GetValue(inspectable);
+                if (type == typeof(global::System.Numerics.Matrix4x4)) return Nullable<global::System.Numerics.Matrix4x4>.GetValue(inspectable);
+                if (type == typeof(global::System.Numerics.Plane)) return Nullable<global::System.Numerics.Plane>.GetValue(inspectable);
+                if (type == typeof(global::System.Numerics.Quaternion)) return Nullable<global::System.Numerics.Quaternion>.GetValue(inspectable);
+                if (type == typeof(global::System.Numerics.Vector2)) return Nullable<global::System.Numerics.Vector2>.GetValue(inspectable);
+                if (type == typeof(global::System.Numerics.Vector3)) return Nullable<global::System.Numerics.Vector3>.GetValue(inspectable);
+                if (type == typeof(global::System.Numerics.Vector4)) return Nullable<global::System.Numerics.Vector4>.GetValue(inspectable);
+                if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(int)) return Nullable_IntEnum.GetValue(type, inspectable);
+                if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint)) return Nullable_FlagsEnum.GetValue(type, inspectable);
+
+                return ComWrappersSupport.GetTypedRcwFactory(type)(inspectable);
+            }
+        }
     }
 
     internal static class IReferenceSignatures
