@@ -1069,8 +1069,9 @@ namespace WinRT
         {
             Debug.Assert(handler != null);
 
-            // Get a registration token, making sure that we haven't already used the value.  This should be quite
-            // rare, but in the case it does happen, just keep trying until we find one that's unused.
+            // Get a registration token, making sure that we haven't already used the value. This should be quite
+            // rare, but in the case it does happen, just keep trying until we find one that's unused. Note that
+            // this mutable part of the token is just 32 bit wide (the lower 32 bits). The upper 32 bits are fixed.
             int tokenLow32Bits = GetPreferredTokenLow32Bits(handler);
 
 #if NET6_0_OR_GREATER
@@ -1087,8 +1088,10 @@ namespace WinRT
             }
             m_tokens[tokenLow32Bits] = handler;
 #endif
-
-            return new EventRegistrationToken { Value = GetRegistrationToken(tokenLow32Bits) };
+            // The real event registration token is composed this way:
+            //   - The upper 32 bits are the hashcode of the T type argument.
+            //   - The lower 32 bits are the valid token computed above.
+            return new EventRegistrationToken { Value = (long)(((ulong)(uint)TypeOfTHashCode << 32) | (uint)tokenLow32Bits) };
         }
 
         // Generate a token that may be used for a particular event handler.  We will frequently be called
@@ -1147,12 +1150,6 @@ namespace WinRT
             }
 
             return handlerHashCode;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static long GetRegistrationToken(int tokenLow32Bits)
-        {
-            return (long)(((ulong)(uint)TypeOfTHashCode << 32) | (uint)tokenLow32Bits);
         }
 
         // Remove the event handler from the table and
