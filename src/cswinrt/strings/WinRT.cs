@@ -1040,8 +1040,14 @@ namespace WinRT
 
     // An event registration token table stores mappings from delegates to event tokens, in order to support
     // sourcing WinRT style events from managed code.
-    internal sealed class EventRegistrationTokenTable<T> where T : class, global::System.Delegate
+    internal sealed class EventRegistrationTokenTable<T>
+        where T : class, global::System.Delegate
     {
+        /// <summary>
+        /// The hashcode of the delegate type, being set in the upper 32 bits of the registration tokens.
+        /// </summary>
+        private static readonly int TypeOfTHashCode = typeof(T).GetHashCode();
+
         // Note this dictionary is also used as the synchronization object for this table
         private readonly Dictionary<EventRegistrationToken, T> m_tokens = new Dictionary<EventRegistrationToken, T>();
 
@@ -1140,7 +1146,7 @@ namespace WinRT
                 handlerHashCode = (uint)handler.GetHashCode();
             }
 
-            ulong tokenValue = ((ulong)(uint)typeof(T).GetHashCode() << 32) | handlerHashCode;
+            ulong tokenValue = ((ulong)(uint)TypeOfTHashCode << 32) | handlerHashCode;
             return new EventRegistrationToken { Value = (long)tokenValue };
         }
 
