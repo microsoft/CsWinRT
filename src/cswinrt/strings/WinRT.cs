@@ -1049,7 +1049,7 @@ namespace WinRT
         private static readonly int TypeOfTHashCode = typeof(T).GetHashCode();
 
         // Note this dictionary is also used as the synchronization object for this table
-        private readonly Dictionary<EventRegistrationToken, T> m_tokens = new Dictionary<EventRegistrationToken, T>();
+        private readonly Dictionary<int, T> m_tokens = new Dictionary<int, T>();
 
         public EventRegistrationToken AddEventHandler(T handler)
         {
@@ -1071,24 +1071,24 @@ namespace WinRT
 
             // Get a registration token, making sure that we haven't already used the value.  This should be quite
             // rare, but in the case it does happen, just keep trying until we find one that's unused.
-            EventRegistrationToken token = GetPreferredToken(handler);
+            int tokenLow32Bits = GetPreferredTokenLow32Bits(handler);
 
 #if NET6_0_OR_GREATER
             // When on .NET 6+, just iterate on TryAdd, which allows skipping the extra
             // lookup on the last iteration (as the handler is added rigth away instead).
-            while (!m_tokens.TryAdd(token, handler))
+            while (!m_tokens.TryAdd(tokenLow32Bits, handler))
             {
-                token = new EventRegistrationToken { Value = token.Value + 1 };
+                tokenLow32Bits++;
             }
 #else
-            while (m_tokens.ContainsKey(token))
+            while (m_tokens.ContainsKey(tokenLow32Bits))
             {
-                token = new EventRegistrationToken { Value = token.Value + 1 };
+                tokenLow32Bits++;
             }
-            m_tokens[token] = handler;
+            m_tokens[tokenLow32Bits] = handler;
 #endif
 
-            return token;
+            return new EventRegistrationToken { Value = GetRegistrationToken(tokenLow32Bits) };
         }
 
         // Generate a token that may be used for a particular event handler.  We will frequently be called
@@ -1106,7 +1106,7 @@ namespace WinRT
         // Effectively the only reasonable thing to do with this value is either to:
         //  1. Use it as a good starting point for generating a token for handler
         //  2. Use it as a guess to quickly see if the handler was really assigned this token value
-        private static EventRegistrationToken GetPreferredToken(T handler)
+        private static int GetPreferredTokenLow32Bits(T handler)
         {
             Debug.Assert(handler != null);
 
@@ -1135,19 +1135,24 @@ namespace WinRT
             // take a dependency upon it.  (Simply applying the hash-value algorithm directly won't work in the
             // case of collisions, where we'll use a different token value).
 
-            uint handlerHashCode;
+            int handlerHashCode;
             global::System.Delegate[] invocationList = ((global::System.Delegate)(object)handler).GetInvocationList();
             if (invocationList.Length == 1)
             {
-                handlerHashCode = (uint)invocationList[0].Method.GetHashCode();
+                handlerHashCode = invocationList[0].Method.GetHashCode();
             }
             else
             {
-                handlerHashCode = (uint)handler.GetHashCode();
+                handlerHashCode = handler.GetHashCode();
             }
 
-            ulong tokenValue = ((ulong)(uint)TypeOfTHashCode << 32) | handlerHashCode;
-            return new EventRegistrationToken { Value = (long)tokenValue };
+            return handlerHashCode;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static long GetRegistrationToken(int tokenLow32Bits)
+        {
+            return (long)(((ulong)(uint)TypeOfTHashCode << 32) | (uint)tokenLow32Bits);
         }
 
         // Remove the event handler from the table and
@@ -1155,19 +1160,28 @@ namespace WinRT
         // If the event registration token is not registered, returns false
         public bool RemoveEventHandler(EventRegistrationToken token, out T handler)
         {
+            // If the token doesn't have the upper 32 bits set to the hashcode of the delegate
+            // type in use, we know that the token cannot possibly have a registered handler.
+            if ((uint)(((ulong)token.Value >> 32) & 0x00000000FFFFFFFFU) != (uint)TypeOfTHashCode)
+            {
+                handler = null;
+
+                return false;
+            }
+
             lock (m_tokens)
             {
 #if NET6_0_OR_GREATER
                 // On .NET 6 and above, we can use a single lookup to both check whether the token
                 // exists in the table, remove it, and also retrieve the removed handler to return.
-                if (m_tokens.Remove(token, out handler))
+                if (m_tokens.Remove((int)token.Value, out handler))
                 {
                     return true;
                 }
 #else
-                if (m_tokens.TryGetValue(token, out handler))
+                if (m_tokens.TryGetValue((int)token.Value, out handler))
                 {
-                    m_tokens.Remove(token);
+                    m_tokens.Remove((int)token.Value);
                     return true;
                 }
 #endif                
