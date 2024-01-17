@@ -1151,22 +1151,23 @@ namespace WinRT
         {
             lock (m_tokens)
             {
-                if (m_tokens.TryGetValue(token, out handler))
+#if NET6_0_OR_GREATER
+                // On .NET 6 and above, we can use a single lookup to both check whether the token
+                // exists in the table, remove it, and also retrieve the removed handler to return.
+                if (m_tokens.Remove(token, out handler))
                 {
-                    RemoveEventHandlerNoLock(token);
                     return true;
                 }
+#else
+                if (m_tokens.TryGetValue(token, out handler))
+                {
+                    m_tokens.Remove(token);
+                    return true;
+                }
+#endif                
             }
 
             return false;
-        }
-
-        private void RemoveEventHandlerNoLock(EventRegistrationToken token)
-        {
-            if (m_tokens.TryGetValue(token, out T handler))
-            {
-                m_tokens.Remove(token);
-            }
         }
     }
 
