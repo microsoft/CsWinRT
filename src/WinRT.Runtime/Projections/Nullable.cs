@@ -282,6 +282,7 @@ namespace ABI.System
             if (typeof(T) == typeof(float)) return Nullable_float.GetGuidSignature();
             if (typeof(T) == typeof(double)) return Nullable_double.GetGuidSignature();
             if (typeof(T) == typeof(Guid)) return Nullable_guid.GetGuidSignature();
+            if (typeof(T) == typeof(global::System.Type)) return Nullable_Type.GetGuidSignature();
             if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.GetGuidSignature();
             if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.GetGuidSignature();
             if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceSignatures.Point;
