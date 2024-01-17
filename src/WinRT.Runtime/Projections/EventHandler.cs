@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WinRT;
 using WinRT.Interop;
 
@@ -226,8 +227,12 @@ namespace ABI.System
                 }
                 else
                 {
-                    // Same as in the static constructor, we initialize the ABI delegate type manually here if needed
-                    global::System.Threading.Interlocked.CompareExchange(ref _abi_invoke_type, Projections.GetAbiDelegateType(typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int)), null);
+                    // Same as in the static constructor, we initialize the ABI delegate type manually here if needed.
+                    // We gate this behind a null check to avoid unnecessarily calling Projections.GetAbiDelegateType.
+                    if (Volatile.Read(ref _abi_invoke_type) is null)
+                    {
+                        global::System.Threading.Interlocked.CompareExchange(ref _abi_invoke_type, Projections.GetAbiDelegateType(typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int)), null);
+                    }
 
                     IntPtr ThisPtr = _nativeDelegate.ThisPtr;
                     var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, _abi_invoke_type);
