@@ -1041,7 +1041,7 @@ namespace WinRT
     // An event registration token table stores mappings from delegates to event tokens, in order to support
     // sourcing WinRT style events from managed code.
     internal sealed class EventRegistrationTokenTable<T>
-        where T : class, global::System.Delegate
+        where T : global::System.Delegate
     {
         /// <summary>
         /// The hashcode of the delegate type, being set in the upper 32 bits of the registration tokens.
