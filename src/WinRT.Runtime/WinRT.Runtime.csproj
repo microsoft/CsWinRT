@@ -25,6 +25,11 @@
     <IsTrimmable>true</IsTrimmable>
     <DefineConstants>$(DefineConstants);CsWinRT_LANG_11_FEATURES</DefineConstants>
   </PropertyGroup>
+
+  <!-- Include the ILLink file (to properly trim configuration switches in publish builds) -->
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
+    <EmbeddedResource Include="Configuration\ILLink.Substitutions.xml" LogicalName="ILLink.Substitutions.xml" />
+  </ItemGroup>
     
   <ItemGroup>
     <Compile Include="../cswinrt/strings/WinRT*.cs" Link="cswinrt/%(FileName)%(Extension)" />
