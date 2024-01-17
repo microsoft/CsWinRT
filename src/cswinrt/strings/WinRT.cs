@@ -1115,7 +1115,7 @@ namespace WinRT
             //   1. Is quickly obtained from the handler instance (in this case, it doesn't depend on it at all).
             //   2. Uses bits in the upper 32 bits of the 64 bit value, in order to avoid bugs where code
             //      may assume the value is really just 32 bits.
-            //   3. Uuses bits in the bottom 32 bits of the 64 bit value, in order to ensure that code doesn't
+            //   3. Uses bits in the bottom 32 bits of the 64 bit value, in order to ensure that code doesn't
             //      take a dependency on them always being 0.
             //
             // The simple algorithm chosen here is to simply assign the upper 32 bits the metadata token of the
@@ -1165,6 +1165,12 @@ namespace WinRT
         {
             // If the token doesn't have the upper 32 bits set to the hashcode of the delegate
             // type in use, we know that the token cannot possibly have a registered handler.
+            //
+            // Note that both here right after the right shift by 32 bits (since we want to read
+            // the upper 32 bits to compare against the T hashcode) and below (where we want to
+            // read the lower 32 bits to use as lookup index into our dictionary), we're just
+            // casting to int as a simple and efficient way of truncating the input 64 bit value.
+            // That is, '(int)i64' is the same as '(int)(i64 & 0xFFFFFFFF)', but more readable.
             if ((int)((ulong)token.Value >> 32) != TypeOfTHashCode)
             {
                 handler = null;
