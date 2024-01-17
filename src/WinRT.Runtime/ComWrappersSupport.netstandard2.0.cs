@@ -32,6 +32,8 @@ namespace WinRT
             return CreateRcwForComObject<T>(ptr, true);
         }
 
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
+
         private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
         {
             if (ptr == IntPtr.Zero)
@@ -56,13 +58,13 @@ namespace WinRT
 
                     if (typeof(T).IsSealed)
                     {
-                        runtimeWrapper = TypedObjectFactoryCacheForType.GetOrAdd(typeof(T), classType => CreateTypedRcwFactory(classType))(inspectable);
+                        runtimeWrapper = GetTypedRcwFactory(typeof(T))(inspectable);
                     }
                     else
                     {
                         Type runtimeClassType = GetRuntimeClassForTypeCreation(inspectable, typeof(T), out var isNullable);
                         runtimeWrapper = runtimeClassType == null ? inspectable : 
-                          (isNullable ? ABI.System.NullableObject.GetValue(runtimeClassType, inspectable) : TypedObjectFactoryCacheForType.GetOrAdd(runtimeClassType, classType => CreateTypedRcwFactory(classType))(inspectable));
+                          (isNullable ? ABI.System.NullableObject.GetValue(runtimeClassType, inspectable) : GetTypedRcwFactory(runtimeClassType)(inspectable));
                     }
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
