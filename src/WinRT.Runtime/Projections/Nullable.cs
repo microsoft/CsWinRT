@@ -156,7 +156,7 @@ namespace ABI.Windows.Foundation
                     typeof(BoxedValueIReferenceImpl<T>).GetMethod(nameof(Do_Abi_get_Value_0), BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(Marshaler<T>.AbiType));
             }
 
-            throw new NotSupportedException("Failed to get the marshalling delegate for BoxedValueIReferenceImpl`1.");
+            throw new NotSupportedException($"Failed to get the marshalling delegate for BoxedValueIReferenceImpl`1 with type '{typeof(T)}'.");
         }
     }
 
@@ -362,7 +362,7 @@ namespace ABI.System
                     return Marshal.GetDelegateForFunctionPointer(ptr, get_Value_0_Type);
                 }
 
-                throw new NotSupportedException("Failed to get the marshalling delegate for Nullable`1.");
+                throw new NotSupportedException($"Failed to get the marshalling delegate for Nullable`1 with type '{typeof(T)}'.");
             }
         }
 
@@ -492,7 +492,7 @@ namespace ABI.System
                 }
             }
 
-            throw new NotSupportedException("Cannot retrieve the value for the current Nullable`1 instance.");
+            throw new NotSupportedException($"Cannot retrieve the value for the current Nullable`1 instance with type '{typeof(T)}'.");
         }
     }
 
