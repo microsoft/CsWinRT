@@ -12,6 +12,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Input;
 using Windows.Foundation.Collections;
@@ -477,8 +478,9 @@ namespace WinRT
 
 #if NET
         [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070",
-            Justification = "This is a fallback for compat purposes with existing projections.  " +
-            "Applications which make use of trimming will make use of updated projections that won't hit this code path.")]
+            Justification =
+            "The path using reflection to retrieve the default interface property is only used with legacy projections. " +
+            "Applications which make use of trimming will make use of updated projections and won't hit that code path.")]
 #endif
         internal static bool TryGetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass, out Type defaultInterface)
         {
@@ -486,23 +488,33 @@ namespace WinRT
             {
                 runtimeClass = runtimeClass.GetRuntimeClassCCWType() ?? runtimeClass;
                 ProjectedRuntimeClassAttribute attr = runtimeClass.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
+
                 if (attr is null)
                 {
                     return null;
                 }
 
-                if (attr.DefaultInterface != null)
+#if NET
+                // Using AOT requires using updated projections, which means we expect the type constructor to be used.
+                // The one taking a string for the property is not trim safe and is not used anymore by projections.
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
                     return attr.DefaultInterface;
                 }
-                else if (attr.DefaultInterfaceProperty != null)
+#endif
+
+                if (attr.DefaultInterface != null)
+                {
+                    return attr.DefaultInterface;
+                }                
+                
+                // This path is only ever taken for .NET Standard legacy projections
+                if (attr.DefaultInterfaceProperty != null)
                 {
                     return runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             });
             return defaultInterface != null;
         }
