@@ -396,33 +396,6 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             }
         }
 
-        //
-        // Exception requires anything to be added into Data dictionary is serializable
-        // This wrapper is made serializable to satisfy this requirement but does NOT serialize
-        // the object and simply ignores it during serialization, because we only need
-        // the exception instance in the app to hold the error object alive.
-        //
-        [Serializable]
-        internal sealed class __RestrictedErrorObject
-        {
-            // Hold the error object instance but don't serialize/deserialize it
-            [NonSerialized]
-            private readonly ObjectReference<IUnknownVftbl> _realErrorObject;
-
-            internal __RestrictedErrorObject(ObjectReference<IUnknownVftbl> errorObject)
-            {
-                _realErrorObject = errorObject;
-            }
-
-            public ObjectReference<IUnknownVftbl> RealErrorObject
-            {
-                get
-                {
-                    return _realErrorObject;
-                }
-            }
-        }
-
         internal static void AddExceptionDataForRestrictedErrorInfo(
             this Exception ex,
             string description,
@@ -442,7 +415,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
                 // Keep the error object alive so that user could retrieve error information
                 // using Data["RestrictedErrorReference"]
-                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject);
+                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
                 dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
             }
         }
@@ -457,8 +430,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             {
                 if (dict.Contains("__RestrictedErrorObjectReference"))
                 {
-                    if (dict["__RestrictedErrorObjectReference"] is __RestrictedErrorObject restrictedObject)
-                        restrictedErrorObject = restrictedObject.RealErrorObject;
+                    restrictedErrorObject = (IObjectReference)dict["__RestrictedErrorObjectReference"];
                 }
                 return (bool)dict["__HasRestrictedLanguageErrorObject"]!;
             }
@@ -556,16 +528,14 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
 namespace Microsoft.UI.Xaml
 {
-    using System.Runtime.Serialization;
     namespace Automation
     {
-        [Serializable]
 #if EMBED
         internal
 #else
         public
 #endif
-        class ElementNotAvailableException : Exception
+        sealed class ElementNotAvailableException : Exception
         {
             public ElementNotAvailableException()
                 : base("The element is not available.")
@@ -584,11 +554,6 @@ namespace Microsoft.UI.Xaml
             {
                 HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTAVAILABLE;
             }
-
-            protected ElementNotAvailableException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-                : base(serializationInfo, streamingContext)
-            {
-            }
         }
 
 #if EMBED
@@ -596,7 +561,7 @@ namespace Microsoft.UI.Xaml
 #else
         public
 #endif
-        class ElementNotEnabledException : Exception
+        sealed class ElementNotEnabledException : Exception
         {
             public ElementNotEnabledException()
                 : base("The element is not enabled.")
@@ -625,7 +590,7 @@ namespace Microsoft.UI.Xaml
 #else
         public
 #endif
-        class XamlParseException : Exception
+        sealed class XamlParseException : Exception
         {
             public XamlParseException()
                 : base("XAML parsing failed.")
@@ -646,13 +611,13 @@ namespace Microsoft.UI.Xaml
             }
         }
     }
-    [Serializable]
+
 #if EMBED
     internal
 #else
     public
 #endif
-    class LayoutCycleException : Exception
+    sealed class LayoutCycleException : Exception
     {
         public LayoutCycleException()
             : base("A cycle occurred while laying out the GUI.")
@@ -670,11 +635,6 @@ namespace Microsoft.UI.Xaml
             : base(message, innerException)
         {
             HResult = WinRT.ExceptionHelpers.E_LAYOUTCYCLE;
-        }
-
-        protected LayoutCycleException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-            : base(serializationInfo, streamingContext)
-        {
         }
     }
 }
