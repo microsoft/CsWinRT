@@ -1499,14 +1499,16 @@ namespace WinRT
     public
 #endif
     static class MarshalInspectable<
-#if NET6_0_OR_GREATER
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#elif NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
         T>
     {
-        public static IObjectReference CreateMarshaler<V>(
+        public static IObjectReference CreateMarshaler<
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+            V>(
             T o,
             Guid iid,
             bool unwrapObject = true)
@@ -1687,6 +1689,10 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObjectForMarshaling(o, delegateIID);
         }
 
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091",
+            Justification = "Preserving constructors is not necessary when creating RCWs for delegates, as they go through the factory methods in the helper types.")]
+#endif
         public static T FromAbi<T>(IntPtr nativeDelegate)
             where T : Delegate
         {
