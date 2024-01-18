@@ -27,26 +27,11 @@ namespace WinRT
     {
         internal enum UiXamlMode
         {
+            Unknown,
             MicrosoftUiXaml,
             WindowsUiXaml
         }
 
-        private static UiXamlMode GetUIXamlModeSetting()
-        {
-            if (AppContext.GetData("CsWinRT.UiXamlMode") is string str && Enum.TryParse<UiXamlMode>(str, out var mode))
-            {
-#if !NET5_0_OR_GREATER
-                if (mode == UiXamlMode.WindowsUiXaml)
-                {
-                    throw new NotSupportedException("Windows.UI.Xaml is not supported before .NET 5. Please use built-in WinRT interop for Windows.UI.Xaml experiences");
-                }
-#endif
-                return mode;
-            }
-            return UiXamlMode.MicrosoftUiXaml; // We default to MUX for back-compat with existing projects.
-        }
-
-        internal static UiXamlMode UiXamlModeSetting { get; } = GetUIXamlModeSetting();
 
         private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
 

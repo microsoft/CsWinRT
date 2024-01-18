@@ -16,7 +16,15 @@ namespace ABI.System.ComponentModel
 #endif
     static class INotifyPropertyChangedMethods
     {
-        public static global::System.Guid IID { get; } = GuidGenerator.GetWuxMuxIID(typeof(INotifyPropertyChanged).GetCustomAttribute<WuxMuxProjectedTypeAttribute>());
+        public static global::System.Guid IID { get; } = new(GetIID());
+
+        private static ReadOnlySpan<byte> GetIID()
+            => FeatureSwitches.WuxMuxMode switch
+            {
+                Projections.UiXamlMode.WindowsUiXaml => new(new byte[] { 0x9c, 0xd6, 0x75, 0xcf, 0xf4, 0xf2, 0x6b, 0x48, 0xb3, 0x2, 0xbb, 0x4c, 0x9, 0xba, 0xeb, 0xfa }),
+                Projections.UiXamlMode.MicrosoftUiXaml => new(new byte[] { 0x1, 0x76, 0xb1, 0x90, 0x65, 0xb0, 0x6e, 0x58, 0x83, 0xd9, 0x9a, 0xdc, 0x3a, 0x69, 0x52, 0x84 }),
+                _ => throw new InvalidOperationException("Invalid UI XAML mode")
+            };
 
         public static IntPtr AbiToProjectionVftablePtr => INotifyPropertyChanged.Vftbl.AbiToProjectionVftablePtr;
     }

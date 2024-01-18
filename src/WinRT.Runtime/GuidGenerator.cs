@@ -48,7 +48,7 @@ namespace WinRT
 
         internal static Guid GetWuxMuxIID(WuxMuxProjectedTypeAttribute wuxMuxAttribute)
         {
-            return Projections.UiXamlModeSetting switch
+            return FeatureSwitches.WuxMuxMode switch
             {
                 Projections.UiXamlMode.WindowsUiXaml => wuxMuxAttribute.WuxIID,
                 Projections.UiXamlMode.MicrosoftUiXaml => wuxMuxAttribute.MuxIID,

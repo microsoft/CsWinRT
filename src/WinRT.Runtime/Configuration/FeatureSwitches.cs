@@ -77,4 +77,44 @@ internal static class FeatureSwitches
 
         return isEnabled;
     }
+
+    private static Projections.WuxMuxMode _wuxMuxMode = Projections.WuxMuxMode.Unknown;
+
+    internal static Projections.WuxMuxMode WuxMuxMode => GetWuMuxMode("CsWinRT.WuxMuxMode", ref _wuxMuxMode);
+
+    /// <summary>
+    /// Gets a configuration value for a specified property.
+    /// </summary>
+    /// <param name="propertyName">The property name to retrieve the value for.</param>
+    /// <param name="cachedResult">The cached result for the target configuration value.</param>
+    /// <returns>The value of the specified configuration setting.</returns>
+    private static Projections.WuxMuxMode GetWuxMuxMode(string propertyName, ref Projections.WuxMuxMode cachedResult)
+    {
+        // This method doesn't need to worry about concurrent accesses to the cached result,
+        // as even if the configuration value is retrieved twice, that'll always be the same.
+        if (cachedResult != Projections.WuxMuxMode.Unknown)
+        {
+            return cachedResult;
+        }
+
+        // Get the configuration switch value, or its default.
+        // All feature switches have a default set in the .targets file.
+        if (AppContext.GetData(propertyName) is string str && Enum.TryParse<UiXamlMode>(str, out var mode))
+        {
+            cachedResult = mode;
+        }
+        else
+        {
+            cachedResult = Projections.WuxMuxMode.MicrosoftUiXaml;
+        }
+
+#if !NET5_0_OR_GREATER
+            if (mode == UiXamlMode.WindowsUiXaml)
+            {
+                throw new NotSupportedException("Windows.UI.Xaml is not supported before .NET 5. Please use built-in WinRT interop for Windows.UI.Xaml experiences");
+            }
+#endif
+
+        return cachedResult;
+    }
 }
