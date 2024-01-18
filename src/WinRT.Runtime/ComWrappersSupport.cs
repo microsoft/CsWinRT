@@ -439,25 +439,30 @@ namespace WinRT
 
         private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
         {
-            var getValueMethod = implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic);
+            var getValueMethod = implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.Public);
             return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
         }
 
         private static Func<IInspectable, object> CreateAbiNullableTFactory(
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicMethods)]
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
             Type implementationType)
         {
-            var getValueMethod = implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic);
-            return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
+            // This method is only called when 'implementationType' has been validated to be some ABI.System.Nullable_Delegate<T>.
+            // As such, we know that the type definitely has a method with signature 'static Nullable GetValue(IInspectable)'.
+            var getValueMethod = implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.Public);
+
+            return (Func<IInspectable, object>)getValueMethod.CreateDelegate(typeof(Func<IInspectable, object>));
         }
 
         private static Func<IInspectable, object> CreateArrayFactory(Type implementationType)
         {
-            var getValueFunc = (Func<IInspectable, object>)implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic).
-                CreateDelegate(typeof(Func<IInspectable, object>));
-            return getValueFunc;
+            // This method is only called when 'implementationType' is some 'Windows.Foundation.IReferenceArray<T>' type.
+            // That interface is only implemented by 'ABI.Windows.Foundation.IReferenceArray<T>', and the method is public.
+            var getValueMethod = implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.Public);
+
+            return (Func<IInspectable, object>)getValueMethod.CreateDelegate(typeof(Func<IInspectable, object>));
         }
 
         // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
@@ -476,7 +481,7 @@ namespace WinRT
 
         private static Func<IInspectable, object> CreateCustomTypeMappingFactory(Type customTypeHelperType)
         {
-            var fromAbiMethod = customTypeHelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            var fromAbiMethod = customTypeHelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static);
             if (fromAbiMethod is null)
             {
                 throw new MissingMethodException();
