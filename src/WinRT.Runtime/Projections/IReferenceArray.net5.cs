@@ -110,7 +110,7 @@ namespace ABI.Windows.Foundation
             return wrapper.Value;
         }
 
-        internal static unsafe object GetValue(IInspectable inspectable)
+        public static unsafe object GetValue(IInspectable inspectable)
         {
             IntPtr referenceArrayPtr = IntPtr.Zero;
             int __retval_length = default;

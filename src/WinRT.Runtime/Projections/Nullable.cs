@@ -414,7 +414,7 @@ namespace ABI.System
             _obj = obj;
         }
 
-        internal static unsafe T GetValue(IInspectable inspectable)
+        public static unsafe T GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -571,7 +571,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static int GetValue(IInspectable inspectable)
+        public static unsafe int GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -648,7 +648,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static Nullable GetValue(IInspectable inspectable)
+        public static unsafe Nullable GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             IntPtr __retval = default;
@@ -726,7 +726,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static byte GetValue(IInspectable inspectable)
+        public static unsafe byte GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -803,7 +803,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static sbyte GetValue(IInspectable inspectable)
+        public static unsafe sbyte GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -880,7 +880,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static short GetValue(IInspectable inspectable)
+        public static unsafe short GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -957,7 +957,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static ushort GetValue(IInspectable inspectable)
+        public static unsafe ushort GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -1034,7 +1034,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static uint GetValue(IInspectable inspectable)
+        public static unsafe uint GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -1111,7 +1111,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static long GetValue(IInspectable inspectable)
+        public static unsafe long GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -1188,7 +1188,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static ulong GetValue(IInspectable inspectable)
+        public static unsafe ulong GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -1265,7 +1265,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static float GetValue(IInspectable inspectable)
+        public static unsafe float GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -1342,7 +1342,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static double GetValue(IInspectable inspectable)
+        public static unsafe double GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -1419,7 +1419,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static char GetValue(IInspectable inspectable)
+        public static unsafe char GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -1496,7 +1496,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static bool GetValue(IInspectable inspectable)
+        public static unsafe bool GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -1573,7 +1573,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static Guid GetValue(IInspectable inspectable)
+        public static unsafe Guid GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             try
@@ -1650,7 +1650,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static global::System.DateTimeOffset GetValue(IInspectable inspectable)
+        public static unsafe global::System.DateTimeOffset GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             DateTimeOffset __retval = default;
@@ -1728,7 +1728,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static global::System.TimeSpan GetValue(IInspectable inspectable)
+        public static unsafe global::System.TimeSpan GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             TimeSpan __retval = default;
@@ -1867,7 +1867,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static Nullable GetValue(IInspectable inspectable)
+        public static unsafe Nullable GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             Type __retval = default;
@@ -1945,7 +1945,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static Nullable GetValue(IInspectable inspectable)
+        public static unsafe Nullable GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             Exception __retval = default;
@@ -2007,7 +2007,7 @@ namespace ABI.System
             return 0;
         }
 
-        unsafe internal static Nullable GetValue(IInspectable inspectable)
+        public static unsafe Nullable GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             IntPtr __retval = default;
@@ -2064,7 +2064,7 @@ namespace ABI.System
 
         public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
 
-        unsafe internal static Nullable GetValue(IInspectable inspectable)
+        public static unsafe Nullable GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             IntPtr __retval = default;

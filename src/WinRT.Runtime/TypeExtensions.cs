@@ -21,7 +21,6 @@ namespace WinRT
 
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                            DynamicallyAccessedMemberTypes.NonPublicMethods |
                                             DynamicallyAccessedMemberTypes.PublicNestedTypes | 
                                             DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
@@ -30,7 +29,6 @@ namespace WinRT
             return HelperTypeCache.GetOrAdd(type,
 #if NET
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                                DynamicallyAccessedMemberTypes.NonPublicMethods |
                                                 DynamicallyAccessedMemberTypes.PublicNestedTypes | 
                                                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
@@ -93,7 +91,6 @@ namespace WinRT
 
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | 
-                                            DynamicallyAccessedMemberTypes.NonPublicMethods |
                                             DynamicallyAccessedMemberTypes.PublicNestedTypes |
                                             DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
@@ -152,25 +149,26 @@ namespace WinRT
 
         public static Type GetAbiType(this Type type)
         {
-            return type.GetHelperType().GetMethod("GetAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).ReturnType;
+            return type.GetHelperType().GetMethod("GetAbi", BindingFlags.Public | BindingFlags.Static).ReturnType;
         }
 
         public static Type GetMarshalerType(this Type type)
         {
-            return type.GetHelperType().GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).ReturnType;
+            return type.GetHelperType().GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.Static).ReturnType;
         }
 
         internal static Type GetMarshaler2Type(this Type type)
         {
             var helperType = type.GetHelperType();
-            var createMarshaler = helperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static) ??
-                helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            var createMarshaler =
+                helperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.Static) ??
+                helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.Static);
             return createMarshaler.ReturnType;
         }
 
         internal static Type GetMarshalerArrayType(this Type type)
         {
-            return type.GetHelperType().GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.ReturnType;
+            return type.GetHelperType().GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.Static)?.ReturnType;
         }
 
         public static bool IsDelegate(this Type type)
