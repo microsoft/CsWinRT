@@ -1317,7 +1317,9 @@ namespace WinRT
 #endif
         private static readonly Type HelperType = typeof(T).GetHelperType();
         private static FieldInfo _ObjField;
-        private static Func<T, IObjectReference> _CreateMarshaler;
+
+        // Either a Func<T, IObjectReference> (JIT) or a boxed Guid (NativeAOT)
+        private static object _CreateMarshalerOrIid;
 
         public static T FromAbi(IntPtr ptr)
         {
@@ -1346,9 +1348,7 @@ namespace WinRT
                 return ObjectReference<IUnknownVftbl>.Attach(ref ptr);
             }
 
-            _CreateMarshaler ??= BindCreateMarshaler();
-
-            return _CreateMarshaler(value);
+            return CreateMarshalerCore(value);
         }
 
         public static ObjectReferenceValue CreateMarshaler2(T value, Guid iid = default)
@@ -1433,22 +1433,34 @@ namespace WinRT
             return false;
         }
 
+        private static IObjectReference CreateMarshalerCore(T value)
+        {
+#if NET
+            // On NativeAOT, we can inline everything and skip creating any delegates
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                _CreateMarshalerOrIid ??= GuidGenerator.GetIID(HelperType);
+
+                return MarshalInspectable<T>.CreateMarshaler<IUnknownVftbl>(value, (Guid)_CreateMarshalerOrIid, true);
+            }
+#endif
+            // Otherwise, just use the fallback path
+            _CreateMarshalerOrIid ??= BindCreateMarshaler();
+
+            return ((Func<T, IObjectReference>)_CreateMarshalerOrIid)(value);
+        }
+
         private static Func<T, IObjectReference> BindCreateMarshaler()
         {
             Guid iid = GuidGenerator.GetIID(HelperType);
-#if NET
-            if (RuntimeFeature.IsDynamicCodeCompiled)
-#endif
+            var vftblType = HelperType.FindVftblType();
+
+            if (vftblType is not null)
             {
-                var vftblType = HelperType.FindVftblType();
-                
-                if (vftblType is not null)
-                {
-                    var methodInfo = typeof(MarshalInspectable<T>).GetMethod("CreateMarshaler", new Type[] { typeof(T), typeof(Guid), typeof(bool) }).
-                        MakeGenericMethod(vftblType);
-                    var createMarshaler = (Func<T, Guid, bool, IObjectReference>)methodInfo.CreateDelegate(typeof(Func<T, Guid, bool, IObjectReference>));
-                    return obj => createMarshaler(obj, iid, true);
-                }
+                var methodInfo = typeof(MarshalInspectable<T>).GetMethod("CreateMarshaler", new Type[] { typeof(T), typeof(Guid), typeof(bool) }).
+                    MakeGenericMethod(vftblType);
+                var createMarshaler = (Func<T, Guid, bool, IObjectReference>)methodInfo.CreateDelegate(typeof(Func<T, Guid, bool, IObjectReference>));
+                return obj => createMarshaler(obj, iid, true);
             }
 
             return obj => MarshalInspectable<T>.CreateMarshaler<IUnknownVftbl>(obj, iid, true);
