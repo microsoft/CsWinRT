@@ -535,7 +535,7 @@ namespace Microsoft.UI.Xaml
 #else
         public
 #endif
-        sealed class ElementNotAvailableException : Exception
+        class ElementNotAvailableException : Exception
         {
             public ElementNotAvailableException()
                 : base("The element is not available.")
@@ -561,7 +561,7 @@ namespace Microsoft.UI.Xaml
 #else
         public
 #endif
-        sealed class ElementNotEnabledException : Exception
+        class ElementNotEnabledException : Exception
         {
             public ElementNotEnabledException()
                 : base("The element is not enabled.")
@@ -590,7 +590,7 @@ namespace Microsoft.UI.Xaml
 #else
         public
 #endif
-        sealed class XamlParseException : Exception
+        class XamlParseException : Exception
         {
             public XamlParseException()
                 : base("XAML parsing failed.")
@@ -617,7 +617,7 @@ namespace Microsoft.UI.Xaml
 #else
     public
 #endif
-    sealed class LayoutCycleException : Exception
+    class LayoutCycleException : Exception
     {
         public LayoutCycleException()
             : base("A cycle occurred while laying out the GUI.")
