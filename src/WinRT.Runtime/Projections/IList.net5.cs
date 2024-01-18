@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -157,9 +158,16 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IListMethods()
         {
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return;
+            }
+
             // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
             // and due to that the function pointers haven't been initialized.
-            if (RuntimeFeature.IsDynamicCodeCompiled && !IVectorMethods<T>._RcwHelperInitialized)
+            if (!IVectorMethods<T>._RcwHelperInitialized)
             {
                 var initRcwHelperFallback = (Func<bool>)typeof(IListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
                     GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
@@ -928,10 +936,18 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe global::System.Collections.Generic.IReadOnlyList<T> GetView(IObjectReference obj)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetView != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
-                return GetView(obj);
+                return _GetView(obj);
             }
+
+            if (_GetView != null)
+            {
+                return _GetView(obj);
+            }
+            else
             {
                 var ThisPtr = obj.ThisPtr;
                 IntPtr __retval = default;
@@ -987,7 +1003,14 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe uint GetMany(IObjectReference obj, uint startIndex, ref T[] items)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetMany != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return _GetMany(obj, startIndex, items);
+            }
+
+            if (_GetMany != null)
             {
                 return _GetMany(obj, startIndex, items);
             }
@@ -1015,7 +1038,16 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe void ReplaceAll(IObjectReference obj, T[] items)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _ReplaceAll != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                _ReplaceAll(obj, items);
+
+                return;
+            }
+
+            if (_ReplaceAll != null)
             {
                 _ReplaceAll(obj, items);
             }
@@ -1250,13 +1282,24 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static IList()
         {
-            if (RuntimeFeature.IsDynamicCodeCompiled && IListMethods<T>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
             {
-                // Handle the compat scenario where the source generator wasn't used or IDIC was used.
-                var initFallbackCCWVtable = (Action)typeof(IListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
-                    GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Action));
-                initFallbackCCWVtable();
+                // Simple invocation guarded by a direct runtime feature check to help the linker.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                InitFallbackCCWVTableIfNeeded();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void InitFallbackCCWVTableIfNeeded()
+                {
+                    if (IListMethods<T>.AbiToProjectionVftablePtr == default)
+                    {
+                        // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                        var initFallbackCCWVtable = (Action)typeof(IListMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                            CreateDelegate(typeof(Action));
+                        initFallbackCCWVtable();
+                    }
+                }
             }
 
             AbiToProjectionVftablePtr = IListMethods<T>.AbiToProjectionVftablePtr;

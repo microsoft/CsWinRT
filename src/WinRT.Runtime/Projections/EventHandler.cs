@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WinRT;
 using WinRT.Interop;
 
@@ -110,29 +111,40 @@ namespace ABI.System
     {
         public static Guid PIID = GuidGenerator.CreateIID(typeof(global::System.EventHandler<T>));
 
+        /// <summary>
+        /// The ABI delegate type for the fallback, non-AOT scenario.
+        /// This is lazily-initialized from the fallback paths below.
+        /// </summary>
         private static global::System.Type _abi_invoke_type;
-        private static global::System.Type Abi_Invoke_Type => _abi_invoke_type ?? MakeAbiInvokeType();
-
-        private static global::System.Type MakeAbiInvokeType()
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref _abi_invoke_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int) }), null);
-            return _abi_invoke_type;
-        }
 
         public static IntPtr AbiToProjectionVftablePtr;
 
         static unsafe EventHandler()
         {
 #if NET
-            if (!RuntimeFeature.IsDynamicCodeCompiled || EventHandlerMethods<T>.AbiToProjectionVftablePtr != default)
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                // On NAOT, we always just use the available vtable, no matter if it's been set or not.
+                // See: https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                // We specifically need this check to be separate than that of the vtable not being null.
+                AbiToProjectionVftablePtr = EventHandlerMethods<T>.AbiToProjectionVftablePtr;
+
+                return;
+            }
+#endif
+            
+            if (EventHandlerMethods<T>.AbiToProjectionVftablePtr != default)
             {
                 AbiToProjectionVftablePtr = EventHandlerMethods<T>.AbiToProjectionVftablePtr;
             }
             else
-#endif
             {
+                // Initialize the ABI invoke delegate type (we don't want to do that from a method in this type, or it will get rooted).
+                // That is because there's other reflection paths just preserving members from EventHandler<T> unconditionally.
+                _abi_invoke_type = Projections.GetAbiDelegateType(typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int));
+
                 // Handle the compat scenario where the source generator wasn't used or IDIC was used.
-                AbiInvokeDelegate = global::System.Delegate.CreateDelegate(Abi_Invoke_Type, typeof(EventHandler<T>).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic).
+                AbiInvokeDelegate = global::System.Delegate.CreateDelegate(_abi_invoke_type, typeof(EventHandler<T>).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic).
                     MakeGenericMethod(new global::System.Type[] { Marshaler<T>.AbiType }));
                 AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler<T>), sizeof(global::WinRT.Interop.IDelegateVftbl));
                 *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
@@ -200,18 +212,30 @@ namespace ABI.System
             public unsafe void Invoke(object sender, T args)
             {
 #if NET
-                bool useDynamicInvoke = EventHandlerMethods<T>._Invoke == null && RuntimeFeature.IsDynamicCodeCompiled;
-#else
-                bool useDynamicInvoke = EventHandlerMethods<T>._Invoke == null;
+                // Standalone path for NAOT to ensure the linker trims code as expected
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    EventHandlerMethods<T>._Invoke(_nativeDelegate, sender, args);
+
+                    return;
+                }
 #endif
-                if (!useDynamicInvoke)
+
+                if (EventHandlerMethods<T>._Invoke != null)
                 {
                     EventHandlerMethods<T>._Invoke(_nativeDelegate, sender, args);
                 }
                 else
                 {
+                    // Same as in the static constructor, we initialize the ABI delegate type manually here if needed.
+                    // We gate this behind a null check to avoid unnecessarily calling Projections.GetAbiDelegateType.
+                    if (Volatile.Read(ref _abi_invoke_type) is null)
+                    {
+                        global::System.Threading.Interlocked.CompareExchange(ref _abi_invoke_type, Projections.GetAbiDelegateType(typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int)), null);
+                    }
+
                     IntPtr ThisPtr = _nativeDelegate.ThisPtr;
-                    var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, Abi_Invoke_Type);
+                    var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, _abi_invoke_type);
                     ObjectReferenceValue __sender = default;
                     object __args = default;
                     var __params = new object[] { ThisPtr, null, null };

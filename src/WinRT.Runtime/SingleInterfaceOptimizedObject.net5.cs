@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 
@@ -29,15 +30,21 @@ namespace WinRT
             if (requireQI)
             {
                 Type helperType = type.FindHelperType();
-                var vftblType = helperType.FindVftblType();
-                if (vftblType is null)
+
+                if (RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    _obj = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
+                    var vftblType = helperType.FindVftblType();
+
+                    if (vftblType is not null)
+                    {
+                        _obj = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
+
+                        return;
+                    }
                 }
-                else
-                {
-                    _obj = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
-                }
+
+                _obj = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
+
             }
             else 
             {

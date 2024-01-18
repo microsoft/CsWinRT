@@ -26,13 +26,65 @@ namespace ABI.Windows.Foundation
             AbiToProjectionVftable = new global::ABI.System.Nullable<T>.Vftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                get_Value_0 = global::System.Delegate.CreateDelegate(global::ABI.System.Nullable<T>.Vftbl.get_Value_0_Type, typeof(BoxedValueIReferenceImpl<T>).GetMethod("Do_Abi_get_Value_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType))
+                get_Value_0 = GetValueDelegateForAbi()
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedValueIReferenceImpl<T>), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
             Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
             nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Value_0);
 
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
+        }
+
+        // This method is only for all blittable types. Note: this method  could be an overload of
+        // the generic one below, but using a different one to simplify the reflection lookup in the
+        // fallback case below (so we can use GetMethod and find just the single match we need).
+        private static unsafe int Do_Abi_get_Value_0_Blittable(void* thisPtr, void* result)
+        {
+            if (result is null)
+            {
+                // Immediately return E_POINTER if the target is null
+                return unchecked((int)0x80004003);
+            }
+
+            try
+            {
+                T unboxedValue = (T)global::WinRT.ComWrappersSupport.FindObject<object>(new IntPtr(thisPtr));
+
+                Unsafe.WriteUnaligned(result, unboxedValue);
+
+                return 0;
+            }
+            catch (global::System.Exception __exception__)
+            {
+                Unsafe.WriteUnaligned<T>(result, default);
+
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+        }
+
+        private static unsafe int Do_Abi_get_Value_0_DateTimeOffset(void* thisPtr, DateTimeOffset* result)
+        {
+            if (result is null)
+            {
+                return unchecked((int)0x80004003);
+            }
+
+            try
+            {
+                T unboxedValue = (T)global::WinRT.ComWrappersSupport.FindObject<object>(new IntPtr(thisPtr));
+
+                Unsafe.WriteUnaligned(result, DateTimeOffset.FromManaged(Unsafe.As<T, global::System.DateTimeOffset>(ref unboxedValue)));
+
+                return 0;
+            }
+            catch (global::System.Exception __exception__)
+            {
+                Unsafe.WriteUnaligned<T>(result, default);
+
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
         }
 
         private static unsafe int Do_Abi_get_Value_0<TAbi>(void* thisPtr, out TAbi __return_value__)
@@ -52,6 +104,59 @@ namespace ABI.Windows.Foundation
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
+        }
+
+        internal static unsafe Delegate GetValueDelegateForAbi()
+        {
+            if (typeof(T) == typeof(int) ||
+                typeof(T) == typeof(byte) ||
+                typeof(T) == typeof(bool) ||
+                typeof(T) == typeof(sbyte) ||
+                typeof(T) == typeof(short) ||
+                typeof(T) == typeof(ushort) ||
+                typeof(T) == typeof(char) ||
+                typeof(T) == typeof(uint) ||
+                typeof(T) == typeof(long) ||
+                typeof(T) == typeof(ulong) ||
+                typeof(T) == typeof(float) ||
+                typeof(T) == typeof(double) ||
+                typeof(T) == typeof(Guid) ||
+                typeof(T) == typeof(global::System.TimeSpan) ||
+                typeof(T) == typeof(global::Windows.Foundation.Point) ||
+                typeof(T) == typeof(global::Windows.Foundation.Rect) ||
+                typeof(T) == typeof(global::Windows.Foundation.Size) ||
+                typeof(T) == typeof(global::System.Numerics.Matrix3x2) ||
+                typeof(T) == typeof(global::System.Numerics.Matrix4x4) ||
+                typeof(T) == typeof(global::System.Numerics.Plane) ||
+                typeof(T) == typeof(global::System.Numerics.Quaternion) ||
+                typeof(T) == typeof(global::System.Numerics.Vector2) ||
+                typeof(T) == typeof(global::System.Numerics.Vector3) ||
+                typeof(T) == typeof(global::System.Numerics.Vector4) ||
+                (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
+                (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
+            {
+                return (Nullable_Delegates.GetValueDelegateAbi)Do_Abi_get_Value_0_Blittable;
+            }
+
+            if (typeof(T) == typeof(global::System.DateTimeOffset))
+            {
+                return (Nullable_Delegates.GetValueDelegateAbiDateTimeOffset)Do_Abi_get_Value_0_DateTimeOffset;
+            }
+
+#if NET
+            // Only when not on NAOT, use LINQ expressions to get the delegate type.
+            // This is not safe on AOT, so in that case we just can't get a delegate.
+            if (RuntimeFeature.IsDynamicCodeCompiled)
+#endif
+            {
+                Nullable<T>.Vftbl.get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
+
+                return Delegate.CreateDelegate(
+                    Nullable<T>.Vftbl.get_Value_0_Type,
+                    typeof(BoxedValueIReferenceImpl<T>).GetMethod(nameof(Do_Abi_get_Value_0), BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(Marshaler<T>.AbiType));
+            }
+
+            throw new NotSupportedException($"Failed to get the marshalling delegate for BoxedValueIReferenceImpl`1 with type '{typeof(T)}'.");
         }
     }
 
@@ -160,26 +265,142 @@ namespace ABI.System
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 
-        public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(Nullable<T>));
+        public static string GetGuidSignature() => CreateGuidSignature();
+
+        private static string CreateGuidSignature()
+        {
+            if (typeof(T) == typeof(int)) return Nullable_int.GetGuidSignature();
+            if (typeof(T) == typeof(byte)) return Nullable_byte.GetGuidSignature();
+            if (typeof(T) == typeof(bool)) return Nullable_bool.GetGuidSignature();
+            if (typeof(T) == typeof(sbyte)) return Nullable_sbyte.GetGuidSignature();
+            if (typeof(T) == typeof(short)) return Nullable_short.GetGuidSignature();
+            if (typeof(T) == typeof(ushort)) return Nullable_ushort.GetGuidSignature();
+            if (typeof(T) == typeof(char)) return Nullable_char.GetGuidSignature();
+            if (typeof(T) == typeof(uint)) return Nullable_uint.GetGuidSignature();
+            if (typeof(T) == typeof(long)) return Nullable_long.GetGuidSignature();
+            if (typeof(T) == typeof(ulong)) return Nullable_ulong.GetGuidSignature();
+            if (typeof(T) == typeof(float)) return Nullable_float.GetGuidSignature();
+            if (typeof(T) == typeof(double)) return Nullable_double.GetGuidSignature();
+            if (typeof(T) == typeof(Guid)) return Nullable_guid.GetGuidSignature();
+            if (typeof(T) == typeof(global::System.Type)) return Nullable_Type.GetGuidSignature();
+            if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.GetGuidSignature();
+            if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.GetGuidSignature();
+            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceSignatures.Point;
+            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceSignatures.Size;
+            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceSignatures.Rect;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IReferenceSignatures.Matrix3x2;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IReferenceSignatures.Matrix4x4;
+            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IReferenceSignatures.Plane;
+            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IReferenceSignatures.Quaternion;
+            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IReferenceSignatures.Vector2;
+            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceSignatures.Vector3;
+            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceSignatures.Vector4;
+
+            return GuidGenerator.GetSignature(typeof(Nullable<T>));
+        }
 
         [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate get_Value_0;
-            public static Guid PIID = Nullable<T>.PIID;
-            public static readonly global::System.Type get_Value_0_Type = Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            public static readonly Guid PIID = Nullable<T>.PIID;
+            public static global::System.Type get_Value_0_Type;
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
                 var vftbl = (IntPtr*)vftblPtr.Vftbl;
                 IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
-                get_Value_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], get_Value_0_Type);
+                get_Value_0 = GetValueDelegateForFunctionPointer(vftbl[6]);
+            }
+
+            internal static Delegate GetValueDelegateForFunctionPointer(IntPtr ptr)
+            {
+                if (typeof(T) == typeof(int) ||
+                    typeof(T) == typeof(byte) ||
+                    typeof(T) == typeof(bool) ||
+                    typeof(T) == typeof(sbyte) ||
+                    typeof(T) == typeof(short) ||
+                    typeof(T) == typeof(ushort) ||
+                    typeof(T) == typeof(char) ||
+                    typeof(T) == typeof(uint) ||
+                    typeof(T) == typeof(long) ||
+                    typeof(T) == typeof(ulong) ||
+                    typeof(T) == typeof(float) ||
+                    typeof(T) == typeof(double) ||
+                    typeof(T) == typeof(Guid) ||
+                    typeof(T) == typeof(global::System.TimeSpan) ||
+                    typeof(T) == typeof(global::Windows.Foundation.Point) ||
+                    typeof(T) == typeof(global::Windows.Foundation.Rect) ||
+                    typeof(T) == typeof(global::Windows.Foundation.Size) ||
+                    typeof(T) == typeof(global::System.Numerics.Matrix3x2) ||
+                    typeof(T) == typeof(global::System.Numerics.Matrix4x4) ||
+                    typeof(T) == typeof(global::System.Numerics.Plane) ||
+                    typeof(T) == typeof(global::System.Numerics.Quaternion) ||
+                    typeof(T) == typeof(global::System.Numerics.Vector2) ||
+                    typeof(T) == typeof(global::System.Numerics.Vector3) ||
+                    typeof(T) == typeof(global::System.Numerics.Vector4) ||
+                    (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
+                    (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<Nullable_Delegates.GetValueDelegateAbi>(ptr);
+                }
+
+                if (typeof(T) == typeof(DateTimeOffset))
+                {
+                    return Marshal.GetDelegateForFunctionPointer<Nullable_Delegates.GetValueDelegateAbiDateTimeOffset>(ptr);
+                }
+
+#if NET
+                // Only when not on NAOT, use LINQ expressions to get the delegate type.
+                // This is not safe on AOT, so in that case we just can't get a delegate.
+                if (RuntimeFeature.IsDynamicCodeCompiled)
+#endif
+                {
+                    get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
+
+                    return Marshal.GetDelegateForFunctionPointer(ptr, get_Value_0_Type);
+                }
+
+                throw new NotSupportedException($"Failed to get the marshalling delegate for Nullable`1 with type '{typeof(T)}'.");
             }
         }
 
-        public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
+        public static readonly Guid PIID = CreatePIID();
+
+        private static Guid CreatePIID()
+        {
+#if NET
+            if (typeof(T) == typeof(int)) return Nullable_int.IID;
+            if (typeof(T) == typeof(byte)) return Nullable_byte.IID;
+            if (typeof(T) == typeof(bool)) return Nullable_bool.IID;
+            if (typeof(T) == typeof(sbyte)) return Nullable_sbyte.IID;
+            if (typeof(T) == typeof(short)) return Nullable_short.IID;
+            if (typeof(T) == typeof(ushort)) return Nullable_ushort.IID;
+            if (typeof(T) == typeof(char)) return Nullable_char.IID;
+            if (typeof(T) == typeof(uint)) return Nullable_uint.IID;
+            if (typeof(T) == typeof(long)) return Nullable_long.IID;
+            if (typeof(T) == typeof(ulong)) return Nullable_ulong.IID;
+            if (typeof(T) == typeof(float)) return Nullable_float.IID;
+            if (typeof(T) == typeof(double)) return Nullable_double.IID;
+            if (typeof(T) == typeof(Guid)) return Nullable_guid.IID;
+            if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.IID;
+            if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IReferenceIIDs.IReferenceMatrix3x2_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IReferenceIIDs.IReferenceMatrix4x4_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IReferenceIIDs.IReferencePlane_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IReferenceIIDs.IReferenceQuaternion_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IReferenceIIDs.IReferenceVector2_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceIIDs.IReferenceVector3_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceIIDs.IReferenceVector4_IID;
+#endif
+
+            return GuidGenerator.CreateIID(typeof(Nullable<T>));
+        }
 
         public static implicit operator Nullable<T>(IObjectReference obj) => (obj != null) ? new Nullable<T>(obj) : null;
         public static implicit operator Nullable<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable<T>(obj) : null;
@@ -196,29 +417,74 @@ namespace ABI.System
         internal static unsafe T GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
-            var __params = new object[] { IntPtr.Zero, null };
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out nullablePtr));
-                __params[0] = nullablePtr;
-                Marshal.GetDelegateForFunctionPointer((*(IntPtr**)nullablePtr)[6], Vftbl.get_Value_0_Type).DynamicInvokeAbi(__params);
-                return Marshaler<T>.FromAbi(__params[1]);
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr));
+
+                Delegate marshallingDelegate = Vftbl.GetValueDelegateForFunctionPointer((*(IntPtr**)nullablePtr)[6]);
+
+                // No need to use GC.KeepAlive here because 'nullablePtr' is already keeping
+                // the instance alive through the call. It's only needed in 'Value' below,
+                // because 'ThisPtr' is being used without anyone keeping 'this' alive too.
+                return GetValueFromAbi(nullablePtr, marshallingDelegate);
             }
             finally
             {
-                Marshaler<T>.DisposeAbi(__params[1]);
                 Marshal.Release(nullablePtr);
             }
         }
 
-        public unsafe T Value
+        public T Value
         {
             get
             {
-                var __params = new object[] { ThisPtr, null };
+                T result = GetValueFromAbi(ThisPtr, _obj.Vftbl.get_Value_0);
+
+                GC.KeepAlive(this);
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Shared marshalling stub to get the underlying nullable value from a given <c>IReference`1</c> native instance.
+        /// </summary>
+        /// <param name="thisPtr">The <c>IReference`1</c> native instance to get the value from.</param>
+        /// <param name="marshallingDelegate">The marshalling delegate to get the value from the ABI.</param>
+        /// <returns>The marshalled <typeparamref name="T"/> value retrieved from <paramref name="thisPtr"/>.</returns>
+        /// <exception cref="NotSupportedException">Thrown if no marshalling code for <typeparamref name="T"/> is available.</exception>
+        private static unsafe T GetValueFromAbi(IntPtr thisPtr, Delegate marshallingDelegate)
+        {
+            if (marshallingDelegate.GetType() == typeof(Nullable_Delegates.GetValueDelegateAbi))
+            {
+                T result;
+
+#pragma warning disable CS8500 // We know that T is unmanaged
+                Marshal.ThrowExceptionForHR(((Nullable_Delegates.GetValueDelegateAbi)marshallingDelegate)((void*)thisPtr, &result));
+#pragma warning restore CS8500
+
+                return result;
+            }
+
+            if (marshallingDelegate.GetType() == typeof(Nullable_Delegates.GetValueDelegateAbiDateTimeOffset))
+            {
+                DateTimeOffset result;
+
+                Marshal.ThrowExceptionForHR(((Nullable_Delegates.GetValueDelegateAbiDateTimeOffset)marshallingDelegate)((void*)thisPtr, &result));
+
+                global::System.DateTimeOffset managed = DateTimeOffset.FromAbi(result);
+
+                return Unsafe.As<global::System.DateTimeOffset, T>(ref managed);
+            }
+
+#if NET
+            if (RuntimeFeature.IsDynamicCodeSupported)
+#endif
+            {
+                var __params = new object[] { thisPtr, null };
                 try
                 {
-                    _obj.Vftbl.get_Value_0.DynamicInvokeAbi(__params);
+                    marshallingDelegate.DynamicInvokeAbi(__params);
                     return Marshaler<T>.FromAbi(__params[1]);
                 }
                 finally
@@ -226,6 +492,8 @@ namespace ABI.System
                     Marshaler<T>.DisposeAbi(__params[1]);
                 }
             }
+
+            throw new NotSupportedException($"Cannot retrieve the value for the current Nullable`1 instance with type '{typeof(T)}'.");
         }
     }
 
@@ -247,7 +515,7 @@ namespace ABI.System
     internal static class Nullable_int
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i4)";
-        internal static Guid IID = new(0x548cefbd, 0xbc8a, 0x5fa0, 0x8d, 0xf2, 0x95, 0x74, 0x40, 0xfc, 0x8b, 0xf4);
+        internal static readonly Guid IID = new(0x548cefbd, 0xbc8a, 0x5fa0, 0x8d, 0xf2, 0x95, 0x74, 0x40, 0xfc, 0x8b, 0xf4);
 
         [Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4")]
         public unsafe struct Vftbl
@@ -309,7 +577,7 @@ namespace ABI.System
             try
             {
                 int __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -324,7 +592,7 @@ namespace ABI.System
     internal static class Nullable_string
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};string)";
-        internal static Guid IID = new(0xfd416dfb, 0x2a07, 0x52eb, 0xaa, 0xe3, 0xdf, 0xce, 0x14, 0x11, 0x6c, 0x05);
+        internal static readonly Guid IID = new(0xfd416dfb, 0x2a07, 0x52eb, 0xaa, 0xe3, 0xdf, 0xce, 0x14, 0x11, 0x6c, 0x05);
 
         [Guid("fd416dfb-2a07-52eb-aae3-dfce14116c05")]
         public unsafe struct Vftbl
@@ -386,7 +654,7 @@ namespace ABI.System
             IntPtr __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(MarshalString.FromAbi(__retval));
             }
@@ -402,7 +670,7 @@ namespace ABI.System
     internal static class Nullable_byte
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u1)";
-        internal static Guid IID = new(0xe5198cc8, 0x2873, 0x55f5, 0xb0, 0xa1, 0x84, 0xff, 0x9e, 0x4a, 0xad, 0x62);
+        internal static readonly Guid IID = new(0xe5198cc8, 0x2873, 0x55f5, 0xb0, 0xa1, 0x84, 0xff, 0x9e, 0x4a, 0xad, 0x62);
 
         [Guid("e5198cc8-2873-55f5-b0a1-84ff9e4aad62")]
         public unsafe struct Vftbl
@@ -464,7 +732,7 @@ namespace ABI.System
             try
             {
                 byte __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -479,7 +747,7 @@ namespace ABI.System
     internal static class Nullable_sbyte
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i1)";
-        internal static Guid IID = new(0x95500129, 0xfbf6, 0x5afc, 0x89, 0xdf, 0x70, 0x64, 0x2d, 0x74, 0x19, 0x90);
+        internal static readonly Guid IID = new(0x95500129, 0xfbf6, 0x5afc, 0x89, 0xdf, 0x70, 0x64, 0x2d, 0x74, 0x19, 0x90);
 
         [Guid("95500129-fbf6-5afc-89df-70642d741990")]
         public unsafe struct Vftbl
@@ -541,7 +809,7 @@ namespace ABI.System
             try
             {
                 sbyte __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, sbyte*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -556,7 +824,7 @@ namespace ABI.System
     internal static class Nullable_short
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i2)";
-        internal static Guid IID = new(0x6ec9e41b, 0x6709, 0x5647, 0x99, 0x18, 0xa1, 0x27, 0x01, 0x10, 0xfc, 0x4e);
+        internal static readonly Guid IID = new(0x6ec9e41b, 0x6709, 0x5647, 0x99, 0x18, 0xa1, 0x27, 0x01, 0x10, 0xfc, 0x4e);
 
         [Guid("6ec9e41b-6709-5647-9918-a1270110fc4e")]
         public unsafe struct Vftbl
@@ -618,7 +886,7 @@ namespace ABI.System
             try
             {
                 short __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, short*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -633,7 +901,7 @@ namespace ABI.System
     internal static class Nullable_ushort
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u2)";
-        internal static Guid IID = new(0x5ab7d2c3, 0x6b62, 0x5e71, 0xa4, 0xb6, 0x2d, 0x49, 0xc4, 0xf2, 0x38, 0xfd);
+        internal static readonly Guid IID = new(0x5ab7d2c3, 0x6b62, 0x5e71, 0xa4, 0xb6, 0x2d, 0x49, 0xc4, 0xf2, 0x38, 0xfd);
 
         [Guid("5ab7d2c3-6b62-5e71-a4b6-2d49c4f238fd")]
         public unsafe struct Vftbl
@@ -695,7 +963,7 @@ namespace ABI.System
             try
             {
                 ushort __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, ushort*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -710,7 +978,7 @@ namespace ABI.System
     internal static class Nullable_uint
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u4)";
-        internal static Guid IID = new(0x513ef3af, 0xe784, 0x5325, 0xa9, 0x1e, 0x97, 0xc2, 0xb8, 0x11, 0x1c, 0xf3);
+        internal static readonly Guid IID = new(0x513ef3af, 0xe784, 0x5325, 0xa9, 0x1e, 0x97, 0xc2, 0xb8, 0x11, 0x1c, 0xf3);
 
         [Guid("513ef3af-e784-5325-a91e-97c2b8111cf3")]
         public unsafe struct Vftbl
@@ -772,7 +1040,7 @@ namespace ABI.System
             try
             {
                 uint __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -787,7 +1055,7 @@ namespace ABI.System
     internal static class Nullable_long
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i8)";
-        internal static Guid IID = new(0x4dda9e24, 0xe69f, 0x5c6a, 0xa0, 0xa6, 0x93, 0x42, 0x73, 0x65, 0xaf, 0x2a);
+        internal static readonly Guid IID = new(0x4dda9e24, 0xe69f, 0x5c6a, 0xa0, 0xa6, 0x93, 0x42, 0x73, 0x65, 0xaf, 0x2a);
 
         [Guid("4dda9e24-e69f-5c6a-a0a6-93427365af2a")]
         public unsafe struct Vftbl
@@ -849,7 +1117,7 @@ namespace ABI.System
             try
             {
                 long __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, long*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -864,7 +1132,7 @@ namespace ABI.System
     internal static class Nullable_ulong
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u8)";
-        internal static Guid IID = new(0x6755e376, 0x53bb, 0x568b, 0xa1, 0x1d, 0x17, 0x23, 0x98, 0x68, 0x30, 0x9e);
+        internal static readonly Guid IID = new(0x6755e376, 0x53bb, 0x568b, 0xa1, 0x1d, 0x17, 0x23, 0x98, 0x68, 0x30, 0x9e);
 
         [Guid("6755e376-53bb-568b-a11d-17239868309e")]
         public unsafe struct Vftbl
@@ -926,7 +1194,7 @@ namespace ABI.System
             try
             {
                 ulong __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, ulong*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -941,7 +1209,7 @@ namespace ABI.System
     internal static class Nullable_float
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};f4)";
-        internal static Guid IID = new(0x719cc2ba, 0x3e76, 0x5def, 0x9f, 0x1a, 0x38, 0xd8, 0x5a, 0x14, 0x5e, 0xa8);
+        internal static readonly Guid IID = new(0x719cc2ba, 0x3e76, 0x5def, 0x9f, 0x1a, 0x38, 0xd8, 0x5a, 0x14, 0x5e, 0xa8);
 
         [Guid("719cc2ba-3e76-5def-9f1a-38d85a145ea8")]
         public unsafe struct Vftbl
@@ -1003,7 +1271,7 @@ namespace ABI.System
             try
             {
                 float __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, float*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1018,7 +1286,7 @@ namespace ABI.System
     internal static class Nullable_double
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};f8)";
-        internal static Guid IID = new(0x2f2d6c29, 0x5473, 0x5f3e, 0x92, 0xe7, 0x96, 0x57, 0x2b, 0xb9, 0x90, 0xe2);
+        internal static readonly Guid IID = new(0x2f2d6c29, 0x5473, 0x5f3e, 0x92, 0xe7, 0x96, 0x57, 0x2b, 0xb9, 0x90, 0xe2);
 
         [Guid("2f2d6c29-5473-5f3e-92e7-96572bb990e2")]
         public unsafe struct Vftbl
@@ -1080,7 +1348,7 @@ namespace ABI.System
             try
             {
                 double __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, double*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1095,7 +1363,7 @@ namespace ABI.System
     internal static class Nullable_char
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};c2)";
-        internal static Guid IID = new(0xfb393ef3, 0xbbac, 0x5bd5, 0x91, 0x44, 0x84, 0xf2, 0x35, 0x76, 0xf4, 0x15);
+        internal static readonly Guid IID = new(0xfb393ef3, 0xbbac, 0x5bd5, 0x91, 0x44, 0x84, 0xf2, 0x35, 0x76, 0xf4, 0x15);
 
         [Guid("fb393ef3-bbac-5bd5-9144-84f23576f415")]
         public unsafe struct Vftbl
@@ -1157,7 +1425,7 @@ namespace ABI.System
             try
             {
                 char __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, char*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1172,7 +1440,7 @@ namespace ABI.System
     internal static class Nullable_bool
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};b1)";
-        internal static Guid IID = new(0x3c00fd60, 0x2950, 0x5939, 0xa2, 0x1a, 0x2d, 0x12, 0xc5, 0xa0, 0x1b, 0x8a);
+        internal static readonly Guid IID = new(0x3c00fd60, 0x2950, 0x5939, 0xa2, 0x1a, 0x2d, 0x12, 0xc5, 0xa0, 0x1b, 0x8a);
 
         [Guid("3c00fd60-2950-5939-a21a-2d12c5a01b8a")]
         public unsafe struct Vftbl
@@ -1234,7 +1502,7 @@ namespace ABI.System
             try
             {
                 bool __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, bool*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1249,7 +1517,7 @@ namespace ABI.System
     internal static class Nullable_guid
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};g16)";
-        internal static Guid IID = new(0x7d50f649, 0x632c, 0x51f9, 0x84, 0x9a, 0xee, 0x49, 0x42, 0x89, 0x33, 0xea);
+        internal static readonly Guid IID = new(0x7d50f649, 0x632c, 0x51f9, 0x84, 0x9a, 0xee, 0x49, 0x42, 0x89, 0x33, 0xea);
 
         [Guid("7d50f649-632c-51f9-849a-ee49428933ea")]
         public unsafe struct Vftbl
@@ -1311,7 +1579,7 @@ namespace ABI.System
             try
             {
                 Guid __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return __retval;
             }
@@ -1326,7 +1594,7 @@ namespace ABI.System
     internal static class Nullable_DateTimeOffset
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.DateTime;i8))";
-        internal static Guid IID = new(0x5541d8a7, 0x497c, 0x5aa4, 0x86, 0xfc, 0x77, 0x13, 0xad, 0xbf, 0x2a, 0x2c);
+        internal static readonly Guid IID = new(0x5541d8a7, 0x497c, 0x5aa4, 0x86, 0xfc, 0x77, 0x13, 0xad, 0xbf, 0x2a, 0x2c);
 
         [Guid("5541d8a7-497c-5aa4-86fc-7713adbf2a2c")]
         public unsafe struct Vftbl
@@ -1388,7 +1656,7 @@ namespace ABI.System
             DateTimeOffset __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, DateTimeOffset*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return DateTimeOffset.FromAbi(__retval);
             }
@@ -1404,7 +1672,7 @@ namespace ABI.System
     internal static class Nullable_TimeSpan
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.TimeSpan;i8))";
-        internal static Guid IID = new(0x604d0c4c, 0x91de, 0x5c2a, 0x93, 0x5f, 0x36, 0x2f, 0x13, 0xea, 0xf8, 0x00);
+        internal static readonly Guid IID = new(0x604d0c4c, 0x91de, 0x5c2a, 0x93, 0x5f, 0x36, 0x2f, 0x13, 0xea, 0xf8, 0x00);
 
         [Guid("604d0c4c-91de-5c2a-935f-362f13eaf800")]
         public unsafe struct Vftbl
@@ -1466,7 +1734,7 @@ namespace ABI.System
             TimeSpan __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, TimeSpan*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return TimeSpan.FromAbi(__retval);
             }
@@ -1482,7 +1750,7 @@ namespace ABI.System
     internal static class Nullable_Object
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};cinterface(IInspectable))";
-        internal static Guid IID = new(0x06dccc90, 0xa058, 0x5c88, 0x87, 0xb7, 0x6f, 0x33, 0x60, 0xa2, 0xfc, 0x16);
+        internal static readonly Guid IID = new(0x06dccc90, 0xa058, 0x5c88, 0x87, 0xb7, 0x6f, 0x33, 0x60, 0xa2, 0xfc, 0x16);
 
         [Guid("06dccc90-a058-5c88-87b7-6f3360a2fc16")]
         public unsafe struct Vftbl
@@ -1543,7 +1811,7 @@ namespace ABI.System
     internal static class Nullable_Type
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4)))";
-        internal static Guid IID = new(0x3830ad99, 0xd8da, 0x53f3, 0x98, 0x9b, 0xfc, 0x92, 0xad, 0x22, 0x27, 0x78);
+        internal static readonly Guid IID = new(0x3830ad99, 0xd8da, 0x53f3, 0x98, 0x9b, 0xfc, 0x92, 0xad, 0x22, 0x27, 0x78);
 
         [Guid("3830ad99-d8da-53f3-989b-fc92ad222778")]
         public unsafe struct Vftbl
@@ -1605,7 +1873,7 @@ namespace ABI.System
             Type __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Type*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(Type.FromAbi(__retval));
             }
@@ -1698,7 +1966,7 @@ namespace ABI.System
     [Guid("25230F05-B49C-57EE-8961-5373D98E1AB1")]
     internal static class Nullable_EventHandler
     {
-        internal static Guid IID = new(0x25230F05, 0xB49C, 0x57EE, 0x89, 0x61, 0x53, 0x73, 0xD9, 0x8E, 0x1A, 0xB1);
+        internal static readonly Guid IID = new(0x25230F05, 0xB49C, 0x57EE, 0x89, 0x61, 0x53, 0x73, 0xD9, 0x8E, 0x1A, 0xB1);
 
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
@@ -1745,7 +2013,7 @@ namespace ABI.System
             IntPtr __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(EventHandler.FromAbi(__retval));
             }
@@ -1908,11 +2176,29 @@ namespace ABI.System
     {
         public unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
         public unsafe delegate int GetValueDelegateAbi(void* thisPtr, void* value);
+        public unsafe delegate int GetValueDelegateAbiDateTimeOffset(void* ptr, DateTimeOffset* result);
+    }
+
+    internal static class IReferenceSignatures
+    {
+        public const string Point = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Point;f4;f4))";
+        public const string Size = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Size;f4;f4))";
+        public const string Rect = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Rect;f4;f4;f4;f4))";
+        public const string Matrix3x2 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Matrix3x2;f4;f4;f4;f4;f4;f4))";
+        public const string Matrix4x4 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Matrix4x4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4;f4))";
+        public const string Plane = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Plane;struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4);f4))";
+        public const string Quaternion = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Quaternion;f4;f4;f4;f4))";
+        public const string Vector2 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector2;f4;f4))";
+        public const string Vector3 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4))";
+        public const string Vector4 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector4;f4;f4;f4;f4))";
     }
 
     internal static class IReferenceIIDs
     {
 #if NET
+        internal static readonly Guid IReferenceOfPoint_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x22, 0x4C, 0xF1, 0x84, 0x0A, 0xA0, 0x72, 0x52, 0x8D, 0x3D, 0x82, 0x11, 0x2E, 0x66, 0xDF, 0x00 }));
+        internal static readonly Guid IReferenceOfSize_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x86, 0x30, 0x72, 0x61, 0x53, 0x8E, 0x76, 0x52, 0x9F, 0x36, 0x2A, 0x4B, 0xB9, 0x3E, 0x2B, 0x75 }));
+        internal static readonly Guid IReferenceOfRect_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x11, 0x3F, 0x42, 0x80, 0x4F, 0x05, 0xAC, 0x5E, 0xAF, 0xD3, 0x63, 0xB6, 0xCE, 0x15, 0xE7, 0x7B }));
         internal static readonly Guid IReferenceMatrix3x2_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xfd, 0x8c, 0x35, 0x76, 0xbd, 0x2c, 0x5b, 0x52, 0xa4, 0x9e, 0x90, 0xee, 0x18, 0x24, 0x7b, 0x71 }));
         internal static readonly Guid IReferenceMatrix4x4_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xdc, 0xff, 0xcb, 0xda, 0xef, 0x68, 0xd0, 0x5f, 0xb6, 0x57, 0x78, 0x2d, 0x0a, 0xc9, 0x80, 0x7e }));
         internal static readonly Guid IReferencePlane_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xa1, 0x42, 0xd5, 0x46, 0xf7, 0x52, 0xe7, 0x58, 0xac, 0xfc, 0x9a, 0x6d, 0x36, 0x4d, 0xa0, 0x22 }));
