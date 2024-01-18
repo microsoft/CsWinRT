@@ -1682,7 +1682,6 @@ namespace WinRT
 
     internal static class Marshaler
     {
-        internal static Action<object> EmptyFunc = (object box) => { };
         internal static Func<object, object> ReturnParameterFunc = (object box) => box;
         internal static unsafe Action<object, IntPtr> CopyIntEnumFunc = 
             (object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
@@ -1841,8 +1840,8 @@ namespace WinRT
                     GetAbi = Marshaler.ReturnParameterFunc;
                     FromAbi = (object value) => (T)value;
                     FromManaged = ReturnTypedParameterFunc;
-                    DisposeMarshaler = Marshaler.EmptyFunc;
-                    DisposeAbi = Marshaler.EmptyFunc;
+                    DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
+                    DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
                     if (typeof(T).IsEnum)
                     {
                         // For marshaling non-blittable enum arrays via MarshalNonBlittable
