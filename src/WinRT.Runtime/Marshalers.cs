@@ -1316,7 +1316,7 @@ namespace WinRT
             DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
         private static readonly Type HelperType = typeof(T).GetHelperType();
-        private static Func<T, IObjectReference> _ToAbi;
+        private static FieldInfo _ObjField;
         private static Func<T, IObjectReference> _CreateMarshaler;
 
         public static T FromAbi(IntPtr ptr)
@@ -1336,25 +1336,17 @@ namespace WinRT
                 return null;
             }
 
-            // If the value passed in is the native implementation of the interface
-            // use the ToAbi delegate since it will be faster than reflection.
-            if (value.GetType() == HelperType)
+            if (TryGetObjFieldValue(value, out IObjectReference objectReference))
             {
-                if (_ToAbi == null)
-                {
-                    _ToAbi = BindToAbi();
-                }
-                var ptr = _ToAbi(value).GetRef();
+                IntPtr ptr = objectReference.GetRef();
+
                 // We can use ObjectReference.Attach here since this API is
                 // only used during marshalling where we deterministically dispose
                 // on the same thread (and as a result don't need to capture context).
                 return ObjectReference<IUnknownVftbl>.Attach(ref ptr);
             }
 
-            if (_CreateMarshaler is null)
-            {
-                _CreateMarshaler = BindCreateMarshaler();
-            }
+            _CreateMarshaler ??= BindCreateMarshaler();
 
             return _CreateMarshaler(value);
         }
@@ -1366,15 +1358,9 @@ namespace WinRT
                 return new ObjectReferenceValue();
             }
 
-            // If the value passed in is the native implementation of the interface
-            // use the ToAbi delegate since it will be faster than reflection.
-            if (value.GetType() == HelperType)
+            if (TryGetObjFieldValue(value, out IObjectReference objectReference))
             {
-                if (_ToAbi == null)
-                {
-                    _ToAbi = BindToAbi();
-                }
-                return _ToAbi(value).AsValue();
+                return objectReference.AsValue();
             }
 
             return MarshalInspectable<T>.CreateMarshaler2(value, iid == default ? GuidGenerator.GetIID(HelperType) : iid, true);
@@ -1429,10 +1415,22 @@ namespace WinRT
 
         public static unsafe void DisposeAbiArray(object box) => MarshalInterfaceHelper<T>.DisposeAbiArray(box);
 
-        private static Func<T, IObjectReference> BindToAbi()
+        private static bool TryGetObjFieldValue(T value, out IObjectReference objectReference)
         {
-            var objField = HelperType.GetField("_obj", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-            return (T arg) => (IObjectReference) objField.GetValue(arg);
+            // If the value passed in is the native implementation of the interface,
+            // cache the '_obj' field and access it directly rather using a marshaler.
+            if (value.GetType() == HelperType)
+            {
+                _ObjField ??= HelperType.GetField("_obj", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+                objectReference = (IObjectReference)_ObjField.GetValue(value);
+
+                return true;
+            }
+
+            objectReference = null;
+
+            return false;
         }
 
         private static Func<T, IObjectReference> BindCreateMarshaler()
