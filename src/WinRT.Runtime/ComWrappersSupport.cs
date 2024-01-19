@@ -778,6 +778,13 @@ namespace WinRT
             }
             if (type.IsDelegate())
             {
+#if NET
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException($"Cannot provide IReference`1 support for delegate type '{type}'.");
+                }
+#endif
+
                 var delegateHelperType = typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(type);
                 return new ComInterfaceEntry
                 {
@@ -849,6 +856,13 @@ namespace WinRT
                     Vtable = ABI.System.Nullable_Exception.Vftbl.AbiToProjectionVftablePtr
                 };
             }
+
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot provide IReference`1 support for type '{type}'.");
+            }
+#endif
 
             return new ComInterfaceEntry
             {
@@ -1060,6 +1074,14 @@ namespace WinRT
                     Vtable = BoxedArrayIReferenceArrayImpl<System.Exception>.AbiToProjectionVftablePtr
                 };
             }
+
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot provide IReferenceArray`1 support for element type '{type}'.");
+            }
+#endif
+
             return new ComInterfaceEntry
             {
                 IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<>).MakeGenericType(type)),
