@@ -231,8 +231,12 @@ $(CsWinRTInternalProjection)
   </Target>
 
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="CsWinRT.UiXamlMode" Condition="'$(CsWinRTUiXamlMode)' != ''">
-      <Value>$(CsWinRTUiXamlMode)</Value>
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUiXamlMode)' == 'WindowsUiXaml'">
+      <Value>true</Value>
+      <Trim>true</Trim>
+    </RuntimeHostConfigurationOption>
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUiXamlMode)' != 'WindowsUiXaml'">
+      <Value>false</Value>
       <Trim>true</Trim>
     </RuntimeHostConfigurationOption>
   </ItemGroup>

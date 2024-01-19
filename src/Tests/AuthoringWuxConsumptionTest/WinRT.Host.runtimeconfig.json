@@ -7,7 +7,7 @@
       "version": "6.0.0"
     },
     "configProperties": {
-      "CsWinRT.UiXamlMode": "WindowsUiXaml"
+      "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS": "true"
     }
   }
 }

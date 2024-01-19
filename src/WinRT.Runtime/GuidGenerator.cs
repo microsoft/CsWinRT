@@ -48,12 +48,9 @@ namespace WinRT
 
         internal static Guid GetWuxMuxIID(WuxMuxProjectedTypeAttribute wuxMuxAttribute)
         {
-            return FeatureSwitches.WuxMuxMode switch
-            {
-                Projections.UiXamlMode.WindowsUiXaml => wuxMuxAttribute.WuxIID,
-                Projections.UiXamlMode.MicrosoftUiXaml => wuxMuxAttribute.MuxIID,
-                _ => throw new InvalidOperationException("Invalid UI XAML mode")
-            };
+            return FeatureSwitches.IsWuxMode
+                ? wuxMuxAttribute.WuxIID
+                : wuxMuxAttribute.MuxIID;
         }
 
         public static string GetSignature(

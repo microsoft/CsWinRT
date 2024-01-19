@@ -278,7 +278,7 @@ namespace ABI.System.Collections.Specialized
     struct NotifyCollectionChangedEventArgs
     {
         private static IWinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = 
-            FeatureSwitches.WuxMuxMode == Projections.UiXamlMode.WindowsUiXaml
+            FeatureSwitches.IsWuxMode
             ? new WUXNotifyCollectionChangedEventArgsRuntimeClassFactory(ActivationFactory.Get("Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"))
             : new MUXNotifyCollectionChangedEventArgsRuntimeClassFactory(ActivationFactory.Get("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"));
 
@@ -358,7 +358,7 @@ namespace ABI.System.Collections.Specialized
 
         public static string GetGuidSignature()
         {
-            if (FeatureSwitches.WuxMuxMode == Projections.UiXamlMode.WindowsUiXaml)
+            if (FeatureSwitches.IsWuxMode)
             {
                 return "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})";
             }

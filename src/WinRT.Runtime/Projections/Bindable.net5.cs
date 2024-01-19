@@ -145,7 +145,7 @@ namespace ABI.System.Collections
         {
             AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(IEnumerable), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 1);
             *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>*)AbiToProjectionVftablePtr)[6] = FeatureSwitches.WuxMuxMode is Projections.UiXamlMode.WindowsUiXaml ? &Do_Wux_Abi_First_0 : &Do_Mux_Abi_First_0;
+            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>*)AbiToProjectionVftablePtr)[6] = FeatureSwitches.IsWuxMode ? &Do_Wux_Abi_First_0 : &Do_Mux_Abi_First_0;
         }
 
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
@@ -767,7 +767,7 @@ namespace ABI.System.Collections
             *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
             ((delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_GetAt_0;
             ((delegate* unmanaged[Stdcall]<IntPtr, uint*, int>*)AbiToProjectionVftablePtr)[7] = &Do_Abi_get_Size_1;
-            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>*)AbiToProjectionVftablePtr)[8] = FeatureSwitches.WuxMuxMode is Projections.UiXamlMode.WindowsUiXaml ? &Do_Wux_Abi_GetView_2 : &Do_Mux_Abi_GetView_2;
+            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>*)AbiToProjectionVftablePtr)[8] = FeatureSwitches.IsWuxMode ? &Do_Wux_Abi_GetView_2 : &Do_Mux_Abi_GetView_2;
             ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int>*)AbiToProjectionVftablePtr)[9] = &Do_Abi_IndexOf_3;
             ((delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int>*)AbiToProjectionVftablePtr)[10] = &Do_Abi_SetAt_4;
             ((delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int>*)AbiToProjectionVftablePtr)[11] = &Do_Abi_InsertAt_5;
@@ -983,7 +983,7 @@ namespace ABI.System.Collections
         internal static FromAbiHelper _VectorToList(IWinRTObject _this)
         {
             IBindableVectorAdapter adapter = null;
-            if (FeatureSwitches.WuxMuxMode is Projections.UiXamlMode.WindowsUiXaml)
+            if (FeatureSwitches.IsWuxMode)
             {
                 adapter = new WuxBindableVectorAdapter((WUX.IBindableVector)_this);
             }

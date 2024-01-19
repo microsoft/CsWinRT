@@ -25,13 +25,6 @@ namespace WinRT
 #endif
     static class Projections
     {
-        internal enum UiXamlMode
-        {
-            Unknown,
-            MicrosoftUiXaml,
-            WindowsUiXaml
-        }
-
 
         private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
 
@@ -72,7 +65,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(TimeSpan), typeof(ABI.System.TimeSpan), "Windows.Foundation.TimeSpan");
             RegisterCustomAbiTypeMappingNoLock(typeof(Uri), typeof(ABI.System.Uri), "Windows.Foundation.Uri", isRuntimeClass: true);
 
-            if (UiXamlModeSetting == UiXamlMode.MicrosoftUiXaml)
+            if (!FeatureSwitches.IsWuxMode)
             {
                 RegisterCustomAbiTypeMappingNoLock(typeof(DataErrorsChangedEventArgs), typeof(ABI.System.ComponentModel.DataErrorsChangedEventArgs), "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", isRuntimeClass: true);
                 RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", isRuntimeClass: true);
@@ -90,7 +83,7 @@ namespace WinRT
                 CustomTypeToHelperTypeMappings.Add(typeof(Microsoft.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList));
             }
 #if NET5_0_OR_GREATER
-            else if (UiXamlModeSetting == UiXamlMode.WindowsUiXaml)
+            else
             {
                 RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Windows.UI.Xaml.Data.PropertyChangedEventArgs", isRuntimeClass: true);
                 RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventHandler), typeof(ABI.System.ComponentModel.PropertyChangedEventHandler), "Windows.UI.Xaml.Data.PropertyChangedEventHandler");
