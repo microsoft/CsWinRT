@@ -565,11 +565,9 @@ namespace WinRT
                 // there is to the actual type.
                 if (runtimeClassName.StartsWith("Windows.Foundation.IReference`1<", StringComparison.Ordinal))
                 {
-                    // runtimeClassName is of format Windows.Foundation.IReference`1<type>.
-                    runtimeClassName = runtimeClassName.Substring(32, runtimeClassName.Length - 33);
-                    implementationType = TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName);
                     isNullable = true;
-                    return implementationType;
+                    // runtimeClassName is of format Windows.Foundation.IReference`1<type>.
+                    return TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName.Substring(32, runtimeClassName.Length - 33));
                 }
 
                 implementationType = TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName);
@@ -608,18 +606,6 @@ namespace WinRT
                 {
                     return staticallyDeterminedType;
                 }
-            }
-
-            // Check if this is a nullable type where there are no references to the nullable version, but
-            // there is to the actual type.
-            if (implementationType == null && 
-                !string.IsNullOrEmpty(runtimeClassName) && 
-                runtimeClassName.StartsWith("Windows.Foundation.IReference`1<", StringComparison.Ordinal))
-            {
-                // runtimeClassName is of format Windows.Foundation.IReference`1<type>.
-                runtimeClassName = runtimeClassName.Substring(32, runtimeClassName.Length - 33);
-                implementationType = TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName);
-                isNullable = true;
             }
 
             return implementationType;
