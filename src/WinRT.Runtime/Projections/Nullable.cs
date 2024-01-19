@@ -2252,10 +2252,36 @@ namespace ABI.System
                 if (type == typeof(global::System.Numerics.Vector2)) return Nullable<global::System.Numerics.Vector2>.GetValue(inspectable);
                 if (type == typeof(global::System.Numerics.Vector3)) return Nullable<global::System.Numerics.Vector3>.GetValue(inspectable);
                 if (type == typeof(global::System.Numerics.Vector4)) return Nullable<global::System.Numerics.Vector4>.GetValue(inspectable);
+                if (type == typeof(global::System.EventHandler)) return Nullable_EventHandler.GetValue(inspectable);
                 if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(int)) return Nullable_IntEnum.GetValue(type, inspectable);
                 if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint)) return Nullable_FlagsEnum.GetValue(type, inspectable);
 
-                return ComWrappersSupport.GetTypedRcwFactory(type)(inspectable);
+#if NET
+                var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+                if (winrtExposedClassAttribute == null)
+                {
+                    var authoringMetadaType = type.GetAuthoringMetadataType();
+                    if (authoringMetadaType != null)
+                    {
+                        winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+                    }
+                }
+
+                if (winrtExposedClassAttribute != null && winrtExposedClassAttribute.WinRTExposedTypeDetails != null)
+                {                    
+                    if (Activator.CreateInstance(winrtExposedClassAttribute.WinRTExposedTypeDetails) is IWinRTNullableTypeDetails nullableTypeDetails)
+                    {
+                        return nullableTypeDetails.GetNullableValue(inspectable);
+                    }
+                }
+
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException($"Failed to get the value from nullable with type '{type}'.");
+                }
+#endif
+
+                return ComWrappersSupport.GetTypedRcwFactory(typeof(global::System.Nullable).MakeGenericType(type))(inspectable);
             }
         }
     }
@@ -2302,7 +2328,12 @@ namespace ABI.System
 #if NET
     namespace WinRT
 {
-    public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails where T: struct where TAbi : unmanaged
+    internal interface IWinRTNullableTypeDetails
+    {
+        ABI.System.Nullable GetNullableValue(IInspectable inspectable);
+    }
+
+    public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T: struct where TAbi : unmanaged
     {
         private static readonly Guid PIID = GuidGenerator.CreateIID(typeof(ABI.System.Nullable<T>));
 
@@ -2322,9 +2353,33 @@ namespace ABI.System
                 }
             };
         }
+
+        unsafe ABI.System.Nullable IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable)
+        {
+            IntPtr nullablePtr = IntPtr.Zero;
+            TAbi __retval = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                if (typeof(T) == typeof(TAbi))
+                {
+                    return new ABI.System.Nullable(__retval);
+                }
+                else 
+                {
+                    return new ABI.System.Nullable(Marshaler<T>.FromAbi(__retval));
+                }
+            }
+            finally
+            {
+                Marshaler<T>.DisposeAbi(__retval);
+                Marshal.Release(nullablePtr);
+            }
+        }
     }
 
-    public abstract class DelegateTypeDetails<T> : IWinRTExposedTypeDetails where T : global::System.Delegate
+    public abstract class DelegateTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : global::System.Delegate
     {
         private static readonly Guid PIID = GuidGenerator.CreateIID(typeof(ABI.System.Nullable<T>));
 
@@ -2352,6 +2407,23 @@ namespace ABI.System
         }
 
         public abstract ComWrappers.ComInterfaceEntry GetDelegateInterface();
+
+        unsafe ABI.System.Nullable IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable)
+        {
+            IntPtr nullablePtr = IntPtr.Zero;
+            IntPtr __retval = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return new ABI.System.Nullable(Marshaler<T>.FromAbi(__retval));
+            }
+            finally
+            {
+                Marshaler<T>.DisposeAbi(__retval);
+                Marshal.Release(nullablePtr);
+            }
+        }
     }
 }
 #endif
