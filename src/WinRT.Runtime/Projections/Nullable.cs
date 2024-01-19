@@ -2226,9 +2226,33 @@ namespace ABI.System
     {
         public static object GetValue(global::System.Type type, IInspectable inspectable)
         {
-            object obj = GetValue(type, inspectable);
-            ComWrappersSupport.AddToBoxedValueCache(obj, inspectable);
-            return obj;
+            object obj;
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                obj = GetValue(type, inspectable);
+                ComWrappersSupport.AddToBoxedValueCache(obj, inspectable);
+                return obj;
+            }
+#endif
+
+            obj = GetValue(type, inspectable);
+            if (obj != null)
+            {
+                ComWrappersSupport.AddToBoxedValueCache(obj, inspectable);
+                return obj;
+            } // fallback for .NET standard and pre-existing projections.
+            else
+            {
+                if (type.IsDelegate())
+                {
+                    return ComWrappersSupport.GetTypedRcwFactory(typeof(Nullable_Delegate<>).MakeGenericType(type))(inspectable);
+                }
+                else
+                {
+                    return ComWrappersSupport.GetTypedRcwFactory(typeof(global::System.Nullable<>).MakeGenericType(type))(inspectable);
+                }
+            }
 
             static object GetValue(global::System.Type type, IInspectable inspectable)
             {
@@ -2288,14 +2312,8 @@ namespace ABI.System
                     throw new NotSupportedException($"Failed to get the value from nullable with type '{type}'.");
                 }
 #endif
-                if (type.IsDelegate())
-                {
-                    return ComWrappersSupport.GetTypedRcwFactory(typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(type))(inspectable);
-                }
-                else
-                {
-                    return ComWrappersSupport.GetTypedRcwFactory(typeof(global::System.Nullable<>).MakeGenericType(type))(inspectable);
-                }
+
+                return null;
             }
         }
     }
