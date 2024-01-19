@@ -22,10 +22,10 @@ namespace Generator
                 ("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", false, true);
         }
 
-        public TypeMapper(UiXamlMode xamlMode)
+        public TypeMapper(UIXamlProjectionsMode xamlMode)
         {
             // This should be in sync with the reverse mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
-            if (xamlMode == UiXamlMode.WindowsUIXaml)
+            if (xamlMode == UIXamlProjectionsMode.WindowsUIXaml)
             {
                 typeMapping = new(StringComparer.Ordinal)
                 {

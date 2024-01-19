@@ -16,7 +16,7 @@ namespace Generator
             _assemblyName = assemblyName;
             _context = context;
             _flag = false;
-            _typeMapper = new TypeMapper(context.AnalyzerConfigOptions.GlobalOptions.GetUiXamlMode());
+            _typeMapper = new TypeMapper(context.AnalyzerConfigOptions.GlobalOptions.GetUIXamlProjectionsMode());
         }
 
         private readonly string _assemblyName;

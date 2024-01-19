@@ -20,7 +20,7 @@ namespace Generator
         {
             var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent()));
 
-            var typeMapper = context.AnalyzerConfigOptionsProvider.Select((options, ct) => options.GlobalOptions.GetUiXamlMode()).Select((mode, ct) => new TypeMapper(mode));
+            var typeMapper = context.AnalyzerConfigOptionsProvider.Select((options, ct) => options.GlobalOptions.GetUIXamlProjectionsMode()).Select((mode, ct) => new TypeMapper(mode));
 
             var possibleVtableAttributesToAdd = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => NeedVtableAttribute(n),
