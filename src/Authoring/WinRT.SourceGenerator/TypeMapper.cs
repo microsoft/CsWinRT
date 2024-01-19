@@ -25,7 +25,7 @@ namespace Generator
         public TypeMapper(UiXamlMode xamlMode)
         {
             // This should be in sync with the reverse mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
-            if (xamlMode == UiXamlMode.WindowsUiXaml)
+            if (xamlMode == UiXamlMode.WindowsUIXaml)
             {
                 typeMapping = new(StringComparer.Ordinal)
                 {
