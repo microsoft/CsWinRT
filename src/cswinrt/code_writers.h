@@ -9653,10 +9653,15 @@ public static IntPtr Make()
 }
 
 static readonly % _factory = new %();
-public static ObjectReference<I> ActivateInstance<I>()
+public static ObjectReference<I> ActivateInstance<
+#if NET5_0_OR_GREATER
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+    I>()
 {
-IntPtr instance = _factory.ActivateInstance();
-return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
+    IntPtr instance = _factory.ActivateInstance();
+
+    return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
 }
 
 %
