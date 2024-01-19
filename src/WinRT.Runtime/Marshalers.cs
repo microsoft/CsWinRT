@@ -1822,7 +1822,32 @@ namespace WinRT
                     }
                 }
 
-                if (AbiType == null)
+                // We repeat all primitive checks here as the linker is not able to propagate the constant
+                // expression from above, and ends up instantiating MarshalNonBlittable<T> below for many
+                // blittable types, unnecessarily, which wastes binary size. If the type doesn't match
+                // any of the primitive types, then we do the usual ABI type check as well.
+                if (typeof(T) == typeof(int) ||
+                    typeof(T) == typeof(byte) ||
+                    typeof(T) == typeof(sbyte) ||
+                    typeof(T) == typeof(short) ||
+                    typeof(T) == typeof(ushort) ||
+                    typeof(T) == typeof(uint) ||
+                    typeof(T) == typeof(long) ||
+                    typeof(T) == typeof(ulong) ||
+                    typeof(T) == typeof(float) ||
+                    typeof(T) == typeof(double) ||
+                    typeof(T) == typeof(Guid) ||
+                    typeof(T) == typeof(global::Windows.Foundation.Point) ||
+                    typeof(T) == typeof(global::Windows.Foundation.Rect) ||
+                    typeof(T) == typeof(global::Windows.Foundation.Size) ||
+                    typeof(T) == typeof(global::System.Numerics.Matrix3x2) ||
+                    typeof(T) == typeof(global::System.Numerics.Matrix4x4) ||
+                    typeof(T) == typeof(global::System.Numerics.Plane) ||
+                    typeof(T) == typeof(global::System.Numerics.Quaternion) ||
+                    typeof(T) == typeof(global::System.Numerics.Vector2) ||
+                    typeof(T) == typeof(global::System.Numerics.Vector3) ||
+                    typeof(T) == typeof(global::System.Numerics.Vector4) ||
+                    AbiType == null)
                 {
                     Func<T, object> ReturnTypedParameterFunc = (T value) => value;
                     AbiType = typeof(T);
