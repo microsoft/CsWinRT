@@ -2280,8 +2280,14 @@ namespace ABI.System
                     throw new NotSupportedException($"Failed to get the value from nullable with type '{type}'.");
                 }
 #endif
-
-                return ComWrappersSupport.GetTypedRcwFactory(typeof(global::System.Nullable).MakeGenericType(type))(inspectable);
+                if (type.IsDelegate())
+                {
+                    return ComWrappersSupport.GetTypedRcwFactory(typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(type))(inspectable);
+                }
+                else
+                {
+                    return ComWrappersSupport.GetTypedRcwFactory(typeof(global::System.Nullable<>).MakeGenericType(type))(inspectable);
+                }
             }
         }
     }
