@@ -90,7 +90,7 @@ namespace Generator
 
         internal static VtableAttribute GetVtableAttributeToAdd(ITypeSymbol symbol, Func<ISymbol, bool> isWinRTType, IAssemblySymbol assemblySymbol, bool isAuthoring, string authoringDefaultInterface = "")
         {
-            if (GeneratorHelper.HasNonInstantiatedWinRTGeneric(symbol) || GeneratorHelper.HasPrivateclass(symbol))
+            if (GeneratorHelper.HasNonInstantiatedWinRTGeneric(symbol))
             {
                 return default;
             }
@@ -381,9 +381,20 @@ namespace Generator
                         """);
                     }
 
+                    // Handle nested classes
+                    var classes = vtableAttribute.ClassName.Split('.');
+                    var className = classes[^1];
+                    for (int idx = 0; idx < classes.Length - 1; idx++)
+                    {
+                        source.AppendLine($$"""
+                            partial class {{classes[idx]}}
+                            { 
+                            """);
+                    }
+
                     source.AppendLine($$"""
                     [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
-                    partial class {{vtableAttribute.ClassName}}
+                    partial class {{className}}
                     {
                     }
 
@@ -440,6 +451,11 @@ namespace Generator
                                 }
                             }
                         """);
+
+                    for (int idx = 0; idx < classes.Length - 1; idx++)
+                    {
+                        source.AppendLine($@"}}");
+                    }
 
                     if (!vtableAttribute.IsGlobalNamespace)
                     {
