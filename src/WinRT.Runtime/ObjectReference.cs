@@ -26,7 +26,7 @@ namespace WinRT
         private readonly IntPtr _thisPtr;
         private object _disposedLock = new object();
         private IntPtr _referenceTrackerPtr;
-        private IntPtr _contextPtr;
+        protected IntPtr _contextToken;
 
         public IntPtr ThisPtr
         {
@@ -37,9 +37,9 @@ namespace WinRT
             }
         }
 
-        public bool IsFreeThreaded => _contextPtr == IntPtr.Zero;
+        public bool IsFreeThreaded => _contextToken == IntPtr.Zero;
 
-        public bool IsInCurrentContext => IsFreeThreaded || _contextPtr == Context.GetContextToken();
+        public bool IsInCurrentContext => IsFreeThreaded || _contextToken == Context.GetContextToken();
 
         private protected IntPtr ThisPtrFromOriginalContext
         {
@@ -122,17 +122,17 @@ namespace WinRT
                 throw new ArgumentNullException(nameof(thisPtr));
             }
             _thisPtr = thisPtr;
-            _contextPtr = ComWrappersSupport.IsFreeThreaded(thisPtr) ? IntPtr.Zero : Context.GetContextToken();
+            _contextToken = ComWrappersSupport.IsFreeThreaded(thisPtr) ? IntPtr.Zero : Context.GetContextToken();
         }
 
-        protected IObjectReference(IntPtr thisPtr, IntPtr contextPtr)
+        protected IObjectReference(IntPtr thisPtr, IntPtr contextToken)
         {
             if (thisPtr == IntPtr.Zero)
             {
                 throw new ArgumentNullException(nameof(thisPtr));
             }
             _thisPtr = thisPtr;
-            _contextPtr = contextPtr;
+            _contextToken = contextToken;
         }
 
         ~IObjectReference()
@@ -440,14 +440,14 @@ namespace WinRT
             }
         }
 
-        ObjectReference(IntPtr thisPtr, IntPtr contextPtr, T vftblT) :
-            base(thisPtr, contextPtr)
+        ObjectReference(IntPtr thisPtr, IntPtr contextToken, T vftblT) :
+            base(thisPtr, contextToken)
         {
             _vftbl = vftblT;
         }
 
-        private protected ObjectReference(IntPtr thisPtr, IntPtr contextPtr) :
-            this(thisPtr, contextPtr, GetVtable(thisPtr))
+        private protected ObjectReference(IntPtr thisPtr, IntPtr contextToken) :
+            this(thisPtr, contextToken, GetVtable(thisPtr))
         {
         }
 
@@ -581,7 +581,6 @@ namespace WinRT
             : base(thisPtr, contextToken)
         {
             _contextCallbackPtr = contextCallbackPtr;
-            _contextToken = contextToken;
         }
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
