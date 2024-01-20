@@ -3,7 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+
+#nullable enable
 
 namespace WinRT
 {
@@ -142,7 +145,12 @@ namespace WinRT
         /// <param name="token">The registration token to use to remove the event handler.</param>
         /// <param name="handler">The resulting delegate associated with <paramref name="token"/>, if it exists.</param>
         /// <returns>Whether or not a registered event handler could be retrieved and removed from the table.</returns>
-        public bool RemoveEventHandler(EventRegistrationToken token, out T handler)
+        public bool RemoveEventHandler(
+            EventRegistrationToken token,
+#if NET6_0_OR_GREATER
+            [NotNullWhen(true)]
+#endif
+            out T? handler)
         {
             // If the token doesn't have the upper 32 bits set to the hashcode of the delegate
             // type in use, we know that the token cannot possibly have a registered handler.
@@ -164,14 +172,14 @@ namespace WinRT
 #if NET6_0_OR_GREATER
                 // On .NET 6 and above, we can use a single lookup to both check whether the token
                 // exists in the table, remove it, and also retrieve the removed handler to return.
-                if (m_tokens.Remove((int)token.Value, out object obj))
+                if (m_tokens.Remove((int)token.Value, out object? obj))
                 {
                     handler = Unsafe.As<T>(obj);
 
                     return true;
                 }
 #else
-                if (m_tokens.TryGetValue((int)token.Value, out object obj))
+                if (m_tokens.TryGetValue((int)token.Value, out object? obj))
                 {
                     m_tokens.Remove((int)token.Value);
 
