@@ -77,16 +77,14 @@ namespace WinRT
         // This can either be if the object implements IAgileObject or the free threaded marshaler.
         internal unsafe static bool IsFreeThreaded(IntPtr iUnknown)
         {
-            Guid iid_IAgileObject = InterfaceIIDs.IAgileObject_IID;
-            if (Marshal.QueryInterface(iUnknown, ref iid_IAgileObject, out var agilePtr) >= 0)
+            if (Marshal.QueryInterface(iUnknown, ref Unsafe.AsRef(InterfaceIIDs.IAgileObject_IID), out var agilePtr) >= 0)
             {
                 Marshal.Release(agilePtr);
                 return true;
             }
             else
             {
-                Guid iid_IMarshal = InterfaceIIDs.IMarshal_IID;
-                if (Marshal.QueryInterface(iUnknown, ref iid_IMarshal, out var marshalPtr) >= 0)
+                if (Marshal.QueryInterface(iUnknown, ref Unsafe.AsRef(InterfaceIIDs.IMarshal_IID), out var marshalPtr) >= 0)
                 {
                     try
                     {
