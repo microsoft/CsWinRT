@@ -127,6 +127,14 @@ if (enumerableRequiredTwo == null)
     return 115;
 }
 
+var nestedClass = TestClass2.GetInstance();
+ccw = MarshalInspectable<object>.CreateMarshaler(nestedClass);
+ccw.TryAs<IUnknownVftbl>(IID_IProperties2, out properties2CCW);
+if (properties2CCW == null)
+{
+    return 116;
+}
+
 var managedWarningClassList = new List<ManagedWarningClass>();
 instance.BindableIterableProperty = managedWarningClassList;
 
@@ -342,5 +350,19 @@ sealed class TestClass
     {
         private int _value;
         public int ReadWriteProperty { get => _value; set => _value = value; }
+    }
+}
+
+partial class TestClass2
+{
+    private partial class NestedTestClass : IProperties2
+    {
+        private int _value;
+        public int ReadWriteProperty { get => _value; set => _value = value; }
+    }
+
+    internal static IProperties2 GetInstance()
+    {
+        return new NestedTestClass();
     }
 }
