@@ -7,8 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Threading;
 using WinRT.Interop;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
@@ -24,7 +22,8 @@ namespace WinRT
 #endif
     abstract class IObjectReference : IDisposable
     {
-        private IntPtr _thisPtr;
+        protected bool disposed;
+        private readonly IntPtr _thisPtr;
         private object _disposedLock = new object();
         private IntPtr _referenceTrackerPtr;
         private IntPtr _contextPtr;
@@ -103,6 +102,15 @@ namespace WinRT
             {
                 ThrowIfDisposed();
                 return **(IUnknownVftbl**)ThisPtr;
+            }
+        }
+
+        private protected unsafe IUnknownVftbl VftblIUnknownFromOriginalContext
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return **(IUnknownVftbl**)ThisPtrFromOriginalContext;
             }
         }
 
@@ -256,11 +264,11 @@ namespace WinRT
 
         protected void ThrowIfDisposed()
         {
-            if (_thisPtr == IntPtr.Zero)
+            if (disposed)
             {
                 lock (_disposedLock)
                 {
-                    if (_thisPtr == IntPtr.Zero) throw new ObjectDisposedException("ObjectReference");
+                    if (disposed) throw new ObjectDisposedException("ObjectReference");
                 }
             }
         }
@@ -275,7 +283,7 @@ namespace WinRT
         {
             lock (_disposedLock)
             {
-                if (_thisPtr == IntPtr.Zero)
+                if (disposed)
                 {
                     return;
                 }
@@ -290,20 +298,32 @@ namespace WinRT
                 {
                     Release();
                 }
-                else
-                {
-                    // No release
-                    Interlocked.Exchange(ref _thisPtr, IntPtr.Zero);
-                }
 
                 DisposeTrackerSource();
+                disposed = true;
+            }
+        }
+
+        internal bool Resurrect()
+        {
+            lock (_disposedLock)
+            {
+                if (!disposed)
+                {
+                    return false;
+                }
+                disposed = false;
+                ResurrectTrackerSource();
+                AddRef();
+                GC.ReRegisterForFinalize(this);
+                return true;
             }
         }
 
         protected virtual unsafe void AddRef(bool refFromTrackerSource)
         {
             Marshal.AddRef(ThisPtr);
-            if(refFromTrackerSource)
+            if (refFromTrackerSource)
             {
                 AddRefFromTrackerSource();
             }
@@ -317,12 +337,7 @@ namespace WinRT
         protected virtual unsafe void Release()
         {
             ReleaseFromTrackerSource();
-
-            var thisPtr = Interlocked.Exchange(ref _thisPtr, IntPtr.Zero);
-            if (thisPtr != IntPtr.Zero)
-            {
-                Marshal.Release(thisPtr);
-            }
+            Marshal.Release(ThisPtr);
         }
 
         private protected unsafe void ReleaseWithoutContext()
@@ -335,39 +350,47 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
-                return (**(IUnknownVftbl**)ThisPtr).Equals(IUnknownVftbl.AbiToProjectionVftbl);
+                return VftblIUnknown.Equals(IUnknownVftbl.AbiToProjectionVftbl);
             }
         }
 
         internal unsafe void AddRefFromTrackerSource()
         {
-            var referenceTrackerPtr = ReferenceTrackerPtr;
-            if (referenceTrackerPtr != IntPtr.Zero)
+            if (ReferenceTrackerPtr != IntPtr.Zero)
             {
-                (**(IReferenceTrackerVftbl**)referenceTrackerPtr).AddRefFromTrackerSource(referenceTrackerPtr);
+                ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
             }
         }
 
         internal unsafe void ReleaseFromTrackerSource()
         {
-            var referenceTrackerPtr = ReferenceTrackerPtr;
-            if (referenceTrackerPtr != IntPtr.Zero)
+            if (ReferenceTrackerPtr != IntPtr.Zero)
             {
-                (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(referenceTrackerPtr);
+                ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
+            }
+        }
+
+        private unsafe void ResurrectTrackerSource()
+        {
+            if (ReferenceTrackerPtr != IntPtr.Zero)
+            {
+                Marshal.AddRef(ReferenceTrackerPtr);
+                if (!PreventReleaseFromTrackerSourceOnDispose)
+                {
+                    ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
+                }
             }
         }
 
         private unsafe void DisposeTrackerSource()
         {
-            var referenceTrackerPtr = Interlocked.Exchange(ref this._referenceTrackerPtr, IntPtr.Zero);
-            if (referenceTrackerPtr != IntPtr.Zero)
+            if (ReferenceTrackerPtr != IntPtr.Zero)
             {
                 if (!PreventReleaseFromTrackerSourceOnDispose)
                 {
-                    (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(referenceTrackerPtr);
+                    ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
                 }
-                Marshal.Release(referenceTrackerPtr);
+                Marshal.Release(ReferenceTrackerPtr);
             }
         }
 
@@ -539,7 +562,7 @@ namespace WinRT
         private volatile AgileReference __agileReference;
         private AgileReference AgileReference => _isAgileReferenceSet ? __agileReference : Make_AgileReference();
         private AgileReference Make_AgileReference()
-        { 
+        {
             Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
 
             // Set after CallInContext callback given callback can fail to occur.
@@ -555,7 +578,7 @@ namespace WinRT
         private readonly Guid _iid;
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken)
-            :base(thisPtr, contextToken)
+            : base(thisPtr, contextToken)
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
