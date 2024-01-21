@@ -15,7 +15,6 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-
 #if EMBED
     internal
 #else
@@ -23,9 +22,14 @@ namespace WinRT
 #endif
     abstract class IObjectReference : IDisposable
     {
+        // Flags for the '_disposedFlags' field, see notes in the Dispose() method below
+        private const int NOT_DISPOSED = 0;
+        private const int DISPOSE_PENDING = 1;
+        private const int DISPOSE_COMPLETED = 2;
+
         private readonly IntPtr _thisPtr;
         private IntPtr _referenceTrackerPtr;
-        private int _isDisposed;
+        private int _disposedFlags;
 
         public IntPtr ThisPtr
         {
@@ -259,7 +263,7 @@ namespace WinRT
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ThrowIfDisposed()
         {
-            if (Volatile.Read(ref _isDisposed) != 0)
+            if (Volatile.Read(ref _disposedFlags) == DISPOSE_COMPLETED)
             {
                 ThrowObjectDisposedException();
             }
@@ -292,7 +296,18 @@ namespace WinRT
             // lock object guarding all the logic within the Dispose() method. The only difference is that simply using
             // a flag this way avoids one object allocation per ObjectReference instance, and also allows making the size
             // of the whole object smaller by sizeof(object), when taking into account padding.
-            if (Interlocked.Exchange(ref _isDisposed, 1) == 0)
+            //
+            // Additionally, note that the '_disposedFlags' field has 3 different states:
+            //   - NOT_DISPOSED: the initial state, when the object is alive
+            //   - DISPOSE_PENDING: indicates that a thread is currently executing the Dispose() method and got past the
+            //     first check, and is in the process of releasing the native resources. This state is checked by the
+            //     ThrowIfDisposed() method above, and still treated as if the object can be used normally. This is
+            //     necessary, because the dispose logic still has to access the 'ThisPtr' property and others in order
+            //     to perform the various Release() calls on the native objects being used. If the state was immediately
+            //     set to disposed, that method would just start throwing immediately, and this logic would not work.
+            //   - DISPOSE_COMPLETED: set when all the Dispose() logic has been completed and the object should not be
+            //     used at all anymore. When this is set, the ThrowIfDisposed() method will start throwing exceptions.
+            if (Interlocked.CompareExchange(ref _disposedFlags, DISPOSE_PENDING, NOT_DISPOSED) == NOT_DISPOSED)
             {
 #if DEBUG
                 if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
@@ -307,6 +322,8 @@ namespace WinRT
                 }
 
                 DisposeTrackerSource();
+
+                Volatile.Write(ref _disposedFlags, DISPOSE_COMPLETED);
             }
         }
 
