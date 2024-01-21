@@ -875,6 +875,12 @@ namespace WinRT
                 return null;
             }
 
+            // Exclude Type, as it has dedicated marshalling code available from Marshaler<T>
+            if (typeof(T) == typeof(Type))
+            {
+                throw new NotSupportedException("Using 'System.Type' with MarshalNonBlittable<T> isn't supported, use Marshaler<T> instead.");
+            }
+
             // Fallback path with the original logic
             return typeof(T).GetAbiType();
         }
@@ -900,6 +906,9 @@ namespace WinRT
             public object[] _marshalers;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
+#endif
         public static new unsafe MarshalerArray CreateMarshalerArray(T[] array)
         {
             MarshalerArray m = new MarshalerArray();
@@ -940,6 +949,9 @@ namespace WinRT
             return (m._marshalers?.Length ?? 0, m._array);
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
+#endif
         public static new unsafe T[] FromAbiArray(object box)
         {
             if (box is null)
@@ -963,6 +975,9 @@ namespace WinRT
             return array;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
+#endif
         public static unsafe void CopyAbiArray(T[] array, object box)
         {
             var abi = ((int length, IntPtr data))box;
@@ -980,6 +995,9 @@ namespace WinRT
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
+#endif
         public static new unsafe (int length, IntPtr data) FromManagedArray(T[] array)
         {
             if (array is null)
@@ -1013,7 +1031,10 @@ namespace WinRT
             }
         }
 
-        public static new unsafe void CopyManagedArray(T[] array, IntPtr data)
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
+#endif
+        public static unsafe void CopyManagedArray(T[] array, IntPtr data)
         {
             if (array is null)
             {
@@ -1046,6 +1067,9 @@ namespace WinRT
 
         public static new void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
+#endif
         public static unsafe void DisposeAbiArrayElements((int length, IntPtr data) abi)
         {
             var data = (byte*)abi.data.ToPointer();
@@ -1058,6 +1082,9 @@ namespace WinRT
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
+#endif
         public static new unsafe void DisposeAbiArray(object box)
         {
             if (box == null) return;
@@ -1725,13 +1752,13 @@ namespace WinRT
                 FromManaged = (T value) => ABI.System.Type.FromManaged((Type)(object)value);
                 DisposeMarshaler = (object box) => ABI.System.Type.DisposeMarshaler((ABI.System.Type.Marshaler)box);
                 DisposeAbi = (object box) => ABI.System.Type.DisposeAbi((ABI.System.Type)box);
-                CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
-                GetAbiArray = MarshalNonBlittable<T>.GetAbiArray;
-                FromAbiArray = MarshalNonBlittable<T>.FromAbiArray;
-                FromManagedArray = MarshalNonBlittable<T>.FromManagedArray;
-                CopyManagedArray = MarshalNonBlittable<T>.CopyManagedArray;
-                DisposeMarshalerArray = MarshalNonBlittable<T>.DisposeMarshalerArray;
-                DisposeAbiArray = MarshalNonBlittable<T>.DisposeAbiArray;
+                CreateMarshalerArray = (Func<T[], object>)(object)new Func<Type[], object>(ABI.System.NonBlittableMarshallingStubs.Type_CreateMarshalerArray);
+                GetAbiArray = new Func<object, (int, IntPtr)>(ABI.System.Type.GetAbiArray);
+                FromAbiArray = (Func<object, T[]>)(object)new Func<object, Type[]>(ABI.System.Type.FromAbiArray);
+                FromManagedArray = (Func<T[], (int, IntPtr)>)(object)new Func<Type[], (int, IntPtr)>(ABI.System.Type.FromManagedArray);
+                CopyManagedArray = (Action<T[], IntPtr>)(object)new Action<Type[], IntPtr>(ABI.System.Type.CopyManagedArray);
+                DisposeMarshalerArray = new Action<object>(ABI.System.Type.DisposeMarshalerArray);
+                DisposeAbiArray = new Action<object>(ABI.System.Type.DisposeAbiArray);
             }
             else if (typeof(T).IsValueType)
             {
