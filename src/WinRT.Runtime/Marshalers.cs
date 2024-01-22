@@ -1698,7 +1698,7 @@ namespace WinRT
             if (typeof(T) == typeof(string))
             {
                 AbiType = typeof(IntPtr);
-                CreateMarshaler = (T value) => MarshalString.CreateMarshaler((string)(object)value);
+                CreateMarshaler = (Func<T, object>)(object)(new Func<string, MarshalString>(MarshalString.CreateMarshaler));
                 CreateMarshaler2 = CreateMarshaler;
                 GetAbi = (object box) => MarshalString.GetAbi(box);
                 FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
@@ -1707,9 +1707,9 @@ namespace WinRT
                 DisposeAbi = MarshalString.DisposeAbi;
                 CreateMarshalerArray = (T[] array) => MarshalString.CreateMarshalerArray((string[])(object)array);
                 GetAbiArray = MarshalString.GetAbiArray;
-                FromAbiArray = (object box) => (T[])(object)MarshalString.FromAbiArray(box);
-                FromManagedArray = (T[] array) => MarshalString.FromManagedArray((string[])(object)array);
-                CopyManagedArray = (T[] array, IntPtr data) => MarshalString.CopyManagedArray((string[])(object)array, data);
+                FromAbiArray = (Func<object, T[]>)(object)new Func<object, string[]>(MarshalString.FromAbiArray);
+                FromManagedArray = (Func<T[], (int, IntPtr)>)(object)new Func<string[], (int, IntPtr)>(MarshalString.FromManagedArray);
+                CopyManagedArray = (Action<T[], IntPtr>)(object)new Action<string[], IntPtr>(MarshalString.CopyManagedArray);
                 DisposeMarshalerArray = MarshalString.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalString.DisposeAbiArray;
             }
@@ -1721,7 +1721,7 @@ namespace WinRT
                 GetAbi = (object box) => ABI.System.Type.GetAbi((ABI.System.Type.Marshaler)box);
                 FromAbi = (object value) => (T)(object)ABI.System.Type.FromAbi((ABI.System.Type)value);
                 CopyAbi = (object box, IntPtr dest) => ABI.System.Type.CopyAbi((ABI.System.Type.Marshaler)box, dest);
-                CopyManaged = (T value, IntPtr dest) => ABI.System.Type.CopyManaged((Type)(object)value, dest);
+                CopyManaged = (Action<T, IntPtr>)(object)new Action<Type, IntPtr>(ABI.System.Type.CopyManaged);
                 FromManaged = (T value) => ABI.System.Type.FromManaged((Type)(object)value);
                 DisposeMarshaler = (object box) => ABI.System.Type.DisposeMarshaler((ABI.System.Type.Marshaler)box);
                 DisposeAbi = (object box) => ABI.System.Type.DisposeAbi((ABI.System.Type)box);
