@@ -1811,14 +1811,16 @@ namespace WinRT
                 }
                 else
                 {
-                    AbiType = typeof(T).FindHelperType();
-                    if (AbiType != null)
+                    Type abiType = typeof(T).FindHelperType();
+
+                    // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
+                    if (abiType?.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static) is null)
                     {
-                        // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
-                        if (AbiType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static) == null)
-                        {
-                            AbiType = null;
-                        }
+                        AbiType = null;
+                    }
+                    else
+                    {
+                        AbiType = abiType;
                     }
                 }
 
@@ -1964,9 +1966,6 @@ namespace WinRT
             RefAbiType = AbiType.MakeByRefType();
         }
 
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
-#endif
         public static readonly Type AbiType;
         public static readonly Type RefAbiType;
         public static readonly Func<T, object> CreateMarshaler;
