@@ -167,6 +167,44 @@ namespace cswinrt
             });
     }
 
+    // This checks for interfaces that have derived generic interfaces
+    // to handle the scenario where the class implementing that interface
+    // can be trimmed and we need to handle potential calls to the
+    // generic interfac methods while not using IDIC.
+    bool has_derived_generic_interface(TypeDef const& type)
+    {
+        if (is_exclusive_to(type))
+        {
+            return false;
+        }
+
+        bool found = false;
+
+        auto impls = type.InterfaceImpl();
+        for (auto&& impl : impls)
+        {
+            call(get_type_semantics(impl.Interface()),
+                [&](type_definition const& type)
+                {
+                    found |= has_derived_generic_interface(type);
+                },
+                [&](generic_type_instance const&)
+                {
+                    found = true;
+                },
+                [](auto)
+                {
+                });
+
+            if (found)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void write_fundamental_type(writer& w, fundamental_type type)
     {
         w.write(to_csharp_type(type));
@@ -3183,11 +3221,20 @@ remove => %.ErrorsChanged -= value;
 
     void write_class_members(writer& w, TypeDef const& type, bool wrapper_type, bool is_interface_impl_type)
     {
+        std::set<TypeDef> writtenInterfaces;
         std::map<std::string, std::tuple<std::string, std::string, std::string, std::string, std::string, bool, bool, bool, std::optional<std::pair<type_semantics, Property>>, std::optional<std::pair<type_semantics, Property>>>> properties;
         auto fast_abi_class_val = get_fast_abi_class_for_class(type);
 
         auto write_class_interface = [&](TypeDef const& interface_type, bool is_default_interface, bool is_overridable_interface, bool is_protected_interface, type_semantics semantics)
         {
+            // When writing derived interfaces of interfaces, we can sometimes encounter duplicate interfaces.
+            // To prevent writing them multiple times, we catch them here.
+            if (writtenInterfaces.find(interface_type) != writtenInterfaces.end())
+            {
+                return;
+            }
+            writtenInterfaces.insert(interface_type);
+
             auto interface_name = write_type_name_temp(w, interface_type);
             auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
 
@@ -3861,6 +3908,7 @@ event % %;)",
         bool has_generic_instantiation;
         std::vector<generic_type_instance> generic_instantiations;
         std::string interface_guid;
+        std::string interface_init_rcw;
 
         bool is_out() const
         {
@@ -4207,6 +4255,11 @@ event % %;)",
                         w.write("_ = global::WinRT.GenericTypeInstantiations.%.EnsureInitialized();\n", generic_instantiation_class_name);
                     }
                 }
+
+                if (interface_init_rcw != "")
+                {
+                    w.write(interface_init_rcw);
+                }
             }
 
             is_return ?
@@ -4328,6 +4381,11 @@ event % %;)",
                                 m.generic_instantiations.emplace_back(generic);
                             },
                             [&](auto) { });
+                    }
+
+                    if (has_derived_generic_interface(type))
+                    {
+                        m.interface_init_rcw = w.write_temp("%.InitRcwHelper();\n", bind<write_type_name>(type, typedef_name_type::StaticAbiClass, true));
                     }
                 }
                 break;
@@ -7289,9 +7347,18 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
             bind<write_type_params>(iface),
             [&](writer& w)
             {
+                std::set<std::string> writtenInterfaces;
                 std::function<void(writer&, type_semantics const&)> write_objref_defintion = [&](writer& w, type_semantics const& ifaceTypeSemantics)
                 {
-                    auto objrefname = bind<write_objref_type_name>(ifaceTypeSemantics);
+                    auto objrefname = w.write_temp("%", bind<write_objref_type_name>(ifaceTypeSemantics));
+
+                    // When writing derived interfaces of interfaces, we can sometimes encounter duplicate interfaces.
+                    // To prevent writing them multiple times, we catch them here.
+                    if (writtenInterfaces.find(objrefname) != writtenInterfaces.end())
+                    {
+                        return;
+                    }
+                    writtenInterfaces.insert(objrefname);
 
                     w.write(R"(
 private volatile IObjectReference __%;
@@ -7447,6 +7514,30 @@ ensureInitializedFallback();
                                 bind<write_generic_type_name>(i));
                         }
                     }));
+                }
+                // If the interface inherits other generic interfaces, but itself isn't generic,
+                // we need to handle the case where the class implementing the interface can be trimmed
+                // and we end up relying on IDIC casts to access the generic interfaces.  But on AOT,
+                // this doesn't work, which means we have a fallback helper impl class for the interface
+                // that we instead create.
+                else if (has_derived_generic_interface(iface))
+                {
+                    w.write(R"(
+private volatile static bool _RcwHelperInitialized;
+public static bool InitRcwHelper()
+{
+if (_RcwHelperInitialized)
+{
+return true;
+}
+
+global::WinRT.ComWrappersSupport.RegisterTypedRcwFactory(typeof(%), @Impl.CreateRcw);
+_RcwHelperInitialized = true;
+return true;
+}
+)",
+                        bind<write_type_name>(iface, typedef_name_type::Projected, false),
+                        iface.TypeName());
                 }
             },
             [&](writer& w) {
@@ -7739,6 +7830,10 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
                     bind_each<write_event_abi_invoke>(iface.EventList())
                 );
 
+                write_generic_interface_impl_class(w, iface);
+            }
+            else if (has_derived_generic_interface(iface))
+            {
                 write_generic_interface_impl_class(w, iface);
             }
         }
