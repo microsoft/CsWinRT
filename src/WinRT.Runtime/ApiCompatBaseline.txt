@@ -10,4 +10,5 @@ MembersMustExist : Member 'public System.Delegate System.Delegate ABI.System.Col
 MembersMustExist : Member 'public System.Delegate System.Delegate ABI.System.Collections.Generic.KeyValuePair<K, V>.Vftbl.get_Value_1' does not exist in the implementation but it does exist in the contract.
 TypesMustExist : Type 'ABI.System.Collections.Specialized.INotifyCollectionChanged' does not exist in the implementation but it does exist in the contract.
 TypesMustExist : Type 'ABI.System.ComponentModel.INotifyDataErrorInfo' does not exist in the implementation but it does exist in the contract.
-Total Issues: 11
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute' exists on 'System.Type WinRT.Marshaler<T>.AbiType' in the contract but not the implementation.
+Total Issues: 12
