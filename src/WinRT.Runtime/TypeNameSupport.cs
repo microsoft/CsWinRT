@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace WinRT
@@ -186,11 +187,20 @@ namespace WinRT
             {
                 if (genericTypes != null)
                 {
-                    if(resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
+#if NET
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        throw new NotSupportedException($"Cannot provide generic type from '{runtimeClassName}'.");
+                    }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+                    if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
                     {
                         return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
                     }
                     resolvedType = resolvedType.MakeGenericType(genericTypes);
+#pragma warning restore IL3050
                 }
                 return resolvedType;
             }

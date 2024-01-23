@@ -85,6 +85,7 @@ namespace System.Collections.Generic
 namespace ABI.Windows.Foundation.Collections
 {
     using global::System;
+    using global::System.Diagnostics.CodeAnalysis;
     using global::System.Runtime.CompilerServices;
 
     internal static class IVectorViewMethods<T>
@@ -103,8 +104,14 @@ namespace ABI.Windows.Foundation.Collections
             {
                 // Simple invocation guarded by a direct runtime feature check to help the linker.
                 // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
 
+
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
                 {
@@ -185,6 +192,7 @@ namespace ABI.Windows.Foundation.Collections
 namespace ABI.System.Collections.Generic
 {
     using global::System;
+    using global::System.Diagnostics.CodeAnalysis;
     using global::System.Runtime.CompilerServices;
 
 #if EMBED
@@ -284,6 +292,9 @@ namespace ABI.System.Collections.Generic
             return true;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         private unsafe static bool InitRcwHelperFallback()
         {
             return InitRcwHelper(&GetAtDynamic, &IndexOfDynamic, null);
@@ -304,6 +315,9 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         private static unsafe bool IndexOfDynamic(IObjectReference obj, T value, out uint index)
         {
             var ThisPtr = obj.ThisPtr;
@@ -354,6 +368,9 @@ namespace ABI.System.Collections.Generic
 
         private static global::System.Delegate[] DelegateCache;
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         internal static unsafe void InitFallbackCCWVtable()
         {
             Type getAt_0_type = Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(uint), typeof(TAbi*), typeof(int) });
@@ -462,6 +479,9 @@ namespace ABI.System.Collections.Generic
             return 0;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         private sealed class DelegateHelper
         {
             internal static Type IndexOf_2_Type = Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(TAbi), typeof(uint*), typeof(byte*), typeof(int) });
@@ -610,8 +630,13 @@ namespace ABI.System.Collections.Generic
             {
                 // Simple invocation guarded by a direct runtime feature check to help the linker.
                 // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
 
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
                 {

@@ -37,7 +37,9 @@ namespace WinRT
 
                     if (vftblType is not null)
                     {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                         _obj = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
+#pragma warning restore IL3050
 
                         return;
                     }
