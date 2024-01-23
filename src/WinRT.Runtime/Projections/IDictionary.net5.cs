@@ -722,7 +722,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private unsafe static bool InitRcwHelperFallback()
         {
@@ -735,7 +735,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static unsafe V LookupDynamic(IObjectReference obj, K key)
         {
@@ -758,7 +758,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static unsafe bool HasKeyDynamic(IObjectReference obj, K key)
         {
@@ -780,7 +780,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static unsafe bool InsertDynamic(IObjectReference obj, K key, V value)
         {
@@ -806,7 +806,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static unsafe void RemoveDynamic(IObjectReference obj, K key)
         {
@@ -861,7 +861,7 @@ namespace ABI.System.Collections.Generic
         private static global::System.Delegate[] DelegateCache;
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         internal static unsafe void InitFallbackCCWVtable()
         {
@@ -1021,13 +1021,13 @@ namespace ABI.System.Collections.Generic
         private static global::System.Type Lookup_0_Type
         {
 #if NET8_0_OR_GREATER
-            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+            [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
             get => _lookup_0_type ?? MakeLookupType();
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static global::System.Type MakeLookupType()
         {
@@ -1039,13 +1039,13 @@ namespace ABI.System.Collections.Generic
         private static global::System.Type HasKey_2_Type
         {
 #if NET8_0_OR_GREATER
-            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+            [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
             get => _hasKey_2_type ?? MakeHasKeyType();
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static global::System.Type MakeHasKeyType()
         {
@@ -1057,13 +1057,13 @@ namespace ABI.System.Collections.Generic
         private static global::System.Type Insert_4_Type
         {
 #if NET8_0_OR_GREATER
-            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+            [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
             get => _insert_4_type ?? MakeInsertType();
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static global::System.Type MakeInsertType()
         {
@@ -1075,13 +1075,13 @@ namespace ABI.System.Collections.Generic
         private static global::System.Type Remove_5_Type
         {
 #if NET8_0_OR_GREATER
-            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+            [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
             get => _remove_5_type ?? MakeRemoveType();
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static global::System.Type MakeRemoveType()
         {
@@ -1090,7 +1090,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private sealed class DelegateHelper
         {
@@ -1228,7 +1228,7 @@ namespace ABI.System.Collections.Generic
 #pragma warning restore IL3050
 
 #if NET8_0_OR_GREATER
-                [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+                [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()

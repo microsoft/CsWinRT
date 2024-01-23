@@ -375,7 +375,7 @@ namespace ABI.System.Collections.Generic
 #pragma warning restore IL3050
 
 #if NET8_0_OR_GREATER
-                [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+                [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
@@ -663,7 +663,7 @@ namespace ABI.System.Collections.Generic
         private static global::System.Delegate[] DelegateCache;
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         internal static unsafe void InitFallbackCCWVtable()
         {
@@ -1064,7 +1064,7 @@ namespace ABI.System.Collections.Generic
 #pragma warning restore IL3050
 
 #if NET8_0_OR_GREATER
-                [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+                [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
