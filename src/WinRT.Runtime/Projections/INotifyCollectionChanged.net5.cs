@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;

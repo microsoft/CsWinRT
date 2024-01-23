@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -36,7 +35,6 @@ namespace ABI.System.ComponentModel
         [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "90B17601-B065-586E-83D9-9ADC3A695284")]
         public struct Vftbl
         {
-
             internal IInspectable.Vftbl IInspectableVftbl;
 
             private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_PropertyChanged_0;
@@ -77,7 +75,6 @@ namespace ABI.System.ComponentModel
                 *token = default;
                 try
                 {
-                    global::System.Diagnostics.Debugger.Launch();
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.ComponentModel.INotifyPropertyChanged>(thisPtr);
                     var __handler = global::ABI.System.ComponentModel.PropertyChangedEventHandler.FromAbi(handler);
                     *token = _PropertyChanged_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
