@@ -130,4 +130,5 @@ MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(S
 MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public T ABI.System.Nullable<T>.GetValue(WinRT.IInspectable)' does not exist in the reference but it does exist in the implementation.
-Total Issues: 131
+TypesMustExist : Type 'WinRT.EventRegistrationTokenTable<T>' does not exist in the reference but it does exist in the implementation.
+Total Issues: 132
