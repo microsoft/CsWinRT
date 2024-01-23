@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ABI.System
 {
@@ -38,6 +40,8 @@ namespace ABI.System
         public static global::System.DateTimeOffset DateTimeOffset_FromAbi(object abi) => DateTimeOffset.FromAbi((DateTimeOffset)abi);
         public static unsafe void DateTimeOffset_CopyAbi(object value, IntPtr dest) => DateTimeOffset.CopyAbi((DateTimeOffset.Marshaler)value, dest);
         public static object DateTimeOffset_FromManaged(global::System.DateTimeOffset value) => DateTimeOffset.FromManaged(value);
+
+        public static object Type_CreateMarshalerArray(global::System.Type[] value) => Type.CreateMarshalerArray(value);
 
         private static void NoOp(object obj)
         {
