@@ -12,7 +12,7 @@ namespace WinRT
         internal static ConditionalWeakTable<IObjectReference, object> DelegateTable = new();
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code might not be available at runtime in AOT environments.")]
+        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         internal unsafe static Delegate CreateDelegate(IntPtr ptr, ref Delegate delegateRef, Type delegateType, int offset)
         {

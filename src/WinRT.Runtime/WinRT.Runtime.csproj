@@ -28,7 +28,7 @@
 
   <!-- NativeAOT specific options, only starting from .NET 8 -->
   <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
-    <IsAotCompatible >true</IsAotCompatible>
+    <IsAotCompatible>true</IsAotCompatible>
 
     <!--
       Explicitly mark critical warnings for NativeAOT publishing as errors, to enforce they're not present.
