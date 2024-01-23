@@ -1509,11 +1509,16 @@ namespace WinRT
             }
 #endif
             // Otherwise, just use the fallback path
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
             _CreateMarshalerOrIid ??= BindCreateMarshaler();
+#pragma warning restore IL3050
 
             return ((Func<T, IObjectReference>)_CreateMarshalerOrIid)(value);
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static Func<T, IObjectReference> BindCreateMarshaler()
         {
             Guid iid = GuidGenerator.GetIID(HelperType);
