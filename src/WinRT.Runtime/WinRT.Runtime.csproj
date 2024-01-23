@@ -40,7 +40,8 @@
       "IL3055: P/Invoke method declares a parameter with an abstract delegate"
       "IL3056: RequiresDynamicCodeAttribute cannot be placed directly on a static constructor"
 
-      For more info, see: https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/fixing-warnings.
+      We're skipping IL3053 on purpose, as that's not a working that could be produced in this scenario.
+      For more info, see: https://learn.microsoft.com/dotnet/core/deploying/native-aot/fixing-warnings.
     -->
     <WarningsAsErrors>$(WarningsAsErrors);IL3050;IL3051;IL3052;IL3054;IL3055;IL3056</WarningsAsErrors>
   </PropertyGroup>
