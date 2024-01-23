@@ -260,7 +260,7 @@ namespace WinRT
             }
 
 #if NET8_0_OR_GREATER
-            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+            [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
             static Type GetGenericImplType(Type implementationType)
