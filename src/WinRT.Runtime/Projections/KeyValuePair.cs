@@ -24,6 +24,7 @@ namespace Windows.Foundation.Collections
 namespace ABI.System.Collections.Generic
 {
     using global::System;
+    using global::System.Diagnostics.CodeAnalysis;
     using global::WinRT.Interop;
 
 #if EMBED
@@ -56,9 +57,11 @@ namespace ABI.System.Collections.Generic
             // and due to that the function pointers haven't been initialized.
             if (!_RcwHelperInitialized)
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var initRcwHelperFallback = (Func<bool>)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
                     GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
                     CreateDelegate(typeof(Func<bool>));
+#pragma warning restore IL3050
                 initRcwHelperFallback();
             }
 
@@ -200,6 +203,9 @@ namespace ABI.System.Collections.Generic
 
         private static global::System.Delegate[] DelegateCache;
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         internal static unsafe void InitFallbackCCWVtable()
         {
             InitRcwHelperFallback();
@@ -377,8 +383,13 @@ namespace ABI.System.Collections.Generic
             {
                 // Simple invocation guarded by a direct runtime feature check to help the linker.
                 // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
 
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
                 {

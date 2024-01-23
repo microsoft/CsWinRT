@@ -195,9 +195,11 @@ namespace ABI.System.Collections.Generic
             // and due to that the function pointers haven't been initialized.
             if (!ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._RcwHelperInitialized)
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var initRcwHelperFallback = (Func<bool>)typeof(IReadOnlyDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
                     GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
                     CreateDelegate(typeof(Func<bool>));
+#pragma warning restore IL3050
                 initRcwHelperFallback();
             }
         }
@@ -462,11 +464,17 @@ namespace ABI.System.Collections.Generic
             return true;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         private unsafe static bool InitRcwHelperFallback()
         {
             return InitRcwHelper(&LookupDynamic, &HasKeyDynamic, null);
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         private static unsafe V LookupDynamic(IObjectReference obj, K key)
         {
             var ThisPtr = obj.ThisPtr;
@@ -487,6 +495,9 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         private static unsafe bool HasKeyDynamic(IObjectReference obj, K key)
         {
             var ThisPtr = obj.ThisPtr;
@@ -535,6 +546,9 @@ namespace ABI.System.Collections.Generic
 
         private static global::System.Delegate[] DelegateCache;
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         internal static unsafe void InitFallbackCCWVtable()
         {
             DelegateCache = new global::System.Delegate[]
@@ -637,8 +651,17 @@ namespace ABI.System.Collections.Generic
         }
 
         private static Type _lookup_0_type;
-        private static Type Lookup_0_Type => _lookup_0_type ?? MakeLookupType();
+        private static Type Lookup_0_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
+            get => _lookup_0_type ?? MakeLookupType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static Type MakeLookupType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _lookup_0_type, Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(KAbi), typeof(VAbi*), typeof(int) }), null);
@@ -646,14 +669,26 @@ namespace ABI.System.Collections.Generic
         }
 
         private static Type _hasKey_2_type;
-        private static Type HasKey_2_Type => _hasKey_2_type ?? MakeHasKeyType();
+        private static Type HasKey_2_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
+            get => _hasKey_2_type ?? MakeHasKeyType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static Type MakeHasKeyType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _hasKey_2_type, Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(KAbi), typeof(byte*), typeof(int) }), null);
             return _hasKey_2_type;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private sealed class DelegateHelper
         {
             private readonly IntPtr _ptr;
@@ -1031,8 +1066,13 @@ namespace ABI.System.Collections.Generic
             {
                 // Simple invocation guarded by a direct runtime feature check to help the linker.
                 // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
 
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
                 {

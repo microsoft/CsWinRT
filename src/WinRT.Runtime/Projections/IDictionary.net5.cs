@@ -263,9 +263,11 @@ namespace ABI.System.Collections.Generic
             // and due to that the function pointers haven't been initialized.
             if (!IMapMethods<K, V>._RcwHelperInitialized)
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var initRcwHelperFallback = (Func<bool>)typeof(IDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
                     GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
                     CreateDelegate(typeof(Func<bool>));
+#pragma warning restore IL3050
                 initRcwHelperFallback();
             }
         }
@@ -719,6 +721,9 @@ namespace ABI.System.Collections.Generic
             return true;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private unsafe static bool InitRcwHelperFallback()
         {
             return InitRcwHelper(
@@ -729,6 +734,9 @@ namespace ABI.System.Collections.Generic
                 &RemoveDynamic);
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static unsafe V LookupDynamic(IObjectReference obj, K key)
         {
             var ThisPtr = obj.ThisPtr;
@@ -749,6 +757,9 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static unsafe bool HasKeyDynamic(IObjectReference obj, K key)
         {
             var ThisPtr = obj.ThisPtr;
@@ -768,6 +779,9 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static unsafe bool InsertDynamic(IObjectReference obj, K key, V value)
         {
             var ThisPtr = obj.ThisPtr;
@@ -791,6 +805,9 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static unsafe void RemoveDynamic(IObjectReference obj, K key)
         {
             var ThisPtr = obj.ThisPtr;
@@ -843,6 +860,9 @@ namespace ABI.System.Collections.Generic
 
         private static global::System.Delegate[] DelegateCache;
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Marshalling code might not be available in AOT environments.")]
+#endif
         internal static unsafe void InitFallbackCCWVtable()
         {
             DelegateCache = new global::System.Delegate[]
@@ -998,8 +1018,17 @@ namespace ABI.System.Collections.Generic
         }
 
         private static global::System.Type _lookup_0_type;
-        private static global::System.Type Lookup_0_Type => _lookup_0_type ?? MakeLookupType();
+        private static global::System.Type Lookup_0_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
+            get => _lookup_0_type ?? MakeLookupType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static global::System.Type MakeLookupType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _lookup_0_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(KAbi), typeof(VAbi*), typeof(int) }), null);
@@ -1007,8 +1036,17 @@ namespace ABI.System.Collections.Generic
         }
 
         private static global::System.Type _hasKey_2_type;
-        private static global::System.Type HasKey_2_Type => _hasKey_2_type ?? MakeHasKeyType();
+        private static global::System.Type HasKey_2_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
+            get => _hasKey_2_type ?? MakeHasKeyType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static global::System.Type MakeHasKeyType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _hasKey_2_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(KAbi), typeof(byte*), typeof(int) }), null);
@@ -1016,8 +1054,17 @@ namespace ABI.System.Collections.Generic
         }
 
         private static global::System.Type _insert_4_type;
-        private static global::System.Type Insert_4_Type => _insert_4_type ?? MakeInsertType();
+        private static global::System.Type Insert_4_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
+            get => _insert_4_type ?? MakeInsertType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static global::System.Type MakeInsertType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _insert_4_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(KAbi), typeof(VAbi), typeof(byte*), typeof(int) }), null);
@@ -1025,14 +1072,26 @@ namespace ABI.System.Collections.Generic
         }
 
         private static global::System.Type _remove_5_type;
-        private static global::System.Type Remove_5_Type => _remove_5_type ?? MakeRemoveType();
+        private static global::System.Type Remove_5_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
+            get => _remove_5_type ?? MakeRemoveType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static global::System.Type MakeRemoveType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _remove_5_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(KAbi), typeof(int) }), null);
             return _remove_5_type;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private sealed class DelegateHelper
         {
             private readonly IntPtr _ptr;
@@ -1162,8 +1221,13 @@ namespace ABI.System.Collections.Generic
             {
                 // Simple invocation guarded by a direct runtime feature check to help the linker.
                 // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
 
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
                 {

@@ -236,7 +236,9 @@ namespace WinRT
                         }
 
                         if (iface.IsConstructedGenericType
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                             && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, out var compatibleIfaces))
+#pragma warning restore IL3050
                         {
                             foreach (var compatibleIface in compatibleIfaces)
                             {
@@ -526,7 +528,16 @@ namespace WinRT
                 }
                 else
                 {
+#if NET
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        throw new NotSupportedException($"Cannot create an RCW factory for implementation type '{implementationType}'.");
+                    }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     return CreateReferenceCachingFactory(CreateNullableTFactory(typeof(System.Nullable<>).MakeGenericType(implementationType)));
+#pragma warning restore IL3050
                 }
             }
             else if (implementationType.IsAbiNullableDelegate())
@@ -764,12 +775,14 @@ namespace WinRT
                 }
 #endif
 
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var delegateHelperType = typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(type);
                 return new ComInterfaceEntry
                 {
                     IID = global::WinRT.GuidGenerator.GetIID(delegateHelperType),
                     Vtable = delegateHelperType.GetAbiToProjectionVftblPtr()
                 };
+#pragma warning restore IL3050
             }
             if (type == typeof(System.Numerics.Matrix3x2))
             {
@@ -843,11 +856,13 @@ namespace WinRT
             }
 #endif
 
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
             return new ComInterfaceEntry
             {
                 IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<>).MakeGenericType(type)),
                 Vtable = typeof(BoxedValueIReferenceImpl<>).MakeGenericType(type).GetAbiToProjectionVftblPtr()
             };
+#pragma warning restore IL3050
         }
 
         private static ComInterfaceEntry ProvideIReferenceArray(Type arrayType)
@@ -1061,11 +1076,13 @@ namespace WinRT
             }
 #endif
 
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
             return new ComInterfaceEntry
             {
                 IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<>).MakeGenericType(type)),
                 Vtable = (IntPtr)typeof(BoxedArrayIReferenceArrayImpl<>).MakeGenericType(type).GetAbiToProjectionVftblPtr()
             };
+#pragma warning restore IL3050
         }
 
         internal sealed class InspectableInfo

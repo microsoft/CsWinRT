@@ -195,9 +195,21 @@ namespace WinRT
                         return specializedAbiType;
                     }
 
-                    return CustomTypeToHelperTypeMappings.TryGetValue(publicType.GetGenericTypeDefinition(), out Type abiTypeDefinition)
-                        ? abiTypeDefinition.MakeGenericType(publicType.GetGenericArguments())
-                        : null;
+                    if (CustomTypeToHelperTypeMappings.TryGetValue(publicType.GetGenericTypeDefinition(), out Type abiTypeDefinition))
+                    {
+#if NET
+                        if (!RuntimeFeature.IsDynamicCodeCompiled)
+                        {
+                            throw new NotSupportedException($"Cannot retrieve a helper type for public type '{publicType}'.");
+                        }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+                        return abiTypeDefinition.MakeGenericType(publicType.GetGenericArguments());
+#pragma warning restore IL3050
+                    }
+
+                    return null;
                 }
                 return CustomTypeToHelperTypeMappings.TryGetValue(publicType, out Type abiType) ? abiType : null;
             }
@@ -219,9 +231,21 @@ namespace WinRT
                         return specializedPublicType;
                     }
 
-                    return CustomAbiTypeToTypeMappings.TryGetValue(abiType.GetGenericTypeDefinition(), out Type publicTypeDefinition)
-                        ? publicTypeDefinition.MakeGenericType(abiType.GetGenericArguments())
-                        : null;
+                    if (CustomAbiTypeToTypeMappings.TryGetValue(abiType.GetGenericTypeDefinition(), out Type publicTypeDefinition))
+                    {
+#if NET
+                        if (!RuntimeFeature.IsDynamicCodeCompiled)
+                        {
+                            throw new NotSupportedException($"Cannot retrieve a public type for ABI type '{abiType}'.");
+                        }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+                        return publicTypeDefinition.MakeGenericType(abiType.GetGenericArguments());
+#pragma warning restore IL3050
+                    }
+
+                    return null;
                 }
                 return CustomAbiTypeToTypeMappings.TryGetValue(abiType, out Type publicType) ? publicType : null;
             }
@@ -313,6 +337,13 @@ namespace WinRT
                 return false;
             }
 
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot retrieve a compatible WinRT type for variant type '{type}'.");
+            }
+#endif
+
             var genericConstraints = definition.GetGenericArguments();
             var genericArguments = type.GetGenericArguments();
             var newArguments = new Type[genericArguments.Length];
@@ -335,10 +366,15 @@ namespace WinRT
                     newArguments[i] = genericArguments[i];
                 }
             }
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
             compatibleType = definition.MakeGenericType(newArguments);
+#pragma warning restore IL3050
             return true;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         private static HashSet<Type> GetCompatibleTypes(Type type, Stack<Type> typeStack)
         {
             HashSet<Type> compatibleTypes = new HashSet<Type>();
@@ -370,6 +406,9 @@ namespace WinRT
             return compatibleTypes;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         internal static IEnumerable<Type> GetAllPossibleTypeCombinations(IEnumerable<IEnumerable<Type>> compatibleTypesPerGeneric, Type definition)
         {
             // Implementation adapted from https://stackoverflow.com/a/4424005
@@ -385,6 +424,9 @@ namespace WinRT
             }
             return accum;
 
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
 #if NET
             [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
                 Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
@@ -410,6 +452,9 @@ namespace WinRT
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("The native code for this instantiation might not be available at runtime.")]
+#endif
         internal static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(Type type, Stack<Type> typeStack, out IEnumerable<Type> compatibleTypes)
         {
             compatibleTypes = null;
@@ -562,6 +607,9 @@ namespace WinRT
         }
 
 #if NET
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode("Native code for the delegate type migth not be available.")]
+#endif
         internal static Type GetAbiDelegateType(params Type[] typeArgs) => Expression.GetDelegateType(typeArgs);
 #else
         private class DelegateTypeComparer : IEqualityComparer<Type[]>

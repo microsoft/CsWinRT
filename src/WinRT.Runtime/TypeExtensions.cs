@@ -81,7 +81,16 @@ namespace WinRT
             {
                 if (type.IsGenericType)
                 {
+#if NET
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        throw new NotSupportedException($"Cannot retrieve the helper type from generic type '{type}'.");
+                    }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     return helperTypeAtribute.HelperType.MakeGenericType(type.GetGenericArguments());
+#pragma warning restore IL3050
                 }
                 else
                 {
@@ -152,7 +161,9 @@ namespace WinRT
             }
             if (helperType.IsGenericType && vftblType is object)
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
+#pragma warning restore IL3050
             }
             return vftblType;
         }

@@ -26,11 +26,11 @@ namespace ABI.Windows.Foundation
             AbiToProjectionVftable = new global::ABI.System.Nullable<T>.Vftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                get_Value_0 = GetValueDelegateForAbi()
+                get_Value_0 = GetValueDelegateForAbi(out IntPtr nativePtr)
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedValueIReferenceImpl<T>), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
             Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
-            nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Value_0);
+            nativeVftbl[6] = nativePtr;
 
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
@@ -106,7 +106,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-        internal static unsafe Delegate GetValueDelegateForAbi()
+        internal static unsafe Delegate GetValueDelegateForAbi(out IntPtr nativePtr)
         {
             if (typeof(T) == typeof(int) ||
                 typeof(T) == typeof(byte) ||
@@ -135,12 +135,20 @@ namespace ABI.Windows.Foundation
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
             {
-                return (Nullable_Delegates.GetValueDelegateAbi)Do_Abi_get_Value_0_Blittable;
+                Nullable_Delegates.GetValueDelegateAbi stub = new(Do_Abi_get_Value_0_Blittable);
+
+                nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
+
+                return stub;
             }
 
             if (typeof(T) == typeof(global::System.DateTimeOffset))
             {
-                return (Nullable_Delegates.GetValueDelegateAbiDateTimeOffset)Do_Abi_get_Value_0_DateTimeOffset;
+                Nullable_Delegates.GetValueDelegateAbiDateTimeOffset stub = new(Do_Abi_get_Value_0_DateTimeOffset);
+
+                nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
+
+                return stub;
             }
 
 #if NET
@@ -149,11 +157,17 @@ namespace ABI.Windows.Foundation
             if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 Nullable<T>.Vftbl.get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
 
-                return Delegate.CreateDelegate(
+                Delegate stub = Delegate.CreateDelegate(
                     Nullable<T>.Vftbl.get_Value_0_Type,
                     typeof(BoxedValueIReferenceImpl<T>).GetMethod(nameof(Do_Abi_get_Value_0), BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(Marshaler<T>.AbiType));
+
+                nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
+
+                return stub;
+#pragma warning restore IL3050
             }
 
             throw new NotSupportedException($"Failed to get the marshalling delegate for BoxedValueIReferenceImpl`1 with type '{typeof(T)}'.");
@@ -358,9 +372,11 @@ namespace ABI.System
                 if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
                 {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
 
                     return Marshal.GetDelegateForFunctionPointer(ptr, get_Value_0_Type);
+#pragma warning restore IL3050
                 }
 
                 throw new NotSupportedException($"Failed to get the marshalling delegate for Nullable`1 with type '{typeof(T)}'.");
