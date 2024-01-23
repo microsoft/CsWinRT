@@ -547,7 +547,6 @@ namespace WinRT
         T> : ObjectReference<T>
     {
         private readonly IntPtr _contextCallbackPtr;
-        private readonly IntPtr _contextToken;
 
         private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> __cachedContext;
         private ConcurrentDictionary<IntPtr, ObjectReference<T>> CachedContext => __cachedContext ?? Make_CachedContext();

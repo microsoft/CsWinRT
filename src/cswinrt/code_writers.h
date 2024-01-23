@@ -1941,7 +1941,7 @@ private static ObjectReference<IActivationFactoryVftbl> %
     get
     { 
         var factory = __%;
-        if (factory != null && factory.IsObjectInContext())
+        if (factory != null && factory.IsInCurrentContext)
         {
             return factory;
         }
@@ -1999,7 +1999,7 @@ private static ObjectReference<%> %
     get
     { 
         var factory = __%;
-        if (factory != null && factory.IsObjectInContext())
+        if (factory != null && factory.IsInCurrentContext)
         {
             return factory;
         }
