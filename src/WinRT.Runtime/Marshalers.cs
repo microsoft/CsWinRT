@@ -916,11 +916,14 @@ namespace WinRT
             public object[] _marshalers;
         }
 
-#if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
-#endif
         public static new unsafe MarshalerArray CreateMarshalerArray(T[] array)
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
+            }
+#endif
             MarshalerArray m = new MarshalerArray();
             if (array is null)
             {
@@ -930,7 +933,9 @@ namespace WinRT
             try
             {
                 int length = array.Length;
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var abi_element_size = Marshal.SizeOf(AbiType);
+#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 m._array = Marshal.AllocCoTaskMem(byte_length);
                 m._marshalers = new object[length];
@@ -959,11 +964,14 @@ namespace WinRT
             return (m._marshalers?.Length ?? 0, m._array);
         }
 
-#if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
-#endif
         public static new unsafe T[] FromAbiArray(object box)
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
+            }
+#endif
             if (box is null)
             {
                 return null;
@@ -975,41 +983,51 @@ namespace WinRT
             }
             var array = new T[abi.length];
             var data = (byte*)abi.data.ToPointer();
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
             var abi_element_size = Marshal.SizeOf(AbiType);
             for (int i = 0; i < abi.length; i++)
             {
                 var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
+#pragma warning restore IL3050
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
             return array;
         }
 
-#if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
-#endif
         public static unsafe void CopyAbiArray(T[] array, object box)
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
+            }
+#endif
             var abi = ((int length, IntPtr data))box;
             if (abi.data == IntPtr.Zero)
             {
                 return;
             }
             var data = (byte*)abi.data.ToPointer();
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
             var abi_element_size = Marshal.SizeOf(AbiType);
             for (int i = 0; i < abi.length; i++)
             {
                 var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
+#pragma warning restore IL3050
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
         }
 
-#if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
-#endif
         public static new unsafe (int length, IntPtr data) FromManagedArray(T[] array)
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
+            }
+#endif
             if (array is null)
             {
                 return (0, IntPtr.Zero);
@@ -1020,7 +1038,9 @@ namespace WinRT
             try
             {
                 int length = array.Length;
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var abi_element_size = Marshal.SizeOf(AbiType);
+#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 data = Marshal.AllocCoTaskMem(byte_length);
                 var bytes = (byte*)data.ToPointer();
@@ -1041,11 +1061,14 @@ namespace WinRT
             }
         }
 
-#if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
-#endif
         public static unsafe void CopyManagedArray(T[] array, IntPtr data)
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
+            }
+#endif
             if (array is null)
             {
                 return;
@@ -1056,7 +1079,9 @@ namespace WinRT
             try
             {
                 int length = array.Length;
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var abi_element_size = Marshal.SizeOf(AbiType);
+#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 var bytes = (byte*)data.ToPointer();
                 for (i = 0; i < length; i++)
@@ -1077,24 +1102,26 @@ namespace WinRT
 
         public static new void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
 
-#if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
-#endif
         public static unsafe void DisposeAbiArrayElements((int length, IntPtr data) abi)
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
+            }
+#endif
             var data = (byte*)abi.data.ToPointer();
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
             var abi_element_size = Marshal.SizeOf(AbiType);
             for (int i = 0; i < abi.length; i++)
             {
                 var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
+#pragma warning restore IL3050
                 Marshaler<T>.DisposeAbi(abi_element);
                 data += abi_element_size;
             }
         }
 
-#if NET8_0_OR_GREATER
-        [RequiresDynamicCode("Marshalling code for the ABI type might not be available.")]
-#endif
         public static new unsafe void DisposeAbiArray(object box)
         {
             if (box == null) return;
