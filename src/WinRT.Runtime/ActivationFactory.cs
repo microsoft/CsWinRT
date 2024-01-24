@@ -12,14 +12,14 @@ namespace WinRT
 {
     internal unsafe sealed class DllModule
     {
-        readonly string _fileName;
-        readonly IntPtr _moduleHandle;
-        readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> _GetActivationFactory;
-        readonly delegate* unmanaged[Stdcall]<int> _CanUnloadNow; // TODO: Eventually periodically call
+        private readonly string _fileName;
+        private readonly IntPtr _moduleHandle;
+        private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> _GetActivationFactory;
+        private readonly delegate* unmanaged[Stdcall]<int> _CanUnloadNow; // TODO: Eventually periodically call
 
-        static readonly string _currentModuleDirectory = AppContext.BaseDirectory;
+        private static readonly string _currentModuleDirectory = AppContext.BaseDirectory;
 
-        static Dictionary<string, DllModule> _cache = new System.Collections.Generic.Dictionary<string, DllModule>(StringComparer.Ordinal);
+        private static Dictionary<string, DllModule> _cache = new Dictionary<string, DllModule>(StringComparer.Ordinal);
 
         public static bool TryLoad(string fileName, out DllModule module)
         {
@@ -38,7 +38,7 @@ namespace WinRT
             }
         }
 
-        private static unsafe bool TryCreate(string fileName, out DllModule module)
+        private static bool TryCreate(string fileName, out DllModule module)
         {
             // Explicitly look for module in the same directory as this one, and
             // use altered search path to ensure any dependencies in the same directory are found.
@@ -97,7 +97,7 @@ namespace WinRT
             }
         }
 
-        public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
+        public (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             IntPtr instancePtr = IntPtr.Zero;
             try
@@ -137,18 +137,18 @@ namespace WinRT
         }
     }
 
-    internal sealed class WinrtModule
+    internal sealed class WinRTModule
     {
-        readonly IntPtr _mtaCookie;
-        volatile static WinrtModule _instance;
-        private static WinrtModule MakeWinRTModule()
+        private static volatile WinRTModule _instance;
+        private readonly IntPtr _mtaCookie;
+        private static WinRTModule MakeWinRTModule()
         {
-            global::System.Threading.Interlocked.CompareExchange(ref _instance, new WinrtModule(), null);
+            global::System.Threading.Interlocked.CompareExchange(ref _instance, new WinRTModule(), null);
             return _instance;
         }
-        public static WinrtModule Instance => _instance ?? MakeWinRTModule();
+        public static WinRTModule Instance => _instance ?? MakeWinRTModule();
 
-        public unsafe WinrtModule()
+        public unsafe WinRTModule()
         {
             IntPtr mtaCookie;
             Marshal.ThrowExceptionForHR(Platform.CoIncrementMTAUsage(&mtaCookie));
@@ -182,25 +182,37 @@ namespace WinRT
             }
         }
 
-        ~WinrtModule()
+        ~WinRTModule()
         {
             Marshal.ThrowExceptionForHR(Platform.CoDecrementMTAUsage(_mtaCookie));
         }
     }
 
-#if EMBED
-    internal
-#else 
-    public
-#endif
-    static class ActivationFactory
+    internal static class IActivationFactoryMethods
     {
-        public static IObjectReference Get(string typeName)
+        public static unsafe ObjectReference<I> ActivateInstance<I>(IObjectReference obj)
+        {
+            IntPtr instancePtr;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)obj.ThisPtr)[6](obj.ThisPtr, &instancePtr));
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
+            }
+        }
+    }
+
+    internal static class ActivationFactory
+    {
+        public static ObjectReference<IActivationFactoryVftbl> Get(string typeName)
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<IActivationFactoryVftbl> factory;
-            (factory, hr) = WinrtModule.GetActivationFactory<IActivationFactoryVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
+            (factory, hr) = WinRTModule.GetActivationFactory<IActivationFactoryVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
             if (factory != null)
             {
                 return factory;
@@ -237,7 +249,7 @@ namespace WinRT
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<I> factory;
-            (factory, hr) = WinrtModule.GetActivationFactory<I>(typeName, iid);
+            (factory, hr) = WinRTModule.GetActivationFactory<I>(typeName, iid);
             if (factory != null)
             {
                 return factory;
