@@ -1935,13 +1935,13 @@ private static % _% = new %("%.%", %.IID);
     {
         auto objrefname = w.write_temp("%", bind<write_objref_type_name>(classType));
         w.write(R"(
-private static volatile FactoryObjectReference<IActivationFactoryVftbl> __%;
-private static FactoryObjectReference<IActivationFactoryVftbl> %
+private static volatile ObjectReference<IActivationFactoryVftbl> __%;
+private static ObjectReference<IActivationFactoryVftbl> %
 {
     get
     { 
         var factory = __%;
-        if (factory != null && factory.IsObjectInContext())
+        if (factory != null && factory.IsInCurrentContext)
         {
             return factory;
         }
@@ -1993,13 +1993,13 @@ private static ObjectReference<%> % => __% ?? Make__%();
         {
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(staticsType));
             w.write(R"(
-private static volatile FactoryObjectReference<%> __%;
-private static FactoryObjectReference<%> %
+private static volatile ObjectReference<%> __%;
+private static ObjectReference<%> %
 {
     get
     { 
         var factory = __%;
-        if (factory != null && factory.IsObjectInContext())
+        if (factory != null && factory.IsInCurrentContext)
         {
             return factory;
         }
