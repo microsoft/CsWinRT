@@ -19,7 +19,7 @@ namespace WinRT
 
         private static readonly string _currentModuleDirectory = AppContext.BaseDirectory;
 
-        private static Dictionary<string, DllModule> _cache = new Dictionary<string, DllModule>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, DllModule> _cache = new Dictionary<string, DllModule>(StringComparer.Ordinal);
 
         public static bool TryLoad(string fileName, out DllModule module)
         {
@@ -188,26 +188,14 @@ namespace WinRT
         }
     }
 
-    internal static class IActivationFactoryMethods
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class ActivationFactory
     {
-        public static unsafe ObjectReference<I> ActivateInstance<I>(IObjectReference obj)
-        {
-            IntPtr instancePtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)obj.ThisPtr)[6](obj.ThisPtr, &instancePtr));
-            try
-            {
-                return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(instancePtr);
-            }
-        }
-    }
-
-    public static class ActivationFactory
-    {
-        public static ObjectReference<IActivationFactoryVftbl> Get(string typeName)
+        public static IObjectReference Get(string typeName)
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
@@ -240,20 +228,29 @@ namespace WinRT
             }
         }
 
-        public static ObjectReference<I> Get<
 #if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+        public static IObjectReference Get(string typeName, Guid iid)
+#else
+        public static ObjectReference<I> Get<I>(string typeName, Guid iid)
 #endif
-        I>(string typeName, Guid iid)
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
+#if NET
+            ObjectReference<IUnknownVftbl> factory;
+            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(typeName, iid);
+            if (factory != null)
+            {
+                return factory;
+            }
+#else
             ObjectReference<I> factory;
             (factory, hr) = WinRTModule.GetActivationFactory<I>(typeName, iid);
             if (factory != null)
             {
                 return factory;
             }
+#endif
 
             var moduleName = typeName;
             while (true)
@@ -274,7 +271,11 @@ namespace WinRT
                     {
                         using (activationFactory)
                         {
+#if NET
+                            return activationFactory.As<IUnknownVftbl>(iid);
+#else
                             return activationFactory.As<I>(iid);
+#endif
                         }
                     }
                 }
