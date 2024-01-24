@@ -205,7 +205,7 @@ namespace WinRT
         }
     }
 
-    internal static class ActivationFactory
+    public static class ActivationFactory
     {
         public static ObjectReference<IActivationFactoryVftbl> Get(string typeName)
         {
