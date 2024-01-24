@@ -435,7 +435,7 @@ namespace WinRT
             }
         }
 
-        public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
+        public unsafe (FactoryObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             IntPtr instancePtr = IntPtr.Zero;
             try
@@ -446,7 +446,7 @@ namespace WinRT
                     int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
+                        var objRef = FactoryObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
                         return (objRef, hr);
                     }
                     else
@@ -493,7 +493,7 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe (ObjectReference<I> obj, int hr) GetActivationFactory<I>(string runtimeClassId, Guid iid)
+        public static unsafe (FactoryObjectReference<I> obj, int hr) GetActivationFactory<I>(string runtimeClassId, Guid iid)
         {
             var module = Instance; // Ensure COM is initialized
             IntPtr instancePtr = IntPtr.Zero;
@@ -505,7 +505,7 @@ namespace WinRT
                     int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &iid, &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ObjectReference<I>.Attach(ref instancePtr);
+                        var objRef = FactoryObjectReference<I>.Attach(ref instancePtr);
                         return (objRef, hr);
                     }
                     else
@@ -523,6 +523,71 @@ namespace WinRT
         ~WinrtModule()
         {
             Marshal.ThrowExceptionForHR(Platform.CoDecrementMTAUsage(_mtaCookie));
+        }
+    }
+
+    internal sealed class FactoryObjectReference<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        T> : IObjectReference
+    {
+        private readonly IntPtr _contextToken;
+
+        public static FactoryObjectReference<T> Attach(ref IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+            var obj = new FactoryObjectReference<T>(thisPtr);
+            thisPtr = IntPtr.Zero;
+            return obj;
+        }
+
+        internal FactoryObjectReference(IntPtr thisPtr) :
+            base(thisPtr)
+        {
+            if (!IsFreeThreaded(this))
+            {
+                _contextToken = Context.GetContextToken();
+            }
+        }
+
+        internal FactoryObjectReference(IntPtr thisPtr, IntPtr contextToken)
+            : base(thisPtr)
+        {
+            _contextToken = contextToken;
+        }
+
+        public static new unsafe FactoryObjectReference<T> FromAbi(IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+            var obj = new FactoryObjectReference<T>(thisPtr);
+            obj.VftblIUnknown.AddRef(obj.ThisPtr);
+            return obj;
+        }
+
+        public bool IsObjectInContext()
+        {
+            return _contextToken == IntPtr.Zero || _contextToken == Context.GetContextToken();
+        }
+
+        // If we are free threaded, we do not need to keep track of context.
+        // This can either be if the object implements IAgileObject or the free threaded marshaler.
+        // We only check IAgileObject for now as the necessary code to check the
+        // free threaded marshaler is not exposed from WinRT.Runtime.
+        private unsafe static bool IsFreeThreaded(IObjectReference objRef)
+        {
+            if (objRef.TryAs(InterfaceIIDs.IAgileObject_IID, out var agilePtr) >= 0)
+            {
+                Marshal.Release(agilePtr);
+                return true;
+            }
+            return false;
         }
     }
 
@@ -545,11 +610,11 @@ namespace WinRT
 
     internal static class ActivationFactory
     {
-        public static ObjectReference<IActivationFactoryVftbl> Get(string typeName)
+        public static FactoryObjectReference<IActivationFactoryVftbl> Get(string typeName)
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
-            ObjectReference<IActivationFactoryVftbl> factory;
+            FactoryObjectReference<IActivationFactoryVftbl> factory;
             (factory, hr) = WinrtModule.GetActivationFactory<IActivationFactoryVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
             if (factory != null)
             {
@@ -579,7 +644,7 @@ namespace WinRT
         }
 
 #if NET
-        public static ObjectReference<I> Get<
+        public static FactoryObjectReference<I> Get<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
 #else
         public static ObjectReference<I> Get<
@@ -588,7 +653,7 @@ namespace WinRT
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
-            ObjectReference<I> factory;
+            FactoryObjectReference<I> factory;
             (factory, hr) = WinrtModule.GetActivationFactory<I>(typeName, iid);
             if (factory != null)
             {
@@ -615,13 +680,20 @@ namespace WinRT
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    ObjectReference<IActivationFactoryVftbl> activationFactory;
+                    FactoryObjectReference<IActivationFactoryVftbl> activationFactory;
                     (activationFactory, hr) = module.GetActivationFactory(typeName);
                     if (activationFactory != null)
                     {
                         using (activationFactory)
                         {
+#if NET
+                            if (activationFactory.TryAs(iid, out IntPtr iidPtr) >= 0)
+                            {
+                                return FactoryObjectReference<I>.Attach(ref iidPtr);
+                            }
+#else
                             return activationFactory.As<I>(iid);
+#endif
                         }
                     }
                 }
@@ -709,7 +781,8 @@ namespace WinRT
         public void InitalizeReferenceTracking(IntPtr ptr)
         {
             eventInvokePtr = ptr;
-            int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(IReferenceTrackerTargetVftbl.IID), out referenceTrackerTargetPtr);
+            Guid iid = IReferenceTrackerTargetVftbl.IID;
+            int hr = Marshal.QueryInterface(ptr, ref iid, out referenceTrackerTargetPtr);
             if (hr != 0)
             {
                 referenceTrackerTargetPtr = default;

@@ -364,7 +364,6 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 if (restrictedErrorInfoRef != null)
                 {
                     roReportUnhandledError(restrictedErrorInfoRef.ThisPtr);
-                    GC.KeepAlive(restrictedErrorInfoRef);
                 }
             }
         }

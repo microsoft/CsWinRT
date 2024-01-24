@@ -1581,7 +1581,8 @@ namespace WinRT
             IntPtr iunknownPtr = IntPtr.Zero;
             try
             {
-                Marshal.QueryInterface(ptr, ref Unsafe.AsRef(IUnknownVftbl.IID), out iunknownPtr);
+                Guid iid_iunknown = IUnknownVftbl.IID;
+                Marshal.QueryInterface(ptr, ref iid_iunknown, out iunknownPtr);
                 if (IUnknownVftbl.IsReferenceToManagedObject(iunknownPtr))
                 {
                     return (T)ComWrappersSupport.FindObject<object>(iunknownPtr);

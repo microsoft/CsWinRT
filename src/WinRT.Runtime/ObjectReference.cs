@@ -36,17 +36,6 @@ namespace WinRT
             }
         }
 
-        public bool IsFreeThreaded => GetContextToken() == IntPtr.Zero;
-
-        public bool IsInCurrentContext
-        {
-            get
-            {
-                var contextToken = GetContextToken();
-                return contextToken == IntPtr.Zero || contextToken == Context.GetContextToken();
-            }
-        }
-
         private protected IntPtr ThisPtrFromOriginalContext
         {
             get
@@ -317,7 +306,7 @@ namespace WinRT
         protected virtual unsafe void AddRef(bool refFromTrackerSource)
         {
             Marshal.AddRef(ThisPtr);
-            if (refFromTrackerSource)
+            if(refFromTrackerSource)
             {
                 AddRefFromTrackerSource();
             }
@@ -393,11 +382,6 @@ namespace WinRT
             return ThisPtrFromOriginalContext;
         }
 
-        private protected virtual IntPtr GetContextToken()
-        {
-            return IntPtr.Zero;
-        }
-
         public ObjectReferenceValue AsValue()
         {
             // Sharing ptr with objref.
@@ -439,7 +423,18 @@ namespace WinRT
             }
         }
 
-        private protected ObjectReference(IntPtr thisPtr, T vftblT) :
+        public static ObjectReference<T> Attach(ref IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+            var obj = new ObjectReference<T>(thisPtr);
+            thisPtr = IntPtr.Zero;
+            return obj;
+        }
+
+        ObjectReference(IntPtr thisPtr, T vftblT) :
             base(thisPtr)
         {
             _vftbl = vftblT;
@@ -450,102 +445,15 @@ namespace WinRT
         {
         }
 
-        public static ObjectReference<T> Attach(ref IntPtr thisPtr)
-        {
-            if (thisPtr == IntPtr.Zero)
-            {
-                return null;
-            }
-
-            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
-            {
-                var obj = new ObjectReference<T>(thisPtr);
-                thisPtr = IntPtr.Zero;
-                return obj;
-            }
-            else
-            {
-                var obj = new ObjectReferenceWithContext<T>(
-                    thisPtr,
-                    Context.GetContextCallback(),
-                    Context.GetContextToken());
-                thisPtr = IntPtr.Zero;
-                return obj;
-            }
-        }
-
-        public static ObjectReference<T> Attach(ref IntPtr thisPtr, Guid iid)
-        {
-            if (thisPtr == IntPtr.Zero)
-            {
-                return null;
-            }
-
-            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
-            {
-                var obj = new ObjectReference<T>(thisPtr);
-                thisPtr = IntPtr.Zero;
-                return obj;
-            }
-            else
-            {
-                var obj = new ObjectReferenceWithContext<T>(
-                    thisPtr,
-                    Context.GetContextCallback(),
-                    Context.GetContextToken(),
-                    iid);
-                thisPtr = IntPtr.Zero;
-                return obj;
-            }
-        }
-
         public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
         {
             if (thisPtr == IntPtr.Zero)
             {
                 return null;
             }
-
             Marshal.AddRef(thisPtr);
-            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
-            {
-                var obj = new ObjectReference<T>(thisPtr, vftblT);
-                return obj;
-            }
-            else
-            {
-                var obj = new ObjectReferenceWithContext<T>(
-                    thisPtr,
-                    vftblT,
-                    Context.GetContextCallback(),
-                    Context.GetContextToken());
-                return obj;
-            }
-        }
-
-        public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT, Guid iid)
-        {
-            if (thisPtr == IntPtr.Zero)
-            {
-                return null;
-            }
-
-            Marshal.AddRef(thisPtr);
-            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
-            {
-                var obj = new ObjectReference<T>(thisPtr, vftblT);
-                return obj;
-            }
-            else
-            {
-                var obj = new ObjectReferenceWithContext<T>(
-                    thisPtr,
-                    vftblT,
-                    Context.GetContextCallback(),
-                    Context.GetContextToken(),
-                    iid);
-                return obj;
-            }
+            var obj = new ObjectReference<T>(thisPtr, vftblT);
+            return obj;
         }
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr)
@@ -556,16 +464,6 @@ namespace WinRT
             }
             var vftblT = GetVtable(thisPtr);
             return FromAbi(thisPtr, vftblT);
-        }
-
-        public static ObjectReference<T> FromAbi(IntPtr thisPtr, Guid iid)
-        {
-            if (thisPtr == IntPtr.Zero)
-            {
-                return null;
-            }
-            var vftblT = GetVtable(thisPtr);
-            return FromAbi(thisPtr, vftblT, iid);
         }
 
         private static unsafe T GetVtable(IntPtr thisPtr)
@@ -622,7 +520,7 @@ namespace WinRT
         private volatile AgileReference __agileReference;
         private AgileReference AgileReference => _isAgileReferenceSet ? __agileReference : Make_AgileReference();
         private AgileReference Make_AgileReference()
-        {
+        { 
             Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
 
             // Set after CallInContext callback given callback can fail to occur.
@@ -638,7 +536,7 @@ namespace WinRT
         private readonly Guid _iid;
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken)
-            : base(thisPtr)
+            :base(thisPtr)
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
@@ -646,19 +544,6 @@ namespace WinRT
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : this(thisPtr, contextCallbackPtr, contextToken)
-        {
-            _iid = iid;
-        }
-
-        internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken)
-            : base(thisPtr, vftblT)
-        {
-            _contextCallbackPtr = contextCallbackPtr;
-            _contextToken = contextToken;
-        }
-
-        internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
-            : this(thisPtr, vftblT, contextCallbackPtr, contextToken)
         {
             _iid = iid;
         }
@@ -672,11 +557,6 @@ namespace WinRT
             }
 
             return cachedObjRef.ThisPtr;
-        }
-
-        private protected override IntPtr GetContextToken()
-        {
-            return this._contextToken;
         }
 
         private protected override T GetVftblForCurrentContext()
