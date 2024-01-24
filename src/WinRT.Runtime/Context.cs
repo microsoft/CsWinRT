@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ABI.WinRT.Interop;
 
@@ -25,10 +24,9 @@ namespace WinRT
 
         public static unsafe IntPtr GetContextCallback()
         {
+            Guid iid = IContextCallbackVftbl.IID;
             IntPtr contextCallbackPtr;
-            Marshal.ThrowExceptionForHR(CoGetObjectContext(
-                (Guid*)Unsafe.AsPointer(ref Unsafe.AsRef(in IContextCallbackVftbl.IID_ICallbackWithNoReentrancyToApplicationSTA)),
-                &contextCallbackPtr));
+            Marshal.ThrowExceptionForHR(CoGetObjectContext(&iid, &contextCallbackPtr));
             return contextCallbackPtr;
         }
 

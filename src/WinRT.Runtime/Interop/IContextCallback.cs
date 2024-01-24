@@ -23,8 +23,8 @@ namespace ABI.WinRT.Interop
 
     internal unsafe struct IContextCallbackVftbl
     {
-        internal static readonly Guid IID = InterfaceIIDs.IContextCallback_IID;
-        internal static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
+        public static readonly Guid IID = InterfaceIIDs.IContextCallback_IID;
+        public static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
 
         private global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
         private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4;
@@ -44,13 +44,14 @@ namespace ABI.WinRT.Interop
             comCallData.pUserDefined = IntPtr.Zero;
 #endif
 
+            Guid iid = IID_ICallbackWithNoReentrancyToApplicationSTA;
             int hresult;
 #if NET && CsWinRT_LANG_11_FEATURES
             hresult = ContextCallback_4(
                 contextCallbackPtr,
                 (IntPtr)(delegate* unmanaged<ComCallData*, int>)&InvokeCallback,
                 &comCallData,
-                (Guid*)Unsafe.AsPointer(ref Unsafe.AsRef(in IID_ICallbackWithNoReentrancyToApplicationSTA)),
+                &iid,
                 /* iMethod */ 5,
                 IntPtr.Zero);
 #else
@@ -64,7 +65,7 @@ namespace ABI.WinRT.Interop
                 contextCallbackPtr,
                 Marshal.GetFunctionPointerForDelegate(nativeCallback),
                 &comCallData,
-                (Guid*)Unsafe.AsPointer(ref Unsafe.AsRef(in IID_ICallbackWithNoReentrancyToApplicationSTA)),
+                &iid,
                 /* iMethod */ 5,
                 IntPtr.Zero);
 
