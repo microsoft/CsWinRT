@@ -474,6 +474,31 @@ namespace WinRT
             }
         }
 
+        public static ObjectReference<T> Attach(ref IntPtr thisPtr, Guid iid)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
+            {
+                var obj = new ObjectReference<T>(thisPtr);
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
+            else
+            {
+                var obj = new ObjectReferenceWithContext<T>(
+                    thisPtr,
+                    Context.GetContextCallback(),
+                    Context.GetContextToken(),
+                    iid);
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
+        }
+
         public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
         {
             if (thisPtr == IntPtr.Zero)
@@ -491,8 +516,34 @@ namespace WinRT
             {
                 var obj = new ObjectReferenceWithContext<T>(
                     thisPtr,
+                    vftblT,
                     Context.GetContextCallback(),
                     Context.GetContextToken());
+                return obj;
+            }
+        }
+
+        public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT, Guid iid)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            Marshal.AddRef(thisPtr);
+            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
+            {
+                var obj = new ObjectReference<T>(thisPtr, vftblT);
+                return obj;
+            }
+            else
+            {
+                var obj = new ObjectReferenceWithContext<T>(
+                    thisPtr,
+                    vftblT,
+                    Context.GetContextCallback(),
+                    Context.GetContextToken(),
+                    iid);
                 return obj;
             }
         }
@@ -505,6 +556,16 @@ namespace WinRT
             }
             var vftblT = GetVtable(thisPtr);
             return FromAbi(thisPtr, vftblT);
+        }
+
+        public static ObjectReference<T> FromAbi(IntPtr thisPtr, Guid iid)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+            var vftblT = GetVtable(thisPtr);
+            return FromAbi(thisPtr, vftblT, iid);
         }
 
         private static unsafe T GetVtable(IntPtr thisPtr)
@@ -585,6 +646,19 @@ namespace WinRT
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : this(thisPtr, contextCallbackPtr, contextToken)
+        {
+            _iid = iid;
+        }
+
+        internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken)
+            : base(thisPtr, vftblT)
+        {
+            _contextCallbackPtr = contextCallbackPtr;
+            _contextToken = contextToken;
+        }
+
+        internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
+            : this(thisPtr, vftblT, contextCallbackPtr, contextToken)
         {
             _iid = iid;
         }

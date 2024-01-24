@@ -142,11 +142,11 @@ namespace WinRT
             if (requireQI)
             {
                 Marshal.ThrowExceptionForHR(Marshal.QueryInterface(externalComObject, ref iid, out IntPtr ptr));
-                return ObjectReference<T>.Attach(ref ptr);
+                return ObjectReference<T>.Attach(ref ptr, iid);
             }
             else
             {
-                return ObjectReference<T>.FromAbi(externalComObject);
+                return ObjectReference<T>.FromAbi(externalComObject, iid);
             }
         }
 

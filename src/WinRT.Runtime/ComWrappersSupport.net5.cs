@@ -175,7 +175,7 @@ namespace WinRT
         public static IObjectReference CreateCCWForObject(object obj)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
-            return ObjectReference<IUnknownVftbl>.Attach(ref ccw);
+            return ObjectReference<IUnknownVftbl>.Attach(ref ccw, InterfaceIIDs.IUnknown_IID);
         }
 
         internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
