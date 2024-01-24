@@ -2,82 +2,96 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
-using WinRT.Interop;
 
-#pragma warning disable 0169 // warning CS0169: The field '...' is never used
-#pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
+#pragma warning disable CS8500
 
-namespace WinRT.Interop
+namespace ABI.WinRT.Interop
 {
-    struct ComCallData
+    internal struct ComCallData
     {
         public int dwDispid;
         public int dwReserved;
         public IntPtr pUserDefined;
     }
 
-    unsafe delegate int PFNCONTEXTCALL(ComCallData* data);
+#if !(NET && CsWinRT_LANG_11_FEATURES)
+    internal unsafe delegate int PFNCONTEXTCALL(ComCallData* data);
+#endif
 
-    [Guid("000001da-0000-0000-C000-000000000046")]
-    unsafe interface IContextCallback
-    {
-        // The pUnk parameter is intentionally excluded here
-        // since it is required to always be null.
-        void ContextCallback(
-            PFNCONTEXTCALL pfnCallback,
-            ComCallData* pParam,
-            Guid riid,
-            int iMethod);
-    }
-}
-
-
-namespace ABI.WinRT.Interop
-{
-    [Guid("000001da-0000-0000-C000-000000000046")]
-    internal sealed unsafe class IContextCallback : global::WinRT.Interop.IContextCallback
+    internal unsafe struct IContextCallbackVftbl
     {
         internal static readonly Guid IID = InterfaceIIDs.IContextCallback_IID;
+        internal static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
 
-        [Guid("000001da-0000-0000-C000-000000000046")]
-        public struct Vftbl
+        private global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+        private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4;
+
+        public void ContextCallback(IntPtr contextCallbackPtr, Action callback, Action onFailCallback)
         {
-            global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            private void* _ContextCallback;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4
+            // We can just store a pointer to the callback to invoke in the context,
+            // so we don't need to allocate another closure or anything. The callback
+            // will be kept alive automatically, because 'comCallData' is address exposed.
+            // We only do this if we can use C# 11, and if we're on modern .NET, to be safe.
+            ComCallData comCallData;
+            comCallData.dwDispid = 0;
+            comCallData.dwReserved = 0;
+#if NET && CsWinRT_LANG_11_FEATURES
+            comCallData.pUserDefined = (IntPtr)(void*)&callback;
+#else
+            comCallData.pUserDefined = IntPtr.Zero;
+#endif
+
+            int hresult;
+#if NET && CsWinRT_LANG_11_FEATURES
+            hresult = ContextCallback_4(
+                contextCallbackPtr,
+                (IntPtr)(delegate* unmanaged<ComCallData*, int>)&InvokeCallback,
+                &comCallData,
+                (Guid*)Unsafe.AsPointer(ref Unsafe.AsRef(in IID_ICallbackWithNoReentrancyToApplicationSTA)),
+                /* iMethod */ 5,
+                IntPtr.Zero);
+#else
+            PFNCONTEXTCALL nativeCallback = _ =>
             {
-                get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int>)_ContextCallback;
-                set => _ContextCallback = (void*)value;
+                callback();
+                return 0;
+            };
+
+            hresult = ContextCallback_4(
+                contextCallbackPtr,
+                Marshal.GetFunctionPointerForDelegate(nativeCallback),
+                &comCallData,
+                (Guid*)Unsafe.AsPointer(ref Unsafe.AsRef(in IID_ICallbackWithNoReentrancyToApplicationSTA)),
+                /* iMethod */ 5,
+                IntPtr.Zero);
+
+            GC.KeepAlive(nativeCallback);
+#endif
+
+            if (hresult < 0)
+            {
+                onFailCallback?.Invoke();
             }
         }
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        public static implicit operator IContextCallback(IObjectReference obj) => (obj != null) ? new IContextCallback(obj) : null;
-        public static implicit operator IContextCallback(ObjectReference<Vftbl> obj) => (obj != null) ? new IContextCallback(obj) : null;
-        private readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public IContextCallback(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public IContextCallback(ObjectReference<Vftbl> obj)
+#if NET && CsWinRT_LANG_11_FEATURES
+        [UnmanagedCallersOnly]
+        private static int InvokeCallback(ComCallData* comCallData)
         {
-            _obj = obj;
-        }
+            try
+            {
+                ((Action*)comCallData->pUserDefined)->Invoke();
 
-        private unsafe struct ContextCallData
-        {
-            public IntPtr delegateHandle;
-            public ComCallData* userData;
+                return 0; // S_OK
+            }
+            catch (Exception e)
+            {
+                return e.HResult;
+            }
         }
-
-        public unsafe void ContextCallback(global::WinRT.Interop.PFNCONTEXTCALL pfnCallback, ComCallData* pParam, Guid riid, int iMethod)
-        {
-            var callback = Marshal.GetFunctionPointerForDelegate(pfnCallback);
-            var result = _obj.Vftbl.ContextCallback_4(ThisPtr, callback, pParam, &riid, iMethod, IntPtr.Zero);
-            GC.KeepAlive(pfnCallback);
-            Marshal.ThrowExceptionForHR(result);
-        }
+#endif
     }
 }
