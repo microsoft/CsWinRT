@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 
@@ -17,14 +16,9 @@ namespace ABI.WinRT.Interop
         public IntPtr pUserDefined;
     }
 
-#if !(NET && CsWinRT_LANG_11_FEATURES)
-    internal unsafe delegate int PFNCONTEXTCALL(ComCallData* data);
-#endif
-
+#if NET && CsWinRT_LANG_11_FEATURES
     internal unsafe struct IContextCallbackVftbl
     {
-        public static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
-
         private global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
         private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4;
 
@@ -33,7 +27,6 @@ namespace ABI.WinRT.Interop
             ComCallData comCallData;
             comCallData.dwDispid = 0;
             comCallData.dwReserved = 0;
-#if NET && CsWinRT_LANG_11_FEATURES
 
             // Copy the callback into a local to make sure it really is a local that
             // gets marked as address taken, rather than something that could potentially
@@ -65,37 +58,16 @@ namespace ABI.WinRT.Interop
                     return e.HResult;
                 }
             }
-#else
-            comCallData.pUserDefined = IntPtr.Zero;
-#endif
 
-            Guid iid = IID_ICallbackWithNoReentrancyToApplicationSTA;
-            int hresult;
-#if NET && CsWinRT_LANG_11_FEATURES
-            hresult = (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback_4(
+            Guid iid = InterfaceIIDs.ICallbackWithNoReentrancyToApplicationSTA_IID;
+
+            int hresult = (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback_4(
                 contextCallbackPtr,
                 (IntPtr)(delegate* unmanaged<ComCallData*, int>)&InvokeCallback,
                 &comCallData,
                 &iid,
                 /* iMethod */ 5,
                 IntPtr.Zero);
-#else
-            PFNCONTEXTCALL nativeCallback = _ =>
-            {
-                callback();
-                return 0;
-            };
-
-            hresult = (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback_4(
-                contextCallbackPtr,
-                Marshal.GetFunctionPointerForDelegate(nativeCallback),
-                &comCallData,
-                &iid,
-                /* iMethod */ 5,
-                IntPtr.Zero);
-
-            GC.KeepAlive(nativeCallback);
-#endif
 
             if (hresult < 0)
             {
@@ -103,4 +75,46 @@ namespace ABI.WinRT.Interop
             }
         }
     }
+#else
+    internal unsafe delegate int PFNCONTEXTCALL(ComCallData* data);
+
+    [Guid("000001da-0000-0000-C000-000000000046")]
+    internal sealed unsafe class IContextCallback
+    {
+        internal static readonly Guid IID = InterfaceIIDs.IContextCallback_IID;
+
+        [Guid("000001da-0000-0000-C000-000000000046")]
+        public struct Vftbl
+        {
+            global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+            private void* _ContextCallback;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4
+            {
+                get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int>)_ContextCallback;
+                set => _ContextCallback = (void*)value;
+            }
+        }
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+
+        public static implicit operator IContextCallback(IObjectReference obj) => (obj != null) ? new IContextCallback(obj) : null;
+        public static implicit operator IContextCallback(ObjectReference<Vftbl> obj) => (obj != null) ? new IContextCallback(obj) : null;
+        private readonly ObjectReference<Vftbl> _obj;
+        public IntPtr ThisPtr => _obj.ThisPtr;
+        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+        public A As<A>() => _obj.AsType<A>();
+        public IContextCallback(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public IContextCallback(ObjectReference<Vftbl> obj)
+        {
+            _obj = obj;
+        }
+
+        public unsafe void ContextCallback(PFNCONTEXTCALL pfnCallback, ComCallData* pParam, Guid riid, int iMethod)
+        {
+            var callback = Marshal.GetFunctionPointerForDelegate(pfnCallback);
+            var result = _obj.Vftbl.ContextCallback_4(ThisPtr, callback, pParam, &riid, iMethod, IntPtr.Zero);
+            GC.KeepAlive(pfnCallback);
+            Marshal.ThrowExceptionForHR(result);
+        }
+    }
+#endif
 }

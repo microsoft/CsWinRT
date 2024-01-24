@@ -43,7 +43,25 @@ namespace WinRT
                 return;
             }
 
+#if NET && CsWinRT_LANG_11_FEATURES
             IContextCallbackVftbl.ContextCallback(contextCallbackPtr, callback, onFailCallback);
+#else
+            ComCallData data = default;
+            var contextCallback = new ABI.WinRT.Interop.IContextCallback(ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.FromAbi(contextCallbackPtr));
+
+            try
+            {
+                contextCallback.ContextCallback(_ =>
+                {
+                    callback();
+                    return 0;
+                }, &data, InterfaceIIDs.ICallbackWithNoReentrancyToApplicationSTA_IID, 5);
+            } 
+            catch(Exception)
+            {
+                onFailCallback?.Invoke();
+            }
+#endif
         }
 
         public static void DisposeContextCallback(IntPtr contextCallbackPtr)
