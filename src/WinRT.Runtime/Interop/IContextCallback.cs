@@ -35,12 +35,17 @@ namespace ABI.WinRT.Interop
             comCallData.dwReserved = 0;
 #if NET && CsWinRT_LANG_11_FEATURES
 
+            // Copy the callback into a local to make sure it really is a local that
+            // gets marked as address taken, rather than something that could potentially
+            // be inlined into the caller into some state machine or anything else not safe.
+            Action callbackAddressTaken = callback;
+
             // We can just store a pointer to the callback to invoke in the context,
             // so we don't need to allocate another closure or anything. The callback
             // will be kept alive automatically, because 'comCallData' is address exposed.
             // We only do this if we can use C# 11, and if we're on modern .NET, to be safe.
             // In the callback below, we can then just retrieve the Action again to invoke it.
-            comCallData.pUserDefined = (IntPtr)(void*)&callback;
+            comCallData.pUserDefined = (IntPtr)(void*)&callbackAddressTaken;
             
             [UnmanagedCallersOnly]
             static int InvokeCallback(ComCallData* comCallData)
