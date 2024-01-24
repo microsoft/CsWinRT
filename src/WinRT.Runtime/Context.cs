@@ -43,7 +43,7 @@ namespace WinRT
                 return;
             }
 
-            (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback(contextCallbackPtr, callback, onFailCallback);
+            IContextCallbackVftbl.ContextCallback(contextCallbackPtr, callback, onFailCallback);
         }
 
         public static void DisposeContextCallback(IntPtr contextCallbackPtr)
