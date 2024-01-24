@@ -193,63 +193,11 @@ namespace WinRT
             // which would just explode the binary size on NativeAOT due to combinatorial generics.
             if (this is IObjectReferenceWithContext)
             {
-                return TryAsForObjectReferenceWithContext(this, iid, out objRef);
+                return ObjectReferenceWithContext<T>.TryAs(this, iid, out objRef);
             }
 
             // Normal path for IObjectReference or any IObjectReference<T>
-            return TryAsForObjectReference(this, iid, out objRef);
-
-            static int TryAsForObjectReference(IObjectReference sourceRef, Guid iid, out ObjectReference<T> objRef)
-            {
-                objRef = null;
-
-                sourceRef.ThrowIfDisposed();
-
-                int hr = Marshal.QueryInterface(sourceRef.ThisPtr, ref iid, out IntPtr thatPtr);
-
-                if (hr >= 0)
-                {
-                    if (sourceRef.IsAggregated)
-                    {
-                        Marshal.Release(thatPtr);
-                    }
-
-                    sourceRef.AddRefFromTrackerSource();
-
-                    objRef = ObjectReference<T>.Attach(ref thatPtr);
-                    objRef.IsAggregated = sourceRef.IsAggregated;
-                    objRef.PreventReleaseOnDispose = sourceRef.IsAggregated;
-                    objRef.ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr;
-                }
-
-                return hr;
-            }
-
-            static int TryAsForObjectReferenceWithContext(IObjectReference sourceRef, Guid iid, out ObjectReference<T> objRef)
-            {
-                objRef = null;
-
-                int hr = Marshal.QueryInterface(sourceRef.ThisPtr, ref iid, out IntPtr thatPtr);
-
-                if (hr >= 0)
-                {
-                    if (sourceRef.IsAggregated)
-                    {
-                        Marshal.Release(thatPtr);
-                    }
-
-                    sourceRef.AddRefFromTrackerSource();
-
-                    objRef = new ObjectReferenceWithContext<T>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
-                    {
-                        IsAggregated = sourceRef.IsAggregated,
-                        PreventReleaseOnDispose = sourceRef.IsAggregated,
-                        ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr
-                    };
-                }
-
-                return hr;
-            }
+            return ObjectReference<T>.TryAs(this, iid, out objRef);            
         }
 
         public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
@@ -642,6 +590,30 @@ namespace WinRT
         {
             return _vftbl;
         }
+
+        internal static int TryAs(IObjectReference sourceRef, Guid iid, out ObjectReference<T> objRef)
+        {
+            objRef = null;
+
+            int hr = Marshal.QueryInterface(sourceRef.ThisPtr, ref iid, out IntPtr thatPtr);
+
+            if (hr >= 0)
+            {
+                if (sourceRef.IsAggregated)
+                {
+                    Marshal.Release(thatPtr);
+                }
+
+                sourceRef.AddRefFromTrackerSource();
+
+                objRef = ObjectReference<T>.Attach(ref thatPtr);
+                objRef.IsAggregated = sourceRef.IsAggregated;
+                objRef.PreventReleaseOnDispose = sourceRef.IsAggregated;
+                objRef.ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr;
+            }
+
+            return hr;
+        }
     }
 
     internal sealed class ObjectReferenceWithContext<
@@ -799,6 +771,32 @@ namespace WinRT
                 ReferenceTrackerPtr = ReferenceTrackerPtr
             };
             return objRef;
+        }
+
+        internal static new int TryAs(IObjectReference sourceRef, Guid iid, out ObjectReference<T> objRef)
+        {
+            objRef = null;
+
+            int hr = Marshal.QueryInterface(sourceRef.ThisPtr, ref iid, out IntPtr thatPtr);
+
+            if (hr >= 0)
+            {
+                if (sourceRef.IsAggregated)
+                {
+                    Marshal.Release(thatPtr);
+                }
+
+                sourceRef.AddRefFromTrackerSource();
+
+                objRef = new ObjectReferenceWithContext<T>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
+                {
+                    IsAggregated = sourceRef.IsAggregated,
+                    PreventReleaseOnDispose = sourceRef.IsAggregated,
+                    ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr
+                };
+            }
+
+            return hr;
         }
     }
 
