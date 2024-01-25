@@ -7,8 +7,18 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    static partial class Context
+    internal static partial class Context
     {
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
+
+        public unsafe static IntPtr GetContextToken()
+        {
+            IntPtr contextToken;
+            Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
+            return contextToken;
+        }
+
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         private static extern unsafe int CoGetObjectContext(Guid* riid, IntPtr* ppv);
 

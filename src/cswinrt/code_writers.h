@@ -1935,8 +1935,8 @@ private static % _% = new %("%.%", %.IID);
     {
         auto objrefname = w.write_temp("%", bind<write_objref_type_name>(classType));
         w.write(R"(
-private static volatile ObjectReference<IActivationFactoryVftbl> __%;
-private static ObjectReference<IActivationFactoryVftbl> %
+private static volatile IObjectReference __%;
+private static IObjectReference %
 {
     get
     { 
@@ -1960,10 +1960,11 @@ private static ObjectReference<IActivationFactoryVftbl> %
             classType.TypeName());
     }
 
-    void write_static_objref_definition(writer& w, std::string_view const& vftblType, TypeDef const& staticsType, TypeDef const& classType)
+    void write_static_objref_definition(writer& w, TypeDef const& staticsType, TypeDef const& classType)
     {
         if (settings.netstandard_compat)
         {
+            auto vftblType = w.write_temp("%.Vftbl", bind<write_type_name>(staticsType, typedef_name_type::ABI, true));
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(staticsType));
             w.write(R"(
 private static volatile ObjectReference<%> __%;
@@ -1993,8 +1994,8 @@ private static ObjectReference<%> % => __% ?? Make__%();
         {
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(staticsType));
             w.write(R"(
-private static volatile ObjectReference<%> __%;
-private static ObjectReference<%> %
+private static volatile IObjectReference __%;
+private static IObjectReference %
 {
     get
     { 
@@ -2005,18 +2006,15 @@ private static ObjectReference<%> %
         }
         else
         {
-            return __% = ActivationFactory.Get<%>("%.%", %.IID);
+            return __% = ActivationFactory.Get("%.%", %.IID);
         }
     }
 }
 )",
-                vftblType,
-                objrefname,
-                vftblType,
                 objrefname,
                 objrefname,
                 objrefname,
-                vftblType,
+                objrefname,
                 classType.TypeNamespace(),
                 classType.TypeName(),
                 bind<write_type_name>(staticsType, typedef_name_type::StaticAbiClass, true));
@@ -2052,10 +2050,7 @@ private static class _%
         if (factory_type)
         {
             write_static_abi_class_raw<write_static_abi_method_with_raw_return_type>(w, factory_type);
-            auto vftblType = settings.netstandard_compat ?
-                w.write_temp("%.Vftbl", bind<write_type_name>(factory_type, typedef_name_type::ABI, true)) :
-                "IUnknownVftbl";
-            write_static_objref_definition(w, vftblType, factory_type, class_type);
+            write_static_objref_definition(w, factory_type, class_type);
             auto cache_object = w.write_temp("%", bind<write_objref_type_name>(factory_type));
 
             auto platform_attribute = write_platform_attribute_temp(w, factory_type);
@@ -2277,10 +2272,8 @@ private IObjectReference % => __% ?? Make__%();
     void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type, std::string_view visibility)
     {
         write_static_abi_class_raw<write_static_composing_factory_method>(w, composable_type);
-        auto vftblType = settings.netstandard_compat ?
-            w.write_temp("%.Vftbl", bind<write_type_name>(composable_type, typedef_name_type::ABI, true)) :
-            "IUnknownVftbl";
-        write_static_objref_definition(w, vftblType, composable_type, class_type);
+
+        write_static_objref_definition(w, composable_type, class_type);
         auto cache_object = bind<write_objref_type_name>(composable_type);
 
         auto default_interface_name = get_default_interface_name(w, class_type, false);
@@ -2428,10 +2421,7 @@ Marshal.Release(inner);
         {
             if (factory.statics)
             {
-                auto vftblType = settings.netstandard_compat ?
-                    w.write_temp("%.Vftbl", bind<write_type_name>(factory.type, typedef_name_type::ABI, true)) :
-                    "IUnknownVftbl";
-                write_static_objref_definition(w, vftblType, factory.type, class_type);
+                write_static_objref_definition(w, factory.type, class_type);
                 auto cache_object = w.write_temp("%", bind<write_objref_type_name>(factory.type));
 
                 auto platform_attribute = write_platform_attribute_temp(w, factory.type);
