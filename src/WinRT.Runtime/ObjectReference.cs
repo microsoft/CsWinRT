@@ -609,9 +609,9 @@ namespace WinRT
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
 
-        private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> __cachedContext;
-        private ConcurrentDictionary<IntPtr, ObjectReference<T>> CachedContext => __cachedContext ?? Make_CachedContext();
-        private ConcurrentDictionary<IntPtr, ObjectReference<T>> Make_CachedContext()
+        private volatile ConcurrentDictionary<IntPtr, IObjectReference> __cachedContext;
+        private ConcurrentDictionary<IntPtr, IObjectReference> CachedContext => __cachedContext ?? Make_CachedContext();
+        private ConcurrentDictionary<IntPtr, IObjectReference> Make_CachedContext()
         {
             global::System.Threading.Interlocked.CompareExchange(ref __cachedContext, new(), null);
             return __cachedContext;
@@ -702,9 +702,15 @@ namespace WinRT
                 return null;
             }
 
-            return CachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
+            // We use a non-generic map of just <IntPtr, IObjectReference> values, to avoid all generic instantiations
+            // of ConcurrentDictionary<,> and transitively dependent types for every vtable type T, since it's not
+            // something we actually need. Because the cache is private and we're the only ones using it, we can
+            // just store the per-context agile references as IObjectReference values, and then cast them on return.
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
 
-            ObjectReference<T> CreateForCurrentContext(IntPtr _)
+            return Unsafe.As<ObjectReference<T>>(objectReference);
+
+            IObjectReference CreateForCurrentContext(IntPtr _)
             {
                 var agileReference = AgileReference;
                 // We may fail to switch context and thereby not get an agile reference.
