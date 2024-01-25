@@ -152,20 +152,17 @@ namespace WinRT
 
         public unsafe TInterface AsInterface<TInterface>()
         {
-            if (typeof(TInterface).IsDefined(typeof(System.Runtime.InteropServices.ComImportAttribute)))
+            if (typeof(TInterface).IsDefined(typeof(ComImportAttribute)))
             {
                 Guid iid = typeof(TInterface).GUID;
-                IntPtr comPtr = IntPtr.Zero;
-                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ThisPtr, ref iid, out comPtr));
+                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ThisPtr, ref iid, out IntPtr comPtr));
                 try
                 {
                     return (TInterface)Marshal.GetObjectForIUnknown(comPtr);
                 }
                 finally
                 {
-                    var vftblPtr = Unsafe.AsRef<WinRT.VftblPtr>(comPtr.ToPointer());
-                    var vftblIUnknown = Marshal.PtrToStructure<WinRT.Interop.IUnknownVftbl>(vftblPtr.Vftbl);
-                    vftblIUnknown.Release(comPtr);
+                    _ = Marshal.Release(comPtr);
                 }
             }
 
@@ -562,7 +559,6 @@ namespace WinRT
 
         private static unsafe T GetVtable(IntPtr thisPtr)
         {
-            var vftblPtr = Unsafe.AsRef<VftblPtr>(thisPtr.ToPointer());
             T vftblT;
             // With our vtable types, the generic vtables will have System.Delegate fields
             // and the non-generic types will have only void* fields.
@@ -581,7 +577,7 @@ namespace WinRT
             }
             else
             {
-                vftblT = Unsafe.AsRef<T>(vftblPtr.Vftbl.ToPointer());
+                vftblT = Unsafe.Read<T>(*(void***)thisPtr);
             }
             return vftblT;
         }
