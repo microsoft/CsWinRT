@@ -247,9 +247,12 @@ namespace WinRT
 
         protected void ThrowIfDisposed()
         {
-            lock (_disposedLock)
+            if (disposed)
             {
-                if (disposed) throw new ObjectDisposedException("ObjectReference");
+                lock (_disposedLock)
+                {
+                    if (disposed) throw new ObjectDisposedException("ObjectReference");
+                }
             }
         }
 
