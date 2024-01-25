@@ -12,14 +12,14 @@ namespace WinRT
 {
     internal unsafe sealed class DllModule
     {
+        private static readonly string _currentModuleDirectory = AppContext.BaseDirectory;
+
+        private static readonly Dictionary<string, DllModule> _cache = new Dictionary<string, DllModule>(StringComparer.Ordinal);
+
         private readonly string _fileName;
         private readonly IntPtr _moduleHandle;
         private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> _GetActivationFactory;
         private readonly delegate* unmanaged[Stdcall]<int> _CanUnloadNow; // TODO: Eventually periodically call
-
-        private static readonly string _currentModuleDirectory = AppContext.BaseDirectory;
-
-        private static readonly Dictionary<string, DllModule> _cache = new Dictionary<string, DllModule>(StringComparer.Ordinal);
 
         public static bool TryLoad(string fileName, out DllModule module)
         {
@@ -155,7 +155,11 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe (ObjectReference<I> obj, int hr) GetActivationFactory<I>(string runtimeClassId, Guid iid)
+        public static unsafe (ObjectReference<I> obj, int hr) GetActivationFactory<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        I>(string runtimeClassId, Guid iid)
         {
             var module = Instance; // Ensure COM is initialized
             IntPtr instancePtr = IntPtr.Zero;
