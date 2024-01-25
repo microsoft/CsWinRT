@@ -706,13 +706,15 @@ namespace WinRT
             // of ConcurrentDictionary<,> and transitively dependent types for every vtable type T, since it's not
             // something we actually need. Because the cache is private and we're the only ones using it, we can
             // just store the per-context agile references as IObjectReference values, and then cast them on return.
-            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, CreateForCurrentContext, this);
 
             return Unsafe.As<ObjectReference<T>>(objectReference);
 
-            IObjectReference CreateForCurrentContext(IntPtr _)
+            static IObjectReference CreateForCurrentContext(IntPtr _, IObjectReference self)
             {
-                var agileReference = AgileReference;
+                var thisReference = Unsafe.As<ObjectReferenceWithContext<T>>(self);
+                var agileReference = thisReference.AgileReference;
+
                 // We may fail to switch context and thereby not get an agile reference.
                 // In these cases, fallback to using the current context.
                 if (agileReference == null)
@@ -722,13 +724,13 @@ namespace WinRT
 
                 try
                 {
-                    if (_iid == Guid.Empty)
+                    if (thisReference._iid == Guid.Empty)
                     {
                         return agileReference.Get<T>(GuidGenerator.GetIID(typeof(T)));
                     }
                     else
                     {
-                        return agileReference.Get<T>(_iid);
+                        return agileReference.Get<T>(thisReference._iid);
                     }
                 }
                 catch (Exception)
