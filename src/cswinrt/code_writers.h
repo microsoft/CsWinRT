@@ -9697,6 +9697,13 @@ default:
 }
 )",
     internal_accessibility(),
+    // We want to leverage C# support for switching on a ReadOnlySpan<char>, which allows the exported
+    // 'DllGetActivationFactory' method to avoid the temporary allocation of the string instance for the
+    // input runtime class name. Because that's a C# 11 feature, we only enable this on .NET 7 and above.
+    // If that's the TFM in use, we generate this method using ReadOnlySpan<char>, and then a string overload
+    // just calling it. Otherwise, we switch on the string parameter, and generate a dummy ReadOnlySpan<char>
+    // overload just allocating and calling that. We always need both exports to make sure that hosting
+    // scenarios also work, since those will be looking up the string overload via reflection.
     settings.net7_0_or_greater ? "ReadOnlySpan<char>" : "string",
 bind_each([](writer& w, TypeDef const& type)
     {
