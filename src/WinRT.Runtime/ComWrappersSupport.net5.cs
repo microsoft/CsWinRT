@@ -116,12 +116,6 @@ namespace WinRT
             // We need to do the same thing for System.Type because there can be multiple WUX.Interop.TypeName's
             // for a single System.Type.
 
-            // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
-            if (rcw is IWinRTObject winrtObj)
-            {
-                winrtObj.Resurrect();
-            }
-
             return rcw switch
             {
                 ABI.System.Nullable nt => (T)nt.Value,
@@ -161,15 +155,7 @@ namespace WinRT
 
         public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr)
         {
-            var rcw = ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
-
-            // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
-            var target = rcw is Delegate del ? del.Target : rcw;
-            if (target is IWinRTObject winrtObj)
-            {
-                winrtObj.Resurrect();
-            }
-            return rcw;
+            return ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
         }
 
         public static IObjectReference CreateCCWForObject(object obj)

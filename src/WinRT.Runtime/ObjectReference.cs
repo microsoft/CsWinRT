@@ -287,22 +287,6 @@ namespace WinRT
             }
         }
 
-        internal bool Resurrect()
-        {
-            lock (_disposedLock)
-            {
-                if (!disposed)
-                {
-                    return false;
-                }
-                disposed = false;
-                ResurrectTrackerSource();
-                AddRef();
-                GC.ReRegisterForFinalize(this);
-                return true;
-            }
-        }
-
         protected virtual unsafe void AddRef(bool refFromTrackerSource)
         {
             Marshal.AddRef(ThisPtr);
@@ -350,18 +334,6 @@ namespace WinRT
             if (ReferenceTrackerPtr != IntPtr.Zero)
             {
                 ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
-            }
-        }
-
-        private unsafe void ResurrectTrackerSource()
-        {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
-            {
-                Marshal.AddRef(ReferenceTrackerPtr);
-                if (!PreventReleaseFromTrackerSourceOnDispose)
-                {
-                    ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
-                }
             }
         }
 
