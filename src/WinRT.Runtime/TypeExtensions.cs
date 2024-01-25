@@ -52,6 +52,16 @@ namespace WinRT
                     return GetHelperTypeFromAttribute(helperTypeAtribute, type);
                 }
 
+                var authoringMetadaType = type.GetAuthoringMetadataType();
+                if (authoringMetadaType is not null)
+                {
+                    helperTypeAtribute = authoringMetadaType.GetCustomAttribute<WindowsRuntimeHelperTypeAttribute>();
+                    if (helperTypeAtribute is not null)
+                    {
+                        return GetHelperTypeFromAttribute(helperTypeAtribute, type);
+                    }
+                }
+
 #if NET
                 // Using AOT requires using updated projections, which would never let the code below
                 // be reached (as it's just a fallback path for legacy projections). So we can trim it.
