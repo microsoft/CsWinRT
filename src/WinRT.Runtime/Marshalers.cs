@@ -1700,14 +1700,13 @@ namespace WinRT
             {
                 return null;
             }
-            else if (IUnknownVftbl.IsReferenceToManagedObject(nativeDelegate))
+            
+            if (IUnknownVftbl.IsReferenceToManagedObject(nativeDelegate))
             {
                 return ComWrappersSupport.FindObject<T>(nativeDelegate);
             }
-            else
-            {
-                return ComWrappersSupport.CreateRcwForComObject<T>(nativeDelegate);
-            }
+
+            return ComWrappersSupport.CreateRcwForComObject<T>(nativeDelegate);
         }
     }
 

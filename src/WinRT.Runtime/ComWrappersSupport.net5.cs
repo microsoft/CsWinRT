@@ -181,9 +181,6 @@ namespace WinRT
         public static unsafe T FindObject<T>(IntPtr ptr)
             where T : class => ComInterfaceDispatch.GetInstance<T>((ComInterfaceDispatch*)ptr);
 
-        private static T FindDelegate<T>(IntPtr thisPtr)
-            where T : class, System.Delegate => FindObject<T>(thisPtr);
-
         public static IUnknownVftbl IUnknownVftbl => DefaultComWrappers.IUnknownVftbl;
         public static IntPtr IUnknownVftblPtr => DefaultComWrappers.IUnknownVftblPtr;
 
@@ -537,7 +534,7 @@ namespace WinRT
             {
                 if (ComWrappersSupport.CreateRCWType != null && ComWrappersSupport.CreateRCWType.IsDelegate())
                 {
-                    return ComWrappersSupport.CreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
+                    return ComWrappersSupport.GetOrCreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {
