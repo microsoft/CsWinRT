@@ -9678,22 +9678,33 @@ namespace WinRT
 {
 % static partial class Module
 {
-public static unsafe IntPtr GetActivationFactory(String runtimeClassId)
-{%
-return IntPtr.Zero;
+public static unsafe IntPtr GetActivationFactory(% runtimeClassId)
+{
+switch (runtimeClassId)
+{
+%
+default:
+    return IntPtr.Zero;
 }
+}
+%
 }
 }
 )",
     internal_accessibility(),
+    // We want to leverage C# support for switching on a ReadOnlySpan<char>, which allows the exported
+    // 'DllGetActivationFactory' method to avoid the temporary allocation of the string instance for the
+    // input runtime class name. Because that's a C# 11 feature, we only enable this on .NET 7 and above.
+    // If that's the TFM in use, we generate this method using ReadOnlySpan<char>, and then a string overload
+    // just calling it. Otherwise, we switch on the string parameter, and generate a dummy ReadOnlySpan<char>
+    // overload just allocating and calling that. We always need both exports to make sure that hosting
+    // scenarios also work, since those will be looking up the string overload via reflection.
+    settings.net7_0_or_greater ? "ReadOnlySpan<char>" : "string",
 bind_each([](writer& w, TypeDef const& type)
     {
         w.write(R"(
-
-if (runtimeClassId == "%.%")
-{
-return %ServerActivationFactory.Make();
-}
+case "%.%":
+    return %ServerActivationFactory.Make();
 )",
 type.TypeNamespace(),
 type.TypeName(),
@@ -9701,7 +9712,18 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
 );
     },
     types
-        ));
+        ),
+    settings.net7_0_or_greater ? R"(
+public static IntPtr GetActivationFactory(string runtimeClassId)
+{
+    return GetActivationFactory(runtimeClassId.AsSpan());
+}
+)" : R"(
+public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
+{
+    return GetActivationFactory(runtimeClassId.ToString());
+}
+)");
     }
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)
