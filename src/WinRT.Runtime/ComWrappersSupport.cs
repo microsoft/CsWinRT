@@ -11,7 +11,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using WinRT.Interop;
 
 #if NET
@@ -76,14 +75,15 @@ namespace WinRT
 
         // If we are free threaded, we do not need to keep track of context.
         // This can either be if the object implements IAgileObject or the free threaded marshaler.
-        internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
+        internal unsafe static bool IsFreeThreaded(IntPtr iUnknown)
         {
-            if (objRef.TryAs(InterfaceIIDs.IAgileObject_IID, out var agilePtr) >= 0)
+            if (Marshal.QueryInterface(iUnknown, ref Unsafe.AsRef(InterfaceIIDs.IAgileObject_IID), out var agilePtr) >= 0)
             {
                 Marshal.Release(agilePtr);
                 return true;
             }
-            else if (objRef.TryAs(InterfaceIIDs.IMarshal_IID, out var marshalPtr) >= 0)
+
+            if (Marshal.QueryInterface(iUnknown, ref Unsafe.AsRef(InterfaceIIDs.IMarshal_IID), out var marshalPtr) >= 0)
             {
                 try
                 {
@@ -104,6 +104,14 @@ namespace WinRT
             return false;
         }
 
+        internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
+        {
+            var isFreeThreaded = IsFreeThreaded(objRef.ThisPtr);
+            // ThisPtr is owned by objRef, so need to make sure objRef stays alive.
+            GC.KeepAlive(objRef);
+            return isFreeThreaded;
+        }
+
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
         {
             return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject);
@@ -116,21 +124,7 @@ namespace WinRT
                 return null;
             }
 
-            ObjectReference<T> objRef = ObjectReference<T>.FromAbi(externalComObject);
-            if (IsFreeThreaded(objRef))
-            {
-                return objRef;
-            }
-            else
-            {
-                using (objRef)
-                {
-                    return new ObjectReferenceWithContext<T>(
-                        objRef.GetRef(),
-                        Context.GetContextCallback(),
-                        Context.GetContextToken());
-                }
-            }
+            return ObjectReference<T>.FromAbi(externalComObject);
         }
 
         public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid)
@@ -145,31 +139,14 @@ namespace WinRT
                 return null;
             }
 
-            ObjectReference<T> objRef;
             if (requireQI)
             {
                 Marshal.ThrowExceptionForHR(Marshal.QueryInterface(externalComObject, ref iid, out IntPtr ptr));
-                objRef = ObjectReference<T>.Attach(ref ptr);
+                return ObjectReference<T>.Attach(ref ptr, iid);
             }
             else
             {
-                objRef = ObjectReference<T>.FromAbi(externalComObject);
-            }
-
-            if (IsFreeThreaded(objRef))
-            {
-                return objRef;
-            }
-            else
-            {
-                using (objRef)
-                {
-                    return new ObjectReferenceWithContext<T>(
-                        objRef.GetRef(),
-                        Context.GetContextCallback(),
-                        Context.GetContextToken(),
-                        iid);
-                }
+                return ObjectReference<T>.FromAbi(externalComObject, iid);
             }
         }
 
@@ -488,7 +465,12 @@ namespace WinRT
             }
 
             var fromAbiMethodFunc = (Func<IntPtr, object>) fromAbiMethod.CreateDelegate(typeof(Func<IntPtr, object>));
-            return (IInspectable obj) => fromAbiMethodFunc(obj.ThisPtr);
+            return (IInspectable obj) =>
+            {
+                var fromAbiMethod = fromAbiMethodFunc(obj.ThisPtr);
+                GC.KeepAlive(obj);
+                return fromAbiMethod;
+            };
         }
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(

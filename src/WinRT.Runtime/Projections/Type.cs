@@ -23,7 +23,7 @@ namespace ABI.System
 #else
     public
 #endif
-    struct Type
+    partial struct Type
     {
         private IntPtr Name;
         private TypeKind Kind;

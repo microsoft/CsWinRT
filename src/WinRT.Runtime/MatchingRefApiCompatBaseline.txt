@@ -135,4 +135,11 @@ MembersMustExist : Member 'public System.ReadOnlySpan<System.Char> WinRT.Marshal
 CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.ComponentModel.PropertyChangedEventHandler' in the implementation but not the reference.
 MembersMustExist : Member 'public T ABI.System.Nullable<T>.GetValue(WinRT.IInspectable)' does not exist in the reference but it does exist in the implementation.
-Total Issues: 136
+TypesMustExist : Type 'WinRT.EventRegistrationTokenTable<T>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean WinRT.IObjectReference.IsFreeThreaded.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean WinRT.IObjectReference.IsInCurrentContext.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference<T>.Attach(System.IntPtr, System.Guid)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference<T>.FromAbi(System.IntPtr, System.Guid)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T, System.Guid)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.ActivationFactory' does not exist in the reference but it does exist in the implementation.
+Total Issues: 143

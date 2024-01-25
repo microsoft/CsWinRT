@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -176,7 +175,7 @@ namespace WinRT
         public static IObjectReference CreateCCWForObject(object obj)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
-            return ObjectReference<IUnknownVftbl>.Attach(ref ccw);
+            return ObjectReference<IUnknownVftbl>.Attach(ref ccw, InterfaceIIDs.IUnknown_IID);
         }
 
         internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
@@ -351,8 +350,7 @@ namespace WinRT
                 // otherwise the new instance will be used. Since the inner was composed
                 // it should answer immediately without going through the outer. Either way
                 // the reference count will go to the new instance.
-                Guid iid = IReferenceTrackerVftbl.IID;
-                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out referenceTracker);
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IReferenceTrackerVftbl.IID), out referenceTracker);
                 if (hr != 0)
                 {
                     referenceTracker = default;
@@ -452,8 +450,7 @@ namespace WinRT
         {
             if (objRef.ReferenceTrackerPtr == IntPtr.Zero)
             {
-                Guid iid = IReferenceTrackerVftbl.IID;
-                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out var referenceTracker);
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IReferenceTrackerVftbl.IID), out var referenceTracker);
                 if (hr == 0)
                 {
                     // WinUI scenario

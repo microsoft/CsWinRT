@@ -8,9 +8,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 
 namespace WinRT
 {
@@ -18,10 +16,12 @@ namespace WinRT
     internal enum TypeNameGenerationFlags
     {
         None = 0,
+
         /// <summary>
         /// Generate the name of the type as if it was boxed in an object.
         /// </summary>
         GenerateBoxedName = 0x1,
+
         /// <summary>
         /// Don't output a type name of a custom .NET type. Generate a compatible WinRT type name if needed.
         /// </summary>
@@ -306,16 +306,20 @@ namespace WinRT
             public bool Covariant { get; set; }
         }
 
+#nullable enable
         /// <summary>
         /// Tracker for visited types when determining a WinRT interface to use as the type name.
-        /// Only used when GetNameForType is called with <see cref="TypeNameGenerationFlags.ForGetRuntimeClassName"/>.
         /// </summary>
-        private static readonly ThreadLocal<Stack<VisitedType>> VisitedTypes = new ThreadLocal<Stack<VisitedType>>(() => new Stack<VisitedType>());
+        /// <remarks>
+        /// Only used when <see cref="GetNameForType"/> is called with <see cref="TypeNameGenerationFlags.ForGetRuntimeClassName"/>.
+        /// </remarks>
+        [ThreadStatic]
+        private static Stack<VisitedType>? visitedTypesInstance;
 
         [ThreadStatic]
         private static StringBuilder? nameForTypeBuilderInstance;
 
-        public static string GetNameForType(Type type, TypeNameGenerationFlags flags)
+        public static string GetNameForType(Type? type, TypeNameGenerationFlags flags)
         {
             if (type is null)
             {
@@ -332,6 +336,7 @@ namespace WinRT
 
             return string.Empty;
         }
+#nullable restore
 
         private static bool TryAppendSimpleTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
@@ -385,7 +390,7 @@ namespace WinRT
             Debug.Assert((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0);
             Debug.Assert(!type.IsGenericTypeDefinition);
 
-            var visitedTypes = VisitedTypes.Value;
+            var visitedTypes = visitedTypesInstance ??= new Stack<VisitedType>();
 
             if (visitedTypes.Any(visited => visited.Type == type))
             {
@@ -490,6 +495,8 @@ namespace WinRT
             Type[] genericTypeArguments = type.GetGenericArguments();
             Type[] genericTypeParameters = definition.GetGenericArguments();
 
+            var visitedTypes = visitedTypesInstance ??= new Stack<VisitedType>();
+
             for (int i = 0; i < genericTypeArguments.Length; i++)
             {
                 Type argument = genericTypeArguments[i];
@@ -507,7 +514,7 @@ namespace WinRT
 
                 if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0)
                 {
-                    VisitedTypes.Value.Push(new VisitedType
+                    visitedTypes.Push(new VisitedType
                     {
                         Type = type,
                         Covariant = (genericTypeParameters[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant
@@ -518,7 +525,7 @@ namespace WinRT
 
                 if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0)
                 {
-                    VisitedTypes.Value.Pop();
+                    visitedTypes.Pop();
                 }
 
                 if (!success)

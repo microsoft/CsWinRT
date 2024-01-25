@@ -9,6 +9,25 @@
       <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS feature flag -->
       <method signature="System.Boolean get_IsWuxMode()" body="stub" value="false" feature="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" featurevalue="false" />
       <method signature="System.Boolean get_IsWuxMode()" body="stub" value="true" feature="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" featurevalue="true" />
+        
+      <!-- CSWINRT_USE_EXCEPTION_RESOURCE_KEYS switch -->
+      <method signature="System.Boolean get_UseExceptionResourceKeys()" body="stub" value="false" feature="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS" featurevalue="false"/>
+      <method signature="System.Boolean get_UseExceptionResourceKeys()" body="stub" value="true" feature="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS" featurevalue="true"/>
     </type>
+  </assembly>
+
+  <!-- Remove all embedded resources for exception messages when the feature switch is set-->
+  <assembly fullname="WinRT.Runtime" feature="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS" featurevalue="true">
+    <resource name="WinRT.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.de_DE.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.es_ES.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.fr_FR.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.it_IT.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.ja_JP.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.ko_KR.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.pt_BR.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.ru_RU.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.zh_CN.WinRTRuntimeErrorStrings.resources" action="remove" />
+    <resource name="WinRT.ResX.zh_TW.WinRTRuntimeErrorStrings.resources" action="remove" />
   </assembly>
 </linker>

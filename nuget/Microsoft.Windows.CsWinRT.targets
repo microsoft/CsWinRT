@@ -237,6 +237,7 @@ $(CsWinRTInternalProjection)
   <!-- Default values for all custom CsWinRT runtimem feature switches -->
   <PropertyGroup>
     <CsWinRTEnableDynamicObjectsSupport Condition="'$(CsWinRTEnableDynamicObjectsSupport)' == ''">true</CsWinRTEnableDynamicObjectsSupport>
+    <CsWinRTUseExceptionResourceKeys Condition="'$(CsWinRTUseExceptionResourceKeys)' == ''">false</CsWinRTUseExceptionResourceKeys>
   </PropertyGroup>
 
   <!--
@@ -249,6 +250,12 @@ $(CsWinRTInternalProjection)
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT"
                                     Value="$(CsWinRTEnableDynamicObjectsSupport)"
                                     Trim="true" />
+
+    <!-- CSWINRT_USE_EXCEPTION_RESOURCE_KEYS switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS"
+                                    Value="$(CsWinRTUseExceptionResourceKeys)"
+                                    Trim="true" />
+
     <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS switch-->
     <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUIXamlProjections)' == 'WindowsUIXaml'">
       <Value>true</Value>
