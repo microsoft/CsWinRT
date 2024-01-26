@@ -3,9 +3,11 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Threading;
 using WinRT.Interop;
@@ -22,21 +24,44 @@ namespace WinRT
 #endif
     abstract class IObjectReference : IDisposable
     {
-        // Flags for the '_disposedFlags' field, see notes in the Dispose() method below
-        private const int NOT_DISPOSED = 0;
-        private const int DISPOSE_PENDING = 1;
-        private const int DISPOSE_COMPLETED = 2;
+#if DEBUG && NET
+        /// <summary>Indicates whether debug tracking and logging of IObjectReference finalization is enabled.</summary>
+        private static readonly bool s_logFinalization = Environment.GetEnvironmentVariable("DEBUG_OBJECTREFERENCE_FINALIZATION") == "1";
+        /// <summary>Debug counter for the number of IObjectReference that have been finalized.</summary>
+        private static long s_objectReferencesFinalized;
+
+        private readonly string _ctorStackTrace;
+#endif
 
         private readonly IntPtr _thisPtr;
         private IntPtr _referenceTrackerPtr;
-        private int _disposedFlags;
+        private volatile int _state;
+
+        /// <summary>Bitmasks for the <see cref="_state"/> field.</summary>
+        /// <remarks>
+        /// The state field ends up looking like this:
+        ///
+        ///  31                                                        2  1   0
+        /// +-----------------------------------------------------------+---+---+
+        /// |                           Ref count                       | D | C |
+        /// +-----------------------------------------------------------+---+---+
+        ///
+        /// Where D = 1 means a Dispose has been performed and C = 1 means the
+        /// underlying handle has been (or will be shortly) released.
+        /// </remarks>
+        private static class StateBits
+        {
+            public const int Closed = 0b01;
+            public const int Disposed = 0b10;
+            public const int RefCount = unchecked(~0b11); // 2 bits reserved for closed/disposed; ref count gets 30 bits
+            public const int RefCountOne = 1 << 2;
+        }
 
         public IntPtr ThisPtr
         {
             get
             {
-                ThrowIfDisposed();
-                return GetThisPtrForCurrentContext();
+                return DangerousGetPtr();
             }
         }
 
@@ -55,21 +80,11 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
                 return _thisPtr;
             }
         }
 
 #if DEBUG
-        private unsafe uint RefCount
-        {
-            get
-            {
-                Marshal.AddRef(ThisPtr);
-                return (uint)Marshal.Release(ThisPtr);
-            }
-        }
-
         private bool BreakOnDispose { get; set; }
 #endif
 
@@ -88,39 +103,17 @@ namespace WinRT
 
             set
             {
+                if (_referenceTrackerPtr != IntPtr.Zero)
+                {
+                    Marshal.Release(_referenceTrackerPtr);
+                    ReleaseFromTrackerSource();
+                }
                 _referenceTrackerPtr = value;
                 if (_referenceTrackerPtr != IntPtr.Zero)
                 {
                     Marshal.AddRef(_referenceTrackerPtr);
                     AddRefFromTrackerSource();
                 }
-            }
-        }
-
-        internal unsafe IReferenceTrackerVftbl ReferenceTracker
-        {
-            get
-            {
-                ThrowIfDisposed();
-                return **(IReferenceTrackerVftbl**)ReferenceTrackerPtr;
-            }
-        }
-
-        protected unsafe IUnknownVftbl VftblIUnknown
-        {
-            get
-            {
-                ThrowIfDisposed();
-                return **(IUnknownVftbl**)ThisPtr;
-            }
-        }
-
-        private protected unsafe IUnknownVftbl VftblIUnknownFromOriginalContext
-        {
-            get
-            {
-                ThrowIfDisposed();
-                return **(IUnknownVftbl**)ThisPtrFromOriginalContext;
             }
         }
 
@@ -131,12 +124,25 @@ namespace WinRT
                 throw new ArgumentNullException(nameof(thisPtr));
             }
             _thisPtr = thisPtr;
+            _state = StateBits.RefCountOne; // Ref count 1 and not closed or disposed.
+
+#if DEBUG && NET
+            if (s_logFinalization)
+            {
+                int lastError = Marshal.GetLastPInvokeError();
+                _ctorStackTrace = Environment.StackTrace;
+                Marshal.SetLastPInvokeError(lastError);
+            }
+#endif
         }
 
         ~IObjectReference()
         {
-            Dispose();
+            Dispose(disposing: false);
         }
+
+
+        public IntPtr DangerousGetPtr() => GetThisPtrForCurrentContext();
 
         public ObjectReference<T> As<
 #if NET
@@ -158,15 +164,27 @@ namespace WinRT
         {
             if (typeof(TInterface).IsDefined(typeof(ComImportAttribute)))
             {
-                Guid iid = typeof(TInterface).GUID;
-                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ThisPtr, ref iid, out IntPtr comPtr));
+                bool success = false;
                 try
                 {
-                    return (TInterface)Marshal.GetObjectForIUnknown(comPtr);
+                    DangerousAddRef(ref success);
+                    Guid iid = typeof(TInterface).GUID;
+                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface(DangerousGetPtr(), ref iid, out IntPtr comPtr));
+                    try
+                    {
+                        return (TInterface)Marshal.GetObjectForIUnknown(comPtr);
+                    }
+                    finally
+                    {
+                        _ = Marshal.Release(comPtr);
+                    }
                 }
                 finally
                 {
-                    _ = Marshal.Release(comPtr);
+                    if (success)
+                    {
+                        DangerousRelease();
+                    }
                 }
             }
 
@@ -219,117 +237,228 @@ namespace WinRT
         public virtual unsafe int TryAs(Guid iid, out IntPtr ppv)
         {
             ppv = IntPtr.Zero;
-            ThrowIfDisposed();
-            IntPtr thatPtr = IntPtr.Zero;
-            int hr = Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr);
-            if (hr >= 0)
+
+            bool success = false;
+            try
             {
-                ppv = thatPtr;
+                DangerousAddRef(ref success);
+
+                IntPtr thatPtr = IntPtr.Zero;
+                int hr = Marshal.QueryInterface(DangerousGetPtr(), ref iid, out thatPtr);
+                if (hr >= 0)
+                {
+                    ppv = thatPtr;
+                }
+                return hr;
             }
-            return hr;
+            finally
+            {
+                if (success)
+                {
+                    DangerousRelease();
+                }
+            }
         }
 
         public unsafe IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
 
         public T AsType<T>()
         {
-            ThrowIfDisposed();
-            var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
-            if (ctor != null)
+            bool success = false;
+            try
             {
-                return (T)ctor.Invoke(new[] { this });
+                DangerousAddRef(ref success);
+
+                var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
+                if (ctor != null)
+                {
+                    return (T)ctor.Invoke(new[] { this });
+                }
+                throw new InvalidOperationException("Target type is not a projected interface.");
             }
-            throw new InvalidOperationException("Target type is not a projected interface.");
+            finally
+            {
+                if (success)
+                {
+                    DangerousRelease();
+                }
+            }
         }
 
         public IntPtr GetRef()
         {
-            ThrowIfDisposed();
-            AddRef(false);
-            return ThisPtr;
-        }
-
-        /// <summary>
-        /// Throws an <see cref="ObjectDisposedException"/> if <see cref="Dispose"/> has already been called on the current instance.
-        /// </summary>
-        /// <remarks>
-        /// Note that calling this method does not protect callers against concurrent threads calling <see cref="Dispose"/> on the
-        /// same instance, as that behavior is explicitly undefined. Similarly, callers using this to then access the underlying
-        /// pointers should also make sure to keep the current instance alive until they're done using the pointer (unless they're
-        /// also incrementing it via <c>AddRef</c> in some way), or the GC could concurrently collect the instance and cause the
-        /// same problem (ie. the underlying pointer being in use becoming invalid right after retrieving it from the object).
-        /// </remarks>
-        /// <exception cref="ObjectDisposedException">Thrown if the current instance is disposed.</exception>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void ThrowIfDisposed()
-        {
-            if (Volatile.Read(ref _disposedFlags) == DISPOSE_COMPLETED)
+            bool success = false;
+            try
             {
-                ThrowObjectDisposedException();
+                DangerousAddRef(ref success);
+            
+                AddRef(false);
+                return DangerousGetPtr();
             }
-
-            static void ThrowObjectDisposedException()
+            finally
             {
-                throw new ObjectDisposedException("ObjectReference");
+                if (success)
+                {
+                    DangerousRelease();
+                }
             }
         }
 
-        /// <inheritdoc/>
         public void Dispose()
         {
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
+        }
 
-            // We swap the disposed flag and only dispose the first time. This is safe with respect to
-            // different threads concurrently trying to dispose the same object, as only the first one
-            // will actually dispose it, and the others will just do nothing.
-            //
-            // It is not safe when combined with ThrowIfDisposed(), as the following scenario is possible:
-            //   - Thread A calls ProjectedType.Foo()
-            //   - Thread A calls ThisPtr, the dispose check passes and it gets the IntPtr value (not incremented)
-            //   - Thread B calls Dispose(), which releases the object
-            //   - Thread A now uses that IntPtr to invoke some function pointer
-            //   - Thread A goes ka-boom 💥
-            //
-            // However, this is by design, as the ObjectReference owns the 'ThisPtr' property, and disposing it while it
-            // is still in use can lead to all kinds of things going wrong. This is conceptually the same as calling
-            // SafeHandle.DangerousGetHandle(). Furthermore, the same exact behavior was already possible with an actual
-            // lock object guarding all the logic within the Dispose() method. The only difference is that simply using
-            // a flag this way avoids one object allocation per ObjectReference instance, and also allows making the size
-            // of the whole object smaller by sizeof(object), when taking into account padding.
-            //
-            // Additionally, note that the '_disposedFlags' field has 3 different states:
-            //   - NOT_DISPOSED: the initial state, when the object is alive
-            //   - DISPOSE_PENDING: indicates that a thread is currently executing the Dispose() method and got past the
-            //     first check, and is in the process of releasing the native resources. This state is checked by the
-            //     ThrowIfDisposed() method above, and still treated as if the object can be used normally. This is
-            //     necessary, because the dispose logic still has to access the 'ThisPtr' property and others in order
-            //     to perform the various Release() calls on the native objects being used. If the state was immediately
-            //     set to disposed, that method would just start throwing immediately, and this logic would not work.
-            //   - DISPOSE_COMPLETED: set when all the Dispose() logic has been completed and the object should not be
-            //     used at all anymore. When this is set, the ThrowIfDisposed() method will start throwing exceptions.
-            if (Interlocked.CompareExchange(ref _disposedFlags, DISPOSE_PENDING, NOT_DISPOSED) == NOT_DISPOSED)
-            {
+        protected virtual void Dispose(bool disposing)
+        {
 #if DEBUG
-                if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
+            if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
+            {
+                System.Diagnostics.Debugger.Break();
+            }
+#endif
+
+#if DEBUG && NET
+            if (!disposing && _ctorStackTrace is not null)
+            {
+                long count = Interlocked.Increment(ref s_objectReferencesFinalized);
+                Debug.WriteLine($"{Environment.NewLine}*** #{count} {GetType()} (0x{_thisPtr.ToInt64():x}) finalized! Ctor stack:{Environment.NewLine}{_ctorStackTrace}{Environment.NewLine}");
+            }
+#endif
+            InternalRelease(disposeOrFinalizeOperation: true);
+        }
+
+        public void DangerousAddRef(ref bool success)
+        {
+            // THis enforces the following invariant: we cannot successfully AddRef
+            // an ObjectReference which we've committed to the process of releasing.
+
+            // We ensure this by never AddRef'ing an ObjectReference that is marked closed and
+            // never marking an ObjectReference as closed while the ref count is non-zero. For
+            // this to be thread safe we must perform inspection/updates of the two
+            // values as a single atomic operation. We achieve this by storing them both
+            // in a single aligned int and modifying the entire state via interlocked
+            // compare exchange operations.
+
+            // Additionally we have to deal with the problem of the Dispose operation.
+            // We must assume that this operation is directly exposed to untrusted
+            // callers and that malicious callers will try and use what is basically a
+            // Release call to decrement the ref count to zero and free the ObjectReference while
+            // it's still in use. We combat this by allowing only one Dispose to operate against
+            // a given ObjectReference (which balances the creation operation given that
+            // Dispose suppresses finalization). We record the fact that a Dispose has
+            // been requested in the same state field as the ref count and closed state.
+
+            // Might have to perform the following steps multiple times due to
+            // interference from other DangeroudAddRef's and DangerousRelease's.
+            int oldState, newState;
+            do
+            {
+                // First step is to read the current handle state. We use this as a
+                // basis to decide whether a DangerousAddRef is legal and, if so, to propose an
+                // update predicated on the initial state (a conditional write).
+                // Check for closed state.
+                oldState = _state;
+#if NET8_0_OR_GREATER
+                ObjectDisposedException.ThrowIf((oldState & StateBits.Closed) != 0, this);
+#else
+                if ((oldState & StateBits.Closed) != 0)
                 {
-                    System.Diagnostics.Debugger.Break();
+                    throw new ObjectDisposedException(nameof(IObjectReference), "Object reference has been closed.");
                 }
 #endif
 
-                if (!PreventReleaseOnDispose)
+                // Not closed, let's propose an update (to the ref count, just add
+                // StateBits.RefCountOne to the state to effectively add 1 to the ref count).
+                // Continue doing this until the update succeeds (because nobody
+                // modifies the state field between the read and write operations) or
+                // the state moves to closed.
+                newState = oldState + StateBits.RefCountOne;
+            } while (Interlocked.CompareExchange(ref _state, newState, oldState) != oldState);
+
+            // If we got here we managed to update the ref count while the state
+            // remained non closed. So we're done.
+            success = true;
+        }
+
+        public void DangerousRelease() => InternalRelease(disposeOrFinalizeOperation: false);
+
+        private void InternalRelease(bool disposeOrFinalizeOperation)
+        {
+            // See DangeroudAddRef above for the design of the synchronization here. Basically we
+            // will try to decrement the current ref count and, if that would take us to
+            // zero refs, set the closed state on the handle as well.
+            bool performRelease;
+
+            // Might have to perform the following steps multiple times due to
+            // interference from other DangeroudAddRef's and DangeroudRelease's.
+            int oldState, newState;
+            do
+            {
+                // First step is to read the current handle state. We use this cached
+                // value to predicate any modification we might decide to make to the
+                // state).
+                oldState = _state;
+
+                // If this is a Dispose operation we have additional requirements (to
+                // ensure that Dispose happens at most once as the comments in DangeroudAddRef
+                // detail). We must check that the dispose bit is not set in the old
+                // state and, in the case of successful state update, leave the disposed
+                // bit set. Silently do nothing if Dispose has already been called.
+                if (disposeOrFinalizeOperation && ((oldState & StateBits.Disposed) != 0))
                 {
-                    Release();
+                    return;
                 }
 
-                DisposeTrackerSource();
+                // We should never see a ref count of zero (that would imply we have
+                // unbalanced DangeroudAddRef and DangeroudReleases).
+#if NET8_0_OR_GREATER
+                ObjectDisposedException.ThrowIf((oldState & StateBits.RefCount) == 0, this);
+#else
+                if ((oldState & StateBits.RefCount) == 0)
+                {
+                    throw new ObjectDisposedException(nameof(IObjectReference), "Object reference has been closed.");
+                }
+#endif
 
-                Volatile.Write(ref _disposedFlags, DISPOSE_COMPLETED);
+                // If we're proposing a decrement to zero and the ObjectReference is not closed
+                // and PreventReleaseOnDispose is not true then we need to release the
+                // ObjectReference upon a successful state update.
+                performRelease = ((oldState & (StateBits.RefCount | StateBits.Closed)) == StateBits.RefCountOne) &&
+                    !PreventReleaseOnDispose;
+
+                // Attempt the update to the new state, fail and retry if the initial
+                // state has been modified in the meantime. Decrement the ref count by
+                // subtracting StateBits.RefCountOne from the state then OR in the bits for
+                // Dispose (if that's the reason for the Release) and closed (if the
+                // initial ref count was 1).
+                newState = oldState - StateBits.RefCountOne;
+                if ((oldState & StateBits.RefCount) == StateBits.RefCountOne)
+                {
+                    newState |= StateBits.Closed;
+                }
+                if (disposeOrFinalizeOperation)
+                {
+                    newState |= StateBits.Disposed;
+                }
+            } while (Interlocked.CompareExchange(ref _state, newState, oldState) != oldState);
+
+            // If we get here we successfully decremented the ref count. Additionally we
+            // may have decremented it to zero and set the handle state as closed. In
+            // this case (providing we own the handle) we will call the Release
+            // method on the IObjectReference subclass.
+            if (performRelease)
+            {
+                Release();
+
+                DisposeTrackerSource();
             }
         }
 
         protected virtual unsafe void AddRef(bool refFromTrackerSource)
         {
-            Marshal.AddRef(ThisPtr);
+            Marshal.AddRef(DangerousGetPtr());
             if (refFromTrackerSource)
             {
                 AddRefFromTrackerSource();
@@ -344,7 +473,7 @@ namespace WinRT
         protected virtual unsafe void Release()
         {
             ReleaseFromTrackerSource();
-            Marshal.Release(ThisPtr);
+            Marshal.Release(DangerousGetPtr());
         }
 
         private protected unsafe void ReleaseWithoutContext()
@@ -357,35 +486,51 @@ namespace WinRT
         {
             get
             {
-                return VftblIUnknown.Equals(IUnknownVftbl.AbiToProjectionVftbl);
+                bool success = false;
+                try
+                {
+                    DangerousAddRef(ref success);
+
+                    return IUnknownVftbl.IsReferenceToManagedObject(DangerousGetPtr());
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        DangerousRelease();
+                    }
+                }
             }
         }
 
         internal unsafe void AddRefFromTrackerSource()
         {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
+            var referenceTrackerPtr = ReferenceTrackerPtr;
+            if (referenceTrackerPtr != IntPtr.Zero)
             {
-                ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
+                (**(IReferenceTrackerVftbl**)referenceTrackerPtr).AddRefFromTrackerSource(referenceTrackerPtr);
             }
         }
 
         internal unsafe void ReleaseFromTrackerSource()
         {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
+            var referenceTrackerPtr = ReferenceTrackerPtr;
+            if (referenceTrackerPtr != IntPtr.Zero)
             {
-                ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
+                (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(ReferenceTrackerPtr);
             }
         }
 
         private unsafe void DisposeTrackerSource()
         {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
+            var referenceTrackerPtr = ReferenceTrackerPtr;
+            if (referenceTrackerPtr != IntPtr.Zero)
             {
                 if (!PreventReleaseFromTrackerSourceOnDispose)
                 {
-                    ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
+                    (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(referenceTrackerPtr);
                 }
-                Marshal.Release(ReferenceTrackerPtr);
+                Marshal.Release(referenceTrackerPtr);
             }
         }
 
@@ -401,21 +546,47 @@ namespace WinRT
 
         public ObjectReferenceValue AsValue()
         {
-            // Sharing ptr with objref.
-            return new ObjectReferenceValue(ThisPtr, IntPtr.Zero, true, this);
+            bool success = false;
+            try
+            {
+                DangerousAddRef(ref success);
+
+                // Sharing ptr with objref.
+                return new ObjectReferenceValue(DangerousGetPtr(), IntPtr.Zero, true, this);
+            }
+            finally
+            {
+                if (success)
+                {
+                    DangerousRelease();
+                }
+            }
         }
 
         public unsafe ObjectReferenceValue AsValue(Guid iid)
         {
-            IntPtr thatPtr = IntPtr.Zero;
-            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr));
-            if (IsAggregated)
+            bool success = false;
+            try
             {
-                Marshal.Release(thatPtr);
-            }
-            AddRefFromTrackerSource();
+                DangerousAddRef(ref success);
+                
+                IntPtr thatPtr = IntPtr.Zero;
+                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(DangerousGetPtr(), ref iid, out thatPtr));
+                if (IsAggregated)
+                {
+                    Marshal.Release(thatPtr);
+                }
+                AddRefFromTrackerSource();
 
-            return new ObjectReferenceValue(thatPtr, ReferenceTrackerPtr, IsAggregated, this);
+                return new ObjectReferenceValue(thatPtr, ReferenceTrackerPtr, IsAggregated, this);
+            }
+            finally
+            {
+                if (success)
+                {
+                    DangerousRelease();
+                }
+            }
         }
     }
 
@@ -435,7 +606,6 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
                 return GetVftblForCurrentContext();
             }
         }
@@ -603,24 +773,37 @@ namespace WinRT
         {
             objRef = null;
 
-            int hr = Marshal.QueryInterface(sourceRef.ThisPtr, ref iid, out IntPtr thatPtr);
-
-            if (hr >= 0)
+            bool success = false;
+            try
             {
-                if (sourceRef.IsAggregated)
+                sourceRef.DangerousAddRef(ref success);
+
+                int hr = Marshal.QueryInterface(sourceRef.DangerousGetPtr(), ref iid, out IntPtr thatPtr);
+
+                if (hr >= 0)
                 {
-                    Marshal.Release(thatPtr);
+                    if (sourceRef.IsAggregated)
+                    {
+                        Marshal.Release(thatPtr);
+                    }
+
+                    sourceRef.AddRefFromTrackerSource();
+
+                    objRef = ObjectReference<T>.Attach(ref thatPtr);
+                    objRef.IsAggregated = sourceRef.IsAggregated;
+                    objRef.PreventReleaseOnDispose = sourceRef.IsAggregated;
+                    objRef.ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr;
                 }
 
-                sourceRef.AddRefFromTrackerSource();
-
-                objRef = ObjectReference<T>.Attach(ref thatPtr);
-                objRef.IsAggregated = sourceRef.IsAggregated;
-                objRef.PreventReleaseOnDispose = sourceRef.IsAggregated;
-                objRef.ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr;
+                return hr;
             }
-
-            return hr;
+            finally
+            {
+                if (success)
+                {
+                    sourceRef.DangerousRelease();
+                }
+            }
         }
     }
 
@@ -791,26 +974,37 @@ namespace WinRT
         {
             objRef = null;
 
-            int hr = Marshal.QueryInterface(sourceRef.ThisPtr, ref iid, out IntPtr thatPtr);
-
-            if (hr >= 0)
+            bool success = false;
+            try
             {
-                if (sourceRef.IsAggregated)
+                sourceRef.DangerousAddRef(ref success);
+                int hr = Marshal.QueryInterface(sourceRef.DangerousGetPtr(), ref iid, out IntPtr thatPtr);
+                if (hr >= 0)
                 {
-                    Marshal.Release(thatPtr);
+                    if (sourceRef.IsAggregated)
+                    {
+                        Marshal.Release(thatPtr);
+                    }
+
+                    sourceRef.AddRefFromTrackerSource();
+
+                    objRef = new ObjectReferenceWithContext<T>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
+                    {
+                        IsAggregated = sourceRef.IsAggregated,
+                        PreventReleaseOnDispose = sourceRef.IsAggregated,
+                        ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr
+                    };
                 }
 
-                sourceRef.AddRefFromTrackerSource();
-
-                objRef = new ObjectReferenceWithContext<T>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
-                {
-                    IsAggregated = sourceRef.IsAggregated,
-                    PreventReleaseOnDispose = sourceRef.IsAggregated,
-                    ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr
-                };
+                return hr;
             }
-
-            return hr;
+            finally
+            {
+                if (success)
+                {
+                    sourceRef.DangerousRelease();
+                }
+            }
         }
     }
 
