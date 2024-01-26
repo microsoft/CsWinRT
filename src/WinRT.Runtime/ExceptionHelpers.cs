@@ -374,7 +374,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             int hr = ex.HResult;
             if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
             {
-                restrictedErrorObject.AsType<ABI.WinRT.Interop.IRestrictedErrorInfo>().GetErrorDetails(out _, out hr, out _, out _);
+                new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorObject).GetErrorDetails(out _, out hr, out _, out _);
             }
 
             switch (hr)
