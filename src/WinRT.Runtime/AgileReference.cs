@@ -80,9 +80,9 @@ namespace WinRT
         }
 
 
-        public IObjectReference Get() => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve(_agileReference, IUnknownVftbl.IID) : Git?.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID);
+        public IObjectReference Get() => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve(_agileReference, IUnknownVftbl.IID) : Git.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID);
 
-        internal ObjectReference<T> Get<T>(Guid iid) => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve<T>(_agileReference, iid) : Git?.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID)?.As<T>(iid);
+        internal ObjectReference<T> Get<T>(Guid iid) => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve<T>(_agileReference, iid) : Git.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID)?.As<T>(iid);
 
         protected virtual void Dispose(bool disposing)
         {
@@ -117,7 +117,8 @@ namespace WinRT
                     1 /*CLSCTX_INPROC_SERVER*/,
                     &gitIid,
                     &gitPtr));
-                return ABI.WinRT.Interop.IGlobalInterfaceTable.FromAbi(gitPtr).AsType<ABI.WinRT.Interop.IGlobalInterfaceTable>();
+
+                return new ABI.WinRT.Interop.IGlobalInterfaceTable(ABI.WinRT.Interop.IGlobalInterfaceTable.FromAbi(gitPtr));
             }
             finally
             {
