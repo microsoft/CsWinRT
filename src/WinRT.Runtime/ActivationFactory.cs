@@ -64,7 +64,7 @@ namespace WinRT
 #else
                 Encoding.ASCII.GetBytes("DllGetActivationFactory");
 #endif
-            getActivationFactory = Platform.TryGetProcAddress(moduleHandle, functionName);
+            getActivationFactory = (void*)Platform.TryGetProcAddress(moduleHandle, functionName);
             if (getActivationFactory == null)
             {
                 module = null;
@@ -91,7 +91,7 @@ namespace WinRT
 #else
                 Encoding.ASCII.GetBytes("DllCanUnloadNow");
 #endif
-            canUnloadNow = Platform.TryGetProcAddress(_moduleHandle, functionName);
+            canUnloadNow = (void*)Platform.TryGetProcAddress(_moduleHandle, functionName);
 
             if (canUnloadNow != null)
             {
