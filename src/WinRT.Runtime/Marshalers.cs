@@ -440,7 +440,9 @@ namespace WinRT
                 return (0, IntPtr.Zero);
             }
             var length = array.Length;
-            var byte_length = length * Marshal.SizeOf<T>();
+#pragma warning disable CS8500 // 'T' is always blittable
+            var byte_length = length * sizeof(T);
+#pragma warning restore CS8500
             var data = Marshal.AllocCoTaskMem(byte_length);
             CopyManagedArray(array, data);
             return (length, data);
@@ -453,7 +455,9 @@ namespace WinRT
                 return;
             }
             var length = array.Length;
-            var byte_length = length * Marshal.SizeOf<T>();
+#pragma warning disable CS8500 // 'T' is always blittable
+            var byte_length = length * sizeof(T);
+#pragma warning restore CS8500
             var array_handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             var array_data = array_handle.AddrOfPinnedObject();
             Buffer.MemoryCopy(array_data.ToPointer(), data.ToPointer(), byte_length, byte_length);

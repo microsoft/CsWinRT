@@ -5,7 +5,7 @@ using System;
 using System.Runtime.InteropServices;
 using WinRT;
 
-#pragma warning disable CS8500
+#pragma warning disable CS8500, CS0169
 
 namespace ABI.WinRT.Interop
 {

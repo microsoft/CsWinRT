@@ -151,7 +151,7 @@ namespace ABI.WinRT.Interop
                     _GetHelpFileContent_4 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetHelpFileContent_4
 #endif
                 };
-                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
+                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(sizeof(Vftbl));
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -409,7 +409,7 @@ namespace ABI.WinRT.Interop
                     _InterfaceSupportsErrorInfo_0 = (delegate* unmanaged<IntPtr, Guid*, int>)&Do_Abi_InterfaceSupportsErrorInfo_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
+                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(sizeof(Vftbl));
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
