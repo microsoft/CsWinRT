@@ -484,7 +484,7 @@ _ => null
 [System.Runtime.CompilerServices.ModuleInitializer]
 internal static void InitializeAuthoringTypeMapping()
 {
-ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(GetMetadataTypeMapping);
+ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetMetadataTypeMapping));
 }
 }
 })",
