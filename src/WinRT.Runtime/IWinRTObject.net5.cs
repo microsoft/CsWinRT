@@ -184,23 +184,5 @@ namespace WinRT
         {
             return AdditionalTypeData.GetOrAdd(type, (type) => helperDataFactory());
         }
-
-        internal void Resurrect()
-        {
-            if (NativeObject.Resurrect())
-            {
-                foreach (var cached in QueryInterfaceCache)
-                {
-                    cached.Value.Resurrect();
-                }
-
-                // Delegates store their agile reference as an additional type data.
-                // These should be recreated when instances are resurrect.
-                if (AdditionalTypeData.TryGetValue(typeof(AgileReference).TypeHandle, out var agileObj))
-                {
-                    AdditionalTypeData.TryUpdate(typeof(AgileReference).TypeHandle, new AgileReference(NativeObject), agileObj);
-                }
-            }
-        }
     }
 }
