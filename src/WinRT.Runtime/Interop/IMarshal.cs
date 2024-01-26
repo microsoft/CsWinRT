@@ -113,10 +113,10 @@ namespace ABI.WinRT.Interop
                     _ReleaseMarshalData_4 = Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new IMarshal_Delegates.ReleaseMarshalData_4(Do_Abi_ReleaseMarshalData_4)).ToPointer(),
                     _DisconnectObject_5 = Marshal.GetFunctionPointerForDelegate(DelegateCache[5] = new IMarshal_Delegates.DisconnectObject_5(Do_Abi_DisconnectObject_5)).ToPointer(),
                 };
-                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
+                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(sizeof(Vftbl));
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
 #else
-                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.Interop.IUnknownVftbl>() + sizeof(IntPtr) * 6);
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.Interop.IUnknownVftbl) + sizeof(IntPtr) * 6);
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,

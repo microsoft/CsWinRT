@@ -56,7 +56,7 @@ namespace ABI.System.Windows.Input
                     _Execute_3 = (delegate* unmanaged<IntPtr, IntPtr, int>)&Do_Abi_Execute_3,
 
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 4);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
