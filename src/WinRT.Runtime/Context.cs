@@ -9,24 +9,18 @@ namespace WinRT
 {
     internal static partial class Context
     {
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
-
         public unsafe static IntPtr GetContextToken()
         {
             IntPtr contextToken;
-            Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
+            Marshal.ThrowExceptionForHR(Platform.CoGetContextToken(&contextToken));
             return contextToken;
         }
-
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern unsafe int CoGetObjectContext(Guid* riid, IntPtr* ppv);
 
         public static unsafe IntPtr GetContextCallback()
         {
             Guid iid = InterfaceIIDs.IContextCallback_IID;
             IntPtr contextCallbackPtr;
-            Marshal.ThrowExceptionForHR(CoGetObjectContext(&iid, &contextCallbackPtr));
+            Marshal.ThrowExceptionForHR(Platform.CoGetObjectContext(&iid, &contextCallbackPtr));
             return contextCallbackPtr;
         }
 

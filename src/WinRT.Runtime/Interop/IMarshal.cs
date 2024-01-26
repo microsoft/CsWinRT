@@ -38,9 +38,6 @@ namespace ABI.WinRT.Interop
     {
         internal static readonly Guid IID = InterfaceIIDs.IMarshal_IID;
 
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern unsafe int CoCreateFreeThreadedMarshaler(IntPtr outer, IntPtr* marshalerPtr);
-
         private static readonly string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
 
         internal static readonly Lazy<Guid> IID_InProcFreeThreadedMarshaler = new Lazy<Guid>(Vftbl.GetInProcFreeThreadedMarshalerIID);
@@ -119,7 +116,7 @@ namespace ABI.WinRT.Interop
                 try
                 {
                     IntPtr proxyPtr;
-                    Marshal.ThrowExceptionForHR(CoCreateFreeThreadedMarshaler(IntPtr.Zero, &proxyPtr));
+                    Marshal.ThrowExceptionForHR(Platform.CoCreateFreeThreadedMarshaler(IntPtr.Zero, &proxyPtr));
                     using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref proxyPtr);
                     IMarshal proxy = new IMarshal(objRef);
                     t_freeThreadedMarshaler = proxy;

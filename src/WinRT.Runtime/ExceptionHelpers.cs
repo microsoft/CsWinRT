@@ -51,9 +51,6 @@ namespace WinRT
         private const int ERROR_CANCELLED = unchecked((int)0x800704c7);
         private const int ERROR_TIMEOUT = unchecked((int)0x800705b4);
 
-        [DllImport("oleaut32.dll")]
-        private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
-
         private static delegate* unmanaged[Stdcall]<IntPtr*, int> getRestrictedErrorInfo;
         private static delegate* unmanaged[Stdcall]<IntPtr, int> setRestrictedErrorInfo;
         private static delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int> roOriginateLanguageException;
@@ -351,7 +348,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             else
             {
                 using var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex));
-                SetErrorInfo(0, iErrorInfo.ThisPtr);
+                Platform.SetErrorInfo(0, iErrorInfo.ThisPtr);
             }
         }
 
