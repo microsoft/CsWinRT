@@ -5203,7 +5203,13 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
                     else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                     {
                         w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled || _% != null)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
+{
+    % _%(_genericObj%%);
+    %
+}
+
+if (% != null)
 {
 % _%(_genericObj%%);
 }
@@ -5212,6 +5218,15 @@ else
 %
 }
 )",
+                            // Early return to ensure things are trimmed correctly on NAOT.
+                            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                            signature.return_signature() ? "return " : "",
+                            method.Name(),
+                            signature.has_params() ? ", " : "",
+                            bind_list<write_parameter_name>(", ", signature.params()),
+                            signature.return_signature() ? "" : "return;",
+
+                            // CoreCLR paths
                             method.Name(),
                             signature.return_signature() ? "return " : "",
                             method.Name(),
@@ -5278,7 +5293,12 @@ else
                         else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
                             w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled || _% != null)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
+{
+return _%(_genericObj);
+}
+
+if (_% != null)
 {
 return _%(_genericObj);
 }
@@ -5287,6 +5307,7 @@ else
 %
 }
 )",
+                                getter.Name(),
                                 getter.Name(),
                                 getter.Name(),
                                 bind([&](writer& w) {
@@ -5328,7 +5349,11 @@ else
                         if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
                             w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled || _% != null)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
+{
+_%(_genericObj, value);
+}
+else if (_% != null)
 {
 _%(_genericObj, value);
 }
@@ -5337,6 +5362,7 @@ else
 %
 }
 )",
+                                setter.Name(),
                                 setter.Name(),
                                 setter.Name(),
                                 bind([&](writer& w) {
@@ -7538,7 +7564,11 @@ internal volatile static bool _RcwHelperInitialized;
 unsafe static @Methods()
 {
 ComWrappersSupport.RegisterHelperType(typeof(%), typeof(%));
-if (RuntimeFeature.IsDynamicCodeCompiled && !_RcwHelperInitialized)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
+{
+return;
+}
+if (!_RcwHelperInitialized)
 {
 var ensureInitializedFallback = (Func<bool>)typeof(@Methods<%>).MakeGenericType(%).
 GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
@@ -7972,15 +8002,22 @@ public static Guid PIID = %.IID;
 public static readonly IntPtr AbiToProjectionVftablePtr;
 static unsafe @()
 {
-if (RuntimeFeature.IsDynamicCodeCompiled && %.AbiToProjectionVftablePtr == default)
-{
-var initFallbackCCWVtable = (Action)typeof(@Methods<%>).MakeGenericType(%).
-GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-CreateDelegate(typeof(Action));
-initFallbackCCWVtable();
-}
+    if (!RuntimeFeature.IsDynamicCodeCompiled)
+    {
+        AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
 
-AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
+        return;
+    }
+
+    if (%.AbiToProjectionVftablePtr == default)
+    {
+        var initFallbackCCWVtable = (Action)typeof(@Methods<%>).MakeGenericType(%).
+        GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+        CreateDelegate(typeof(Action));
+        initFallbackCCWVtable();
+    }
+
+    AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
 }
 
 %
@@ -7993,6 +8030,8 @@ public static readonly IntPtr AbiToProjectionVftablePtr = %.AbiToProjectionVftab
 public static Guid PIID = %.IID;
 }
 )",
+                        // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         type.TypeName(),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
@@ -9000,8 +9039,11 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
                 {
                     w.write(R"(
 %
-
-if (RuntimeFeature.IsDynamicCodeCompiled && %.AbiToProjectionVftablePtr == default)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
+{
+AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
+}
+else if (%.AbiToProjectionVftablePtr == default)
 {
 AbiInvokeDelegate = %;
 AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@%), sizeof(IntPtr) * 4);
@@ -9014,8 +9056,12 @@ AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
 }
 )",
                         !have_generic_params ? "" :
-                            w.write_temp(R"( 
-if (RuntimeFeature.IsDynamicCodeCompiled && (%.AbiToProjectionVftablePtr == default || %._Invoke == default))
+                            w.write_temp(R"(
+if (!RuntimeFeature.IsDynamicCodeCompiled)
+{
+Abi_Invoke_Type = null;
+}
+else if (%.AbiToProjectionVftablePtr == default || %._Invoke == default)
 {
 Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(int) });
 }
@@ -9026,6 +9072,7 @@ Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof
                                 {
                                     w.write("%, ", pair.first);
                                 }, generic_abi_types)),
+                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         [&](writer& w)
                         {
@@ -9085,12 +9132,19 @@ Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof
                 if (!settings.netstandard_compat && have_generic_params)
                 {
                     w.write(R"(
-if (%._Invoke != null || !RuntimeFeature.IsDynamicCodeCompiled)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
+{
+%._Invoke(_nativeDelegate, %);
+}
+else if (%._Invoke != null)
 {
 %._Invoke(_nativeDelegate, %);
 }
 else
 )",
+                        // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                        bind_list<write_parameter_name>(", ", signature.params()),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind_list<write_parameter_name>(", ", signature.params()));
