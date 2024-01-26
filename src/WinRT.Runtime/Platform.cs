@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace WinRT
+namespace WinRT.Interop
 {
     // Direct P/Invoke for platform helpers
     internal static partial class Platform

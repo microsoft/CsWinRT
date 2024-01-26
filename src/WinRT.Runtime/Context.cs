@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 using ABI.WinRT.Interop;
+using WinRT.Interop;
 
 namespace WinRT
 {
