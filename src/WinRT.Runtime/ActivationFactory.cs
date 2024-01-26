@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using WinRT.Interop;
 
 namespace WinRT
@@ -57,11 +58,11 @@ namespace WinRT
             }
 
             void* getActivationFactory = null;
-
+            ReadOnlySpan<byte> functionName =
 #if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
-            ReadOnlySpan<byte> functionName = "DllGetActivationFactory"u8;
+                "DllGetActivationFactory"u8;
 #else
-            string functionName = "DllGetActivationFactory";
+                Encoding.ASCII.GetBytes("DllGetActivationFactory");
 #endif
             getActivationFactory = Platform.TryGetProcAddress(moduleHandle, functionName);
             if (getActivationFactory == null)
@@ -84,10 +85,11 @@ namespace WinRT
             _GetActivationFactory = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)getActivationFactory;
 
             void* canUnloadNow = null;
+            ReadOnlySpan<byte> functionName =
 #if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
-            ReadOnlySpan<byte> functionName = "DllCanUnloadNow"u8;
+                "DllCanUnloadNow"u8;
 #else
-            string functionName = "DllCanUnloadNow";
+                Encoding.ASCII.GetBytes("DllCanUnloadNow");
 #endif
             canUnloadNow = Platform.TryGetProcAddress(_moduleHandle, functionName);
 
