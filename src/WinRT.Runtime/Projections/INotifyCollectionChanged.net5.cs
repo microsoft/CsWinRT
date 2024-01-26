@@ -72,7 +72,7 @@ namespace ABI.System.Collections.Specialized
                     _remove_CollectionChanged_1 = &Do_Abi_remove_CollectionChanged_1,
 
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 2);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 2);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }

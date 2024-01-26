@@ -69,7 +69,7 @@ namespace WinRT
                     _GetTrustLevel = (void*)(delegate* unmanaged<IntPtr, TrustLevel*, int>)&Do_Abi_GetTrustLevel
 #endif
                 };
-                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
+                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(sizeof(Vftbl));
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
             }
 

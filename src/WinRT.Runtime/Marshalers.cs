@@ -440,7 +440,7 @@ namespace WinRT
                 return (0, IntPtr.Zero);
             }
             var length = array.Length;
-#pragma warning disable CS8500 // We know that T is unmanaged
+#pragma warning disable CS8500 // 'T' is always blittable
             var byte_length = length * sizeof(T);
 #pragma warning restore CS8500
             var data = Marshal.AllocCoTaskMem(byte_length);
@@ -455,7 +455,7 @@ namespace WinRT
                 return;
             }
             var length = array.Length;
-#pragma warning disable CS8500 // We know that T is unmanaged
+#pragma warning disable CS8500 // 'T' is always blittable
             var byte_length = length * sizeof(T);
 #pragma warning restore CS8500
 #if NET
