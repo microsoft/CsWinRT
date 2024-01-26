@@ -71,72 +71,17 @@ namespace WinRT
             }
         }
 
-        public static unsafe void* TryGetProcAddress(IntPtr moduleHandle, string functionName)
-        {
-            bool allocated = false;
-            Span<byte> buffer = stackalloc byte[0x100];
-            if (functionName.Length * 3 >= 0x100) // Maximum of 3 bytes per UTF-8 character, stack allocation limit of 256 bytes (including the null terminator)
-            {
-                // Calculate accurate byte count when the provided stack-allocated buffer is not sufficient
-                int exactByteCount = checked(Encoding.UTF8.GetByteCount(functionName) + 1); // + 1 for null terminator
-                if (exactByteCount > 0x100)
-                {
-#if NET6_0_OR_GREATER
-                    buffer = new((byte*)NativeMemory.Alloc((nuint)exactByteCount), exactByteCount);
-#else
-                    buffer = new((byte*)Marshal.AllocHGlobal(exactByteCount), exactByteCount);
-#endif
-                    allocated = true;
-                }
-            }
-
-            var rawByte = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer));
-
-            int byteCount;
-
-#if NET
-            byteCount = Encoding.UTF8.GetBytes(functionName, buffer);
-#else
-            fixed (char* lpFunctionName = functionName)
-            {
-                byteCount = Encoding.UTF8.GetBytes(lpFunctionName, functionName.Length, rawByte, buffer.Length);
-            }
-#endif
-            buffer[byteCount] = 0;
-
-            void* functionPtr = TryGetProcAddress(moduleHandle, (sbyte*)rawByte);
-
-            if (allocated)
-#if NET6_0_OR_GREATER
-                NativeMemory.Free(rawByte);
-#else
-                Marshal.FreeHGlobal((IntPtr)rawByte);
-#endif
-
-            return functionPtr;
-        }
-
         public static unsafe void* GetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
         {
             fixed (byte* lpFunctionName = functionName)
             {
-                void* functionPtr = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
+                void* functionPtr = TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
                 if (functionPtr == null)
                 {
                     Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
                 }
                 return functionPtr;
             }
-        }
-
-        public static unsafe void* GetProcAddress(IntPtr moduleHandle, string functionName)
-        {
-            void* functionPtr = Platform.TryGetProcAddress(moduleHandle, functionName);
-            if (functionPtr == null)
-            {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
-            }
-            return functionPtr;
         }
 
 #if NET6_0_OR_GREATER
