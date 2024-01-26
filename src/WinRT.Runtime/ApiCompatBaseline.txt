@@ -12,4 +12,6 @@ TypesMustExist : Type 'ABI.System.Collections.Specialized.INotifyCollectionChang
 TypesMustExist : Type 'ABI.System.ComponentModel.INotifyDataErrorInfo' does not exist in the implementation but it does exist in the contract.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute' exists on 'System.Type WinRT.Marshaler<T>.AbiType' in the contract but not the implementation.
 CannotMakeMemberNonVirtual : Member 'public System.Int32 WinRT.IObjectReference.TryAs<T>(System.Guid, WinRT.ObjectReference<T>)' is non-virtual in the implementation but is virtual in the contract.
-Total Issues: 13
+MembersMustExist : Member 'protected System.Boolean System.Boolean WinRT.IObjectReference.disposed' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void WinRT.IObjectReference.Dispose(System.Boolean)' does not exist in the implementation but it does exist in the contract.
+Total Issues: 15

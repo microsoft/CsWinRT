@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WinRT.Interop;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
@@ -14,7 +15,6 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-
 #if EMBED
     internal
 #else
@@ -22,10 +22,14 @@ namespace WinRT
 #endif
     abstract class IObjectReference : IDisposable
     {
-        protected bool disposed;
+        // Flags for the '_disposedFlags' field, see notes in the Dispose() method below
+        private const int NOT_DISPOSED = 0;
+        private const int DISPOSE_PENDING = 1;
+        private const int DISPOSE_COMPLETED = 2;
+
         private readonly IntPtr _thisPtr;
-        private object _disposedLock = new object();
         private IntPtr _referenceTrackerPtr;
+        private int _disposedFlags;
 
         public IntPtr ThisPtr
         {
@@ -131,7 +135,7 @@ namespace WinRT
 
         ~IObjectReference()
         {
-            Dispose(false);
+            Dispose();
         }
 
         public ObjectReference<T> As<
@@ -245,31 +249,66 @@ namespace WinRT
             return ThisPtr;
         }
 
+        /// <summary>
+        /// Throws an <see cref="ObjectDisposedException"/> if <see cref="Dispose"/> has already been called on the current instance.
+        /// </summary>
+        /// <remarks>
+        /// Note that calling this method does not protect callers against concurrent threads calling <see cref="Dispose"/> on the
+        /// same instance, as that behavior is explicitly undefined. Similarly, callers using this to then access the underlying
+        /// pointers should also make sure to keep the current instance alive until they're done using the pointer (unless they're
+        /// also incrementing it via <c>AddRef</c> in some way), or the GC could concurrently collect the instance and cause the
+        /// same problem (ie. the underlying pointer being in use becoming invalid right after retrieving it from the object).
+        /// </remarks>
+        /// <exception cref="ObjectDisposedException">Thrown if the current instance is disposed.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ThrowIfDisposed()
         {
-            if (disposed)
+            if (Volatile.Read(ref _disposedFlags) == DISPOSE_COMPLETED)
             {
-                lock (_disposedLock)
-                {
-                    if (disposed) throw new ObjectDisposedException("ObjectReference");
-                }
+                ThrowObjectDisposedException();
+            }
+
+            static void ThrowObjectDisposedException()
+            {
+                throw new ObjectDisposedException("ObjectReference");
             }
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
-            Dispose(true);
             GC.SuppressFinalize(this);
-        }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            lock (_disposedLock)
+            // We swap the disposed flag and only dispose the first time. This is safe with respect to
+            // different threads concurrently trying to dispose the same object, as only the first one
+            // will actually dispose it, and the others will just do nothing.
+            //
+            // It is not safe when combined with ThrowIfDisposed(), as the following scenario is possible:
+            //   - Thread A calls ProjectedType.Foo()
+            //   - Thread A calls ThisPtr, the dispose check passes and it gets the IntPtr value (not incremented)
+            //   - Thread B calls Dispose(), which releases the object
+            //   - Thread A now uses that IntPtr to invoke some function pointer
+            //   - Thread A goes ka-boom 💥
+            //
+            // However, this is by design, as the ObjectReference owns the 'ThisPtr' property, and disposing it while it
+            // is still in use can lead to all kinds of things going wrong. This is conceptually the same as calling
+            // SafeHandle.DangerousGetHandle(). Furthermore, the same exact behavior was already possible with an actual
+            // lock object guarding all the logic within the Dispose() method. The only difference is that simply using
+            // a flag this way avoids one object allocation per ObjectReference instance, and also allows making the size
+            // of the whole object smaller by sizeof(object), when taking into account padding.
+            //
+            // Additionally, note that the '_disposedFlags' field has 3 different states:
+            //   - NOT_DISPOSED: the initial state, when the object is alive
+            //   - DISPOSE_PENDING: indicates that a thread is currently executing the Dispose() method and got past the
+            //     first check, and is in the process of releasing the native resources. This state is checked by the
+            //     ThrowIfDisposed() method above, and still treated as if the object can be used normally. This is
+            //     necessary, because the dispose logic still has to access the 'ThisPtr' property and others in order
+            //     to perform the various Release() calls on the native objects being used. If the state was immediately
+            //     set to disposed, that method would just start throwing immediately, and this logic would not work.
+            //   - DISPOSE_COMPLETED: set when all the Dispose() logic has been completed and the object should not be
+            //     used at all anymore. When this is set, the ThrowIfDisposed() method will start throwing exceptions.
+            if (Interlocked.CompareExchange(ref _disposedFlags, DISPOSE_PENDING, NOT_DISPOSED) == NOT_DISPOSED)
             {
-                if (disposed)
-                {
-                    return;
-                }
 #if DEBUG
                 if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
                 {
@@ -283,7 +322,8 @@ namespace WinRT
                 }
 
                 DisposeTrackerSource();
-                disposed = true;
+
+                Volatile.Write(ref _disposedFlags, DISPOSE_COMPLETED);
             }
         }
 
