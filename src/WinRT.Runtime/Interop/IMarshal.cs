@@ -41,9 +41,35 @@ namespace ABI.WinRT.Interop
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         private static extern unsafe int CoCreateFreeThreadedMarshaler(IntPtr outer, IntPtr* marshalerPtr);
 
-        private static readonly string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
+        private const string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
 
-        internal static readonly Lazy<Guid> IID_InProcFreeThreadedMarshaler = new Lazy<Guid>(Vftbl.GetInProcFreeThreadedMarshalerIID);
+        private static readonly object _IID_InProcFreeThreadedMarshalerLock = new();
+        internal static volatile object _IID_InProcFreeThreadedMarshaler;
+
+        // Simple singleton lazy-initialization scheme (and saving the Lazy<T> size)
+        internal static Guid IID_InProcFreeThreadedMarshaler
+        {
+            get
+            {
+                object iid = _IID_InProcFreeThreadedMarshaler;
+
+                if (iid is not null)
+                {
+                    return (Guid)iid;
+                }
+
+                return IID_InProcFreeThreadedMarshaler_Slow();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static Guid IID_InProcFreeThreadedMarshaler_Slow()
+                {
+                    lock (_IID_InProcFreeThreadedMarshalerLock)
+                    {
+                        return (Guid)(_IID_InProcFreeThreadedMarshaler ??= Vftbl.GetInProcFreeThreadedMarshalerIID());
+                    }
+                }
+            }
+        }
 
         [Guid("00000003-0000-0000-c000-000000000046")]
         public unsafe struct Vftbl
