@@ -1575,6 +1575,35 @@ namespace AuthoringTest
         public double Z;
     }
 
+    // Nested type to validate (https://github.com/microsoft/CsWinRT/issues/1477)
+    // Doesn't need to be consumed, we just want to verify the generator does work.
+    internal partial class Nested1
+    {
+        internal partial record struct Nested2
+        {
+            internal partial struct Nested3
+            {
+                internal partial interface INested4
+                {
+                    internal partial record Nested5
+                    {
+                        internal partial class InnerMostType : IGraphicsEffectSource, IPublicInterface, IDisposable
+                        {
+                            public string HelloWorld()
+                            {
+                                return "Hello from mixed WinRT/COM";
+                            }
+
+                            public void Dispose()
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public sealed class TestMixedWinRTCOMWrapper : IGraphicsEffectSource, IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2
     {
         public string HelloWorld()

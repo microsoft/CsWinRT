@@ -163,14 +163,12 @@ namespace Generator
 
             EquatableArray<TypeInfo> classHierarchy = ImmutableArray<TypeInfo>.Empty;
 
-            // Gather the type hierarchy, only if the type is not nested (as an optimization)
+            // Gather the type hierarchy, only if the type is nested (as an optimization)
             if (symbol.ContainingType is not null)
             {
                 List<TypeInfo> hierarchyList = new();
 
-                for (ITypeSymbol parent = symbol;
-                     parent is not null;
-                     parent = parent.ContainingType)
+                for (ITypeSymbol parent = symbol; parent is not null; parent = parent.ContainingType)
                 {
                     hierarchyList.Add(new TypeInfo(
                         parent.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
