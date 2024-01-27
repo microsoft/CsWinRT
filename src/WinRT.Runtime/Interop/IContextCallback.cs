@@ -99,6 +99,7 @@ namespace ABI.WinRT.Interop
         public static implicit operator IContextCallback(IObjectReference obj) => (obj != null) ? new IContextCallback(obj) : null;
         public static implicit operator IContextCallback(ObjectReference<Vftbl> obj) => (obj != null) ? new IContextCallback(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
+        [Obsolete]
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
@@ -110,10 +111,24 @@ namespace ABI.WinRT.Interop
 
         public unsafe void ContextCallback(PFNCONTEXTCALL pfnCallback, ComCallData* pParam, Guid riid, int iMethod)
         {
-            var callback = Marshal.GetFunctionPointerForDelegate(pfnCallback);
-            var result = _obj.Vftbl.ContextCallback_4(ThisPtr, callback, pParam, &riid, iMethod, IntPtr.Zero);
-            GC.KeepAlive(pfnCallback);
-            Marshal.ThrowExceptionForHR(result);
+            bool success =  false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                var callback = Marshal.GetFunctionPointerForDelegate(pfnCallback);
+                var result = _obj.Vftbl.ContextCallback_4(thisPtr, callback, pParam, &riid, iMethod, IntPtr.Zero);
+                GC.KeepAlive(pfnCallback);
+                Marshal.ThrowExceptionForHR(result);
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
     }
 #endif

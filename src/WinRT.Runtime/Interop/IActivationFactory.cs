@@ -118,13 +118,21 @@ namespace ABI.WinRT.Interop
         public unsafe IntPtr ActivateInstance()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ActivateInstance_0(ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ActivateInstance_0(thisPtr, &__retval));
                 return __retval;
             }
             finally
             {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }

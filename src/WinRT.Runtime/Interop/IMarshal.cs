@@ -250,6 +250,7 @@ namespace ABI.WinRT.Interop
         public static implicit operator IMarshal(IObjectReference obj) => (obj != null) ? new IMarshal(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
+        [Obsolete]
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
@@ -261,32 +262,110 @@ namespace ABI.WinRT.Interop
 
         public unsafe void GetUnmarshalClass(Guid* riid, IntPtr pv, global::WinRT.Interop.MSHCTX dwDestContext, IntPtr pvDestContext, global::WinRT.Interop.MSHLFLAGS mshlFlags, Guid* pCid)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetUnmarshalClass_0(ThisPtr, riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetUnmarshalClass_0(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe void GetMarshalSizeMax(Guid* riid, IntPtr pv, global::WinRT.Interop.MSHCTX dwDestContext, IntPtr pvDestContext, global::WinRT.Interop.MSHLFLAGS mshlflags, uint* pSize)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetMarshalSizeMax_1(ThisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetMarshalSizeMax_1(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe void MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, global::WinRT.Interop.MSHCTX dwDestContext, IntPtr pvDestContext, global::WinRT.Interop.MSHLFLAGS mshlflags)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.MarshalInterface_2(ThisPtr, pStm, riid, pv, dwDestContext, pvDestContext, mshlflags));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.MarshalInterface_2(thisPtr, pStm, riid, pv, dwDestContext, pvDestContext, mshlflags));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe void UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.UnmarshalInterface_3(ThisPtr, pStm, riid, ppv));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.UnmarshalInterface_3(thisPtr, pStm, riid, ppv));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe void ReleaseMarshalData(IntPtr pStm)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.ReleaseMarshalData_4(ThisPtr, pStm));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.ReleaseMarshalData_4(thisPtr, pStm));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe void DisconnectObject(uint dwReserved)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.DisconnectObject_5(ThisPtr, dwReserved));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.DisconnectObject_5(thisPtr, dwReserved));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
     }
 

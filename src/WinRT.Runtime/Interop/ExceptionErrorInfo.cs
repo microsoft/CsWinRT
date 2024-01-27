@@ -263,6 +263,8 @@ namespace ABI.WinRT.Interop
         public static implicit operator IErrorInfo(IObjectReference obj) => (obj != null) ? new IErrorInfo(obj) : null;
         public static implicit operator IErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new IErrorInfo(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
+        public IObjectReference ObjRef { get => _obj; }
+        [Obsolete]
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
@@ -275,63 +277,104 @@ namespace ABI.WinRT.Interop
         public Guid GetGuid()
         {
             Guid __return_value__;
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetGuid_0(ThisPtr, &__return_value__));
-            return __return_value__;
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetGuid_0(thisPtr, &__return_value__));
+                return __return_value__;
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public string GetSource()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetSource_1(ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetSource_1(thisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
                 Marshal.FreeBSTR(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public string GetDescription()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetDescription_2(ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetDescription_2(thisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
                 Marshal.FreeBSTR(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public string GetHelpFile()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFile_3(ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFile_3(thisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
                 Marshal.FreeBSTR(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public string GetHelpFileContent()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFileContent_4(ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFileContent_4(thisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
                 Marshal.FreeBSTR(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }
@@ -352,7 +395,7 @@ namespace ABI.WinRT.Interop
         public static implicit operator ILanguageExceptionErrorInfo(IObjectReference obj) => (obj != null) ? new ILanguageExceptionErrorInfo(obj) : null;
         public static implicit operator ILanguageExceptionErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new ILanguageExceptionErrorInfo(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
+        public IntPtr ThisPtr => _obj.ThisPtr; 
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
         public ILanguageExceptionErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
@@ -364,17 +407,20 @@ namespace ABI.WinRT.Interop
         public IObjectReference GetLanguageException()
         {
             IntPtr __return_value__ = IntPtr.Zero;
-
+            bool success = false;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetLanguageException_0(ThisPtr, &__return_value__));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetLanguageException_0(thisPtr, &__return_value__));
                 return ObjectReference<global::WinRT.Interop.IUnknownVftbl>.Attach(ref __return_value__);
             }
             finally
             {
-                if (__return_value__ != IntPtr.Zero)
+                MarshalInspectable<object>.DisposeAbi(__return_value__);
+                if (success)
                 {
-                    (*(global::WinRT.Interop.IUnknownVftbl**)__return_value__)->Release(__return_value__);
+                    _obj.DangerousRelease();
                 }
             }
         }
@@ -435,6 +481,8 @@ namespace ABI.WinRT.Interop
         public static implicit operator ISupportErrorInfo(IObjectReference obj) => (obj != null) ? new ISupportErrorInfo(obj) : null;
         public static implicit operator ISupportErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new ISupportErrorInfo(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
+        public IObjectReference ObjRef { get => _obj; }
+        [Obsolete]
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
@@ -446,7 +494,20 @@ namespace ABI.WinRT.Interop
 
         public bool InterfaceSupportsErrorInfo(Guid riid)
         {
-            return _obj.Vftbl.InterfaceSupportsErrorInfo_0(ThisPtr, &riid) == 0;
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                return _obj.Vftbl.InterfaceSupportsErrorInfo_0(thisPtr, &riid) == 0;
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
     }
 
@@ -468,7 +529,6 @@ namespace ABI.WinRT.Interop
         public static implicit operator IRestrictedErrorInfo(IObjectReference obj) => (obj != null) ? new IRestrictedErrorInfo(obj) : null;
         public static implicit operator IRestrictedErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new IRestrictedErrorInfo(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
         public IRestrictedErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
@@ -486,11 +546,15 @@ namespace ABI.WinRT.Interop
             IntPtr _description = IntPtr.Zero;
             IntPtr _restrictedDescription = IntPtr.Zero;
             IntPtr _capabilitySid = IntPtr.Zero;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
                 fixed (int* pError = &error)
                 {
-                    Marshal.ThrowExceptionForHR(_obj.Vftbl.GetErrorDetails_0(ThisPtr, &_description, pError, &_restrictedDescription, &_capabilitySid));
+                    Marshal.ThrowExceptionForHR(_obj.Vftbl.GetErrorDetails_0(thisPtr, &_description, pError, &_restrictedDescription, &_capabilitySid));
                 }
                 description = _description != IntPtr.Zero ? Marshal.PtrToStringBSTR(_description) : string.Empty;
                 restrictedDescription = _restrictedDescription != IntPtr.Zero ? Marshal.PtrToStringBSTR(_restrictedDescription) : string.Empty;
@@ -501,20 +565,34 @@ namespace ABI.WinRT.Interop
                 Marshal.FreeBSTR(_description);
                 Marshal.FreeBSTR(_restrictedDescription);
                 Marshal.FreeBSTR(_capabilitySid);
+
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public string GetReference()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetReference_1(ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetReference_1(thisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
                 Marshal.FreeBSTR(__retval);
+
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }

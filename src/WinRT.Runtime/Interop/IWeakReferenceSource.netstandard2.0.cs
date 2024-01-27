@@ -56,6 +56,7 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     using global::WinRT;
+    using global::WinRT.Interop;
 
     [Guid("00000038-0000-0000-C000-000000000046")]
     internal unsafe class IWeakReferenceSource : global::WinRT.Interop.IWeakReferenceSource
@@ -106,6 +107,7 @@ namespace ABI.WinRT.Interop
         public static implicit operator IWeakReferenceSource(IObjectReference obj) => (obj != null) ? new IWeakReferenceSource(obj) : null;
         public static implicit operator IWeakReferenceSource(ObjectReference<Vftbl> obj) => (obj != null) ? new IWeakReferenceSource(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
+        [Obsolete]
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
@@ -117,15 +119,22 @@ namespace ABI.WinRT.Interop
 
         public global::WinRT.Interop.IWeakReference GetWeakReference()
         {
+            bool success = false;
             IntPtr objRef = IntPtr.Zero;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetWeakReference(ThisPtr, out objRef));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr(); 
+                ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetWeakReference(thisPtr, out objRef));
                 return MarshalInterface<WinRT.Interop.IWeakReference>.FromAbi(objRef);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(objRef);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }
@@ -180,6 +189,8 @@ namespace ABI.WinRT.Interop
         public static implicit operator IWeakReference(IObjectReference obj) => (obj != null) ? new IWeakReference(obj) : null;
         public static implicit operator IWeakReference(ObjectReference<Vftbl> obj) => (obj != null) ? new IWeakReference(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
+        public IObjectReference ObjRef { get => _obj; }
+        [Obsolete]
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
@@ -192,14 +203,22 @@ namespace ABI.WinRT.Interop
 
         public IObjectReference Resolve(Guid riid)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Resolve(ThisPtr, ref riid, out IntPtr objRef));
+            bool success = false;
+            IntPtr objRef = IntPtr.Zero;
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(objRef);
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Resolve(thisPtr, ref riid, out objRef));
+                return ObjectReference<IUnknownVftbl>.Attach(ref objRef);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(objRef);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }
