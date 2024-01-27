@@ -1063,23 +1063,6 @@ namespace cswinrt
                 }));
     }
 
-    void write_explicitly_implemented_method_for_abi(writer& w, MethodDef const& method,
-        std::string_view return_type, TypeDef const& method_interface, std::string_view method_target)
-    {
-        method_signature signature{ method };
-        w.write(R"(
-% %.%(%) => %.%(%);
-)",
-            return_type,
-            bind<write_type_name>(method_interface, typedef_name_type::CCW, false),
-            method.Name(),
-            bind_list<write_projection_parameter>(", ", signature.params()),
-            method_target,
-            method.Name(),
-            bind_list<write_parameter_name_with_modifier>(", ", signature.params())
-        );
-    }
-
     auto method_signature_equal(writer& w, MethodDef const& first, MethodDef const& second)
     {
         method_signature signature_first{ first };
@@ -1419,16 +1402,6 @@ private % Make_%()
         return w.write_temp("%", bind<write_projected_signature>(prop.Type().Type()));
     }
 
-    void write_explicitly_implemented_property_for_abi(writer& w, Property const& prop, TypeDef const& iface, bool as_abi)
-    {
-        auto prop_target = write_as_cast(w, iface, as_abi);
-        auto [getter, setter] = get_property_methods(prop);
-        auto getter_target = getter ? prop_target : "";
-        auto setter_target = setter ? prop_target : "";
-        write_property(w, write_explicit_name(w, iface, prop.Name()), prop.Name(),
-            write_prop_type(w, prop), getter_target, setter_target);
-    }
-
     void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv, std::string_view platform_attribute = ""sv,
         std::optional<std::tuple<type_semantics, Event, bool>> paramsForStaticMethodCall = {})
@@ -1481,11 +1454,6 @@ remove => %;
                         w.write("%.% -= value", event_target, event.Name());
                     }
                 }));
-    }
-
-    void write_explicitly_implemented_event_for_abi(writer& w, Event const& evt, TypeDef const& iface, bool as_abi)
-    {
-        write_event(w, write_explicit_name(w, iface, evt.Name()), evt, write_as_cast(w, iface, as_abi));
     }
 
     void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute = ""sv, std::optional<type_semantics> call_static_method = {})
@@ -5470,29 +5438,10 @@ return eventSource.EventActions;
                 return;
             }
 
-            auto methods = w.write_temp("%",
-            [&](writer& w)
-            {
-                for (auto&& method : iface.MethodList())
-                {
-                    if (!method.SpecialName())
-                    {
-                        std::string method_target;
-                        if (settings.netstandard_compat)
-                        {
-                            method_target = w.write_temp("As<%>()", bind<write_type_name>(iface, typedef_name_type::ABI, false));
-                        }
-                        else
-                        {
-                            method_target = w.write_temp("((%)(IWinRTObject)this)", bind<write_type_name>(iface, typedef_name_type::Projected, false));
-                        }
-                        auto return_type = w.write_temp("%", bind<write_projection_return_type>(method_signature{ method }));
-                        write_explicitly_implemented_method_for_abi(w, method, return_type, iface, method_target);
-                    }
-                }
-                w.write_each<write_explicitly_implemented_property_for_abi>(iface.PropertyList(), iface, true);
-                w.write_each<write_explicitly_implemented_event_for_abi>(iface.EventList(), iface, true);
-            });
+            // Here we used to generate explicit interface implementations of all methods, which we
+            // don't actually need to (since all other members are already public). We can just skip
+            // these. See: https://github.com/microsoft/CsWinRT/issues/1384.
+            auto methods = w.write_temp("%", "");
             required_interfaces[std::move(interface_name)] = { methods };
         };
         
