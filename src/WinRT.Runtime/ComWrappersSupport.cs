@@ -91,7 +91,7 @@ namespace WinRT
                     Guid iid_unmarshalClass;
                     Marshal.ThrowExceptionForHR((**(ABI.WinRT.Interop.IMarshal.Vftbl**)marshalPtr).GetUnmarshalClass_0(
                         marshalPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
-                    if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
+                    if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler)
                     {
                         return true;
                     }
