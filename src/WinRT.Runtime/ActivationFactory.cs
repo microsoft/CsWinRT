@@ -48,7 +48,7 @@ namespace WinRT
 #if NET
             if (moduleHandle == IntPtr.Zero)
             {
-                NativeLibrary.TryLoad(fileName, Assembly.GetExecutingAssembly(), null, out moduleHandle);
+                NativeLibrary.TryLoad(fileName, typeof(DllModule).Assembly, null, out moduleHandle);
             }
 #endif
             if (moduleHandle == IntPtr.Zero)
