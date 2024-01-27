@@ -161,10 +161,31 @@ namespace Generator
                 typeName = typeName[(@namespace.Length + 1)..];
             }
 
+            EquatableArray<TypeInfo> classHierarchy = ImmutableArray<TypeInfo>.Empty;
+
+            // Gather the type hierarchy, only if the type is not nested (as an optimization)
+            if (symbol.ContainingType is not null)
+            {
+                List<TypeInfo> hierarchyList = new();
+
+                for (ITypeSymbol parent = symbol;
+                     parent is not null;
+                     parent = parent.ContainingType)
+                {
+                    hierarchyList.Add(new TypeInfo(
+                        parent.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
+                        parent.TypeKind,
+                        parent.IsRecord));
+                }
+
+                classHierarchy = ImmutableArray.CreateRange(hierarchyList);
+            }
+
             return new VtableAttribute(
                 isAuthoring ? "ABI.Impl." + @namespace : @namespace,
                 isGlobalNamespace,
                 typeName,
+                classHierarchy,
                 ToVtableLookupString(symbol),
                 interfacesToAddToVtable.ToImmutableArray(),
                 genericInterfacesToAddToVtable.ToImmutableArray(),
@@ -369,8 +390,6 @@ namespace Generator
                 if (((isCsWinRTComponentFromAotOptimizer && !vtableAttribute.IsPublic) || !isCsWinRTComponentFromAotOptimizer) && 
                     vtableAttribute.Interfaces.Any())
                 {
-                    var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(vtableAttribute.ClassName);
-
                     StringBuilder source = new();
                     source.AppendLine("using static WinRT.TypeExtensions;\n");
                     if (!vtableAttribute.IsGlobalNamespace)
@@ -381,12 +400,48 @@ namespace Generator
                         """);
                     }
 
-                    source.AppendLine($$"""
-                    [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
-                    partial class {{vtableAttribute.ClassName}}
+                    var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(vtableAttribute.ClassName);
+
+                    // Simple case when the type is not nested
+                    if (vtableAttribute.ClassHierarchy.IsEmpty)
                     {
+                        source.AppendLine($$"""
+                            [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
+                            partial class {{vtableAttribute.ClassName}}
+                            {
+                            }
+                            """);
+                    }
+                    else
+                    {
+                        ReadOnlySpan<TypeInfo> classHierarchy = vtableAttribute.ClassHierarchy.AsSpan();
+
+                        // If the type is nested, correctly nest the type definition
+                        for (int i = classHierarchy.Length - 1; i > 0; i--)
+                        {
+                            source.AppendLine($$"""
+                                partial {{classHierarchy[i].GetTypeKeyword()}} {{classHierarchy[i].QualifiedName}}
+                                {
+                                """);
+                        }
+
+                        // Define the inner-most item with the attribute
+                        source.AppendLine($$"""
+                            [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
+                            partial {{classHierarchy[0].GetTypeKeyword()}} {{classHierarchy[0].QualifiedName}}
+                            {
+                            }
+                            """);
+
+                        // Close all brackets
+                        for (int i = classHierarchy.Length - 1; i > 0; i--)
+                        {
+                            source.AppendLine("}");
+                        }
                     }
 
+                    source.AppendLine();
+                    source.AppendLine($$"""
                     internal sealed class {{escapedClassName}}WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
                     {
                         public global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
@@ -807,10 +862,37 @@ namespace Generator
         string Namespace,
         bool IsGlobalNamespace,
         string ClassName,
+        EquatableArray<TypeInfo> ClassHierarchy,
         string VtableLookupClassName,
         EquatableArray<string> Interfaces,
         EquatableArray<GenericInterface> GenericInterfaces,
         bool IsArray,
         bool IsDelegate,
         bool IsPublic);
+
+    /// <summary>
+    /// A model describing a type info in a type hierarchy.
+    /// </summary>
+    /// <param name="QualifiedName">The qualified name for the type.</param>
+    /// <param name="Kind">The type of the type in the hierarchy.</param>
+    /// <param name="IsRecord">Whether the type is a record type.</param>
+    // Ported from https://github.com/Sergio0694/ComputeSharp
+    internal sealed record TypeInfo(string QualifiedName, TypeKind Kind, bool IsRecord)
+    {
+        /// <summary>
+        /// Gets the keyword for the current type kind.
+        /// </summary>
+        /// <returns>The keyword for the current type kind.</returns>
+        public string GetTypeKeyword()
+        {
+            return Kind switch
+            {
+                TypeKind.Struct when IsRecord => "record struct",
+                TypeKind.Struct => "struct",
+                TypeKind.Interface => "interface",
+                TypeKind.Class when IsRecord => "record",
+                _ => "class"
+            };
+        }
+    }
 }
