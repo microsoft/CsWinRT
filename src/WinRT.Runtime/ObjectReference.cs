@@ -331,7 +331,7 @@ namespace WinRT
 
         public void DangerousAddRef(ref bool success)
         {
-            // THis enforces the following invariant: we cannot successfully AddRef
+            // This enforces the following invariant: we cannot successfully AddRef
             // an ObjectReference which we've committed to the process of releasing.
 
             // We ensure this by never AddRef'ing an ObjectReference that is marked closed and
@@ -351,7 +351,7 @@ namespace WinRT
             // been requested in the same state field as the ref count and closed state.
 
             // Might have to perform the following steps multiple times due to
-            // interference from other DangeroudAddRef's and DangerousRelease's.
+            // interference from other DangerousAddRef's and DangerousRelease's.
             int oldState, newState;
             do
             {
@@ -386,13 +386,13 @@ namespace WinRT
 
         private void InternalRelease(bool disposeOrFinalizeOperation)
         {
-            // See DangeroudAddRef above for the design of the synchronization here. Basically we
+            // See DangerousAddRef above for the design of the synchronization here. Basically we
             // will try to decrement the current ref count and, if that would take us to
             // zero refs, set the closed state on the handle as well.
             bool performRelease;
 
             // Might have to perform the following steps multiple times due to
-            // interference from other DangeroudAddRef's and DangeroudRelease's.
+            // interference from other DangerousAddRef's and DangerousRelease's.
             int oldState, newState;
             do
             {
@@ -402,7 +402,7 @@ namespace WinRT
                 oldState = _state;
 
                 // If this is a Dispose operation we have additional requirements (to
-                // ensure that Dispose happens at most once as the comments in DangeroudAddRef
+                // ensure that Dispose happens at most once as the comments in DangerousAddRef
                 // detail). We must check that the dispose bit is not set in the old
                 // state and, in the case of successful state update, leave the disposed
                 // bit set. Silently do nothing if Dispose has already been called.
@@ -412,7 +412,7 @@ namespace WinRT
                 }
 
                 // We should never see a ref count of zero (that would imply we have
-                // unbalanced DangeroudAddRef and DangeroudReleases).
+                // unbalanced DangerousAddRef and DangerousReleases).
 #if NET8_0_OR_GREATER
                 ObjectDisposedException.ThrowIf((oldState & StateBits.RefCount) == 0, this);
 #else
@@ -1039,6 +1039,9 @@ namespace WinRT
             this.preventReleaseOnDispose = preventReleaseOnDispose;
             this.objRef = objRef;
 
+            // This will throw if objRef is disposed.
+            bool ignore = false;
+            this.objRef.DangerousAddRef(ref ignore);
         }
 
         public static ObjectReferenceValue Attach(ref IntPtr thisPtr)
@@ -1077,6 +1080,11 @@ namespace WinRT
             if (!preventReleaseOnDispose && ptr != IntPtr.Zero)
             {
                 Marshal.Release(ptr);
+            }
+
+            if (objRef != null)
+            {
+                objRef.DangerousRelease();
             }
         }
     }
