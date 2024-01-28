@@ -106,10 +106,20 @@ namespace WinRT
 
         internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
         {
-            var isFreeThreaded = IsFreeThreaded(objRef.ThisPtr);
-            // ThisPtr is owned by objRef, so need to make sure objRef stays alive.
-            GC.KeepAlive(objRef);
-            return isFreeThreaded;
+            bool success = false;
+            try
+            {
+                objRef.DangerousAddRef(ref success);
+                var thisPtr = objRef.DangerousGetPtr();
+                return IsFreeThreaded(thisPtr);
+            }
+            finally
+            {
+                if (success)
+                {
+                    objRef.DangerousRelease();
+                }
+            }
         }
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)

@@ -65,7 +65,7 @@ namespace WinRT
                 return null;
             }
             using var resolved = reference.Resolve(IUnknownVftbl.IID);
-            return ComWrappersSupport.CreateRcwForComObject<object>(resolved.ThisPtr);
+            return ComWrappersSupport.CreateRcwForComObject<object>(resolved.DangerousGetPtr());
         }
     }
 }

@@ -319,7 +319,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             {
                 // If the exception has information for an IRestrictedErrorInfo, use that
                 // as our error so as to propagate the error through WinRT end-to-end.
-                if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
+                if (ex.TryGetRestrictedLanguageErrorObject(out IObjectReference restrictedErrorObject))
                 {
                     using (restrictedErrorObject)
                     {
