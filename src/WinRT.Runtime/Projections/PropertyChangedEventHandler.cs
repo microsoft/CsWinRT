@@ -180,11 +180,11 @@ namespace ABI.System.ComponentModel
             PropertyChangedEventHandler.CreateMarshaler2(del);
 
         protected override State CreateEventState() =>
-            new EventState(_obj.ThisPtr, _index);
+            new EventState(_obj, _index);
 
         private sealed class EventState : State
         {
-            public EventState(IntPtr obj, int index)
+            public EventState(IObjectReference obj, int index)
                 : base(obj, index)
             {
             }

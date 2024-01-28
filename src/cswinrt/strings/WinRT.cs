@@ -260,17 +260,28 @@ namespace WinRT
 
     internal static class IActivationFactoryMethods
     {
-        public static unsafe ObjectReference<I> ActivateInstance<I>(IObjectReference obj)
+        public static unsafe ObjectReference<I> ActivateInstance<
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+            I>(IObjectReference objRef)
         {
-            IntPtr instancePtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)obj.ThisPtr)[6](obj.ThisPtr, &instancePtr));
+            IntPtr instancePtr= IntPtr.Zero;
+            bool success = false;
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
+                objRef.DangerousAddRef(ref success);
+                var thisPtr = objRef.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[6](thisPtr, &instancePtr));
+                return ObjectReference<I>.Attach(ref instancePtr);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(instancePtr);
+                if (success)
+                {
+                    objRef.DangerousRelease();
+                }
             }
         }
     }
@@ -303,13 +314,13 @@ namespace WinRT
         public System.Delegate del;
         public System.Delegate eventInvoke;
         private bool disposedValue;
-        private readonly IntPtr obj;
+        private readonly IObjectReference obj;
         private readonly int index;
         private readonly System.WeakReference<State> cacheEntry;
         private IntPtr eventInvokePtr;
         private IntPtr referenceTrackerTargetPtr;
 
-        protected State(IntPtr obj, int index)
+        protected State(IObjectReference obj, int index)
         {
             this.obj = obj;
             this.index = index;
@@ -341,8 +352,20 @@ namespace WinRT
             // the finalizer.
             if (!disposedValue)
             {
-                Cache.Remove(obj, index, cacheEntry);
-                disposedValue = true;
+                bool success = false;
+                try
+                {
+                    obj.DangerousAddRef(ref success);
+                    Cache.Remove(obj.DangerousGetPtr(), index, cacheEntry);
+                    disposedValue = true;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        obj.DangerousRelease();
+                    }
+                }
             }
         }
 
@@ -483,23 +506,41 @@ namespace WinRT
 #endif
 
             cachesLock.EnterReadLock();
+            bool success = false;
             try
             {
-                caches.AddOrUpdate(obj.ThisPtr,
+                obj.DangerousAddRef(ref success);
+                caches.AddOrUpdate(obj.DangerousGetPtr(),
                     (IntPtr ThisPtr) => new Cache(target, index, state),
                     (IntPtr ThisPtr, Cache cache) => cache.Update(target, index, state));
             }
             finally
             {
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
                 cachesLock.ExitReadLock();
             }
         }
 
         public static System.WeakReference<State> GetState(IObjectReference obj, int index)
         {
-            if (caches.TryGetValue(obj.ThisPtr, out var cache))
+            bool success = false;
+            try
             {
-                return cache.GetState(index);
+                obj.DangerousAddRef(ref success);
+                if (caches.TryGetValue(obj.DangerousGetPtr(), out var cache))
+                {
+                    return cache.GetState(index);
+                }
+            }
+            finally
+            {
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
 
             return null;
@@ -593,20 +634,26 @@ namespace WinRT
                 {
                     var eventInvoke = (TDelegate)state.eventInvoke;
                     var marshaler = CreateMarshaler(eventInvoke);
+                    bool success = false;
                     try
                     {
+                        _obj.DangerousAddRef(ref success);
                         var nativeDelegate = marshaler.GetAbi();
                         state.InitalizeReferenceTracking(nativeDelegate);
 #if NET
                         WinRT.EventRegistrationToken token;
-                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, &token));
+                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.DangerousGetPtr(), nativeDelegate, &token));
                         state.token = token;
 #else
-                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out state.token));
+                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.DangerousGetPtr(), nativeDelegate, out state.token));
 #endif
                     }
                     finally
                     {
+                        if (success)
+                        {
+                            _obj.DangerousRelease();
+                        }
                         // Dispose our managed reference to the delegate's CCW.
                         // Either the native event holds a reference now or the _addHandler call failed.
                         marshaler.Dispose();
@@ -637,9 +684,21 @@ namespace WinRT
 
         private void UnsubscribeFromNative(State state)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, state.token));
-            state.Dispose();
-            _state = null;
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.DangerousGetPtr(), state.token));
+                state.Dispose();
+                _state = null;
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
     }
 
@@ -660,11 +719,11 @@ namespace WinRT
             ABI.System.EventHandler<T>.CreateMarshaler2(del);
 
         protected override State CreateEventState() =>
-            new EventState(_obj.ThisPtr, _index);
+            new EventState(_obj, _index);
 
         private sealed class EventState : State
         {
-            public EventState(IntPtr obj, int index)
+            public EventState(IObjectReference obj, int index)
                 : base(obj, index)
             {
             }
