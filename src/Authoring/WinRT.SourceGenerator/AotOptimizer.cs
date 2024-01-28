@@ -90,7 +90,7 @@ namespace Generator
 
         internal static VtableAttribute GetVtableAttributeToAdd(ITypeSymbol symbol, Func<ISymbol, bool> isWinRTType, IAssemblySymbol assemblySymbol, bool isAuthoring, string authoringDefaultInterface = "")
         {
-            if (GeneratorHelper.HasNonInstantiatedWinRTGeneric(symbol) || GeneratorHelper.HasPrivateclass(symbol))
+            if (GeneratorHelper.HasNonInstantiatedWinRTGeneric(symbol))
             {
                 return default;
             }
