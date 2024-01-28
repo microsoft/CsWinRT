@@ -1345,7 +1345,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             byte __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8_2(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8_2(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1354,7 +1354,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             short __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16_3(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16_3(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1363,7 +1363,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             ushort __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16_4(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16_4(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1372,7 +1372,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             int __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32_5(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32_5(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1381,7 +1381,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             uint __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32_6(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32_6(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1390,7 +1390,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             long __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64_7(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64_7(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1399,7 +1399,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             ulong __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64_8(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64_8(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1408,7 +1408,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             float __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingle_9(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingle_9(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1417,7 +1417,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             double __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDouble_10(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDouble_10(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1426,7 +1426,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             ushort __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16_11(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16_11(thisPtr, &__retval));
             return (char)__retval;
         }
 
@@ -1435,7 +1435,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             byte __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBoolean_12(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBoolean_12(thisPtr, &__retval));
             return __retval != 0;
         }
 
@@ -1446,7 +1446,7 @@ namespace ABI.Windows.Foundation
             IntPtr __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetString_13(ThisPtr, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetString_13(thisPtr, &__retval));
                 return MarshalString.FromAbi(__retval);
             }
             finally
@@ -1460,7 +1460,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             Guid __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuid_14(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuid_14(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1471,7 +1471,7 @@ namespace ABI.Windows.Foundation
             global::ABI.System.DateTimeOffset __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTime_15(ThisPtr, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTime_15(thisPtr, &__retval));
                 return global::ABI.System.DateTimeOffset.FromAbi(__retval);
             }
             finally
@@ -1487,7 +1487,7 @@ namespace ABI.Windows.Foundation
             global::ABI.System.TimeSpan __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpan_16(ThisPtr, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpan_16(thisPtr, &__retval));
                 return global::ABI.System.TimeSpan.FromAbi(__retval);
             }
             finally
@@ -1501,7 +1501,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             global::Windows.Foundation.Point __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPoint_17(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPoint_17(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1510,7 +1510,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             global::Windows.Foundation.Size __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_18(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_18(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1519,7 +1519,7 @@ namespace ABI.Windows.Foundation
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             global::Windows.Foundation.Rect __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRect_19(ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRect_19(thisPtr, &__retval));
             return __retval;
         }
 
@@ -1531,7 +1531,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8Array_20(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8Array_20(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<byte>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1548,7 +1548,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16Array_21(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16Array_21(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<short>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1565,7 +1565,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16Array_22(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16Array_22(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<ushort>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1582,7 +1582,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32Array_23(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32Array_23(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<int>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1599,7 +1599,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32Array_24(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32Array_24(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<uint>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1616,7 +1616,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64Array_25(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64Array_25(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<long>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1633,7 +1633,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64Array_26(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64Array_26(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<ulong>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1650,7 +1650,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingleArray_27(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingleArray_27(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<float>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1667,7 +1667,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDoubleArray_28(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDoubleArray_28(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<double>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1684,7 +1684,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16Array_29(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16Array_29(thisPtr, &__value_length, &__value_data));
                 value = MarshalNonBlittable<char>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1701,7 +1701,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBooleanArray_30(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBooleanArray_30(thisPtr, &__value_length, &__value_data));
                 value = MarshalNonBlittable<bool>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1718,7 +1718,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetStringArray_31(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetStringArray_31(thisPtr, &__value_length, &__value_data));
                 value = MarshalString.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1735,7 +1735,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInspectableArray_32(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInspectableArray_32(thisPtr, &__value_length, &__value_data));
                 value = MarshalInspectable<object>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1752,7 +1752,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuidArray_33(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuidArray_33(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<Guid>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1769,7 +1769,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTimeArray_34(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTimeArray_34(thisPtr, &__value_length, &__value_data));
                 value = MarshalNonBlittable<global::System.DateTimeOffset>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1786,7 +1786,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpanArray_35(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpanArray_35(thisPtr, &__value_length, &__value_data));
                 value = MarshalNonBlittable<global::System.TimeSpan>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1803,7 +1803,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPointArray_36(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPointArray_36(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<global::Windows.Foundation.Point>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1820,7 +1820,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSizeArray_37(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSizeArray_37(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<global::Windows.Foundation.Size>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1837,7 +1837,7 @@ namespace ABI.Windows.Foundation
             IntPtr __value_data = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRectArray_38(ThisPtr, &__value_length, &__value_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRectArray_38(thisPtr, &__value_length, &__value_data));
                 value = MarshalBlittable<global::Windows.Foundation.Rect>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1853,7 +1853,7 @@ namespace ABI.Windows.Foundation
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
                 byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_IsNumericScalar_1(ThisPtr, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_IsNumericScalar_1(thisPtr, &__retval));
                 return __retval != 0;
             }
         }
@@ -1865,7 +1865,7 @@ namespace ABI.Windows.Foundation
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Foundation.IPropertyValue).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
                 global::Windows.Foundation.PropertyType __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Type_0(ThisPtr, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Type_0(thisPtr, &__retval));
                 return __retval;
             }
         }

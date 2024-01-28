@@ -70,7 +70,7 @@ namespace ABI.System
             MarshalString.Pinnable __uri = new(uri);
             fixed (void* ___uri = __uri)
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, MarshalString.GetAbi(ref __uri), &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)thisPtr)[6](thisPtr, MarshalString.GetAbi(ref __uri), &__retval));
                 return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
             }
         }
@@ -81,7 +81,7 @@ namespace ABI.System
             MarshalString.Pinnable __uri = new(uri);
             fixed (void* ___uri = __uri)
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, MarshalString.GetAbi(ref __uri), &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)thisPtr)[6](thisPtr, MarshalString.GetAbi(ref __uri), &__retval));
                 return new ObjectReferenceValue(__retval);
             }
         }

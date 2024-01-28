@@ -49,7 +49,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             get
             {
                 global::System.Collections.Specialized.NotifyCollectionChangedAction __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Action_0(ThisPtr, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Action_0(thisPtr, &__retval));
                 return __retval;
             }
         }
@@ -61,7 +61,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 IntPtr __retval = default;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_NewItems_1(ThisPtr, &__retval));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_NewItems_1(thisPtr, &__retval));
                     return MarshalInterface<global::System.Collections.IList>.FromAbi(__retval);
                 }
                 finally
@@ -76,7 +76,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             get
             {
                 int __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_NewStartingIndex_3(ThisPtr, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_NewStartingIndex_3(thisPtr, &__retval));
                 return __retval;
             }
         }
@@ -88,7 +88,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 IntPtr __retval = default;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_OldItems_2(ThisPtr, &__retval));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_OldItems_2(thisPtr, &__retval));
                     return MarshalInterface<global::System.Collections.IList>.FromAbi(__retval);
                 }
                 finally
@@ -103,7 +103,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             get
             {
                 int __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_OldStartingIndex_4(ThisPtr, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_OldStartingIndex_4(thisPtr, &__retval));
                 return __retval;
             }
         }
@@ -147,7 +147,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(newItems);
                 __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(oldItems);
                 __baseInterface = MarshalInspectable<object>.CreateMarshaler2(baseInterface);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(thisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
                 innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                 return ObjectReference<IUnknownVftbl>.FromAbi(__retval);
             }
@@ -171,7 +171,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             {
                 __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(newItems);
                 __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(oldItems);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, IntPtr.Zero, &__innerInterface, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(thisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, IntPtr.Zero, &__innerInterface, &__retval));
                 return new ObjectReferenceValue(__retval);
             }
             finally

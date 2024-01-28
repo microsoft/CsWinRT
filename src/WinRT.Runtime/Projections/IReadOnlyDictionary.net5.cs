@@ -147,7 +147,7 @@ namespace ABI.Windows.Foundation.Collections
                 IntPtr __second = default;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, IntPtr*, int>**)ThisPtr)[9](ThisPtr, &__first, &__second));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, IntPtr*, int>**)thisPtr)[9](thisPtr, &__first, &__second));
                     first = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__first);
                     second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__second);
                 }
@@ -164,7 +164,7 @@ namespace ABI.Windows.Foundation.Collections
             var ThisPtr = obj.ThisPtr;
 
             uint __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)thisPtr)[7](thisPtr, &__retval));
             return __retval;   
         }
     }

@@ -234,13 +234,16 @@ namespace ABI.System
                         global::System.Threading.Interlocked.CompareExchange(ref _abi_invoke_type, Projections.GetAbiDelegateType(typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int)), null);
                     }
 
-                    IntPtr ThisPtr = _nativeDelegate.ThisPtr;
                     var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, _abi_invoke_type);
                     ObjectReferenceValue __sender = default;
                     object __args = default;
-                    var __params = new object[] { ThisPtr, null, null };
+                    bool success = false; 
                     try
                     {
+                        _nativeDelegate.DangerousAddRef(ref success);
+                        var thisPtr = _nativeDelegate.DangerousGetPtr();
+
+                        var __params = new object[] { thisPtr, null, null };
                         __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
                         __params[1] = MarshalInspectable<object>.GetAbi(__sender);
                         __args = Marshaler<T>.CreateMarshaler2(args);
@@ -251,6 +254,10 @@ namespace ABI.System
                     {
                         MarshalInspectable<object>.DisposeMarshaler(__sender);
                         Marshaler<T>.DisposeMarshaler(__args);
+                        if (success)
+                        {
+                            _nativeDelegate.DangerousRelease();
+                        }
                     }
                 }
             }
@@ -381,20 +388,23 @@ namespace ABI.System
 
             public unsafe void Invoke(object sender, EventArgs args)
             {
-                IntPtr ThisPtr = _nativeDelegate.ThisPtr;
 #if !NET
                 var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
 #else
                 var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(_nativeDelegate.Vftbl.Invoke);
 #endif
                 ObjectReferenceValue __sender = default;
-                ObjectReferenceValue __args = default;
+                ObjectReferenceValue __args = default; 
+                bool success = false;
                 try
                 {
+                    _nativeDelegate.DangerousAddRef(ref success);
+                    var thisPtr = _nativeDelegate.DangerousGetPtr();
+
                     __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
                     __args = MarshalInspectable<EventArgs>.CreateMarshaler2(args);
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(
-                        ThisPtr,
+                        thisPtr,
                         MarshalInspectable<object>.GetAbi(__sender),
                         MarshalInspectable<EventArgs>.GetAbi(__args)));
                 }
@@ -402,6 +412,10 @@ namespace ABI.System
                 {
                     MarshalInspectable<object>.DisposeMarshaler(__sender);
                     MarshalInspectable<EventArgs>.DisposeMarshaler(__args);
+                    if (success)
+                    {
+                        _nativeDelegate.DangerousRelease();
+                    }
                 }
             }
         }

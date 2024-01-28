@@ -157,29 +157,43 @@ namespace ABI.System.Windows.Input
         {
             ObjectReferenceValue __parameter = default;
             byte __retval = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CanExecute_2(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter), out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CanExecute_2(thisPtr, MarshalInspectable<object>.GetAbi(__parameter), out __retval));
                 return __retval != 0;
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__parameter);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void Execute(object parameter)
         {
             ObjectReferenceValue __parameter = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Execute_3(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter)));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Execute_3(thisPtr, MarshalInspectable<object>.GetAbi(__parameter)));
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__parameter);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 

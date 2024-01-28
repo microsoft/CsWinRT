@@ -113,7 +113,7 @@ namespace ABI.System.Collections.Specialized
                 {
                     __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
                     __e = global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.CreateMarshaler2(e);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable<object>.GetAbi(__sender), MarshalInspectable<object>.GetAbi(__e)));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(thisPtr, MarshalInspectable<object>.GetAbi(__sender), MarshalInspectable<object>.GetAbi(__e)));
                 }
                 finally
                 {

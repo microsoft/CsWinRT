@@ -52,29 +52,49 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public unsafe IObjectReference CreateInstance(string name)
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 MarshalString.Pinnable __name = new(name);
                 fixed (void* ___name = __name)
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), &__retval));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(thisPtr, MarshalString.GetAbi(ref __name), &__retval));
                     return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
                 }
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe ObjectReferenceValue CreateInstanceForMarshaling(string name)
         {
             IntPtr __retval = default;
-            MarshalString.Pinnable __name = new(name);
-            fixed (void* ___name = __name)
+            bool success = false;
+            try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), &__retval));
-                return new ObjectReferenceValue(__retval);
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                MarshalString.Pinnable __name = new(name);
+                fixed (void* ___name = __name)
+                {
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(thisPtr, MarshalString.GetAbi(ref __name), &__retval));
+                    return new ObjectReferenceValue(__retval);
+                }
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }

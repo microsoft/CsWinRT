@@ -730,9 +730,14 @@ namespace ABI.System.Collections.Generic
         public unsafe V Lookup(K key)
         {
             object __key = default;
-            var __params = new object[] { ThisPtr, null, null };
+            var __params = new object[] { null, null, null };
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                __params[0] = thisPtr;
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
@@ -742,15 +747,23 @@ namespace ABI.System.Collections.Generic
             {
                 Marshaler<K>.DisposeMarshaler(__key);
                 Marshaler<V>.DisposeAbi(__params[2]);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe bool HasKey(K key)
         {
             object __key = default;
-            var __params = new object[] { ThisPtr, null, null };
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null, null };
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.HasKey_2.DynamicInvokeAbi(__params);
@@ -759,20 +772,32 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<K>.DisposeMarshaler(__key);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         internal unsafe global::Windows.Foundation.Collections.IMapView<K, V> GetView()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_3(ThisPtr, out __retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_3(thisPtr, out __retval));
                 return MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -780,9 +805,13 @@ namespace ABI.System.Collections.Generic
         {
             object __key = default;
             object __value = default;
-            var __params = new object[] { ThisPtr, null, null, null };
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null, null, null };
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 __value = Marshaler<V>.CreateMarshaler2(value);
@@ -794,15 +823,23 @@ namespace ABI.System.Collections.Generic
             {
                 Marshaler<K>.DisposeMarshaler(__key);
                 Marshaler<V>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void _Remove(K key)
         {
             object __key = default;
-            var __params = new object[] { ThisPtr, null };
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null };
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Remove_5.DynamicInvokeAbi(__params);
@@ -810,6 +847,10 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<K>.DisposeMarshaler(__key);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -822,9 +863,22 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
-                return __retval;
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+                    uint __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(thisPtr, out __retval));
+                    return __retval;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
 

@@ -62,7 +62,7 @@ namespace ABI.System
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.IServiceProvider).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
                 __type = global::ABI.System.Type.CreateMarshaler(type);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetService_0(ThisPtr, global::ABI.System.Type.GetAbi(__type), &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetService_0(thisPtr, global::ABI.System.Type.GetAbi(__type), &__retval));
                 return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally

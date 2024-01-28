@@ -705,7 +705,7 @@ namespace ABI.System.Collections.Generic
             IntPtr __second = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Split_3(ThisPtr, out __first, out __second));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Split_3(thisPtr, out __first, out __second));
                 first = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__first);
                 second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__second);
             }
@@ -721,7 +721,7 @@ namespace ABI.System.Collections.Generic
             get
             {
                 uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(thisPtr, out __retval));
                 return __retval;
             }
         }

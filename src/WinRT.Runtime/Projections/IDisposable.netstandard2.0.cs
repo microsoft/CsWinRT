@@ -79,7 +79,20 @@ namespace ABI.System
 
         public unsafe void Dispose()
         {
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Close_0(ThisPtr));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Close_0(thisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
     }
 }

@@ -438,7 +438,7 @@ namespace ABI.System
         {
             get
             {
-                T result = GetValueFromAbi(ThisPtr, _obj.Vftbl.get_Value_0);
+                T result = GetValueFromAbi(thisPtr, _obj.Vftbl.get_Value_0);
 
                 GC.KeepAlive(this);
 

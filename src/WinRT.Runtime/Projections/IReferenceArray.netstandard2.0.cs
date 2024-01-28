@@ -182,7 +182,7 @@ namespace ABI.Windows.Foundation
                 IntPtr __retval_data = default;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Value_0(ThisPtr, out __retval_length, out __retval_data));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Value_0(thisPtr, out __retval_length, out __retval_data));
                     return Marshaler<T>.FromAbiArray((__retval_length, __retval_data));
                 }
                 finally

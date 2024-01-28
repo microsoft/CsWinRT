@@ -766,38 +766,58 @@ namespace ABI.System.Collections.Generic
 
         public unsafe T GetAt(uint index)
         {
-            var __params = new object[] { ThisPtr, index, null };
+            var __params = new object[] { null, index, null };
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                __params[0] = thisPtr;
                 _obj.Vftbl.GetAt_0.DynamicInvokeAbi(__params);
                 return Marshaler<T>.FromAbi(__params[2]);
             }
             finally
             {
                 Marshaler<T>.DisposeAbi(__params[2]);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         internal unsafe global::Windows.Foundation.Collections.IVectorView<T> GetView()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(ThisPtr, out __retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(thisPtr, out __retval));
                 return MarshalInterface<global::Windows.Foundation.Collections.IVectorView<T>>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInterface<global::Windows.Foundation.Collections.IVectorView<T>>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe bool IndexOf(T value, out uint index)
         {
             object __value = default;
-            var __params = new object[] { ThisPtr, null, null, null };
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null, null, null };
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.IndexOf_3.DynamicInvokeAbi(__params);
@@ -807,15 +827,23 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<T>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void SetAt(uint index, T value)
         {
             object __value = default;
-            var __params = new object[] { ThisPtr, index, null };
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, index, null };
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[2] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.SetAt_4.DynamicInvokeAbi(__params);
@@ -823,15 +851,23 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<T>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void InsertAt(uint index, T value)
         {
             object __value = default;
-            var __params = new object[] { ThisPtr, index, null };
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                
+                var __params = new object[] { thisPtr, index, null };
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[2] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.InsertAt_5.DynamicInvokeAbi(__params);
@@ -839,20 +875,42 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<T>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void RemoveAt(uint index)
         {
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAt_6(ThisPtr, index));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAt_6(thisPtr, index));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe void Append(T value)
         {
             object __value = default;
-            var __params = new object[] { ThisPtr, null };
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null };
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.Append_7.DynamicInvokeAbi(__params);
@@ -860,17 +918,49 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<T>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void RemoveAtEnd()
         {
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAtEnd_8(ThisPtr));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAtEnd_8(thisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe void _Clear()
         {
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Clear_9(ThisPtr));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Clear_9(thisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe uint GetMany(uint startIndex, ref T[] items)
@@ -879,17 +969,25 @@ namespace ABI.System.Collections.Generic
             int __items_length = default;
             IntPtr __items_data = default;
             uint __retval = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
                 __items = Marshaler<T>.CreateMarshalerArray(items);
                 (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_10(ThisPtr, startIndex, __items_length, __items_data, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_10(thisPtr, startIndex, __items_length, __items_data, out __retval));
                 items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                 return __retval;
             }
             finally
             {
                 Marshaler<T>.DisposeMarshalerArray(__items);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -898,15 +996,23 @@ namespace ABI.System.Collections.Generic
             object __items = default;
             int __items_length = default;
             IntPtr __items_data = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
                 __items = Marshaler<T>.CreateMarshalerArray(items);
                 (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ReplaceAll_11(ThisPtr, __items_length, __items_data));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ReplaceAll_11(thisPtr, __items_length, __items_data));
             }
             finally
             {
                 Marshaler<T>.DisposeMarshalerArray(__items);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -914,9 +1020,23 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
-                return __retval;
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+
+                    uint __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(thisPtr, out __retval));
+                    return __retval;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
 

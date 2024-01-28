@@ -183,14 +183,21 @@ namespace ABI.System.Collections.Generic
         unsafe global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(thisPtr, out __retval));
                 return ABI.System.Collections.Generic.IEnumerator<T>.FromAbi(__retval);
             }
             finally
             {
-                ABI.System.Collections.Generic.IEnumerator<T>.DisposeAbi(__retval);
+                ABI.System.Collections.Generic.IEnumerator<T>.DisposeAbi(__retval); 
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -607,9 +614,22 @@ namespace ABI.System.Collections.Generic
 
         public unsafe bool _MoveNext()
         {
-            byte __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.MoveNext_2(ThisPtr, out __retval));
-            return __retval != 0;
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                byte __retval = default;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.MoveNext_2(thisPtr, out __retval));
+                return __retval != 0;
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe uint GetMany(ref T[] items)
@@ -618,17 +638,24 @@ namespace ABI.System.Collections.Generic
             int __items_length = default;
             IntPtr __items_data = default;
             uint __retval = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __items = Marshaler<T>.CreateMarshalerArray(items);
                 (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_3(ThisPtr, __items_length, __items_data, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_3(thisPtr, __items_length, __items_data, out __retval));
                 items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                 return __retval;
             }
             finally
             {
                 Marshaler<T>.DisposeMarshalerArray(__items);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -636,15 +663,24 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                var __params = new object[] { ThisPtr, null };
+                var __params = new object[] { null, null };
+                bool success = false;
                 try
                 {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+
+                    __params[0] = thisPtr;
                     _obj.Vftbl.get_Current_0.DynamicInvokeAbi(__params);
                     return Marshaler<T>.FromAbi(__params[1]);
                 }
                 finally
                 {
                     Marshaler<T>.DisposeAbi(__params[1]);
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
                 }
             }
         }
@@ -653,9 +689,23 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasCurrent_1(ThisPtr, out __retval));
-                return __retval != 0;
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+
+                    byte __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasCurrent_1(thisPtr, out __retval));
+                    return __retval != 0;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
 

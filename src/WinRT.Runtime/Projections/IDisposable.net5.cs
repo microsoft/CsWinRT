@@ -22,8 +22,20 @@ namespace ABI.System
 
         public static unsafe void Dispose(IObjectReference obj)
         {
-            var ThisPtr = obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[6](ThisPtr));
+            bool success = false;
+            try
+            {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)thisPtr)[6](thisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
+            }
         }
     }
 

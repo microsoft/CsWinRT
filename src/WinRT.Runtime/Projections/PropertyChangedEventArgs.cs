@@ -56,7 +56,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 fixed (void* ___name = __name)
                 {
                     __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(thisPtr, MarshalString.GetAbi(ref __name), MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
                     innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                     return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
                 }
@@ -78,7 +78,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 MarshalString.Pinnable __name = new(name);
                 fixed (void* ___name = __name)
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), IntPtr.Zero, &__innerInterface, &__retval));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(thisPtr, MarshalString.GetAbi(ref __name), IntPtr.Zero, &__innerInterface, &__retval));
                     return new ObjectReferenceValue(__retval);
                 }
             }

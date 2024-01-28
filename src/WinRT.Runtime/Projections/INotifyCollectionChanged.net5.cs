@@ -31,8 +31,8 @@ namespace ABI.System.Collections.Specialized
                 var ThisPtr = obj.ThisPtr;
 
                 return new NotifyCollectionChangedEventSource(obj,
-                    (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
-                    (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)thisPtr)[6],
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)thisPtr)[7]);
             });
             return eventSource.EventActions;
         }

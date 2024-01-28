@@ -483,28 +483,37 @@ namespace ABI.System.Collections.Generic
 
         private static unsafe T GetAtDynamic(IObjectReference obj, uint index)
         {
-            var ThisPtr = obj.ThisPtr;
             TAbi result = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, void*, int>**)ThisPtr)[6](ThisPtr, index, &result));
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, void*, int>**)thisPtr)[6](thisPtr, index, &result));
                 return Marshaler<T>.FromAbi(result);
             }
             finally
             {
                 Marshaler<T>.DisposeAbi(result);
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
         }
 
         private static unsafe bool IndexOfDynamic(IObjectReference obj, T value, out uint index)
         {
-            var ThisPtr = obj.ThisPtr;
             byte found;
             uint _index;
             object __value = default;
-            var __params = new object[] { ThisPtr, null, (IntPtr)(void*)&_index, (IntPtr)(void*)&found };
+            bool success = false;
             try
             {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null, (IntPtr)(void*)&_index, (IntPtr)(void*)&found };
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 DelegateHelper.Get(obj).IndexOf.DynamicInvokeAbi(__params);
@@ -514,16 +523,23 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<T>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
         }
 
         private static unsafe void SetAtDynamic(IObjectReference obj, uint index, T value)
         {
-            var ThisPtr = obj.ThisPtr;
             object __value = default;
-            var __params = new object[] { ThisPtr, index, null };
+            bool success = false;
             try
             {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, index, null };
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[2] = Marshaler<T>.GetAbi(__value);
                 DelegateHelper.Get(obj).SetAt.DynamicInvokeAbi(__params);
@@ -531,16 +547,23 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<T>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
         }
 
         private static unsafe void InsertAtDynamic(IObjectReference obj, uint index, T value)
         {
-            var ThisPtr = obj.ThisPtr;
             object __value = default;
-            var __params = new object[] { ThisPtr, index, null };
+            bool success = false;
             try
             {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, index, null };
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[2] = Marshaler<T>.GetAbi(__value);
                 DelegateHelper.Get(obj).InsertAt.DynamicInvokeAbi(__params);
@@ -548,16 +571,23 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<T>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
         }
 
         private static unsafe void AppendDynamic(IObjectReference obj, T value)
         {
-            var ThisPtr = obj.ThisPtr;
             object __value = default;
-            var __params = new object[] { ThisPtr, null };
+            bool success = false;
             try
             {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null };
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 DelegateHelper.Get(obj).Append.DynamicInvokeAbi(__params);
@@ -565,6 +595,10 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<T>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
         }
 
@@ -923,10 +957,23 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe uint get_Size(IObjectReference obj)
         {
-            IntPtr ThisPtr = obj.ThisPtr;
-            uint __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
-            return __retval;
+            bool success = false;
+            try
+            {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+
+                uint __retval = default;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)thisPtr)[7](thisPtr, &__retval));
+                return __retval;
+            }
+            finally
+            {
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
+            }
         }
 
         public static unsafe T GetAt(IObjectReference obj, uint index)
@@ -949,16 +996,23 @@ namespace ABI.System.Collections.Generic
             }
             else
             {
-                var ThisPtr = obj.ThisPtr;
                 IntPtr __retval = default;
+                bool success = false;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[8](ThisPtr, &__retval));
+                    obj.DangerousAddRef(ref success);
+                    var thisPtr = obj.DangerousGetPtr();
+
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[8](thisPtr, &__retval));
                     return MarshalInterface<global::System.Collections.Generic.IReadOnlyList<T>>.FromAbi(__retval);
                 }
                 finally
                 {
                     MarshalInterface<global::Windows.Foundation.Collections.IVectorView<T>>.DisposeAbi(__retval);
+                    if (success)
+                    {
+                        obj.DangerousRelease();
+                    }
                 }
             }
         }
@@ -980,8 +1034,20 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe void RemoveAt(IObjectReference obj, uint index)
         {
-            var ThisPtr = obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int>**)ThisPtr)[12](ThisPtr, index));
+            bool success = false;
+            try
+            {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int>**)thisPtr)[12](thisPtr, index));
+            }
+            finally
+            {
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
+            }
         }
 
         public static unsafe void Append(IObjectReference obj, T value)
@@ -991,14 +1057,38 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe void RemoveAtEnd(IObjectReference obj)
         {
-            var ThisPtr = obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[14](ThisPtr));
+            bool success = false;
+            try
+            {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)thisPtr)[14](thisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
+            }
         }
 
         public static unsafe void Clear(IObjectReference obj)
         {
-            var ThisPtr = obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[15](ThisPtr));
+            bool success = false;
+            try
+            {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)thisPtr)[15](thisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
+            }
         }
 
         public static unsafe uint GetMany(IObjectReference obj, uint startIndex, ref T[] items)
@@ -1016,22 +1106,29 @@ namespace ABI.System.Collections.Generic
             }
             else
             {
-                var ThisPtr = obj.ThisPtr;
                 object __items = default;
                 int __items_length = default;
                 IntPtr __items_data = default;
                 uint __retval = default;
+                bool success = false;
                 try
                 {
+                    obj.DangerousAddRef(ref success);
+                    var thisPtr = obj.DangerousGetPtr();
+
                     __items = Marshaler<T>.CreateMarshalerArray(items);
                     (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, uint*, int>**)ThisPtr)[16](ThisPtr, startIndex, __items_length, __items_data, &__retval));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, uint*, int>**)thisPtr)[16](thisPtr, startIndex, __items_length, __items_data, &__retval));
                     items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                     return __retval;
                 }
                 finally
                 {
                     Marshaler<T>.DisposeMarshalerArray(__items);
+                    if (success)
+                    {
+                        obj.DangerousRelease();
+                    }
                 }
             }
         }
@@ -1053,19 +1150,26 @@ namespace ABI.System.Collections.Generic
             }
             else
             {
-                var ThisPtr = obj.ThisPtr;
                 object __items = default;
                 int __items_length = default;
                 IntPtr __items_data = default;
+                bool success = false;
                 try
                 {
+                    obj.DangerousAddRef(ref success);
+                    var thisPtr = obj.DangerousGetPtr();
+
                     __items = Marshaler<T>.CreateMarshalerArray(items);
                     (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int>**)ThisPtr)[17](ThisPtr, __items_length, __items_data));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int>**)thisPtr)[17](thisPtr, __items_length, __items_data));
                 }
                 finally
                 {
                     Marshaler<T>.DisposeMarshalerArray(__items);
+                    if (success)
+                    {
+                        obj.DangerousRelease();
+                    }
                 }
             }
         }

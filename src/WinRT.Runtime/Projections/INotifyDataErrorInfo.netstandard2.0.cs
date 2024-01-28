@@ -179,18 +179,26 @@ namespace ABI.System.ComponentModel
         public unsafe global::System.Collections.IEnumerable GetErrors(string propertyName)
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+
                 MarshalString.Pinnable __propertyName = new(propertyName);
                 fixed (void* ___propertyName = __propertyName)
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(ref __propertyName), &__retval));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(thisPtr, MarshalString.GetAbi(ref __propertyName), &__retval));
                     return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
                 }
             }
             finally
             {
                 global::ABI.System.Collections.Generic.IEnumerable<object>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -198,9 +206,22 @@ namespace ABI.System.ComponentModel
         {
             get
             {
-                byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasErrors_0(ThisPtr, &__retval));
-                return __retval != 0;
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+                    byte __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasErrors_0(thisPtr, &__retval));
+                    return __retval != 0;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
 
