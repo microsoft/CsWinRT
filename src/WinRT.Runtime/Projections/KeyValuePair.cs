@@ -109,6 +109,11 @@ namespace ABI.System.Collections.Generic
 #endif
     static class KeyValuePairMethods<K, KAbi, V, VAbi> where KAbi : unmanaged where VAbi : unmanaged
     {
+        static KeyValuePairMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.KeyValuePair<K, V>), typeof(global::ABI.System.Collections.Generic.KeyValuePair<K, V>));
+        }
+
         public unsafe static bool InitRcwHelper(
             delegate*<IObjectReference, K> getKey,
             delegate*<IObjectReference, V> getValue)
@@ -219,23 +224,10 @@ namespace ABI.System.Collections.Generic
                 global::System.Delegate.CreateDelegate(get_Value_1_Type, typeof(KeyValuePairMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_get_Value_1), BindingFlags.NonPublic | BindingFlags.Static)),
             };
 
-#if NET
-            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 2));
-#else
-            var abiToProjectionVftablePtr = (IntPtr)Marshal.AllocCoTaskMem((sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 2));
-#endif
-            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache[0]);
-            ((IntPtr*)abiToProjectionVftablePtr)[7] = Marshal.GetFunctionPointerForDelegate(DelegateCache[1]);
-
-            if (!KeyValuePairMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
-            {
-#if NET
-                NativeMemory.Free((void*)abiToProjectionVftablePtr);
-#else
-                Marshal.FreeCoTaskMem(abiToProjectionVftablePtr);
-#endif
-            }
+            InitCcw(
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[0]),
+                (delegate* unmanaged[Stdcall]<IntPtr, VAbi*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[1])
+            );
         }
 
         private static unsafe int Do_Abi_get_Key_0(IntPtr thisPtr, KAbi* __return_value__)

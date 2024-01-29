@@ -6106,7 +6106,7 @@ return eventSource.EventActions;
                     auto guard{ w.push_generic_args(type) };
                     set_typedef_marshaler(type.generic_type);
 
-                    if (!settings.netstandard_compat && (!m.is_out() || get_category(type.generic_type) == category::delegate_type))
+                    if (!settings.netstandard_compat /* && (!m.is_out() || get_category(type.generic_type) == category::delegate_type) */)
                     {
                         auto generic_instantiation_class_name = get_generic_instantiation_class_type_name(w, type.generic_type);
                         if (!starts_with(generic_instantiation_class_name, "Windows_Foundation_IReference"))
@@ -7533,6 +7533,11 @@ public static global::System.IntPtr AbiToProjectionVftablePtr => %.AbiToProjecti
                 w.write(R"(
 % static class %%
 {
+static @Methods()
+{
+ComWrappersSupport.RegisterHelperType(typeof(%), typeof(%));
+}
+
 public unsafe static bool InitRcwHelper(%)
 {
 if (%._RcwHelperInitialized)
@@ -7620,6 +7625,9 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
                         write_generic_type_name(w, index++);
                         w.write("Abi : unmanaged");
                     }, iface.GenericParam()),
+                    iface.TypeName(),
+                    bind<write_type_name>(iface, typedef_name_type::Projected, false),
+                    bind<write_type_name>(iface, typedef_name_type::ABI, false),
                     [&](writer& w) {
                         bool write_delimiter = false;
                         for (auto& method : iface.MethodList())

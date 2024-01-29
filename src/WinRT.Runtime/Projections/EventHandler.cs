@@ -49,6 +49,11 @@ namespace ABI.System
 #endif
     static class EventHandlerMethods<T, TAbi> where TAbi : unmanaged
     {
+        static EventHandlerMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.EventHandler<T>), typeof(global::ABI.System.EventHandler<T>));
+        }
+
         public unsafe static bool InitRcwHelper(delegate*<IObjectReference, object, T, void> invoke)
         {
             if (EventHandlerMethods<T>._Invoke == null)

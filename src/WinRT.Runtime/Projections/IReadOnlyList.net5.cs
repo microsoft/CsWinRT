@@ -270,6 +270,11 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IReadOnlyListMethods<T,TAbi> where TAbi: unmanaged
     {
+        static IReadOnlyListMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IReadOnlyList<T>), typeof(global::ABI.System.Collections.Generic.IReadOnlyList<T>));
+        }
+
         public unsafe static bool InitRcwHelper(
             delegate*<IObjectReference, uint, T> getAt,
             delegate*<IObjectReference, T, out uint, bool> indexOf,
@@ -383,17 +388,12 @@ namespace ABI.System.Collections.Generic
                 new IReadOnlyList_Delegates.GetMany_3_Abi(Do_Abi_GetMany_3)
             };
 
-            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 4));
-            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache[0]);
-            ((IntPtr*)abiToProjectionVftablePtr)[7] = Marshal.GetFunctionPointerForDelegate(DelegateCache[1]);
-            ((IntPtr*)abiToProjectionVftablePtr)[8] = Marshal.GetFunctionPointerForDelegate(DelegateCache[2]);
-            ((IntPtr*)abiToProjectionVftablePtr)[9] = Marshal.GetFunctionPointerForDelegate(DelegateCache[3]);
-
-            if (!IReadOnlyListMethods<T>.TryInitCCWVtable(abiToProjectionVftablePtr))
-            {
-                NativeMemory.Free((void*)abiToProjectionVftablePtr);
-            }
+            InitCcw(
+                (delegate* unmanaged[Stdcall]<IntPtr, uint, TAbi*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[0]),
+                (delegate* unmanaged[Stdcall]<IntPtr, uint*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[1]),
+                (delegate* unmanaged[Stdcall]<IntPtr, TAbi, uint*, byte*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[2]),
+                (delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, uint*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[3])
+            );
         }
 
         private static unsafe int Do_Abi_GetAt_0(IntPtr thisPtr, uint index, TAbi* __return_value__)

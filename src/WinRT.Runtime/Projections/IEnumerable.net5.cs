@@ -260,6 +260,11 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumerableMethods<T, TAbi> where TAbi : unmanaged
     {
+        static IEnumerableMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerable<T>), typeof(global::ABI.System.Collections.Generic.IEnumerable<T>));
+        }
+
         public unsafe static bool InitRcwHelper(delegate*<IObjectReference, global::System.Collections.Generic.IEnumerator<T>> first)
         {
             if (ABI.Windows.Foundation.Collections.IIterableMethods<T>._RcwHelperInitialized)
@@ -294,6 +299,9 @@ namespace ABI.System.Collections.Generic
                 return false;
             }
 
+            // Register generic helper types referenced in CCW.
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerator<T>), typeof(global::ABI.System.Collections.Generic.IEnumerator<T>));
+
             return true;
         }
 
@@ -302,15 +310,7 @@ namespace ABI.System.Collections.Generic
         internal static unsafe void InitFallbackCCWVtable()
         {
             DelegateCache = new IEnumerable_Delegates.First_0_Abi(Do_Abi_First_0);
-
-            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 1));
-            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache);
-
-            if (!IEnumerableMethods<T>.TryInitCCWVtable(abiToProjectionVftablePtr))
-            {
-                NativeMemory.Free((void*)abiToProjectionVftablePtr);
-            }
+            InitCcw((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache));
         }
 
         private static unsafe int Do_Abi_First_0(IntPtr thisPtr, IntPtr* __return_value__)
@@ -590,6 +590,11 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumeratorMethods<T, TAbi> where TAbi : unmanaged
     {
+        static IEnumeratorMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerator<T>), typeof(global::ABI.System.Collections.Generic.IEnumerator<T>));
+        }
+
         public unsafe static bool InitRcwHelper(
             delegate*<IObjectReference, T> getCurrent,
             delegate*<IObjectReference, T[], uint> getMany)
@@ -673,17 +678,12 @@ namespace ABI.System.Collections.Generic
                 new IEnumerator_Delegates.GetMany_3_Abi(Do_Abi_GetMany_3)
             };
 
-            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 4));
-            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache[0]);
-            ((IntPtr*)abiToProjectionVftablePtr)[7] = Marshal.GetFunctionPointerForDelegate(DelegateCache[1]);
-            ((IntPtr*)abiToProjectionVftablePtr)[8] = Marshal.GetFunctionPointerForDelegate(DelegateCache[2]);
-            ((IntPtr*)abiToProjectionVftablePtr)[9] = Marshal.GetFunctionPointerForDelegate(DelegateCache[3]);
-
-            if (!IEnumeratorMethods<T>.TryInitCCWVtable(abiToProjectionVftablePtr))
-            {
-                NativeMemory.Free((void*)abiToProjectionVftablePtr);
-            }
+            InitCcw(
+                (delegate* unmanaged[Stdcall]<IntPtr, TAbi*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[0]),
+                (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[1]),
+                (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[2]),
+                (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[3])
+            );
         }
 
         private static unsafe int Do_Abi_MoveNext_2(IntPtr thisPtr, byte* __return_value__)
