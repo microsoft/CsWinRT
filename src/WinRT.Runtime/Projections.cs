@@ -37,6 +37,11 @@ namespace WinRT
 
         static Projections()
         {
+            // We always register mappings for 'bool' and 'char' as they're primitive types.
+            // They're also very cheap anyway and commonly used, so this keeps things simpler.
+            RegisterCustomAbiTypeMappingNoLock(typeof(bool), typeof(ABI.System.Boolean), "Boolean");
+            RegisterCustomAbiTypeMappingNoLock(typeof(char), typeof(ABI.System.Char), "Char");
+
             // If default mappings are disabled, we avoid rooting everything by default.
             // Developers will have to optionally opt-in into individual mappings later.
             if (!FeatureSwitches.EnableDefaultCustomTypeMappings)
@@ -44,9 +49,7 @@ namespace WinRT
                 return;
             }
 
-            // This should be in sync with cswinrt/helpers.h and the reverse mapping from WinRT.SourceGenerator/WinRTTypeWriter.cs.
-            RegisterCustomAbiTypeMappingNoLock(typeof(bool), typeof(ABI.System.Boolean), "Boolean");
-            RegisterCustomAbiTypeMappingNoLock(typeof(char), typeof(ABI.System.Char), "Char");
+            // This should be in sync with cswinrt/helpers.h and the reverse mapping from WinRT.SourceGenerator/WinRTTypeWriter.cs.            
             RegisterCustomAbiTypeMappingNoLock(typeof(EventRegistrationToken), typeof(ABI.WinRT.EventRegistrationToken), "Windows.Foundation.EventRegistrationToken");
             
             RegisterCustomAbiTypeMappingNoLock(typeof(Nullable<>), typeof(ABI.System.Nullable<>), "Windows.Foundation.IReference`1");
