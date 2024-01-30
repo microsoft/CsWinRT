@@ -37,6 +37,13 @@ namespace WinRT
 
         static Projections()
         {
+            // If default mappings are disabled, we avoid rooting everything by default.
+            // Developers will have to optionally opt-in into individual mappings later.
+            if (!FeatureSwitches.EnableDefaultCustomTypeMappings)
+            {
+                return;
+            }
+
             // This should be in sync with cswinrt/helpers.h and the reverse mapping from WinRT.SourceGenerator/WinRTTypeWriter.cs.
             RegisterCustomAbiTypeMappingNoLock(typeof(bool), typeof(ABI.System.Boolean), "Boolean");
             RegisterCustomAbiTypeMappingNoLock(typeof(char), typeof(ABI.System.Char), "Char");
