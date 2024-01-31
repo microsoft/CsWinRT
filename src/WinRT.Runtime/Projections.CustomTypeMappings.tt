@@ -39,7 +39,8 @@ static string GetMethodName(string name, string hint)
 }
 
 // Types for 'RegisterCustomAbiTypeMapping'
-foreach (var type in new (string Public, string Abi, string Name, string Hint, bool IsRuntimeClass)[] {
+var registerCustomAbiTypeMappings = new (string Public, string Abi, string Name, string Hint, bool IsRuntimeClass)[]
+{
     ("EventRegistrationToken", "ABI.WinRT.EventRegistrationToken", "Windows.Foundation.EventRegistrationToken", null, false),
     ("Nullable<>", "ABI.System.Nullable<>", "Windows.Foundation.IReference`1", null, false),
     ("int?", "ABI.System.Nullable_int", "Windows.Foundation.IReference`1<Int32>", "NullableInt", false),
@@ -89,7 +90,24 @@ foreach (var type in new (string Public, string Abi, string Name, string Hint, b
     ("Vector2", "ABI.System.Numerics.Vector2", "Windows.Foundation.Numerics.Vector2", null, false),
     ("Vector3", "ABI.System.Numerics.Vector3", "Windows.Foundation.Numerics.Vector3", null, false),
     ("Vector4", "ABI.System.Numerics.Vector4", "Windows.Foundation.Numerics.Vector4", null, false),
-    ("EventHandler", "ABI.System.EventHandler", null, null, false) })
+    ("EventHandler", "ABI.System.EventHandler", null, null, false)
+};
+
+// Types for 'RegisterCustomTypeToHelperTypeMapping'
+var registerCustomTypeToHelperTypeMapping = new (string Public, string Helper)[]
+{
+    ("IMap<,>", "ABI.System.Collections.Generic.IDictionary<,>"),
+    ("IVector<>", "ABI.System.Collections.Generic.IList<>"),
+    ("IMapView<,>", "ABI.System.Collections.Generic.IReadOnlyDictionary<,>"),
+    ("IVectorView<>", "ABI.System.Collections.Generic.IReadOnlyList<>"),
+    ("IBindableVector", "ABI.System.Collections.IList"),
+    ("ICollection<>", "ABI.System.Collections.Generic.ICollection<>"),
+    ("IReadOnlyCollection<>", "ABI.System.Collections.Generic.IReadOnlyCollection<>"),
+    ("ICollection", "ABI.System.Collections.ICollection")
+};
+
+// 'RegisterCustomAbiTypeMapping' methods
+foreach (var type in registerCustomAbiTypeMappings)
 {
     WriteLine("");
 
@@ -114,16 +132,8 @@ foreach (var type in new (string Public, string Abi, string Name, string Hint, b
     }
 }
 
-// Types for 'RegisterCustomTypeToHelperTypeMapping'
-foreach (var type in new (string Public, string Helper)[] {
-    ("IMap<,>", "ABI.System.Collections.Generic.IDictionary<,>"),
-    ("IVector<>", "ABI.System.Collections.Generic.IList<>"),
-    ("IMapView<,>", "ABI.System.Collections.Generic.IReadOnlyDictionary<,>"),
-    ("IVectorView<>", "ABI.System.Collections.Generic.IReadOnlyList<>"),
-    ("IBindableVector", "ABI.System.Collections.IList"),
-    ("ICollection<>", "ABI.System.Collections.Generic.ICollection<>"),
-    ("IReadOnlyCollection<>", "ABI.System.Collections.Generic.IReadOnlyCollection<>"),
-    ("ICollection", "ABI.System.Collections.ICollection") })
+// 'RegisterCustomTypeToHelperTypeMapping' methods
+foreach (var type in registerCustomTypeToHelperTypeMapping)
 {
     string xmlName = type.Public;
 
