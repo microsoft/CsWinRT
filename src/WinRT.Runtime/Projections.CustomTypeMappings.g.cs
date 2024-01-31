@@ -263,6 +263,12 @@ namespace WinRT
         public static void RegisterNotifyCollectionChangedActionMapping() => RegisterCustomAbiTypeMapping(
             typeof(NotifyCollectionChangedAction),
             typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedAction),
+            "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", isRuntimeClass: false);
+
+        /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"</c> WinRT type.</summary>
+        public static void RegisterNotifyCollectionChangedEventArgsMapping() => RegisterCustomAbiTypeMapping(
+            typeof(NotifyCollectionChangedEventArgs),
+            typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
             "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", isRuntimeClass: true);
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler"</c> WinRT type.</summary>
