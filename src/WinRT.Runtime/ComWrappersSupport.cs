@@ -7,7 +7,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -184,7 +183,20 @@ namespace WinRT
                 entries.AddRange(winrtExposedClassAttribute.GetExposedInterfaces());
                 if (type.IsClass)
                 {
-                    hasCustomIMarshalInterface = entries.Any(entry => entry.IID == ABI.WinRT.Interop.IMarshal.IID);
+                    static bool GetHasCustomIMarshalInterface(List<ComInterfaceEntry> entries)
+                    {
+                        foreach (ref readonly ComInterfaceEntry entry in CollectionsMarshal.AsSpan(entries))
+                        {
+                            if (entry.IID == ABI.WinRT.Interop.IMarshal.IID)
+                            {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    }
+
+                    hasCustomIMarshalInterface = GetHasCustomIMarshalInterface(entries);
                 }
             }
             else if (type == typeof(global::System.EventHandler))
@@ -204,7 +216,7 @@ namespace WinRT
             }
             else if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
-            {
+                    {
                 if (type.IsDelegate())
                 {
                     // Delegates have no interfaces that they implement, so adding default WinRT entries.
@@ -555,6 +567,21 @@ namespace WinRT
 
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
             {
+                static bool HasAnyTypeMatches(Type[] interfaceTypes, Type targetType)
+                {
+                    Type genericTargetType = targetType.GetGenericTypeDefinition();
+
+                    foreach (Type interfaceType in interfaceTypes)
+                    {
+                        if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == genericTargetType)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
                 // We have a static type which we can use to construct the object.  But, we can't just use it for all scenarios
                 // and primarily use it for tear off scenarios and for scenarios where runtimeclass isn't accurate.
                 // For instance if the static type is an interface, we return an IInspectable to represent the interface.
@@ -566,7 +593,7 @@ namespace WinRT
                 if (!(implementationType != null &&
                     (staticallyDeterminedType == implementationType ||
                      staticallyDeterminedType.IsAssignableFrom(implementationType) ||
-                     staticallyDeterminedType.IsGenericType && implementationType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == staticallyDeterminedType.GetGenericTypeDefinition()))))
+                     staticallyDeterminedType.IsGenericType && HasAnyTypeMatches(implementationType.GetInterfaces(), staticallyDeterminedType))))
                 {
                     return staticallyDeterminedType;
                 }
