@@ -183,6 +183,7 @@ namespace WinRT
                 entries.AddRange(winrtExposedClassAttribute.GetExposedInterfaces());
                 if (type.IsClass)
                 {
+                    // Manual helper to save binary size (no LINQ, no lambdas) and get better performance
                     static bool GetHasCustomIMarshalInterface(List<ComInterfaceEntry> entries)
                     {
                         foreach (ref readonly ComInterfaceEntry entry in CollectionsMarshal.AsSpan(entries))
@@ -567,6 +568,7 @@ namespace WinRT
 
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
             {
+                // Manual helper to save binary size (no LINQ, no lambdas) and get better performance
                 static bool HasAnyTypeMatches(Type[] interfaceTypes, Type targetType)
                 {
                     Type genericTargetType = targetType.GetGenericTypeDefinition();
