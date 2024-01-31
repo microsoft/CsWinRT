@@ -42,6 +42,9 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(bool), typeof(ABI.System.Boolean), "Boolean");
             RegisterCustomAbiTypeMappingNoLock(typeof(char), typeof(ABI.System.Char), "Char");
 
+            // Also always register Type, since it's "free" (no associated ABI type to root)
+            CustomTypeToAbiTypeNameMappings.Add(typeof(System.Type), "Windows.UI.Xaml.Interop.TypeName");
+
             // If default mappings are disabled, we avoid rooting everything by default.
             // Developers will have to optionally opt-in into individual mappings later.
             if (!FeatureSwitches.EnableDefaultCustomTypeMappings)
@@ -120,7 +123,6 @@ namespace WinRT
             CustomTypeToHelperTypeMappings.Add(typeof(IReadOnlyCollection<>), typeof(ABI.System.Collections.Generic.IReadOnlyCollection<>));
             CustomTypeToHelperTypeMappings.Add(typeof(ICollection), typeof(ABI.System.Collections.ICollection));
 #endif
-            CustomTypeToAbiTypeNameMappings.Add(typeof(System.Type), "Windows.UI.Xaml.Interop.TypeName");
         }
 
         public static void RegisterCustomAbiTypeMapping(
