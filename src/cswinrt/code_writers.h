@@ -9634,7 +9634,7 @@ internal class % : %%
 
 static %()
 {
-RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
+//RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
 }
 
 public static IntPtr Make()
