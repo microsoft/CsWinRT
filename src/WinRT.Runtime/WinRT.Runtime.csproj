@@ -30,6 +30,19 @@
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
     <EmbeddedResource Include="Configuration\ILLink.Substitutions.xml" LogicalName="ILLink.Substitutions.xml" />
   </ItemGroup>
+
+  <!-- Import all .tt files with their generated .g.cs files (the T4 service is imported in the .props file) -->
+  <ItemGroup>
+    <None Update="**\*.tt">
+      <LastGenOutput>%(Filename).g.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <Compile Update="**\*.g.cs">
+      <DependentUpon>$([System.IO.Path]::GetFileNameWithoutExtension('%(Filename)')).tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
     
   <ItemGroup>
     <Compile Include="../cswinrt/strings/WinRT*.cs" Link="cswinrt/%(FileName)%(Extension)" />
@@ -65,6 +78,16 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" PrivateAssets="All" />
     <PackageDownload Include="Microsoft.Windows.CsWinRT" Version="[$(CsWinRTApiCompatVersion)]" />
+  </ItemGroup> 
+  
+  <!-- T4 template generation service (the .tt/.g.cs files are resolved in the .targets file) -->
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Projections.CustomTypeMappings.net5.tt">
+      <LastGenOutput>Projections.CustomTypeMappings.net5.g.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
   <Target Name="_ResolveResolvedMatchingContract" BeforeTargets="ValidateApiCompatForSrc;RunMatchingRefApiCompat" Condition="'$(TargetFramework)' == 'net6.0'">
