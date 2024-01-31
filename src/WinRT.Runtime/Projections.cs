@@ -205,6 +205,27 @@ namespace WinRT
             }
         }
 
+        private static void RegisterCustomAbiTypeMapping(
+            Type publicType,
+#if NET
+            [DynamicallyAccessedMembers(
+                DynamicallyAccessedMemberTypes.PublicMethods |
+                DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            Type abiType)
+        {
+            rwlock.EnterWriteLock();
+            try
+            {
+                RegisterCustomAbiTypeMappingNoLock(publicType, abiType);
+            }
+            finally
+            {
+                rwlock.ExitWriteLock();
+            }
+        }
+
         private static void RegisterCustomAbiTypeMappingNoLock(
             Type publicType,
 #if NET

@@ -356,18 +356,8 @@ namespace WinRT
             typeof(ABI.System.Collections.ICollection));
 #endif
         /// <summary>Registers the custom ABI type mapping for the <see cref="EventHandler"/> type.</summary>
-        public static void RegisterEventHandlerMapping()
-        {
-            rwlock.EnterWriteLock();
-
-            try
-            {
-                RegisterCustomAbiTypeMappingNoLock(typeof(EventHandler), typeof(ABI.System.EventHandler));
-            }
-            finally
-            {
-                rwlock.ExitWriteLock();
-            }
-        }
+        public static void RegisterEventHandlerMapping() => RegisterCustomAbiTypeMapping(
+            typeof(EventHandler),
+            typeof(ABI.System.EventHandler));
     }
 }
