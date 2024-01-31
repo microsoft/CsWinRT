@@ -112,16 +112,16 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(EventHandler), typeof(ABI.System.EventHandler));
 
             // TODO: Ideally we should not need these
-            CustomTypeToHelperTypeMappings.Add(typeof(IMap<,>), typeof(ABI.System.Collections.Generic.IDictionary<,>));
-            CustomTypeToHelperTypeMappings.Add(typeof(IVector<>), typeof(ABI.System.Collections.Generic.IList<>));
-            CustomTypeToHelperTypeMappings.Add(typeof(IMapView<,>), typeof(ABI.System.Collections.Generic.IReadOnlyDictionary<,>));
-            CustomTypeToHelperTypeMappings.Add(typeof(IVectorView<>), typeof(ABI.System.Collections.Generic.IReadOnlyList<>));
-            CustomTypeToHelperTypeMappings.Add(typeof(Microsoft.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList));
+            RegisterCustomTypeToHelperTypeMappingNoLock(typeof(IMap<,>), typeof(ABI.System.Collections.Generic.IDictionary<,>));
+            RegisterCustomTypeToHelperTypeMappingNoLock(typeof(IVector<>), typeof(ABI.System.Collections.Generic.IList<>));
+            RegisterCustomTypeToHelperTypeMappingNoLock(typeof(IMapView<,>), typeof(ABI.System.Collections.Generic.IReadOnlyDictionary<,>));
+            RegisterCustomTypeToHelperTypeMappingNoLock(typeof(IVectorView<>), typeof(ABI.System.Collections.Generic.IReadOnlyList<>));
+            RegisterCustomTypeToHelperTypeMappingNoLock(typeof(Microsoft.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList));
 
 #if NET
-            CustomTypeToHelperTypeMappings.Add(typeof(ICollection<>), typeof(ABI.System.Collections.Generic.ICollection<>));
-            CustomTypeToHelperTypeMappings.Add(typeof(IReadOnlyCollection<>), typeof(ABI.System.Collections.Generic.IReadOnlyCollection<>));
-            CustomTypeToHelperTypeMappings.Add(typeof(ICollection), typeof(ABI.System.Collections.ICollection));
+            RegisterCustomTypeToHelperTypeMappingNoLock(typeof(ICollection<>), typeof(ABI.System.Collections.Generic.ICollection<>));
+            RegisterCustomTypeToHelperTypeMappingNoLock(typeof(IReadOnlyCollection<>), typeof(ABI.System.Collections.Generic.IReadOnlyCollection<>));
+            RegisterCustomTypeToHelperTypeMappingNoLock(typeof(ICollection), typeof(ABI.System.Collections.ICollection));
 #endif
         }
 
@@ -146,6 +146,40 @@ namespace WinRT
             {
                 rwlock.ExitWriteLock();
             }
+        }
+
+        private static void RegisterCustomTypeToHelperTypeMapping(
+            Type publicType,
+#if NET
+            [DynamicallyAccessedMembers(
+                DynamicallyAccessedMemberTypes.PublicMethods |
+                DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            Type helperType)
+        {
+            rwlock.EnterWriteLock();
+            try
+            {
+                CustomTypeToHelperTypeMappings.Add(publicType, helperType);
+            }
+            finally
+            {
+                rwlock.ExitWriteLock();
+            }
+        }
+
+        private static void RegisterCustomTypeToHelperTypeMappingNoLock(
+            Type publicType,
+#if NET
+            [DynamicallyAccessedMembers(
+                DynamicallyAccessedMemberTypes.PublicMethods |
+                DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            Type helperType)
+        {
+            CustomTypeToHelperTypeMappings.Add(publicType, helperType);
         }
 
         private static void RegisterCustomAbiTypeMappingNoLock(
@@ -176,7 +210,8 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+                DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType)
         {
