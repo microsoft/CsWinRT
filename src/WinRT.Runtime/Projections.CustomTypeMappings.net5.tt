@@ -20,6 +20,22 @@ namespace WinRT
     partial class Projections
     {
 <#
+// Helper method to get the generated method name
+static string GetMethodName(string name, string hint)
+{
+    var methodTypeName = hint ?? name;
+
+    // If the hint isn't available, automatically derive the name. For generic types,
+    // we strip the '<>' from the name and append "OpenGeneric" as a suffix.
+    if (hint == null)
+    {
+        if (name.Contains("<")) methodTypeName = methodTypeName.Substring(0, methodTypeName.IndexOf('<'));
+        if (name.Contains("<")) methodTypeName += "OpenGeneric";
+    }
+
+    return $"Register{methodTypeName}Mapping";
+}
+
 // Types for 'RegisterCustomAbiTypeMapping'
 foreach (var type in new (string Public, string Abi, string Name, string Hint, bool IsRuntimeClass)[] {
     ("EventRegistrationToken", "ABI.WinRT.EventRegistrationToken", "Windows.Foundation.EventRegistrationToken", null, false),
@@ -73,25 +89,13 @@ foreach (var type in new (string Public, string Abi, string Name, string Hint, b
     ("Vector4", "ABI.System.Numerics.Vector4", "Windows.Foundation.Numerics.Vector4", null, false),
     ("EventHandler", "ABI.System.EventHandler", null, null, false) })
 {
-    var methodTypeName = type.Hint ?? type.Public;
-
-    // If the hint isn't available, automatically derive the name. For generic types,
-    // we strip the '<>' from the name and append "OpenGeneric" as a suffix.
-    if (type.Hint == null)
-    {
-        if (type.Public.Contains("<")) methodTypeName = methodTypeName.Substring(0, methodTypeName.IndexOf('<'));
-        if (type.Public.Contains("<")) methodTypeName += "OpenGeneric";
-    }
-
-    var methodFullName = $"Register{methodTypeName}Mapping";
-
     WriteLine("");
 
     if (type.Name != null)
     {
 #>
         /// <summary>Registers the custom ABI type mapping for the <c>"<#=type.Name#>"</c> WinRT type.</summary>
-        public static void <#=methodFullName#>() => RegisterCustomAbiTypeMapping(
+        public static void <#=GetMethodName(type.Public, type.Hint)#>() => RegisterCustomAbiTypeMapping(
             typeof(<#=type.Public#>),
             typeof(<#=type.Abi#>),
             "<#=type.Name#>", isRuntimeClass: <#=type.IsRuntimeClass.ToString().ToLowerInvariant()#>);
@@ -101,7 +105,7 @@ foreach (var type in new (string Public, string Abi, string Name, string Hint, b
     {
 #>
         /// <summary>Registers the custom ABI type mapping for the <see cref="<#=type.Public#>"/> type.</summary>
-        public static void <#=methodFullName#>() => RegisterCustomAbiTypeMapping(
+        public static void <#=GetMethodName(type.Public, type.Hint)#>() => RegisterCustomAbiTypeMapping(
             typeof(<#=type.Public#>),
             typeof(<#=type.Abi#>));
 <#
