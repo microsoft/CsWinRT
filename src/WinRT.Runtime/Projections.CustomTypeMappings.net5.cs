@@ -339,7 +339,7 @@ namespace WinRT
         public static void RegisterIBindableVectorMapping() => RegisterCustomTypeToHelperTypeMapping(
             typeof(IBindableVector),
             typeof(ABI.System.Collections.IList));
-#if NET
+
         /// <summary>Registers the custom ABI type mapping for the <see cref="ICollection{T}"/> type.</summary>
         public static void RegisterICollectionOpenGenericMapping() => RegisterCustomTypeToHelperTypeMapping(
             typeof(ICollection<>),
@@ -354,7 +354,7 @@ namespace WinRT
         public static void RegisterICollectionMapping() => RegisterCustomTypeToHelperTypeMapping(
             typeof(ICollection),
             typeof(ABI.System.Collections.ICollection));
-#endif
+
         /// <summary>Registers the custom ABI type mapping for the <see cref="EventHandler"/> type.</summary>
         public static void RegisterEventHandlerMapping() => RegisterCustomAbiTypeMapping(
             typeof(EventHandler),

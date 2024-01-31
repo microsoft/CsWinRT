@@ -45,12 +45,16 @@ namespace WinRT
             // Also always register Type, since it's "free" (no associated ABI type to root)
             CustomTypeToAbiTypeNameMappings.Add(typeof(Type), "Windows.UI.Xaml.Interop.TypeName");
 
+#if NET
             // If default mappings are disabled, we avoid rooting everything by default.
             // Developers will have to optionally opt-in into individual mappings later.
+            // Only do this on modern .NET, because trimming isn't supported downlevel
+            // anyway. This also makes it simpler to expose all 'Register' methods.
             if (!FeatureSwitches.EnableDefaultCustomTypeMappings)
             {
                 return;
             }
+#endif
 
             // This should be in sync with cswinrt/helpers.h and the reverse mapping from WinRT.SourceGenerator/WinRTTypeWriter.cs.            
             RegisterCustomAbiTypeMappingNoLock(typeof(EventRegistrationToken), typeof(ABI.WinRT.EventRegistrationToken), "Windows.Foundation.EventRegistrationToken");
