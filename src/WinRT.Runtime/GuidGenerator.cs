@@ -3,7 +3,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -101,7 +100,19 @@ namespace WinRT
                                 }
                                 else
                                 {
-                                    var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignature(fi.FieldType));
+                                    static string[] SelectSignaturesForFields(FieldInfo[] fields)
+                                    {
+                                        string[] signatures = new string[fields.Length];
+
+                                        for (int i = 0; i < fields.Length; i++)
+                                        {
+                                            signatures[i] = GetSignature(fields[i].FieldType);
+                                        }
+
+                                        return signatures;
+                                    }
+
+                                    var args = SelectSignaturesForFields(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
                                     return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
                                 }
                             }
@@ -117,7 +128,19 @@ namespace WinRT
 
             if (type.IsGenericType)
             {
-                var args = type.GetGenericArguments().Select(t => GetSignature(t));
+                static string[] SelectSignaturesForTypes(Type[] types)
+                {
+                    string[] signatures = new string[types.Length];
+
+                    for (int i = 0; i < types.Length; i++)
+                    {
+                        signatures[i] = GetSignature(types[i]);
+                    }
+
+                    return signatures;
+                }
+
+                var args = SelectSignaturesForTypes(type.GetGenericArguments());
                 return "pinterface({" + GetGUID(type) + "};" + String.Join(";", args) + ")";
             }
 
@@ -181,7 +204,7 @@ namespace WinRT
         internal static Guid CreateIIDForGenericType(string signature)
         {
 #if !NET
-            var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(signature)).ToArray();
+            var data = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(wrt_pinterface_namespace.ToByteArray(), Encoding.UTF8.GetBytes(signature)));
 
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {
