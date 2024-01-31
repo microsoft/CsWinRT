@@ -125,7 +125,7 @@ namespace WinRT
 #endif
         }
 
-        public static void RegisterCustomAbiTypeMapping(
+        private static void RegisterCustomAbiTypeMapping(
             Type publicType,
 #if NET
             [DynamicallyAccessedMembers(
