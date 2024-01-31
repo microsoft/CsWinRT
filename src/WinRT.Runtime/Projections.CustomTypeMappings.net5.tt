@@ -19,10 +19,6 @@ namespace WinRT
     /// <inheritdoc cref="Projections"/>
     partial class Projections
     {
-        /// <summary>Registers the custom ABI type mapping for the <see cref="EventHandler"/> type.</summary>
-        public static void RegisterEventHandlerMapping() => RegisterCustomAbiTypeMapping(
-            typeof(EventHandler),
-            typeof(ABI.System.EventHandler));
 <#
 // Types for 'RegisterCustomAbiTypeMapping'
 foreach (var type in new (string Public, string Abi, string Name, string Hint, bool IsRuntimeClass)[] {
@@ -74,29 +70,42 @@ foreach (var type in new (string Public, string Abi, string Name, string Hint, b
     ("Quaternion", "ABI.System.Numerics.Quaternion", "Windows.Foundation.Numerics.Quaternion", null, false),
     ("Vector2", "ABI.System.Numerics.Vector2", "Windows.Foundation.Numerics.Vector2", null, false),
     ("Vector3", "ABI.System.Numerics.Vector3", "Windows.Foundation.Numerics.Vector3", null, false),
-    ("Vector4", "ABI.System.Numerics.Vector4", "Windows.Foundation.Numerics.Vector4", null, false) })
+    ("Vector4", "ABI.System.Numerics.Vector4", "Windows.Foundation.Numerics.Vector4", null, false),
+    ("EventHandler", "ABI.System.EventHandler", null, null, false) })
 {
-    var methodTypeName = type.Hint;
+    var methodTypeName = type.Hint ?? type.Public;
 
     // If the hint isn't available, automatically derive the name. For generic types,
     // we strip the '<>' from the name and append "OpenGeneric" as a suffix.
-    if (methodTypeName == null)
+    if (type.Hint == null)
     {
-        methodTypeName = type.Public;
-        if (type.Name.Contains("`")) methodTypeName = methodTypeName.Substring(0, methodTypeName.IndexOf('<'));
-        if (type.Name.Contains("`")) methodTypeName += "OpenGeneric";
+        if (type.Public.Contains("<")) methodTypeName = methodTypeName.Substring(0, methodTypeName.IndexOf('<'));
+        if (type.Public.Contains("<")) methodTypeName += "OpenGeneric";
     }
 
     var methodFullName = $"Register{methodTypeName}Mapping";
 
     WriteLine("");
+
+    if (type.Name != null)
+    {
 #>
         /// <summary>Registers the custom ABI type mapping for the <c>"<#=type.Name#>"</c> WinRT type.</summary>
         public static void <#=methodFullName#>() => RegisterCustomAbiTypeMapping(
             typeof(<#=type.Public#>),
             typeof(<#=type.Abi#>),
-            "<#=type.Name#>");
+            "<#=type.Name#>", isRuntimeClass: <#=type.IsRuntimeClass.ToString().ToLowerInvariant()#>);
 <#
+    }
+    else
+    {
+#>
+        /// <summary>Registers the custom ABI type mapping for the <see cref="<#=type.Public#>"/> type.</summary>
+        public static void <#=methodFullName#>() => RegisterCustomAbiTypeMapping(
+            typeof(<#=type.Public#>),
+            typeof(<#=type.Abi#>));
+<#
+    }
 }
 #>
     }
