@@ -1720,11 +1720,11 @@ namespace WinRT
 
         private static object ReturnParameter(object arg) => arg;
 
-        private static unsafe void CopyIntEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
+        private static unsafe void CopyIntEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = Convert.ToInt32(value);
 
         private static unsafe void CopyIntEnumDirect(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)value;
 
-        private static unsafe void CopyUIntEnum(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
+        private static unsafe void CopyUIntEnum(object value, IntPtr dest) => *(uint*)dest.ToPointer() = Convert.ToUInt32(value);
 
         private static unsafe void CopyUIntEnumDirect(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)value;
     }
