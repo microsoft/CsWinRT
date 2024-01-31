@@ -4,6 +4,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if NET
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -111,6 +113,33 @@ foreach (var type in new (string Public, string Abi, string Name, string Hint, b
 <#
     }
 }
+
+// Types for 'RegisterCustomTypeToHelperTypeMapping'
+foreach (var type in new (string Public, string Helper)[] {
+    ("IMap<,>", "ABI.System.Collections.Generic.IDictionary<,>"),
+    ("IVector<>", "ABI.System.Collections.Generic.IList<>"),
+    ("IMapView<,>", "ABI.System.Collections.Generic.IReadOnlyDictionary<,>"),
+    ("IVectorView<>", "ABI.System.Collections.Generic.IReadOnlyList<>"),
+    ("IBindableVector", "ABI.System.Collections.IList"),
+    ("ICollection<>", "ABI.System.Collections.Generic.ICollection<>"),
+    ("IReadOnlyCollection<>", "ABI.System.Collections.Generic.IReadOnlyCollection<>"),
+    ("ICollection", "ABI.System.Collections.ICollection") })
+{
+    string xmlName = type.Public;
+
+    if (type.Public.EndsWith("<>")) xmlName = $"{xmlName.Substring(0, xmlName.IndexOf('<'))}{{T}}";
+    if (type.Public.EndsWith("<,>")) xmlName = $"{xmlName.Substring(0, xmlName.IndexOf('<'))}{{K, V}}";
+
+    WriteLine("");
+#>
+        /// <summary>Registers the custom ABI type mapping for the <see cref="<#=xmlName#>"/> type.</summary>
+        public static void <#=GetMethodName(type.Public, null)#>() => RegisterCustomTypeToHelperTypeMapping(
+            typeof(<#=type.Public#>),
+            typeof(<#=type.Helper#>));
+<#
+}
 #>
     }
 }
+
+#endif

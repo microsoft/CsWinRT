@@ -84,11 +84,6 @@
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
-  <ItemGroup>
-    <None Update="Projections.CustomTypeMappings.net5.tt">
-      <LastGenOutput>Projections.CustomTypeMappings.net5.g.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
 
   <Target Name="_ResolveResolvedMatchingContract" BeforeTargets="ValidateApiCompatForSrc;RunMatchingRefApiCompat" Condition="'$(TargetFramework)' == 'net6.0'">
     <ItemGroup>
