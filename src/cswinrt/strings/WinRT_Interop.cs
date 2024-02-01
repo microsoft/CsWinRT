@@ -9,17 +9,6 @@ using System.Runtime.InteropServices;
 
 namespace WinRT.Interop
 {
-    // IActivationFactory
-    [Guid("00000035-0000-0000-C000-000000000046")]
-    internal unsafe struct IActivationFactoryVftbl
-    {
-        public IInspectable.Vftbl IInspectableVftbl;
-        private void* _ActivateInstance;
-        public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ActivateInstance => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ActivateInstance;
-
-        internal static readonly Guid IID = new(0x00000035, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
-    }
-
     // IDelegate
     internal struct IDelegateVftbl
     {
