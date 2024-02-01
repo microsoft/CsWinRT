@@ -19,7 +19,7 @@ namespace WinRT
 
         public static unsafe IntPtr GetContextCallback()
         {
-            Guid iid = InterfaceIIDs.IContextCallback_IID;
+            Guid iid = IID.IID_IContextCallback;
             IntPtr contextCallbackPtr;
             Marshal.ThrowExceptionForHR(Platform.CoGetObjectContext(&iid, &contextCallbackPtr));
             return contextCallbackPtr;
@@ -50,7 +50,7 @@ namespace WinRT
                 {
                     callback();
                     return 0;
-                }, &data, InterfaceIIDs.ICallbackWithNoReentrancyToApplicationSTA_IID, 5);
+                }, &data, IID.IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
             } 
             catch(Exception)
             {

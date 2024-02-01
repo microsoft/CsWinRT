@@ -206,7 +206,7 @@ namespace WinRT
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<IUnknownVftbl> factory;
-            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
+            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(typeName, IID.IID_IActivationFactory);
             if (factory != null)
             {
                 return factory;

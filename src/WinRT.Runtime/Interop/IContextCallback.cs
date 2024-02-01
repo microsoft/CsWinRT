@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 #pragma warning disable CS8500
 
@@ -59,7 +60,7 @@ namespace ABI.WinRT.Interop
                 }
             }
 
-            Guid iid = InterfaceIIDs.ICallbackWithNoReentrancyToApplicationSTA_IID;
+            Guid iid = IID.IID_ICallbackWithNoReentrancyToApplicationSTA;
 
             int hresult = (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback_4(
                 contextCallbackPtr,
@@ -81,7 +82,7 @@ namespace ABI.WinRT.Interop
     [Guid("000001da-0000-0000-C000-000000000046")]
     internal sealed unsafe class IContextCallback
     {
-        internal static readonly Guid IID = InterfaceIIDs.IContextCallback_IID;
+        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IContextCallback;
 
         [Guid("000001da-0000-0000-C000-000000000046")]
         public struct Vftbl

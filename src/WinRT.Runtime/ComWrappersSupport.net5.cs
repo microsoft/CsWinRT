@@ -161,7 +161,7 @@ namespace WinRT
         public static IObjectReference CreateCCWForObject(object obj)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
-            return ObjectReference<IUnknownVftbl>.Attach(ref ccw, InterfaceIIDs.IUnknown_IID);
+            return ObjectReference<IUnknownVftbl>.Attach(ref ccw, IID.IID_IUnknown);
         }
 
         internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
@@ -526,7 +526,7 @@ namespace WinRT
 
         private static object CreateObject(IntPtr externalComObject)
         {
-            Guid inspectableIID = InterfaceIIDs.IInspectable_IID;
+            Guid inspectableIID = IID.IID_IInspectable;
             Guid weakReferenceIID = ABI.WinRT.Interop.IWeakReference.IID;
             IntPtr ptr = IntPtr.Zero;
 

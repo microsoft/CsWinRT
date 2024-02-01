@@ -16,6 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Input;
 using Windows.Foundation.Collections;
+using WinRT.Interop;
 
 namespace WinRT
 {
@@ -601,7 +602,7 @@ namespace WinRT
             Type projectedType = typeof(T);
             if (projectedType == typeof(object))
             {
-                if (objectReference.TryAs<IInspectable.Vftbl>(InterfaceIIDs.IInspectable_IID, out var inspectablePtr) == 0)
+                if (objectReference.TryAs<IInspectable.Vftbl>(IID.IID_IInspectable, out var inspectablePtr) == 0)
                 {
                     rwlock.EnterReadLock();
                     try
