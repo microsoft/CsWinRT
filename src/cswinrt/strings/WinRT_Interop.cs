@@ -3,7 +3,6 @@
 
 
 using System;
-using System.Runtime.InteropServices;
 
 #pragma warning disable CS0649
 
@@ -14,20 +13,5 @@ namespace WinRT.Interop
     {
         public IUnknownVftbl IUnknownVftbl;
         public IntPtr Invoke;
-    }
-
-    [Guid("64BD43F8-bFEE-4EC4-B7EB-2935158DAE21")]
-    [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct IReferenceTrackerTargetVftbl
-    {
-        public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-        private void* _AddRefFromReferenceTracker;
-        public delegate* unmanaged[Stdcall]<IntPtr, uint> AddRefFromReferenceTracker => (delegate* unmanaged[Stdcall]<IntPtr, uint>)_AddRefFromReferenceTracker;
-        private void* _ReleaseFromReferenceTracker;
-        public delegate* unmanaged[Stdcall]<IntPtr, uint> ReleaseFromReferenceTracker => (delegate* unmanaged[Stdcall]<IntPtr, uint>)_ReleaseFromReferenceTracker;
-        private void* _Peg;
-        private void* _Unpeg;
-
-        internal static readonly Guid IID = new(0x64BD43F8, 0xbFEE, 0x4EC4, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21);
     }
 }
