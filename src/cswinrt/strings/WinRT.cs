@@ -19,23 +19,6 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
-    {
-        public IntPtr ActivateInstance()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    internal class ActivatableComponentActivationFactory<T> : ComponentActivationFactory, global::WinRT.Interop.IActivationFactory where T : class, new()
-    {
-        public new IntPtr ActivateInstance()
-        {
-            T comp = new T();
-            return MarshalInspectable<T>.FromManaged(comp);
-        }
-    }
-
 #pragma warning disable CA2002
 
     // Registration state and delegate cached separately to survive EventSource garbage collection
