@@ -7950,7 +7950,7 @@ nongeneric_delegates);
 global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
 {
 ppv = IntPtr.Zero;
-if (IsOverridableInterface(iid) || global::WinRT.InterfaceIIDs.IInspectable_IID == iid)
+if (IsOverridableInterface(iid) || global::WinRT.Interop.IID.IID_IInspectable == iid)
 {
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
@@ -9646,7 +9646,7 @@ RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
 
 public static IntPtr Make()
 {
-    return MarshalInspectable<%>.CreateMarshaler2(_factory, InterfaceIIDs.IActivationFactory_IID).Detach();
+    return MarshalInspectable<%>.CreateMarshaler2(_factory, IID.IID_IActivationFactory).Detach();
 }
 
 static readonly % _factory = new %();
