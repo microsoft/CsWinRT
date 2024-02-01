@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace WinRT.Interop
 {
@@ -38,6 +40,35 @@ namespace ABI.WinRT.Interop
 #endif
 
         public static IntPtr AbiToProjectionVftablePtr => IActivationFactory.Vftbl.AbiToProjectionVftablePtr;
+
+        /// <summary>
+        /// Activates an instance from a given activation factory <see cref="IObjectReference"/> instance.
+        /// </summary>
+        /// <param name="objectReference">The input activation factory <see cref="IObjectReference"/> instance to use.</param>
+        /// <returns>The resulting <see cref="IObjectReference"/> instance created from <paramref name="objectReference"/>.</returns>
+        /// <remarks>
+        /// <para>This method assumes <paramref name="objectReference"/> is wrapping an <c>IActivationFactory</c> instance (with no validation).</para>
+        /// <para>This method is only meant to be used by the generated projections, and not by consumers of CsWinRT directly.</para>
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static unsafe IObjectReference ActivateInstanceUnsafe(IObjectReference objectReference)
+        {
+            IntPtr thisPtr = objectReference.ThisPtr;
+            IntPtr instancePtr;
+
+            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[6](thisPtr, &instancePtr));
+
+            GC.KeepAlive(objectReference);
+
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr);
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
+            }
+        }
     }
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
