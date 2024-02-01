@@ -1668,10 +1668,10 @@ namespace WinRT
 
             if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
             {
-                return objRef.As<IDelegateVftbl>(delegateIID);
+                return objRef.As<IUnknownVftbl>(delegateIID);
             }
 
-            return ComWrappersSupport.CreateCCWForObject<IDelegateVftbl>(o, delegateIID);
+            return ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(o, delegateIID);
         }
 
         public static ObjectReferenceValue CreateMarshaler2(object o, Guid delegateIID, bool unwrapObject = true)

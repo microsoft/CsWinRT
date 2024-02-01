@@ -8,10 +8,4 @@ using System;
 
 namespace WinRT.Interop
 {
-    // IDelegate
-    internal struct IDelegateVftbl
-    {
-        public IUnknownVftbl IUnknownVftbl;
-        public IntPtr Invoke;
-    }
 }
