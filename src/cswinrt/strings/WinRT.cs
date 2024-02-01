@@ -19,14 +19,6 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    internal static partial class DelegateExtensions
-    {
-        public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
-        {
-            Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
-        }
-    }
-
     internal static class IActivationFactoryMethods
     {
         public static unsafe ObjectReference<I> ActivateInstance<I>(IObjectReference obj)

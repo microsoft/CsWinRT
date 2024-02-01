@@ -4563,7 +4563,7 @@ event % %;)",
             }
             if (is_generic)
             {
-                w.write("%.DynamicInvokeAbi(__params);\n", invoke_target);
+                w.write("global::System.Runtime.InteropServices.Marshal.ThrowExceptionForHR((int)%.DynamicInvoke(__params));\n", invoke_target);
             }
             else if (!has_noexcept_attr)
             {
