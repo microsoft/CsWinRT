@@ -124,7 +124,7 @@ namespace WinRT
         public void InitalizeReferenceTracking(IntPtr ptr)
         {
             eventInvokePtr = ptr;
-            int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(IReferenceTrackerTargetVftbl.IID), out referenceTrackerTargetPtr);
+            int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in InterfaceIIDs.IReferenceTrackerTarget_IID), out referenceTrackerTargetPtr);
             if (hr != 0)
             {
                 referenceTrackerTargetPtr = default;
@@ -152,9 +152,14 @@ namespace WinRT
 
             if (referenceTrackerTargetPtr != default)
             {
-                IReferenceTrackerTargetVftbl vftblReferenceTracker = **(IReferenceTrackerTargetVftbl**)referenceTrackerTargetPtr;
-                vftblReferenceTracker.AddRefFromReferenceTracker(referenceTrackerTargetPtr);
-                uint refTrackerCount = vftblReferenceTracker.ReleaseFromReferenceTracker(referenceTrackerTargetPtr);
+                void** vftblReferenceTracker = *(void***)referenceTrackerTargetPtr;
+
+                // AddRefFromReferenceTracker
+                _ = ((delegate* unmanaged[Stdcall]<IntPtr, uint>)(vftblReferenceTracker[3]))(referenceTrackerTargetPtr);
+
+                // ReleaseFromReferenceTracker
+                uint refTrackerCount = ((delegate* unmanaged[Stdcall]<IntPtr, uint>)(vftblReferenceTracker[4]))(referenceTrackerTargetPtr);
+
                 if (refTrackerCount != 0)
                 {
                     // Note we can't tell if the reference tracker ref is pegged or not, so this is best effort where if there
@@ -465,6 +470,7 @@ namespace WinRT
         internal static readonly Guid IMarshal_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
         internal static readonly Guid IContextCallback_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xDA, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
         internal static readonly Guid ICallbackWithNoReentrancyToApplicationSTA_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x74, 0x97, 0x29, 0x0A, 0x4E, 0x3E, 0x42, 0xFC, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57 }));
+        internal static readonly Guid IReferenceTrackerTarget_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xF8, 0x43, 0xBD, 0x64, 0xEE, 0xBF, 0xC4, 0x4E, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21 }));
 #else
         internal static readonly Guid IInspectable_IID = new(0xAF86E2E0, 0xB12D, 0x4c6a, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90);
         internal static readonly Guid IUnknown_IID = new(0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
@@ -475,6 +481,7 @@ namespace WinRT
         internal static readonly Guid IMarshal_IID = new(0x00000003, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
         internal static readonly Guid IContextCallback_IID = new(0x000001da, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
         internal static readonly Guid ICallbackWithNoReentrancyToApplicationSTA_IID = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
+        internal static readonly Guid IReferenceTrackerTarget_IID = new(0x64BD43F8, 0xbFEE, 0x4EC4, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21);
 #endif
     }
 }

@@ -99,7 +99,7 @@ namespace WinRT
             }
         }
 
-        public (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
+        public (ObjectReference<IUnknownVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             IntPtr instancePtr = IntPtr.Zero;
             try
@@ -110,7 +110,7 @@ namespace WinRT
                     int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
+                        var objRef = ObjectReference<IUnknownVftbl>.Attach(ref instancePtr);
                         return (objRef, hr);
                     }
                     else
@@ -205,8 +205,8 @@ namespace WinRT
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
-            ObjectReference<IActivationFactoryVftbl> factory;
-            (factory, hr) = WinRTModule.GetActivationFactory<IActivationFactoryVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
+            ObjectReference<IUnknownVftbl> factory;
+            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
             if (factory != null)
             {
                 return factory;
@@ -271,7 +271,7 @@ namespace WinRT
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    ObjectReference<IActivationFactoryVftbl> activationFactory;
+                    ObjectReference<IUnknownVftbl> activationFactory;
                     (activationFactory, hr) = module.GetActivationFactory(typeName);
                     if (activationFactory != null)
                     {
