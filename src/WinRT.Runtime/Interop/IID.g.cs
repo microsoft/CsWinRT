@@ -16,7 +16,7 @@ namespace WinRT.Interop
     static class IID
     {
         /// <summary>The IID for <c>IUnknown</c> (00000000-0000-0000-C000-000000000046).</summary>
-        internal static ref readonly Guid IID_IUnknown
+        public static ref readonly Guid IID_IUnknown
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
