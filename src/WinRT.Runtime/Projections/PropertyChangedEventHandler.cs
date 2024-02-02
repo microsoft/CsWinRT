@@ -112,7 +112,7 @@ namespace ABI.System.ComponentModel
                 {
                     __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
                     __e = global::ABI.System.ComponentModel.PropertyChangedEventArgs.CreateMarshaler2(e);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable<object>.GetAbi(__sender), MarshalInspectable<object>.GetAbi(__e)));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(thisPtr, MarshalInspectable<object>.GetAbi(__sender), MarshalInspectable<object>.GetAbi(__e)));
                 }
                 finally
                 {
@@ -180,11 +180,11 @@ namespace ABI.System.ComponentModel
             PropertyChangedEventHandler.CreateMarshaler2(del);
 
         protected override State CreateEventState() =>
-            new EventState(_obj.ThisPtr, _index);
+            new EventState(_obj, _index);
 
         private sealed class EventState : State
         {
-            public EventState(IntPtr obj, int index)
+            public EventState(IObjectReference obj, int index)
                 : base(obj, index)
             {
             }

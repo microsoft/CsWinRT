@@ -175,7 +175,7 @@ namespace ABI.Windows.Foundation
                 IntPtr __retval_data = default;
                 try
                 {
-                    ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval_length, &__retval_data));
+                    ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)thisPtr)[6](thisPtr, &__retval_length, &__retval_data));
                     return Marshaler<T>.FromAbiArray((__retval_length, __retval_data));
                 }
                 finally

@@ -71,7 +71,7 @@ namespace WinRT
 
                 keepAliveSentinel = runtimeWrapper; // We don't take a strong reference on runtimeWrapper at any point, so we need to make sure it lives until it can get assigned to rcw.
                 var runtimeWrapperReference = new System.WeakReference<object>(runtimeWrapper);
-                var cleanupSentinel = new RuntimeWrapperCleanup(identity.ThisPtr, runtimeWrapperReference);
+                var cleanupSentinel = new RuntimeWrapperCleanup(identity.DangerousGetPtr(), runtimeWrapperReference);
                 return runtimeWrapperReference;
             };
 
@@ -79,7 +79,7 @@ namespace WinRT
             if (tryUseCache)
             {
                 RuntimeWrapperCache.AddOrUpdate(
-                    identity.ThisPtr,
+                    identity.DangerousGetPtr(),
                     rcwFactory,
                     (ptr, oldValue) =>
                     {

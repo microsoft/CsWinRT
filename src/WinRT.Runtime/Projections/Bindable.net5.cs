@@ -163,10 +163,22 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         unsafe bool global::Microsoft.UI.Xaml.Interop.IBindableIterator.MoveNext()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
-            byte __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)ThisPtr)[8](ThisPtr, &__retval));
-            return __retval != 0;
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                byte __retval = default;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)thisPtr)[8](thisPtr, &__retval));
+                return __retval != 0;
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         unsafe uint global::Microsoft.UI.Xaml.Interop.IBindableIterator.GetMany(ref object[] items)
@@ -180,16 +192,22 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             get
             {
                 var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
-                var ThisPtr = _obj.ThisPtr;
+                bool success = false;
                 IntPtr __retval = default;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval));
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[6](thisPtr, &__retval));
                     return MarshalInspectable<object>.FromAbi(__retval);
                 }
                 finally
                 {
                     MarshalInspectable<object>.DisposeAbi(__retval);
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
                 }
             }
         }
@@ -199,10 +217,22 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             get
             {
                 var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
-                var ThisPtr = _obj.ThisPtr;
-                byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)ThisPtr)[7](ThisPtr, &__retval));
-                return __retval != 0;
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+                    byte __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)thisPtr)[7](thisPtr, &__retval));
+                    return __retval != 0;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
 
@@ -304,16 +334,23 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         unsafe object global::Microsoft.UI.Xaml.Interop.IBindableVectorView.GetAt(uint index)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
+
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int>**)ThisPtr)[6](ThisPtr, index, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int>**)thisPtr)[6](thisPtr, index, &__retval));
                 return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -324,10 +361,13 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             ObjectReferenceValue __value = default;
             uint __index = default;
             byte __retval = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int>**)ThisPtr)[8](
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int>**)thisPtr)[8](
                     ThisPtr,
                     MarshalInspectable<object>.GetAbi(__value),
                     &__index,
@@ -338,6 +378,10 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -346,10 +390,23 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             get
             {
                 var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
-                var ThisPtr = _obj.ThisPtr;
-                uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
-                return __retval;
+
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+                    uint __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)thisPtr)[7](thisPtr, &__retval));
+                    return __retval;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
 
@@ -517,16 +574,23 @@ namespace ABI.System.Collections
         unsafe global::Microsoft.UI.Xaml.Interop.IBindableIterator global::Microsoft.UI.Xaml.Interop.IBindableIterable.First()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IEnumerable).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
+
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[6](thisPtr, &__retval));
                 return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -1221,122 +1285,194 @@ namespace ABI.System.Collections
         unsafe object global::Microsoft.UI.Xaml.Interop.IBindableVector.GetAt(uint index)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int>**)ThisPtr)[6](ThisPtr, index, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int>**)thisPtr)[6](thisPtr, index, &__retval));
                 return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         unsafe global::Microsoft.UI.Xaml.Interop.IBindableVectorView global::Microsoft.UI.Xaml.Interop.IBindableVector.GetView()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[8](ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[8](thisPtr, &__retval));
                 return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         unsafe bool global::Microsoft.UI.Xaml.Interop.IBindableVector.IndexOf(object value, out uint index)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
             ObjectReferenceValue __value = default;
             uint __index = default;
             byte __retval = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int>**)ThisPtr)[9](ThisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int>**)thisPtr)[9](thisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
                 index = __index;
                 return __retval != 0;
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.SetAt(uint index, object value)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
             ObjectReferenceValue __value = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int>**)ThisPtr)[10](ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int>**)thisPtr)[10](thisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.InsertAt(uint index, object value)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
             ObjectReferenceValue __value = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int>**)ThisPtr)[11](ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int>**)thisPtr)[11](thisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.RemoveAt(uint index)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int>**)ThisPtr)[12](ThisPtr, index));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int>**)thisPtr)[12](thisPtr, index));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.Append(object value)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
             ObjectReferenceValue __value = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>**)ThisPtr)[13](ThisPtr, MarshalInspectable<object>.GetAbi(__value)));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>**)thisPtr)[13](thisPtr, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.RemoveAtEnd()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[14](ThisPtr));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)thisPtr)[14](thisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.Clear()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[15](ThisPtr));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)thisPtr)[15](thisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         unsafe uint global::Microsoft.UI.Xaml.Interop.IBindableVector.Size
@@ -1344,10 +1480,22 @@ namespace ABI.System.Collections
             get
             {
                 var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
-                var ThisPtr = _obj.ThisPtr;
-                uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
-                return __retval;
+                uint __retval = default; 
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr(); 
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)thisPtr)[7](thisPtr, &__retval));
+                    return __retval;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
 

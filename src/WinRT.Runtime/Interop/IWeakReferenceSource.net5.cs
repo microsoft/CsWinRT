@@ -5,6 +5,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using global::WinRT;
+using WinRT.Interop;
 
 namespace WinRT.Interop
 {
@@ -92,16 +93,22 @@ namespace ABI.WinRT.Interop
     {
         public static unsafe global::WinRT.Interop.IWeakReference GetWeakReference(IObjectReference _obj)
         {
-            var ThisPtr = _obj.ThisPtr;
+            bool success = false;
             IntPtr objRef = IntPtr.Zero;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[3](ThisPtr, &objRef));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[3](thisPtr, &objRef));
                 return MarshalInterface<global::WinRT.Interop.IWeakReference>.FromAbi(objRef);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(objRef);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }
@@ -185,17 +192,26 @@ namespace ABI.WinRT.Interop
         IObjectReference global::WinRT.Interop.IWeakReference.Resolve(Guid riid)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::WinRT.Interop.IWeakReference).TypeHandle);
-            var ThisPtr = _obj.ThisPtr;
 
-            IntPtr objRef;
-            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](ThisPtr, &riid, &objRef));
+            bool success = false;
+            IntPtr objRef = IntPtr.Zero;
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(objRef);
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)thisPtr)[3](thisPtr, &riid, &objRef));
+                return ObjectReference<IUnknownVftbl>.Attach(ref objRef);
             }
             finally
             {
-                MarshalInspectable<object>.DisposeAbi(objRef);
+                if (objRef != IntPtr.Zero)
+                {
+                    MarshalInspectable<object>.DisposeAbi(objRef);
+                }
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }

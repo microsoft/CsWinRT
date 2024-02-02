@@ -40,7 +40,10 @@ namespace WinRT.Interop
 
 namespace ABI.WinRT.Interop
 {
+    using global::System.Diagnostics.CodeAnalysis;
     using global::WinRT;
+    using global::WinRT.Interop;
+    using WinRT.Interop;
 
     internal static class IAgileReferenceMethods
     {
@@ -48,35 +51,50 @@ namespace ABI.WinRT.Interop
         {
             if (_obj == null) return null;
 
-            var ThisPtr = _obj.ThisPtr;
+            bool success =  false;
             IntPtr ptr = IntPtr.Zero;
-            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
-                ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)thisPtr)[3](
+                    thisPtr, &riid, &ptr));
+                return ObjectReference<IUnknownVftbl>.Attach(ref ptr);
             }
             finally
             {
-                MarshalInspectable<object>.DisposeAbi(ptr);
+                if (ptr != IntPtr.Zero)
+                {
+                    MarshalInspectable<object>.DisposeAbi(ptr);
+                }
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
-        public static unsafe ObjectReference<T> Resolve<T>(IObjectReference _obj, Guid riid)
+        public static unsafe ObjectReference<T> Resolve<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IObjectReference _obj, Guid riid)
         {
             if (_obj == null) return null;
 
-            var ThisPtr = _obj.ThisPtr;
+            bool success = false;
             IntPtr ptr = IntPtr.Zero;
-            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
-                ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr);
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)thisPtr)[3](
+                    thisPtr, &riid, &ptr));
+                return ObjectReference<T>.Attach(ref ptr);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(ptr);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }
@@ -154,6 +172,8 @@ namespace ABI.WinRT.Interop
         public static implicit operator IGlobalInterfaceTable(IObjectReference obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
         public static implicit operator IGlobalInterfaceTable(ObjectReference<Vftbl> obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
+        public IObjectReference ObjRef { get => _obj; }
+        [Obsolete]
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
@@ -167,27 +187,62 @@ namespace ABI.WinRT.Interop
         public IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid)
         {
             IntPtr cookie;
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RegisterInterfaceInGlobal(ThisPtr, ptr, &riid, &cookie));
-            return cookie;
+            bool success = false;
 
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RegisterInterfaceInGlobal(thisPtr, ptr, &riid, &cookie));
+                return cookie;
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public void RevokeInterfaceFromGlobal(IntPtr cookie)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RevokeInterfaceFromGlobal(ThisPtr, cookie));
+            bool success = false;
+
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RevokeInterfaceFromGlobal(thisPtr, cookie));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid)
         {
-            IntPtr ptr;
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInterfaceFromGlobal(ThisPtr, cookie, &riid, &ptr));
+            IntPtr ptr = IntPtr.Zero;
+            bool success = false;
+
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInterfaceFromGlobal(thisPtr, cookie, &riid, &ptr));
+                return ObjectReference<IUnknownVftbl>.Attach(ref ptr);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(ptr);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }

@@ -193,16 +193,22 @@ namespace ABI.Windows.Foundation.Collections
             }
             else
             {
-                var ThisPtr = obj.ThisPtr;
                 IntPtr __retval = default;
+                bool success = false;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[9](ThisPtr, &__retval));
+                    obj.DangerousAddRef(ref success);
+                    var thisPtr = obj.DangerousGetPtr();
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[9](thisPtr, &__retval));
                     return MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>.FromAbi(__retval);
                 }
                 finally
                 {
                     MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__retval);
+                    if (success)
+                    {
+                        obj.DangerousRelease();
+                    }
                 }
             }
         }
@@ -224,16 +230,40 @@ namespace ABI.Windows.Foundation.Collections
 
         private static unsafe void _ClearHelper(IObjectReference obj)
         {
-            var ThisPtr = obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[12](ThisPtr));
+            bool success = false;
+            try
+            {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)thisPtr)[12](thisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
+            }
         }
 
         public static unsafe uint get_Size(IObjectReference obj)
         {
-            var ThisPtr = obj.ThisPtr;
-            uint __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
-            return __retval;
+            bool success = false;
+            try
+            {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+                uint __retval = default;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)thisPtr)[7](thisPtr, &__retval));
+                return __retval;
+            }
+            finally
+            {
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
+            }
         }
     }
 }
@@ -731,12 +761,15 @@ namespace ABI.System.Collections.Generic
 
         private static unsafe V LookupDynamic(IObjectReference obj, K key)
         {
-            var ThisPtr = obj.ThisPtr;
             object __key = default;
             VAbi valueAbi = default;
-            var __params = new object[] { ThisPtr, null, (IntPtr)(void*)&valueAbi };
+            bool success = false;
             try
             {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null, (IntPtr)(void*)&valueAbi };
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 DelegateHelper.Get(obj).Lookup.DynamicInvokeAbi(__params);
@@ -746,17 +779,24 @@ namespace ABI.System.Collections.Generic
             {
                 Marshaler<K>.DisposeMarshaler(__key);
                 Marshaler<V>.DisposeAbi(valueAbi);
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
         }
 
         private static unsafe bool HasKeyDynamic(IObjectReference obj, K key)
         {
-            var ThisPtr = obj.ThisPtr;
             object __key = default;
             byte found;
-            var __params = new object[] { ThisPtr, null, (IntPtr)(void*)&found };
+            bool success = false;
             try
             {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null, (IntPtr)(void*)&found };
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 DelegateHelper.Get(obj).HasKey.DynamicInvokeAbi(__params);
@@ -765,18 +805,25 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<K>.DisposeMarshaler(__key);
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
         }
 
         private static unsafe bool InsertDynamic(IObjectReference obj, K key, V value)
         {
-            var ThisPtr = obj.ThisPtr;
             object __key = default;
             object __value = default;
             byte replaced;
-            var __params = new object[] { ThisPtr, null, null, (IntPtr)(void*)&replaced };
+            bool success = false;
             try
             {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null, null, (IntPtr)(void*)&replaced };
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 __value = Marshaler<V>.CreateMarshaler2(value);
@@ -788,16 +835,23 @@ namespace ABI.System.Collections.Generic
             {
                 Marshaler<K>.DisposeMarshaler(__key);
                 Marshaler<V>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
         }
 
         private static unsafe void RemoveDynamic(IObjectReference obj, K key)
         {
-            var ThisPtr = obj.ThisPtr;
             object __key = default;
-            var __params = new object[] { ThisPtr, null };
+            bool success = false;
             try
             {
+                obj.DangerousAddRef(ref success);
+                var thisPtr = obj.DangerousGetPtr();
+
+                var __params = new object[] { thisPtr, null };
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 DelegateHelper.Get(obj).Remove.DynamicInvokeAbi(__params);
@@ -805,6 +859,10 @@ namespace ABI.System.Collections.Generic
             finally
             {
                 Marshaler<K>.DisposeMarshaler(__key);
+                if (success)
+                {
+                    obj.DangerousRelease();
+                }
             }
         }
 

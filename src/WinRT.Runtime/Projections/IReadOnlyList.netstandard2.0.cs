@@ -416,7 +416,7 @@ namespace ABI.System.Collections.Generic
             {
                 __items = Marshaler<T>.CreateMarshalerArray(items);
                 (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_3(ThisPtr, startIndex, __items_length, __items_data, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_3(thisPtr, startIndex, __items_length, __items_data, out __retval));
                 items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                 return __retval;
             }
@@ -431,7 +431,7 @@ namespace ABI.System.Collections.Generic
             get
             {
                 uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(thisPtr, out __retval));
                 return __retval;
             }
         }

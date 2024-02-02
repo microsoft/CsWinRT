@@ -13,6 +13,7 @@ TypesMustExist : Type 'ABI.System.ComponentModel.INotifyDataErrorInfo' does not 
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute' exists on 'System.Type WinRT.Marshaler<T>.AbiType' in the contract but not the implementation.
 CannotMakeMemberNonVirtual : Member 'public System.Int32 WinRT.IObjectReference.TryAs<T>(System.Guid, WinRT.ObjectReference<T>)' is non-virtual in the implementation but is virtual in the contract.
 MembersMustExist : Member 'protected System.Boolean System.Boolean WinRT.IObjectReference.disposed' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'protected void WinRT.IObjectReference.Dispose(System.Boolean)' does not exist in the implementation but it does exist in the contract.
 CannotChangeAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' on 'ABI.System.Type.FromAbi(ABI.System.Type)' changed from '[UnconditionalSuppressMessageAttribute("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the contract to '[UnconditionalSuppressMessageAttribute("ReflectionAnalysis", "IL2057", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the implementation.
-Total Issues: 16
+MembersMustExist : Member 'protected void WinRT.IObjectReference.ThrowIfDisposed()' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected WinRT.Interop.IUnknownVftbl WinRT.IObjectReference.VftblIUnknown.get()' does not exist in the implementation but it does exist in the contract.
+Total Issues: 17

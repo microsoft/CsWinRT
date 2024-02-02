@@ -187,9 +187,22 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
         public unsafe bool MoveNext()
         {
-            byte __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.MoveNext_2(ThisPtr, &__retval));
-            return __retval != 0;
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                byte __retval = default;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.MoveNext_2(thisPtr, &__retval));
+                return __retval != 0;
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe object Current
@@ -197,14 +210,21 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             get
             {
                 IntPtr __retval = default;
+                bool success = false;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Current_0(ThisPtr, &__retval));
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Current_0(thisPtr, &__retval));
                     return MarshalInspectable<object>.FromAbi(__retval);
                 }
                 finally
                 {
                     MarshalInspectable<object>.DisposeAbi(__retval);
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
                 }
             }
         }
@@ -213,9 +233,22 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         {
             get
             {
-                byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasCurrent_1(ThisPtr, &__retval));
-                return __retval != 0;
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+                    byte __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasCurrent_1(thisPtr, &__retval));
+                    return __retval != 0;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
 
@@ -352,14 +385,21 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         public unsafe object GetAt(uint index)
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(ThisPtr, index, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(thisPtr, index, &__retval));
                 return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -368,16 +408,23 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             ObjectReferenceValue __value = default;
             uint __index = default;
             byte __retval = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_2(ThisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_2(thisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
                 index = __index;
                 return __retval != 0;
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -385,9 +432,22 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         {
             get
             {
-                uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, &__retval));
-                return __retval;
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+                    uint __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(thisPtr, &__retval));
+                    return __retval;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
         public IEnumerator GetEnumerator() => _iterableToEnumerable.GetEnumerator();
@@ -542,14 +602,21 @@ namespace ABI.System.Collections
         unsafe global::Microsoft.UI.Xaml.Interop.IBindableIterator IBindableIterable.First()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(thisPtr, &__retval));
                 return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -1253,28 +1320,42 @@ namespace ABI.System.Collections
         public unsafe object GetAt(uint index)
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(ThisPtr, index, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(thisPtr, index, &__retval));
                 return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         internal unsafe global::Microsoft.UI.Xaml.Interop.IBindableVectorView GetView()
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(ThisPtr, &__retval));
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(thisPtr, &__retval));
                 return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.FromAbi(__retval);
             }
             finally
             {
                 MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.DisposeAbi(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
@@ -1283,83 +1364,163 @@ namespace ABI.System.Collections
             ObjectReferenceValue __value = default;
             uint __index = default;
             byte __retval = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_3(ThisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_3(thisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
                 index = __index;
                 return __retval != 0;
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void SetAt(uint index, object value)
         {
             ObjectReferenceValue __value = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.SetAt_4(ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.SetAt_4(thisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void InsertAt(uint index, object value)
         {
             ObjectReferenceValue __value = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.InsertAt_5(ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.InsertAt_5(thisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void RemoveAt(uint index)
         {
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAt_6(ThisPtr, index));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAt_6(thisPtr, index));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe void Append(object value)
         {
             ObjectReferenceValue __value = default;
+            bool success = false;
             try
             {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Append_7(ThisPtr, MarshalInspectable<object>.GetAbi(__value)));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Append_7(thisPtr, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
             {
                 MarshalInspectable<object>.DisposeMarshaler(__value);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
 
         public unsafe void RemoveAtEnd()
         {
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAtEnd_8(ThisPtr));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAtEnd_8(ThisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe void _Clear()
         {
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Clear_9(ThisPtr));
+            bool success = false;
+            try
+            {
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Clear_9(ThisPtr));
+            }
+            finally
+            {
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
+            }
         }
 
         public unsafe uint Size
         {
             get
             {
-                uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, &__retval));
-                return __retval;
+                bool success = false;
+                try
+                {
+                    _obj.DangerousAddRef(ref success);
+                    var thisPtr = _obj.DangerousGetPtr();
+                    uint __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(thisPtr, &__retval));
+                    return __retval;
+                }
+                finally
+                {
+                    if (success)
+                    {
+                        _obj.DangerousRelease();
+                    }
+                }
             }
         }
 

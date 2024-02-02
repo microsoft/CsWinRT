@@ -138,7 +138,7 @@ namespace ABI.System.Collections.Generic
             KAbi keyAbi = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)ThisPtr)[6](ThisPtr, &keyAbi));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)thisPtr)[6](thisPtr, &keyAbi));
                 return Marshaler<K>.FromAbi(keyAbi);
             }
             finally
@@ -153,7 +153,7 @@ namespace ABI.System.Collections.Generic
             VAbi valueAbi = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)ThisPtr)[7](ThisPtr, &valueAbi));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)thisPtr)[7](thisPtr, &valueAbi));
                 return Marshaler<V>.FromAbi(valueAbi);
             }
             finally

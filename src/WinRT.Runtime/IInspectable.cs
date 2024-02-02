@@ -135,9 +135,12 @@ namespace WinRT
         public unsafe string GetRuntimeClassName(bool noThrow = false)
         {
             IntPtr __retval = default;
+            bool success = false;
             try
             {
-                var hr = _obj.Vftbl.GetRuntimeClassName(ThisPtr, &__retval);
+                _obj.DangerousAddRef(ref success);
+                var thisPtr = _obj.DangerousGetPtr();
+                var hr = _obj.Vftbl.GetRuntimeClassName(thisPtr, &__retval);
                 if (hr != 0)
                 {
                     if (noThrow)
@@ -151,6 +154,10 @@ namespace WinRT
             finally
             {
                 Platform.WindowsDeleteString(__retval);
+                if (success)
+                {
+                    _obj.DangerousRelease();
+                }
             }
         }
     }

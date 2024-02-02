@@ -134,7 +134,7 @@ namespace ABI.Windows.Foundation.Collections
             var ThisPtr = obj.ThisPtr;
 
             uint __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)thisPtr)[7](thisPtr, &__retval));
             return __retval;
         }
 
@@ -169,7 +169,7 @@ namespace ABI.Windows.Foundation.Collections
                 {
                     __items = Marshaler<T>.CreateMarshalerArray(items);
                     (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, uint*, int>**)ThisPtr)[9](ThisPtr, startIndex, __items_length, __items_data, &__retval));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, uint*, int>**)thisPtr)[9](thisPtr, startIndex, __items_length, __items_data, &__retval));
                     items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                     return __retval;
                 }
@@ -295,7 +295,7 @@ namespace ABI.System.Collections.Generic
             TAbi result = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, void*, int>**)ThisPtr)[6](ThisPtr, index, &result));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, void*, int>**)thisPtr)[6](thisPtr, index, &result));
                 return Marshaler<T>.FromAbi(result);
             }
             finally

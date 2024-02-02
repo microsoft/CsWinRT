@@ -34,7 +34,7 @@ namespace WinRT
                 {
                     using (objRef)
                     {
-                        return ComWrappersSupport.CreateRcwForComObject<TInterface>(objRef.ThisPtr);
+                        return ComWrappersSupport.CreateRcwForComObject<TInterface>(objRef.DangerousGetPtr());
                     }
                 }
             }
