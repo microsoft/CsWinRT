@@ -16,7 +16,7 @@ namespace WinRT.Interop
     static class IID
     {
         /// <summary>The IID for <c>IUnknown</c> (00000000-0000-0000-C000-000000000046).</summary>
-        public static ref readonly Guid IID_IUnknown
+        internal static ref readonly Guid IID_IUnknown
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -66,7 +66,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IWeakReference</c> (00000037-0000-0000-C000-000000000046).</summary>
-        public static ref readonly Guid IID_IWeakReference
+        internal static ref readonly Guid IID_IWeakReference
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -91,7 +91,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IWeakReferenceSource</c> (00000038-0000-0000-C000-000000000046).</summary>
-        public static ref readonly Guid IID_IWeakReferenceSource
+        internal static ref readonly Guid IID_IWeakReferenceSource
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -116,7 +116,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IReferenceTracker</c> (11D3B13A-180E-4789-A8BE-7712882893E6).</summary>
-        public static ref readonly Guid IID_IReferenceTracker
+        internal static ref readonly Guid IID_IReferenceTracker
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -141,7 +141,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IReferenceTrackerTarget</c> (64BD43F8-BFEE-4EC4-B7EB-2935158DAE21).</summary>
-        public static ref readonly Guid IID_IReferenceTrackerTarget
+        internal static ref readonly Guid IID_IReferenceTrackerTarget
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -191,7 +191,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IAgileObject</c> (94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90).</summary>
-        public static ref readonly Guid IID_IAgileObject
+        internal static ref readonly Guid IID_IAgileObject
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -216,7 +216,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IMarshal</c> (00000003-0000-0000-C000-000000000046).</summary>
-        public static ref readonly Guid IID_IMarshal
+        internal static ref readonly Guid IID_IMarshal
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -241,7 +241,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IContextCallback</c> (000001DA-0000-0000-C000-000000000046).</summary>
-        public static ref readonly Guid IID_IContextCallback
+        internal static ref readonly Guid IID_IContextCallback
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -266,7 +266,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>ICallbackWithNoReentrancyToApplicationSTA</c> (0A299774-3E4E-FC42-1D9D-72CEE105CA57).</summary>
-        public static ref readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA
+        internal static ref readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get

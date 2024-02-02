@@ -20,19 +20,19 @@ namespace WinRT.Interop
     static class IID
     {
 <#
-var entries = new (string Name, string IID)[]
+var entries = new (string Name, string IID, bool IsPublic)[]
 {
-    ("IUnknown", "00000000-0000-0000-C000-000000000046"),
-    ("IInspectable", "AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90"),
-    ("IWeakReference", "00000037-0000-0000-C000-000000000046"),
-    ("IWeakReferenceSource", "00000038-0000-0000-C000-000000000046"),
-    ("IReferenceTracker", "11D3B13A-180E-4789-A8BE-7712882893E6"),
-    ("IReferenceTrackerTarget", "64BD43F8-BFEE-4EC4-B7EB-2935158DAE21"),
-    ("IActivationFactory", "00000035-0000-0000-C000-000000000046"),
-    ("IAgileObject", "94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90"),
-    ("IMarshal", "00000003-0000-0000-C000-000000000046"),
-    ("IContextCallback", "000001DA-0000-0000-C000-000000000046"),
-    ("ICallbackWithNoReentrancyToApplicationSTA", "0A299774-3E4E-FC42-1D9D-72CEE105CA57")
+    ("IUnknown", "00000000-0000-0000-C000-000000000046", false),
+    ("IInspectable", "AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90", true),
+    ("IWeakReference", "00000037-0000-0000-C000-000000000046", false),
+    ("IWeakReferenceSource", "00000038-0000-0000-C000-000000000046", false),
+    ("IReferenceTracker", "11D3B13A-180E-4789-A8BE-7712882893E6", false),
+    ("IReferenceTrackerTarget", "64BD43F8-BFEE-4EC4-B7EB-2935158DAE21", false),
+    ("IActivationFactory", "00000035-0000-0000-C000-000000000046", true),
+    ("IAgileObject", "94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90", false),
+    ("IMarshal", "00000003-0000-0000-C000-000000000046", false),
+    ("IContextCallback", "000001DA-0000-0000-C000-000000000046", false),
+    ("ICallbackWithNoReentrancyToApplicationSTA", "0A299774-3E4E-FC42-1D9D-72CEE105CA57", false)
 };
 
 for (int i = 0; i < entries.Length; i++)
@@ -41,9 +41,10 @@ for (int i = 0; i < entries.Length; i++)
 
     var bytes = new Guid(entries[i].IID).ToByteArray();
     var hex = bytes.Select(b => $"0x{b.ToString("X2").ToUpperInvariant()}").ToArray();
+    var modifier = entries[i].IsPublic ? "public" : "internal";
 #>
         /// <summary>The IID for <c><#=entries[i].Name#></c> (<#=entries[i].IID#>).</summary>
-        public static ref readonly Guid IID_<#=entries[i].Name#>
+        <#=modifier#> static ref readonly Guid IID_<#=entries[i].Name#>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
