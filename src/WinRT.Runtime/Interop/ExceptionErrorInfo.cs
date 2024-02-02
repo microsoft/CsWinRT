@@ -235,7 +235,6 @@ namespace ABI.WinRT.Interop
     }
 #endif
 
-    [Guid("04A2DBF3-DF83-116C-0946-0812ABF6E07D")]
     internal unsafe class ILanguageExceptionErrorInfo
     {
         protected readonly ObjectReference<IUnknownVftbl> _obj;
@@ -253,6 +252,7 @@ namespace ABI.WinRT.Interop
             {
                 IntPtr thisPtr = _obj.ThisPtr;
 
+                // GetLanguageException
                 Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[3])(thisPtr, &__return_value__));
 
                 GC.KeepAlive(_obj);
@@ -269,29 +269,11 @@ namespace ABI.WinRT.Interop
         }
     }
 
-    [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
     internal unsafe class IRestrictedErrorInfo
     {
-        [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-        public struct Vftbl
-        {
-            internal global::WinRT.Interop.IUnknownVftbl unknownVftbl;
-            private void* _GetErrorDetails_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int> GetErrorDetails_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)_GetErrorDetails_0;
-            private void* _GetReference_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetReference_1 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetReference_1;
-        }
+        protected readonly ObjectReference<IUnknownVftbl> _obj;
 
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        public static implicit operator IRestrictedErrorInfo(IObjectReference obj) => (obj != null) ? new IRestrictedErrorInfo(obj) : null;
-        public static implicit operator IRestrictedErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new IRestrictedErrorInfo(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public IRestrictedErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public IRestrictedErrorInfo(ObjectReference<Vftbl> obj)
+        public IRestrictedErrorInfo(ObjectReference<IUnknownVftbl> obj)
         {
             _obj = obj;
         }
@@ -305,12 +287,24 @@ namespace ABI.WinRT.Interop
             IntPtr _description = IntPtr.Zero;
             IntPtr _restrictedDescription = IntPtr.Zero;
             IntPtr _capabilitySid = IntPtr.Zero;
+
             try
             {
                 fixed (int* pError = &error)
                 {
-                    Marshal.ThrowExceptionForHR(_obj.Vftbl.GetErrorDetails_0(ThisPtr, &_description, pError, &_restrictedDescription, &_capabilitySid));
+                    IntPtr thisPtr = _obj.ThisPtr;
+
+                    // GetErrorDetails
+                    Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)(*(void***)thisPtr)[3])(
+                        thisPtr,
+                        &_description,
+                        pError,
+                        &_restrictedDescription,
+                        &_capabilitySid));
+
+                    GC.KeepAlive(_obj);
                 }
+
                 description = _description != IntPtr.Zero ? Marshal.PtrToStringBSTR(_description) : string.Empty;
                 restrictedDescription = _restrictedDescription != IntPtr.Zero ? Marshal.PtrToStringBSTR(_restrictedDescription) : string.Empty;
                 capabilitySid = _capabilitySid != IntPtr.Zero ? Marshal.PtrToStringBSTR(_capabilitySid) : string.Empty;
@@ -326,9 +320,18 @@ namespace ABI.WinRT.Interop
         public string GetReference()
         {
             IntPtr __retval = default;
+
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetReference_1(ThisPtr, &__retval));
+                IntPtr thisPtr = _obj.ThisPtr;
+
+                // GetReference
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[4])(
+                    thisPtr,
+                    &__retval));
+
+                GC.KeepAlive(_obj);
+
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
