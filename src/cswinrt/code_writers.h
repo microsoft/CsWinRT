@@ -9632,7 +9632,7 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
             ? w.write_temp(R"(% comp = new %();
 
     return MarshalInspectable<%>.FromManaged(comp);)", type_name, type_name, type_name)
-            : "throw new NotSupportedException();";
+            : "throw new NotImplementedException();";
 
         w.write(R"(
 %

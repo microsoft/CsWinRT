@@ -27,9 +27,9 @@ namespace WinRT.Interop
         /// Activates an instance of the target WinRT type.
         /// </summary>
         /// <returns>The resulting instance.</returns>
-        /// <exception cref="NotSupportedException">
-        /// Thrown if the operation is not supported by the activation factory type. For instance,
-        /// that is the case is the associated type is static or does not have a default constructor.
+        /// <exception cref="NotImplementedException">
+        /// Thrown if the operation is not available on the activation factory type in use. For instance,
+        /// that is the case if the associated type is static or does not have a default constructor.
         /// </exception>
         IntPtr ActivateInstance();
     }
