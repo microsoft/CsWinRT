@@ -34,7 +34,9 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("IContextCallback", "000001DA-0000-0000-C000-000000000046", false),
     ("ICallbackWithNoReentrancyToApplicationSTA", "0A299774-3E4E-FC42-1D9D-72CEE105CA57", false),
     ("IErrorInfo", "1CF2B120-547D-101B-8E65-08002B2BD119", false),
-    ("ISupportErrorInfo", "DF0B3D60-548F-101B-8E65-08002B2BD119", false)
+    ("ISupportErrorInfo", "DF0B3D60-548F-101B-8E65-08002B2BD119", false),
+    ("ILanguageExceptionErrorInfo", "04A2DBF3-DF83-116C-0946-0812ABF6E07D", false),
+    ("IRestrictedErrorInfo", "82BA7092-4C88-427D-A7BC-16DD93FEB67E", false)
 };
 
 for (int i = 0; i < entries.Length; i++)

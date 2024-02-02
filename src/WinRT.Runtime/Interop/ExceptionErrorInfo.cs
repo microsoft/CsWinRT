@@ -235,27 +235,12 @@ namespace ABI.WinRT.Interop
     }
 #endif
 
-    [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
+    [Guid("04A2DBF3-DF83-116C-0946-0812ABF6E07D")]
     internal unsafe class ILanguageExceptionErrorInfo
     {
-        [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-        public struct Vftbl
-        {
-            internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            private void* _GetLanguageException_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetLanguageException_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetLanguageException_0;
-        }
+        protected readonly ObjectReference<IUnknownVftbl> _obj;
 
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        public static implicit operator ILanguageExceptionErrorInfo(IObjectReference obj) => (obj != null) ? new ILanguageExceptionErrorInfo(obj) : null;
-        public static implicit operator ILanguageExceptionErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new ILanguageExceptionErrorInfo(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public ILanguageExceptionErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public ILanguageExceptionErrorInfo(ObjectReference<Vftbl> obj)
+        public ILanguageExceptionErrorInfo(ObjectReference<IUnknownVftbl> obj)
         {
             _obj = obj;
         }
@@ -266,14 +251,19 @@ namespace ABI.WinRT.Interop
 
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetLanguageException_0(ThisPtr, &__return_value__));
-                return ObjectReference<global::WinRT.Interop.IUnknownVftbl>.Attach(ref __return_value__);
+                IntPtr thisPtr = _obj.ThisPtr;
+
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[3])(thisPtr, &__return_value__));
+
+                GC.KeepAlive(_obj);
+
+                return ObjectReference<IUnknownVftbl>.Attach(ref __return_value__);
             }
             finally
             {
                 if (__return_value__ != IntPtr.Zero)
                 {
-                    (*(global::WinRT.Interop.IUnknownVftbl**)__return_value__)->Release(__return_value__);
+                    (*(IUnknownVftbl**)__return_value__)->Release(__return_value__);
                 }
             }
         }
