@@ -152,9 +152,14 @@ namespace WinRT
 
             if (referenceTrackerTargetPtr != default)
             {
-                IReferenceTrackerTargetVftbl vftblReferenceTracker = **(IReferenceTrackerTargetVftbl**)referenceTrackerTargetPtr;
-                vftblReferenceTracker.AddRefFromReferenceTracker(referenceTrackerTargetPtr);
-                uint refTrackerCount = vftblReferenceTracker.ReleaseFromReferenceTracker(referenceTrackerTargetPtr);
+                void** vftblReferenceTracker = *(void***)referenceTrackerTargetPtr;
+
+                // AddRefFromReferenceTracker
+                _ = ((delegate* unmanaged[Stdcall]<IntPtr, uint>)(vftblReferenceTracker[3]))(referenceTrackerTargetPtr);
+
+                // ReleaseFromReferenceTracker
+                uint refTrackerCount = ((delegate* unmanaged[Stdcall]<IntPtr, uint>)(vftblReferenceTracker[4]))(referenceTrackerTargetPtr);
+
                 if (refTrackerCount != 0)
                 {
                     // Note we can't tell if the reference tracker ref is pegged or not, so this is best effort where if there
