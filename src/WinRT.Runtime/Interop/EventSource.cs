@@ -57,7 +57,7 @@ namespace WinRT.Interop
             // the finalizer.
             if (!disposedValue)
             {
-                Cache.Remove(obj, index, cacheEntry);
+                EventSourceCache.Remove(obj, index, cacheEntry);
                 disposedValue = true;
             }
         }
@@ -119,144 +119,6 @@ namespace WinRT.Interop
         }
     }
 
-    internal sealed class Cache
-    {
-        private Cache(IWeakReference target, int index, System.WeakReference<State> state)
-        {
-            this.target = target;
-            SetState(index, state);
-        }
-
-        private IWeakReference target;
-        private readonly ConcurrentDictionary<int, System.WeakReference<State>> states = new();
-
-        private static readonly ReaderWriterLockSlim cachesLock = new();
-        private static readonly ConcurrentDictionary<IntPtr, Cache> caches = new();
-
-        private Cache Update(IWeakReference target, int index, System.WeakReference<State> state)
-        {
-            // If target no longer exists, destroy cache
-            lock (this)
-            {
-                using var resolved = this.target.Resolve(IID.IID_IUnknown);
-                if (resolved == null)
-                {
-                    this.target = target;
-                    states.Clear();
-                }
-            }
-            SetState(index, state);
-            return this;
-        }
-
-        private System.WeakReference<State> GetState(int index)
-        {
-            // If target no longer exists, destroy cache
-            lock (this)
-            {
-                using var resolved = this.target.Resolve(IID.IID_IUnknown);
-                if (resolved == null)
-                {
-                    return null;
-                }
-            }
-
-            if (states.TryGetValue(index, out var weakState))
-            {
-                return weakState;
-            }
-            return null;
-        }
-
-        private void SetState(int index, System.WeakReference<State> state)
-        {
-            states[index] = state;
-        }
-
-        public static void Create(IObjectReference obj, int index, System.WeakReference<State> state)
-        {
-            // If event source implements weak reference support, track event registrations so that
-            // unsubscribes will work across garbage collections.  Note that most static/factory classes
-            // do not implement IWeakReferenceSource, so static codegen caching approach is also used.
-            IWeakReference target = null;
-#if !NET
-            try
-            {
-                var weakRefSource = (IWeakReferenceSource)typeof(IWeakReferenceSource).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { obj });
-                if (weakRefSource == null)
-                {
-                    return;
-                }
-                target = weakRefSource.GetWeakReference();
-            }
-            catch (Exception)
-            {
-                return;
-            }
-#else
-            int hr = obj.TryAs<IUnknownVftbl>(IID.IID_IWeakReferenceSource, out var weakRefSource);
-            if (hr != 0)
-            {
-                return;
-            }
-
-            target = ABI.WinRT.Interop.IWeakReferenceSourceMethods.GetWeakReference(weakRefSource);
-#endif
-
-            cachesLock.EnterReadLock();
-            try
-            {
-                caches.AddOrUpdate(obj.ThisPtr,
-                    (IntPtr ThisPtr) => new Cache(target, index, state),
-                    (IntPtr ThisPtr, Cache cache) => cache.Update(target, index, state));
-            }
-            finally
-            {
-                cachesLock.ExitReadLock();
-            }
-        }
-
-        public static System.WeakReference<State> GetState(IObjectReference obj, int index)
-        {
-            if (caches.TryGetValue(obj.ThisPtr, out var cache))
-            {
-                return cache.GetState(index);
-            }
-
-            return null;
-        }
-
-        public static void Remove(IntPtr thisPtr, int index, System.WeakReference<State> state)
-        {
-            if (caches.TryGetValue(thisPtr, out var cache))
-            {
-#if !NET
-                // https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
-                ((ICollection<KeyValuePair<int, System.WeakReference<State>>>)cache.states).Remove(
-                    new KeyValuePair<int, System.WeakReference<State>>(index, state));
-#else
-                cache.states.TryRemove(new KeyValuePair<int, System.WeakReference<State>>(index, state));
-#endif
-                // using double-checked lock idiom
-                if (cache.states.IsEmpty)
-                {
-                    cachesLock.EnterWriteLock();
-                    try
-                    {
-                        if (cache.states.IsEmpty)
-                        {
-                            caches.TryRemove(thisPtr, out var _);
-                        }
-                    }
-                    finally
-                    {
-                        cachesLock.ExitWriteLock();
-                    }
-                }
-            }
-        }
-    }
-
     internal unsafe abstract class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
@@ -284,7 +146,7 @@ namespace WinRT.Interop
             _addHandler = addHandler;
             _removeHandler = removeHandler;
             _index = index;
-            _state = Cache.GetState(obj, index);
+            _state = EventSourceCache.GetState(obj, index);
             _handlerTuple = (Subscribe, Unsubscribe);
         }
 
@@ -306,7 +168,7 @@ namespace WinRT.Interop
                 {
                     state = CreateEventState();
                     _state = state.GetWeakReferenceForCache();
-                    Cache.Create(_obj, _index, _state);
+                    EventSourceCache.Create(_obj, _index, _state);
                 }
 
                 state.del = (TDelegate)global::System.Delegate.Combine(state.del, del);
