@@ -23,24 +23,6 @@ namespace WinRT.Interop
         bool InterfaceSupportsErrorInfo(Guid riid);
     }
 
-    [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-    internal interface ILanguageExceptionErrorInfo
-    {
-        IObjectReference GetLanguageException();
-    }
-
-    [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-    internal interface IRestrictedErrorInfo
-    {
-        void GetErrorDetails(
-            out string description,
-            out int error,
-            out string restrictedDescription,
-            out string capabilitySid);
-
-        string GetReference();
-    }
-
 #if NET
     [WinRTExposedType(typeof(ManagedExceptionErrorInfoTypeDetails))]
 #endif
@@ -337,7 +319,7 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-    internal unsafe class ILanguageExceptionErrorInfo : global::WinRT.Interop.ILanguageExceptionErrorInfo
+    internal unsafe class ILanguageExceptionErrorInfo
     {
         [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
         public struct Vftbl
@@ -451,7 +433,7 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-    internal unsafe class IRestrictedErrorInfo : global::WinRT.Interop.IRestrictedErrorInfo
+    internal unsafe class IRestrictedErrorInfo
     {
         [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
         public struct Vftbl

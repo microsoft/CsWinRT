@@ -163,7 +163,7 @@ namespace WinRT
                     restrictedErrorReference = restrictedErrorInfo.GetReference();
                     if (restrictedErrorInfoRef.TryAs<ABI.WinRT.Interop.ILanguageExceptionErrorInfo.Vftbl>(out var languageErrorInfoRef) >= 0)
                     {
-                        ILanguageExceptionErrorInfo languageErrorInfo = new ABI.WinRT.Interop.ILanguageExceptionErrorInfo(languageErrorInfoRef);
+                        ABI.WinRT.Interop.ILanguageExceptionErrorInfo languageErrorInfo = new(languageErrorInfoRef);
                         using IObjectReference languageException = languageErrorInfo.GetLanguageException();
                         if (languageException is object)
                         {
