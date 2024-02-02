@@ -879,7 +879,7 @@ namespace WinRT
                 isRuntimeClass: false);
         }
 
-        /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"</c> WinRT type.</summary>
+        /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction"</c> WinRT type.</summary>
         public static void RegisterNotifyCollectionChangedActionMapping()
         {
             if (FeatureSwitches.EnableDefaultCustomTypeMappings)
@@ -895,7 +895,7 @@ namespace WinRT
             RegisterCustomAbiTypeMapping(
                 typeof(NotifyCollectionChangedAction),
                 typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedAction),
-                "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
+                "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction",
                 isRuntimeClass: false);
         }
 
