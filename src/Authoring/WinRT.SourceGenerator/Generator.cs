@@ -49,7 +49,7 @@ namespace Generator
             return tempFolder;
         }
 
-        private void GenerateSources()
+        private void GenerateSources(string csWinRTExeTFM)
         {
             string cswinrtExe = context.GetCsWinRTExe();
             string assemblyName = context.GetAssemblyName();
@@ -59,12 +59,13 @@ namespace Generator
             string winmds = context.GetCsWinRTDependentMetadata();
 
             string arguments = string.Format(
-                "-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -input {4} -verbose",
+                "-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -input {4} -target {5} -verbose",
                 winmdFile,
                 windowsMetadata,
                 assemblyName,
                 outputDir,
-                winmds);
+                winmds,
+                csWinRTExeTFM);
             Logger.Log("Running " + cswinrtExe + " " + arguments);
 
             var processInfo = new ProcessStartInfo
@@ -166,7 +167,7 @@ namespace Generator
                 GenerateWinMD(metadataBuilder);
                 if (!context.ShouldGenerateWinMDOnly())
                 {
-                    GenerateSources();
+                    GenerateSources(context.GetCsWinRTExeTFM());
                     writer.GenerateWinRTExposedClassAttributes(context);
                 }
             }

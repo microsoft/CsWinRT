@@ -74,6 +74,12 @@ namespace Generator
             return generatedFilesDir;
         }
 
+        public static string GetCsWinRTExeTFM(this GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExeTFM", out var csWinRTExeTFM);
+            return csWinRTExeTFM;
+        }
+
         public static bool IsCsWinRTComponent(this GeneratorExecutionContext context)
         {
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTComponent", out var isCsWinRTComponentStr))
