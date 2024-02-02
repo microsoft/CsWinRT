@@ -19,23 +19,6 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    internal static class IActivationFactoryMethods
-    {
-        public static unsafe ObjectReference<I> ActivateInstance<I>(IObjectReference obj)
-        {
-            IntPtr instancePtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)obj.ThisPtr)[6](obj.ThisPtr, &instancePtr));
-            try
-            {
-                return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(instancePtr);
-            }
-        }
-    }
-
     internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
     {
         public IntPtr ActivateInstance()
