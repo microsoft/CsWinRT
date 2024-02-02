@@ -267,11 +267,29 @@ namespace WinRT
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
 
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
+
         public unsafe static IntPtr GetContextToken()
         {
             IntPtr contextToken;
             Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
             return contextToken;
+        }
+
+        public static IntPtr GetContextCallback()
+        {
+            Guid riid = InterfaceIIDs.IContextCallback_IID;
+            Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
+            return contextCallbackPtr;
+        }
+
+        public static void DisposeContextCallback(IntPtr contextCallbackPtr)
+        {
+            if (contextCallbackPtr != IntPtr.Zero)
+            {
+                MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
+            }
         }
     }
 
@@ -460,6 +478,7 @@ namespace WinRT
         T> : IObjectReference
     {
         private readonly IntPtr _contextToken;
+        private readonly IntPtr _contextCallback;
 
         public static FactoryObjectReference<T> Attach(ref IntPtr thisPtr)
         {
@@ -478,6 +497,7 @@ namespace WinRT
             if (!IsFreeThreaded(this))
             {
                 _contextToken = Context.GetContextToken();
+                _contextCallback = Context.GetContextCallback();
             }
         }
 
@@ -496,6 +516,13 @@ namespace WinRT
             var obj = new FactoryObjectReference<T>(thisPtr);
             obj.VftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
+        }
+
+        protected override unsafe void Release()
+        {
+            base.Release();
+
+            Context.DisposeContextCallback(_contextCallback);
         }
 
         public bool IsObjectInContext()
