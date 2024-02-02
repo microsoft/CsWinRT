@@ -9,26 +9,10 @@ using System.Runtime.InteropServices;
 
 namespace WinRT.Interop
 {
-    [Guid("1CF2B120-547D-101B-8E65-08002B2BD119")]
-    internal interface IErrorInfo
-    {
-        Guid GetGuid();
-        string GetSource();
-        string GetDescription();
-        string GetHelpFile();
-        string GetHelpFileContent();
-    }
-
-    [Guid("DF0B3D60-548F-101B-8E65-08002B2BD119")]
-    internal interface ISupportErrorInfo
-    {
-        bool InterfaceSupportsErrorInfo(Guid riid);
-    }
-
 #if NET
     [WinRTExposedType(typeof(ManagedExceptionErrorInfoTypeDetails))]
 #endif
-    internal sealed class ManagedExceptionErrorInfo : IErrorInfo, ISupportErrorInfo
+    internal sealed class ManagedExceptionErrorInfo
     {
         private readonly Exception _exception;
 
@@ -86,11 +70,12 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     using global::WinRT;
+    using global::WinRT.Interop;
 
 #if NET
     internal unsafe struct IErrorInfoVftbl
     {
-        public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+        public IUnknownVftbl IUnknownVftbl;
         public delegate* unmanaged[Stdcall]<IntPtr, Guid*, int> GetGuid_0;
         public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetSource_1;
         public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetDescription_2;
@@ -104,7 +89,7 @@ namespace ABI.WinRT.Interop
         {
             AbiToProjectionVftable = new IErrorInfoVftbl
             {
-                IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+                IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl,
                 GetGuid_0 = &Do_Abi_GetGuid_0,
                 GetSource_1 = &Do_Abi_GetSource_1,
                 GetDescription_2 = &Do_Abi_GetDescription_2,
@@ -124,7 +109,7 @@ namespace ABI.WinRT.Interop
         {
             try
             {
-                *guid = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetGuid();
+                *guid = ComWrappersSupport.FindObject<ManagedExceptionErrorInfo>(thisPtr).GetGuid();
             }
             catch (Exception ex)
             {
@@ -141,7 +126,7 @@ namespace ABI.WinRT.Interop
             string _source;
             try
             {
-                _source = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetSource();
+                _source = ComWrappersSupport.FindObject<ManagedExceptionErrorInfo>(thisPtr).GetSource();
                 *source = Marshal.StringToBSTR(_source);
             }
             catch (Exception ex)
@@ -160,7 +145,7 @@ namespace ABI.WinRT.Interop
             string _description;
             try
             {
-                _description = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetDescription();
+                _description = ComWrappersSupport.FindObject<ManagedExceptionErrorInfo>(thisPtr).GetDescription();
                 *description = Marshal.StringToBSTR(_description);
             }
             catch (Exception ex)
@@ -179,7 +164,7 @@ namespace ABI.WinRT.Interop
             string _helpFile;
             try
             {
-                _helpFile = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetHelpFile();
+                _helpFile = ComWrappersSupport.FindObject<ManagedExceptionErrorInfo>(thisPtr).GetHelpFile();
                 *helpFile = Marshal.StringToBSTR(_helpFile);
             }
             catch (Exception ex)
@@ -198,7 +183,7 @@ namespace ABI.WinRT.Interop
             string _helpFileContent;
             try
             {
-                _helpFileContent = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetHelpFileContent();
+                _helpFileContent = ComWrappersSupport.FindObject<ManagedExceptionErrorInfo>(thisPtr).GetHelpFileContent();
                 *helpFileContent = Marshal.StringToBSTR(_helpFileContent);
             }
             catch (Exception ex)
@@ -213,7 +198,7 @@ namespace ABI.WinRT.Interop
 
     internal unsafe struct ISupportErrorInfoVftbl
     {
-        public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+        public IUnknownVftbl IUnknownVftbl;
         public delegate* unmanaged[Stdcall]<IntPtr, Guid*, int> InterfaceSupportsErrorInfo_0;
 
         public static readonly ISupportErrorInfoVftbl AbiToProjectionVftable;
@@ -223,7 +208,7 @@ namespace ABI.WinRT.Interop
         {
             AbiToProjectionVftable = new ISupportErrorInfoVftbl
             {
-                IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+                IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl,
                 InterfaceSupportsErrorInfo_0 = &Do_Abi_InterfaceSupportsErrorInfo_0
             };
 
@@ -239,7 +224,7 @@ namespace ABI.WinRT.Interop
         {
             try
             {
-                return global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.ISupportErrorInfo>(thisPtr).InterfaceSupportsErrorInfo(*guid) ? 0 : 1;
+                return global::WinRT.ComWrappersSupport.FindObject<ManagedExceptionErrorInfo>(thisPtr).InterfaceSupportsErrorInfo(*guid) ? 0 : 1;
             }
             catch (Exception ex)
             {
