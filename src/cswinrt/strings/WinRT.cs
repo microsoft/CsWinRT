@@ -19,367 +19,6 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    internal static class DelegateExtensions
-    {
-        public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
-        {
-            Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
-        }
-
-        // These methods below can be used to efficiently change the signature of arbitrary delegate types
-        // to one that has just 'object' as any of the type arguments, without the need to generate a new
-        // closure and display class. The C# compiler will lower the method group expression over one of
-        // the extension methods below into a direct constructor call of the new delegate types, passing
-        // a function pointer for the target delegate, along with any target, if present. This is more
-        // compact in binary size (and better in perf) than eg. 'return (object arg) => function(arg)';
-        //
-        // We have both some general purpose generic versions, as well two specialized variants to handle
-        // the ObjectReferenceValue marshalling with arbitrary inputs, when marshalling reference types.
-        // Once again, this just allows us to attach additional logic without needing a display class.
-
-        public static Func<object, object> WithMarshaler2Support(this Func<IObjectReference, IntPtr> function)
-        {
-            return function.InvokeWithMarshaler2Support;
-        }
-
-        public static Action<object> WithMarshaler2Support(this Action<IObjectReference> action)
-        {
-            return action.InvokeWithMarshaler2Support;
-        }
-
-        public static Action<T, IntPtr> WithTypedT1<T>(this Action<object, IntPtr> action)
-        {
-            return action.InvokeWithTypedT1;
-        }
-
-        public static Func<object, TResult> WithObjectT<T, TResult>(this Func<T, TResult> function)
-        {
-            return function.InvokeWithObjectT;
-        }
-
-        public static Func<T, object> WithObjectTResult<T, TResult>(this Func<T, TResult> function)
-        {
-            return function.InvokeWithObjectTResult;
-        }
-
-        public static Action<object> WithObjectParams<T>(this Action<T> action)
-        {
-            return action.InvokeWithObjectParams;
-        }
-
-        private static object InvokeWithMarshaler2Support(this Func<IObjectReference, IntPtr> func, object arg)
-        {
-            if (arg is ObjectReferenceValue objectReferenceValue)
-            {
-                return objectReferenceValue.GetAbi();
-            }
-
-            return func.Invoke((IObjectReference)arg);
-        }
-
-        private static void InvokeWithMarshaler2Support(this Action<IObjectReference> action, object arg)
-        {
-            if (arg is ObjectReferenceValue objectReferenceValue)
-            {
-                objectReferenceValue.Dispose();
-            }
-            else
-            {
-                action((IObjectReference)arg);
-            }
-        }
-
-        private static object InvokeWithObjectTResult<T, TResult>(this Func<T, TResult> func, T arg)
-        {
-            return func.Invoke(arg);
-        }
-
-        private static TResult InvokeWithObjectT<T, TResult>(this Func<T, TResult> func, object arg)
-        {
-            return func.Invoke((T)arg);
-        }
-
-        private static void InvokeWithObjectParams<T>(this Action<T> func, object arg)
-        {
-            func.Invoke((T)arg);
-        }
-
-        private static void InvokeWithTypedT1<T>(this Action<object, IntPtr> action, T arg1, IntPtr arg2)
-        {
-            action.Invoke(arg1, arg2);
-        }
-    }
-
-    internal sealed class Platform
-    {
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        internal static extern unsafe int CoCreateInstance(Guid* clsid, IntPtr outer, uint clsContext, Guid* iid, IntPtr* instance);
-
-        internal static unsafe int CoCreateInstance(ref Guid clsid, IntPtr outer, uint clsContext, ref Guid iid, IntPtr* instance)
-        {
-            fixed (Guid* lpClsid = &clsid)
-            {
-                fixed (Guid* lpIid = &iid)
-                {
-                    return CoCreateInstance(lpClsid, outer, clsContext, lpIid, instance);
-                }
-            }
-        }
-
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        internal static extern int CoDecrementMTAUsage(IntPtr cookie);
-
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        internal static extern unsafe int CoIncrementMTAUsage(IntPtr* cookie);
-
-#if NET6_0_OR_GREATER
-        internal static bool FreeLibrary(IntPtr moduleHandle)
-        {
-            int lastError;
-            bool returnValue;
-            int nativeReturnValue;
-            {
-                Marshal.SetLastSystemError(0);
-                nativeReturnValue = PInvoke(moduleHandle);
-                lastError = Marshal.GetLastSystemError();
-            }
-
-            // Unmarshal - Convert native data to managed data.
-            returnValue = nativeReturnValue != 0;
-            Marshal.SetLastPInvokeError(lastError);
-            return returnValue;
-
-            // Local P/Invoke
-            [DllImportAttribute("kernel32.dll", EntryPoint = "FreeLibrary", ExactSpelling = true)]
-            static extern unsafe int PInvoke(IntPtr nativeModuleHandle);
-        }
-
-        internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, sbyte* functionName)
-        {
-            int lastError;
-            void* returnValue;
-            {
-                Marshal.SetLastSystemError(0);
-                returnValue = PInvoke(moduleHandle, functionName);
-                lastError = Marshal.GetLastSystemError();
-            }
-
-            Marshal.SetLastPInvokeError(lastError);
-            return returnValue;
-
-            // Local P/Invoke
-            [DllImportAttribute("kernel32.dll", EntryPoint = "GetProcAddress", ExactSpelling = true)]
-            static extern unsafe void* PInvoke(IntPtr nativeModuleHandle, sbyte* nativeFunctionName);
-        }
-#else
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool FreeLibrary(IntPtr moduleHandle);
-
-        [DllImport("kernel32.dll", EntryPoint = "GetProcAddress", SetLastError = true, BestFitMapping = false)]
-        internal static unsafe extern void* TryGetProcAddress(IntPtr moduleHandle, sbyte* functionName);
-#endif
-
-        internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
-        {
-            fixed (byte* lpFunctionName = functionName)
-            {
-                return TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
-            }
-        }
-
-        internal static unsafe void* TryGetProcAddress(IntPtr moduleHandle, string functionName)
-        {
-            bool allocated = false;
-            Span<byte> buffer = stackalloc byte[0x100];
-            if (functionName.Length * 3 >= 0x100) // Maximum of 3 bytes per UTF-8 character, stack allocation limit of 256 bytes (including the null terminator)
-            {
-                // Calculate accurate byte count when the provided stack-allocated buffer is not sufficient
-                int exactByteCount = checked(Encoding.UTF8.GetByteCount(functionName) + 1); // + 1 for null terminator
-                if (exactByteCount > 0x100)
-                {
-#if NET6_0_OR_GREATER
-                    buffer = new((byte*)NativeMemory.Alloc((nuint)exactByteCount), exactByteCount);
-#else
-                    buffer = new((byte*)Marshal.AllocHGlobal(exactByteCount), exactByteCount);
-#endif
-                    allocated = true;
-                }
-            }
-
-            var rawByte = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer));
-
-            int byteCount;
-
-#if NET
-            byteCount = Encoding.UTF8.GetBytes(functionName, buffer);
-#else
-            fixed (char* lpFunctionName = functionName)
-            {
-                byteCount = Encoding.UTF8.GetBytes(lpFunctionName, functionName.Length, rawByte, buffer.Length);
-            }
-#endif
-            buffer[byteCount] = 0;
-
-            void* functionPtr = TryGetProcAddress(moduleHandle, (sbyte*)rawByte);
-
-            if (allocated)
-#if NET6_0_OR_GREATER
-                NativeMemory.Free(rawByte);
-#else
-                Marshal.FreeHGlobal((IntPtr)rawByte);
-#endif
-
-            return functionPtr;
-        }
-
-        internal static unsafe void* GetProcAddress(IntPtr moduleHandle, ReadOnlySpan<byte> functionName)
-        {
-            fixed (byte* lpFunctionName = functionName)
-            {
-                void* functionPtr = Platform.TryGetProcAddress(moduleHandle, (sbyte*)lpFunctionName);
-                if (functionPtr == null)
-                {
-                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
-                }
-                return functionPtr;
-            }
-        }
-
-        internal static unsafe void* GetProcAddress(IntPtr moduleHandle, string functionName)
-        {
-            void* functionPtr = Platform.TryGetProcAddress(moduleHandle, functionName);
-            if (functionPtr == null)
-            {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
-            }
-            return functionPtr;
-        }
-
-#if NET6_0_OR_GREATER
-        internal static unsafe IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags)
-        {
-            int lastError;
-            IntPtr returnValue;
-            {
-                Marshal.SetLastSystemError(0);
-                returnValue = PInvoke(fileName, fileHandle, flags);
-                lastError = Marshal.GetLastSystemError();
-            }
-
-            Marshal.SetLastPInvokeError(lastError);
-            return returnValue;
-
-            // Local P/Invoke
-            [DllImportAttribute("kernel32.dll", EntryPoint = "LoadLibraryExW", ExactSpelling = true)]
-            static extern unsafe IntPtr PInvoke(ushort* nativeFileName, IntPtr nativeFileHandle, uint nativeFlags);
-        }
-#else
-        [DllImport("kernel32.dll", SetLastError = true)]
-        internal static unsafe extern IntPtr LoadLibraryExW(ushort* fileName, IntPtr fileHandle, uint flags);
-#endif
-        internal static unsafe IntPtr LoadLibraryExW(string fileName, IntPtr fileHandle, uint flags)
-        {
-            fixed (char* lpFileName = fileName)
-                return LoadLibraryExW((ushort*)lpFileName, fileHandle, flags);
-        }
-
-        [DllImport("api-ms-win-core-winrt-l1-1-0.dll")]
-        internal static extern unsafe int RoGetActivationFactory(IntPtr runtimeClassId, Guid* iid, IntPtr* factory);
-
-        internal static unsafe int RoGetActivationFactory(IntPtr runtimeClassId, ref Guid iid, IntPtr* factory)
-        {
-            fixed (Guid* lpIid = &iid)
-            {
-                return RoGetActivationFactory(runtimeClassId, lpIid, factory);
-            }
-        }
-
-        [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe int WindowsCreateString(ushort* sourceString,
-                                                  int length,
-                                                  IntPtr* hstring);
-
-        internal static unsafe int WindowsCreateString(string sourceString, int length, IntPtr* hstring)
-        {
-            fixed (char* lpSourceString = sourceString)
-            {
-                return WindowsCreateString((ushort*)lpSourceString, length, hstring);
-            }
-        }
-
-        [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe int WindowsCreateStringReference(ushort* sourceString,
-                                                  int length,
-                                                  IntPtr* hstring_header,
-                                                  IntPtr* hstring);
-
-        internal static unsafe int WindowsCreateStringReference(char* sourceString, int length, IntPtr* hstring_header, IntPtr* hstring)
-        {
-            return WindowsCreateStringReference((ushort*)sourceString, length, hstring_header, hstring);
-        }
-
-        [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern int WindowsDeleteString(IntPtr hstring);
-
-        [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe int WindowsDuplicateString(IntPtr sourceString,
-                                                  IntPtr* hstring);
-
-        [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
-
-        [DllImport("api-ms-win-core-com-l1-1-1.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe int RoGetAgileReference(uint options, Guid* iid, IntPtr unknown, IntPtr* agileReference);
-
-        internal static unsafe int RoGetAgileReference(uint options, ref Guid iid, IntPtr unknown, IntPtr* agileReference)
-        {
-            fixed (Guid* lpIid = &iid)
-            {
-                return RoGetAgileReference(options, lpIid, unknown, agileReference);
-            }
-        }
-    }
-
-    internal struct VftblPtr
-    {
-        public IntPtr Vftbl;
-    }
-
-    internal static class IActivationFactoryMethods
-    {
-        public static unsafe ObjectReference<I> ActivateInstance<I>(IObjectReference obj)
-        {
-            IntPtr instancePtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)obj.ThisPtr)[6](obj.ThisPtr, &instancePtr));
-            try
-            {
-                return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(instancePtr);
-            }
-        }
-    }
-
-    internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
-    {
-        public IntPtr ActivateInstance()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    internal class ActivatableComponentActivationFactory<T> : ComponentActivationFactory, global::WinRT.Interop.IActivationFactory where T : class, new()
-    {
-        public new IntPtr ActivateInstance()
-        {
-            T comp = new T();
-            return MarshalInspectable<T>.FromManaged(comp);
-        }
-    }
-
 #pragma warning disable CA2002
 
     // Registration state and delegate cached separately to survive EventSource garbage collection
@@ -443,7 +82,7 @@ namespace WinRT
         public void InitalizeReferenceTracking(IntPtr ptr)
         {
             eventInvokePtr = ptr;
-            int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(IReferenceTrackerTargetVftbl.IID), out referenceTrackerTargetPtr);
+            int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in InterfaceIIDs.IReferenceTrackerTarget_IID), out referenceTrackerTargetPtr);
             if (hr != 0)
             {
                 referenceTrackerTargetPtr = default;
@@ -471,9 +110,14 @@ namespace WinRT
 
             if (referenceTrackerTargetPtr != default)
             {
-                IReferenceTrackerTargetVftbl vftblReferenceTracker = **(IReferenceTrackerTargetVftbl**)referenceTrackerTargetPtr;
-                vftblReferenceTracker.AddRefFromReferenceTracker(referenceTrackerTargetPtr);
-                uint refTrackerCount = vftblReferenceTracker.ReleaseFromReferenceTracker(referenceTrackerTargetPtr);
+                void** vftblReferenceTracker = *(void***)referenceTrackerTargetPtr;
+
+                // AddRefFromReferenceTracker
+                _ = ((delegate* unmanaged[Stdcall]<IntPtr, uint>)(vftblReferenceTracker[3]))(referenceTrackerTargetPtr);
+
+                // ReleaseFromReferenceTracker
+                uint refTrackerCount = ((delegate* unmanaged[Stdcall]<IntPtr, uint>)(vftblReferenceTracker[4]))(referenceTrackerTargetPtr);
+
                 if (refTrackerCount != 0)
                 {
                     // Note we can't tell if the reference tracker ref is pegged or not, so this is best effort where if there
@@ -783,6 +427,8 @@ namespace WinRT
         internal static readonly Guid IAgileObject_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x94, 0x2B, 0xEA, 0x94, 0xCC, 0xE9, 0xE0, 0x49, 0xC0, 0xFF, 0xEE, 0x64, 0xCA, 0x8F, 0x5B, 0x90 }));
         internal static readonly Guid IMarshal_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
         internal static readonly Guid IContextCallback_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xDA, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
+        internal static readonly Guid ICallbackWithNoReentrancyToApplicationSTA_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x74, 0x97, 0x29, 0x0A, 0x4E, 0x3E, 0x42, 0xFC, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57 }));
+        internal static readonly Guid IReferenceTrackerTarget_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xF8, 0x43, 0xBD, 0x64, 0xEE, 0xBF, 0xC4, 0x4E, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21 }));
 #else
         internal static readonly Guid IInspectable_IID = new(0xAF86E2E0, 0xB12D, 0x4c6a, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90);
         internal static readonly Guid IUnknown_IID = new(0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
@@ -792,6 +438,8 @@ namespace WinRT
         internal static readonly Guid IAgileObject_IID = new(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90);
         internal static readonly Guid IMarshal_IID = new(0x00000003, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
         internal static readonly Guid IContextCallback_IID = new(0x000001da, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid ICallbackWithNoReentrancyToApplicationSTA_IID = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
+        internal static readonly Guid IReferenceTrackerTarget_IID = new(0x64BD43F8, 0xbFEE, 0x4EC4, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21);
 #endif
     }
 }

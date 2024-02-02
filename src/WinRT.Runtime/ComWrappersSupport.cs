@@ -91,7 +91,7 @@ namespace WinRT
                     Guid iid_unmarshalClass;
                     Marshal.ThrowExceptionForHR((**(ABI.WinRT.Interop.IMarshal.Vftbl**)marshalPtr).GetUnmarshalClass_0(
                         marshalPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
-                    if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
+                    if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler)
                     {
                         return true;
                     }
@@ -385,31 +385,37 @@ namespace WinRT
             return createRcwFunc;
         }
 
-        internal static Func<IntPtr, object> CreateDelegateFactory(Type type)
+        internal static Func<IntPtr, object> GetOrCreateDelegateFactory(Type type)
         {
-            return DelegateFactoryCache.GetOrAdd(type, (type) =>
-            {
-                var createRcwFunc = (Func<IntPtr, object>)type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static).
-                        CreateDelegate(typeof(Func<IntPtr, object>));
-                var iid = GuidGenerator.GetIID(type);
+            return DelegateFactoryCache.GetOrAdd(type, CreateDelegateFactory);
+        }
 
-                return (IntPtr externalComObject) =>
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2067",
+            Justification = "The type is a delegate type, so 'GuidGenerator.GetIID' doesn't need to access public fields from it (it uses the helper type).")]
+#endif
+        private static Func<IntPtr, object> CreateDelegateFactory(Type type)
+        {
+            var createRcwFunc = (Func<IntPtr, object>)type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static).
+                    CreateDelegate(typeof(Func<IntPtr, object>));
+            var iid = GuidGenerator.GetIID(type);
+
+            return (IntPtr externalComObject) =>
+            {
+                // The CreateRCW function for delegates expect the pointer to be the delegate interface in CsWinRT 1.5.
+                // But CreateObject is passed the IUnknown interface. This would typically be fine for delegates as delegates
+                // don't implement interfaces and implementations typically have both the IUnknown vtable and the delegate
+                // vtable point to the same vtable.  But when the pointer is to a proxy, that can not be relied on.
+                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(externalComObject, ref iid, out var ptr));
+                try
                 {
-                    // The CreateRCW function for delegates expect the pointer to be the delegate interface in CsWinRT 1.5.
-                    // But CreateObject is passed the IUnknown interface. This would typically be fine for delegates as delegates
-                    // don't implement interfaces and implementations typically have both the IUnknown vtable and the delegate
-                    // vtable point to the same vtable.  But when the pointer is to a proxy, that can not be relied on.
-                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface(externalComObject, ref iid, out var ptr));
-                    try
-                    {
-                        return createRcwFunc(ptr);
-                    }
-                    finally
-                    {
-                        Marshal.Release(ptr);
-                    }
-                };
-            });
+                    return createRcwFunc(ptr);
+                }
+                finally
+                {
+                    Marshal.Release(ptr);
+                }
+            };
         }
 
         public static bool RegisterDelegateFactory(Type implementationType, Func<IntPtr, object> delegateFactory) => DelegateFactoryCache.TryAdd(implementationType, delegateFactory);

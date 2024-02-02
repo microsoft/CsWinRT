@@ -38,12 +38,35 @@ namespace ABI.WinRT.Interop
     {
         internal static readonly Guid IID = InterfaceIIDs.IMarshal_IID;
 
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern unsafe int CoCreateFreeThreadedMarshaler(IntPtr outer, IntPtr* marshalerPtr);
+        private const string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
 
-        private static readonly string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
+        private static readonly object _IID_InProcFreeThreadedMarshalerLock = new();
+        internal static volatile object _IID_InProcFreeThreadedMarshaler;
 
-        internal static readonly Lazy<Guid> IID_InProcFreeThreadedMarshaler = new Lazy<Guid>(Vftbl.GetInProcFreeThreadedMarshalerIID);
+        // Simple singleton lazy-initialization scheme (and saving the Lazy<T> size)
+        internal static Guid IID_InProcFreeThreadedMarshaler
+        {
+            get
+            {
+                object iid = _IID_InProcFreeThreadedMarshaler;
+
+                if (iid is not null)
+                {
+                    return (Guid)iid;
+                }
+
+                return IID_InProcFreeThreadedMarshaler_Slow();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static Guid IID_InProcFreeThreadedMarshaler_Slow()
+                {
+                    lock (_IID_InProcFreeThreadedMarshalerLock)
+                    {
+                        return (Guid)(_IID_InProcFreeThreadedMarshaler ??= Vftbl.GetInProcFreeThreadedMarshalerIID());
+                    }
+                }
+            }
+        }
 
         [Guid("00000003-0000-0000-c000-000000000046")]
         public unsafe struct Vftbl
@@ -119,7 +142,7 @@ namespace ABI.WinRT.Interop
                 try
                 {
                     IntPtr proxyPtr;
-                    Marshal.ThrowExceptionForHR(CoCreateFreeThreadedMarshaler(IntPtr.Zero, &proxyPtr));
+                    Marshal.ThrowExceptionForHR(Platform.CoCreateFreeThreadedMarshaler(IntPtr.Zero, &proxyPtr));
                     using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref proxyPtr);
                     IMarshal proxy = new IMarshal(objRef);
                     t_freeThreadedMarshaler = proxy;

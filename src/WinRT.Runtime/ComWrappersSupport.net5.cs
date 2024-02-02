@@ -116,12 +116,6 @@ namespace WinRT
             // We need to do the same thing for System.Type because there can be multiple WUX.Interop.TypeName's
             // for a single System.Type.
 
-            // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
-            if (rcw is IWinRTObject winrtObj)
-            {
-                winrtObj.Resurrect();
-            }
-
             return rcw switch
             {
                 ABI.System.Nullable nt => (T)nt.Value,
@@ -161,15 +155,7 @@ namespace WinRT
 
         public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr)
         {
-            var rcw = ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
-
-            // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
-            var target = rcw is Delegate del ? del.Target : rcw;
-            if (target is IWinRTObject winrtObj)
-            {
-                winrtObj.Resurrect();
-            }
-            return rcw;
+            return ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
         }
 
         public static IObjectReference CreateCCWForObject(object obj)
@@ -194,9 +180,6 @@ namespace WinRT
 
         public static unsafe T FindObject<T>(IntPtr ptr)
             where T : class => ComInterfaceDispatch.GetInstance<T>((ComInterfaceDispatch*)ptr);
-
-        private static T FindDelegate<T>(IntPtr thisPtr)
-            where T : class, System.Delegate => FindObject<T>(thisPtr);
 
         public static IUnknownVftbl IUnknownVftbl => DefaultComWrappers.IUnknownVftbl;
         public static IntPtr IUnknownVftblPtr => DefaultComWrappers.IUnknownVftblPtr;
@@ -551,7 +534,7 @@ namespace WinRT
             {
                 if (ComWrappersSupport.CreateRCWType != null && ComWrappersSupport.CreateRCWType.IsDelegate())
                 {
-                    return ComWrappersSupport.CreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
+                    return ComWrappersSupport.GetOrCreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {

@@ -230,7 +230,7 @@ namespace Generator
 
                             try
                             {
-                                IntPtr obj = GetActivationFactory(MarshalString.FromAbi((IntPtr)activatableClassId));
+                                IntPtr obj = GetActivationFactory(MarshalString.FromAbiUnsafe((IntPtr)activatableClassId));
 
                                 if ((void*)obj is null)
                                 {

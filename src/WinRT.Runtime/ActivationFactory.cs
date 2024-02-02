@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using WinRT.Interop;
 
 namespace WinRT
@@ -47,7 +48,7 @@ namespace WinRT
 #if NET
             if (moduleHandle == IntPtr.Zero)
             {
-                NativeLibrary.TryLoad(fileName, Assembly.GetExecutingAssembly(), null, out moduleHandle);
+                NativeLibrary.TryLoad(fileName, typeof(DllModule).Assembly, null, out moduleHandle);
             }
 #endif
             if (moduleHandle == IntPtr.Zero)
@@ -57,13 +58,13 @@ namespace WinRT
             }
 
             void* getActivationFactory = null;
-
+            ReadOnlySpan<byte> functionName =
 #if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
-            ReadOnlySpan<byte> functionName = "DllGetActivationFactory"u8;
+                "DllGetActivationFactory"u8;
 #else
-            string functionName = "DllGetActivationFactory";
+                Encoding.ASCII.GetBytes("DllGetActivationFactory");
 #endif
-            getActivationFactory = Platform.TryGetProcAddress(moduleHandle, functionName);
+            getActivationFactory = (void*)Platform.TryGetProcAddress(moduleHandle, functionName);
             if (getActivationFactory == null)
             {
                 module = null;
@@ -84,12 +85,13 @@ namespace WinRT
             _GetActivationFactory = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)getActivationFactory;
 
             void* canUnloadNow = null;
+            ReadOnlySpan<byte> functionName =
 #if NET7_0_OR_GREATER || CsWinRT_LANG_11_FEATURES
-            ReadOnlySpan<byte> functionName = "DllCanUnloadNow"u8;
+                "DllCanUnloadNow"u8;
 #else
-            string functionName = "DllCanUnloadNow";
+                Encoding.ASCII.GetBytes("DllCanUnloadNow");
 #endif
-            canUnloadNow = Platform.TryGetProcAddress(_moduleHandle, functionName);
+            canUnloadNow = (void*)Platform.TryGetProcAddress(_moduleHandle, functionName);
 
             if (canUnloadNow != null)
             {
@@ -97,7 +99,7 @@ namespace WinRT
             }
         }
 
-        public (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
+        public (ObjectReference<IUnknownVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             IntPtr instancePtr = IntPtr.Zero;
             try
@@ -108,7 +110,7 @@ namespace WinRT
                     int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
+                        var objRef = ObjectReference<IUnknownVftbl>.Attach(ref instancePtr);
                         return (objRef, hr);
                     }
                     else
@@ -203,8 +205,8 @@ namespace WinRT
         {
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
-            ObjectReference<IActivationFactoryVftbl> factory;
-            (factory, hr) = WinRTModule.GetActivationFactory<IActivationFactoryVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
+            ObjectReference<IUnknownVftbl> factory;
+            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
             if (factory != null)
             {
                 return factory;
@@ -269,7 +271,7 @@ namespace WinRT
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    ObjectReference<IActivationFactoryVftbl> activationFactory;
+                    ObjectReference<IUnknownVftbl> activationFactory;
                     (activationFactory, hr) = module.GetActivationFactory(typeName);
                     if (activationFactory != null)
                     {

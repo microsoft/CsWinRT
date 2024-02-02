@@ -32,6 +32,11 @@ internal static class FeatureSwitches
     private const string UseExceptionResourceKeysPropertyName = "CSWINRT_USE_EXCEPTION_RESOURCE_KEYS";
 
     /// <summary>
+    /// The configuration property name for <see cref="EnableDefaultCustomTypeMappings"/>.
+    /// </summary>
+    private const string EnableDefaultCustomTypeMappingsPropertyName = "CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS";
+
+    /// <summary>
     /// The backing field for <see cref="IsDynamicObjectsSupportEnabled"/>.
     /// </summary>
     private static int _isDynamicObjectsSupportEnabled;
@@ -40,6 +45,11 @@ internal static class FeatureSwitches
     /// The backing field for <see cref="UseExceptionResourceKeys"/>.
     /// </summary>
     private static int _useExceptionResourceKeys;
+
+    /// <summary>
+    /// The backing field for <see cref="EnableDefaultCustomTypeMappings"/>.
+    /// </summary>
+    private static int _enableDefaultCustomTypeMappings;
 
     /// <summary>
     /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -57,6 +67,15 @@ internal static class FeatureSwitches
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => GetConfigurationValue(UseExceptionResourceKeysPropertyName, ref _useExceptionResourceKeys);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether or not <see cref="Projections"/> should initialize all default type mappings automatically (defaults to <see langword="true"/>).
+    /// </summary>
+    public static bool EnableDefaultCustomTypeMappings
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => GetConfigurationValue(EnableDefaultCustomTypeMappingsPropertyName, ref _enableDefaultCustomTypeMappings);
     }
 
     /// <summary>

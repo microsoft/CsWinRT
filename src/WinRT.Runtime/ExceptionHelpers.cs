@@ -6,6 +6,7 @@ using System.Collections;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using WinRT.Interop;
 
 namespace WinRT
@@ -51,9 +52,6 @@ namespace WinRT
         private const int ERROR_CANCELLED = unchecked((int)0x800704c7);
         private const int ERROR_TIMEOUT = unchecked((int)0x800705b4);
 
-        [DllImport("oleaut32.dll")]
-        private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
-
         private static delegate* unmanaged[Stdcall]<IntPtr*, int> getRestrictedErrorInfo;
         private static delegate* unmanaged[Stdcall]<IntPtr, int> setRestrictedErrorInfo;
         private static delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int> roOriginateLanguageException;
@@ -70,8 +68,8 @@ namespace WinRT
                 ReadOnlySpan<byte> langExceptionString = "RoOriginateLanguageException"u8;
                 ReadOnlySpan<byte> reportUnhandledErrorString = "RoReportUnhandledError"u8;
 #else
-                string langExceptionString = "RoOriginateLanguageException";
-                string reportUnhandledErrorString = "RoReportUnhandledError";
+                ReadOnlySpan<byte> langExceptionString = Encoding.ASCII.GetBytes("RoOriginateLanguageException");
+                ReadOnlySpan<byte> reportUnhandledErrorString = Encoding.ASCII.GetBytes("RoReportUnhandledError");
 #endif
 
                 roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, langExceptionString);
@@ -88,8 +86,8 @@ namespace WinRT
                 ReadOnlySpan<byte> getRestrictedErrorInfoFuncName = "GetRestrictedErrorInfo"u8;
                 ReadOnlySpan<byte> setRestrictedErrorInfoFuncName = "SetRestrictedErrorInfo"u8;
 #else
-                string getRestrictedErrorInfoFuncName = "GetRestrictedErrorInfo";
-                string setRestrictedErrorInfoFuncName = "SetRestrictedErrorInfo";
+                ReadOnlySpan<byte> getRestrictedErrorInfoFuncName = Encoding.ASCII.GetBytes("GetRestrictedErrorInfo");
+                ReadOnlySpan<byte> setRestrictedErrorInfoFuncName = Encoding.ASCII.GetBytes("SetRestrictedErrorInfo");
 #endif
                 getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr*, int>)Platform.GetProcAddress(winRTErrorModule, getRestrictedErrorInfoFuncName);
                 setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, setRestrictedErrorInfoFuncName);
@@ -351,7 +349,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             else
             {
                 using var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex));
-                SetErrorInfo(0, iErrorInfo.ThisPtr);
+                Platform.SetErrorInfo(0, iErrorInfo.ThisPtr);
             }
         }
 
@@ -374,7 +372,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             int hr = ex.HResult;
             if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
             {
-                restrictedErrorObject.AsType<ABI.WinRT.Interop.IRestrictedErrorInfo>().GetErrorDetails(out _, out hr, out _, out _);
+                new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorObject).GetErrorDetails(out _, out hr, out _, out _);
             }
 
             switch (hr)

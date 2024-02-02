@@ -36,7 +36,7 @@ namespace WinRT.Host
                 {
                     return REGDB_E_READREGDB;
                 }
-                var GetActivationFactory = type.GetMethod("GetActivationFactory");
+                var GetActivationFactory = type.GetMethod("GetActivationFactory", new Type[] { typeof(string) });
                 if (GetActivationFactory == null)
                 {
                     return REGDB_E_READREGDB;

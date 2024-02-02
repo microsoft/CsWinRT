@@ -234,10 +234,11 @@ $(CsWinRTInternalProjection)
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
 
-  <!-- Default values for all custom CsWinRT runtimem feature switches -->
+  <!-- Default values for all custom CsWinRT runtime feature switches -->
   <PropertyGroup>
     <CsWinRTEnableDynamicObjectsSupport Condition="'$(CsWinRTEnableDynamicObjectsSupport)' == ''">true</CsWinRTEnableDynamicObjectsSupport>
     <CsWinRTUseExceptionResourceKeys Condition="'$(CsWinRTUseExceptionResourceKeys)' == ''">false</CsWinRTUseExceptionResourceKeys>
+    <CsWinRTEnableDefaultCustomTypeMappings Condition="'$(CsWinRTEnableDefaultCustomTypeMappings)' == ''">true</CsWinRTEnableDefaultCustomTypeMappings>
   </PropertyGroup>
 
   <!--
@@ -265,6 +266,11 @@ $(CsWinRTInternalProjection)
       <Value>false</Value>
       <Trim>true</Trim>
     </RuntimeHostConfigurationOption>
+                                  
+    <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS"
+                                    Value="$(CsWinRTEnableDefaultCustomTypeMappings)"
+                                    Trim="true" />
   </ItemGroup>
 
 </Project>

@@ -48,7 +48,7 @@ namespace WinRT
                 object runtimeWrapper = null;
                 if (typeof(T).IsDelegate())
                 {
-                    runtimeWrapper = CreateDelegateFactory(typeof(T))(ptr);
+                    runtimeWrapper = GetOrCreateDelegateFactory(typeof(T))(ptr);
                 }
                 else if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
                 {

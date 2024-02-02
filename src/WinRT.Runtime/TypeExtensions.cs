@@ -50,6 +50,25 @@ namespace WinRT
                     return GetHelperTypeFromAttribute(helperTypeAtribute, type);
                 }
 
+                var authoringMetadaType = type.GetAuthoringMetadataType();
+                if (authoringMetadaType is not null)
+                {
+                    helperTypeAtribute = authoringMetadaType.GetCustomAttribute<WindowsRuntimeHelperTypeAttribute>();
+                    if (helperTypeAtribute is not null)
+                    {
+                        return GetHelperTypeFromAttribute(helperTypeAtribute, type);
+                    }
+                }
+
+#if NET
+                // Using AOT requires using updated projections, which would never let the code below
+                // be reached (as it's just a fallback path for legacy projections). So we can trim it.
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    return null;
+                }
+#endif
+
                 return FindHelperTypeFallback(type);
             });
 
@@ -242,13 +261,10 @@ namespace WinRT
                     {
                         return null;
                     }
-                    else
 #endif
-                    {
-                        // Fallback code path for back compat with previously generated projections
-                        // running without AOT.
-                        return GetAuthoringMetadataTypeFallback(type);
-                    }
+                    // Fallback code path for back compat with previously generated projections
+                    // running without AOT.
+                    return GetAuthoringMetadataTypeFallback(type);
                 });
         }
 

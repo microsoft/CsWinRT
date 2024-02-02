@@ -2138,7 +2138,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(class_type));
 
             w.write(R"(
-public %() : this(%(WinRT.IActivationFactoryMethods.ActivateInstance<IUnknownVftbl>(%)))
+public %() : this(%(global::ABI.WinRT.Interop.IActivationFactoryMethods.ActivateInstanceUnsafe(%)))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 %
@@ -4563,7 +4563,7 @@ event % %;)",
             }
             if (is_generic)
             {
-                w.write("%.DynamicInvokeAbi(__params);\n", invoke_target);
+                w.write("global::System.Runtime.InteropServices.Marshal.ThrowExceptionForHR((int)%.DynamicInvoke(__params));\n", invoke_target);
             }
             else if (!has_noexcept_attr)
             {
@@ -6915,9 +6915,9 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 w.write(R"(%
 internal unsafe Vftbl(IntPtr thisPtr) : this()
 {
-var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-var vftbl = (IntPtr*)vftblPtr.Vftbl;
-IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
+var vftblPtr = *(void***)thisPtr;
+var vftbl = (IntPtr*)vftblPtr;
+IInspectableVftbl = *(IInspectable.Vftbl*)vftblPtr;
 %}
 )",
                     bind_each([&](writer& w, MethodDef const& method)
@@ -6955,7 +6955,7 @@ AbiToProjectionVftable = new Vftbl
 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
 %
 };
-var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
+var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * %);
 %
 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 }
@@ -6983,7 +6983,7 @@ public static readonly IntPtr AbiToProjectionVftablePtr;
 %
 static unsafe Vftbl()
 {
-AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
+AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * %);
 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
 {
 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
@@ -8652,7 +8652,7 @@ return MarshalDelegate.FromAbi<%>(nativeDelegate);
 
 public static % CreateRcw(IntPtr ptr)
 {
-return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, GuidGenerator.GetIID(typeof(@%)))).Invoke);
+return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, GuidGenerator.GetIID(typeof(@%)))).Invoke);
 }
 
 [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -8662,9 +8662,9 @@ private sealed class NativeDelegateWrapper
 private sealed class NativeDelegateWrapper : IWinRTObject
 #endif
 {
-private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
+private readonly ObjectReference<global::WinRT.Interop.IUnknownVftbl> _nativeDelegate;
 
-public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
+public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IUnknownVftbl> nativeDelegate)
 {
 _nativeDelegate = nativeDelegate;
 }
@@ -8792,7 +8792,7 @@ AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
 IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
 Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)
 };
-var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(@%), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
+var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(@%), sizeof(IntPtr) * 4);
 Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
 AbiToProjectionVftablePtr = nativeVftbl;
 )",
@@ -8802,7 +8802,7 @@ AbiToProjectionVftablePtr = nativeVftbl;
                 else if (!is_generic)
                 {
                     w.write(R"(
-AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), sizeof(global::WinRT.Interop.IDelegateVftbl));
+AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), sizeof(IntPtr) * 4);
 *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
 ((delegate* unmanaged[Stdcall]<%, int>*)AbiToProjectionVftablePtr)[3] = &Do_Abi_Invoke;
 )",
@@ -8817,7 +8817,7 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
 if (RuntimeFeature.IsDynamicCodeCompiled && %.AbiToProjectionVftablePtr == default)
 {
 AbiInvokeDelegate = %;
-AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@%), sizeof(global::WinRT.Interop.IDelegateVftbl));
+AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@%), sizeof(IntPtr) * 4);
 *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
 ((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate);
 }
@@ -8915,17 +8915,17 @@ else
                 {
                     if (have_generic_params)
                     {
-                        w.write("var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, Abi_Invoke_Type);");
+                        w.write("var abiInvoke = Marshal.GetDelegateForFunctionPointer((IntPtr)(*(void***)_nativeDelegate.ThisPtr)[3], Abi_Invoke_Type);");
                     }
                     else
                     {
-                        w.write("var abiInvoke = Marshal.GetDelegateForFunctionPointer<%>(_nativeDelegate.Vftbl.Invoke);",
+                        w.write("var abiInvoke = Marshal.GetDelegateForFunctionPointer<%>((IntPtr)(*(void***)_nativeDelegate.ThisPtr)[3]);",
                             is_generic ? w.write_temp("@_Delegates.Invoke", type.TypeName()) : "Abi_Invoke");
                     }
                 }
                 else
                 {
-                    w.write("var abiInvoke = (delegate* unmanaged[Stdcall]<%, int>)(_nativeDelegate.Vftbl.Invoke);",
+                    w.write("var abiInvoke = (delegate* unmanaged[Stdcall]<%, int>)(*(void***)_nativeDelegate.ThisPtr)[3];",
                         bind<write_abi_parameter_types_pointer>(signature));
                 }
             }),
@@ -9623,13 +9623,20 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
     void write_factory_class(writer& w, TypeDef const& type)
     {
         auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
-        auto base_class = (is_static(type) || !has_default_constructor(type)) ?
-            "ComponentActivationFactory" : write_type_name_temp(w, type, "ActivatableComponentActivationFactory<%>", typedef_name_type::Projected);
+        auto is_activatable = !is_static(type) && has_default_constructor(type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
+
+        // If the type is activatable, we implement IActivationFactory by creating an
+        // instance and marshalling it to IntPtr. Otherwise, we just throw an exception.
+        auto activate_instance_body = is_activatable
+            ? w.write_temp(R"(% comp = new %();
+
+    return MarshalInspectable<%>.FromManaged(comp);)", type_name, type_name, type_name)
+            : "throw new NotImplementedException();";
 
         w.write(R"(
 %
-internal class % : %%
+internal class % : IActivationFactory%
 {
 
 static %()
@@ -9654,18 +9661,23 @@ public static ObjectReference<I> ActivateInstance<
     return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
 }
 
+public IntPtr ActivateInstance()
+{
+    %
+}
+
 %
 }
 )",
 bind<write_winrt_exposed_type_attribute>(type, true),
 factory_type_name,
-base_class,
 bind<write_factory_class_inheritance>(type),
 factory_type_name,
 type_name,
 factory_type_name,
 factory_type_name,
 factory_type_name,
+activate_instance_body,
 bind<write_factory_class_members>(type)
 );
     }
@@ -9678,22 +9690,33 @@ namespace WinRT
 {
 % static partial class Module
 {
-public static unsafe IntPtr GetActivationFactory(String runtimeClassId)
-{%
-return IntPtr.Zero;
+public static unsafe IntPtr GetActivationFactory(% runtimeClassId)
+{
+switch (runtimeClassId)
+{
+%
+default:
+    return IntPtr.Zero;
 }
+}
+%
 }
 }
 )",
     internal_accessibility(),
+    // We want to leverage C# support for switching on a ReadOnlySpan<char>, which allows the exported
+    // 'DllGetActivationFactory' method to avoid the temporary allocation of the string instance for the
+    // input runtime class name. Because that's a C# 11 feature, we only enable this on .NET 7 and above.
+    // If that's the TFM in use, we generate this method using ReadOnlySpan<char>, and then a string overload
+    // just calling it. Otherwise, we switch on the string parameter, and generate a dummy ReadOnlySpan<char>
+    // overload just allocating and calling that. We always need both exports to make sure that hosting
+    // scenarios also work, since those will be looking up the string overload via reflection.
+    settings.net7_0_or_greater ? "ReadOnlySpan<char>" : "string",
 bind_each([](writer& w, TypeDef const& type)
     {
         w.write(R"(
-
-if (runtimeClassId == "%.%")
-{
-return %ServerActivationFactory.Make();
-}
+case "%.%":
+    return %ServerActivationFactory.Make();
 )",
 type.TypeNamespace(),
 type.TypeName(),
@@ -9701,7 +9724,18 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
 );
     },
     types
-        ));
+        ),
+    settings.net7_0_or_greater ? R"(
+public static IntPtr GetActivationFactory(string runtimeClassId)
+{
+    return GetActivationFactory(runtimeClassId.AsSpan());
+}
+)" : R"(
+public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
+{
+    return GetActivationFactory(runtimeClassId.ToString());
+}
+)");
     }
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)

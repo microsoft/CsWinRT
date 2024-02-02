@@ -1499,14 +1499,16 @@ namespace WinRT
     public
 #endif
     static class MarshalInspectable<
-#if NET6_0_OR_GREATER
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#elif NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
         T>
     {
-        public static IObjectReference CreateMarshaler<V>(
+        public static IObjectReference CreateMarshaler<
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+            V>(
             T o,
             Guid iid,
             bool unwrapObject = true)
@@ -1666,10 +1668,10 @@ namespace WinRT
 
             if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
             {
-                return objRef.As<IDelegateVftbl>(delegateIID);
+                return objRef.As<IUnknownVftbl>(delegateIID);
             }
 
-            return ComWrappersSupport.CreateCCWForObject<IDelegateVftbl>(o, delegateIID);
+            return ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(o, delegateIID);
         }
 
         public static ObjectReferenceValue CreateMarshaler2(object o, Guid delegateIID, bool unwrapObject = true)
@@ -1687,6 +1689,10 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObjectForMarshaling(o, delegateIID);
         }
 
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091",
+            Justification = "Preserving constructors is not necessary when creating RCWs for delegates, as they go through the factory methods in the helper types.")]
+#endif
         public static T FromAbi<T>(IntPtr nativeDelegate)
             where T : Delegate
         {
@@ -1694,14 +1700,13 @@ namespace WinRT
             {
                 return null;
             }
-            else if (IUnknownVftbl.IsReferenceToManagedObject(nativeDelegate))
+            
+            if (IUnknownVftbl.IsReferenceToManagedObject(nativeDelegate))
             {
                 return ComWrappersSupport.FindObject<T>(nativeDelegate);
             }
-            else
-            {
-                return ComWrappersSupport.CreateRcwForComObject<T>(nativeDelegate);
-            }
+
+            return ComWrappersSupport.CreateRcwForComObject<T>(nativeDelegate);
         }
     }
 
@@ -1715,11 +1720,11 @@ namespace WinRT
 
         private static object ReturnParameter(object arg) => arg;
 
-        private static unsafe void CopyIntEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
+        private static unsafe void CopyIntEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = Convert.ToInt32(value);
 
         private static unsafe void CopyIntEnumDirect(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)value;
 
-        private static unsafe void CopyUIntEnum(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
+        private static unsafe void CopyUIntEnum(object value, IntPtr dest) => *(uint*)dest.ToPointer() = Convert.ToUInt32(value);
 
         private static unsafe void CopyUIntEnumDirect(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)value;
     }
