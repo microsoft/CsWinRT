@@ -9623,13 +9623,20 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
     void write_factory_class(writer& w, TypeDef const& type)
     {
         auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
-        auto base_class = (is_static(type) || !has_default_constructor(type)) ?
-            "ComponentActivationFactory" : write_type_name_temp(w, type, "ActivatableComponentActivationFactory<%>", typedef_name_type::Projected);
+        auto is_activatable = !is_static(type) && has_default_constructor(type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
+
+        // If the type is activatable, we implement IActivationFactory by creating an
+        // instance and marshalling it to IntPtr. Otherwise, we just throw an exception.
+        auto activate_instance_body = is_activatable
+            ? w.write_temp(R"(% comp = new %();
+
+    return MarshalInspectable<%>.FromManaged(comp);)", type_name, type_name, type_name)
+            : "throw new NotImplementedException();";
 
         w.write(R"(
 %
-internal class % : %%
+internal class % : IActivationFactory%
 {
 
 static %()
@@ -9654,18 +9661,23 @@ public static ObjectReference<I> ActivateInstance<
     return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
 }
 
+public IntPtr ActivateInstance()
+{
+    %
+}
+
 %
 }
 )",
 bind<write_winrt_exposed_type_attribute>(type, true),
 factory_type_name,
-base_class,
 bind<write_factory_class_inheritance>(type),
 factory_type_name,
 type_name,
 factory_type_name,
 factory_type_name,
 factory_type_name,
+activate_instance_body,
 bind<write_factory_class_members>(type)
 );
     }

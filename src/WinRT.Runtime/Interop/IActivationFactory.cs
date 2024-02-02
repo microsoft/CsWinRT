@@ -10,6 +10,9 @@ using WinRT.Interop;
 
 namespace WinRT.Interop
 {
+    /// <summary>
+    /// An interface for managed objects representing activation factories for WinRT types.
+    /// </summary>
     [WindowsRuntimeType]
     [Guid("00000035-0000-0000-C000-000000000046")]
     [WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IActivationFactory))]
@@ -20,6 +23,14 @@ namespace WinRT.Interop
 #endif
     interface IActivationFactory
     {
+        /// <summary>
+        /// Activates an instance of the target WinRT type.
+        /// </summary>
+        /// <returns>The resulting instance.</returns>
+        /// <exception cref="NotImplementedException">
+        /// Thrown if the operation is not available on the activation factory type in use. For instance,
+        /// that is the case if the associated type is static or does not have a default constructor.
+        /// </exception>
         IntPtr ActivateInstance();
     }
 }
