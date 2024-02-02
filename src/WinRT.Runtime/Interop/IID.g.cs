@@ -289,5 +289,55 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
+        /// <summary>The IID for <c>IErrorInfo</c> (1CF2B120-547D-101B-8E65-08002B2BD119).</summary>
+        public static ref readonly Guid IID_IErrorInfo
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x20, 0xB1, 0xF2, 0x1C,
+                    0x7D, 0x54,
+                    0x1B, 0x10,
+                    0x8E,
+                    0x65,
+                    0x08,
+                    0x00,
+                    0x2B,
+                    0x2B,
+                    0xD1,
+                    0x19
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>ISupportErrorInfo</c> (DF0B3D60-548F-101B-8E65-08002B2BD119).</summary>
+        public static ref readonly Guid IID_ISupportErrorInfo
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x60, 0x3D, 0x0B, 0xDF,
+                    0x8F, 0x54,
+                    0x1B, 0x10,
+                    0x8E,
+                    0x65,
+                    0x08,
+                    0x00,
+                    0x2B,
+                    0x2B,
+                    0xD1,
+                    0x19
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
     }
 }
