@@ -2,11 +2,17 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 
 namespace WinRT
 {
-    internal static partial class DelegateExtensions
+    internal static class DelegateExtensions
     {
+        public static void DynamicInvokeAbi(this Delegate del, object[] invoke_params)
+        {
+            Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
+        }
+
         // These methods below can be used to efficiently change the signature of arbitrary delegate types
         // to one that has just 'object' as any of the type arguments, without the need to generate a new
         // closure and display class. The C# compiler will lower the method group expression over one of
