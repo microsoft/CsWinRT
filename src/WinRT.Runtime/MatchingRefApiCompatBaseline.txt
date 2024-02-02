@@ -139,4 +139,63 @@ MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference
 TypesMustExist : Type 'WinRT.ActivationFactory' does not exist in the reference but it does exist in the implementation.
 CannotChangeAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' on 'ABI.System.Type.FromAbi(ABI.System.Type)' changed from '[UnconditionalSuppressMessageAttribute("ReflectionAnalysis", "IL2057", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the implementation to '[UnconditionalSuppressMessageAttribute("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the reference.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.MarshalDelegate.FromAbi<T>(System.IntPtr)' in the implementation but not the reference.
-Total Issues: 140
+MembersMustExist : Member 'public void WinRT.Projections.RegisterDataErrorsChangedEventArgsMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterDateTimeOffsetMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterEventHandlerMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterEventHandlerOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterEventRegistrationTokenMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterExceptionMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIBindableVectorMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterICollectionMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterICollectionOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterICommandMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIDictionaryOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIDisposableMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIEnumerableMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIEnumerableOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIEnumeratorOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIListMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIListOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIMapOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIMapViewOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterINotifyCollectionChangedMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterINotifyDataErrorInfoMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterINotifyPropertyChangedMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIReadOnlyCollectionOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIReadOnlyDictionaryOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIReadOnlyListOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIServiceProviderMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIVectorOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIVectorViewOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterKeyValuePairOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterMatrix3x2Mapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterMatrix4x4Mapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNotifyCollectionChangedActionMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNotifyCollectionChangedEventArgsMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNotifyCollectionChangedEventHandlerMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableBoolMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableByteMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableCharMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableDateTimeOffsetMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableDoubleMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableFloatMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableGuidMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableIntMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableLongMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableSByteMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableShortMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableTimeSpanMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableUIntMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableULongMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableUShortMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterPlaneMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterPropertyChangedEventArgsMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterPropertyChangedEventHandlerMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterQuaternionMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterTimeSpanMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterUriMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterVector2Mapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterVector3Mapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterVector4Mapping()' does not exist in the reference but it does exist in the implementation. 
+Total Issues: 199

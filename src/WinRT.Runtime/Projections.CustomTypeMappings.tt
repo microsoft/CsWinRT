@@ -1,0 +1,212 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+<#@ output extension=".g.cs"#>
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+#if NET
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Numerics;
+using System.Threading;
+using System.Windows.Input;
+using Microsoft.UI.Xaml.Interop;
+using Windows.Foundation.Collections;
+
+namespace WinRT
+{
+    /// <inheritdoc cref="Projections"/>
+    partial class Projections
+    {
+<#
+// Helper method to get the generated method name
+static string GetMethodName(string name, string hint)
+{
+    var methodTypeName = hint ?? name;
+
+    // If the hint isn't available, automatically derive the name. For generic types,
+    // we strip the '<>' from the name and append "OpenGeneric" as a suffix.
+    if (hint == null)
+    {
+        if (name.Contains("<")) methodTypeName = methodTypeName.Substring(0, methodTypeName.IndexOf('<'));
+        if (name.Contains("<")) methodTypeName += "OpenGeneric";
+    }
+
+    return $"Register{methodTypeName}Mapping";
+}
+
+// Helper to write the guard statements for a given method.
+// We need two extra indents as these are inside each method.
+void WriteGuardStatements(string name)
+{
+#>
+            if (FeatureSwitches.EnableDefaultCustomTypeMappings)
+            {
+                return;
+            }
+
+            if (Interlocked.CompareExchange(ref _<#=Regex.Replace(name, "[?<>,]", "_")#>, 1, 0) == 1)
+            {
+                return;
+            }
+<#
+}
+
+// Types for 'RegisterCustomAbiTypeMapping'
+var registerCustomAbiTypeMappings = new (string Public, string Abi, string Name, string Hint, bool IsRuntimeClass)[]
+{
+    ("EventRegistrationToken", "ABI.WinRT.EventRegistrationToken", "Windows.Foundation.EventRegistrationToken", null, false),
+    ("Nullable<>", "ABI.System.Nullable<>", "Windows.Foundation.IReference`1", null, false),
+    ("int?", "ABI.System.Nullable_int", "Windows.Foundation.IReference`1<Int32>", "NullableInt", false),
+    ("byte?", "ABI.System.Nullable_byte", "Windows.Foundation.IReference`1<UInt8>", "NullableByte", false),
+    ("sbyte?", "ABI.System.Nullable_sbyte", "Windows.Foundation.IReference`1<Int8>", "NullableSByte", false),
+    ("short?", "ABI.System.Nullable_short", "Windows.Foundation.IReference`1<Int16>", "NullableShort", false),
+    ("ushort?", "ABI.System.Nullable_ushort", "Windows.Foundation.IReference`1<UInt16>", "NullableUShort", false),
+    ("uint?", "ABI.System.Nullable_uint", "Windows.Foundation.IReference`1<UInt32>", "NullableUInt", false),
+    ("long?", "ABI.System.Nullable_long", "Windows.Foundation.IReference`1<Int64>", "NullableLong", false),
+    ("ulong?", "ABI.System.Nullable_ulong", "Windows.Foundation.IReference`1<UInt64>", "NullableULong", false),
+    ("float?", "ABI.System.Nullable_float", "Windows.Foundation.IReference`1<Single>", "NullableFloat", false),
+    ("double?", "ABI.System.Nullable_double", "Windows.Foundation.IReference`1<Double>", "NullableDouble", false),
+    ("char?", "ABI.System.Nullable_char", "Windows.Foundation.IReference`1<Char16>", "NullableChar", false),
+    ("bool?", "ABI.System.Nullable_bool", "Windows.Foundation.IReference`1<Boolean>", "NullableBool", false),
+    ("Guid?", "ABI.System.Nullable_guid", "Windows.Foundation.IReference`1<Guid>", "NullableGuid", false),
+    ("DateTimeOffset?", "ABI.System.Nullable_DateTimeOffset", "Windows.Foundation.IReference`1<Windows.Foundation.DateTime>", "NullableDateTimeOffset", false),
+    ("TimeSpan?", "ABI.System.Nullable_TimeSpan", "Windows.Foundation.IReference`1<TimeSpan>", "NullableTimeSpan", false),
+    ("DateTimeOffset", "ABI.System.DateTimeOffset", "Windows.Foundation.DateTime", null, false),
+    ("Exception", "ABI.System.Exception", "Windows.Foundation.HResult", null, false),
+    ("TimeSpan", "ABI.System.TimeSpan", "Windows.Foundation.TimeSpan", null, false),
+    ("Uri", "ABI.System.Uri", "Windows.Foundation.Uri", null, true),
+    ("DataErrorsChangedEventArgs", "ABI.System.ComponentModel.DataErrorsChangedEventArgs", "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", null, true),
+    ("PropertyChangedEventArgs", "ABI.System.ComponentModel.PropertyChangedEventArgs", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", null, true),
+    ("PropertyChangedEventHandler", "ABI.System.ComponentModel.PropertyChangedEventHandler", "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler", null, false),
+    ("INotifyDataErrorInfo", "ABI.System.ComponentModel.INotifyDataErrorInfo", "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo", null, false),
+    ("INotifyPropertyChanged", "ABI.System.ComponentModel.INotifyPropertyChanged", "Microsoft.UI.Xaml.Data.INotifyPropertyChanged", null, false),
+    ("ICommand", "ABI.System.Windows.Input.ICommand", "Microsoft.UI.Xaml.Interop.ICommand", null, false),
+    ("IServiceProvider", "ABI.System.IServiceProvider", "Microsoft.UI.Xaml.IXamlServiceProvider", null, false),
+    ("EventHandler<>", "ABI.System.EventHandler<>", "Windows.Foundation.EventHandler`1", null, false),
+    ("KeyValuePair<,>", "ABI.System.Collections.Generic.KeyValuePair<,>", "Windows.Foundation.Collections.IKeyValuePair`2", null, false),
+    ("IEnumerable<>", "ABI.System.Collections.Generic.IEnumerable<>", "Windows.Foundation.Collections.IIterable`1", null, false),
+    ("IEnumerator<>", "ABI.System.Collections.Generic.IEnumerator<>", "Windows.Foundation.Collections.IIterator`1", null, false),
+    ("IList<>", "ABI.System.Collections.Generic.IList<>", "Windows.Foundation.Collections.IVector`1", null, false),
+    ("IReadOnlyList<>", "ABI.System.Collections.Generic.IReadOnlyList<>", "Windows.Foundation.Collections.IVectorView`1", null, false),
+    ("IDictionary<,>", "ABI.System.Collections.Generic.IDictionary<,>", "Windows.Foundation.Collections.IMap`2", null, false),
+    ("IReadOnlyDictionary<,>", "ABI.System.Collections.Generic.IReadOnlyDictionary<,>", "Windows.Foundation.Collections.IMapView`2", null, false),
+    ("IDisposable", "ABI.System.IDisposable", "Windows.Foundation.IClosable", null, false),
+    ("IEnumerable", "ABI.System.Collections.IEnumerable", "Microsoft.UI.Xaml.Interop.IBindableIterable", null, false),
+    ("IList", "ABI.System.Collections.IList", "Microsoft.UI.Xaml.Interop.IBindableVector", null, false),
+    ("INotifyCollectionChanged", "ABI.System.Collections.Specialized.INotifyCollectionChanged", "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", null, false),
+    ("NotifyCollectionChangedAction", "ABI.System.Collections.Specialized.NotifyCollectionChangedAction", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", null, false),
+    ("NotifyCollectionChangedEventArgs", "ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", null, true),
+    ("NotifyCollectionChangedEventHandler", "ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", null, false),
+    ("Matrix3x2", "ABI.System.Numerics.Matrix3x2", "Windows.Foundation.Numerics.Matrix3x2", null, false),
+    ("Matrix4x4", "ABI.System.Numerics.Matrix4x4", "Windows.Foundation.Numerics.Matrix4x4", null, false),
+    ("Plane", "ABI.System.Numerics.Plane", "Windows.Foundation.Numerics.Plane", null, false),
+    ("Quaternion", "ABI.System.Numerics.Quaternion", "Windows.Foundation.Numerics.Quaternion", null, false),
+    ("Vector2", "ABI.System.Numerics.Vector2", "Windows.Foundation.Numerics.Vector2", null, false),
+    ("Vector3", "ABI.System.Numerics.Vector3", "Windows.Foundation.Numerics.Vector3", null, false),
+    ("Vector4", "ABI.System.Numerics.Vector4", "Windows.Foundation.Numerics.Vector4", null, false),
+    ("EventHandler", "ABI.System.EventHandler", null, null, false)
+};
+
+// Types for 'RegisterCustomTypeToHelperTypeMapping'
+var registerCustomTypeToHelperTypeMapping = new (string Public, string Helper)[]
+{
+    ("IMap<,>", "ABI.System.Collections.Generic.IDictionary<,>"),
+    ("IVector<>", "ABI.System.Collections.Generic.IList<>"),
+    ("IMapView<,>", "ABI.System.Collections.Generic.IReadOnlyDictionary<,>"),
+    ("IVectorView<>", "ABI.System.Collections.Generic.IReadOnlyList<>"),
+    ("IBindableVector", "ABI.System.Collections.IList"),
+    ("ICollection<>", "ABI.System.Collections.Generic.ICollection<>"),
+    ("IReadOnlyCollection<>", "ABI.System.Collections.Generic.IReadOnlyCollection<>"),
+    ("ICollection", "ABI.System.Collections.ICollection")
+};
+
+// Declare all fields
+foreach (string fieldName in
+    registerCustomAbiTypeMappings
+    .Select(t => t.Public)
+    .Concat(
+        registerCustomTypeToHelperTypeMapping
+        .Select(t => t.Public))
+    .Select(s => Regex.Replace(s, "[?<>,]", "_")))
+{
+#>
+        private static int _<#=fieldName#>;
+<# 
+}
+
+// 'RegisterCustomAbiTypeMapping' methods
+foreach (var type in registerCustomAbiTypeMappings)
+{
+    WriteLine("");
+
+    if (type.Name != null)
+    {
+#>
+        /// <summary>Registers the custom ABI type mapping for the <c>"<#=type.Name#>"</c> WinRT type.</summary>
+        public static void <#=GetMethodName(type.Public, type.Hint)#>()
+        {
+<#
+            WriteGuardStatements(type.Public);
+#>
+
+            RegisterCustomAbiTypeMapping(
+                typeof(<#=type.Public#>),
+                typeof(<#=type.Abi#>),
+                "<#=type.Name#>",
+                isRuntimeClass: <#=type.IsRuntimeClass.ToString().ToLowerInvariant()#>);
+        }
+<#
+    }
+    else
+    {
+#>
+        /// <summary>Registers the custom ABI type mapping for the <see cref="<#=type.Public#>"/> type.</summary>
+        public static void <#=GetMethodName(type.Public, type.Hint)#>()
+        {
+<#
+            WriteGuardStatements(type.Public);
+#>
+
+            RegisterCustomAbiTypeMapping(
+                typeof(<#=type.Public#>),
+                typeof(<#=type.Abi#>));
+        }
+<#
+    }
+}
+
+// 'RegisterCustomTypeToHelperTypeMapping' methods
+foreach (var type in registerCustomTypeToHelperTypeMapping)
+{
+    string xmlName = type.Public;
+
+    if (type.Public.EndsWith("<>")) xmlName = $"{xmlName.Substring(0, xmlName.IndexOf('<'))}{{T}}";
+    if (type.Public.EndsWith("<,>")) xmlName = $"{xmlName.Substring(0, xmlName.IndexOf('<'))}{{K, V}}";
+
+    WriteLine("");
+#>
+        /// <summary>Registers the custom ABI type mapping for the <see cref="<#=xmlName#>"/> type.</summary>
+        public static void <#=GetMethodName(type.Public, null)#>()
+        {
+<#
+            WriteGuardStatements(type.Public);
+#>
+
+            RegisterCustomTypeToHelperTypeMapping(
+                typeof(<#=type.Public#>),
+                typeof(<#=type.Helper#>));
+        }
+<#
+}
+#>
+    }
+}
+
+#endif
