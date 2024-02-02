@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace ABI.System.ComponentModel
 {
@@ -201,9 +202,7 @@ namespace ABI.System.ComponentModel
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static (global::System.Action<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>, 
-                        global::System.Action<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>)
-            _ErrorsChanged(IWinRTObject _this)
+        private static EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> _ErrorsChanged(IWinRTObject _this)
         {
             var _obj = _this.GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle);
             return INotifyDataErrorInfoMethods.Get_ErrorsChanged(_obj, _this);
