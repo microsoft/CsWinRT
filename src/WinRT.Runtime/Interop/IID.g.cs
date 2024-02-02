@@ -115,6 +115,56 @@ namespace WinRT.Interop
             }
         }
 
+        /// <summary>The IID for <c>IReferenceTracker</c> (11D3B13A-180E-4789-A8BE-7712882893E6).</summary>
+        public static ref readonly Guid IID_IReferenceTracker
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x3A, 0xB1, 0xD3, 0x11,
+                    0x0E, 0x18,
+                    0x89, 0x47,
+                    0xA8,
+                    0xBE,
+                    0x77,
+                    0x12,
+                    0x88,
+                    0x28,
+                    0x93,
+                    0xE6
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceTrackerTarget</c> (64BD43F8-BFEE-4EC4-B7EB-2935158DAE21).</summary>
+        public static ref readonly Guid IID_IReferenceTrackerTarget
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xF8, 0x43, 0xBD, 0x64,
+                    0xEE, 0xBF,
+                    0xC4, 0x4E,
+                    0xB7,
+                    0xEB,
+                    0x29,
+                    0x35,
+                    0x15,
+                    0x8D,
+                    0xAE,
+                    0x21
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
         /// <summary>The IID for <c>IActivationFactory</c> (00000035-0000-0000-C000-000000000046).</summary>
         public static ref readonly Guid IID_IActivationFactory
         {

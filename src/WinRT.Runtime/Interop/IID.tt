@@ -26,6 +26,8 @@ var entries = new (string Name, string IID)[]
     ("IInspectable", "AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90"),
     ("IWeakReference", "00000037-0000-0000-C000-000000000046"),
     ("IWeakReferenceSource", "00000038-0000-0000-C000-000000000046"),
+    ("IReferenceTracker", "11D3B13A-180E-4789-A8BE-7712882893E6"),
+    ("IReferenceTrackerTarget", "64BD43F8-BFEE-4EC4-B7EB-2935158DAE21"),
     ("IActivationFactory", "00000035-0000-0000-C000-000000000046"),
     ("IAgileObject", "94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90"),
     ("IMarshal", "00000003-0000-0000-C000-000000000046"),

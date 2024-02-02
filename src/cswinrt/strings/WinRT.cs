@@ -82,7 +82,7 @@ namespace WinRT
         public void InitalizeReferenceTracking(IntPtr ptr)
         {
             eventInvokePtr = ptr;
-            int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in InterfaceIIDs.IReferenceTrackerTarget_IID), out referenceTrackerTargetPtr);
+            int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in IID.IID_IReferenceTrackerTarget), out referenceTrackerTargetPtr);
             if (hr != 0)
             {
                 referenceTrackerTargetPtr = default;
