@@ -82,7 +82,7 @@ namespace WinRT
         public void InitalizeReferenceTracking(IntPtr ptr)
         {
             eventInvokePtr = ptr;
-            int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in IID.IID_IReferenceTrackerTarget), out referenceTrackerTargetPtr);
+            int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in InterfaceIIDs.IReferenceTrackerTarget_IID), out referenceTrackerTargetPtr);
             if (hr != 0)
             {
                 referenceTrackerTargetPtr = default;
@@ -205,7 +205,7 @@ namespace WinRT
                     return;
                 }
 #else
-            int hr = obj.TryAs<IUnknownVftbl>(IID.IID_IWeakReferenceSource, out var weakRefSource);
+            int hr = obj.TryAs<IUnknownVftbl>(InterfaceIIDs.IWeakReferenceSource_IID, out var weakRefSource);
             if (hr != 0)
             {
                 return;
@@ -412,6 +412,17 @@ namespace WinRT
                 return handler;
             }
         }
+    }
+
+    internal static class InterfaceIIDs
+    {
+#if NET
+        internal static readonly Guid IWeakReferenceSource_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
+        internal static readonly Guid IReferenceTrackerTarget_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xF8, 0x43, 0xBD, 0x64, 0xEE, 0xBF, 0xC4, 0x4E, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21 }));
+#else
+        internal static readonly Guid IWeakReferenceSource_IID = new(0x00000038, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IReferenceTrackerTarget_IID = new(0x64BD43F8, 0xbFEE, 0x4EC4, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21);
+#endif
     }
 }
 
