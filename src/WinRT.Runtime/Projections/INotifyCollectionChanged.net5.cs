@@ -23,8 +23,7 @@ namespace ABI.System.Collections.Specialized
         }
         private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource> CollectionChanged => _CollectionChanged ?? MakeCollectionChangedTable();
 
-
-        public static unsafe global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource Get_CollectionChanged(IObjectReference obj, object thisObj)
+        public static unsafe global::WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> Get_CollectionChanged(IObjectReference obj, object thisObj)
         {
             return CollectionChanged.GetValue(thisObj, (key) =>
             {
@@ -124,7 +123,7 @@ namespace ABI.System.Collections.Specialized
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource _CollectionChanged(IWinRTObject _this)
+        private static global::WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> _CollectionChanged(IWinRTObject _this)
         {
             var _obj = _this.GetObjectReferenceForType(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle);
             return INotifyCollectionChangedMethods.Get_CollectionChanged(_obj, _this);

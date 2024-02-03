@@ -6,7 +6,7 @@ using ABI.System.Collections.Specialized;
 
 namespace WinRT.Interop
 {
-    public sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : EventSource<System.Collections.Specialized.NotifyCollectionChangedEventHandler>
+    internal sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : EventSource<System.Collections.Specialized.NotifyCollectionChangedEventHandler>
     {
         internal NotifyCollectionChangedEventHandlerEventSource(
             IObjectReference objectReference,
