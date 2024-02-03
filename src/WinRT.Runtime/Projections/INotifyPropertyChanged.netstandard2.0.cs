@@ -23,7 +23,7 @@ namespace ABI.System.ComponentModel
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
-            private void* _add_PropertyChanged_0;
+            internal void* _add_PropertyChanged_0;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_PropertyChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_PropertyChanged_0; set => _add_PropertyChanged_0=(void*)value; }
             private void* _remove_PropertyChanged_1;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_PropertyChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_PropertyChanged_1; set => _remove_PropertyChanged_1=(void*)value; }
@@ -112,7 +112,7 @@ namespace ABI.System.ComponentModel
 
             _PropertyChanged =
                 new PropertyChangedEventSource(_obj,
-                _obj.Vftbl.add_PropertyChanged_0,
+                (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int>)_obj.Vftbl._add_PropertyChanged_0,
                 _obj.Vftbl.remove_PropertyChanged_1);
         }
 

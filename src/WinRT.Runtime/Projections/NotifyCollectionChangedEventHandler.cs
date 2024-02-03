@@ -167,14 +167,11 @@ namespace ABI.System.Collections.Specialized
 
     internal sealed unsafe class NotifyCollectionChangedEventSource : EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
     {
-        internal NotifyCollectionChangedEventSource(IObjectReference obj,
-#if NET
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::WinRT.EventRegistrationToken*, int> addHandler,
-#else
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
-#endif
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
-            : base(obj, addHandler, removeHandler)
+        internal NotifyCollectionChangedEventSource(
+            IObjectReference objectReference,
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> addHandler,
+            delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> removeHandler)
+            : base(objectReference, addHandler, removeHandler)
         {
         }
 
@@ -182,7 +179,7 @@ namespace ABI.System.Collections.Specialized
             NotifyCollectionChangedEventHandler.CreateMarshaler2(del);
 
         protected override EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> CreateEventState() =>
-            new EventState(_obj.ThisPtr, _index);
+            new EventState(_objectReference.ThisPtr, _index);
 
         private sealed class EventState : EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
         {
@@ -193,14 +190,7 @@ namespace ABI.System.Collections.Specialized
 
             protected override global::System.Collections.Specialized.NotifyCollectionChangedEventHandler GetEventInvoke()
             {
-                global::System.Collections.Specialized.NotifyCollectionChangedEventHandler handler =
-                    (global::System.Object obj, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
-                    {
-                        var localDel = (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler) del;
-                        if (localDel != null)
-                            localDel.Invoke(obj, e);
-                    };
-                return handler;
+                return (obj, e) => del?.Invoke(obj, e);
             }
         }
     }

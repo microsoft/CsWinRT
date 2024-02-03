@@ -165,14 +165,11 @@ namespace ABI.System.ComponentModel
 
     internal sealed unsafe class PropertyChangedEventSource : EventSource<global::System.ComponentModel.PropertyChangedEventHandler>
     {
-        internal PropertyChangedEventSource(IObjectReference obj,
-#if NET
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::WinRT.EventRegistrationToken*, int> addHandler,
-#else
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
-#endif
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
-            : base(obj, addHandler, removeHandler)
+        internal PropertyChangedEventSource(
+            IObjectReference objectReference,
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> addHandler,
+            delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> removeHandler)
+            : base(objectReference, addHandler, removeHandler)
         {
         }
 
@@ -180,7 +177,7 @@ namespace ABI.System.ComponentModel
             PropertyChangedEventHandler.CreateMarshaler2(del);
 
         protected override EventSourceState<global::System.ComponentModel.PropertyChangedEventHandler> CreateEventState() =>
-            new EventState(_obj.ThisPtr, _index);
+            new EventState(_objectReference.ThisPtr, _index);
 
         private sealed class EventState : EventSourceState<global::System.ComponentModel.PropertyChangedEventHandler>
         {
@@ -191,14 +188,7 @@ namespace ABI.System.ComponentModel
 
             protected override global::System.ComponentModel.PropertyChangedEventHandler GetEventInvoke()
             {
-                global::System.ComponentModel.PropertyChangedEventHandler handler =
-                    (global::System.Object obj, global::System.ComponentModel.PropertyChangedEventArgs e) =>
-                    {
-                        var localDel = (global::System.ComponentModel.PropertyChangedEventHandler) del;
-                        if (localDel != null)
-                            localDel.Invoke(obj, e);
-                    };
-                return handler;
+                return (obj, e) => del?.Invoke(obj, e);
             }
         }
     }

@@ -9,31 +9,24 @@ namespace WinRT.Interop
     internal unsafe abstract class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
-        protected readonly IObjectReference _obj;
+        protected readonly IObjectReference _objectReference;
         protected readonly int _index;
-#if NET
-        readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, WinRT.EventRegistrationToken*, int> _addHandler;
-#else
-        readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
-#endif
-        readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
+        readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> _addHandler;
+        readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
         protected System.WeakReference<object> _state;
         private readonly (Action<TDelegate>, Action<TDelegate>) _handlerTuple;
 
-        protected EventSource(IObjectReference obj,
-#if NET
-            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, WinRT.EventRegistrationToken*, int> addHandler,
-#else
-            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-#endif
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
+        protected EventSource(
+            IObjectReference objectReference,
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> addHandler,
+            delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> removeHandler,
             int index = 0)
         {
-            _obj = obj;
+            _objectReference = objectReference;
             _addHandler = addHandler;
             _removeHandler = removeHandler;
             _index = index;
-            _state = EventSourceCache.GetState(obj, index);
+            _state = EventSourceCache.GetState(objectReference, index);
             _handlerTuple = (Subscribe, Unsubscribe);
         }
 
@@ -55,25 +48,22 @@ namespace WinRT.Interop
                 {
                     state = CreateEventState();
                     _state = state.GetWeakReferenceForCache();
-                    EventSourceCache.Create(_obj, _index, _state);
+                    EventSourceCache.Create(_objectReference, _index, _state);
                 }
 
-                state.del = (TDelegate)global::System.Delegate.Combine(state.del, del);
+                state.del = (TDelegate)Delegate.Combine(state.del, del);
                 if (registerHandler)
                 {
-                    var eventInvoke = (TDelegate)state.eventInvoke;
+                    var eventInvoke = state.eventInvoke;
                     var marshaler = CreateMarshaler(eventInvoke);
                     try
                     {
                         var nativeDelegate = marshaler.GetAbi();
                         state.InitalizeReferenceTracking(nativeDelegate);
-#if NET
-                        WinRT.EventRegistrationToken token;
-                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, &token));
+
+                        EventRegistrationToken token;
+                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_objectReference.ThisPtr, nativeDelegate, &token));
                         state.token = token;
-#else
-                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out state.token));
-#endif
                     }
                     finally
                     {
@@ -95,7 +85,7 @@ namespace WinRT.Interop
             lock (this)
             {
                 var oldEvent = state.del;
-                state.del = (TDelegate)global::System.Delegate.Remove(state.del, del);
+                state.del = (TDelegate)Delegate.Remove(state.del, del);
                 if (oldEvent is object && state.del is null)
                 {
                     UnsubscribeFromNative(state);
@@ -107,7 +97,7 @@ namespace WinRT.Interop
 
         private void UnsubscribeFromNative(EventSourceState<TDelegate> state)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, state.token));
+            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_objectReference.ThisPtr, state.token));
             state.Dispose();
             _state = null;
         }

@@ -482,14 +482,11 @@ namespace ABI.System
 
     internal sealed unsafe class EventHandlerEventSource : EventSource<global::System.EventHandler>
     {
-        internal EventHandlerEventSource(IObjectReference obj,
-#if NET
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::WinRT.EventRegistrationToken*, int> addHandler,
-#else
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
-#endif
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
-            : base(obj, addHandler, removeHandler)
+        internal EventHandlerEventSource(
+            IObjectReference objectReference,
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> addHandler,
+            delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> removeHandler)
+            : base(objectReference, addHandler, removeHandler)
         {
         }
 
@@ -497,7 +494,7 @@ namespace ABI.System
             EventHandler.CreateMarshaler2(del);
 
         protected override EventSourceState<global::System.EventHandler> CreateEventState() =>
-            new EventState(_obj.ThisPtr, _index);
+            new EventState(_objectReference.ThisPtr, _index);
 
         private sealed class EventState : EventSourceState<global::System.EventHandler>
         {
@@ -508,13 +505,7 @@ namespace ABI.System
 
             protected override global::System.EventHandler GetEventInvoke()
             {
-                global::System.EventHandler handler = (global::System.Object obj, global::System.EventArgs e) =>
-                {
-                    var localDel = (global::System.EventHandler) del;
-                    if (localDel != null)
-                        localDel.Invoke(obj, e);
-                };
-                return handler;
+                return (obj, e) => del?.Invoke(obj, e);
             }
         }
     }

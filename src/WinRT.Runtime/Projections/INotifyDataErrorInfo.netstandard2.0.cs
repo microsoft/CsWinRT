@@ -172,7 +172,7 @@ namespace ABI.System.ComponentModel
 
             _ErrorsChanged =
                 new EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>(_obj,
-                (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_obj.Vftbl.add_ErrorsChanged_1,
+                _obj.Vftbl.add_ErrorsChanged_1,
                 _obj.Vftbl.remove_ErrorsChanged_2,
                 0);
         }

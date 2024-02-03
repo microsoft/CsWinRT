@@ -2,11 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace WinRT.Interop
 {
@@ -17,8 +14,8 @@ namespace WinRT.Interop
         where TDelegate : class, MulticastDelegate
     {
         public EventRegistrationToken token;
-        public System.Delegate del;
-        public System.Delegate eventInvoke;
+        public TDelegate del;
+        public TDelegate eventInvoke;
         private bool disposedValue;
         private readonly IntPtr obj;
         private readonly int index;

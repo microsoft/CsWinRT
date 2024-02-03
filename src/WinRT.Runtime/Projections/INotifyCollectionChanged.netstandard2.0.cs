@@ -23,7 +23,7 @@ namespace ABI.System.Collections.Specialized
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
-            private void* _add_CollectionChanged_0;
+            internal void* _add_CollectionChanged_0;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CollectionChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CollectionChanged_0; set => _add_CollectionChanged_0=(void*)value; }
             private void* _remove_CollectionChanged_1;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CollectionChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CollectionChanged_1; set => _remove_CollectionChanged_1=(void*)value; }
@@ -113,7 +113,7 @@ namespace ABI.System.Collections.Specialized
 
             _CollectionChanged =
                 new NotifyCollectionChangedEventSource(_obj,
-                _obj.Vftbl.add_CollectionChanged_0,
+                (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int>)_obj.Vftbl.add_CollectionChanged_0,
                 _obj.Vftbl.remove_CollectionChanged_1);
         }
 
