@@ -496,17 +496,17 @@ namespace ABI.System
         protected override ObjectReferenceValue CreateMarshaler(global::System.EventHandler del) => 
             EventHandler.CreateMarshaler2(del);
 
-        protected override State CreateEventState() =>
+        protected override EventSourceState<global::System.EventHandler> CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);
 
-        private sealed class EventState : State
+        private sealed class EventState : EventSourceState<global::System.EventHandler>
         {
             public EventState(IntPtr obj, int index)
                 : base(obj, index)
             {
             }
 
-            protected override Delegate GetEventInvoke()
+            protected override global::System.EventHandler GetEventInvoke()
             {
                 global::System.EventHandler handler = (global::System.Object obj, global::System.EventArgs e) =>
                 {

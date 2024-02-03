@@ -13,17 +13,17 @@ namespace WinRT.Interop
         private static readonly ReaderWriterLockSlim cachesLock = new();
         private static readonly ConcurrentDictionary<IntPtr, EventSourceCache> caches = new();
 
-        private readonly ConcurrentDictionary<int, System.WeakReference<State>> states = new();
+        private readonly ConcurrentDictionary<int, System.WeakReference<object>> states = new();
         private IWeakReference target;
 
-        private EventSourceCache(IWeakReference target, int index, System.WeakReference<State> state)
+        private EventSourceCache(IWeakReference target, int index, System.WeakReference<object> state)
         {
             this.target = target;
 
             SetState(index, state);
         }
 
-        private EventSourceCache Update(IWeakReference target, int index, System.WeakReference<State> state)
+        private EventSourceCache Update(IWeakReference target, int index, System.WeakReference<object> state)
         {
             // If target no longer exists, destroy cache
             lock (this)
@@ -39,7 +39,7 @@ namespace WinRT.Interop
             return this;
         }
 
-        private System.WeakReference<State> GetState(int index)
+        private System.WeakReference<object> GetState(int index)
         {
             // If target no longer exists, destroy cache
             lock (this)
@@ -58,12 +58,12 @@ namespace WinRT.Interop
             return null;
         }
 
-        private void SetState(int index, System.WeakReference<State> state)
+        private void SetState(int index, System.WeakReference<object> state)
         {
             states[index] = state;
         }
 
-        public static void Create(IObjectReference obj, int index, System.WeakReference<State> state)
+        public static void Create(IObjectReference obj, int index, System.WeakReference<object> state)
         {
             // If event source implements weak reference support, track event registrations so that
             // unsubscribes will work across garbage collections.  Note that most static/factory classes
@@ -106,7 +106,7 @@ namespace WinRT.Interop
             }
         }
 
-        public static System.WeakReference<State> GetState(IObjectReference obj, int index)
+        public static System.WeakReference<object> GetState(IObjectReference obj, int index)
         {
             if (caches.TryGetValue(obj.ThisPtr, out var cache))
             {
@@ -116,16 +116,16 @@ namespace WinRT.Interop
             return null;
         }
 
-        public static void Remove(IntPtr thisPtr, int index, System.WeakReference<State> state)
+        public static void Remove(IntPtr thisPtr, int index, System.WeakReference<object> state)
         {
             if (caches.TryGetValue(thisPtr, out var cache))
             {
 #if !NET
                 // https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
-                ((ICollection<KeyValuePair<int, System.WeakReference<State>>>)cache.states).Remove(
-                    new KeyValuePair<int, System.WeakReference<State>>(index, state));
+                ((ICollection<KeyValuePair<int, System.WeakReference<object>>>)cache.states).Remove(
+                    new KeyValuePair<int, System.WeakReference<object>>(index, state));
 #else
-                cache.states.TryRemove(new KeyValuePair<int, System.WeakReference<State>>(index, state));
+                cache.states.TryRemove(new KeyValuePair<int, System.WeakReference<object>>(index, state));
 #endif
                 // using double-checked lock idiom
                 if (cache.states.IsEmpty)

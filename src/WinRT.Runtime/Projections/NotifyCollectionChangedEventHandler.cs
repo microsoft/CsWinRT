@@ -181,17 +181,17 @@ namespace ABI.System.Collections.Specialized
         protected override ObjectReferenceValue CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler del) =>
             NotifyCollectionChangedEventHandler.CreateMarshaler2(del);
 
-        protected override State CreateEventState() =>
+        protected override EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);
 
-        private sealed class EventState : State
+        private sealed class EventState : EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
         {
             public EventState(IntPtr obj, int index)
                 : base(obj, index)
             {
             }
 
-            protected override Delegate GetEventInvoke()
+            protected override global::System.Collections.Specialized.NotifyCollectionChangedEventHandler GetEventInvoke()
             {
                 global::System.Collections.Specialized.NotifyCollectionChangedEventHandler handler =
                     (global::System.Object obj, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>

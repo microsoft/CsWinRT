@@ -179,17 +179,17 @@ namespace ABI.System.ComponentModel
         protected override ObjectReferenceValue CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler del) =>
             PropertyChangedEventHandler.CreateMarshaler2(del);
 
-        protected override State CreateEventState() =>
+        protected override EventSourceState<global::System.ComponentModel.PropertyChangedEventHandler> CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);
 
-        private sealed class EventState : State
+        private sealed class EventState : EventSourceState<global::System.ComponentModel.PropertyChangedEventHandler>
         {
             public EventState(IntPtr obj, int index)
                 : base(obj, index)
             {
             }
 
-            protected override Delegate GetEventInvoke()
+            protected override global::System.ComponentModel.PropertyChangedEventHandler GetEventInvoke()
             {
                 global::System.ComponentModel.PropertyChangedEventHandler handler =
                     (global::System.Object obj, global::System.ComponentModel.PropertyChangedEventArgs e) =>
