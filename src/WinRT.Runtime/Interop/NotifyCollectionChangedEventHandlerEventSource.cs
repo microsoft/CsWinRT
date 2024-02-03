@@ -10,7 +10,11 @@ namespace WinRT.Interop
     {
         internal NotifyCollectionChangedEventHandlerEventSource(
             IObjectReference objectReference,
+#if NET
             delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> addHandler,
+#else
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> addHandler,
+#endif
             delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> removeHandler)
             : base(objectReference, addHandler, removeHandler)
         {

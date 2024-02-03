@@ -23,7 +23,7 @@ namespace ABI.System.Windows.Input
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            internal void* _add_CanExecuteChanged_0;
+            private void* _add_CanExecuteChanged_0;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CanExecuteChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CanExecuteChanged_0; set => _add_CanExecuteChanged_0 = value; }
             private void* _remove_CanExecuteChanged_1;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CanExecuteChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CanExecuteChanged_1; set => _remove_CanExecuteChanged_1 = value; }
@@ -148,7 +148,7 @@ namespace ABI.System.Windows.Input
 
             _CanExecuteChanged =
                 new EventHandlerEventSource(_obj,
-                (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int>)_obj.Vftbl._add_CanExecuteChanged_0,
+                _obj.Vftbl.add_CanExecuteChanged_0,
                 _obj.Vftbl.remove_CanExecuteChanged_1);
         }
 

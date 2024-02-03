@@ -11,13 +11,21 @@ namespace WinRT.Interop
     {
         private readonly IObjectReference _objectReference;
         private readonly int _index;
+#if NET
         private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> _addHandler;
+#else
+        private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> _addHandler;
+#endif
         private readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
         private System.WeakReference<object> _state;
 
         protected EventSource(
             IObjectReference objectReference,
+#if NET
             delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> addHandler,
+#else
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> addHandler,
+#endif
             delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> removeHandler,
             int index = 0)
         {
@@ -64,7 +72,11 @@ namespace WinRT.Interop
                         state.InitalizeReferenceTracking(nativeDelegate);
 
                         EventRegistrationToken token;
+#if NET
                         ExceptionHelpers.ThrowExceptionForHR(_addHandler(_objectReference.ThisPtr, nativeDelegate, &token));
+#else
+                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_objectReference.ThisPtr, nativeDelegate, out token));
+#endif
                         state.token = token;
                     }
                     finally
