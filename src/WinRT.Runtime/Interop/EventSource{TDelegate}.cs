@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -9,6 +10,12 @@ using System.Runtime.CompilerServices;
 
 namespace WinRT.Interop
 {
+    /// <summary>
+    /// A managed wrapper for an event to expose to a native WinRT consumer.
+    /// </summary>
+    /// <typeparam name="TDelegate">The type of delegate being managed.</typeparam>
+    /// <remarks>This type is only meant to be used by generated projections.</remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public unsafe abstract class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
@@ -22,6 +29,13 @@ namespace WinRT.Interop
         private readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
         private System.WeakReference<object>? _state;
 
+        /// <summary>
+        /// Creates a new <see cref="EventSource{TDelegate}"/> instance with the specified parameters.
+        /// </summary>
+        /// <param name="objectReference">The <see cref="IObjectReference"/> instance holding the event.</param>
+        /// <param name="addHandler">The native function pointer for the <c>AddHandler</c> method on the target object.</param>
+        /// <param name="removeHandler">The native function pointer for the <c>RemoveHandler</c> method on the target object.</param>
+        /// <param name="index">The index of the event being managed.</param>
         protected EventSource(
             IObjectReference objectReference,
 #if NET
@@ -39,15 +53,34 @@ namespace WinRT.Interop
             _state = EventSourceCache.GetState(objectReference, index);
         }
 
+        /// <summary>
+        /// Gets the <see cref="IObjectReference"/> instance holding the event.
+        /// </summary>
         protected IObjectReference ObjectReference => _objectReference;
 
+        /// <summary>
+        /// Gets the index of the event being managed.
+        /// </summary>
         protected int Index => _index;
 
-        protected abstract ObjectReferenceValue CreateMarshaler(TDelegate del);
+        /// <summary>
+        /// Gets an <see cref="ObjectReferenceValue"/> instance to marshal a <typeparamref name="TDelegate"/> instance.
+        /// </summary>
+        /// <param name="handler">The input <typeparamref name="TDelegate"/> handler to create the marshaller for.</param>
+        /// <returns>An <see cref="ObjectReferenceValue"/> instance to marshal a <typeparamref name="TDelegate"/> instance.</returns>
+        protected abstract ObjectReferenceValue CreateMarshaler(TDelegate handler);
 
+        /// <summary>
+        /// Creates the <see cref="EventSourceState{TDelegate}"/> instance for the current event source.
+        /// </summary>
+        /// <returns>The <see cref="EventSourceState{TDelegate}"/> instance for the current event source.</returns>
         protected abstract EventSourceState<TDelegate> CreateEventSourceState();
 
-        public void Subscribe(TDelegate del)
+        /// <summary>
+        /// Subscribes a given handler to the target event.
+        /// </summary>
+        /// <param name="handler">The handler to subscribe to the target event.</param>
+        public void Subscribe(TDelegate handler)
         {
             lock (this)
             {
@@ -63,7 +96,7 @@ namespace WinRT.Interop
                     EventSourceCache.Create(_objectReference, _index, _state);
                 }
 
-                state!.targetDelegate = (TDelegate)Delegate.Combine(state.targetDelegate, del);
+                state!.targetDelegate = (TDelegate)Delegate.Combine(state.targetDelegate, handler);
                 if (registerHandler)
                 {
                     var eventInvoke = state.eventInvoke;
@@ -91,7 +124,11 @@ namespace WinRT.Interop
             }
         }
 
-        public void Unsubscribe(TDelegate del)
+        /// <summary>
+        /// Removes a given handler from the target event.
+        /// </summary>
+        /// <param name="handler">The handler to remove from the target event.</param>
+        public void Unsubscribe(TDelegate handler)
         {
             if (_state is null || !TryGetStateUnsafe(out var state))
             {
@@ -101,7 +138,7 @@ namespace WinRT.Interop
             lock (this)
             {
                 var oldEvent = state.targetDelegate;
-                state.targetDelegate = (TDelegate?)Delegate.Remove(state.targetDelegate, del);
+                state.targetDelegate = (TDelegate?)Delegate.Remove(state.targetDelegate, handler);
                 if (oldEvent is object && state.targetDelegate is null)
                 {
                     UnsubscribeFromNative(state);

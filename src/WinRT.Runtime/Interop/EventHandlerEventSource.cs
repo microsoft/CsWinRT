@@ -2,9 +2,15 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 
 namespace WinRT.Interop
 {
+    /// <summary>
+    /// An <see cref="EventSource{TDelegate}"/> implementation for <see cref="EventHandler"/>.
+    /// </summary>
+    /// <remarks>This type is only meant to be used by generated projections.</remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
     {
         public EventHandlerEventSource(
@@ -19,9 +25,11 @@ namespace WinRT.Interop
         {
         }
 
+        /// <inheritdoc/>
         protected override ObjectReferenceValue CreateMarshaler(EventHandler del) =>
             ABI.System.EventHandler.CreateMarshaler2(del);
 
+        /// <inheritdoc/>
         protected override EventSourceState<EventHandler> CreateEventSourceState() =>
             new EventState(ObjectReference.ThisPtr, Index);
 
