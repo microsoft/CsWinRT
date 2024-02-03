@@ -1069,7 +1069,7 @@ namespace cswinrt
                         w.write("(IWinRTObject)this");
                     }
                 }),
-            isSubscribeCall ? "Item1" : "Item2");
+            isSubscribeCall ? "Subscribe" : "Unsubscribe");
     }
 
     void write_method(writer& w, method_signature signature, std::string_view method_name,
@@ -3784,7 +3784,7 @@ Vtable = %.AbiToProjectionVftablePtr
                 if ((eventType.TypeNamespace() == "Windows.Foundation" || eventType.TypeNamespace() == "System") && eventType.TypeName() == "EventHandler`1")
                 {
                     auto [add, remove] = get_event_methods(evt);
-                    w.write(R"( new EventSource__EventHandler%(_obj,
+                    w.write(R"( new EventHandlerEventSource%(_obj,
 %,
 %,
 %))",
@@ -5365,16 +5365,16 @@ else
         for (auto&& evt : iface.EventList())
         {
                     w.write(R"(%
-% static unsafe (Action<%>, Action<%>) Get_%(% %, object _thisObj)
+% static unsafe EventSource<%> Get_%(% %, object _thisObj)
 {
-var eventSource = _%.GetValue(_thisObj, (key) =>
+return _%.GetValue(_thisObj, (key) =>
 {
 %
 return %;
 });
-return eventSource.EventActions;
 }
 )",
+                        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
                         bind<write_event_source_table>(evt),
                         isExclusiveInterface ? "internal" : "public",
                         bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
