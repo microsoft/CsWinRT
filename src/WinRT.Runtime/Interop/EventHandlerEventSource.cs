@@ -5,9 +5,9 @@ using System;
 
 namespace WinRT.Interop
 {
-    internal sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
+    public sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
     {
-        internal EventHandlerEventSource(
+        public EventHandlerEventSource(
             IObjectReference objectReference,
             delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> addHandler,
             delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> removeHandler)
