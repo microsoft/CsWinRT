@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -392,7 +391,21 @@ namespace WinRT
 
             var visitedTypes = visitedTypesInstance ??= new Stack<VisitedType>();
 
-            if (visitedTypes.Any(visited => visited.Type == type))
+            // Manual helper to save binary size (no LINQ, no lambdas) and get better performance
+            static bool HasAnyVisitedTypes(Stack<VisitedType> visitedTypes, Type type)
+            {
+                foreach (VisitedType visitedType in visitedTypes)
+                {
+                    if (visitedType.Type == type)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            if (HasAnyVisitedTypes(visitedTypes, type))
             {
                 // In this case, we've already visited the type when recursing through generic parameters.
                 // Try to fall back to object if the parameter is covariant and the argument is compatable with object.
