@@ -15,13 +15,13 @@ namespace ABI.System.Collections.Specialized
 #endif
     static class INotifyCollectionChangedMethods
     {
-        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource> _CollectionChanged;
-        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource> MakeCollectionChangedTable()
+        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventHandlerEventSource> _CollectionChanged;
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventHandlerEventSource> MakeCollectionChangedTable()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _CollectionChanged, new(), null);
             return _CollectionChanged;
         }
-        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource> CollectionChanged => _CollectionChanged ?? MakeCollectionChangedTable();
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventHandlerEventSource> CollectionChanged => _CollectionChanged ?? MakeCollectionChangedTable();
 
         public static unsafe global::WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> Get_CollectionChanged(IObjectReference obj, object thisObj)
         {
@@ -29,7 +29,7 @@ namespace ABI.System.Collections.Specialized
             {
                 var ThisPtr = obj.ThisPtr;
 
-                return new global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource(obj,
+                return new NotifyCollectionChangedEventHandlerEventSource(obj,
                     (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
                     (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
             });

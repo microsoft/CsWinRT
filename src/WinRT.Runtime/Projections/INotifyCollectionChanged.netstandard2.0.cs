@@ -112,7 +112,7 @@ namespace ABI.System.Collections.Specialized
             _obj = obj;
 
             _CollectionChanged =
-                new global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource(_obj,
+                new NotifyCollectionChangedEventHandlerEventSource(_obj,
                 _obj.Vftbl.add_CollectionChanged_0,
                 _obj.Vftbl.remove_CollectionChanged_1);
         }
