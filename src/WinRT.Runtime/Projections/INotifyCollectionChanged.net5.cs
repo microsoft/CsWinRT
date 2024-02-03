@@ -15,26 +15,25 @@ namespace ABI.System.Collections.Specialized
 #endif
     static class INotifyCollectionChangedMethods
     {
-        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventSource> _CollectionChanged;
-        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventSource> MakeCollectionChangedTable()
+        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource> _CollectionChanged;
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource> MakeCollectionChangedTable()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _CollectionChanged, new(), null);
             return _CollectionChanged;
         }
-        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventSource> CollectionChanged => _CollectionChanged ?? MakeCollectionChangedTable();
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource> CollectionChanged => _CollectionChanged ?? MakeCollectionChangedTable();
 
 
-        public static unsafe (Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>, Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>) Get_CollectionChanged(IObjectReference obj, object thisObj)
+        public static unsafe global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource Get_CollectionChanged(IObjectReference obj, object thisObj)
         {
-            var eventSource = CollectionChanged.GetValue(thisObj, (key) =>
+            return CollectionChanged.GetValue(thisObj, (key) =>
             {
                 var ThisPtr = obj.ThisPtr;
 
-                return new NotifyCollectionChangedEventSource(obj,
+                return new global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource(obj,
                     (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
                     (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
             });
-            return eventSource.EventActions;
         }
 
         public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xE1, 0x55, 0x01, 0x53, 0xA5, 0x28, 0x93, 0x56, 0x87, 0xCE, 0x30, 0x72, 0x4D, 0x95, 0xA0, 0x6D }));
@@ -125,7 +124,7 @@ namespace ABI.System.Collections.Specialized
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static (Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>, Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>) _CollectionChanged(IWinRTObject _this)
+        private static global::WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource _CollectionChanged(IWinRTObject _this)
         {
             var _obj = _this.GetObjectReferenceForType(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle);
             return INotifyCollectionChangedMethods.Get_CollectionChanged(_obj, _this);
@@ -133,8 +132,8 @@ namespace ABI.System.Collections.Specialized
 
         event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged
         {
-            add => _CollectionChanged((IWinRTObject)this).Item1(value);
-            remove => _CollectionChanged((IWinRTObject)this).Item2(value);
+            add => _CollectionChanged((IWinRTObject)this).Subscribe(value);
+            remove => _CollectionChanged((IWinRTObject)this).Unsubscribe(value);
         }
     }
 }

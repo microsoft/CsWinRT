@@ -213,4 +213,5 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'System.T
 TypesMustExist : Type 'WinRT.Interop.IID' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.EventSource<TDelegate>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.EventSourceState<TDelegate>' does not exist in the reference but it does exist in the implementation.
-Total Issues: 215
+TypesMustExist : Type 'WinRT.Interop.NotifyCollectionChangedEventHandlerEventSource' does not exist in the reference but it does exist in the implementation.
+Total Issues: 216

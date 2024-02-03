@@ -14,7 +14,6 @@ namespace WinRT.Interop
         private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> _addHandler;
         private readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
         private System.WeakReference<object> _state;
-        private readonly (Action<TDelegate>, Action<TDelegate>) _handlerTuple;
 
         protected EventSource(
             IObjectReference objectReference,
@@ -27,7 +26,6 @@ namespace WinRT.Interop
             _removeHandler = removeHandler;
             _index = index;
             _state = EventSourceCache.GetState(objectReference, index);
-            _handlerTuple = (Subscribe, Unsubscribe);
         }
 
         protected IObjectReference ObjectReference => _objectReference;
@@ -96,8 +94,6 @@ namespace WinRT.Interop
                 }
             }
         }
-
-        public (Action<TDelegate>, Action<TDelegate>) EventActions => _handlerTuple;
 
         private void UnsubscribeFromNative(EventSourceState<TDelegate> state)
         {
