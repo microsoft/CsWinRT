@@ -493,8 +493,8 @@ namespace ABI.System
         protected override ObjectReferenceValue CreateMarshaler(global::System.EventHandler del) => 
             EventHandler.CreateMarshaler2(del);
 
-        protected override EventSourceState<global::System.EventHandler> CreateEventState() =>
-            new EventState(_objectReference.ThisPtr, _index);
+        protected override EventSourceState<global::System.EventHandler> CreateEventSourceState() =>
+            new EventState(ObjectReference.ThisPtr, Index);
 
         private sealed class EventState : EventSourceState<global::System.EventHandler>
         {
@@ -505,7 +505,7 @@ namespace ABI.System
 
             protected override global::System.EventHandler GetEventInvoke()
             {
-                return (obj, e) => del?.Invoke(obj, e);
+                return (obj, e) => targetDelegate?.Invoke(obj, e);
             }
         }
     }

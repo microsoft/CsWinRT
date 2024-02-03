@@ -178,8 +178,8 @@ namespace ABI.System.Collections.Specialized
         protected override ObjectReferenceValue CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler del) =>
             NotifyCollectionChangedEventHandler.CreateMarshaler2(del);
 
-        protected override EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> CreateEventState() =>
-            new EventState(_objectReference.ThisPtr, _index);
+        protected override EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> CreateEventSourceState() =>
+            new EventState(ObjectReference.ThisPtr, Index);
 
         private sealed class EventState : EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
         {
@@ -190,7 +190,7 @@ namespace ABI.System.Collections.Specialized
 
             protected override global::System.Collections.Specialized.NotifyCollectionChangedEventHandler GetEventInvoke()
             {
-                return (obj, e) => del?.Invoke(obj, e);
+                return (obj, e) => targetDelegate?.Invoke(obj, e);
             }
         }
     }

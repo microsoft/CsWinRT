@@ -6,14 +6,14 @@ using System.Runtime.CompilerServices;
 
 namespace WinRT.Interop
 {
-    internal unsafe abstract class EventSource<TDelegate>
+    public unsafe abstract class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
-        protected readonly IObjectReference _objectReference;
-        protected readonly int _index;
-        readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> _addHandler;
-        readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
-        protected System.WeakReference<object> _state;
+        private readonly IObjectReference _objectReference;
+        private readonly int _index;
+        private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> _addHandler;
+        private readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
+        private System.WeakReference<object> _state;
         private readonly (Action<TDelegate>, Action<TDelegate>) _handlerTuple;
 
         protected EventSource(
@@ -30,9 +30,13 @@ namespace WinRT.Interop
             _handlerTuple = (Subscribe, Unsubscribe);
         }
 
+        protected IObjectReference ObjectReference => _objectReference;
+
+        protected int Index => _index;
+
         protected abstract ObjectReferenceValue CreateMarshaler(TDelegate del);
 
-        protected abstract EventSourceState<TDelegate> CreateEventState();
+        protected abstract EventSourceState<TDelegate> CreateEventSourceState();
 
         public void Subscribe(TDelegate del)
         {
@@ -46,12 +50,12 @@ namespace WinRT.Interop
                     !state.HasComReferences();
                 if (registerHandler)
                 {
-                    state = CreateEventState();
+                    state = CreateEventSourceState();
                     _state = state.GetWeakReferenceForCache();
                     EventSourceCache.Create(_objectReference, _index, _state);
                 }
 
-                state.del = (TDelegate)Delegate.Combine(state.del, del);
+                state.targetDelegate = (TDelegate)Delegate.Combine(state.targetDelegate, del);
                 if (registerHandler)
                 {
                     var eventInvoke = state.eventInvoke;
@@ -84,9 +88,9 @@ namespace WinRT.Interop
 
             lock (this)
             {
-                var oldEvent = state.del;
-                state.del = (TDelegate)Delegate.Remove(state.del, del);
-                if (oldEvent is object && state.del is null)
+                var oldEvent = state.targetDelegate;
+                state.targetDelegate = (TDelegate)Delegate.Remove(state.targetDelegate, del);
+                if (oldEvent is object && state.targetDelegate is null)
                 {
                     UnsubscribeFromNative(state);
                 }

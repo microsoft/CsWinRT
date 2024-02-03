@@ -10,22 +10,22 @@ namespace WinRT.Interop
     // Registration state and delegate cached separately to survive EventSource garbage collection
     // and to prevent the generated event delegate from impacting the lifetime of the
     // event source.
-    internal abstract class EventSourceState<TDelegate> : IDisposable
+    public abstract class EventSourceState<TDelegate> : IDisposable
         where TDelegate : class, MulticastDelegate
     {
-        public EventRegistrationToken token;
-        public TDelegate del;
-        public TDelegate eventInvoke;
         private bool disposedValue;
         private readonly IntPtr obj;
         private readonly int index;
         private readonly System.WeakReference<object> cacheEntry;
         private IntPtr eventInvokePtr;
         private IntPtr referenceTrackerTargetPtr;
+        internal EventRegistrationToken token;
+        internal TDelegate targetDelegate;
+        internal TDelegate eventInvoke;
 
-        protected EventSourceState(IntPtr obj, int index)
+        protected EventSourceState(IntPtr thisPtr, int index)
         {
-            this.obj = obj;
+            this.obj = thisPtr;
             this.index = index;
             eventInvoke = GetEventInvoke();
             cacheEntry = new System.WeakReference<object>(this);
@@ -37,13 +37,6 @@ namespace WinRT.Interop
         ~EventSourceState()
         {
             Dispose(false);
-        }
-
-        // Allows to retrieve a singleton like weak reference to use
-        // with the cache to allow for proper removal with comparision.
-        public System.WeakReference<object> GetWeakReferenceForCache()
-        {
-            return cacheEntry;
         }
 
         protected abstract TDelegate GetEventInvoke();
@@ -62,11 +55,19 @@ namespace WinRT.Interop
 
         public void Dispose()
         {
-            Dispose(true);
             GC.SuppressFinalize(this);
+
+            Dispose(true);
         }
 
-        public void InitalizeReferenceTracking(IntPtr ptr)
+        // Allows to retrieve a singleton like weak reference to use
+        // with the cache to allow for proper removal with comparision.
+        internal System.WeakReference<object> GetWeakReferenceForCache()
+        {
+            return cacheEntry;
+        }
+
+        internal void InitalizeReferenceTracking(IntPtr ptr)
         {
             eventInvokePtr = ptr;
             int hr = Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in IID.IID_IReferenceTrackerTarget), out referenceTrackerTargetPtr);
@@ -82,7 +83,7 @@ namespace WinRT.Interop
             }
         }
 
-        public unsafe bool HasComReferences()
+        internal unsafe bool HasComReferences()
         {
             if (eventInvokePtr != default)
             {

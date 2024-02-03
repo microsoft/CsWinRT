@@ -18,8 +18,8 @@ namespace WinRT.Interop
         protected override ObjectReferenceValue CreateMarshaler(EventHandler<T> del) =>
             ABI.System.EventHandler<T>.CreateMarshaler2(del);
 
-        protected override EventSourceState<EventHandler<T>> CreateEventState() =>
-            new EventState(_objectReference.ThisPtr, _index);
+        protected override EventSourceState<EventHandler<T>> CreateEventSourceState() =>
+            new EventState(ObjectReference.ThisPtr, Index);
 
         private sealed class EventState : EventSourceState<EventHandler<T>>
         {
@@ -30,7 +30,7 @@ namespace WinRT.Interop
 
             protected override EventHandler<T> GetEventInvoke()
             {
-                return (obj, e) => del?.Invoke(obj, e);
+                return (obj, e) => targetDelegate?.Invoke(obj, e);
             }
         }
     }
