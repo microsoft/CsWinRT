@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+
+#nullable enable
 
 namespace WinRT.Interop
 {
@@ -17,7 +20,7 @@ namespace WinRT.Interop
         private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> _addHandler;
 #endif
         private readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
-        private System.WeakReference<object> _state;
+        private System.WeakReference<object>? _state;
 
         protected EventSource(
             IObjectReference objectReference,
@@ -48,9 +51,8 @@ namespace WinRT.Interop
         {
             lock (this)
             {
-                EventSourceState<TDelegate> state = null;
+                EventSourceState<TDelegate>? state = null;
                 bool registerHandler =
-                    _state is null ||
                     !TryGetStateUnsafe(out state) ||
                     // We have a wrapper delegate, but no longer has any references from any event source.
                     !state.HasComReferences();
@@ -61,7 +63,7 @@ namespace WinRT.Interop
                     EventSourceCache.Create(_objectReference, _index, _state);
                 }
 
-                state.targetDelegate = (TDelegate)Delegate.Combine(state.targetDelegate, del);
+                state!.targetDelegate = (TDelegate)Delegate.Combine(state.targetDelegate, del);
                 if (registerHandler)
                 {
                     var eventInvoke = state.eventInvoke;
@@ -99,7 +101,7 @@ namespace WinRT.Interop
             lock (this)
             {
                 var oldEvent = state.targetDelegate;
-                state.targetDelegate = (TDelegate)Delegate.Remove(state.targetDelegate, del);
+                state.targetDelegate = (TDelegate?)Delegate.Remove(state.targetDelegate, del);
                 if (oldEvent is object && state.targetDelegate is null)
                 {
                     UnsubscribeFromNative(state);
@@ -114,10 +116,17 @@ namespace WinRT.Interop
             _state = null;
         }
 
+#if NET
+        [MemberNotNullWhen(true, nameof(_state))]
+#endif
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool TryGetStateUnsafe(out EventSourceState<TDelegate> state)
+        private bool TryGetStateUnsafe(
+#if NET
+            [NotNullWhen(true)]
+#endif
+            out EventSourceState<TDelegate>? state)
         {
-            if (_state.TryGetTarget(out object stateObj))
+            if (_state is not null && _state.TryGetTarget(out object? stateObj))
             {
                 state = Unsafe.As<EventSourceState<TDelegate>>(stateObj);
 

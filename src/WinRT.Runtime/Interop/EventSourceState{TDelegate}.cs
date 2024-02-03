@@ -5,6 +5,8 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+#nullable enable
+
 namespace WinRT.Interop
 {
     // Registration state and delegate cached separately to survive EventSource garbage collection
@@ -20,7 +22,7 @@ namespace WinRT.Interop
         private IntPtr eventInvokePtr;
         private IntPtr referenceTrackerTargetPtr;
         internal EventRegistrationToken token;
-        internal TDelegate targetDelegate;
+        internal TDelegate? targetDelegate;
         internal TDelegate eventInvoke;
 
         protected EventSourceState(IntPtr thisPtr, int index)
