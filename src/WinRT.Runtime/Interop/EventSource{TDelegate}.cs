@@ -16,7 +16,12 @@ namespace WinRT.Interop
     /// <typeparam name="TDelegate">The type of delegate being managed.</typeparam>
     /// <remarks>This type is only meant to be used by generated projections.</remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public unsafe abstract class EventSource<TDelegate>
+    #if EMBED
+    internal
+#else
+    public
+#endif
+    abstract unsafe class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
         private readonly IObjectReference _objectReference;

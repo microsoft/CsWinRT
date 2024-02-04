@@ -11,7 +11,12 @@ namespace WinRT.Interop
     /// </summary>
     /// <remarks>This type is only meant to be used by generated projections.</remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
+#if EMBED
+    internal
+#else
+    public
+#endif  
+    sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
     {
         public EventHandlerEventSource(
             IObjectReference objectReference,

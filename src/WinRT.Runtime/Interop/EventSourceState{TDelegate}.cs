@@ -16,7 +16,12 @@ namespace WinRT.Interop
     /// <typeparam name="TDelegate">The type of delegate being managed from the associated event.</typeparam>
     /// <remarks>This type is only meant to be used by generated projections.</remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public abstract class EventSourceState<TDelegate> : IDisposable
+#if EMBED
+    internal
+#else
+    public
+#endif    
+    abstract class EventSourceState<TDelegate> : IDisposable
         where TDelegate : class, MulticastDelegate
     {
         // Registration state and delegate cached separately to survive EventSource garbage collection
