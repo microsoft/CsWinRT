@@ -159,6 +159,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
       <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedProjection>
       <CsWinRTEmbeddedEnums Condition="'$(CsWinRTEmbeddedPublicEnums)' == 'true'">-public_enums</CsWinRTEmbeddedEnums>
+
+      <!--
+        These 'CsWinRTExeTFM' properties should be kept in sync with the ones in ''Microsoft.Windows.CsWinRT.Authoring.targets'.
+        This list is used when generating projections, and the other one is used by the authoring source generator instead.
+      -->
       <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 6">net6.0</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 7">net7.0</CsWinRTExeTFM>
