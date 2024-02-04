@@ -3784,7 +3784,7 @@ Vtable = %.AbiToProjectionVftablePtr
                 if ((eventType.TypeNamespace() == "Windows.Foundation" || eventType.TypeNamespace() == "System") && eventType.TypeName() == "EventHandler`1")
                 {
                     auto [add, remove] = get_event_methods(evt);
-                    w.write(R"( new EventHandlerEventSource%(_obj,
+                    w.write(R"( new global::WinRT.Interop.EventHandlerEventSource%(_obj,
 %,
 %,
 %))",
@@ -3818,7 +3818,7 @@ new %%(_obj,
         for (auto&& evt : type.EventList())
         {
             w.write(R"(
-private EventSource<%> _%;)",
+private global::WinRT.Interop.EventSource<%> _%;)",
 bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
 evt.Name());
         }
@@ -3827,14 +3827,14 @@ evt.Name());
     void write_event_source_table(writer& w, Event const& evt)
     {
         w.write(R"(
-private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _%_;
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> Make%Table()
+private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.EventSource<%>> _%_;
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.EventSource<%>> Make%Table()
 {
     %
     global::System.Threading.Interlocked.CompareExchange(ref _%_, new(), null);
     return _%_;
 }
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _% => _%_ ?? Make%Table();
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.EventSource<%>> _% => _%_ ?? Make%Table();
 )",
             bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
             evt.Name(),
@@ -5365,7 +5365,7 @@ else
         for (auto&& evt : iface.EventList())
         {
                     w.write(R"(%
-% static unsafe EventSource<%> Get_%(% %, object _thisObj)
+% static unsafe global::WinRT.Interop.EventSource<%> Get_%(% %, object _thisObj)
 {
 return _%.GetValue(_thisObj, (key) =>
 {
@@ -9966,7 +9966,7 @@ public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
                 auto invokeMethodSig = get_event_invoke_method_signature(eventType);
                 w.write(R"(
-internal sealed unsafe class %% : EventSource<%>
+internal sealed unsafe class %% : global::WinRT.Interop.EventSource<%>
 {
 %
 
@@ -9977,48 +9977,48 @@ delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> r
 %
 }
 
-protected override ObjectReferenceValue CreateMarshaler(% del) =>
-%.CreateMarshaler2(del);
+protected override ObjectReferenceValue CreateMarshaler(% handler) =>
+%.CreateMarshaler2(handler);
 
-protected override State CreateEventState() =>
-new EventState(_obj.ThisPtr, _index);
+protected override global::WinRT.Interop.EventSourceState<%> CreateEventSourceState() =>
+new EventState(ObjectReference.ThisPtr, Index);
 
-private sealed class EventState : State
+private sealed class EventState : global::WinRT.Interop.EventSourceState<%>
 {
 public EventState(System.IntPtr obj, int index)
 : base(obj, index)
 {
 }
 
-protected override System.Delegate GetEventInvoke()
+protected override % GetEventInvoke()
 {
-% invoke = (%) =>
+return (%) =>
 {
-var localDel = (%) del;
-if (localDel == null)
+var targetDelegate = TargetDelegate;
+if (targetDelegate is null)
 {%
 return %;
 }
-%localDel.Invoke(%);
+%targetDelegate.Invoke(%);
 };
-return invoke;
 }
 }
 }
 )",
 bind<write_event_source_type_name>(eventTypeSemantics),
 bind<write_event_source_generic_args>(eventTypeSemantics),
-eventTypeCode,
+eventTypeCode, // EventSource<%>
 genericInstantiationInitialization,
 bind<write_event_source_type_name>(eventTypeSemantics),
 settings.netstandard_compat ? "out " : "",
 settings.netstandard_compat ? "" : "*",
 genericInstantiationInitialization == "" ? "" : "_ = initialized;",
-eventTypeCode,
+eventTypeCode, // % handler
 abiTypeName,
-eventTypeCode,
+eventTypeCode, // EventSourceState<%>
+eventTypeCode, // EventSourceState<%>
+eventTypeCode, // % GetEventInvoke()
 bind<write_event_invoke_params>(invokeMethodSig),
-eventTypeCode,
 bind<write_event_out_defaults>(invokeMethodSig),
 bind<write_event_invoke_return_default>(invokeMethodSig),
 bind<write_event_invoke_return>(invokeMethodSig),
