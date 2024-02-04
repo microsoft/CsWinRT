@@ -58,6 +58,11 @@ namespace WinRT.Interop
         }
 
         /// <summary>
+        /// Gets the current <typeparamref name="TDelegate"/> value with the active subscriptions for the target event.
+        /// </summary>
+        protected TDelegate? TargetDelegate => targetDelegate;
+
+        /// <summary>
         /// Gets a <typeparamref name="TDelegate"/> instance responsible for actually raising the
         /// event, if any targets are currently available, or for doing nothing if the current
         /// target handler is currently <see langword="null"/>.
