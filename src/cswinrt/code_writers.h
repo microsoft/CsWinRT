@@ -2074,7 +2074,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(class_type));
 
             w.write(R"(
-public %() : this(%(WinRT.IActivationFactoryMethods.ActivateInstance<IUnknownVftbl>(%)))
+public %() : this(%(global::WinRT.IActivationFactoryMethods.ActivateInstance<IUnknownVftbl>(%)))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 %
