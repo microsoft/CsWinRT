@@ -53,7 +53,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="strings\WinRT.cs">
+    <None Include="strings\InitalizeProjection.cs">
       <Filter>strings</Filter>
     </None>
     <None Include="packages.config" />

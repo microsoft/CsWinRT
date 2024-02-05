@@ -25,7 +25,7 @@ Contains benchmarks written using BenchmarkDotNet to track the performance of sc
 
 ## [`src/cswinrt`](../src/cswinrt) 
 
-Contains the sources and `cswinrt.vcxproj` project file for building the C#/WinRT compiler, **cswinrt.exe**.  The projection's base library is contained in src/cswinrt/strings/WinRT.cs, which is processed by src/Strings.props to generate string literals contained in the compiler.
+Contains the sources and `cswinrt.vcxproj` project file for building the C#/WinRT compiler, **cswinrt.exe**.
 
 The compiler uses the [WinMD NuGet package](http://aka.ms/winmd/nuget) for parsing [ECMA-335 metadata](http://www.ecma-international.org/publications/standards/Ecma-335.htm) files.  The WinMD github repo includes a [winmd.natvis](https://github.com/microsoft/winmd/blob/master/vs/winmd.natvis) script for debugging metadata parsing.  A symlink can be used to install the script:
   > for /f "tokens=2*" %i in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Personal ^| findstr Personal') do @for /f "tokens=2" %k in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere" -latest ^| findstr catalog_productLineVersion') do @echo %j\Visual Studio %k\Visualizers| for /f "delims=" %l in ('more') do @md "%l" 2>nul & mklink "%l\winmd.natvis" "c:\git\winmd\vs\winmd.natvis" 
