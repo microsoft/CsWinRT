@@ -36,7 +36,7 @@ namespace ABI.WinRT.Interop
     [Guid("00000003-0000-0000-c000-000000000046")]
     internal sealed class IMarshal
     {
-        internal static readonly Guid IID = InterfaceIIDs.IMarshal_IID;
+        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IMarshal;
 
         private const string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
 

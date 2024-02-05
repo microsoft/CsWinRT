@@ -44,11 +44,7 @@ namespace ABI.WinRT.Interop
 #endif
     static class IActivationFactoryMethods
     {
-#if NET
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x35, 0, 0, 0, 0, 0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46 }));
-#else
-        public static global::System.Guid IID { get; } = new(0x00000035, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
-#endif
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_IActivationFactory;
 
         public static IntPtr AbiToProjectionVftablePtr => IActivationFactory.Vftbl.AbiToProjectionVftablePtr;
 

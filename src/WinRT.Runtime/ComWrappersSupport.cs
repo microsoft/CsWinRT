@@ -76,17 +76,17 @@ namespace WinRT
         // This can either be if the object implements IAgileObject or the free threaded marshaler.
         internal unsafe static bool IsFreeThreaded(IntPtr iUnknown)
         {
-            if (Marshal.QueryInterface(iUnknown, ref Unsafe.AsRef(InterfaceIIDs.IAgileObject_IID), out var agilePtr) >= 0)
+            if (Marshal.QueryInterface(iUnknown, ref Unsafe.AsRef(in IID.IID_IAgileObject), out var agilePtr) >= 0)
             {
                 Marshal.Release(agilePtr);
                 return true;
             }
 
-            if (Marshal.QueryInterface(iUnknown, ref Unsafe.AsRef(InterfaceIIDs.IMarshal_IID), out var marshalPtr) >= 0)
+            if (Marshal.QueryInterface(iUnknown, ref Unsafe.AsRef(in IID.IID_IMarshal), out var marshalPtr) >= 0)
             {
                 try
                 {
-                    Guid iid_IUnknown = InterfaceIIDs.IUnknown_IID;
+                    Guid iid_IUnknown = IID.IID_IUnknown;
                     Guid iid_unmarshalClass;
                     Marshal.ThrowExceptionForHR((**(ABI.WinRT.Interop.IMarshal.Vftbl**)marshalPtr).GetUnmarshalClass_0(
                         marshalPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
@@ -314,7 +314,7 @@ namespace WinRT
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = InterfaceIIDs.IWeakReferenceSource_IID,
+                IID = IID.IID_IWeakReferenceSource,
                 Vtable = ABI.WinRT.Interop.IWeakReferenceSource.AbiToProjectionVftablePtr
             });
 
@@ -324,7 +324,7 @@ namespace WinRT
             {
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = InterfaceIIDs.IMarshal_IID,
+                    IID = IID.IID_IMarshal,
                     Vtable = ABI.WinRT.Interop.IMarshal.Vftbl.AbiToProjectionVftablePtr
                 });
             }
@@ -332,20 +332,20 @@ namespace WinRT
             // Add IAgileObject to all CCWs
             entries.Add(new ComInterfaceEntry
             {
-                IID = InterfaceIIDs.IAgileObject_IID,
+                IID = IID.IID_IAgileObject,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = InterfaceIIDs.IInspectable_IID,
+                IID = IID.IID_IInspectable,
                 Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
             });
 
             // This should be the last entry as it is included / excluded based on the flags.
             entries.Add(new ComInterfaceEntry
             {
-                IID = InterfaceIIDs.IUnknown_IID,
+                IID = IID.IID_IUnknown,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
 
@@ -358,10 +358,10 @@ namespace WinRT
                 entries.Add(new ComInterfaceEntry
                 {
                     IID = GuidGenerator.GetIID(interfaceHelperType),
-                    Vtable = (IntPtr)interfaceHelperType.GetAbiToProjectionVftblPtr()
+                    Vtable = interfaceHelperType.GetAbiToProjectionVftblPtr()
                 });
 
-                if (!hasCustomIMarshalInterface && iid == InterfaceIIDs.IMarshal_IID)
+                if (!hasCustomIMarshalInterface && iid == IID.IID_IMarshal)
                 {
                     hasCustomIMarshalInterface = true;
                 }

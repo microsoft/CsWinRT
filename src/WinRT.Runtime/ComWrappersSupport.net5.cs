@@ -161,7 +161,7 @@ namespace WinRT
         public static IObjectReference CreateCCWForObject(object obj)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
-            return ObjectReference<IUnknownVftbl>.Attach(ref ccw, InterfaceIIDs.IUnknown_IID);
+            return ObjectReference<IUnknownVftbl>.Attach(ref ccw, IID.IID_IUnknown);
         }
 
         internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
@@ -333,7 +333,7 @@ namespace WinRT
                 // otherwise the new instance will be used. Since the inner was composed
                 // it should answer immediately without going through the outer. Either way
                 // the reference count will go to the new instance.
-                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IReferenceTrackerVftbl.IID), out referenceTracker);
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IID.IID_IReferenceTracker), out referenceTracker);
                 if (hr != 0)
                 {
                     referenceTracker = default;
@@ -433,7 +433,7 @@ namespace WinRT
         {
             if (objRef.ReferenceTrackerPtr == IntPtr.Zero)
             {
-                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IReferenceTrackerVftbl.IID), out var referenceTracker);
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IID.IID_IReferenceTracker), out var referenceTracker);
                 if (hr == 0)
                 {
                     // WinUI scenario
@@ -526,7 +526,7 @@ namespace WinRT
 
         private static object CreateObject(IntPtr externalComObject)
         {
-            Guid inspectableIID = InterfaceIIDs.IInspectable_IID;
+            Guid inspectableIID = IID.IID_IInspectable;
             Guid weakReferenceIID = ABI.WinRT.Interop.IWeakReference.IID;
             IntPtr ptr = IntPtr.Zero;
 

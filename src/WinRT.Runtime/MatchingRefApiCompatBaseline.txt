@@ -197,5 +197,6 @@ MembersMustExist : Member 'public void WinRT.Projections.RegisterTimeSpanMapping
 MembersMustExist : Member 'public void WinRT.Projections.RegisterUriMapping()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.Projections.RegisterVector2Mapping()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.Projections.RegisterVector3Mapping()' does not exist in the reference but it does exist in the implementation.
-MembersMustExist : Member 'public void WinRT.Projections.RegisterVector4Mapping()' does not exist in the reference but it does exist in the implementation. 
-Total Issues: 199
+MembersMustExist : Member 'public void WinRT.Projections.RegisterVector4Mapping()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.Interop.IID' does not exist in the reference but it does exist in the implementation.
+Total Issues: 200

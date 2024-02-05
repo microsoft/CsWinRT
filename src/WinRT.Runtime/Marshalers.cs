@@ -1537,7 +1537,7 @@ namespace WinRT
             T o,
             bool unwrapObject = true)
         {
-            return CreateMarshaler<IInspectable.Vftbl>(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
+            return CreateMarshaler<IInspectable.Vftbl>(o, IID.IID_IInspectable, unwrapObject);
         }
 
         public static ObjectReferenceValue CreateMarshaler2(
@@ -1566,7 +1566,7 @@ namespace WinRT
         }
 
         public static ObjectReferenceValue CreateMarshaler2(
-            T o, bool unwrapObject = true) => CreateMarshaler2(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
+            T o, bool unwrapObject = true) => CreateMarshaler2(o, IID.IID_IInspectable, unwrapObject);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef is null ? IntPtr.Zero : MarshalInterfaceHelper<T>.GetAbi(objRef);

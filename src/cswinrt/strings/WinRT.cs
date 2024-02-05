@@ -149,7 +149,7 @@ namespace WinRT
             // If target no longer exists, destroy cache
             lock (this)
             {
-                using var resolved = this.target.Resolve(InterfaceIIDs.IUnknown_IID);
+                using var resolved = this.target.Resolve(IID.IID_IUnknown);
                 if (resolved == null)
                 {
                     this.target = target;
@@ -165,7 +165,7 @@ namespace WinRT
             // If target no longer exists, destroy cache
             lock (this)
             {
-                using var resolved = this.target.Resolve(InterfaceIIDs.IUnknown_IID);
+                using var resolved = this.target.Resolve(IID.IID_IUnknown);
                 if (resolved == null)
                 {
                     return null;
@@ -414,31 +414,13 @@ namespace WinRT
         }
     }
 
-#pragma warning restore CA2002
-
     internal static class InterfaceIIDs
     {
 #if NET
-        internal static readonly Guid IInspectable_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xE0, 0xE2, 0x86, 0xAF, 0x2D, 0xB1, 0x6A, 0x4C, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90 }));
-        internal static readonly Guid IUnknown_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
         internal static readonly Guid IWeakReferenceSource_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
-        internal static readonly Guid IWeakReference_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x37, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
-        internal static readonly Guid IActivationFactory_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x35, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
-        internal static readonly Guid IAgileObject_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x94, 0x2B, 0xEA, 0x94, 0xCC, 0xE9, 0xE0, 0x49, 0xC0, 0xFF, 0xEE, 0x64, 0xCA, 0x8F, 0x5B, 0x90 }));
-        internal static readonly Guid IMarshal_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
-        internal static readonly Guid IContextCallback_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xDA, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }));
-        internal static readonly Guid ICallbackWithNoReentrancyToApplicationSTA_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x74, 0x97, 0x29, 0x0A, 0x4E, 0x3E, 0x42, 0xFC, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57 }));
         internal static readonly Guid IReferenceTrackerTarget_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xF8, 0x43, 0xBD, 0x64, 0xEE, 0xBF, 0xC4, 0x4E, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21 }));
 #else
-        internal static readonly Guid IInspectable_IID = new(0xAF86E2E0, 0xB12D, 0x4c6a, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90);
-        internal static readonly Guid IUnknown_IID = new(0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
         internal static readonly Guid IWeakReferenceSource_IID = new(0x00000038, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
-        internal static readonly Guid IWeakReference_IID = new(0x00000037, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
-        internal static readonly Guid IActivationFactory_IID = new (0x00000035, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
-        internal static readonly Guid IAgileObject_IID = new(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90);
-        internal static readonly Guid IMarshal_IID = new(0x00000003, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
-        internal static readonly Guid IContextCallback_IID = new(0x000001da, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
-        internal static readonly Guid ICallbackWithNoReentrancyToApplicationSTA_IID = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
         internal static readonly Guid IReferenceTrackerTarget_IID = new(0x64BD43F8, 0xbFEE, 0x4EC4, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21);
 #endif
     }
