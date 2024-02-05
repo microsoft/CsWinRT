@@ -291,7 +291,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IErrorInfo</c> (1CF2B120-547D-101B-8E65-08002B2BD119).</summary>
-        public static ref readonly Guid IID_IErrorInfo
+        internal static ref readonly Guid IID_IErrorInfo
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -316,7 +316,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>ISupportErrorInfo</c> (DF0B3D60-548F-101B-8E65-08002B2BD119).</summary>
-        public static ref readonly Guid IID_ISupportErrorInfo
+        internal static ref readonly Guid IID_ISupportErrorInfo
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -341,7 +341,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>ILanguageExceptionErrorInfo</c> (04A2DBF3-DF83-116C-0946-0812ABF6E07D).</summary>
-        public static ref readonly Guid IID_ILanguageExceptionErrorInfo
+        internal static ref readonly Guid IID_ILanguageExceptionErrorInfo
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -366,7 +366,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IRestrictedErrorInfo</c> (82BA7092-4C88-427D-A7BC-16DD93FEB67E).</summary>
-        public static ref readonly Guid IID_IRestrictedErrorInfo
+        internal static ref readonly Guid IID_IRestrictedErrorInfo
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
