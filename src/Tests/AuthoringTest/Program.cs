@@ -1474,6 +1474,10 @@ namespace AuthoringTest
         }
     }
 
+    public sealed class TestCollection : CollectionBase
+    {
+    }
+
     public partial interface IPartialInterface
     {
         public string GetNumberAsString();
