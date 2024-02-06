@@ -49,7 +49,7 @@ namespace Generator
             return tempFolder;
         }
 
-        private void GenerateSources(string csWinRTExeTFM)
+        private void GenerateSources()
         {
             string cswinrtExe = context.GetCsWinRTExe();
             string assemblyName = context.GetAssemblyName();
@@ -57,6 +57,7 @@ namespace Generator
             string outputDir = GetTempFolder(true);
             string windowsMetadata = context.GetCsWinRTWindowsMetadata();
             string winmds = context.GetCsWinRTDependentMetadata();
+            string csWinRTExeTFM = context.GetCsWinRTExeTFM();
 
             string arguments = string.Format(
                 "-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -input {4} -target {5} -verbose",
@@ -167,7 +168,7 @@ namespace Generator
                 GenerateWinMD(metadataBuilder);
                 if (!context.ShouldGenerateWinMDOnly())
                 {
-                    GenerateSources(context.GetCsWinRTExeTFM());
+                    GenerateSources();
                     writer.GenerateWinRTExposedClassAttributes(context);
                 }
             }
