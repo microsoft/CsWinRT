@@ -5203,7 +5203,7 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
                     else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                     {
                         w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled)
+if (%)
 {
     % _%(_genericObj%%);
     %
@@ -5220,6 +5220,7 @@ else
 )",
                             // Early return to ensure things are trimmed correctly on NAOT.
                             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                            settings.netstandard_compat ? "false" : "!RuntimeFeature.IsDynamicCodeCompiled",
                             signature.return_signature() ? "return " : "",
                             method.Name(),
                             signature.has_params() ? ", " : "",
@@ -5293,7 +5294,7 @@ else
                         else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
                             w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled)
+if (%)
 {
 return _%(_genericObj);
 }
@@ -5307,6 +5308,7 @@ else
 %
 }
 )",
+                                settings.netstandard_compat ? "false" : "!RuntimeFeature.IsDynamicCodeCompiled",
                                 getter.Name(),
                                 getter.Name(),
                                 getter.Name(),
@@ -5349,7 +5351,7 @@ else
                         if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
                             w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled)
+if (%)
 {
 _%(_genericObj, value);
 }
@@ -5362,6 +5364,7 @@ else
 %
 }
 )",
+                                settings.netstandard_compat ? "false" : "!RuntimeFeature.IsDynamicCodeCompiled",
                                 setter.Name(),
                                 setter.Name(),
                                 setter.Name(),
@@ -7564,7 +7567,7 @@ internal volatile static bool _RcwHelperInitialized;
 unsafe static @Methods()
 {
 ComWrappersSupport.RegisterHelperType(typeof(%), typeof(%));
-if (!RuntimeFeature.IsDynamicCodeCompiled)
+if (%)
 {
 return;
 }
@@ -7577,6 +7580,7 @@ ensureInitializedFallback();
 }
 }
 )",
+                    settings.netstandard_compat ? "false" : "!RuntimeFeature.IsDynamicCodeCompiled",
                     iface.TypeName(),
                     bind<write_type_name>(iface, typedef_name_type::Projected, false),
                     bind<write_type_name>(iface, typedef_name_type::ABI, false),
@@ -8002,7 +8006,7 @@ public static Guid PIID = %.IID;
 public static readonly IntPtr AbiToProjectionVftablePtr;
 static unsafe @()
 {
-    if (!RuntimeFeature.IsDynamicCodeCompiled)
+    if (%)
     {
         AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
 
@@ -8031,6 +8035,7 @@ public static Guid PIID = %.IID;
 }
 )",
                         // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                        settings.netstandard_compat ? "false" : "!RuntimeFeature.IsDynamicCodeCompiled",
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         type.TypeName(),
@@ -9039,7 +9044,7 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
                 {
                     w.write(R"(
 %
-if (!RuntimeFeature.IsDynamicCodeCompiled)
+if (%)
 {
 AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
 }
@@ -9057,7 +9062,7 @@ AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
 )",
                         !have_generic_params ? "" :
                             w.write_temp(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled)
+if (%)
 {
 Abi_Invoke_Type = null;
 }
@@ -9066,12 +9071,14 @@ else if (%.AbiToProjectionVftablePtr == default || %._Invoke == default)
 Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(int) });
 }
 )",
+                                settings.netstandard_compat ? "false" : "!RuntimeFeature.IsDynamicCodeCompiled",
                                 bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                                 bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                                 bind_each([&](writer& w, auto&& pair)
                                 {
                                     w.write("%, ", pair.first);
                                 }, generic_abi_types)),
+                        settings.netstandard_compat ? "false" : "!RuntimeFeature.IsDynamicCodeCompiled",
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         [&](writer& w)
