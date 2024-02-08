@@ -458,10 +458,17 @@ namespace WinRT
 #pragma warning disable CS8500 // We know that T is unmanaged
             var byte_length = length * sizeof(T);
 #pragma warning restore CS8500
+#if NET
+            fixed (byte* pArrayData = &MemoryMarshal.GetArrayDataReference(array))
+            {
+                Buffer.MemoryCopy(pArrayData, data.ToPointer(), byte_length, byte_length);
+            }
+#else
             var array_handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             var array_data = array_handle.AddrOfPinnedObject();
             Buffer.MemoryCopy(array_data.ToPointer(), data.ToPointer(), byte_length, byte_length);
             array_handle.Free();
+#endif
         }
 
         public static void DisposeMarshalerArray(object box)
