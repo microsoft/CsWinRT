@@ -118,7 +118,7 @@ namespace WinRT
         }
 
         // Retrieve restricted error info from thread without removing it, for propagation and debugging (watch, locals, etc)
-        private static IObjectReference BorrowRestrictedErrorInfo()
+        private static ObjectReference<IUnknownVftbl> BorrowRestrictedErrorInfo()
         {
             if (getRestrictedErrorInfo == null)
                 return null;
@@ -131,10 +131,10 @@ namespace WinRT
             if (setRestrictedErrorInfo != null)
             {
                 setRestrictedErrorInfo(restrictedErrorInfoPtr);
-                return ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.FromAbi(restrictedErrorInfoPtr);
+                return ObjectReference<IUnknownVftbl>.FromAbi(restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
             }
 
-            return ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.Attach(ref restrictedErrorInfoPtr);
+            return ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
         }
 
         public static Exception GetExceptionForHR(int hr) => hr >= 0 ? null : GetExceptionForHR(hr, true, out _);
@@ -143,7 +143,7 @@ namespace WinRT
         {
             restoredExceptionFromGlobalState = false;
 
-            IObjectReference restrictedErrorInfoToSave = null;
+            ObjectReference<IUnknownVftbl> restrictedErrorInfoToSave = null;
             Exception ex;
             string description = null;
             string restrictedError = null;
@@ -157,14 +157,18 @@ namespace WinRT
                 using var restrictedErrorInfoRef = BorrowRestrictedErrorInfo();
                 if (restrictedErrorInfoRef != null)
                 {
-                    restrictedErrorInfoToSave = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>();
-                    ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
+                    restrictedErrorInfoToSave = restrictedErrorInfoRef.As<IUnknownVftbl>(IID.IID_IRestrictedErrorInfo);
+                    ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new(restrictedErrorInfoRef);
                     restrictedErrorInfo.GetErrorDetails(out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
                     restrictedErrorReference = restrictedErrorInfo.GetReference();
-                    if (restrictedErrorInfoRef.TryAs<ABI.WinRT.Interop.ILanguageExceptionErrorInfo.Vftbl>(out var languageErrorInfoRef) >= 0)
+                    if (restrictedErrorInfoRef.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo, out var languageErrorInfoRef) >= 0)
                     {
-                        ILanguageExceptionErrorInfo languageErrorInfo = new ABI.WinRT.Interop.ILanguageExceptionErrorInfo(languageErrorInfoRef);
+#if NET
+                        using IObjectReference languageException = ABI.WinRT.Interop.ILanguageExceptionErrorInfo.GetLanguageException(languageErrorInfoRef);
+#else
+                        ABI.WinRT.Interop.ILanguageExceptionErrorInfo languageErrorInfo = new(languageErrorInfoRef);
                         using IObjectReference languageException = languageErrorInfo.GetLanguageException();
+#endif
                         if (languageException is object)
                         {
                             if (languageException.IsReferenceToManagedObject)
@@ -403,14 +407,14 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
         {
             // Hold the error object instance but don't serialize/deserialize it
             [NonSerialized]
-            private readonly IObjectReference _realErrorObject;
+            private readonly ObjectReference<IUnknownVftbl> _realErrorObject;
 
-            internal __RestrictedErrorObject(IObjectReference errorObject)
+            internal __RestrictedErrorObject(ObjectReference<IUnknownVftbl> errorObject)
             {
                 _realErrorObject = errorObject;
             }
 
-            public IObjectReference RealErrorObject
+            public ObjectReference<IUnknownVftbl> RealErrorObject
             {
                 get
                 {
@@ -425,7 +429,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             string restrictedError,
             string restrictedErrorReference,
             string restrictedCapabilitySid,
-            IObjectReference restrictedErrorObject,
+            ObjectReference<IUnknownVftbl> restrictedErrorObject,
             bool hasRestrictedLanguageErrorObject = false)
         {
             IDictionary dict = ex.Data;
@@ -445,7 +449,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
         internal static bool TryGetRestrictedLanguageErrorObject(
             this Exception ex,
-            out IObjectReference restrictedErrorObject)
+            out ObjectReference<IUnknownVftbl> restrictedErrorObject)
         {
             restrictedErrorObject = null;
             IDictionary dict = ex.Data;
@@ -480,7 +484,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
                     if (restrictedErrorInfoPtr != IntPtr.Zero)
                     {
-                        IObjectReference restrictedErrorInfoRef = ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.Attach(ref restrictedErrorInfoPtr);
+                        ObjectReference<IUnknownVftbl> restrictedErrorInfoRef = ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
 
                         ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
 
@@ -501,7 +505,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                                                                     restrictedDescription,
                                                                      restrictedErrorInfo.GetReference(),
                                                                      capabilitySid,
-                                                                     restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>());
+                                                                     restrictedErrorInfoRef.As<IUnknownVftbl>(IID.IID_IRestrictedErrorInfo));
                         }
                     }
                 }
