@@ -585,7 +585,11 @@ namespace WinRT
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
 #endif
             {
+#if NET
+                throw new NotSupportedException("Generic vtable types are not supported.");
+#else
                 vftblT = (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
+#endif
             }
             else
             {
