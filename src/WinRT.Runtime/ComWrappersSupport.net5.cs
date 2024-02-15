@@ -39,7 +39,6 @@ namespace WinRT
         internal static readonly ConditionalWeakTable<Type, InspectableInfo> InspectableInfoTable = new();
         
         [ThreadStatic]
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
         internal static Type CreateRCWType;
 
         private static ComWrappers _comWrappers;
@@ -87,12 +86,12 @@ namespace WinRT
             return InspectableInfoTable.GetValue(_this.GetType(), o => PregenerateNativeTypeInformation(o).inspectableInfo);
         }
 
-        public static T CreateRcwForComObject<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr ptr)
+        public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
             return CreateRcwForComObject<T>(ptr, true);
         }
 
-        private static T CreateRcwForComObject<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr ptr, bool tryUseCache)
+        private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
         {
             if (ptr == IntPtr.Zero)
             {
@@ -199,11 +198,11 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
 
         public static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => TypedObjectFactoryCacheForType.TryAdd(implementationType, rcwFactory);
 
-        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType)
+        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
         {
             if (implementationType.IsGenericType)
             {
