@@ -220,8 +220,19 @@ namespace WinRT
                 return obj => obj;
             }
 
-            var constructor = implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null);
-            return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
+            var attribute = implementationType.GetCustomAttribute<WinRTImplementationTypeRcwFactoryAttribute>();
+
+            // For update projections, get the derived [WinRTImplementationTypeRcwFactory]
+            // attribute instance and use its overridden 'CreateInstance' method as factory.
+            if (attribute is not null)
+            {
+                return attribute.CreateInstance;
+            }
+
+            throw new NotSupportedException("Temporarily not supported");
+
+            // var constructor = implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null);
+            // return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
 
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
             static Type GetGenericImplType(Type implementationType)

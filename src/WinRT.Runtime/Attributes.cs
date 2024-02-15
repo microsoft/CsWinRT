@@ -152,6 +152,18 @@ namespace WinRT
         internal Type WinRTExposedTypeDetails { get; }
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    abstract class WinRTImplementationTypeRcwFactoryAttribute : Attribute
+    {
+        public abstract object CreateInstance(IInspectable inspectable);
+    }
+
 #endif
 }
 
