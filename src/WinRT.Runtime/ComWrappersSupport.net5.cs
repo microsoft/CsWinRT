@@ -229,10 +229,19 @@ namespace WinRT
                 return attribute.CreateInstance;
             }
 
-            throw new NotSupportedException("Temporarily not supported");
+            return CreateRcwFallback(implementationType);
 
-            // var constructor = implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null);
-            // return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
+            [SuppressMessage("Trimming", "IL2070", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
+            static Func<IInspectable, object> CreateRcwFallback(Type implementationType)
+            {
+                var constructor = implementationType.GetConstructor(
+                    bindingAttr: BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance,
+                    binder: null,
+                    types: new[] { typeof(IObjectReference) },
+                    modifiers: null);
+
+                return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
+            }
 
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
             static Type GetGenericImplType(Type implementationType)
