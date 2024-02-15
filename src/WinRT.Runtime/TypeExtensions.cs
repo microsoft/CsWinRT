@@ -130,7 +130,7 @@ namespace WinRT
         }
 
 #if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         public static Type FindVftblType(
 #if NET

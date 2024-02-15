@@ -140,15 +140,11 @@ namespace WinRT
 
         public ObjectReference<T> As<
 #if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
 
-        public unsafe ObjectReference<T> As<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        T>(Guid iid)
+        public unsafe ObjectReference<T> As<T>(Guid iid)
         {
             Marshal.ThrowExceptionForHR(TryAs<T>(iid, out var objRef));
             return objRef;
@@ -179,15 +175,11 @@ namespace WinRT
 
         public int TryAs<
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
 
-        public unsafe int TryAs<
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-            T>(Guid iid, out ObjectReference<T> objRef)
+        public unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
         {
             // Check the marker interface for ObjectReferenceWithContext<T>. If that is the case, we inline
             // the special logic for such objects. This avoids having to use a generic virtual method here,
@@ -424,11 +416,7 @@ namespace WinRT
 #else
     public
 #endif
-    class ObjectReference<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        T> : IObjectReference
+    class ObjectReference<T> : IObjectReference
     {
         private readonly T _vftbl;
         public T Vftbl
@@ -626,11 +614,7 @@ namespace WinRT
         }
     }
 
-    internal sealed class ObjectReferenceWithContext<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        T> : ObjectReference<T>, IObjectReferenceWithContext
+    internal sealed class ObjectReferenceWithContext<T> : ObjectReference<T>, IObjectReferenceWithContext
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
