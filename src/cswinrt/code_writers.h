@@ -8294,6 +8294,8 @@ private struct InterfaceTag<I>{};
 %
 %%
 }
+
+%
 )",
             bind<write_winrt_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
@@ -8450,7 +8452,13 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                     }
                 }),
             bind<write_class_members>(type, false, false),
-            bind<write_custom_query_interface_impl>(type));
+            bind<write_custom_query_interface_impl>(type),
+            settings.netstandard_compat ? "" : w.write_temp(R"(
+internal sealed class %RcwFactoryAttribute : WinRTImplementationTypeRcwFactoryAttribute
+{
+    public override object CreateInstance(IInspectable inspectable)
+        => new %(inspectable.ObjRef);
+})", type_name, type_name));
     }
 
     void write_abi_class(writer& w, TypeDef const& type)
