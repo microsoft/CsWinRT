@@ -152,6 +152,9 @@ namespace WinRT
         internal Type WinRTExposedTypeDetails { get; }
     }
 
+    /// <summary>
+    /// An attributes used for generated RCW types, to expose a factory method for them.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 #if EMBED
@@ -161,6 +164,11 @@ namespace WinRT
 #endif
     abstract class WinRTImplementationTypeRcwFactoryAttribute : Attribute
     {
+        /// <summary>
+        /// Creates a new instance of a given RCW type, from an input <see cref="IInspectable"/> object.
+        /// </summary>
+        /// <param name="inspectable">The native <see cref="IInspectable"/> object to use to construct the RCW instance.</param>
+        /// <returns>The resulting RCW instance wrapping the same native object as <paramref name="inspectable"/>.</returns>
         public abstract object CreateInstance(IInspectable inspectable);
     }
 
