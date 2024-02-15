@@ -199,4 +199,5 @@ MembersMustExist : Member 'public void WinRT.Projections.RegisterVector2Mapping(
 MembersMustExist : Member 'public void WinRT.Projections.RegisterVector3Mapping()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.Projections.RegisterVector4Mapping()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IID' does not exist in the reference but it does exist in the implementation.
-Total Issues: 200
+TypesMustExist : Type 'WinRT.WinRTImplementationTypeRcwFactoryAttribute' does not exist in the reference but it does exist in the implementation.
+Total Issues: 201
