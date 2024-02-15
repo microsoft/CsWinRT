@@ -571,31 +571,29 @@ namespace WinRT
 
         private static unsafe T GetVtable(IntPtr thisPtr)
         {
-            T vftblT;
             // With our vtable types, the generic vtables will have System.Delegate fields
-            // and the non-generic types will have only void* fields.
-            // On .NET 5, we can use RuntimeHelpers.IsReferenceorContainsReferences
-            // to disambiguate between generic and non-generic vtables since it's a JIT-time constant.
-            // Since it is a JIT time constant, this function will be branchless on .NET 5.
+            // and the non-generic types will have only void* fields. On .NET 6+, we can use
+            // RuntimeHelpers.IsReferenceorContainsReferences to disambiguate between generic
+            // and non-generic vtables since it's a JIT-time constant. Projections for .NET 6+
+            // never use such vtables, so this path will just always throw. This also allows
+            // dropping the trimming annotations preserving all non public constructors.
+            // Since it is a JIT time constant, this function will be branchless on .NET 6+.
             // On .NET Standard 2.0, the IsReferenceOrContainsReferences method does not exist,
-            // so we instead fall back to typeof(T).IsGenericType, which sadly is not a JIT-time constant.
-#if !NET
-            if (typeof(T).IsGenericType)
-#else
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-#endif
-            {
+            // so we instead fall back to typeof(T).IsGenericType, which is not a JIT-time constant.
 #if NET
-                throw new NotSupportedException("Generic vtable types are not supported.");
-#else
-                vftblT = (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
-#endif
-            }
-            else
+            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             {
-                vftblT = Unsafe.Read<T>(*(void***)thisPtr);
+                throw new NotSupportedException("Generic vtable types are not supported.");
             }
-            return vftblT;
+#else
+            if (typeof(T).IsGenericType)
+            {
+                return (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
+            }
+#endif
+
+            // Blittable vtables can just be read directly from the input pointer
+            return Unsafe.Read<T>(*(void***)thisPtr);
         }
 
         private protected virtual T GetVftblForCurrentContext()
