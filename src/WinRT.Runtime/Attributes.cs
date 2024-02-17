@@ -31,6 +31,9 @@ namespace WinRT
         public Type DefaultInterface { get; }
     }
 
+#if NET
+    [Obsolete("This attribute is only used for the .NET Standard 2.0 projections.")]
+#endif
     [EditorBrowsable(EditorBrowsableState.Never)]
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 #if EMBED

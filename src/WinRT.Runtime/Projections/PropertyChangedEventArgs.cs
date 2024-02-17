@@ -18,8 +18,9 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_PropertyName_0;
     }
 
-
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("7C0C27A8-0B41-5070-B160-FC9AE960A36C")]
     internal sealed unsafe class WinRTPropertyChangedEventArgsRuntimeClassFactory
     {

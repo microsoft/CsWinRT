@@ -78,7 +78,9 @@ namespace ABI.WinRT.Interop
         }
     }
 
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("00000035-0000-0000-C000-000000000046")]
 #if EMBED
     internal

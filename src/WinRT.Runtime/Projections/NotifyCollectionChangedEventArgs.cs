@@ -10,7 +10,9 @@ using WinRT.Interop;
 
 namespace ABI.Microsoft.UI.Xaml.Interop
 {
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
     internal sealed unsafe class INotifyCollectionChangedEventArgs
     {
@@ -109,7 +111,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         }
     }
 
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("5108EBA4-4892-5A20-8374-A96815E0FD27")]
     internal sealed unsafe class WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory
     {

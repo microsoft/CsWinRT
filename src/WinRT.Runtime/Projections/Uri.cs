@@ -36,8 +36,9 @@ namespace ABI.Windows.Foundation
 
 namespace ABI.System
 {
-
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("44A9796F-723E-4FDF-A218-033E75B0C084")]
     internal sealed class WinRTUriRuntimeClassFactory
     {
