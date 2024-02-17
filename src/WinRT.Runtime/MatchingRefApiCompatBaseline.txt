@@ -200,4 +200,5 @@ MembersMustExist : Member 'public void WinRT.Projections.RegisterVector3Mapping(
 MembersMustExist : Member 'public void WinRT.Projections.RegisterVector4Mapping()' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IID' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.WinRTImplementationTypeRcwFactoryAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 201
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReferenceWrapperAttribute' in the implementation but not the reference.
+Total Issues: 202
