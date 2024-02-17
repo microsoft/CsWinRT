@@ -8260,6 +8260,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
         w.write(R"(%%
+[%RcwFactoryAttribute]
 [global::WinRT.ProjectedRuntimeClass(typeof(%))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
@@ -8295,10 +8296,15 @@ private struct InterfaceTag<I>{};
 %%
 }
 
-%
+internal sealed class %RcwFactoryAttribute : WinRTImplementationTypeRcwFactoryAttribute
+{
+    public override object CreateInstance(IInspectable inspectable)
+        => new %(inspectable.ObjRef);
+}
 )",
             bind<write_winrt_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
+            type_name,
             default_interface_name,
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
@@ -8453,12 +8459,8 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                 }),
             bind<write_class_members>(type, false, false),
             bind<write_custom_query_interface_impl>(type),
-            settings.netstandard_compat ? "" : w.write_temp(R"(
-internal sealed class %RcwFactoryAttribute : WinRTImplementationTypeRcwFactoryAttribute
-{
-    public override object CreateInstance(IInspectable inspectable)
-        => new %(inspectable.ObjRef);
-})", type_name, type_name));
+            type_name,
+            type_name);
     }
 
     void write_abi_class(writer& w, TypeDef const& type)
