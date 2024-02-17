@@ -268,7 +268,7 @@ namespace WinRT
         private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
 
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
+        private static extern unsafe int CoGetObjectContext(Guid* riid, IntPtr* ppv);
 
         public unsafe static IntPtr GetContextToken()
         {
@@ -277,10 +277,11 @@ namespace WinRT
             return contextToken;
         }
 
-        public static IntPtr GetContextCallback()
+        public unsafe static IntPtr GetContextCallback()
         {
-            Guid riid = InterfaceIIDs.IContextCallback_IID;
-            Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
+            Guid iid = InterfaceIIDs.IContextCallback_IID;
+            IntPtr contextCallbackPtr;
+            Marshal.ThrowExceptionForHR(CoGetObjectContext(&iid, &contextCallbackPtr));
             return contextCallbackPtr;
         }
 
@@ -860,7 +861,10 @@ namespace WinRT
                 return;
             }
 
-            target = ABI.WinRT.Interop.IWeakReferenceSourceMethods.GetWeakReference(weakRefSource);
+            using (weakRefSource)
+            {
+                target = ABI.WinRT.Interop.IWeakReferenceSourceMethods.GetWeakReference(weakRefSource);
+            }
 #endif
 
             cachesLock.EnterReadLock();
