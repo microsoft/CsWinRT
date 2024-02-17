@@ -118,7 +118,7 @@ namespace WinRT
             _thisPtr = thisPtr;
 
             // We are holding onto a native object or one of its interfaces.
-            // This causes for their to be native memory being held onto by
+            // This causes for there to be native memory being held onto by
             // this that the .NET GC isn't aware of.  So we use memory pressure
             // to make the .NET GC aware of it.  In theory all the interface QIs
             // can be holding onto the same native object.  Here we are taking the simplified
