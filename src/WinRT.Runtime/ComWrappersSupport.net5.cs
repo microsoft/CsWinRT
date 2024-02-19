@@ -228,6 +228,14 @@ namespace WinRT
                 return attribute.CreateInstance;
             }
 
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"Cannot create an RCW factory for implementation type '{implementationType}', because it doesn't have " +
+                    "a [WinRTImplementationTypeRcwFactory] derived attribute on it. The fallback path for older projections " +
+                    "is not trim-safe, and isn't supported in AOT environments. Make sure to reference updated projections.");
+            }
+
             return CreateRcwFallback(implementationType);
 
             [SuppressMessage("Trimming", "IL2070", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]

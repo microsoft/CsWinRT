@@ -101,9 +101,9 @@ namespace WinRT
                 }
 
                 throw new NotSupportedException(
-                    $"""The requested runtime class name is "{runtimeClassName.ToString()}", which maps to a dynamic projected type. """ +
-                    """This can only be used when support for dynamic objects is enabled in the CsWinRT configuration. To enable it, """ +
-                    """make sure that the "CsWinRTEnableDynamicObjectsSupport" MSBuild property is not being set to 'false' anywhere.""");
+                    $"The requested runtime class name is '{runtimeClassName.ToString()}', which maps to a dynamic projected type. " +
+                    "This can only be used when support for dynamic objects is enabled in the CsWinRT configuration. To enable it, " +
+                    "make sure that the 'CsWinRTEnableDynamicObjectsSupport' MSBuild property is not being set to 'false' anywhere.");
             }
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
             else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<String>".AsSpan(), StringComparison.Ordinal) == 0)
