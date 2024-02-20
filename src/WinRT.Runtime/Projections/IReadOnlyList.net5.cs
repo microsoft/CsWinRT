@@ -202,6 +202,11 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IReadOnlyListMethods<T>
     {
+        static IReadOnlyListMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IReadOnlyList<T>), typeof(global::ABI.System.Collections.Generic.IReadOnlyList<T>));
+        }
+
         public static int get_Count(IObjectReference obj)
         {
             uint size = ABI.Windows.Foundation.Collections.IVectorViewMethods<T>.get_Size(obj);
@@ -270,11 +275,6 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IReadOnlyListMethods<T,TAbi> where TAbi: unmanaged
     {
-        static IReadOnlyListMethods()
-        {
-            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IReadOnlyList<T>), typeof(global::ABI.System.Collections.Generic.IReadOnlyList<T>));
-        }
-
         public unsafe static bool InitRcwHelper(
             delegate*<IObjectReference, uint, T> getAt,
             delegate*<IObjectReference, T, out uint, bool> indexOf,

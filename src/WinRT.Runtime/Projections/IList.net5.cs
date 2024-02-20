@@ -159,6 +159,8 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IListMethods()
         {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IList<T>), typeof(global::ABI.System.Collections.Generic.IList<T>));
+
             // Early return to ensure things are trimmed correctly on NAOT.
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
@@ -440,11 +442,6 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IListMethods<T, TAbi> where TAbi : unmanaged
     {
-        static IListMethods()
-        {
-            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IList<T>), typeof(global::ABI.System.Collections.Generic.IList<T>));
-        }
-
         public unsafe static bool InitRcwHelper(
             delegate*<IObjectReference, uint, T> getAt,
             delegate*<IObjectReference, global::System.Collections.Generic.IReadOnlyList<T>> getView,

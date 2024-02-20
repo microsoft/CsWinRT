@@ -252,6 +252,8 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IDictionaryMethods()
         {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IDictionary<K, V>), typeof(global::ABI.System.Collections.Generic.IDictionary<K, V>));
+
             // Early return to ensure things are trimmed correctly on NAOT.
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
@@ -695,11 +697,6 @@ namespace ABI.System.Collections.Generic
         internal unsafe static delegate*<IObjectReference, global::System.Collections.Generic.IReadOnlyDictionary<K, V>> _GetView;
         internal unsafe static delegate*<IObjectReference, K, V, bool> _Insert;
         internal unsafe static delegate*<IObjectReference, K, void> _Remove;
-
-        static IDictionaryMethods()
-        {
-            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IDictionary<K, V>), typeof(global::ABI.System.Collections.Generic.IDictionary<K, V>));
-        }
 
         public unsafe static bool InitRcwHelper(
             delegate*<IObjectReference, K, V> lookup,

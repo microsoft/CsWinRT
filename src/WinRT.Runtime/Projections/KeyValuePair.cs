@@ -41,6 +41,11 @@ namespace ABI.System.Collections.Generic
         internal volatile unsafe static delegate*<IObjectReference, V> _GetValue;
         internal volatile static bool _RcwHelperInitialized;
 
+        static KeyValuePairMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.KeyValuePair<K, V>), typeof(global::ABI.System.Collections.Generic.KeyValuePair<K, V>));
+        }
+
         internal static unsafe bool EnsureInitialized()
         {
 #if NET
@@ -109,11 +114,6 @@ namespace ABI.System.Collections.Generic
 #endif
     static class KeyValuePairMethods<K, KAbi, V, VAbi> where KAbi : unmanaged where VAbi : unmanaged
     {
-        static KeyValuePairMethods()
-        {
-            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.KeyValuePair<K, V>), typeof(global::ABI.System.Collections.Generic.KeyValuePair<K, V>));
-        }
-
         public unsafe static bool InitRcwHelper(
             delegate*<IObjectReference, K> getKey,
             delegate*<IObjectReference, V> getValue)

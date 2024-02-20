@@ -7412,6 +7412,7 @@ internal static global::System.Guid IID { get; } = new Guid(new byte[] { % });
 internal volatile static bool _RcwHelperInitialized;
 unsafe static @Methods()
 {
+ComWrappersSupport.RegisterHelperType(typeof(%), typeof(%));
 if (RuntimeFeature.IsDynamicCodeCompiled && !_RcwHelperInitialized)
 {
 var ensureInitializedFallback = (Func<bool>)typeof(@Methods<%>).MakeGenericType(%).
@@ -7422,6 +7423,8 @@ ensureInitializedFallback();
 }
 )",
                     iface.TypeName(),
+                    bind<write_type_name>(iface, typedef_name_type::Projected, false),
+                    bind<write_type_name>(iface, typedef_name_type::ABI, false),
                     iface.TypeName(),
                     bind([&](writer& w)
                     {
@@ -7533,11 +7536,6 @@ public static global::System.IntPtr AbiToProjectionVftablePtr => %.AbiToProjecti
                 w.write(R"(
 % static class %%
 {
-static @Methods()
-{
-ComWrappersSupport.RegisterHelperType(typeof(%), typeof(%));
-}
-
 public unsafe static bool InitRcwHelper(%)
 {
 if (%._RcwHelperInitialized)
@@ -7625,9 +7623,6 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
                         write_generic_type_name(w, index++);
                         w.write("Abi : unmanaged");
                     }, iface.GenericParam()),
-                    iface.TypeName(),
-                    bind<write_type_name>(iface, typedef_name_type::Projected, false),
-                    bind<write_type_name>(iface, typedef_name_type::ABI, false),
                     [&](writer& w) {
                         bool write_delimiter = false;
                         for (auto& method : iface.MethodList())
@@ -9066,6 +9061,11 @@ internal static class %
 private static IntPtr abiToProjectionVftablePtr;
 internal static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
 
+static @Methods()
+{
+ComWrappersSupport.RegisterHelperType(typeof(%), typeof(%));
+}
+
 internal static bool TryInitCCWVtable(IntPtr ptr)
 {
 bool success = global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionVftablePtr, ptr, IntPtr.Zero) == IntPtr.Zero;
@@ -9123,6 +9123,9 @@ public static % Abi_Invoke(IntPtr thisPtr%%)
                             bind_list<write_projection_parameter_type>(", ", signature.params()),
                             signature.has_params() ? ", " : "",
                             bind<write_projection_return_type>(signature)),
+                    type.TypeName(),
+                    bind<write_type_name>(type, typedef_name_type::Projected, false),
+                    bind<write_type_name>(type, typedef_name_type::ABI, false),
                     bind<write_type_name>(type, typedef_name_type::ABI, false),
                     bind<write_type_name>(type, typedef_name_type::Projected, false),
                     bind<write_type_name>(type, typedef_name_type::Projected, false),

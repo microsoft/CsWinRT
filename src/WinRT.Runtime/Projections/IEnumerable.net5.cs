@@ -220,6 +220,11 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumerableMethods<T>
     {
+        static IEnumerableMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerable<T>), typeof(global::ABI.System.Collections.Generic.IEnumerable<T>));
+        }
+
         public static global::System.Collections.Generic.IEnumerator<T> GetEnumerator(IObjectReference obj)
         {
             var first = ABI.Windows.Foundation.Collections.IIterableMethods<T>.First(obj);
@@ -260,11 +265,6 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumerableMethods<T, TAbi> where TAbi : unmanaged
     {
-        static IEnumerableMethods()
-        {
-            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerable<T>), typeof(global::ABI.System.Collections.Generic.IEnumerable<T>));
-        }
-
         public unsafe static bool InitRcwHelper(delegate*<IObjectReference, global::System.Collections.Generic.IEnumerator<T>> first)
         {
             if (ABI.Windows.Foundation.Collections.IIterableMethods<T>._RcwHelperInitialized)
@@ -512,6 +512,8 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IEnumeratorMethods()
         {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerator<T>), typeof(global::ABI.System.Collections.Generic.IEnumerator<T>));
+
             // Early return to ensure things are trimmed correctly on NAOT.
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
@@ -590,11 +592,6 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumeratorMethods<T, TAbi> where TAbi : unmanaged
     {
-        static IEnumeratorMethods()
-        {
-            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerator<T>), typeof(global::ABI.System.Collections.Generic.IEnumerator<T>));
-        }
-
         public unsafe static bool InitRcwHelper(
             delegate*<IObjectReference, T> getCurrent,
             delegate*<IObjectReference, T[], uint> getMany)
