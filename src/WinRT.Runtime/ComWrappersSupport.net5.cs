@@ -219,7 +219,9 @@ namespace WinRT
                 return obj => obj;
             }
 
-            var attribute = implementationType.GetCustomAttribute<WinRTImplementationTypeRcwFactoryAttribute>();
+            // We never look for attributes on base types, since each [WinRTImplementationTypeRcwFactory] type acts as
+            // a factory type specifically for the annotated implementation type, so it has to be on that derived type.
+            var attribute = implementationType.GetCustomAttribute<WinRTImplementationTypeRcwFactoryAttribute>(inherit: false);
 
             // For update projections, get the derived [WinRTImplementationTypeRcwFactory]
             // attribute instance and use its overridden 'CreateInstance' method as factory.
