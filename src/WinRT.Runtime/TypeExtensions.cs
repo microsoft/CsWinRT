@@ -79,7 +79,7 @@ namespace WinRT
 #endif
             static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
             {
-                if (type.IsGenericType)
+                if (type.IsGenericType && !type.IsGenericTypeDefinition)
                 {
 #if NET
                     if (!RuntimeFeature.IsDynamicCodeCompiled)

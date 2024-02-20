@@ -52,6 +52,13 @@ namespace WinRT
                 return "string";
             }
 
+            if (type.IsGenericType)
+            {
+                var args = type.GetGenericArguments().Select(t => GetSignature(t));
+                var genericHelperType = type.GetGenericTypeDefinition().FindHelperType() ?? type;
+                return "pinterface({" + genericHelperType.GUID + "};" + string.Join(";", args) + ")";
+            }
+
             var helperType = type.FindHelperType();
             if (helperType != null)
             {
@@ -114,12 +121,6 @@ namespace WinRT
             // For built-in system interfaces that are custom type mapped, we use the helper type to get the guid.
             // For others, either the type itself or the helper type has the same guid and can be used.
             type = type.IsInterface ? (helperType ?? type) : type;
-
-            if (type.IsGenericType)
-            {
-                var args = type.GetGenericArguments().Select(t => GetSignature(t));
-                return "pinterface({" + GetGUID(type) + "};" + String.Join(";", args) + ")";
-            }
 
             if (type.IsDelegate())
             {
