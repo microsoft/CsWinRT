@@ -1292,7 +1292,9 @@ namespace ABI.Windows.Foundation
     internal unsafe interface IPropertyValue : global::Windows.Foundation.IPropertyValue
     {
         [Guid("4BD682DD-7554-40E9-9A9B-82654EDE7E62")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             internal void* _get_Type_0;

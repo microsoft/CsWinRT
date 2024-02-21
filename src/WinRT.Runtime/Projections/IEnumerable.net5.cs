@@ -351,7 +351,9 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable<T>));
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         internal sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterable<T>
+#pragma warning restore CA2257
         {
             private readonly IEnumerable<T> m_enumerable;
 
@@ -389,7 +391,9 @@ namespace ABI.System.Collections.Generic
         // This is left here for backwards compat purposes where older generated
         // projections can be using FindVftblType and using this to cast.
         [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public unsafe struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
@@ -938,7 +942,9 @@ namespace ABI.System.Collections.Generic
         // In IEnumerator<> scenarios, we use this as a helper for the implementation and don't actually use it to
         // create a CCW.
         [global::WinRT.WinRTExposedType(typeof(IBindableIteratorTypeDetails))]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator
+#pragma warning restore CA2257
         {
             private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
             private bool m_firstItem = true;
@@ -1064,7 +1070,9 @@ namespace ABI.System.Collections.Generic
         // This is left here for backwards compat purposes where older generated
         // projections can be using FindVftblType and using this to cast.
         [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public unsafe struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 

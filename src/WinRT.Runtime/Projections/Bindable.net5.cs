@@ -393,7 +393,9 @@ namespace ABI.System.Collections
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable));
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
+#pragma warning restore CA2257
         {
             private readonly Func<IWinRTObject, global::System.Collections.IEnumerator> _enumerator;
 
@@ -412,7 +414,9 @@ namespace ABI.System.Collections
             public override global::System.Collections.IEnumerator GetEnumerator() => _enumerator != null ? _enumerator(_winrtObject) : base.GetEnumerator();
         }
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public class FromAbiHelper : global::System.Collections.IEnumerable
+#pragma warning restore CA2257
         {
             private readonly global::System.Collections.IEnumerable _iterable;
             protected readonly IWinRTObject _winrtObject;
@@ -449,7 +453,9 @@ namespace ABI.System.Collections
             }
         }
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class ToAbiHelper : IBindableIterable
+#pragma warning restore CA2257
         {
             private readonly IEnumerable m_enumerable;
 
@@ -565,7 +571,9 @@ namespace ABI.System.Collections
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList));
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class FromAbiHelper : global::System.Collections.IList
+#pragma warning restore CA2257
         {
             private readonly global::Microsoft.UI.Xaml.Interop.IBindableVector _vector;
 
@@ -801,7 +809,9 @@ namespace ABI.System.Collections
             }
         }
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class ToAbiHelper : IBindableVector
+#pragma warning restore CA2257
         {
             private global::System.Collections.IList _list;
 

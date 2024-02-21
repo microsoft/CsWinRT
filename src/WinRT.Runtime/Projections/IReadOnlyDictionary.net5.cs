@@ -978,7 +978,9 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReadOnlyDictionary<K, V>));
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IMapView<K, V>
+#pragma warning restore CA2257
         {
             private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> _dictionary;
 
@@ -1053,7 +1055,9 @@ namespace ABI.System.Collections.Generic
         // This is left here for backwards compat purposes where older generated
         // projections can be using FindVftblType and using this to cast.
         [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public unsafe struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
