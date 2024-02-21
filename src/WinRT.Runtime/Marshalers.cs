@@ -1700,10 +1700,6 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObjectForMarshaling(o, delegateIID);
         }
 
-#if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091",
-            Justification = "Preserving constructors is not necessary when creating RCWs for delegates, as they go through the factory methods in the helper types.")]
-#endif
         public static T FromAbi<T>(IntPtr nativeDelegate)
             where T : Delegate
         {

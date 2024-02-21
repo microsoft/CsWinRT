@@ -8251,6 +8251,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
             return;
         }
 
+        auto type_namespace = type.TypeNamespace();
         auto type_name = write_type_name_temp(w, type);
         auto default_interface_name = get_default_interface_name(w, type, false);
         auto base_semantics = get_type_semantics(type.Extends());
@@ -8259,7 +8260,9 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(type)), [&](auto&& iface) { return iface; });
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
-        w.write(R"(%%
+        w.write(R"(%
+%
+[global::ABI.%.%RcwFactory]
 [global::WinRT.ProjectedRuntimeClass(typeof(%))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
@@ -8297,6 +8300,8 @@ private struct InterfaceTag<I>{};
 )",
             bind<write_winrt_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
+            type_namespace,
+            type.TypeName(),
             default_interface_name,
             bind<write_type_custom_attributes>(type, true),
             internal_accessibility(),
@@ -8451,6 +8456,33 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                 }),
             bind<write_class_members>(type, false, false),
             bind<write_custom_query_interface_impl>(type));
+    }
+
+    void write_winrt_implementation_type_rcw_factory_attribute_type(writer& w, TypeDef const& type)
+    {
+        if (settings.netstandard_compat)
+        {
+            return;
+        }
+
+        if (settings.component)
+        {
+            return;
+        }
+
+        if (is_static(type))
+        {
+            return;
+        }
+
+        w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+internal sealed class %RcwFactoryAttribute : global::WinRT.WinRTImplementationTypeRcwFactoryAttribute
+{
+    public override object CreateInstance(global::WinRT.IInspectable inspectable)
+        => new %(inspectable.ObjRef);
+}
+)", type.TypeName(), 
+    bind<write_type_name>(type, typedef_name_type::Projected, false));
     }
 
     void write_abi_class(writer& w, TypeDef const& type)

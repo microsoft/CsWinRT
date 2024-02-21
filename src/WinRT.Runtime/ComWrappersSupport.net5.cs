@@ -39,7 +39,6 @@ namespace WinRT
         internal static readonly ConditionalWeakTable<Type, InspectableInfo> InspectableInfoTable = new();
         
         [ThreadStatic]
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
         internal static Type CreateRCWType;
 
         private static ComWrappers _comWrappers;
@@ -87,12 +86,12 @@ namespace WinRT
             return InspectableInfoTable.GetValue(_this.GetType(), o => PregenerateNativeTypeInformation(o).inspectableInfo);
         }
 
-        public static T CreateRcwForComObject<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr ptr)
+        public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
             return CreateRcwForComObject<T>(ptr, true);
         }
 
-        private static T CreateRcwForComObject<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr ptr, bool tryUseCache)
+        private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
         {
             if (ptr == IntPtr.Zero)
             {
@@ -199,11 +198,11 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
 
         public static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => TypedObjectFactoryCacheForType.TryAdd(implementationType, rcwFactory);
 
-        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType)
+        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
         {
             if (implementationType.IsGenericType)
             {
@@ -220,8 +219,38 @@ namespace WinRT
                 return obj => obj;
             }
 
-            var constructor = implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null);
-            return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
+            // We never look for attributes on base types, since each [WinRTImplementationTypeRcwFactory] type acts as
+            // a factory type specifically for the annotated implementation type, so it has to be on that derived type.
+            var attribute = implementationType.GetCustomAttribute<WinRTImplementationTypeRcwFactoryAttribute>(inherit: false);
+
+            // For update projections, get the derived [WinRTImplementationTypeRcwFactory]
+            // attribute instance and use its overridden 'CreateInstance' method as factory.
+            if (attribute is not null)
+            {
+                return attribute.CreateInstance;
+            }
+
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"Cannot create an RCW factory for implementation type '{implementationType}', because it doesn't have " +
+                    "a [WinRTImplementationTypeRcwFactory] derived attribute on it. The fallback path for older projections " +
+                    "is not trim-safe, and isn't supported in AOT environments. Make sure to reference updated projections.");
+            }
+
+            return CreateRcwFallback(implementationType);
+
+            [SuppressMessage("Trimming", "IL2070", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
+            static Func<IInspectable, object> CreateRcwFallback(Type implementationType)
+            {
+                var constructor = implementationType.GetConstructor(
+                    bindingAttr: BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance,
+                    binder: null,
+                    types: new[] { typeof(IObjectReference) },
+                    modifiers: null);
+
+                return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
+            }
 
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
             static Type GetGenericImplType(Type implementationType)
