@@ -27,7 +27,9 @@ namespace ABI.System.ComponentModel
     internal unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
     {
         [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2247
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public delegate* unmanaged<IntPtr, byte*, int> get_HasErrors_0;

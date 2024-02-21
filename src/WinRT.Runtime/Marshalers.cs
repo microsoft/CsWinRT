@@ -440,7 +440,9 @@ namespace WinRT
                 return (0, IntPtr.Zero);
             }
             var length = array.Length;
-            var byte_length = length * Marshal.SizeOf<T>();
+#pragma warning disable CS8500 // We know that T is unmanaged
+            var byte_length = length * sizeof(T);
+#pragma warning restore CS8500
             var data = Marshal.AllocCoTaskMem(byte_length);
             CopyManagedArray(array, data);
             return (length, data);
@@ -453,11 +455,20 @@ namespace WinRT
                 return;
             }
             var length = array.Length;
-            var byte_length = length * Marshal.SizeOf<T>();
+#pragma warning disable CS8500 // We know that T is unmanaged
+            var byte_length = length * sizeof(T);
+#pragma warning restore CS8500
+#if NET
+            fixed (byte* pArrayData = &MemoryMarshal.GetArrayDataReference(array))
+            {
+                Buffer.MemoryCopy(pArrayData, data.ToPointer(), byte_length, byte_length);
+            }
+#else
             var array_handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             var array_data = array_handle.AddrOfPinnedObject();
             Buffer.MemoryCopy(array_data.ToPointer(), data.ToPointer(), byte_length, byte_length);
             array_handle.Free();
+#endif
         }
 
         public static void DisposeMarshalerArray(object box)
@@ -1689,10 +1700,6 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObjectForMarshaling(o, delegateIID);
         }
 
-#if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2091",
-            Justification = "Preserving constructors is not necessary when creating RCWs for delegates, as they go through the factory methods in the helper types.")]
-#endif
         public static T FromAbi<T>(IntPtr nativeDelegate)
             where T : Delegate
         {

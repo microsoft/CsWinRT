@@ -289,5 +289,105 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
+        /// <summary>The IID for <c>IErrorInfo</c> (1CF2B120-547D-101B-8E65-08002B2BD119).</summary>
+        internal static ref readonly Guid IID_IErrorInfo
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x20, 0xB1, 0xF2, 0x1C,
+                    0x7D, 0x54,
+                    0x1B, 0x10,
+                    0x8E,
+                    0x65,
+                    0x08,
+                    0x00,
+                    0x2B,
+                    0x2B,
+                    0xD1,
+                    0x19
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>ISupportErrorInfo</c> (DF0B3D60-548F-101B-8E65-08002B2BD119).</summary>
+        internal static ref readonly Guid IID_ISupportErrorInfo
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x60, 0x3D, 0x0B, 0xDF,
+                    0x8F, 0x54,
+                    0x1B, 0x10,
+                    0x8E,
+                    0x65,
+                    0x08,
+                    0x00,
+                    0x2B,
+                    0x2B,
+                    0xD1,
+                    0x19
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>ILanguageExceptionErrorInfo</c> (04A2DBF3-DF83-116C-0946-0812ABF6E07D).</summary>
+        internal static ref readonly Guid IID_ILanguageExceptionErrorInfo
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xF3, 0xDB, 0xA2, 0x04,
+                    0x83, 0xDF,
+                    0x6C, 0x11,
+                    0x09,
+                    0x46,
+                    0x08,
+                    0x12,
+                    0xAB,
+                    0xF6,
+                    0xE0,
+                    0x7D
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IRestrictedErrorInfo</c> (82BA7092-4C88-427D-A7BC-16DD93FEB67E).</summary>
+        internal static ref readonly Guid IID_IRestrictedErrorInfo
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x92, 0x70, 0xBA, 0x82,
+                    0x88, 0x4C,
+                    0x7D, 0x42,
+                    0xA7,
+                    0xBC,
+                    0x16,
+                    0xDD,
+                    0x93,
+                    0xFE,
+                    0xB6,
+                    0x7E
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
     }
 }

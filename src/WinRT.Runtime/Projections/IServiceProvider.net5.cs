@@ -13,7 +13,9 @@ namespace ABI.System
     internal unsafe interface IServiceProvider : global::System.IServiceProvider
     {
         [Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 

@@ -44,9 +44,6 @@ namespace WinRT
             projectionTypeNameToBaseTypeNameMappings.Add(typeNameToBaseTypeNameMapping);
         }
 
-#if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
         public static Type FindRcwTypeByNameCached(string runtimeClassName)
         {
             // Try to get the given type name. If it is not found, the type might have been trimmed.
@@ -55,9 +52,6 @@ namespace WinRT
             if (rcwType is null)
             {
                 rcwType = baseRcwTypeCache.GetOrAdd(runtimeClassName,
-#if NET
-                    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
                     (runtimeClassName) =>
                     {
                         var resolvedBaseType = projectionTypeNameToBaseTypeNameMappings.Find((dict) => dict.ContainsKey(runtimeClassName))?[runtimeClassName];
@@ -73,15 +67,9 @@ namespace WinRT
         /// </summary>
         /// <param name="runtimeClassName">The runtime class name to attempt to parse.</param>
         /// <returns>The type, if found.  Null otherwise</returns>
-#if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
         public static Type FindTypeByNameCached(string runtimeClassName)
         {
             return typeNameCache.GetOrAdd(runtimeClassName,
-#if NET
-                [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
                 (runtimeClassName) =>
                 {
                     Type implementationType = null;
@@ -113,9 +101,9 @@ namespace WinRT
                 }
 
                 throw new NotSupportedException(
-                    $"""The requested runtime class name is "{runtimeClassName.ToString()}", which maps to a dynamic projected type. """ +
-                    """This can only be used when support for dynamic objects is enabled in the CsWinRT configuration. To enable it, """ +
-                    """make sure that the "CsWinRTEnableDynamicObjectsSupport" MSBuild property is not being set to 'false' anywhere.""");
+                    $"The requested runtime class name is '{runtimeClassName.ToString()}', which maps to a dynamic projected type. " +
+                    "This can only be used when support for dynamic objects is enabled in the CsWinRT configuration. To enable it, " +
+                    "make sure that the 'CsWinRTEnableDynamicObjectsSupport' MSBuild property is not being set to 'false' anywhere.");
             }
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
             else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<String>".AsSpan(), StringComparison.Ordinal) == 0)
@@ -154,7 +142,6 @@ namespace WinRT
 #if NET
         [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
             Justification = "Any types which are trimmed are not used by user code and there is fallback logic to handle that.")]
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
         private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
         {
