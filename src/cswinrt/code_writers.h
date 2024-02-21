@@ -8481,7 +8481,8 @@ internal sealed class %RcwFactoryAttribute : global::WinRT.WinRTImplementationTy
     public override object CreateInstance(global::WinRT.IInspectable inspectable)
         => new %(inspectable.ObjRef);
 }
-)", type.TypeName(), write_type_name_temp(w, type));
+)", type.TypeName(), 
+    bind<write_type_name>(type, typedef_name_type::Projected, false));
     }
 
     void write_abi_class(writer& w, TypeDef const& type)
