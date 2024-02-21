@@ -6106,7 +6106,7 @@ return eventSource.EventActions;
                     auto guard{ w.push_generic_args(type) };
                     set_typedef_marshaler(type.generic_type);
 
-                    if (!settings.netstandard_compat /* && (!m.is_out() || get_category(type.generic_type) == category::delegate_type) */)
+                    if (!settings.netstandard_compat)
                     {
                         auto generic_instantiation_class_name = get_generic_instantiation_class_type_name(w, type.generic_type);
                         if (!starts_with(generic_instantiation_class_name, "Windows_Foundation_IReference"))
