@@ -26,7 +26,9 @@ namespace ABI.System.Windows.Input
     internal unsafe interface ICommand : global::System.Windows.Input.ICommand
     {
         [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _add_CanExecuteChanged_0;

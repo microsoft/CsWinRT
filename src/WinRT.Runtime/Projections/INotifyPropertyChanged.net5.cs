@@ -25,7 +25,9 @@ namespace ABI.System.ComponentModel
     {
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
