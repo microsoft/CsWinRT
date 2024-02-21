@@ -362,7 +362,7 @@ namespace WinRT
                 // otherwise the new instance will be used. Since the inner was composed
                 // it should answer immediately without going through the outer. Either way
                 // the reference count will go to the new instance.
-                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IID.IID_IReferenceTracker), out referenceTracker);
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(in IID.IID_IReferenceTracker), out referenceTracker);
                 if (hr != 0)
                 {
                     referenceTracker = default;
@@ -462,7 +462,7 @@ namespace WinRT
         {
             if (objRef.ReferenceTrackerPtr == IntPtr.Zero)
             {
-                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IID.IID_IReferenceTracker), out var referenceTracker);
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(in IID.IID_IReferenceTracker), out var referenceTracker);
                 if (hr == 0)
                 {
                     // WinUI scenario
