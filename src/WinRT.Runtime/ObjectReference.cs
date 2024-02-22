@@ -234,12 +234,23 @@ namespace WinRT
         public T AsType<T>()
         {
             ThrowIfDisposed();
+
+#if NET
+            // Same logic as in 'ComWrappersSupport.CreateFactoryForImplementationType', see notes there
+            var attribute = typeof(T).GetCustomAttribute<WinRTImplementationTypeRcwFactoryAttribute>(inherit: false);
+
+            if (attribute is not null)
+            {
+                return (T)attribute.CreateInstance(new IInspectable(this));
+            }
+#else
             var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
-            if (ctor != null)
+            if (ctor is not null)
             {
                 return (T)ctor.Invoke(new[] { this });
             }
-            throw new InvalidOperationException("Target type is not a projected interface.");
+#endif
+            throw new InvalidOperationException($"Target type '{typeof(T)}' is not a projected type.");
         }
 
         public IntPtr GetRef()
