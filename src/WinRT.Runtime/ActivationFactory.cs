@@ -157,11 +157,7 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe (ObjectReference<I> obj, int hr) GetActivationFactory<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        I>(string runtimeClassId, Guid iid)
+        public static unsafe (ObjectReference<I> obj, int hr) GetActivationFactory<I>(string runtimeClassId, Guid iid)
         {
             var module = Instance; // Ensure COM is initialized
             IntPtr instancePtr = IntPtr.Zero;

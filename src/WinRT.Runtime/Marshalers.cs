@@ -1509,17 +1509,9 @@ namespace WinRT
 #else
     public
 #endif
-    static class MarshalInspectable<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        T>
+    static class MarshalInspectable<T>
     {
-        public static IObjectReference CreateMarshaler<
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-            V>(
+        public static IObjectReference CreateMarshaler<V>(
             T o,
             Guid iid,
             bool unwrapObject = true)
@@ -1594,7 +1586,7 @@ namespace WinRT
             IntPtr iunknownPtr = IntPtr.Zero;
             try
             {
-                Marshal.QueryInterface(ptr, ref Unsafe.AsRef(IUnknownVftbl.IID), out iunknownPtr);
+                Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in IUnknownVftbl.IID), out iunknownPtr);
                 if (IUnknownVftbl.IsReferenceToManagedObject(iunknownPtr))
                 {
                     return (T)ComWrappersSupport.FindObject<object>(iunknownPtr);
