@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -231,6 +232,10 @@ namespace WinRT
 
         public unsafe IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
 
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public T AsType<T>()
         {
             ThrowIfDisposed();

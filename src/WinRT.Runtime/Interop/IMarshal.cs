@@ -274,8 +274,6 @@ namespace ABI.WinRT.Interop
         private readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
         public IMarshal(IObjectReference obj) : this(obj.As<Vftbl>(IID)) { }
         internal IMarshal(ObjectReference<Vftbl> obj)
         {

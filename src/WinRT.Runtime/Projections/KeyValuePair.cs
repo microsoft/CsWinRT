@@ -24,6 +24,7 @@ namespace Windows.Foundation.Collections
 namespace ABI.System.Collections.Generic
 {
     using global::System;
+    using global::System.ComponentModel;
     using global::WinRT.Interop;
 
 #if EMBED
@@ -434,6 +435,11 @@ namespace ABI.System.Collections.Generic
 
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public A As<A>() => _obj.AsType<A>();
         public KeyValuePair(IObjectReference obj) : this(obj.As<IUnknownVftbl>(PIID)) { }
         public KeyValuePair(ObjectReference<IUnknownVftbl> obj)
