@@ -12,7 +12,7 @@ namespace WinRT
         internal static ConditionalWeakTable<IObjectReference, object> DelegateTable = new();
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         internal unsafe static Delegate CreateDelegate(IntPtr ptr, ref Delegate delegateRef, Type delegateType, int offset)
         {

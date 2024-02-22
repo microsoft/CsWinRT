@@ -110,7 +110,7 @@ namespace ABI.Windows.Foundation.Collections
 
 
 #if NET8_0_OR_GREATER
-                [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
@@ -298,7 +298,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private unsafe static bool InitRcwHelperFallback()
         {
@@ -321,7 +321,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static unsafe bool IndexOfDynamic(IObjectReference obj, T value, out uint index)
         {
@@ -374,7 +374,7 @@ namespace ABI.System.Collections.Generic
         private static global::System.Delegate[] DelegateCache;
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         internal static unsafe void InitFallbackCCWVtable()
         {
@@ -480,7 +480,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private sealed class DelegateHelper
         {
@@ -635,7 +635,7 @@ namespace ABI.System.Collections.Generic
 #pragma warning restore IL3050
 
 #if NET8_0_OR_GREATER
-                [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
