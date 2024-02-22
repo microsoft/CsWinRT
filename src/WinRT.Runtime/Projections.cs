@@ -446,7 +446,7 @@ namespace WinRT
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static HashSet<Type> GetCompatibleTypes(Type type, Stack<Type> typeStack)
         {
@@ -480,7 +480,7 @@ namespace WinRT
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         internal static IEnumerable<Type> GetAllPossibleTypeCombinations(IEnumerable<IEnumerable<Type>> compatibleTypesPerGeneric, Type definition)
         {
@@ -498,7 +498,7 @@ namespace WinRT
             return accum;
 
 #if NET8_0_OR_GREATER
-            [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
             [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
@@ -526,7 +526,7 @@ namespace WinRT
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         internal static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(Type type, Stack<Type> typeStack, out IEnumerable<Type> compatibleTypes)
         {
@@ -681,7 +681,7 @@ namespace WinRT
 
 #if NET
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         internal static Type GetAbiDelegateType(params Type[] typeArgs) => Expression.GetDelegateType(typeArgs);
 #else

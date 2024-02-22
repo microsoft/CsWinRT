@@ -468,7 +468,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private unsafe static bool InitRcwHelperFallback()
         {
@@ -476,7 +476,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static unsafe V LookupDynamic(IObjectReference obj, K key)
         {
@@ -499,7 +499,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static unsafe bool HasKeyDynamic(IObjectReference obj, K key)
         {
@@ -550,7 +550,7 @@ namespace ABI.System.Collections.Generic
         private static global::System.Delegate[] DelegateCache;
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         internal static unsafe void InitFallbackCCWVtable()
         {
@@ -652,13 +652,13 @@ namespace ABI.System.Collections.Generic
         private static Type Lookup_0_Type
         {
 #if NET8_0_OR_GREATER
-            [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
             get => _lookup_0_type ?? MakeLookupType();
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static Type MakeLookupType()
         {
@@ -670,13 +670,13 @@ namespace ABI.System.Collections.Generic
         private static Type HasKey_2_Type
         {
 #if NET8_0_OR_GREATER
-            [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
             get => _hasKey_2_type ?? MakeHasKeyType();
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static Type MakeHasKeyType()
         {
@@ -685,7 +685,7 @@ namespace ABI.System.Collections.Generic
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private sealed class DelegateHelper
         {
@@ -1071,7 +1071,7 @@ namespace ABI.System.Collections.Generic
 #pragma warning restore IL3050
 
 #if NET8_0_OR_GREATER
-                [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()

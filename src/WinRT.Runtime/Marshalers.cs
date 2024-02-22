@@ -1517,7 +1517,7 @@ namespace WinRT
         }
 
 #if NET8_0_OR_GREATER
-        [RequiresDynamicCode(TrimmingAttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
         private static Func<T, IObjectReference> BindCreateMarshaler()
         {
