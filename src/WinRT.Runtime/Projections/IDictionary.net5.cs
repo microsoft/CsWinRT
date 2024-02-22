@@ -252,6 +252,8 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IDictionaryMethods()
         {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IDictionary<K, V>), typeof(global::ABI.System.Collections.Generic.IDictionary<K, V>));
+
             // Early return to ensure things are trimmed correctly on NAOT.
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
@@ -855,6 +857,9 @@ namespace ABI.System.Collections.Generic
                 return false;
             }
 
+            // Register generic helper types referenced in CCW.
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>), typeof(global::ABI.System.Collections.Generic.IReadOnlyDictionary<K, V>));
+
             return true;
         }
 
@@ -876,20 +881,15 @@ namespace ABI.System.Collections.Generic
                 new IDictionary_Delegates.Clear_6(Do_Abi_Clear_6)
             };
 
-            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 7));
-            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache[0]);
-            ((IntPtr*)abiToProjectionVftablePtr)[7] = Marshal.GetFunctionPointerForDelegate(DelegateCache[1]);
-            ((IntPtr*)abiToProjectionVftablePtr)[8] = Marshal.GetFunctionPointerForDelegate(DelegateCache[2]);
-            ((IntPtr*)abiToProjectionVftablePtr)[9] = Marshal.GetFunctionPointerForDelegate(DelegateCache[3]);
-            ((IntPtr*)abiToProjectionVftablePtr)[10] = Marshal.GetFunctionPointerForDelegate(DelegateCache[4]);
-            ((IntPtr*)abiToProjectionVftablePtr)[11] = Marshal.GetFunctionPointerForDelegate(DelegateCache[5]);
-            ((IntPtr*)abiToProjectionVftablePtr)[12] = Marshal.GetFunctionPointerForDelegate(DelegateCache[6]);
-
-            if (!IDictionaryMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
-            {
-                NativeMemory.Free((void*)abiToProjectionVftablePtr);
-            }
+            InitCcw(
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi, VAbi*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[0]),
+                (delegate* unmanaged[Stdcall]<IntPtr, uint*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[1]),
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi, byte*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[2]),
+                (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[3]),
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi, VAbi, byte*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[4]),
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[5]),
+                (delegate* unmanaged[Stdcall]<IntPtr, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[6])
+            );
         }
 
         private static unsafe int Do_Abi_Lookup_0(void* thisPtr, KAbi key, VAbi* __return_value__)
