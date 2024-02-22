@@ -259,6 +259,8 @@ TEST(AuthoringTest, Arrays)
         EXPECT_EQ(arr2[idx], idx + 1);
     }
 
+    // Array marshaling on AOT needs dynamic code.
+#ifndef AOT
     std::array<BasicStruct, 2> basicStructArr;
     basicStructArr[0] = basicClass.GetBasicStruct();
     basicStructArr[1].X = 4;
@@ -272,6 +274,7 @@ TEST(AuthoringTest, Arrays)
     EXPECT_EQ(result[1].X, basicStructArr[1].X);
     EXPECT_EQ(result[1].Y, basicStructArr[1].Y);
     EXPECT_EQ(result[1].Value, basicStructArr[1].Value);
+#endif
 }
 
 TEST(AuthoringTest, CustomTypes)

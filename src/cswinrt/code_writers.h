@@ -6106,7 +6106,7 @@ return eventSource.EventActions;
                     auto guard{ w.push_generic_args(type) };
                     set_typedef_marshaler(type.generic_type);
 
-                    if (!settings.netstandard_compat && (!m.is_out() || get_category(type.generic_type) == category::delegate_type))
+                    if (!settings.netstandard_compat)
                     {
                         auto generic_instantiation_class_name = get_generic_instantiation_class_type_name(w, type.generic_type);
                         if (!starts_with(generic_instantiation_class_name, "Windows_Foundation_IReference"))
@@ -7412,6 +7412,7 @@ internal static global::System.Guid IID { get; } = new Guid(new byte[] { % });
 internal volatile static bool _RcwHelperInitialized;
 unsafe static @Methods()
 {
+ComWrappersSupport.RegisterHelperType(typeof(%), typeof(%));
 if (RuntimeFeature.IsDynamicCodeCompiled && !_RcwHelperInitialized)
 {
 var ensureInitializedFallback = (Func<bool>)typeof(@Methods<%>).MakeGenericType(%).
@@ -7422,6 +7423,8 @@ ensureInitializedFallback();
 }
 )",
                     iface.TypeName(),
+                    bind<write_type_name>(iface, typedef_name_type::Projected, false),
+                    bind<write_type_name>(iface, typedef_name_type::ABI, false),
                     iface.TypeName(),
                     bind([&](writer& w)
                     {
@@ -9089,6 +9092,11 @@ internal static class %
 private static IntPtr abiToProjectionVftablePtr;
 internal static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
 
+static @Methods()
+{
+ComWrappersSupport.RegisterHelperType(typeof(%), typeof(%));
+}
+
 internal static bool TryInitCCWVtable(IntPtr ptr)
 {
 bool success = global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionVftablePtr, ptr, IntPtr.Zero) == IntPtr.Zero;
@@ -9146,6 +9154,9 @@ public static % Abi_Invoke(IntPtr thisPtr%%)
                             bind_list<write_projection_parameter_type>(", ", signature.params()),
                             signature.has_params() ? ", " : "",
                             bind<write_projection_return_type>(signature)),
+                    type.TypeName(),
+                    bind<write_type_name>(type, typedef_name_type::Projected, false),
+                    bind<write_type_name>(type, typedef_name_type::ABI, false),
                     bind<write_type_name>(type, typedef_name_type::ABI, false),
                     bind<write_type_name>(type, typedef_name_type::Projected, false),
                     bind<write_type_name>(type, typedef_name_type::Projected, false),

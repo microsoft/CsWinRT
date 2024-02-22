@@ -261,7 +261,7 @@ namespace WinRT
                     return null;
                 }
 
-                if (publicType.IsGenericType)
+                if (publicType.IsGenericType && !publicType.IsGenericTypeDefinition)
                 {
                     if (CustomTypeToHelperTypeMappings.TryGetValue(publicType, out Type specializedAbiType))
                     {
