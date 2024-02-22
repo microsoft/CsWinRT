@@ -248,6 +248,40 @@ namespace WinRT
             {
                 return (T)attribute.CreateInstance(new IInspectable(this));
             }
+
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"Cannot create an RCW instance for type '{typeof(T)}', because it doesn't have a " +
+                    "[WinRTImplementationTypeRcwFactory] derived attribute on it. The fallback path for older projections " +
+                    "is not trim-safe, and isn't supported in AOT environments. Make sure to reference updated projections.");
+            }
+
+            if (TryCreateRcwFallback(this, out object rcwInstance))
+            {
+                return (T)rcwInstance;
+            }
+
+            [SuppressMessage("Trimming", "IL2090", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
+            static bool TryCreateRcwFallback(IObjectReference objectReference, out object rcwInstance)
+            {
+                var constructor = typeof(T).GetConstructor(
+                    bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance,
+                    binder: null,
+                    types: new[] { typeof(IObjectReference) },
+                    modifiers: null);
+
+                if (constructor is not null)
+                {
+                    rcwInstance = constructor.Invoke(new[] { objectReference });
+
+                    return true;
+                }
+
+                rcwInstance = null;
+
+                return false;
+            }
 #else
             var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
             if (ctor is not null)
