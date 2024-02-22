@@ -23,21 +23,22 @@ namespace WinRT
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
                                             DynamicallyAccessedMemberTypes.PublicNestedTypes | 
                                             DynamicallyAccessedMemberTypes.PublicFields)]
+        [SuppressMessage("Trimming", "IL2073", Justification = "Matching trimming annotations are used at all callsites registering helper types present in the cache.")]
 #endif
         public static Type FindHelperType(this Type type)
         {
-            return HelperTypeCache.GetOrAdd(type,
 #if NET
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                                DynamicallyAccessedMemberTypes.PublicNestedTypes | 
+                                                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                                                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-            (type) =>
+            static Type FindHelperTypeNoCache(Type type)
             {
                 if (typeof(Exception).IsAssignableFrom(type))
                 {
                     type = typeof(Exception);
                 }
+
                 Type customMapping = Projections.FindCustomHelperTypeMapping(type);
                 if (customMapping is not null)
                 {
@@ -59,7 +60,6 @@ namespace WinRT
                         return GetHelperTypeFromAttribute(helperTypeAtribute, type);
                     }
                 }
-
 #if NET
                 // Using AOT requires using updated projections, which would never let the code below
                 // be reached (as it's just a fallback path for legacy projections). So we can trim it.
@@ -68,9 +68,10 @@ namespace WinRT
                     return null;
                 }
 #endif
-
                 return FindHelperTypeFallback(type);
-            });
+            }
+
+            return HelperTypeCache.GetOrAdd(type, FindHelperTypeNoCache);
 
 #if NET
             [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
