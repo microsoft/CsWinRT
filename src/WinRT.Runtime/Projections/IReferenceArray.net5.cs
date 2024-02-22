@@ -159,8 +159,6 @@ namespace ABI.Windows.Foundation
         private readonly ObjectReference<IUnknownVftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-        public A As<A>() => _obj.AsType<A>();
-
         public IReferenceArray(ObjectReference<IUnknownVftbl> obj)
         {
             _obj = obj;
