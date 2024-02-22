@@ -121,6 +121,9 @@ namespace ABI.System
 
         static unsafe EventHandler()
         {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.EventHandler<T>), typeof(global::ABI.System.EventHandler<T>));
+            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.EventHandler<T>), CreateRcw);
+
 #if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
@@ -152,8 +155,6 @@ namespace ABI.System
                 ((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate);
 #pragma warning restore IL3050
             }
-
-            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.EventHandler<T>), CreateRcw);
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }

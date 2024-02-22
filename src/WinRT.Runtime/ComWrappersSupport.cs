@@ -155,6 +155,15 @@ namespace WinRT
 
         public static void RegisterAuthoringMetadataTypeLookup(Func<Type, Type> authoringMetadataTypeLookup) => TypeExtensions.RegisterAuthoringMetadataTypeLookup(authoringMetadataTypeLookup);
 
+        public static void RegisterHelperType(
+            Type type,
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                        DynamicallyAccessedMemberTypes.PublicNestedTypes |
+                                        DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            Type helperType) => TypeExtensions.HelperTypeCache.TryAdd(type, helperType);
+
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(Type type)
         {
             var entries = new List<ComInterfaceEntry>();

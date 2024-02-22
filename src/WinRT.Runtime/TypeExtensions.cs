@@ -17,7 +17,7 @@ namespace WinRT
 #endif
     static class TypeExtensions
     {
-        private readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
+        internal readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
 
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
@@ -79,7 +79,7 @@ namespace WinRT
 #endif
             static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
             {
-                if (type.IsGenericType)
+                if (type.IsGenericType && !type.IsGenericTypeDefinition)
                 {
 #if NET
                     if (!RuntimeFeature.IsDynamicCodeCompiled)

@@ -209,4 +209,5 @@ CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribut
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.As<A>()' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IObjectReference.AsType<T>()' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IObjectReference.AsType<T>()' in the implementation but not the reference.
-Total Issues: 210
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterHelperType(System.Type, System.Type)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 211
