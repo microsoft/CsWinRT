@@ -8264,7 +8264,6 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
 %
 [global::ABI.%.%RcwFactory]
 [global::WinRT.ProjectedRuntimeClass(typeof(%))]
-[global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
 {
 private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
@@ -8687,8 +8686,8 @@ public static % CreateRcw(IntPtr ptr)
 return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, GuidGenerator.GetIID(typeof(@%)))).Invoke);
 }
 
-[global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
+[global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 private sealed class NativeDelegateWrapper
 #else
 private sealed class NativeDelegateWrapper : IWinRTObject

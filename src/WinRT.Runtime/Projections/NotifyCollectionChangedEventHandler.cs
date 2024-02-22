@@ -65,8 +65,8 @@ namespace ABI.System.Collections.Specialized
             return new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke);
         }
 
-        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
+        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
         private sealed class NativeDelegateWrapper
 #else
         private sealed class NativeDelegateWrapper : IWinRTObject

@@ -218,7 +218,9 @@ namespace ABI.Windows.Foundation
 
 namespace ABI.System
 {
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
 #if EMBED
     internal
