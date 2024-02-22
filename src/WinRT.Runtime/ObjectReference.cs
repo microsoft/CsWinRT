@@ -571,7 +571,7 @@ namespace WinRT
 #if NET
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             {
-                throw new NotSupportedException("Generic vtable types are not supported.");
+                throw new NotSupportedException("Managed vtable types (ie. containing any reference types) are not supported.");
             }
 #else
             if (typeof(T).IsGenericType)
