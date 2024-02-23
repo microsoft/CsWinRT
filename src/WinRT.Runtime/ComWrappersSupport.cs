@@ -30,7 +30,7 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        internal readonly static int GC_PRESSURE_BASE = 1000;
+        internal const int GC_PRESSURE_BASE = 1000;
 
         private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
