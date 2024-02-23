@@ -58,5 +58,10 @@ namespace WinRT
             }
 #endif
         }
+
+        public static void DisposeContextCallback(IntPtr contextCallbackPtr)
+        {
+            MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
+        }
     }
 }
