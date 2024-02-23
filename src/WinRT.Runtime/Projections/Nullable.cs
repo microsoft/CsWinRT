@@ -2262,11 +2262,15 @@ namespace ABI.System
             {
                 if (type.IsDelegate())
                 {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     return ComWrappersSupport.GetTypedRcwFactory(typeof(Nullable_Delegate<>).MakeGenericType(type))(inspectable);
+#pragma warning restore IL3050
                 }
                 else
                 {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     return ComWrappersSupport.GetTypedRcwFactory(typeof(global::System.Nullable<>).MakeGenericType(type))(inspectable);
+#pragma warning restore IL3050
                 }
             }
 
