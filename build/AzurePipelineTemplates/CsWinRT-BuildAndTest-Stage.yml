@@ -3,8 +3,6 @@ stages:
   displayName: Build/Test Stage
   jobs: 
   - job: BuildAndTest
-    pool:
-      vmImage: windows-latest
     timeoutInMinutes: 270
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
