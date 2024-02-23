@@ -1744,3 +1744,27 @@ namespace ABI.AuthoringTest
         }
     }
 }
+
+namespace AnotherNamespace
+{
+    internal partial class PartialClass3
+    {
+        public void InternalFunction()
+        {
+        }
+    }
+
+    partial class PartialClass3
+    {
+        public void InternalFunction2()
+        {
+        }
+    }
+
+    internal class InternalClass
+    {
+        public void InternalFunction()
+        {
+        }
+    }
+}
