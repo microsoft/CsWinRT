@@ -396,33 +396,6 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             }
         }
 
-        //
-        // Exception requires anything to be added into Data dictionary is serializable
-        // This wrapper is made serializable to satisfy this requirement but does NOT serialize
-        // the object and simply ignores it during serialization, because we only need
-        // the exception instance in the app to hold the error object alive.
-        //
-        [Serializable]
-        internal sealed class __RestrictedErrorObject
-        {
-            // Hold the error object instance but don't serialize/deserialize it
-            [NonSerialized]
-            private readonly ObjectReference<IUnknownVftbl> _realErrorObject;
-
-            internal __RestrictedErrorObject(ObjectReference<IUnknownVftbl> errorObject)
-            {
-                _realErrorObject = errorObject;
-            }
-
-            public ObjectReference<IUnknownVftbl> RealErrorObject
-            {
-                get
-                {
-                    return _realErrorObject;
-                }
-            }
-        }
-
         internal static void AddExceptionDataForRestrictedErrorInfo(
             this Exception ex,
             string description,
@@ -442,7 +415,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
                 // Keep the error object alive so that user could retrieve error information
                 // using Data["RestrictedErrorReference"]
-                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject);
+                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
                 dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
             }
         }
@@ -457,8 +430,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             {
                 if (dict.Contains("__RestrictedErrorObjectReference"))
                 {
-                    if (dict["__RestrictedErrorObjectReference"] is __RestrictedErrorObject restrictedObject)
-                        restrictedErrorObject = restrictedObject.RealErrorObject;
+                    restrictedErrorObject = (ObjectReference<IUnknownVftbl>)dict["__RestrictedErrorObjectReference"];
                 }
                 return (bool)dict["__HasRestrictedLanguageErrorObject"]!;
             }
@@ -556,10 +528,8 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
 namespace Microsoft.UI.Xaml
 {
-    using System.Runtime.Serialization;
     namespace Automation
     {
-        [Serializable]
 #if EMBED
         internal
 #else
@@ -583,11 +553,6 @@ namespace Microsoft.UI.Xaml
                 : base(message, innerException)
             {
                 HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTAVAILABLE;
-            }
-
-            protected ElementNotAvailableException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-                : base(serializationInfo, streamingContext)
-            {
             }
         }
 
@@ -646,7 +611,7 @@ namespace Microsoft.UI.Xaml
             }
         }
     }
-    [Serializable]
+
 #if EMBED
     internal
 #else
@@ -670,11 +635,6 @@ namespace Microsoft.UI.Xaml
             : base(message, innerException)
         {
             HResult = WinRT.ExceptionHelpers.E_LAYOUTCYCLE;
-        }
-
-        protected LayoutCycleException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-            : base(serializationInfo, streamingContext)
-        {
         }
     }
 }
