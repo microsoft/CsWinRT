@@ -1241,7 +1241,7 @@ namespace UnitTest
             Assert.Null(TestObject.GetInts());
         }
 
-#if NETCOREAPP2_0
+#if !NET
         [Fact]
         public void TestGenericCast()
         {

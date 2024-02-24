@@ -1,12 +1,26 @@
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 
 variables:
-- template: CsWinRT-Variables.yml
+- template: CsWinRT-Variables.yml@self
 - group: CsWinRT-TouchdownBuild-Secrets
 - name: LocOutputDir
   value: '$(Agent.TempDirectory)\Temp\LocOutput'
 
-stages:
-- template: CsWinRT-BuildOnly-Stage.yml
-
-- template: CsWinRT-LocalizeResources-Stage.yml
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: Azure-Pipelines-1ESPT-ExDShared
+      image: windows-2022
+      os: windows
+    customBuildTags:
+    - ES365AIMigrationTooling
+    stages:
+    - template: CsWinRT-BuildOnly-Stage.yml@self
+    - template: CsWinRT-LocalizeResources-Stage.yml@self

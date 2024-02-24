@@ -652,6 +652,18 @@ And this is another one"
         };
     }
 
+    // Compile time test for sub WinRT namespace
+    namespace WinRT
+    {
+        runtimeclass Class
+        {
+            Class();
+            static void StaticMethod();
+            void Method();
+            void Method2(Windows.Foundation.IStringable stringable);
+        }
+    }
+
     namespace AnotherAssembly
     {
         [default_interface]
