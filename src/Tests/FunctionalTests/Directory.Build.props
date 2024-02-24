@@ -13,6 +13,7 @@
   <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
     <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
+    <ControlFlowGuard>Guard</ControlFlowGuard>
   </PropertyGroup>
  
 </Project>
