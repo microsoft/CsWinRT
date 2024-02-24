@@ -42,7 +42,6 @@ namespace WinRT
 
         private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new();
         private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new();
-the native object held onto by the native object.)
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
