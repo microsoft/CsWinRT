@@ -17,7 +17,6 @@
     <PublishAot>true</PublishAot>
     <NativeLib>Shared</NativeLib>
     <SelfContained>true</SelfContained>
-    <ControlFlowGuard>Guard</ControlFlowGuard>
   </PropertyGroup>
 
 </Project>
