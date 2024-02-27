@@ -19,4 +19,6 @@ MembersMustExist : Member 'public void WinRT.Projections.RegisterCustomAbiTypeMa
 CannotRemoveAttribute : Attribute 'WinRT.ObjectReferenceWrapperAttribute' exists on 'ABI.System.Nullable<T>' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'WinRT.ObjectReferenceWrapperAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'WinRT.ObjectReferenceWrapperAttribute' exists on 'WinRT.IInspectable' in the contract but not the implementation.
-Total Issues: 120
+MembersMustExist : Member 'protected void Microsoft.UI.Xaml.LayoutCycleException..ctor(System.Runtime.Serialization.SerializationInfo, System.Runtime.Serialization.StreamingContext)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void Microsoft.UI.Xaml.Automation.ElementNotAvailableException..ctor(System.Runtime.Serialization.SerializationInfo, System.Runtime.Serialization.StreamingContext)' does not exist in the implementation but it does exist in the contract.
+Total Issues: 122
