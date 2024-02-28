@@ -1389,6 +1389,16 @@ namespace WinRT
         private static Type HelperType => _HelperType ??= typeof(T).GetHelperType();
 
         private static Func<T, IObjectReference> _CreateMarshaler;
+
+        // We are here using CreateIID on the projected type rather than GetIID on the helper type
+        // This allows us to avoid needing to do MakeGenericType calls or 
+        // registration of helper types for projected generic types like System.Nullable<>.
+        // By using CreateIID with the projected type, we are still able to get the IID
+        // but at the same time don't need the generic instance of the helper type to do so.
+        // In addition, other than for that, we don't need the helper type in MarshalInterface.
+        // This does mean we are doing the PIID calculation here instead of using the cached
+        // one in the helper type, but we are also caching it here too so it should be only
+        // one additional call.
         private static object _Iid;
         private static Guid IID => (Guid)(_Iid ??= GuidGenerator.CreateIID(typeof(T)));
 
