@@ -170,7 +170,7 @@ namespace cswinrt
     // This checks for interfaces that have derived generic interfaces
     // to handle the scenario where the class implementing that interface
     // can be trimmed and we need to handle potential calls to the
-    // generic interfac methods while not using IDIC.
+    // generic interface methods while not using IDIC.
     bool has_derived_generic_interface(TypeDef const& type)
     {
         if (is_exclusive_to(type))
@@ -180,6 +180,7 @@ namespace cswinrt
 
         bool found = false;
 
+        // Looking at derived interfaces and not the interface / type itself.
         auto impls = type.InterfaceImpl();
         for (auto&& impl : impls)
         {
@@ -3908,7 +3909,7 @@ event % %;)",
         bool has_generic_instantiation;
         std::vector<generic_type_instance> generic_instantiations;
         std::string interface_guid;
-        std::string interface_init_rcw;
+        std::string interface_init_rcw_helper;
 
         bool is_out() const
         {
@@ -4239,26 +4240,30 @@ event % %;)",
             if (!settings.netstandard_compat && 
                 has_generic_instantiation)
             {
-                for (auto&& generic_instantiation: generic_instantiations)
+                // If we have an InitRcwHelper call for the RCW impl class, we leave it to that to instantiate the generic interfaces
+                // instead of doing them here.
+                if (interface_init_rcw_helper != "")
                 {
-                    auto guard{ w.push_generic_args(generic_instantiation) };
-                    auto generic_instantiation_class_name = get_generic_instantiation_class_type_name(w, generic_instantiation.generic_type);
-                    if (!starts_with(generic_instantiation_class_name, "Windows_Foundation_IReference"))
-                    {
-                        generic_type_instances.insert(
-                            generic_type_instantiation
-                            {
-                                generic_instantiation,
-                                generic_instantiation_class_name
-                            });
-
-                        w.write("_ = global::WinRT.GenericTypeInstantiations.%.EnsureInitialized();\n", generic_instantiation_class_name);
-                    }
+                    w.write(interface_init_rcw_helper);
                 }
-
-                if (interface_init_rcw != "")
+                else
                 {
-                    w.write(interface_init_rcw);
+                    for (auto&& generic_instantiation : generic_instantiations)
+                    {
+                        auto guard{ w.push_generic_args(generic_instantiation) };
+                        auto generic_instantiation_class_name = get_generic_instantiation_class_type_name(w, generic_instantiation.generic_type);
+                        if (!starts_with(generic_instantiation_class_name, "Windows_Foundation_IReference"))
+                        {
+                            generic_type_instances.insert(
+                                generic_type_instantiation
+                                {
+                                    generic_instantiation,
+                                    generic_instantiation_class_name
+                                });
+
+                            w.write("_ = global::WinRT.GenericTypeInstantiations.%.EnsureInitialized();\n", generic_instantiation_class_name);
+                        }
+                    }
                 }
             }
 
@@ -4385,7 +4390,7 @@ event % %;)",
 
                     if (has_derived_generic_interface(type))
                     {
-                        m.interface_init_rcw = w.write_temp("%.InitRcwHelper();\n", bind<write_type_name>(type, typedef_name_type::StaticAbiClass, true));
+                        m.interface_init_rcw_helper = w.write_temp("%.InitRcwHelper();\n", bind<write_type_name>(type, typedef_name_type::StaticAbiClass, true));
                     }
                 }
                 break;
@@ -7347,6 +7352,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
             bind<write_type_params>(iface),
             [&](writer& w)
             {
+                bool hasDerivedGenericInterfaces = distance(iface.GenericParam()) == 0 && has_derived_generic_interface(iface);
                 std::set<std::string> writtenInterfaces;
                 std::function<void(writer&, type_semantics const&)> write_objref_defintion = [&](writer& w, type_semantics const& ifaceTypeSemantics)
                 {
@@ -7364,6 +7370,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
 private volatile IObjectReference __%;
 private IObjectReference Make__%()
 {
+%
 global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(%.IID), null);
 return __%;
 }
@@ -7371,6 +7378,16 @@ private IObjectReference % => __% ?? Make__%();
 )",
                         objrefname,
                         objrefname,
+                        [&](writer& w) {
+                            // We initialize the generic interface instantiation class if the respective interface for this
+                            // impl class is not generic but has derived generic interfaces.  This is because in those cases
+                            // we know the specific generic instantiations and can initialize them here rather than earlier.
+                            // By deferring it to here, we are able to trim friendly allowing to trim unused interfaces.
+                            if (hasDerivedGenericInterfaces)
+                            {
+                                write_ensure_generic_type_initialized(w, ifaceTypeSemantics);
+                            }
+                        },
                         objrefname,
                         bind<write_type_name>(ifaceTypeSemantics, typedef_name_type::StaticAbiClass, false),
                         objrefname,
