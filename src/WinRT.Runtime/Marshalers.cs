@@ -1388,7 +1388,7 @@ namespace WinRT
 #endif
         private static Type HelperType => _HelperType ??= typeof(T).GetHelperType();
 
-        private static Func<T, IObjectReference> _CreateMarshaler;
+        private static object _CreateMarshaler;
 
         // We are here using CreateIID on the projected type rather than GetIID on the helper type
         // This allows us to avoid needing to do MakeGenericType calls or 
@@ -1400,7 +1400,17 @@ namespace WinRT
         // one in the helper type, but we are also caching it here too so it should be only
         // one additional call.
         private static object _Iid;
-        private static Guid IID => (Guid)(_Iid ??= GuidGenerator.CreateIID(typeof(T)));
+        private static Guid IID => (Guid)(_Iid ??= GetIID());
+
+        private static Guid GetIID()
+        {
+            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                return GuidGenerator.CreateIID(typeof(T));
+            }
+            
+            return GuidGenerator.GetIID(HelperType);
+        }
 
         public static T FromAbi(IntPtr ptr)
         {
@@ -1535,7 +1545,7 @@ namespace WinRT
             _CreateMarshaler ??= BindCreateMarshaler();
 #pragma warning restore IL3050
 
-            return _CreateMarshaler(value);
+            return ((Func<T, IObjectReference>)_CreateMarshaler)(value);
         }
 
 #if NET8_0_OR_GREATER
