@@ -2192,26 +2192,12 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 
     bool is_manually_generated_iface(TypeDef const& ifaceType)
     {
-        if (ifaceType.TypeNamespace() == "Windows.Foundation.Collections" && 
-            (ifaceType.TypeName() == "IVector`1"
-                || ifaceType.TypeName() == "IMap`2")
-                || ifaceType.TypeName() == "IIterable`1"
-                || ifaceType.TypeName() == "IIterator`1"
-                || ifaceType.TypeName() == "IMapView`2"
-                || ifaceType.TypeName() == "IVectorView`1")
-        {
-            return false;
-        }
-
-        if (ifaceType.TypeNamespace() == "Windows.Foundation" && ifaceType.TypeName() == "IClosable")
-        {
-            return false;
-        }
-
-        if (auto mapping = get_mapped_type(ifaceType.TypeNamespace(), ifaceType.TypeName()))
+        if (ifaceType.TypeNamespace() == "Microsoft.UI.Xaml.Interop" && 
+            (ifaceType.TypeName() == "IBindableVector" || ifaceType.TypeName() == "IBindableIterable"))
         {
             return true;
         }
+
         return false;
     }
 
@@ -3030,7 +3016,7 @@ set => %.Indexer_Set(%, index, value);
 visibility, self, objref_name);
     }
 
-    void write_notify_data_error_info_members(writer& w, std::string_view target, bool emit_explicit)
+    void write_notify_data_error_info_members_using_idic(writer& w, std::string_view target, bool emit_explicit)
     {
         auto self = emit_explicit ? "global::System.ComponentModel.INotifyDataErrorInfo." : "";
         auto visibility = emit_explicit ? "" : "public ";
@@ -3048,6 +3034,26 @@ remove => %.ErrorsChanged -= value;
     visibility, self, target,
     visibility, self, target, target,
     visibility, self, target);
+    }
+
+    void write_notify_data_error_info_members_using_static_abi_methods(writer& w, bool emit_explicit, std::string objref_name)
+    {
+        auto self = emit_explicit ? "global::System.ComponentModel.INotifyDataErrorInfo." : "";
+        auto visibility = emit_explicit ? "" : "public ";
+
+        w.write(R"(
+%global::System.Collections.IEnumerable %GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors(%, propertyName);
+
+%event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> %ErrorsChanged
+{
+add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged(%, this).Item1(value);
+remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged(%, this).Item2(value);
+}
+%bool %HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.get_HasErrors(%); }
+)",
+visibility, self, objref_name,
+visibility, self, objref_name, objref_name,
+visibility, self, objref_name);
     }
 
     void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping, bool is_private, bool call_static_abi_methods, std::string objref_name)
@@ -3140,7 +3146,14 @@ remove => %.ErrorsChanged -= value;
         }
         else if (mapping.mapped_namespace == "System.ComponentModel" && mapping.mapped_name == "INotifyDataErrorInfo")
         {
-            write_notify_data_error_info_members(w, target, is_private);
+            if (call_static_abi_methods)
+            {
+                write_notify_data_error_info_members_using_static_abi_methods(w, is_private, objref_name);
+            }
+            else
+            {
+                write_notify_data_error_info_members_using_idic(w, target, is_private);
+            }
         }
     }
 
@@ -5405,6 +5418,7 @@ return eventSource.EventActions;
                     required_interfaces[std::move(generic_enumerable)] = {};
                 };
 
+                bool mapping_written = true;
                 if (mapping->abi_name == "IIterable`1") // IEnumerable`1
                 {
                     auto element = w.write_temp("%", bind<write_generic_type_name>(0));
@@ -5530,7 +5544,23 @@ return eventSource.EventActions;
                             !emit_mapped_type_helpers))
                     };
                 }
-                return;
+                else if (mapping->mapped_name == "INotifyDataErrorInfo")
+                {
+                    required_interfaces[std::move(interface_name)] =
+                    {
+                        w.write_temp("%", bind<write_notify_data_error_info_members_using_idic>(emit_mapped_type_helpers ? "As<global::ABI.System.ComponentModel.INotifyDataErrorInfo>()" : "((global::System.ComponentModel.INotifyDataErrorInfo)(IWinRTObject)this)",
+                            !emit_mapped_type_helpers))
+                    };
+                }
+                else
+                {
+                    mapping_written = false;
+                }
+
+                if (mapping_written)
+                {
+                    return;
+                }
             }
 
             auto methods = w.write_temp("%",
