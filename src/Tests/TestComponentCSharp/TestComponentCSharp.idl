@@ -131,6 +131,11 @@ namespace TestComponentCSharp
         static Int32 NumObjects{ get; };
     }
 
+    interface IDerivedGenericInterface requires Microsoft.UI.Xaml.Input.ICommand, Microsoft.UI.Xaml.Interop.INotifyCollectionChanged, Windows.Foundation.Collections.IPropertySet
+    {
+        Int32 Number;
+    }
+
     interface ISingleton
     {
         Int32 IntProperty;
