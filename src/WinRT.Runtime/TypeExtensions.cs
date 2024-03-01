@@ -21,7 +21,6 @@ namespace WinRT
 
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                            DynamicallyAccessedMemberTypes.PublicNestedTypes | 
                                             DynamicallyAccessedMemberTypes.PublicFields)]
         [SuppressMessage("Trimming", "IL2073", Justification = "Matching trimming annotations are used at all callsites registering helper types present in the cache.")]
 #endif
@@ -29,7 +28,6 @@ namespace WinRT
         {
 #if NET
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                                                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             static Type FindHelperTypeNoCache(Type type)
@@ -76,7 +74,7 @@ namespace WinRT
 #if NET
             [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
                 Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
-            [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicNestedTypes | DynamicallyAccessedMemberTypes.PublicFields)]
+            [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
             {
@@ -119,8 +117,7 @@ namespace WinRT
         }
 
 #if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | 
-                                            DynamicallyAccessedMemberTypes.PublicNestedTypes |
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
                                             DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         public static Type GetHelperType(this Type type)
@@ -140,13 +137,9 @@ namespace WinRT
         }
 
 #if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+        [SuppressMessage("Trimming", "IL2070", Justification = "The fallback path is not trim-safe by design (to avoid annotations).")]
 #endif
-        public static Type FindVftblType(
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicNestedTypes)]
-#endif
-            this Type helperType)
+        public static Type FindVftblType(this Type helperType)
         {
 #if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
@@ -169,9 +162,12 @@ namespace WinRT
             return vftblType;
         }
 
+#if NET
+        [SuppressMessage("Trimming", "IL2075", Justification = "The path using vtable types is a fallback and is not trim-safe by design.")]
+#endif
         internal static IntPtr GetAbiToProjectionVftblPtr(
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             this Type helperType)
         {

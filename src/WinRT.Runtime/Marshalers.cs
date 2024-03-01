@@ -1375,7 +1375,6 @@ namespace WinRT
 #if NET
         [DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicFields |
-            DynamicallyAccessedMemberTypes.PublicNestedTypes |
             DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
         private static Type _HelperType;
@@ -1383,7 +1382,6 @@ namespace WinRT
 #if NET
         [DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicFields |
-            DynamicallyAccessedMemberTypes.PublicNestedTypes |
             DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
         private static Type HelperType => _HelperType ??= typeof(T).GetHelperType();

@@ -159,7 +159,6 @@ namespace WinRT
             Type type,
 #if NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                        DynamicallyAccessedMemberTypes.PublicNestedTypes |
                                         DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type helperType) => TypeExtensions.HelperTypeCache.TryAdd(type, helperType);

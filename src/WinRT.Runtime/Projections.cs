@@ -120,7 +120,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType, 
@@ -143,7 +142,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type helperType)
@@ -164,7 +162,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type helperType)
@@ -177,7 +174,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType, 
@@ -200,7 +196,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType)
@@ -221,7 +216,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType)
@@ -233,7 +227,6 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicMethods |
-            DynamicallyAccessedMemberTypes.PublicNestedTypes |
             DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         public static Type FindCustomHelperTypeMapping(Type publicType, bool filterToRuntimeClass = false)
