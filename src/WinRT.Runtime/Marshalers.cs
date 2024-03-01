@@ -1853,7 +1853,9 @@ namespace WinRT
                     CopyManagedArray = MarshalGenericHelper<T>.CopyManagedArray;
                     DisposeMarshalerArray = MarshalInterface<T>.DisposeMarshalerArray;
                     DisposeAbiArray = MarshalInterface<T>.DisposeAbiArray;
+#if !NET
                     RefAbiType = AbiType.MakeByRefType();
+#endif
 
                     return;
                 }
@@ -2011,10 +2013,16 @@ namespace WinRT
                 DisposeMarshalerArray = MarshalGeneric<T>.DisposeMarshalerArray;
                 DisposeAbiArray = MarshalGeneric<T>.DisposeAbiArray;
             }
+
+#if !NET
             RefAbiType = AbiType.MakeByRefType();
+#endif
         }
 
         public static readonly Type AbiType;
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+#endif
         public static readonly Type RefAbiType;
         public static readonly Func<T, object> CreateMarshaler;
         internal static readonly Func<T, object> CreateMarshaler2;
