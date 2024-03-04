@@ -5,13 +5,13 @@ pipelines:
     retail:
       source:
         credscan:
-          lastModifiedDate: 2023-11-27
+          lastModifiedDate: 2024-03-04
         eslint:
-          lastModifiedDate: 2023-11-27
+          lastModifiedDate: 2024-03-04
         psscriptanalyzer:
-          lastModifiedDate: 2023-11-27
+          lastModifiedDate: 2024-03-04
         armory:
-          lastModifiedDate: 2023-11-27
+          lastModifiedDate: 2024-03-04
   108966:
     retail:
       source:
