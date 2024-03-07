@@ -161,5 +161,12 @@ namespace UnitTest
             Assert.Throws<COMException>(() => DisplayInformationInterop.GetForWindow(new IntPtr(0)));
             Assert.Throws<COMException>(() => DisplayInformationInterop.GetForMonitor(new IntPtr(0)));
         }
+
+        [Fact]
+        public void TestDataTransferManager()
+        {
+            Assert.Throws<COMException>(() => DataTransferManager.GetForWindow(new IntPtr(0)));
+            DataTransferManagerInterop.ShowShareUIForWindow(new IntPtr(0));
+        }
     }
 }

@@ -17,7 +17,7 @@ namespace WinRT.Interop
         Int32 unused;
     };
 
-    // accountssettingspaneinterop.idl
+    // AccountsSettingsPaneInterop.idl
 #if UAC_VERSION > 2
     [uuid(D3EE12AD-3865-4362-9746-B75A682DF0E6), ProjectionInternal]
     interface IAccountsSettingsPaneInterop
@@ -34,7 +34,7 @@ namespace WinRT.Interop
     }
 #endif
 
-    // dragdropinterop.idl
+    // DragDropManagerInterop.idl
 #if UAC_VERSION > 0
     [uuid(5AD8CBA7-4C01-4DAC-9074-827894292D63), ProjectionInternal]
     interface IDragDropManagerInterop
@@ -45,7 +45,7 @@ namespace WinRT.Interop
     }
 #endif
 
-    // inputpaneinterop.idl
+    // InputPaneInterop.idl
 #if UAC_VERSION > 2
     [uuid(75CF2C57-9195-4931-8332-F0B409E916AF), ProjectionInternal]
     interface IInputPaneInterop
@@ -96,6 +96,7 @@ namespace WinRT.Interop
     }
 #endif
 
+    // RadialControllerConfigurationInterop.idl
 #if UAC_VERSION > 2
     [uuid(787cdaac-3186-476d-87e4-b9374a7b9970), ProjectionInternal]
     interface IRadialControllerConfigurationInterop
@@ -106,6 +107,7 @@ namespace WinRT.Interop
     }
 #endif
 
+    // RadialControllerIndependentInputSourceInterop.idl
 #if UAC_VERSION > 3
     [uuid(3D577EFF-4CEE-11E6-B535-001BDC06AB3B), ProjectionInternal]
     interface IRadialControllerIndependentInputSourceInterop
@@ -180,7 +182,7 @@ namespace WinRT.Interop
     }
 #endif
 
-    // WindowsGraphicsDisplayInterop.idl
+    // DisplayInformationInterop.idl
 #if UAC_VERSION > 14
     [uuid(7449121C-382B-4705-8DA7-A795BA482013), ProjectionInternal]
     interface IDisplayInformationStaticsInterop
@@ -188,9 +190,24 @@ namespace WinRT.Interop
         Object GetForWindow(
             HWND window,
             ref const GUID riid);
+
         Object GetForMonitor(
             HWND monitor,
             ref const GUID riid);
+    }
+#endif
+
+    // DataTransferManagerInterop.idl
+#if UAC_VERSION > 0
+    [uuid(3A3DCD6C-3EAB-43DC-BCDE-45671CE800C8), ProjectionInternal]
+    interface IDataTransferManagerInterop
+    {
+        Object GetForWindow(
+            HWND appWindow,
+            ref const GUID riid);
+
+        void ShowShareUIForWindow(
+            HWND appWindow);
     }
 #endif
 }

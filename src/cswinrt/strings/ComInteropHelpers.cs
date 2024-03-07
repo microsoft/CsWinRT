@@ -1,4 +1,16 @@
-﻿#if UAC_VERSION_15
+﻿#if UAC_VERSION_19
+#define UAC_VERSION_18
+#endif
+#if UAC_VERSION_18
+#define UAC_VERSION_17
+#endif
+#if UAC_VERSION_17
+#define UAC_VERSION_16
+#endif
+#if UAC_VERSION_16
+#define UAC_VERSION_15
+#endif
+#if UAC_VERSION_15
 #define UAC_VERSION_14
 #endif
 #if UAC_VERSION_14
@@ -127,7 +139,7 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 {
 #if UAC_VERSION_1
 #if NET
-    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.22000.0")]
 #endif
 #if EMBED
     internal
@@ -232,9 +244,9 @@ namespace Windows.Media.PlayTo
 
 namespace Windows.Security.Credentials.UI
 {
-#if UAC_VERSION_1
+#if UAC_VERSION_14
 #if NET
-    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.22000.0")]
 #endif
 #if EMBED
     internal
@@ -258,7 +270,7 @@ namespace Windows.Security.Authentication.Web.Core
 {
 #if UAC_VERSION_1
 #if NET
-    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.20348.0")]
 #endif
 #if EMBED
     internal
@@ -288,7 +300,7 @@ namespace Windows.UI.ApplicationSettings
 {
 #if UAC_VERSION_1
 #if NET
-    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.20348.0")]
 #endif
 #if EMBED
     internal
@@ -393,7 +405,7 @@ namespace Windows.UI.Input.Spatial
 {
 #if UAC_VERSION_2
 #if NET
-    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10586.0")]
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.15063.0")]
 #endif
 #if EMBED
     internal
@@ -417,7 +429,7 @@ namespace Windows.UI.ViewManagement
 {
 #if UAC_VERSION_1
 #if NET
-    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.14393.0")]
 #endif
 #if EMBED
     internal
@@ -436,7 +448,7 @@ namespace Windows.UI.ViewManagement
     }
 
 #if NET
-    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.20348.0")]
 #endif
 #if EMBED
     internal
@@ -484,4 +496,32 @@ namespace Windows.Graphics.Display
         }
     }
 #endif
+}
+
+namespace Windows.ApplicationModel.DataTransfer
+{
+#if UAC_VERSION_1
+#if NET
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
+#endif
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class DataTransferManagerInterop
+    {
+        private static IDataTransferManagerInterop dataTransferManagerInterop = DataTransferManager.As<IDataTransferManagerInterop>();
+
+        public static DataTransferManager GetForWindow(IntPtr appWindow)
+        {
+            Guid iid = GuidGenerator.CreateIID(typeof(IDataTransferManager));
+            return (DataTransferManager)dataTransferManagerInterop.GetForWindow(appWindow, iid);
+        }
+
+        public static void ShowShareUIForWindow(IntPtr appWindow)
+        {
+            dataTransferManagerInterop.ShowShareUIForWindow(appWindow);
+        }
+    }
 }
