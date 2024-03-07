@@ -485,3 +485,31 @@ namespace Windows.Graphics.Display
     }
 #endif
 }
+
+namespace Windows.ApplicationModel.DataTransfer
+{
+#if UAC_VERSION_1
+#if NET
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
+#endif
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class DataTransferManagerInterop
+    {
+        private static IDataTransferManagerInterop dataTransferManagerInterop = DataTransferManager.As<IDataTransferManagerInterop>();
+
+        public static DataTransferManager GetForWindow(IntPtr appWindow)
+        {
+            Guid iid = GuidGenerator.CreateIID(typeof(IDataTransferManager));
+            return (DataTransferManager)dataTransferManagerInterop.GetForWindow(appWindow, iid);
+        }
+
+        public static void ShowShareUIForWindow(IntPtr appWindow)
+        {
+            dataTransferManagerInterop.ShowShareUIForWindow(appWindow);
+        }
+    }
+}
