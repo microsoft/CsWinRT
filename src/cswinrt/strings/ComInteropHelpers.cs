@@ -512,4 +512,5 @@ namespace Windows.ApplicationModel.DataTransfer
             dataTransferManagerInterop.ShowShareUIForWindow(appWindow);
         }
     }
+#endif
 }
