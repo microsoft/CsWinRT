@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using WinRT.Interop;
@@ -566,6 +567,24 @@ namespace WinRT
     {
         public static FactoryObjectReference<IActivationFactoryVftbl> Get(string typeName)
         {
+            var activationHandler = ActivationSupport.ActivationHandler;
+            if (activationHandler != null)
+            {
+                IntPtr instancePtr = IntPtr.Zero;
+                try
+                {
+                    instancePtr = activationHandler(typeName, InterfaceIIDs.IActivationFactory_IID);
+                    if (instancePtr != IntPtr.Zero)
+                    {
+                        return FactoryObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
+                    }
+                }
+                finally
+                {
+                    MarshalInspectable<object>.DisposeAbi(instancePtr);
+                }
+            }
+
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             FactoryObjectReference<IActivationFactoryVftbl> factory;
@@ -605,6 +624,32 @@ namespace WinRT
 #endif
         I>(string typeName, Guid iid)
         {
+            var activationHandler = ActivationSupport.ActivationHandler;
+            if (activationHandler != null)
+            {
+                IntPtr instancePtr = IntPtr.Zero;
+                try
+                {
+                    instancePtr = activationHandler(typeName, iid);
+                    if (instancePtr != IntPtr.Zero)
+                    {
+                        FactoryObjectReference<I> factoryFromHandler = FactoryObjectReference<I>.Attach(ref instancePtr);
+#if NET
+                        return factoryFromHandler;
+#else
+                        using (factoryFromHandler)
+                        {
+                            return factoryFromHandler.As<I>(iid);
+                        }
+#endif
+                    }
+                }
+                finally
+                {
+                    MarshalInspectable<object>.DisposeAbi(instancePtr);
+                }
+            }
+
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             FactoryObjectReference<I> factory;
