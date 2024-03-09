@@ -386,17 +386,7 @@ namespace ABI.System
             }
         }
 
-        public static readonly Guid PIID = CreatePIID();
-
-        private static Guid CreatePIID()
-        {
-            var iid = NullableType.GetIIDForBuiltInType(typeof(T));
-            if (iid == default)
-            {
-                iid = GuidGenerator.CreateIID(typeof(Nullable<T>));
-            }
-            return iid;
-        }
+        public static readonly Guid PIID = NullableType.GetIID<T>();
 
         public static implicit operator Nullable<T>(IObjectReference obj) => (obj != null) ? new Nullable<T>(obj) : null;
         public static implicit operator Nullable<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable<T>(obj) : null;
@@ -2008,7 +1998,7 @@ namespace ABI.System
 
     internal static class NullableBlittable<T> where T: unmanaged
     {
-        private readonly static Guid IID = NullableType.GetIIDForBuiltInType(typeof(T));
+        private readonly static Guid IID = NullableType.GetIID<T>();
 
         public static unsafe object GetValue(IInspectable inspectable)
         {
@@ -2029,36 +2019,36 @@ namespace ABI.System
 
     internal static class NullableType
     {
-        internal static Guid GetIIDForBuiltInType(global::System.Type type)
+        internal static Guid GetIID<T>()
         {
-            if (type == typeof(int)) return Nullable_int.IID;
-            if (type == typeof(byte)) return Nullable_byte.IID;
-            if (type == typeof(bool)) return Nullable_bool.IID;
-            if (type == typeof(sbyte)) return Nullable_sbyte.IID;
-            if (type == typeof(short)) return Nullable_short.IID;
-            if (type == typeof(ushort)) return Nullable_ushort.IID;
-            if (type == typeof(char)) return Nullable_char.IID;
-            if (type == typeof(uint)) return Nullable_uint.IID;
-            if (type == typeof(long)) return Nullable_long.IID;
-            if (type == typeof(ulong)) return Nullable_ulong.IID;
-            if (type == typeof(float)) return Nullable_float.IID;
-            if (type == typeof(double)) return Nullable_double.IID;
-            if (type == typeof(Guid)) return Nullable_guid.IID;
-            if (type == typeof(global::System.Type)) return Nullable_Type.IID;
-            if (type == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.IID;
-            if (type == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.IID;
-            if (type == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
-            if (type == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
-            if (type == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
-            if (type == typeof(global::System.Numerics.Matrix3x2)) return IReferenceIIDs.IReferenceMatrix3x2_IID;
-            if (type == typeof(global::System.Numerics.Matrix4x4)) return IReferenceIIDs.IReferenceMatrix4x4_IID;
-            if (type == typeof(global::System.Numerics.Plane)) return IReferenceIIDs.IReferencePlane_IID;
-            if (type == typeof(global::System.Numerics.Quaternion)) return IReferenceIIDs.IReferenceQuaternion_IID;
-            if (type == typeof(global::System.Numerics.Vector2)) return IReferenceIIDs.IReferenceVector2_IID;
-            if (type == typeof(global::System.Numerics.Vector3)) return IReferenceIIDs.IReferenceVector3_IID;
-            if (type == typeof(global::System.Numerics.Vector4)) return IReferenceIIDs.IReferenceVector4_IID;
+            if (typeof(T) == typeof(int)) return Nullable_int.IID;
+            if (typeof(T) == typeof(byte)) return Nullable_byte.IID;
+            if (typeof(T) == typeof(bool)) return Nullable_bool.IID;
+            if (typeof(T) == typeof(sbyte)) return Nullable_sbyte.IID;
+            if (typeof(T) == typeof(short)) return Nullable_short.IID;
+            if (typeof(T) == typeof(ushort)) return Nullable_ushort.IID;
+            if (typeof(T) == typeof(char)) return Nullable_char.IID;
+            if (typeof(T) == typeof(uint)) return Nullable_uint.IID;
+            if (typeof(T) == typeof(long)) return Nullable_long.IID;
+            if (typeof(T) == typeof(ulong)) return Nullable_ulong.IID;
+            if (typeof(T) == typeof(float)) return Nullable_float.IID;
+            if (typeof(T) == typeof(double)) return Nullable_double.IID;
+            if (typeof(T) == typeof(Guid)) return Nullable_guid.IID;
+            if (typeof(T) == typeof(global::System.Type)) return Nullable_Type.IID;
+            if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.IID;
+            if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IReferenceIIDs.IReferenceMatrix3x2_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IReferenceIIDs.IReferenceMatrix4x4_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IReferenceIIDs.IReferencePlane_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IReferenceIIDs.IReferenceQuaternion_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IReferenceIIDs.IReferenceVector2_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceIIDs.IReferenceVector3_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceIIDs.IReferenceVector4_IID;
 
-            return default;
+            return GuidGenerator.CreateIID(typeof(Nullable<T>));
         }
 
         public static Func<IInspectable, object> GetValueFactory(global::System.Type type)
