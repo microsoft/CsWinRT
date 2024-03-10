@@ -41,7 +41,7 @@ namespace WinRT
             {
                 return true;
             }
-            else if (qiResult < 0)
+            else if (qiResult < 0 && throwIfNotImplemented)
             {
                 // A qiResult of less than zero means the call to QueryInterface has failed.
                 ExceptionHelpers.ThrowExceptionForHR(qiResult);
