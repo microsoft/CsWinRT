@@ -37,7 +37,11 @@ namespace WinRT
 
 #if NET8_0_OR_GREATER
             bool vtableLookup = LookupGeneratedVTableInfo(interfaceType, out _, out int qiResult);
-            if (!vtableLookup)
+            if (vtableLookup)
+            {
+                return true;
+            }
+            else if (qiResult < 0)
             {
                 // A qiResult of less than zero means the call to QueryInterface has failed.
                 ExceptionHelpers.ThrowExceptionForHR(qiResult);
@@ -167,6 +171,7 @@ namespace WinRT
             }
         }
 
+#if NET8_0_OR_GREATER
         unsafe bool LookupGeneratedVTableInfo(RuntimeTypeHandle interfaceType, [NotNullWhen(true)] out IIUnknownCacheStrategy.TableInfo? result, out int qiResult)
         {
             result = null;
@@ -197,7 +202,8 @@ namespace WinRT
 
                 if (!AdditionalTypeData.TryAdd(interfaceType, result))
                 {
-                    System.Diagnostics.Debug.Assert(AdditionalTypeData.TryGetValue(interfaceType, out object newInfo));
+                    bool found = AdditionalTypeData.TryGetValue(interfaceType, out object newInfo);
+                    System.Diagnostics.Debug.Assert(found);
                     result = (IIUnknownCacheStrategy.TableInfo)newInfo;
                     StrategyBasedComWrappers.DefaultIUnknownStrategy.Release(ppv);
                 }
@@ -206,13 +212,16 @@ namespace WinRT
             }
             return false;
         }
+#endif
 
         RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
         {
+#if NET8_0_OR_GREATER
             if (AdditionalTypeData.TryGetValue(interfaceType, out object value) && value is IIUnknownCacheStrategy.TableInfo tableInfo)
             {
                 return tableInfo.ManagedType;
             }
+#endif
             var type = Type.GetTypeFromHandle(interfaceType);
             var helperType = type.GetHelperType();
             if (helperType.IsInterface)
@@ -220,6 +229,7 @@ namespace WinRT
             return default;
         }
 
+#if NET8_0_OR_GREATER
         unsafe VirtualMethodTableInfo IUnmanagedVirtualMethodTableProvider.GetVirtualMethodTableInfoForKey(Type type)
         {
             if (!LookupGeneratedVTableInfo(type.TypeHandle, out IIUnknownCacheStrategy.TableInfo? result, out int qiHResult))
@@ -229,6 +239,7 @@ namespace WinRT
 
             return new((void*)NativeObject.ThisPtr, result.Value.Table);
         }
+#endif
 
         IObjectReference NativeObject { get; }
         bool HasUnwrappableNativeObject { get; }
