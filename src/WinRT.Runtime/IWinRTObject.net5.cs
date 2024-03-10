@@ -4,7 +4,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+#if NET8_0_OR_GREATER
+using System.Runtime.InteropServices.Marshalling;
+#endif
 using WinRT.Interop;
 
 namespace WinRT
@@ -15,6 +19,9 @@ namespace WinRT
     public
 #endif
     interface IWinRTObject : IDynamicInterfaceCastable
+#if NET8_0_OR_GREATER
+        , IUnmanagedVirtualMethodTableProvider
+#endif
     {
         bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {
@@ -27,6 +34,16 @@ namespace WinRT
             {
                 return true;
             }
+
+#if NET8_0_OR_GREATER
+            bool vtableLookup = LookupGeneratedVTableInfo(interfaceType, out _, out int qiResult);
+            if (!vtableLookup)
+            {
+                // A qiResult of less than zero means the call to QueryInterface has failed.
+                ExceptionHelpers.ThrowExceptionForHR(qiResult);
+            }
+#endif
+
             Type type = Type.GetTypeFromHandle(interfaceType);
 
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IReadOnlyCollection<>))
@@ -150,13 +167,67 @@ namespace WinRT
             }
         }
 
+        unsafe bool LookupGeneratedVTableInfo(RuntimeTypeHandle interfaceType, [NotNullWhen(true)] out IIUnknownCacheStrategy.TableInfo? result, out int qiResult)
+        {
+            result = null;
+            qiResult = 0;
+            if (AdditionalTypeData.TryGetValue(interfaceType, out object value))
+            {
+                if (value is IIUnknownCacheStrategy.TableInfo tableInfo)
+                {
+                    result = tableInfo;
+                    return true;
+                }
+                return false;
+            }
+            if (StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetIUnknownDerivedDetails(interfaceType) is IIUnknownDerivedDetails details)
+            {
+                qiResult = StrategyBasedComWrappers.DefaultIUnknownStrategy.QueryInterface((void*)NativeObject.ThisPtr, details.Iid, out void* ppv);
+                if (qiResult < 0)
+                {
+                    return false;
+                }
+                var obj = (void***)ppv;
+                result = new IIUnknownCacheStrategy.TableInfo()
+                {
+                    ThisPtr = obj,
+                    Table = *obj,
+                    ManagedType = details.Implementation.TypeHandle
+                };
+
+                if (!AdditionalTypeData.TryAdd(interfaceType, result))
+                {
+                    System.Diagnostics.Debug.Assert(AdditionalTypeData.TryGetValue(interfaceType, out object newInfo));
+                    result = (IIUnknownCacheStrategy.TableInfo)newInfo;
+                    StrategyBasedComWrappers.DefaultIUnknownStrategy.Release(ppv);
+                }
+
+                return true;
+            }
+            return false;
+        }
+
         RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
         {
+            if (AdditionalTypeData.TryGetValue(interfaceType, out object value) && value is IIUnknownCacheStrategy.TableInfo tableInfo)
+            {
+                return tableInfo.ManagedType;
+            }
             var type = Type.GetTypeFromHandle(interfaceType);
             var helperType = type.GetHelperType();
             if (helperType.IsInterface)
                 return helperType.TypeHandle;
             return default;
+        }
+
+        unsafe VirtualMethodTableInfo IUnmanagedVirtualMethodTableProvider.GetVirtualMethodTableInfoForKey(Type type)
+        {
+            if (!LookupGeneratedVTableInfo(type.TypeHandle, out IIUnknownCacheStrategy.TableInfo? result, out int qiHResult))
+            {
+                Marshal.ThrowExceptionForHR(qiHResult);
+            }
+
+            return new((void*)NativeObject.ThisPtr, result.Value.Table);
         }
 
         IObjectReference NativeObject { get; }
