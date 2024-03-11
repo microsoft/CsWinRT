@@ -1374,16 +1374,43 @@ namespace WinRT
     {
 #if NET
         [DynamicallyAccessedMembers(
-            DynamicallyAccessedMemberTypes.PublicFields | 
-            DynamicallyAccessedMemberTypes.NonPublicFields | 
+            DynamicallyAccessedMemberTypes.PublicFields |
             DynamicallyAccessedMemberTypes.PublicNestedTypes |
             DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
-        private static readonly Type HelperType = typeof(T).GetHelperType();
-        private static FieldInfo _ObjField;
+        private static Type _HelperType;
 
-        // Either a Func<T, IObjectReference> (JIT) or a boxed Guid (NativeAOT)
-        private static object _CreateMarshalerOrIid;
+#if NET
+        [DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicFields |
+            DynamicallyAccessedMemberTypes.PublicNestedTypes |
+            DynamicallyAccessedMemberTypes.PublicMethods)]
+#endif
+        private static Type HelperType => _HelperType ??= typeof(T).GetHelperType();
+
+        private static object _CreateMarshaler;
+
+        // We are here using CreateIID on the projected type rather than GetIID on the helper type
+        // This allows us to avoid needing to do MakeGenericType calls or 
+        // registration of helper types for projected generic types like System.Nullable<>.
+        // By using CreateIID with the projected type, we are still able to get the IID
+        // but at the same time don't need the generic instance of the helper type to do so.
+        // In addition, other than for that, we don't need the helper type in MarshalInterface.
+        // This does mean we are doing the PIID calculation here instead of using the cached
+        // one in the helper type, but we are also caching it here too so it should be only
+        // one additional call.
+        private static object _Iid;
+        private static Guid IID => (Guid)(_Iid ??= GetIID());
+
+        private static Guid GetIID()
+        {
+            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                return GuidGenerator.CreateIID(typeof(T));
+            }
+            
+            return GuidGenerator.GetIID(HelperType);
+        }
 
         public static T FromAbi(IntPtr ptr)
         {
@@ -1402,6 +1429,7 @@ namespace WinRT
                 return null;
             }
 
+#if !NET
             if (TryGetObjFieldValue(value, out IObjectReference objectReference))
             {
                 IntPtr ptr = objectReference.GetRef();
@@ -1411,6 +1439,7 @@ namespace WinRT
                 // on the same thread (and as a result don't need to capture context).
                 return ObjectReference<IUnknownVftbl>.Attach(ref ptr);
             }
+#endif
 
             return CreateMarshalerCore(value);
         }
@@ -1422,12 +1451,14 @@ namespace WinRT
                 return new ObjectReferenceValue();
             }
 
+#if !NET
             if (TryGetObjFieldValue(value, out IObjectReference objectReference))
             {
                 return objectReference.AsValue();
             }
+#endif
 
-            return MarshalInspectable<T>.CreateMarshaler2(value, iid == default ? GuidGenerator.GetIID(HelperType) : iid, true);
+            return MarshalInspectable<T>.CreateMarshaler2(value, iid == default ? IID : iid, true);
         }
 
         public static IntPtr GetAbi(IObjectReference value) =>
@@ -1479,6 +1510,8 @@ namespace WinRT
 
         public static unsafe void DisposeAbiArray(object box) => MarshalInterfaceHelper<T>.DisposeAbiArray(box);
 
+#if !NET
+        private static FieldInfo _ObjField;
         private static bool TryGetObjFieldValue(T value, out IObjectReference objectReference)
         {
             // If the value passed in is the native implementation of the interface,
@@ -1496,6 +1529,7 @@ namespace WinRT
 
             return false;
         }
+#endif
 
         private static IObjectReference CreateMarshalerCore(T value)
         {
@@ -1503,17 +1537,15 @@ namespace WinRT
             // On NativeAOT, we can inline everything and skip creating any delegates
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
-                _CreateMarshalerOrIid ??= GuidGenerator.GetIID(HelperType);
-
-                return MarshalInspectable<T>.CreateMarshaler<IUnknownVftbl>(value, (Guid)_CreateMarshalerOrIid, true);
+                return MarshalInspectable<T>.CreateMarshaler<IUnknownVftbl>(value, IID, true);
             }
 #endif
             // Otherwise, just use the fallback path
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-            _CreateMarshalerOrIid ??= BindCreateMarshaler();
+            _CreateMarshaler ??= BindCreateMarshaler();
 #pragma warning restore IL3050
 
-            return ((Func<T, IObjectReference>)_CreateMarshalerOrIid)(value);
+            return ((Func<T, IObjectReference>)_CreateMarshaler)(value);
         }
 
 #if NET8_0_OR_GREATER
@@ -1521,7 +1553,6 @@ namespace WinRT
 #endif
         private static Func<T, IObjectReference> BindCreateMarshaler()
         {
-            Guid iid = GuidGenerator.GetIID(HelperType);
             var vftblType = HelperType.FindVftblType();
 
             if (vftblType is not null)
@@ -1529,10 +1560,10 @@ namespace WinRT
                 var methodInfo = typeof(MarshalInspectable<T>).GetMethod("CreateMarshaler", new Type[] { typeof(T), typeof(Guid), typeof(bool) }).
                     MakeGenericMethod(vftblType);
                 var createMarshaler = (Func<T, Guid, bool, IObjectReference>)methodInfo.CreateDelegate(typeof(Func<T, Guid, bool, IObjectReference>));
-                return obj => createMarshaler(obj, iid, true);
+                return obj => createMarshaler(obj, IID, true);
             }
 
-            return obj => MarshalInspectable<T>.CreateMarshaler<IUnknownVftbl>(obj, iid, true);
+            return obj => MarshalInspectable<T>.CreateMarshaler<IUnknownVftbl>(obj, IID, true);
         }
     }
 

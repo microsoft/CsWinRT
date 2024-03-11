@@ -444,13 +444,13 @@ namespace WinRT
 
         public static bool RegisterDelegateFactory(Type implementationType, Func<IntPtr, object> delegateFactory) => DelegateFactoryCache.TryAdd(implementationType, delegateFactory);
 
-        private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
+        internal static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
         {
             var getValueMethod = implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.Public);
             return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
         }
 
-        private static Func<IInspectable, object> CreateAbiNullableTFactory(
+        internal static Func<IInspectable, object> CreateAbiNullableTFactory(
 #if NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
@@ -476,7 +476,7 @@ namespace WinRT
         // This is done to avoid pointer reuse until GC cleans up the boxed object
         private static readonly ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
 
-        private static Func<IInspectable, object> CreateReferenceCachingFactory(Func<IInspectable, object> internalFactory)
+        internal static Func<IInspectable, object> CreateReferenceCachingFactory(Func<IInspectable, object> internalFactory)
         {
             return inspectable =>
             {
@@ -513,17 +513,28 @@ namespace WinRT
                 return (IInspectable obj) => obj;
             }
 
-            if (implementationType == typeof(ABI.System.Nullable_string))
+            if (implementationType == typeof(string) || 
+                implementationType == typeof(Type) ||
+                implementationType == typeof(Exception) || 
+                implementationType.IsDelegate())
             {
-                return CreateReferenceCachingFactory(ABI.System.Nullable_string.GetValue);
+                return ABI.System.NullableType.GetValueFactory(implementationType);
             }
-            else if (implementationType == typeof(ABI.System.Nullable_Type))
+
+            if (implementationType.IsValueType)
             {
-                return CreateReferenceCachingFactory(ABI.System.Nullable_Type.GetValue);
-            }
-            else if (implementationType == typeof(ABI.System.Nullable_Exception))
-            {
-                return CreateReferenceCachingFactory(ABI.System.Nullable_Exception.GetValue);
+                if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+                {
+                    return CreateReferenceCachingFactory(CreateKeyValuePairFactory(implementationType));
+                }
+                else if (implementationType.IsNullableT())
+                {
+                    return ABI.System.NullableType.GetValueFactory(implementationType.GetGenericArguments()[0]);
+                }
+                else
+                {
+                    return ABI.System.NullableType.GetValueFactory(implementationType);
+                }
             }
 
             var customHelperType = Projections.FindCustomHelperTypeMapping(implementationType, true);
@@ -532,36 +543,7 @@ namespace WinRT
                 return CreateReferenceCachingFactory(CreateCustomTypeMappingFactory(customHelperType));
             }
 
-            if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
-            {
-                return CreateReferenceCachingFactory(CreateKeyValuePairFactory(implementationType));
-            }
-
-            if (implementationType.IsValueType)
-            {
-                if (implementationType.IsNullableT())
-                {
-                    return CreateReferenceCachingFactory(CreateNullableTFactory(implementationType));
-                }
-                else
-                {
-#if NET
-                    if (!RuntimeFeature.IsDynamicCodeCompiled)
-                    {
-                        throw new NotSupportedException($"Cannot create an RCW factory for implementation type '{implementationType}'.");
-                    }
-#endif
-
-#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                    return CreateReferenceCachingFactory(CreateNullableTFactory(typeof(System.Nullable<>).MakeGenericType(implementationType)));
-#pragma warning restore IL3050
-                }
-            }
-            else if (implementationType.IsAbiNullableDelegate())
-            {
-                return CreateReferenceCachingFactory(CreateAbiNullableTFactory(implementationType));
-            }
-            else if (implementationType.IsIReferenceArray())
+            if (implementationType.IsIReferenceArray())
             {
                 return CreateReferenceCachingFactory(CreateArrayFactory(implementationType));
             }
@@ -575,6 +557,14 @@ namespace WinRT
             Type implementationType = null;
             if (!string.IsNullOrEmpty(runtimeClassName))
             {
+                // Check if this is a nullable type where there are no references to the nullable version, but
+                // there is to the actual type.
+                if (runtimeClassName.StartsWith("Windows.Foundation.IReference`1<", StringComparison.Ordinal))
+                {
+                    // runtimeClassName is of format Windows.Foundation.IReference`1<type>.
+                    return TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName.Substring(32, runtimeClassName.Length - 33));
+                }
+
                 implementationType = TypeNameSupport.FindRcwTypeByNameCached(runtimeClassName);
             }
 
