@@ -5,6 +5,8 @@
 
 namespace System.Runtime.InteropServices.WindowsRuntime
 {
+    using System;
+    using System.Buffers;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
@@ -28,7 +30,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            return AsBuffer(source, 0, source.Length, source.Length);
+            return new WindowsRuntimeBuffer(source.AsMemory(), source.Length);
         }
 
 
@@ -39,7 +41,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
             if (source.Length - offset < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
 
-            return AsBuffer(source, offset, length, length);
+            return new WindowsRuntimeBuffer(source.AsMemory().Slice(offset), length);
         }
 
 
@@ -53,11 +55,28 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source.Length - offset < capacity) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
             if (capacity < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
 
-            return new WindowsRuntimeBuffer(source, offset, length, capacity);
+            return new WindowsRuntimeBuffer(source.AsMemory().Slice(offset, capacity - offset), length);
         }
 
 #endregion (Byte []).AsBuffer extensions
 
+#region (Memory<Byte>).AsBuffer extensions
+
+        public static IBuffer AsBuffer(this Memory<byte> source)
+        {
+            return new WindowsRuntimeBuffer(source, source.Length);
+        }
+
+        public static IBuffer AsBuffer(this Memory<byte> source, int offset, int length)
+        {
+            if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
+            if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
+            if (source.Length - offset < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+
+            return new WindowsRuntimeBuffer(source.Slice(offset), source.Length);
+        }
+
+#endregion (Memory<Byte>).AsBuffer extensions
 
 #region (Byte []).CopyTo extensions for copying to an (IBuffer)
 
@@ -98,17 +117,14 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
             if (count == 0) return;
 
-            // If destination is backed by a managed array, use the array instead of the pointer as it does not require pinning:
-            byte[] destDataArr;
-            int destDataOffs;
-            if (destination.TryGetUnderlyingData(out destDataArr, out destDataOffs))
+            // If destination is backed by a managed memory, use the memory instead of the pointer as it does not require pinning:
+            Memory<byte> destDataArr;
+            if (!destination.TryGetUnderlyingData(out destDataArr))
             {
-                global::System.Buffer.BlockCopy(source, sourceIndex, destDataArr, (int)(destDataOffs + destinationIndex), count);
-                return;
+                destDataArr = destination.AsMemory();
             }
 
-            IntPtr destPtr = destination.GetPointerAtOffset(destinationIndex);
-            Marshal.Copy(source, sourceIndex, destPtr, count);
+            source.AsMemory(sourceIndex, count).CopyTo(destination.AsMemory().Slice((int)destinationIndex));
         }
 
 #endregion (Byte []).CopyTo extensions for copying to an (IBuffer)
@@ -142,6 +158,25 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 #endregion (IBuffer).ToArray extensions for copying to a new (Byte [])
 
 
+#region (IBuffer).AsMemory extensions for copying to a new (Byte [])
+
+        public static Memory<byte> AsMemory(this IBuffer source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            // If source is backed by a managed memory, use the memory instead of the pointer as it does not require pinning:
+            Memory<byte> underlyingData;
+            if (source.TryGetUnderlyingData(out underlyingData))
+            {
+                return underlyingData;
+            }
+
+            return new IBufferMemoryManager(source).Memory;
+        }
+
+#endregion (IBuffer).AsMemory extensions for copying to a new (Byte [])
+
+
 #region (IBuffer).CopyTo extensions for copying to a (Byte [])
 
         public static void CopyTo(this IBuffer source, byte[] destination)
@@ -166,16 +201,13 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (count == 0) return;
 
             // If source is backed by a managed array, use the array instead of the pointer as it does not require pinning:
-            byte[] srcDataArr;
-            int srcDataOffs;
-            if (source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs))
+            Memory<byte> srcDataArr;
+            if (!source.TryGetUnderlyingData(out srcDataArr))
             {
-                global::System.Buffer.BlockCopy(srcDataArr, (int)(srcDataOffs + sourceIndex), destination, destinationIndex, count);
-                return;
+                srcDataArr = source.AsMemory();
             }
 
-            IntPtr srcPtr = source.GetPointerAtOffset(sourceIndex);
-            Marshal.Copy(srcPtr, destination, destinationIndex, count);
+            srcDataArr.Slice((int)sourceIndex, (int)count).CopyTo(destination.AsMemory().Slice(destinationIndex));
         }
 
 #endregion (IBuffer).CopyTo extensions for copying to a (Byte [])
@@ -203,47 +235,22 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (count == 0) return;
 
             // If source are destination are backed by managed arrays, use the arrays instead of the pointers as it does not require pinning:
-            byte[] srcDataArr, destDataArr;
-            int srcDataOffs, destDataOffs;
+            Memory<byte> srcDataArr, destDataArr;
 
-            bool srcIsManaged = source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs);
-            bool destIsManaged = destination.TryGetUnderlyingData(out destDataArr, out destDataOffs);
-
-            if (srcIsManaged && destIsManaged)
+            if (!source.TryGetUnderlyingData(out srcDataArr))
             {
-                Debug.Assert(count <= int.MaxValue);
-                Debug.Assert(sourceIndex <= int.MaxValue);
-                Debug.Assert(destinationIndex <= int.MaxValue);
-
-                global::System.Buffer.BlockCopy(srcDataArr!, srcDataOffs + (int)sourceIndex, destDataArr!, destDataOffs + (int)destinationIndex, (int)count);
-                return;
+                srcDataArr = source.AsMemory();
+            }
+            if (!destination.TryGetUnderlyingData(out destDataArr))
+            {
+                destDataArr = destination.AsMemory();
             }
 
-            IntPtr srcPtr, destPtr;
+            Debug.Assert(count <= int.MaxValue);
+            Debug.Assert(sourceIndex <= int.MaxValue);
+            Debug.Assert(destinationIndex <= int.MaxValue);
 
-            if (srcIsManaged)
-            {
-                Debug.Assert(count <= int.MaxValue);
-                Debug.Assert(sourceIndex <= int.MaxValue);
-
-                destPtr = destination.GetPointerAtOffset(destinationIndex);
-                Marshal.Copy(srcDataArr!, srcDataOffs + (int)sourceIndex, destPtr, (int)count);
-                return;
-            }
-
-            if (destIsManaged)
-            {
-                Debug.Assert(count <= int.MaxValue);
-                Debug.Assert(destinationIndex <= int.MaxValue);
-
-                srcPtr = source.GetPointerAtOffset(sourceIndex);
-                Marshal.Copy(srcPtr, destDataArr!, destDataOffs + (int)destinationIndex, (int)count);
-                return;
-            }
-
-            srcPtr = source.GetPointerAtOffset(sourceIndex);
-            destPtr = destination.GetPointerAtOffset(destinationIndex);
-            MemCopy(srcPtr, destPtr, count);
+            srcDataArr.Slice((int)sourceIndex, (int)count).CopyTo(destDataArr.Slice((int)destinationIndex));
         }
 
 #endregion (IBuffer).CopyTo extensions for copying to an (IBuffer)
@@ -261,10 +268,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// </summary>
         /// <param name="buffer">An <code>IBuffer</code>.</param>
         /// <param name="underlyingDataArray">Will be set to the data array backing <code>buffer</code> or to <code>null</code>.</param>
-        /// <param name="underlyingDataArrayStartOffset">Will be set to the start offset of the buffer data in the backing array
         /// or to <code>-1</code>.</param>
         /// <returns>Whether the <code>IBuffer</code> is backed by a managed byte array.</returns>
-        internal static bool TryGetUnderlyingData(this IBuffer buffer, out byte[] underlyingDataArray, out int underlyingDataArrayStartOffset)
+        internal static bool TryGetUnderlyingData(this IBuffer buffer, out Memory<byte> underlyingDataArray)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
@@ -272,12 +278,11 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             WindowsRuntimeBuffer winRtBuffer = buffer as WindowsRuntimeBuffer;
             if (winRtBuffer == null)
             {
-                underlyingDataArray = null;
-                underlyingDataArrayStartOffset = -1;
+                underlyingDataArray = default;
                 return false;
             }
 
-            winRtBuffer.GetUnderlyingData(out underlyingDataArray, out underlyingDataArrayStartOffset);
+            winRtBuffer.GetUnderlyingData(out underlyingDataArray);
             return true;
         }
 
@@ -303,17 +308,16 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (buffer == otherBuffer)
                 return true;
 
-            byte[] thisDataArr, otherDataArr;
-            int thisDataOffs, otherDataOffs;
+            Memory<byte> thisDataArr, otherDataArr;
 
-            bool thisIsManaged = buffer.TryGetUnderlyingData(out thisDataArr, out thisDataOffs);
-            bool otherIsManaged = otherBuffer.TryGetUnderlyingData(out otherDataArr, out otherDataOffs);
+            bool thisIsManaged = buffer.TryGetUnderlyingData(out thisDataArr);
+            bool otherIsManaged = otherBuffer.TryGetUnderlyingData(out otherDataArr);
 
             if (thisIsManaged != otherIsManaged)
                 return false;
 
             if (thisIsManaged)
-                return (thisDataArr == otherDataArr) && (thisDataOffs == otherDataOffs);
+                return (thisDataArr.Equals(otherDataArr));
 
             IBufferByteAccess thisBuff = buffer.As<IBufferByteAccess>();
             IBufferByteAccess otherBuff = otherBuffer.As<IBufferByteAccess>();
@@ -350,7 +354,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             {
                 throw new UnauthorizedAccessException(global::Windows.Storage.Streams.SR.UnauthorizedAccess_InternalBuffer);
             }
-            return new WindowsRuntimeBuffer(streamData.Array!, (int)streamData.Offset, (int)underlyingStream.Length, underlyingStream.Capacity);
+            return new WindowsRuntimeBuffer(streamData!, (int)underlyingStream.Length);
         }
 
 
@@ -396,10 +400,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 throw new UnauthorizedAccessException(global::Windows.Storage.Streams.SR.UnauthorizedAccess_InternalBuffer);
             }
 
-            int originInStream = streamData.Offset;
             int buffCapacity = Math.Min(length, underlyingStream.Capacity - positionInStream);
             int buffLength = Math.Max(0, Math.Min(length, ((int)underlyingStream.Length) - positionInStream));
-            return new WindowsRuntimeBuffer(streamData.Array!, originInStream + positionInStream, buffLength, buffCapacity);
+            return new WindowsRuntimeBuffer(streamData.Array.AsMemory().Slice(positionInStream), buffLength);
         }
 
 
@@ -408,9 +411,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            byte[] dataArr;
-            int dataOffs;
-            if (source.TryGetUnderlyingData(out dataArr, out dataOffs))
+            Memory<byte> underlying;
+            if (source.TryGetUnderlyingData(out underlying) && MemoryMarshal.TryGetArray<byte>(underlying, out var dataArr))
             {
                 Debug.Assert(source.Capacity < int.MaxValue);
                 return new WindowsRuntimeBufferMemoryStream(source, dataArr, dataOffs);
@@ -433,11 +435,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (source.Length <= byteOffset) throw new ArgumentException("The specified buffer offset is not within the buffer length.");
 
-            byte[] srcDataArr;
-            int srcDataOffs;
-            if (source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs))
+            Memory<byte> srcDataArr;
+            if (source.TryGetUnderlyingData(out srcDataArr))
             {
-                return srcDataArr[srcDataOffs + byteOffset];
+                return srcDataArr.Span[(int)byteOffset];
             }
 
             IntPtr srcPtr = source.GetPointerAtOffset(byteOffset);
@@ -596,6 +597,38 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 _sourceBuffer.Length = (uint)Length;
             }
         }  // class WindowsRuntimeBufferUnmanagedMemoryStream
+
+        private sealed unsafe class IBufferMemoryManager : MemoryManager<byte>
+        {
+            private readonly global::Windows.Storage.Streams.IBuffer _buffer;
+
+            internal IBufferMemoryManager(global::Windows.Storage.Streams.IBuffer buffer)
+            {
+                _buffer = buffer;
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+            }
+
+            public override Span<byte> GetSpan()
+            {
+                IntPtr sourcePtr = _buffer.GetPointerAtOffset(0);
+                return new Span<byte>((byte*)sourcePtr.ToPointer(), (int)_buffer.Length);
+            }
+
+            public override MemoryHandle Pin(int elementIndex = 0)
+            {
+                // IBuffer is responsable for pinning so assume pinned
+                IntPtr sourcePtr = _buffer.GetPointerAtOffset((uint)elementIndex);
+                return new MemoryHandle(sourcePtr.ToPointer(), default, null);
+            }
+
+            public override void Unpin()
+            {
+                // No-op
+            }
+        } // IBufferMemoryManager
 
         private static IntPtr GetPointerAtOffset(this IBuffer buffer, uint offset)
         {

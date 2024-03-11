@@ -95,10 +95,14 @@ namespace Windows.Storage.Streams
                 // No bytes read yet:
                 dataBuffer.Length = 0;
 
-                // Get the buffer backing array:
-                byte[] data;
-                int offset;
-                bool managedBufferAssert = dataBuffer.TryGetUnderlyingData(out data, out offset);
+                // Get the buffer backing memory:
+#if NET
+                Memory<byte> data;
+                bool managedBufferAssert = dataBuffer.TryGetUnderlyingData(out data);
+#else
+                ArraySegment<byte> data;
+                bool managedBufferAssert = dataBuffer.TryGetUnderlyingData(out Memory<byte> underlying) && MemoryMarshal.TryGetArray<byte>(underlying, out data);
+#endif
                 Debug.Assert(managedBufferAssert);
 
                 // Init tracking values:
@@ -112,9 +116,14 @@ namespace Windows.Storage.Streams
 
                     try
                     {
+#if NET
                         // Read asynchronously:
-                        bytesread = await stream.ReadAsync(data!, offset + bytesCompleted, bytesrequested - bytesCompleted, cancelToken)
+                        bytesread = await stream.ReadAsync(data.Slice(bytesCompleted, bytesrequested - bytesCompleted), cancelToken)
                                                 .ConfigureAwait(continueOnCapturedContext: false);
+#else
+                        bytesread = await stream.ReadAsync(data.Array, bytesCompleted, bytesrequested - bytesCompleted, cancelToken)
+                                                .ConfigureAwait(continueOnCapturedContext: false);
+#endif
 
                         // We will continue here on a different thread when read async completed:
                         bytesCompleted += bytesread;
@@ -155,7 +164,7 @@ namespace Windows.Storage.Streams
             return AsyncInfo.Run<IBuffer, uint>(readOperation);
         }  // ReadAsync_AbstractStream
 
-        #endregion ReadAsync implementations
+#endregion ReadAsync implementations
 
 
         #region WriteAsync implementations
@@ -168,11 +177,15 @@ namespace Windows.Storage.Streams
 
             // Choose the optimal writing strategy for the kind of buffer supplied:
             Func<CancellationToken, IProgress<uint>, Task<uint>> writeOperation;
-            byte[] data;
-            int offset;
 
-            // If buffer is backed by a managed array:
-            if (buffer.TryGetUnderlyingData(out data, out offset))
+            // If buffer is backed by managed memory:
+#if NET
+            Memory<byte> data;
+            if (buffer.TryGetUnderlyingData(out data))
+#else
+            ArraySegment<byte> data;
+            if (buffer.TryGetUnderlyingData(out Memory<byte> underlying) && MemoryMarshal.TryGetArray<byte>(underlying, out data))
+#endif
             {
                 writeOperation = async (cancelToken, progressListener) =>
                 {
@@ -183,7 +196,11 @@ namespace Windows.Storage.Streams
 
                     int bytesToWrite = (int)buffer.Length;
 
-                    await stream.WriteAsync(data, offset, bytesToWrite, cancelToken).ConfigureAwait(continueOnCapturedContext: false);
+#if NET
+                    await stream.WriteAsync(data.Slice(0, bytesToWrite), cancelToken).ConfigureAwait(continueOnCapturedContext: false);
+#else
+                    await stream.WriteAsync(data.Array, 0, bytesToWrite, cancelToken).ConfigureAwait(continueOnCapturedContext: false);
+#endif
 
                     if (progressListener != null)
                         progressListener.Report((uint)bytesToWrite);
@@ -220,7 +237,7 @@ namespace Windows.Storage.Streams
             return AsyncInfo.Run<uint, uint>(writeOperation);
         }  // WriteAsync_AbstractStream
 
-        #endregion WriteAsync implementations
+#endregion WriteAsync implementations
 
 
         #region FlushAsync implementations

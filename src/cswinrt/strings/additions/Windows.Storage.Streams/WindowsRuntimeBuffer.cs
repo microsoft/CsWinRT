@@ -5,6 +5,7 @@
 
 namespace System.Runtime.InteropServices.WindowsRuntime
 {
+    using System.Buffers;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Runtime.CompilerServices;
@@ -60,7 +61,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             byte[] underlyingData = new byte[capacity];
             Array.Copy(data, offset, underlyingData, 0, length);
-            return new WindowsRuntimeBuffer(underlyingData, 0, length, capacity);
+            return new WindowsRuntimeBuffer(underlyingData.AsMemory(), length);
         }
 
         #endregion Static factory methods
@@ -106,14 +107,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Fields
 
-        private readonly byte[] _data;
-        private readonly int _dataStartOffs = 0;
+        private readonly Memory<byte> _data;
         private int _usefulDataLength = 0;
-        private readonly int _maxDataCapacity = 0;
-        private GCHandle _pinHandle;
-
-        // Pointer to data[dataStartOffs] when data is pinned:
-        private IntPtr _dataPtr = IntPtr.Zero;
+        private MemoryHandle _pinHandle;
 
         #endregion Fields
 
@@ -125,29 +121,18 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (capacity < 0)
                 throw new ArgumentOutOfRangeException(nameof(capacity));
 
-            _data = new byte[capacity];
-            _dataStartOffs = 0;
+            _data = new Memory<byte>(new byte[capacity]);
             _usefulDataLength = 0;
-            _maxDataCapacity = capacity;
-            _dataPtr = IntPtr.Zero;
         }
 
 
-        internal WindowsRuntimeBuffer(byte[] data, int offset, int length, int capacity)
+        internal WindowsRuntimeBuffer(Memory<byte> data, int length)
         {
-            if (data == null) throw new ArgumentNullException(nameof(data));
-            if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
-            if (capacity < 0) throw new ArgumentOutOfRangeException(nameof(capacity));
-            if (data.Length - offset < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (data.Length - offset < capacity) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (capacity < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
+            if (data.Length < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
 
             _data = data;
-            _dataStartOffs = offset;
             _usefulDataLength = length;
-            _maxDataCapacity = capacity;
-            _dataPtr = IntPtr.Zero;
         }
 
         #endregion Constructors
@@ -155,59 +140,29 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Helpers
 
-        internal void GetUnderlyingData(out byte[] underlyingDataArray, out int underlyingDataArrayStartOffset)
+        internal void GetUnderlyingData(out Memory<byte> underlyingDataArray)
         {
             underlyingDataArray = _data;
-            underlyingDataArrayStartOffset = _dataStartOffs;
         }
 
 
-        private unsafe byte* PinUnderlyingData()
+        private unsafe void PinUnderlyingData()
         {
-            GCHandle gcHandle = default(GCHandle);
-            bool ptrWasStored = false;
-            IntPtr buffPtr;
-
-            try { }
-            finally
+            if (_pinHandle.Pointer == null)
             {
-                try
+                lock (this)
                 {
-                    // Pin the data array:
-                    gcHandle = GCHandle.Alloc(_data, GCHandleType.Pinned);
-                    buffPtr = gcHandle.AddrOfPinnedObject() + _dataStartOffs;
-
-                    // Store the pin IFF it has not been assigned:
-                    ptrWasStored = (Interlocked.CompareExchange(ref _dataPtr, buffPtr, IntPtr.Zero) == IntPtr.Zero);
-                }
-                finally
-                {
-                    if (!ptrWasStored)
+                    if (_pinHandle.Pointer == null)
                     {
-                        // There is a race with another thread also trying to create a pin and they were first
-                        // in assigning to data pin. That's ok, just give it up.
-                        // Unpin again (the pin from the other thread remains):
-                        gcHandle.Free();
-                    }
-                    else
-                    {
-                        if (_pinHandle.IsAllocated)
-                            _pinHandle.Free();
-
-                        // Make sure we keep track of the handle
-                        _pinHandle = gcHandle;
+                        _pinHandle = _data.Pin();
                     }
                 }
             }
-
-            // Ok, now all is good:
-            return (byte*)buffPtr;
         }
 
         ~WindowsRuntimeBuffer()
         {
-            if (_pinHandle.IsAllocated)
-                _pinHandle.Free();
+            _pinHandle.Dispose();
         }
 
         #endregion Helpers
@@ -217,7 +172,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         uint IBuffer.Capacity
         {
-            get { return unchecked((uint)_maxDataCapacity); }
+            get { return unchecked((uint)_data.Length); }
         }
 
 
@@ -252,15 +207,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         {
             get
             {
-                // Get pin handle:
-                IntPtr buffPtr = Volatile.Read(ref _dataPtr);
+                PinUnderlyingData();
 
-                // If we are already pinned, return the pointer and have a nice day:
-                if (buffPtr != IntPtr.Zero)
-                    return buffPtr;
-
-                // Ok, we are not yet pinned. Let's do it.
-                return new IntPtr(PinUnderlyingData());
+                return new IntPtr(_pinHandle.Pointer);
             }
         }
 
