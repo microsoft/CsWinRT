@@ -185,14 +185,13 @@ namespace WinRT
                 }
                 return false;
             }
+
             if (StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetIUnknownDerivedDetails(interfaceType) is IIUnknownDerivedDetails details)
             {
-                qiResult = StrategyBasedComWrappers.DefaultIUnknownStrategy.QueryInterface((void*)NativeObject.ThisPtr, details.Iid, out void* ppv);
+                qiResult = NativeObject.TryAs(details.Iid, out ObjectReference<IUnknownVftbl> objRef);
                 if (qiResult < 0)
-                {
                     return false;
-                }
-                var obj = (void***)ppv;
+                var obj = (void***)objRef.ThisPtr;
                 result = new IIUnknownCacheStrategy.TableInfo()
                 {
                     ThisPtr = obj,
@@ -205,7 +204,7 @@ namespace WinRT
                     bool found = AdditionalTypeData.TryGetValue(interfaceType, out object newInfo);
                     System.Diagnostics.Debug.Assert(found);
                     result = (IIUnknownCacheStrategy.TableInfo)newInfo;
-                    StrategyBasedComWrappers.DefaultIUnknownStrategy.Release(ppv);
+                    objRef.Dispose();
                 }
 
                 return true;
