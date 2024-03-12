@@ -160,7 +160,11 @@ namespace ABI.System.Collections.Specialized
     internal sealed unsafe class NotifyCollectionChangedEventSource : EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
     {
         internal NotifyCollectionChangedEventSource(IObjectReference obj,
+#if NET
+            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::WinRT.EventRegistrationToken*, int> addHandler,
+#else
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
+#endif
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
             : base(obj, addHandler, removeHandler)
         {

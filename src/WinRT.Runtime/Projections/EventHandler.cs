@@ -301,7 +301,11 @@ namespace ABI.System
     internal sealed unsafe class EventHandlerEventSource : EventSource<global::System.EventHandler>
     {
         internal EventHandlerEventSource(IObjectReference obj,
+#if NET
+            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::WinRT.EventRegistrationToken*, int> addHandler,
+#else
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
+#endif
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
             : base(obj, addHandler, removeHandler)
         {
