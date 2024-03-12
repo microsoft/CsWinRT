@@ -8,6 +8,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
     using global::Windows.Foundation;
     using global::Windows.Storage.Streams;
     /// <summary>
@@ -465,6 +467,63 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 : base(dataPtr, (long)sourceBuffer.Length, (long)sourceBuffer.Capacity, FileAccess.ReadWrite)
             {
                 _sourceBuffer = sourceBuffer;
+            }
+
+            public override void SetLength(long value)
+            {
+                base.SetLength(value);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                base.Write(buffer, offset, count);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+
+#if NET
+            public override void Write(ReadOnlySpan<byte> buffer)
+            {
+                base.Write(buffer);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+#endif
+
+            public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                await base.WriteAsync(buffer, offset, count, cancellationToken);
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+
+#if NET
+            public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+            {
+                await base.WriteAsync(buffer, cancellationToken);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+#endif
+
+            public override void WriteByte(byte value)
+            {
+                base.WriteByte(value);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
             }
         }  // class WindowsRuntimeBufferUnmanagedMemoryStream
 
