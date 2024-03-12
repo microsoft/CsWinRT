@@ -614,7 +614,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             public override Span<byte> GetSpan()
             {
                 IntPtr sourcePtr = _buffer.GetPointerAtOffset(0);
-                return new Span<byte>((byte*)sourcePtr.ToPointer(), (int)_buffer.Length);
+                return new Span<byte>((byte*)sourcePtr.ToPointer(), (int)_buffer.Capacity);
             }
 
             public override MemoryHandle Pin(int elementIndex = 0)
