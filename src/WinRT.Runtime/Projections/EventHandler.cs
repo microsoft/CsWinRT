@@ -121,6 +121,9 @@ namespace ABI.System
 
         static unsafe EventHandler()
         {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.EventHandler<T>), typeof(global::ABI.System.EventHandler<T>));
+            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.EventHandler<T>), CreateRcw);
+
 #if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
@@ -139,6 +142,7 @@ namespace ABI.System
             }
             else
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 // Initialize the ABI invoke delegate type (we don't want to do that from a method in this type, or it will get rooted).
                 // That is because there's other reflection paths just preserving members from EventHandler<T> unconditionally.
                 _abi_invoke_type = Projections.GetAbiDelegateType(typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int));
@@ -149,9 +153,8 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler<T>), sizeof(global::WinRT.Interop.IDelegateVftbl));
                 *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
                 ((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate);
+#pragma warning restore IL3050
             }
-
-            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.EventHandler<T>), CreateRcw);
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
@@ -227,6 +230,7 @@ namespace ABI.System
                 }
                 else
                 {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     // Same as in the static constructor, we initialize the ABI delegate type manually here if needed.
                     // We gate this behind a null check to avoid unnecessarily calling Projections.GetAbiDelegateType.
                     if (Volatile.Read(ref _abi_invoke_type) is null)
@@ -236,6 +240,7 @@ namespace ABI.System
 
                     IntPtr ThisPtr = _nativeDelegate.ThisPtr;
                     var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, _abi_invoke_type);
+#pragma warning restore IL3050
                     ObjectReferenceValue __sender = default;
                     object __args = default;
                     var __params = new object[] { ThisPtr, null, null };
@@ -315,7 +320,7 @@ namespace ABI.System
                 Invoke = (IntPtr)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_Invoke
 #endif
             };
-            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
+            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler), sizeof(global::WinRT.Interop.IDelegateVftbl));
             Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
             AbiToProjectionVftablePtr = nativeVftbl;
         }
