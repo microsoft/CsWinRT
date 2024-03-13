@@ -3046,8 +3046,8 @@ remove => %.ErrorsChanged -= value;
 
 %event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> %ErrorsChanged
 {
-add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged(%, this).Item1(value);
-remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged(%, this).Item2(value);
+add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged(%, this).Subscribe(value);
+remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged(%, this).Unsubscribe(value);
 }
 %bool %HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.get_HasErrors(%); }
 )",
