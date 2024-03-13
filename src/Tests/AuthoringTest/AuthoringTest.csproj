@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Platforms>x64;x86</Platforms>
     <CsWinRTComponent>true</CsWinRTComponent>
     <IsTrimmable>true</IsTrimmable>
     <!-- CsWinRTEnableLogging helps to diagnose generation issues -->
     <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
     <!--<CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>--> 
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +29,7 @@
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />    
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>

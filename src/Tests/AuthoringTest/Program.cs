@@ -483,7 +483,7 @@ namespace AuthoringTest
         }
     }
 
-    internal sealed class NonProjectedDisposableClass : IDisposable
+    internal sealed partial class NonProjectedDisposableClass : IDisposable
     {
         public bool IsDisposed { get; set; }
 
@@ -1474,6 +1474,10 @@ namespace AuthoringTest
         }
     }
 
+    public sealed class TestCollection : CollectionBase
+    {
+    }
+
     public partial interface IPartialInterface
     {
         public string GetNumberAsString();
@@ -1573,6 +1577,35 @@ namespace AuthoringTest
     public partial struct PartialStruct
     {
         public double Z;
+    }
+
+    // Nested type to validate (https://github.com/microsoft/CsWinRT/issues/1477)
+    // Doesn't need to be consumed, we just want to verify the generator does work.
+    internal partial class Nested1
+    {
+        internal partial record struct Nested2
+        {
+            internal partial struct Nested3
+            {
+                internal partial interface INested4
+                {
+                    internal partial record Nested5
+                    {
+                        internal partial class InnerMostType : IGraphicsEffectSource, IPublicInterface, IDisposable
+                        {
+                            public string HelloWorld()
+                            {
+                                return "Hello from mixed WinRT/COM";
+                            }
+
+                            public void Dispose()
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public sealed class TestMixedWinRTCOMWrapper : IGraphicsEffectSource, IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2
@@ -1708,6 +1741,30 @@ namespace ABI.AuthoringTest
             public static Guid IID => typeof(global::AuthoringTest.SomeInternalType.IInternalInterface2).GUID;
 
             public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.SomeInternalType.IInternalInterface2.Vftbl.AbiToProjectionVftablePtr;
+        }
+    }
+}
+
+namespace AnotherNamespace
+{
+    internal partial class PartialClass3
+    {
+        public void InternalFunction()
+        {
+        }
+    }
+
+    partial class PartialClass3
+    {
+        public void InternalFunction2()
+        {
+        }
+    }
+
+    internal class InternalClass
+    {
+        public void InternalFunction()
+        {
         }
     }
 }

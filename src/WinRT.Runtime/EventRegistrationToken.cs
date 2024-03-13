@@ -5,6 +5,11 @@ using System;
 
 namespace WinRT
 {
+    [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.WinRT.EventRegistrationToken))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<EventRegistrationToken, EventRegistrationToken>))]
+#endif
 #if EMBED
     internal
 #else 

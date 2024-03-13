@@ -163,16 +163,24 @@ namespace GuidPatch
                 getterMethodGensToCacheTypeGens[guidDataGetterMethod.GenericParameters[i]] = cacheType.GenericParameters[i];
             }
 
-            var instantiatedCacheType = new GenericInstanceType(cacheType);
-            foreach (var arg in guidDataGetterMethod.GenericParameters)
-            {
-                instantiatedCacheType.GenericArguments.Add(arg);
-            }
+            TypeReference instantiatedCacheType = cacheType;
+            TypeReference selfInstantiatedCacheType = cacheType;
 
-            var selfInstantiatedCacheType = new GenericInstanceType(cacheType);
-            foreach (var param in cacheType.GenericParameters)
+            if (cacheType.GenericParameters.Count != 0)
             {
-                selfInstantiatedCacheType.GenericArguments.Add(param);
+                var instantiatedCacheTypeTemp = new GenericInstanceType(cacheType);
+                foreach (var arg in guidDataGetterMethod.GenericParameters)
+                {
+                    instantiatedCacheTypeTemp.GenericArguments.Add(arg);
+                }
+                instantiatedCacheType = instantiatedCacheTypeTemp;
+
+                var selfInstantiatedCacheTypeTemp = new GenericInstanceType(cacheType);
+                foreach (var param in cacheType.GenericParameters)
+                {
+                    selfInstantiatedCacheTypeTemp.GenericArguments.Add(param);
+                }
+                selfInstantiatedCacheType = selfInstantiatedCacheTypeTemp;
             }
 
             var cacheField = new FieldDefinition("iidData", FieldAttributes.Static | FieldAttributes.Assembly, new ArrayType(module.ImportReference(module.TypeSystem.Byte)));
@@ -415,7 +423,8 @@ namespace GuidPatch
             il.Emit(OpCodes.Stloc, destination);
 
             // SHA1.HashData(fullSignatureBuffer, destination);
-            var sha1Type = CecilExtensions.FindTypeReference(module, "System.Security.Cryptography", "SHA1", "System.Security.Cryptography.Algorithms", false);
+            var sha1Type = module.ImportReference(
+                new TypeReference("System.Security.Cryptography", "SHA1", module, new AssemblyNameReference("System.Security.Cryptography.Algorithms", default), false).Resolve());
             var hashDataMethod = module.ImportReference(
                 new MethodReference("HashData", module.ImportReference(module.TypeSystem.Int32), sha1Type)
                 {
@@ -427,30 +436,89 @@ namespace GuidPatch
                     }
                 });
 
-            var spanToReadOnlySpan = module.ImportReference(
-                new MethodReference("op_Implicit",
-                    new GenericInstanceType(module.ImportReference(readOnlySpanOfByte.Resolve()))
+            // HashData is not defined in .NET Standard
+            if (hashDataMethod.Resolve() is null)
+            {
+                var spanToArrayMethod = module.ImportReference(
+                    new MethodReference("ToArray", new ArrayType(span.Resolve().GenericParameters[0]), spanOfByte)
                     {
-                        GenericArguments = { span.Resolve().GenericParameters[0] }
+                        HasThis = true,
+                    });
+
+                // byte[] arrayToHash = data.ToArray();
+                var arrayToHash = new VariableDefinition(new ArrayType(module.TypeSystem.Byte));
+                staticCtor.Body.Variables.Add(arrayToHash);
+                il.Emit(OpCodes.Ldloca, fullSignatureBuffer);
+                il.Emit(OpCodes.Call, spanToArrayMethod);
+                il.Emit(OpCodes.Stloc, arrayToHash);
+
+                // using (SHA1 sha = new SHA1CryptoServiceProvider())
+                // destination = sha.ComputeHash(data);
+                var sha1CryptoServiceProvider = module.ImportReference(
+                    new TypeReference("System.Security.Cryptography", "SHA1CryptoServiceProvider", module, new AssemblyNameReference("netstandard", default), false).Resolve());
+                var sha = new VariableDefinition(sha1CryptoServiceProvider);
+                staticCtor.Body.Variables.Add(sha);
+                var sha1CryptoServiceProviderCtor = module.ImportReference(
+                    new MethodReference(".ctor", module.TypeSystem.Void, sha1CryptoServiceProvider)
+                    {
+                        HasThis = true
                     },
-                    spanOfByte)
-                {
-                    HasThis = false,
-                    Parameters =
+                    sha1CryptoServiceProvider);
+                il.Emit(OpCodes.Newobj, sha1CryptoServiceProviderCtor);
+                il.Emit(OpCodes.Stloc, sha);
+
+                var computeHashMethod = module.ImportReference(
+                    new MethodReference("ComputeHash", new ArrayType(module.TypeSystem.Byte), sha1CryptoServiceProvider)
                     {
+                        HasThis = true,
+                        Parameters =
+                        {
+                            new ParameterDefinition(new ArrayType(module.TypeSystem.Byte))
+                        }
+                    });
+                il.Emit(OpCodes.Ldloc, sha);
+                il.Emit(OpCodes.Ldloc, arrayToHash);
+                il.Emit(OpCodes.Callvirt, computeHashMethod);
+                il.Emit(OpCodes.Newobj, spanOfByteArrayCtor);
+                il.Emit(OpCodes.Stloc, destination);
+
+                var disposable = module.ImportReference(
+                    new TypeReference("System", "IDisposable", module, new AssemblyNameReference("netstandard", default), false).Resolve());
+                var disposeMethod = module.ImportReference(
+                    new MethodReference("Dispose", module.TypeSystem.Void, disposable)
+                    {
+                        HasThis = true,
+                    });
+                il.Emit(OpCodes.Ldloc, sha);
+                il.Emit(OpCodes.Callvirt, disposeMethod);
+            }
+            else
+            {
+                var spanToReadOnlySpan = module.ImportReference(
+                    new MethodReference("op_Implicit",
+                        new GenericInstanceType(module.ImportReference(readOnlySpanOfByte.Resolve()))
+                        {
+                            GenericArguments = { span.Resolve().GenericParameters[0] }
+                        },
+                        spanOfByte)
+                    {
+                        HasThis = false,
+                        Parameters =
+                        {
                         new ParameterDefinition(
                             new GenericInstanceType(span)
                             {
                                 GenericArguments = { span.Resolve().GenericParameters[0] }
                             })
-                    }
-                });
+                        }
+                    });
 
-            il.Emit(OpCodes.Ldloc, fullSignatureBuffer);
-            il.Emit(OpCodes.Call, spanToReadOnlySpan);
-            il.Emit(OpCodes.Ldloc, destination);
-            il.Emit(OpCodes.Call, hashDataMethod);
-            il.Emit(OpCodes.Pop);
+                il.Emit(OpCodes.Ldloc, fullSignatureBuffer);
+                il.Emit(OpCodes.Call, spanToReadOnlySpan);
+                il.Emit(OpCodes.Ldloc, destination);
+                il.Emit(OpCodes.Call, hashDataMethod);
+                il.Emit(OpCodes.Pop);
+            }
 
             // Fix endianness, bytes
             var memoryExtensions = CecilExtensions.FindTypeReference(module, "System", "MemoryExtensions", "System.Memory", false);

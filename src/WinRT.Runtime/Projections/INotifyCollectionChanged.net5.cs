@@ -28,7 +28,7 @@ namespace ABI.System.Collections.Specialized
 
         public static unsafe (Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>, Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>) Get_CollectionChanged(IObjectReference obj, object thisObj)
         {
-            var eventSource = _CollectionChanged.GetValue(thisObj, (key) =>
+            var eventSource = CollectionChanged.GetValue(thisObj, (key) =>
             {
                 var ThisPtr = obj.ThisPtr;
 
@@ -51,7 +51,9 @@ namespace ABI.System.Collections.Specialized
     {
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
         [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
@@ -73,7 +75,7 @@ namespace ABI.System.Collections.Specialized
                     _remove_CollectionChanged_1 = &Do_Abi_remove_CollectionChanged_1,
 
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 2);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 2);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -128,7 +130,7 @@ namespace ABI.System.Collections.Specialized
 
         private static (Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>, Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>) _CollectionChanged(IWinRTObject _this)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)_this).GetObjectReferenceForType(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle));
+            var _obj = _this.GetObjectReferenceForType(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle);
             return INotifyCollectionChangedMethods.Get_CollectionChanged(_obj, _this);
         }
 

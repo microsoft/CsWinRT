@@ -1,0 +1,26 @@
+variables:
+- template: CsWinRT-Variables.yml@self
+
+name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
+
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+extends:
+  template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: Azure-Pipelines-1ESPT-ExDShared
+      image: windows-2022
+      os: windows
+    customBuildTags:
+    - ES365AIMigrationTooling
+    sdl:
+      binskim:
+        scanOutputDirectoryOnly: true
+    stages:
+    - template: CsWinRT-BuildAndTest-Stage.yml@self
+    - template: CsWinRT-PublishToNuget-Stage.yml@self

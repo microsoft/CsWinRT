@@ -2,12 +2,17 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace WinRT.Interop
 {
+    /// <summary>
+    /// An interface for managed objects representing activation factories for WinRT types.
+    /// </summary>
     [WindowsRuntimeType]
     [Guid("00000035-0000-0000-C000-000000000046")]
     [WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IActivationFactory))]
@@ -18,6 +23,14 @@ namespace WinRT.Interop
 #endif
     interface IActivationFactory
     {
+        /// <summary>
+        /// Activates an instance of the target WinRT type.
+        /// </summary>
+        /// <returns>The resulting instance.</returns>
+        /// <exception cref="NotImplementedException">
+        /// Thrown if the operation is not available on the activation factory type in use. For instance,
+        /// that is the case if the associated type is static or does not have a default constructor.
+        /// </exception>
         IntPtr ActivateInstance();
     }
 }
@@ -31,16 +44,43 @@ namespace ABI.WinRT.Interop
 #endif
     static class IActivationFactoryMethods
     {
-#if NET
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x35, 0, 0, 0, 0, 0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46 }));
-#else
-        public static global::System.Guid IID { get; } = new(0x00000035, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
-#endif
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_IActivationFactory;
 
         public static IntPtr AbiToProjectionVftablePtr => IActivationFactory.Vftbl.AbiToProjectionVftablePtr;
+
+        /// <summary>
+        /// Activates an instance from a given activation factory <see cref="IObjectReference"/> instance.
+        /// </summary>
+        /// <param name="objectReference">The input activation factory <see cref="IObjectReference"/> instance to use.</param>
+        /// <returns>The resulting <see cref="IObjectReference"/> instance created from <paramref name="objectReference"/>.</returns>
+        /// <remarks>
+        /// <para>This method assumes <paramref name="objectReference"/> is wrapping an <c>IActivationFactory</c> instance (with no validation).</para>
+        /// <para>This method is only meant to be used by the generated projections, and not by consumers of CsWinRT directly.</para>
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static unsafe IObjectReference ActivateInstanceUnsafe(IObjectReference objectReference)
+        {
+            IntPtr thisPtr = objectReference.ThisPtr;
+            IntPtr instancePtr;
+
+            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[6](thisPtr, &instancePtr));
+
+            GC.KeepAlive(objectReference);
+
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr);
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
+            }
+        }
     }
 
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("00000035-0000-0000-C000-000000000046")]
 #if EMBED
     internal
@@ -67,7 +107,7 @@ namespace ABI.WinRT.Interop
 #endif
             static unsafe Vftbl()
             {
-                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
@@ -108,6 +148,11 @@ namespace ABI.WinRT.Interop
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public A As<A>() => _obj.AsType<A>();
         public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         internal IActivationFactory(ObjectReference<Vftbl> obj)

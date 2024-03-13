@@ -3,7 +3,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -72,6 +71,25 @@ namespace WinRT
                 return "string";
             }
 
+            if (type.IsGenericType)
+            {
+                static string[] SelectSignaturesForTypes(Type[] types)
+                {
+                    string[] signatures = new string[types.Length];
+
+                    for (int i = 0; i < types.Length; i++)
+                    {
+                        signatures[i] = GetSignature(types[i]);
+                    }
+
+                    return signatures;
+                }
+
+                var args = SelectSignaturesForTypes(type.GetGenericArguments());
+                var genericHelperType = type.GetGenericTypeDefinition().FindHelperType() ?? type;
+                return "pinterface({" + genericHelperType.GUID + "};" + string.Join(";", args) + ")";
+            }
+
             var helperType = type.FindHelperType();
             if (helperType != null)
             {
@@ -113,9 +131,27 @@ namespace WinRT
                                 {
                                     return winrtTypeAttribute.GuidSignature;
                                 }
+                                else if (winrtTypeAttribute == null && 
+                                    (winrtTypeAttribute = type.GetAuthoringMetadataType()?.GetCustomAttribute<WindowsRuntimeTypeAttribute>()) != null && 
+                                    !string.IsNullOrEmpty(winrtTypeAttribute.GuidSignature))
+                                {
+                                    return winrtTypeAttribute.GuidSignature;
+                                }
                                 else
                                 {
-                                    var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignature(fi.FieldType));
+                                    static string[] SelectSignaturesForFields(FieldInfo[] fields)
+                                    {
+                                        string[] signatures = new string[fields.Length];
+
+                                        for (int i = 0; i < fields.Length; i++)
+                                        {
+                                            signatures[i] = GetSignature(fields[i].FieldType);
+                                        }
+
+                                        return signatures;
+                                    }
+
+                                    var args = SelectSignaturesForFields(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
                                     return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
                                 }
                             }
@@ -128,12 +164,6 @@ namespace WinRT
             // For built-in system interfaces that are custom type mapped, we use the helper type to get the guid.
             // For others, either the type itself or the helper type has the same guid and can be used.
             type = type.IsInterface ? (helperType ?? type) : type;
-
-            if (type.IsGenericType)
-            {
-                var args = type.GetGenericArguments().Select(t => GetSignature(t));
-                return "pinterface({" + GetGUID(type) + "};" + String.Join(";", args) + ")";
-            }
 
             if (type.IsDelegate())
             {
@@ -195,7 +225,7 @@ namespace WinRT
         internal static Guid CreateIIDForGenericType(string signature)
         {
 #if !NET
-            var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(signature)).ToArray();
+            var data = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(wrt_pinterface_namespace.ToByteArray(), Encoding.UTF8.GetBytes(signature)));
 
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {

@@ -36,8 +36,9 @@ namespace ABI.Windows.Foundation
 
 namespace ABI.System
 {
-
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("44A9796F-723E-4FDF-A218-033E75B0C084")]
     internal sealed class WinRTUriRuntimeClassFactory
     {
@@ -56,8 +57,6 @@ namespace ABI.System
         public static implicit operator WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
         public WinRTUriRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         public WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {

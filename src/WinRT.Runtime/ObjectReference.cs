@@ -3,10 +3,12 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WinRT.Interop;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
@@ -14,7 +16,6 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-
 #if EMBED
     internal
 #else
@@ -22,10 +23,14 @@ namespace WinRT
 #endif
     abstract class IObjectReference : IDisposable
     {
-        protected bool disposed;
+        // Flags for the '_disposedFlags' field, see notes in the Dispose() method below
+        private const int NOT_DISPOSED = 0;
+        private const int DISPOSE_PENDING = 1;
+        private const int DISPOSE_COMPLETED = 2;
+
         private readonly IntPtr _thisPtr;
-        private object _disposedLock = new object();
         private IntPtr _referenceTrackerPtr;
+        private int _disposedFlags;
 
         public IntPtr ThisPtr
         {
@@ -33,6 +38,17 @@ namespace WinRT
             {
                 ThrowIfDisposed();
                 return GetThisPtrForCurrentContext();
+            }
+        }
+
+        public bool IsFreeThreaded => GetContextToken() == IntPtr.Zero;
+
+        public bool IsInCurrentContext
+        {
+            get
+            {
+                var contextToken = GetContextToken();
+                return contextToken == IntPtr.Zero || contextToken == Context.GetContextToken();
             }
         }
 
@@ -120,20 +136,16 @@ namespace WinRT
 
         ~IObjectReference()
         {
-            Dispose(false);
+            Dispose();
         }
 
         public ObjectReference<T> As<
 #if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
 
-        public unsafe ObjectReference<T> As<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
-#endif
-        T>(Guid iid)
+        public unsafe ObjectReference<T> As<T>(Guid iid)
         {
             Marshal.ThrowExceptionForHR(TryAs<T>(iid, out var objRef));
             return objRef;
@@ -141,20 +153,17 @@ namespace WinRT
 
         public unsafe TInterface AsInterface<TInterface>()
         {
-            if (typeof(TInterface).IsDefined(typeof(System.Runtime.InteropServices.ComImportAttribute)))
+            if (typeof(TInterface).IsDefined(typeof(ComImportAttribute)))
             {
                 Guid iid = typeof(TInterface).GUID;
-                IntPtr comPtr = IntPtr.Zero;
-                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ThisPtr, ref iid, out comPtr));
+                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ThisPtr, ref iid, out IntPtr comPtr));
                 try
                 {
                     return (TInterface)Marshal.GetObjectForIUnknown(comPtr);
                 }
                 finally
                 {
-                    var vftblPtr = Unsafe.AsRef<WinRT.VftblPtr>(comPtr.ToPointer());
-                    var vftblIUnknown = Marshal.PtrToStructure<WinRT.Interop.IUnknownVftbl>(vftblPtr.Vftbl);
-                    vftblIUnknown.Release(comPtr);
+                    _ = Marshal.Release(comPtr);
                 }
             }
 
@@ -167,34 +176,22 @@ namespace WinRT
 
         public int TryAs<
 #if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-        T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
+            T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
 
-        public virtual unsafe int TryAs<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
-#endif
-        T>(Guid iid, out ObjectReference<T> objRef)
+        public unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
         {
-            objRef = null;
-            ThrowIfDisposed();
-            IntPtr thatPtr = IntPtr.Zero;
-            int hr = Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr);
-            if (hr >= 0)
+            // Check the marker interface for ObjectReferenceWithContext<T>. If that is the case, we inline
+            // the special logic for such objects. This avoids having to use a generic virtual method here,
+            // which would just explode the binary size on NativeAOT due to combinatorial generics.
+            if (this is IObjectReferenceWithContext)
             {
-                if (IsAggregated)
-                {
-                    Marshal.Release(thatPtr);
-                }
-                AddRefFromTrackerSource();
-
-                objRef = ObjectReference<T>.Attach(ref thatPtr);
-                objRef.IsAggregated = IsAggregated;
-                objRef.PreventReleaseOnDispose = IsAggregated;
-                objRef.ReferenceTrackerPtr = ReferenceTrackerPtr;
+                return ObjectReferenceWithContext<T>.TryAs(this, iid, out objRef);
             }
-            return hr;
+
+            // Normal path for IObjectReference or any IObjectReference<T>
+            return ObjectReference<T>.TryAs(this, iid, out objRef);            
         }
 
         public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
@@ -227,15 +224,64 @@ namespace WinRT
 
         public unsafe IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
 
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public T AsType<T>()
         {
             ThrowIfDisposed();
+
+#if NET
+            // Same logic as in 'ComWrappersSupport.CreateFactoryForImplementationType', see notes there
+            var attribute = typeof(T).GetCustomAttribute<WinRTImplementationTypeRcwFactoryAttribute>(inherit: false);
+
+            if (attribute is not null)
+            {
+                return (T)attribute.CreateInstance(new IInspectable(this));
+            }
+
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"Cannot create an RCW instance for type '{typeof(T)}', because it doesn't have a " +
+                    "[WinRTImplementationTypeRcwFactory] derived attribute on it. The fallback path for older projections " +
+                    "is not trim-safe, and isn't supported in AOT environments. Make sure to reference updated projections.");
+            }
+
+            if (TryCreateRcwFallback(this, out object rcwInstance))
+            {
+                return (T)rcwInstance;
+            }
+
+            [SuppressMessage("Trimming", "IL2090", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
+            static bool TryCreateRcwFallback(IObjectReference objectReference, out object rcwInstance)
+            {
+                var constructor = typeof(T).GetConstructor(
+                    bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance,
+                    binder: null,
+                    types: new[] { typeof(IObjectReference) },
+                    modifiers: null);
+
+                if (constructor is not null)
+                {
+                    rcwInstance = constructor.Invoke(new[] { objectReference });
+
+                    return true;
+                }
+
+                rcwInstance = null;
+
+                return false;
+            }
+#else
             var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
-            if (ctor != null)
+            if (ctor is not null)
             {
                 return (T)ctor.Invoke(new[] { this });
             }
-            throw new InvalidOperationException("Target type is not a projected interface.");
+#endif
+            throw new InvalidOperationException($"Target type '{typeof(T)}' is not a projected type.");
         }
 
         public IntPtr GetRef()
@@ -245,31 +291,66 @@ namespace WinRT
             return ThisPtr;
         }
 
+        /// <summary>
+        /// Throws an <see cref="ObjectDisposedException"/> if <see cref="Dispose"/> has already been called on the current instance.
+        /// </summary>
+        /// <remarks>
+        /// Note that calling this method does not protect callers against concurrent threads calling <see cref="Dispose"/> on the
+        /// same instance, as that behavior is explicitly undefined. Similarly, callers using this to then access the underlying
+        /// pointers should also make sure to keep the current instance alive until they're done using the pointer (unless they're
+        /// also incrementing it via <c>AddRef</c> in some way), or the GC could concurrently collect the instance and cause the
+        /// same problem (ie. the underlying pointer being in use becoming invalid right after retrieving it from the object).
+        /// </remarks>
+        /// <exception cref="ObjectDisposedException">Thrown if the current instance is disposed.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ThrowIfDisposed()
         {
-            if (disposed)
+            if (Volatile.Read(ref _disposedFlags) == DISPOSE_COMPLETED)
             {
-                lock (_disposedLock)
-                {
-                    if (disposed) throw new ObjectDisposedException("ObjectReference");
-                }
+                ThrowObjectDisposedException();
+            }
+
+            static void ThrowObjectDisposedException()
+            {
+                throw new ObjectDisposedException("ObjectReference");
             }
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
-            Dispose(true);
             GC.SuppressFinalize(this);
-        }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            lock (_disposedLock)
+            // We swap the disposed flag and only dispose the first time. This is safe with respect to
+            // different threads concurrently trying to dispose the same object, as only the first one
+            // will actually dispose it, and the others will just do nothing.
+            //
+            // It is not safe when combined with ThrowIfDisposed(), as the following scenario is possible:
+            //   - Thread A calls ProjectedType.Foo()
+            //   - Thread A calls ThisPtr, the dispose check passes and it gets the IntPtr value (not incremented)
+            //   - Thread B calls Dispose(), which releases the object
+            //   - Thread A now uses that IntPtr to invoke some function pointer
+            //   - Thread A goes ka-boom 💥
+            //
+            // However, this is by design, as the ObjectReference owns the 'ThisPtr' property, and disposing it while it
+            // is still in use can lead to all kinds of things going wrong. This is conceptually the same as calling
+            // SafeHandle.DangerousGetHandle(). Furthermore, the same exact behavior was already possible with an actual
+            // lock object guarding all the logic within the Dispose() method. The only difference is that simply using
+            // a flag this way avoids one object allocation per ObjectReference instance, and also allows making the size
+            // of the whole object smaller by sizeof(object), when taking into account padding.
+            //
+            // Additionally, note that the '_disposedFlags' field has 3 different states:
+            //   - NOT_DISPOSED: the initial state, when the object is alive
+            //   - DISPOSE_PENDING: indicates that a thread is currently executing the Dispose() method and got past the
+            //     first check, and is in the process of releasing the native resources. This state is checked by the
+            //     ThrowIfDisposed() method above, and still treated as if the object can be used normally. This is
+            //     necessary, because the dispose logic still has to access the 'ThisPtr' property and others in order
+            //     to perform the various Release() calls on the native objects being used. If the state was immediately
+            //     set to disposed, that method would just start throwing immediately, and this logic would not work.
+            //   - DISPOSE_COMPLETED: set when all the Dispose() logic has been completed and the object should not be
+            //     used at all anymore. When this is set, the ThrowIfDisposed() method will start throwing exceptions.
+            if (Interlocked.CompareExchange(ref _disposedFlags, DISPOSE_PENDING, NOT_DISPOSED) == NOT_DISPOSED)
             {
-                if (disposed)
-                {
-                    return;
-                }
 #if DEBUG
                 if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
                 {
@@ -283,30 +364,15 @@ namespace WinRT
                 }
 
                 DisposeTrackerSource();
-                disposed = true;
-            }
-        }
 
-        internal bool Resurrect()
-        {
-            lock (_disposedLock)
-            {
-                if (!disposed)
-                {
-                    return false;
-                }
-                disposed = false;
-                ResurrectTrackerSource();
-                AddRef();
-                GC.ReRegisterForFinalize(this);
-                return true;
+                Volatile.Write(ref _disposedFlags, DISPOSE_COMPLETED);
             }
         }
 
         protected virtual unsafe void AddRef(bool refFromTrackerSource)
         {
             Marshal.AddRef(ThisPtr);
-            if(refFromTrackerSource)
+            if (refFromTrackerSource)
             {
                 AddRefFromTrackerSource();
             }
@@ -353,18 +419,6 @@ namespace WinRT
             }
         }
 
-        private unsafe void ResurrectTrackerSource()
-        {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
-            {
-                Marshal.AddRef(ReferenceTrackerPtr);
-                if (!PreventReleaseFromTrackerSourceOnDispose)
-                {
-                    ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
-                }
-            }
-        }
-
         private unsafe void DisposeTrackerSource()
         {
             if (ReferenceTrackerPtr != IntPtr.Zero)
@@ -380,6 +434,11 @@ namespace WinRT
         private protected virtual IntPtr GetThisPtrForCurrentContext()
         {
             return ThisPtrFromOriginalContext;
+        }
+
+        private protected virtual IntPtr GetContextToken()
+        {
+            return IntPtr.Zero;
         }
 
         public ObjectReferenceValue AsValue()
@@ -407,11 +466,7 @@ namespace WinRT
 #else
     public
 #endif
-    class ObjectReference<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        T> : IObjectReference
+    class ObjectReference<T> : IObjectReference
     {
         private readonly T _vftbl;
         public T Vftbl
@@ -423,18 +478,7 @@ namespace WinRT
             }
         }
 
-        public static ObjectReference<T> Attach(ref IntPtr thisPtr)
-        {
-            if (thisPtr == IntPtr.Zero)
-            {
-                return null;
-            }
-            var obj = new ObjectReference<T>(thisPtr);
-            thisPtr = IntPtr.Zero;
-            return obj;
-        }
-
-        ObjectReference(IntPtr thisPtr, T vftblT) :
+        private protected ObjectReference(IntPtr thisPtr, T vftblT) :
             base(thisPtr)
         {
             _vftbl = vftblT;
@@ -445,15 +489,102 @@ namespace WinRT
         {
         }
 
+        public static ObjectReference<T> Attach(ref IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
+            {
+                var obj = new ObjectReference<T>(thisPtr);
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
+            else
+            {
+                var obj = new ObjectReferenceWithContext<T>(
+                    thisPtr,
+                    Context.GetContextCallback(),
+                    Context.GetContextToken());
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
+        }
+
+        public static ObjectReference<T> Attach(ref IntPtr thisPtr, Guid iid)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
+            {
+                var obj = new ObjectReference<T>(thisPtr);
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
+            else
+            {
+                var obj = new ObjectReferenceWithContext<T>(
+                    thisPtr,
+                    Context.GetContextCallback(),
+                    Context.GetContextToken(),
+                    iid);
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
+        }
+
         public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
         {
             if (thisPtr == IntPtr.Zero)
             {
                 return null;
             }
+
             Marshal.AddRef(thisPtr);
-            var obj = new ObjectReference<T>(thisPtr, vftblT);
-            return obj;
+            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
+            {
+                var obj = new ObjectReference<T>(thisPtr, vftblT);
+                return obj;
+            }
+            else
+            {
+                var obj = new ObjectReferenceWithContext<T>(
+                    thisPtr,
+                    vftblT,
+                    Context.GetContextCallback(),
+                    Context.GetContextToken());
+                return obj;
+            }
+        }
+
+        public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT, Guid iid)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            Marshal.AddRef(thisPtr);
+            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
+            {
+                var obj = new ObjectReference<T>(thisPtr, vftblT);
+                return obj;
+            }
+            else
+            {
+                var obj = new ObjectReferenceWithContext<T>(
+                    thisPtr,
+                    vftblT,
+                    Context.GetContextCallback(),
+                    Context.GetContextToken(),
+                    iid);
+                return obj;
+            }
         }
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr)
@@ -466,50 +597,81 @@ namespace WinRT
             return FromAbi(thisPtr, vftblT);
         }
 
+        public static ObjectReference<T> FromAbi(IntPtr thisPtr, Guid iid)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+            var vftblT = GetVtable(thisPtr);
+            return FromAbi(thisPtr, vftblT, iid);
+        }
+
         private static unsafe T GetVtable(IntPtr thisPtr)
         {
-            var vftblPtr = Unsafe.AsRef<VftblPtr>(thisPtr.ToPointer());
-            T vftblT;
             // With our vtable types, the generic vtables will have System.Delegate fields
-            // and the non-generic types will have only void* fields.
-            // On .NET 5, we can use RuntimeHelpers.IsReferenceorContainsReferences
-            // to disambiguate between generic and non-generic vtables since it's a JIT-time constant.
-            // Since it is a JIT time constant, this function will be branchless on .NET 5.
+            // and the non-generic types will have only void* fields. On .NET 6+, we can use
+            // RuntimeHelpers.IsReferenceorContainsReferences to disambiguate between generic
+            // and non-generic vtables since it's a JIT-time constant. Projections for .NET 6+
+            // never use such vtables, so this path will just always throw. This also allows
+            // dropping the trimming annotations preserving all non public constructors.
+            // Since it is a JIT time constant, this function will be branchless on .NET 6+.
             // On .NET Standard 2.0, the IsReferenceOrContainsReferences method does not exist,
-            // so we instead fall back to typeof(T).IsGenericType, which sadly is not a JIT-time constant.
-#if !NET
-            if (typeof(T).IsGenericType)
-#else
+            // so we instead fall back to typeof(T).IsGenericType, which is not a JIT-time constant.
+#if NET
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            {
+                throw new NotSupportedException("Managed vtable types (ie. containing any reference types) are not supported.");
+            }
+#else
+            if (typeof(T).IsGenericType)
+            {
+                return (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
+            }
 #endif
-            {
-                vftblT = (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
-            }
-            else
-            {
-                vftblT = Unsafe.AsRef<T>(vftblPtr.Vftbl.ToPointer());
-            }
-            return vftblT;
+
+            // Blittable vtables can just be read directly from the input pointer
+            return Unsafe.Read<T>(*(void***)thisPtr);
         }
 
         private protected virtual T GetVftblForCurrentContext()
         {
             return _vftbl;
         }
+
+        internal static int TryAs(IObjectReference sourceRef, Guid iid, out ObjectReference<T> objRef)
+        {
+            objRef = null;
+
+            int hr = Marshal.QueryInterface(sourceRef.ThisPtr, ref iid, out IntPtr thatPtr);
+
+            if (hr >= 0)
+            {
+                if (sourceRef.IsAggregated)
+                {
+                    Marshal.Release(thatPtr);
+                }
+
+                sourceRef.AddRefFromTrackerSource();
+
+                objRef = ObjectReference<T>.Attach(ref thatPtr);
+                objRef.IsAggregated = sourceRef.IsAggregated;
+                objRef.PreventReleaseOnDispose = sourceRef.IsAggregated;
+                objRef.ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr;
+            }
+
+            return hr;
+        }
     }
 
-    internal sealed class ObjectReferenceWithContext<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        T> : ObjectReference<T>
+    internal sealed class ObjectReferenceWithContext<T> : ObjectReference<T>, IObjectReferenceWithContext
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
 
-        private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> __cachedContext;
-        private ConcurrentDictionary<IntPtr, ObjectReference<T>> CachedContext => __cachedContext ?? Make_CachedContext();
-        private ConcurrentDictionary<IntPtr, ObjectReference<T>> Make_CachedContext()
+        private volatile ConcurrentDictionary<IntPtr, IObjectReference> __cachedContext;
+        private ConcurrentDictionary<IntPtr, IObjectReference> CachedContext => __cachedContext ?? Make_CachedContext();
+        private ConcurrentDictionary<IntPtr, IObjectReference> Make_CachedContext()
         {
             global::System.Threading.Interlocked.CompareExchange(ref __cachedContext, new(), null);
             return __cachedContext;
@@ -520,7 +682,7 @@ namespace WinRT
         private volatile AgileReference __agileReference;
         private AgileReference AgileReference => _isAgileReferenceSet ? __agileReference : Make_AgileReference();
         private AgileReference Make_AgileReference()
-        { 
+        {
             Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
 
             // Set after CallInContext callback given callback can fail to occur.
@@ -536,7 +698,7 @@ namespace WinRT
         private readonly Guid _iid;
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken)
-            :base(thisPtr)
+            : base(thisPtr)
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
@@ -544,6 +706,19 @@ namespace WinRT
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : this(thisPtr, contextCallbackPtr, contextToken)
+        {
+            _iid = iid;
+        }
+
+        internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken)
+            : base(thisPtr, vftblT)
+        {
+            _contextCallbackPtr = contextCallbackPtr;
+            _contextToken = contextToken;
+        }
+
+        internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
+            : this(thisPtr, vftblT, contextCallbackPtr, contextToken)
         {
             _iid = iid;
         }
@@ -557,6 +732,11 @@ namespace WinRT
             }
 
             return cachedObjRef.ThisPtr;
+        }
+
+        private protected override IntPtr GetContextToken()
+        {
+            return this._contextToken;
         }
 
         private protected override T GetVftblForCurrentContext()
@@ -582,9 +762,15 @@ namespace WinRT
                 return null;
             }
 
-            return CachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
+            // We use a non-generic map of just <IntPtr, IObjectReference> values, to avoid all generic instantiations
+            // of ConcurrentDictionary<,> and transitively dependent types for every vtable type T, since it's not
+            // something we actually need. Because the cache is private and we're the only ones using it, we can
+            // just store the per-context agile references as IObjectReference values, and then cast them on return.
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
 
-            ObjectReference<T> CreateForCurrentContext(IntPtr _)
+            return Unsafe.As<ObjectReference<T>>(objectReference);
+
+            IObjectReference CreateForCurrentContext(IntPtr _)
             {
                 var agileReference = AgileReference;
                 // We may fail to switch context and thereby not get an agile reference.
@@ -637,34 +823,35 @@ namespace WinRT
             return objRef;
         }
 
-        public override unsafe int TryAs<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        U>(Guid iid, out ObjectReference<U> objRef)
+        internal static new int TryAs(IObjectReference sourceRef, Guid iid, out ObjectReference<T> objRef)
         {
             objRef = null;
 
-            IntPtr thatPtr = IntPtr.Zero;
-            int hr = Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr);
+            int hr = Marshal.QueryInterface(sourceRef.ThisPtr, ref iid, out IntPtr thatPtr);
+
             if (hr >= 0)
             {
-                if (IsAggregated)
+                if (sourceRef.IsAggregated)
                 {
                     Marshal.Release(thatPtr);
                 }
-                AddRefFromTrackerSource();
 
-                objRef = new ObjectReferenceWithContext<U>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
+                sourceRef.AddRefFromTrackerSource();
+
+                objRef = new ObjectReferenceWithContext<T>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
                 {
-                    IsAggregated = IsAggregated,
-                    PreventReleaseOnDispose = IsAggregated,
-                    ReferenceTrackerPtr = ReferenceTrackerPtr
+                    IsAggregated = sourceRef.IsAggregated,
+                    PreventReleaseOnDispose = sourceRef.IsAggregated,
+                    ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr
                 };
             }
 
             return hr;
         }
+    }
+
+    internal interface IObjectReferenceWithContext
+    {
     }
 
 #if EMBED

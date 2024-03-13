@@ -40,6 +40,14 @@ namespace ABI.Windows.Foundation
         internal static readonly Guid IReferenceArrayOfTimeSpan_IID = new(0xAD73197D, 0x2CFA, 0x57A6, 0x89, 0x93, 0x9F, 0xAC, 0x40, 0xFE, 0xB7, 0x91);
         internal static readonly Guid IReferenceArrayOfObject_IID = new(0x9CD7A84F, 0x0C80, 0x59C5, 0xB4, 0x4E, 0x97, 0x78, 0x41, 0xBB, 0x43, 0xD9);
         internal static readonly Guid IReferenceArrayOfType_IID = new(0xDA8457A7, 0xC2EB, 0x5DA1, 0x80, 0xBE, 0x71, 0x32, 0xA2, 0xE1, 0xBF, 0xA4);
+        internal static readonly Guid IReferenceArrayOfMatrix3x2_IID = new(0xa525d9ff, 0xc09b, 0x501a, 0xa7, 0x85, 0x4d, 0x1e, 0xd9, 0xe1, 0x02, 0xb8);
+        internal static readonly Guid IReferenceArrayOfMatrix4x4_IID = new(0xfc0d5a15, 0x8f9d, 0x5e8f, 0x88, 0x28, 0xae, 0xf2, 0xc2, 0xe2, 0x5b, 0xad);
+        internal static readonly Guid IReferenceArrayOfPlane_IID = new(0xf9cf7f7d, 0x5459, 0x5f98, 0x91, 0xb9, 0xf2, 0x63, 0x2a, 0x9e, 0xc2, 0x98);
+        internal static readonly Guid IReferenceArrayOfQuaternion_IID = new(0xe9ba76be, 0x2c31, 0x5e1d, 0x98, 0xa4, 0xeb, 0xdb, 0x62, 0x5a, 0xee, 0x93);
+        internal static readonly Guid IReferenceArrayOfVector2_IID = new(0x29df2178, 0xffdb, 0x563e, 0x88, 0xdb, 0x38, 0x69, 0xa0, 0x07, 0x30, 0x5e);
+        internal static readonly Guid IReferenceArrayOfVector3_IID = new(0xaa1a35fa, 0x0b4e, 0x5248, 0xbd, 0x79, 0xff, 0xd4, 0x7c, 0xfe, 0x40, 0x27);
+        internal static readonly Guid IReferenceArrayOfVector4_IID = new(0x68757250, 0x5849, 0x5772, 0x90, 0xe3, 0xaa, 0xdb, 0x4c, 0x97, 0x0b, 0xff);
+        internal static readonly Guid IReferenceArrayOfException_IID = new(0x401ae4cc, 0x4ab9, 0x5a8f, 0xb9, 0x93, 0xe3, 0x27, 0x90, 0x0c, 0x36, 0x4d);
     }
 
     internal static class BoxedArrayIReferenceArrayImpl<T>
@@ -110,7 +118,7 @@ namespace ABI.Windows.Foundation
             return wrapper.Value;
         }
 
-        internal static object GetValue(IInspectable inspectable)
+        public static object GetValue(IInspectable inspectable)
         {
             var array = new IReferenceArray<T>(inspectable.ObjRef);
             return array.Value;
@@ -144,9 +152,9 @@ namespace ABI.Windows.Foundation
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
+                var vftblPtr = *(void***)thisPtr;
+                var vftbl = (IntPtr*)vftblPtr;
+                IInspectableVftbl = *(IInspectable.Vftbl*)vftblPtr;
                 get_Value_0 = Marshal.GetDelegateForFunctionPointer<IReferenceArray_Delegates.get_Value_0>(vftbl[6]);
             }
         }

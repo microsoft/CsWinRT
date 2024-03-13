@@ -39,7 +39,7 @@ namespace ABI.System.Collections.Specialized
                 Invoke = (IntPtr)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_Invoke
 #endif
             };
-            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(NotifyCollectionChangedEventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
+            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(NotifyCollectionChangedEventHandler), sizeof(global::WinRT.Interop.IDelegateVftbl));
             Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
             AbiToProjectionVftablePtr = nativeVftbl;
 
@@ -70,8 +70,8 @@ namespace ABI.System.Collections.Specialized
             return new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke);
         }
 
-        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
+        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
         private sealed class NativeDelegateWrapper
 #else
         private sealed class NativeDelegateWrapper : IWinRTObject

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
@@ -190,8 +191,7 @@ namespace ABI.Windows.Foundation
         }
 
         /// <summary>
-        /// Unbox a value of a projected Windows.Foundation struct type
-        /// to a structurally equivalent type with the same name.
+        /// Unbox a value of a projected Windows.Foundation struct type.
         /// </summary>
         /// <typeparam name="T">The target type.</typeparam>
         /// <param name="value">The object to unbox.</param>
@@ -199,23 +199,13 @@ namespace ABI.Windows.Foundation
         private static T UnboxValue<T>(object value)
             where T : struct
         {
-            Type valueType = value.GetType();
-
-            if (valueType.FullName == typeof(T).FullName && Marshal.SizeOf(valueType) == Marshal.SizeOf<T>())
+            if (value.GetType() == typeof(T))
             {
-                return Unsafe.As<Boxed<T>>(value).Value;
+                return (T)value;
             }
 
             throw new InvalidCastException("", TYPE_E_TYPEMISMATCH);
         }
-
-#pragma warning disable CS0649
-        private sealed class Boxed<T>
-            where T : struct
-        {
-            public T Value;
-        }
-#pragma warning restore CS0649
 
         private static T[] UnboxArray<T>(object value)
             where T : struct
@@ -325,12 +315,46 @@ namespace ABI.Windows.Foundation
                 {
                     return (T)(object)guid.ToString("D", global::System.Globalization.CultureInfo.InvariantCulture);
                 }
+                else if (typeof(T) == typeof(byte))
+                {
+                    return (T)(object)Convert.ToByte(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(short))
+                {
+                    return (T)(object)Convert.ToInt16(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(ushort))
+                {
+                    return (T)(object)Convert.ToUInt16(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(int))
+                {
+                    return (T)(object)Convert.ToInt32(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(uint))
+                {
+                    return (T)(object)Convert.ToUInt32(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(long))
+                {
+                    return (T)(object)Convert.ToInt64(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(ulong))
+                {
+                    return (T)(object)Convert.ToUInt64(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(float))
+                {
+                    return (T)(object)Convert.ToSingle(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(double))
+                {
+                    return (T)(object)Convert.ToDouble(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
                 else
                 {
-                    if (NumericScalarTypes.TryGetValue(typeof(T), out _))
-                    {
-                        return (T)Convert.ChangeType(value, typeof(T), global::System.Globalization.CultureInfo.InvariantCulture);
-                    }
+                    Debug.Assert(!NumericScalarTypes.ContainsKey(typeof(T)));
+                    throw new InvalidCastException("", TYPE_E_TYPEMISMATCH);
                 }
             }
             catch (FormatException)
@@ -1257,7 +1281,9 @@ namespace ABI.Windows.Foundation
     internal unsafe interface IPropertyValue : global::Windows.Foundation.IPropertyValue
     {
         [Guid("4BD682DD-7554-40E9-9A9B-82654EDE7E62")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             internal void* _get_Type_0;

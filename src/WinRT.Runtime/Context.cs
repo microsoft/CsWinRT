@@ -3,22 +3,25 @@
 
 using System;
 using System.Runtime.InteropServices;
+using ABI.WinRT.Interop;
 using WinRT.Interop;
 
 namespace WinRT
 {
-    static partial class Context
+    internal static partial class Context
     {
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        private static extern unsafe int CoGetObjectContext(Guid* riid, IntPtr* ppv);
-
-        private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
+        public unsafe static IntPtr GetContextToken()
+        {
+            IntPtr contextToken;
+            Marshal.ThrowExceptionForHR(Platform.CoGetContextToken(&contextToken));
+            return contextToken;
+        }
 
         public static unsafe IntPtr GetContextCallback()
         {
-            Guid riid = ABI.WinRT.Interop.IContextCallback.IID;
+            Guid iid = IID.IID_IContextCallback;
             IntPtr contextCallbackPtr;
-            Marshal.ThrowExceptionForHR(CoGetObjectContext(&riid, &contextCallbackPtr));
+            Marshal.ThrowExceptionForHR(Platform.CoGetObjectContext(&iid, &contextCallbackPtr));
             return contextCallbackPtr;
         }
 
@@ -35,6 +38,9 @@ namespace WinRT
                 return;
             }
 
+#if NET && CsWinRT_LANG_11_FEATURES
+            IContextCallbackVftbl.ContextCallback(contextCallbackPtr, callback, onFailCallback);
+#else
             ComCallData data = default;
             var contextCallback = new ABI.WinRT.Interop.IContextCallback(ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.FromAbi(contextCallbackPtr));
 
@@ -44,12 +50,13 @@ namespace WinRT
                 {
                     callback();
                     return 0;
-                }, &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
+                }, &data, IID.IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
             } 
             catch(Exception)
             {
                 onFailCallback?.Invoke();
             }
+#endif
         }
 
         public static void DisposeContextCallback(IntPtr contextCallbackPtr)

@@ -17,29 +17,28 @@ namespace WinRT
 #endif
     static class TypeExtensions
     {
-        private readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
+        internal readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
 
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                            DynamicallyAccessedMemberTypes.NonPublicMethods |
                                             DynamicallyAccessedMemberTypes.PublicNestedTypes | 
                                             DynamicallyAccessedMemberTypes.PublicFields)]
+        [SuppressMessage("Trimming", "IL2073", Justification = "Matching trimming annotations are used at all callsites registering helper types present in the cache.")]
 #endif
         public static Type FindHelperType(this Type type)
         {
-            return HelperTypeCache.GetOrAdd(type,
 #if NET
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                                DynamicallyAccessedMemberTypes.NonPublicMethods |
-                                                DynamicallyAccessedMemberTypes.PublicNestedTypes | 
+                                                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                                                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-            (type) =>
+            static Type FindHelperTypeNoCache(Type type)
             {
                 if (typeof(Exception).IsAssignableFrom(type))
                 {
                     type = typeof(Exception);
                 }
+
                 Type customMapping = Projections.FindCustomHelperTypeMapping(type);
                 if (customMapping is not null)
                 {
@@ -52,8 +51,27 @@ namespace WinRT
                     return GetHelperTypeFromAttribute(helperTypeAtribute, type);
                 }
 
+                var authoringMetadaType = type.GetAuthoringMetadataType();
+                if (authoringMetadaType is not null)
+                {
+                    helperTypeAtribute = authoringMetadaType.GetCustomAttribute<WindowsRuntimeHelperTypeAttribute>();
+                    if (helperTypeAtribute is not null)
+                    {
+                        return GetHelperTypeFromAttribute(helperTypeAtribute, type);
+                    }
+                }
+#if NET
+                // Using AOT requires using updated projections, which would never let the code below
+                // be reached (as it's just a fallback path for legacy projections). So we can trim it.
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    return null;
+                }
+#endif
                 return FindHelperTypeFallback(type);
-            });
+            }
+
+            return HelperTypeCache.GetOrAdd(type, FindHelperTypeNoCache);
 
 #if NET
             [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
@@ -62,9 +80,18 @@ namespace WinRT
 #endif
             static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
             {
-                if (type.IsGenericType)
+                if (type.IsGenericType && !type.IsGenericTypeDefinition)
                 {
+#if NET
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        throw new NotSupportedException($"Cannot retrieve the helper type from generic type '{type}'.");
+                    }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     return helperTypeAtribute.HelperType.MakeGenericType(type.GetGenericArguments());
+#pragma warning restore IL3050
                 }
                 else
                 {
@@ -93,7 +120,6 @@ namespace WinRT
 
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | 
-                                            DynamicallyAccessedMemberTypes.NonPublicMethods |
                                             DynamicallyAccessedMemberTypes.PublicNestedTypes |
                                             DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
@@ -114,7 +140,7 @@ namespace WinRT
         }
 
 #if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         public static Type FindVftblType(
 #if NET
@@ -136,7 +162,9 @@ namespace WinRT
             }
             if (helperType.IsGenericType && vftblType is object)
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
+#pragma warning restore IL3050
             }
             return vftblType;
         }
@@ -152,25 +180,26 @@ namespace WinRT
 
         public static Type GetAbiType(this Type type)
         {
-            return type.GetHelperType().GetMethod("GetAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).ReturnType;
+            return type.GetHelperType().GetMethod("GetAbi", BindingFlags.Public | BindingFlags.Static).ReturnType;
         }
 
         public static Type GetMarshalerType(this Type type)
         {
-            return type.GetHelperType().GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).ReturnType;
+            return type.GetHelperType().GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.Static).ReturnType;
         }
 
         internal static Type GetMarshaler2Type(this Type type)
         {
             var helperType = type.GetHelperType();
-            var createMarshaler = helperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static) ??
-                helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            var createMarshaler =
+                helperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.Static) ??
+                helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.Static);
             return createMarshaler.ReturnType;
         }
 
         internal static Type GetMarshalerArrayType(this Type type)
         {
-            return type.GetHelperType().GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.ReturnType;
+            return type.GetHelperType().GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.Static)?.ReturnType;
         }
 
         public static bool IsDelegate(this Type type)
@@ -201,12 +230,18 @@ namespace WinRT
                 type == typeof(DateTimeOffset) ||
                 type == typeof(TimeSpan) ||
                 type.IsTypeOfType() ||
+                type.IsTypeOfException() ||
                 ((type.IsValueType || type.IsDelegate()) && Projections.IsTypeWindowsRuntimeType(type));
         }
 
         internal static bool IsTypeOfType(this Type type)
         {
             return typeof(Type).IsAssignableFrom(type);
+        }
+
+        internal static bool IsTypeOfException(this Type type)
+        {
+            return typeof(Exception).IsAssignableFrom(type);
         }
 
         public static Type GetRuntimeClassCCWType(this Type type)
@@ -238,13 +273,10 @@ namespace WinRT
                     {
                         return null;
                     }
-                    else
 #endif
-                    {
-                        // Fallback code path for back compat with previously generated projections
-                        // running without AOT.
-                        return GetAuthoringMetadataTypeFallback(type);
-                    }
+                    // Fallback code path for back compat with previously generated projections
+                    // running without AOT.
+                    return GetAuthoringMetadataTypeFallback(type);
                 });
         }
 

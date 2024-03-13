@@ -62,6 +62,11 @@
     <IntDir>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', '$(MSBuildProjectName)', 'obj'))</IntDir>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <!-- Hash algorithm for file checksums in debug info -->
+    <ChecksumAlgorithm>SHA256</ChecksumAlgorithm>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
     <LinkIncremental>true</LinkIncremental>
@@ -95,8 +100,22 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
+    <ClCompile Condition="'$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj'">
+        <ControlFlowGuard Condition="'$(Configuration)'=='Release'">Guard</ControlFlowGuard>
+        <!-- /Qspectre Specifies compiler generation of instructions to mitigate certain Spectre variant 1 security vulnerabilities. BinSkim asks for this. -->
+        <!-- /ZH:SHA_256 Hash algorithm for file checksums in debug info -->
+        <AdditionalOptions>%(AdditionalOptions) /Qspectre /ZH:SHA_256</AdditionalOptions>
+    </ClCompile>
     <Link>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+    </Link>
+    <Link Condition="'$(Configuration)'=='Release' and ('$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj')">
+      <!-- /Brepro Enables deterministic output from the compiler toolchain -->
+      <!-- /PDBALTPATH Stops pdb's basepath from appearing in the Debug Directories of the image header -->
+      <!-- /CETCOMPAT enables Control-flow Enforcement Technology (CET) Shadow Stack mitigation.
+           BinSkim asks for this. /CETCOMPAT does not support arm64. -->
+      <AdditionalOptions Condition="'$(Platform)' == 'arm64'">%(AdditionalOptions) /Brepro /PDBALTPATH:$(TargetName).pdb</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Platform)' != 'arm64'">%(AdditionalOptions) /Brepro /PDBALTPATH:$(TargetName).pdb /CETCOMPAT</AdditionalOptions>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>VERSION_NUMBER=\"$(VersionNumber)\";VERSION_COMMAS=$(VersionNumber.Replace('.', ','));FILE_DESCRIPTION=\"C#/WinRT v$(VersionString)\";%(PreprocessorDefinitions)</PreprocessorDefinitions>

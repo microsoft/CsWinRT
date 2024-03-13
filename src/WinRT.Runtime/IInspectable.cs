@@ -20,7 +20,9 @@ namespace WinRT
     }
 
     // IInspectable
-    [ObjectReferenceWrapper(nameof(_obj))]
+#if !NET
+    [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
 #if EMBED
     internal
@@ -67,7 +69,7 @@ namespace WinRT
                     _GetTrustLevel = (void*)(delegate* unmanaged<IntPtr, TrustLevel*, int>)&Do_Abi_GetTrustLevel
 #endif
                 };
-                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
+                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(sizeof(Vftbl));
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
             }
 

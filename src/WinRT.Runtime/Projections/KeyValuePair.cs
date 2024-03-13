@@ -24,6 +24,8 @@ namespace Windows.Foundation.Collections
 namespace ABI.System.Collections.Generic
 {
     using global::System;
+    using global::System.ComponentModel;
+    using global::System.Diagnostics.CodeAnalysis;
     using global::WinRT.Interop;
 
 #if EMBED
@@ -40,21 +42,46 @@ namespace ABI.System.Collections.Generic
         internal volatile unsafe static delegate*<IObjectReference, V> _GetValue;
         internal volatile static bool _RcwHelperInitialized;
 
+        static KeyValuePairMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.KeyValuePair<K, V>), typeof(global::ABI.System.Collections.Generic.KeyValuePair<K, V>));
+        }
+
         internal static unsafe bool EnsureInitialized()
         {
-            // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
-            // and due to that the function pointers haven't been initialized.
 #if NET
-            if (RuntimeFeature.IsDynamicCodeCompiled && !_RcwHelperInitialized)
-#else
-            if (!_RcwHelperInitialized)
-#endif
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            // Here we just always return true and rely on the AOT generator doing what's needed.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
-                var initRcwHelperFallback = (Func<bool>)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
-                    GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Func<bool>));
-                initRcwHelperFallback();
+                return true;
             }
+#endif
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+            InitRcwHelperFallbackIfNeeded();
+#pragma warning restore IL3050
+
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+            [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void InitRcwHelperFallbackIfNeeded()
+            {
+                // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
+                // and due to that the function pointers haven't been initialized.
+                if (!_RcwHelperInitialized)
+                {
+                    var initRcwHelperFallback = (Func<bool>)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                        GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
+                        CreateDelegate(typeof(Func<bool>));
+                    initRcwHelperFallback();
+                }
+            }
+
             return true;
         }
 
@@ -193,6 +220,9 @@ namespace ABI.System.Collections.Generic
 
         private static global::System.Delegate[] DelegateCache;
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         internal static unsafe void InitFallbackCCWVtable()
         {
             InitRcwHelperFallback();
@@ -206,23 +236,10 @@ namespace ABI.System.Collections.Generic
                 global::System.Delegate.CreateDelegate(get_Value_1_Type, typeof(KeyValuePairMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_get_Value_1), BindingFlags.NonPublic | BindingFlags.Static)),
             };
 
-#if NET
-            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 2));
-#else
-            var abiToProjectionVftablePtr = (IntPtr)Marshal.AllocCoTaskMem((sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 2));
-#endif
-            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache[0]);
-            ((IntPtr*)abiToProjectionVftablePtr)[7] = Marshal.GetFunctionPointerForDelegate(DelegateCache[1]);
-
-            if (!KeyValuePairMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
-            {
-#if NET
-                NativeMemory.Free((void*)abiToProjectionVftablePtr);
-#else
-                Marshal.FreeCoTaskMem(abiToProjectionVftablePtr);
-#endif
-            }
+            InitCcw(
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[0]),
+                (delegate* unmanaged[Stdcall]<IntPtr, VAbi*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[1])
+            );
         }
 
         private static unsafe int Do_Abi_get_Key_0(IntPtr thisPtr, KAbi* __return_value__)
@@ -364,13 +381,34 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static KeyValuePair()
         {
-            if (KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
+#if NET
+            if (RuntimeFeature.IsDynamicCodeCompiled)
+#endif
             {
-                // Handle the compat scenario where the source generator wasn't used or IDIC was used.
-                var initFallbackCCWVtable = (Action)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
-                    GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Action));
-                initFallbackCCWVtable();
+                // Simple invocation guarded by a direct runtime feature check to help the linker.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+                InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
+
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void InitFallbackCCWVTableIfNeeded()
+                {
+                    if (KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
+                    {
+                        // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                        var initFallbackCCWVtable = (Action)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                            CreateDelegate(typeof(Action));
+                        initFallbackCCWVtable();
+                    }
+                }
             }
 
             AbiToProjectionVftablePtr = KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr;
@@ -414,6 +452,11 @@ namespace ABI.System.Collections.Generic
 
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public A As<A>() => _obj.AsType<A>();
         public KeyValuePair(IObjectReference obj) : this(obj.As<IUnknownVftbl>(PIID)) { }
         public KeyValuePair(ObjectReference<IUnknownVftbl> obj)

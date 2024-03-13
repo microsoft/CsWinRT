@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 
@@ -15,7 +16,27 @@ namespace WinRT
     class AgileReference : IDisposable
     {
         private readonly static Guid CLSID_StdGlobalInterfaceTable = new(0x00000323, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
-        private readonly static Lazy<IGlobalInterfaceTable> Git = new Lazy<IGlobalInterfaceTable>(() => GetGitTable());
+        private static readonly object _lock = new();
+        private static volatile IGlobalInterfaceTable _git;
+
+        // Simple singleton lazy-initialization scheme (and saving the Lazy<T> size)
+        internal static IGlobalInterfaceTable Git
+        {
+            get
+            {
+                return _git ?? Git_Slow();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static IGlobalInterfaceTable Git_Slow()
+                {
+                    lock (_lock)
+                    {
+                        return _git ??= GetGitTable();
+                    }
+                }
+            }
+        }
+
         private readonly IObjectReference _agileReference;
         private readonly IntPtr _cookie;
         private bool disposed;
@@ -50,7 +71,7 @@ namespace WinRT
             }
             catch (TypeLoadException)
             {
-                _cookie = Git.Value.RegisterInterfaceInGlobal(thisPtr, iid);
+                _cookie = Git.RegisterInterfaceInGlobal(thisPtr, iid);
             }
             finally
             {
@@ -59,9 +80,9 @@ namespace WinRT
         }
 
 
-        public IObjectReference Get() => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve(_agileReference, IUnknownVftbl.IID) : Git.Value?.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID);
+        public IObjectReference Get() => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve(_agileReference, IUnknownVftbl.IID) : Git.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID);
 
-        internal ObjectReference<T> Get<T>(Guid iid) => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve<T>(_agileReference, iid) : Git.Value?.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID)?.As<T>(iid);
+        internal ObjectReference<T> Get<T>(Guid iid) => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve<T>(_agileReference, iid) : Git.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID)?.As<T>(iid);
 
         protected virtual void Dispose(bool disposing)
         {
@@ -71,7 +92,7 @@ namespace WinRT
                 {
                     try
                     {
-                        Git.Value.RevokeInterfaceFromGlobal(_cookie);
+                        Git.RevokeInterfaceFromGlobal(_cookie);
                     }
                     catch(ArgumentException)
                     {
@@ -96,7 +117,8 @@ namespace WinRT
                     1 /*CLSCTX_INPROC_SERVER*/,
                     &gitIid,
                     &gitPtr));
-                return ABI.WinRT.Interop.IGlobalInterfaceTable.FromAbi(gitPtr).AsType<ABI.WinRT.Interop.IGlobalInterfaceTable>();
+
+                return new ABI.WinRT.Interop.IGlobalInterfaceTable(ABI.WinRT.Interop.IGlobalInterfaceTable.FromAbi(gitPtr));
             }
             finally
             {

@@ -72,9 +72,6 @@
       <Filter>strings</Filter>
     </None>
     <None Include="packages.config" />
-    <None Include="strings\WinRT_Interop.cs">
-      <Filter>strings</Filter>
-    </None>
     <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
     </None>

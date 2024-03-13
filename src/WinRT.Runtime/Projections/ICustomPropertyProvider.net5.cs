@@ -63,7 +63,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     get_CanRead_7 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_CanRead_7
 
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 8);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 8);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -302,7 +302,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 get_Type_3 = (delegate* unmanaged<IntPtr, global::ABI.System.Type*, int>)&Do_Abi_get_Type_3
 
             };
-            var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedCustomPropertyProviderVftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
+            var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedCustomPropertyProviderVftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 4);
             Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }

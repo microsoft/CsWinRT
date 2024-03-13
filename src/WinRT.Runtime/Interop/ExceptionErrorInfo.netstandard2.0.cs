@@ -41,9 +41,6 @@ namespace WinRT.Interop
         string GetReference();
     }
 
-#if NET
-    [WinRTExposedType(typeof(ManagedExceptionErrorInfoTypeDetails))]
-#endif
     internal sealed class ManagedExceptionErrorInfo : IErrorInfo, ISupportErrorInfo
     {
         private readonly Exception _exception;
@@ -73,28 +70,6 @@ namespace WinRT.Interop
 
         public string GetHelpFileContent() => string.Empty;
     }
-
-#if NET
-    internal sealed class ManagedExceptionErrorInfoTypeDetails : IWinRTExposedTypeDetails
-    {
-        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
-        {
-            return new ComWrappers.ComInterfaceEntry[]
-            {
-                new ComWrappers.ComInterfaceEntry
-                {
-                    IID = ABI.WinRT.Interop.IErrorInfo.IID,
-                    Vtable = ABI.WinRT.Interop.IErrorInfo.Vftbl.AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
-                {
-                    IID = ABI.WinRT.Interop.ISupportErrorInfo.IID,
-                    Vtable = ABI.WinRT.Interop.ISupportErrorInfo.Vftbl.AbiToProjectionVftablePtr
-                }
-            };
-        }
-    }
-#endif
 }
 
 #pragma warning disable CS0649
@@ -126,39 +101,26 @@ namespace ABI.WinRT.Interop
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if !NET
             public delegate int GetGuidDelegate(IntPtr thisPtr, Guid* guid);
             public delegate int GetBstrDelegate(IntPtr thisPtr, IntPtr* bstr);
             private static readonly Delegate[] DelegateCache = new Delegate[5];
-#endif
 
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-#if !NET
                     _GetGuid_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new GetGuidDelegate(Do_Abi_GetGuid_0)).ToPointer(),
                     _GetSource_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new GetBstrDelegate(Do_Abi_GetSource_1)).ToPointer(),
                     _GetDescription_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new GetBstrDelegate(Do_Abi_GetDescription_2)).ToPointer(),
                     _GetHelpFile_3 = Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new GetBstrDelegate(Do_Abi_GetHelpFile_3)).ToPointer(),
-                    _GetHelpFileContent_4 = Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new GetBstrDelegate(Do_Abi_GetHelpFileContent_4)).ToPointer(),
-#else
-                    _GetGuid_0 = (delegate* unmanaged<IntPtr, Guid*, int>)&Do_Abi_GetGuid_0,
-                    _GetSource_1 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetSource_1,
-                    _GetDescription_2 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetDescription_2,
-                    _GetHelpFile_3 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetHelpFile_3,
-                    _GetHelpFileContent_4 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetHelpFileContent_4
-#endif
+                    _GetHelpFileContent_4 = Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new GetBstrDelegate(Do_Abi_GetHelpFileContent_4)).ToPointer()
                 };
-                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
+                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(sizeof(Vftbl));
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if NET
-            [UnmanagedCallersOnly]
-#endif
             private static int Do_Abi_GetGuid_0(IntPtr thisPtr, Guid* guid)
             {
                 try
@@ -173,9 +135,6 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
 
-#if NET
-            [UnmanagedCallersOnly]
-#endif
             private static int Do_Abi_GetSource_1(IntPtr thisPtr, IntPtr* source)
             {
                 *source = IntPtr.Zero;
@@ -194,9 +153,6 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
 
-#if NET
-            [UnmanagedCallersOnly]
-#endif
             private static int Do_Abi_GetDescription_2(IntPtr thisPtr, IntPtr* description)
             {
                 *description = IntPtr.Zero;
@@ -215,9 +171,6 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
 
-#if NET
-            [UnmanagedCallersOnly]
-#endif
             private static int Do_Abi_GetHelpFile_3(IntPtr thisPtr, IntPtr* helpFile)
             {
                 *helpFile = IntPtr.Zero;
@@ -235,10 +188,7 @@ namespace ABI.WinRT.Interop
                 }
                 return 0;
             }
-
-#if NET
-            [UnmanagedCallersOnly]
-#endif
+            
             private static int Do_Abi_GetHelpFileContent_4(IntPtr thisPtr, IntPtr* helpFileContent)
             {
                 *helpFileContent = IntPtr.Zero;
@@ -394,28 +344,21 @@ namespace ABI.WinRT.Interop
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
-#if !NET
+
             public delegate int _InterfaceSupportsErrorInfo(IntPtr thisPtr, Guid* riid);
             private static readonly _InterfaceSupportsErrorInfo DelegateCache;
-#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-#if !NET
                     _InterfaceSupportsErrorInfo_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache = Do_Abi_InterfaceSupportsErrorInfo_0).ToPointer()
-#else
-                    _InterfaceSupportsErrorInfo_0 = (delegate* unmanaged<IntPtr, Guid*, int>)&Do_Abi_InterfaceSupportsErrorInfo_0
-#endif
                 };
-                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
+                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(sizeof(Vftbl));
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
-#if NET
-            [UnmanagedCallersOnly]
-#endif
+
             private static int Do_Abi_InterfaceSupportsErrorInfo_0(IntPtr thisPtr, Guid* guid)
             {
                 try

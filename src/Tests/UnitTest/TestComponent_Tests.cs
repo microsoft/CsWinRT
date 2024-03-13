@@ -835,6 +835,7 @@ namespace UnitTest
             });
         }
 
+#if NET
         [Fact]
         public void Collections_ReadOnly_Dictionary_Call()
         {
@@ -844,6 +845,7 @@ namespace UnitTest
                 return new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(b));
             });
         }
+#endif
 
         [Fact]
         public void Collections_List_Call()
@@ -1153,6 +1155,7 @@ namespace UnitTest
             Box_type(arr4, Tests.Box21);
         }
 
+#if NET
         [Fact]
         public void Fast_Abi_Simple()
         {
@@ -1198,6 +1201,7 @@ namespace UnitTest
             sv.ObjectProperty = new List<int> { 1, 2, 3 };
             Assert.Equal(3, ((List<int>)sv.ObjectProperty).Count);
         }
+#endif
 
         // Nota Bene: this test case must always remain the final one
         [Fact]

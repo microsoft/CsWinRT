@@ -22,7 +22,9 @@ namespace Windows.Foundation
 
 namespace ABI.Windows.Foundation
 {
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("00000035-0000-0000-c000-000000000046")]
     internal class IActivationFactory : global::Windows.Foundation.IActivationFactory
     {

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.UI.Xaml.Interop;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -47,7 +46,14 @@ namespace ABI.Windows.Foundation.Collections
 
         public unsafe static IEnumerator<T> First(IObjectReference obj)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _First != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return _First(obj);
+            }
+
+            if (_First != null)
             {
                 return _First(obj);
             }
@@ -204,6 +210,7 @@ namespace System.Collections.Generic
 namespace ABI.System.Collections.Generic
 {
     using global::System;
+    using global::System.Diagnostics.CodeAnalysis;
     using global::System.Runtime.CompilerServices;
 
 #if EMBED
@@ -213,6 +220,11 @@ namespace ABI.System.Collections.Generic
 #endif
     static class IEnumerableMethods<T>
     {
+        static IEnumerableMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerable<T>), typeof(global::ABI.System.Collections.Generic.IEnumerable<T>));
+        }
+
         public static global::System.Collections.Generic.IEnumerator<T> GetEnumerator(IObjectReference obj)
         {
             var first = ABI.Windows.Foundation.Collections.IIterableMethods<T>.First(obj);
@@ -287,6 +299,9 @@ namespace ABI.System.Collections.Generic
                 return false;
             }
 
+            // Register generic helper types referenced in CCW.
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerator<T>), typeof(global::ABI.System.Collections.Generic.IEnumerator<T>));
+
             return true;
         }
 
@@ -295,15 +310,7 @@ namespace ABI.System.Collections.Generic
         internal static unsafe void InitFallbackCCWVtable()
         {
             DelegateCache = new IEnumerable_Delegates.First_0_Abi(Do_Abi_First_0);
-
-            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 1));
-            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache);
-
-            if (!IEnumerableMethods<T>.TryInitCCWVtable(abiToProjectionVftablePtr))
-            {
-                NativeMemory.Free((void*)abiToProjectionVftablePtr);
-            }
+            InitCcw((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache));
         }
 
         private static unsafe int Do_Abi_First_0(IntPtr thisPtr, IntPtr* __return_value__)
@@ -345,7 +352,9 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable<T>));
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         internal sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterable<T>
+#pragma warning restore CA2257
         {
             private readonly IEnumerable<T> m_enumerable;
 
@@ -357,13 +366,32 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static IEnumerable()
         {
-            if (IEnumerableMethods<T>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
             {
-                // Handle the compat scenario where the source generator wasn't used or IDIC was used.
-                var initFallbackCCWVtable = (Action)typeof(IEnumerableMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
-                    GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Action));
-                initFallbackCCWVtable();
+                // Simple invocation guarded by a direct runtime feature check to help the linker.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+                InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
+
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void InitFallbackCCWVTableIfNeeded()
+                {
+                    if (IEnumerableMethods<T>.AbiToProjectionVftablePtr == default)
+                    {
+                        // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                        var initFallbackCCWVtable = (Action)typeof(IEnumerableMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                            CreateDelegate(typeof(Action));
+                        initFallbackCCWVtable();
+                    }
+                }
             }
 
             AbiToProjectionVftablePtr = IEnumerableMethods<T>.AbiToProjectionVftablePtr;
@@ -372,7 +400,9 @@ namespace ABI.System.Collections.Generic
         // This is left here for backwards compat purposes where older generated
         // projections can be using FindVftblType and using this to cast.
         [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public unsafe struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
@@ -432,7 +462,14 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe uint GetMany(IObjectReference obj, ref T[] items)
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled || _GetMany != null)
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return _GetMany(obj, items);
+            }
+
+            if (_GetMany != null)
             {
                 return _GetMany(obj, items);
             }
@@ -482,14 +519,37 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IEnumeratorMethods()
         {
-            // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
-            // and due to that the function pointers haven't been initialized.
-            if (RuntimeFeature.IsDynamicCodeCompiled && !IIteratorMethods<T>._RcwHelperInitialized)
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerator<T>), typeof(global::ABI.System.Collections.Generic.IEnumerator<T>));
+
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
-                var initRcwHelperFallback = (Func<bool>)typeof(IEnumeratorMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
-                    GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Func<bool>));
-                initRcwHelperFallback();
+                return;
+            }
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+            InitRcwHelperFallbackIfNeeded();
+#pragma warning restore IL3050
+
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+            [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void InitRcwHelperFallbackIfNeeded()
+            {
+                // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
+                // and due to that the function pointers haven't been initialized.
+                if (!IIteratorMethods<T>._RcwHelperInitialized)
+                {
+                    var initRcwHelperFallback = (Func<bool>)typeof(IEnumeratorMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                        GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
+                        CreateDelegate(typeof(Func<bool>));
+                    initRcwHelperFallback();
+                }
             }
         }
 
@@ -619,6 +679,9 @@ namespace ABI.System.Collections.Generic
 
         private static global::System.Delegate[] DelegateCache;
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         internal static unsafe void InitFallbackCCWVtable()
         {
             Type get_Current_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(TAbi*), typeof(int) });
@@ -631,17 +694,12 @@ namespace ABI.System.Collections.Generic
                 new IEnumerator_Delegates.GetMany_3_Abi(Do_Abi_GetMany_3)
             };
 
-            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 4));
-            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache[0]);
-            ((IntPtr*)abiToProjectionVftablePtr)[7] = Marshal.GetFunctionPointerForDelegate(DelegateCache[1]);
-            ((IntPtr*)abiToProjectionVftablePtr)[8] = Marshal.GetFunctionPointerForDelegate(DelegateCache[2]);
-            ((IntPtr*)abiToProjectionVftablePtr)[9] = Marshal.GetFunctionPointerForDelegate(DelegateCache[3]);
-
-            if (!IEnumeratorMethods<T>.TryInitCCWVtable(abiToProjectionVftablePtr))
-            {
-                NativeMemory.Free((void*)abiToProjectionVftablePtr);
-            }
+            InitCcw(
+                (delegate* unmanaged[Stdcall]<IntPtr, TAbi*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[0]),
+                (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[1]),
+                (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[2]),
+                (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[3])
+            );
         }
 
         private static unsafe int Do_Abi_MoveNext_2(IntPtr thisPtr, byte* __return_value__)
@@ -907,7 +965,9 @@ namespace ABI.System.Collections.Generic
         // In IEnumerator<> scenarios, we use this as a helper for the implementation and don't actually use it to
         // create a CCW.
         [global::WinRT.WinRTExposedType(typeof(IBindableIteratorTypeDetails))]
-        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator, global::Windows.UI.Xaml.Interop.IBindableIterator
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
+        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator
+#pragma warning restore CA2257
         {
             private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
             private bool m_firstItem = true;
@@ -1012,13 +1072,32 @@ namespace ABI.System.Collections.Generic
         public static readonly IntPtr AbiToProjectionVftablePtr;
         static IEnumerator()
         {
-            if (RuntimeFeature.IsDynamicCodeCompiled && IEnumeratorMethods<T>.AbiToProjectionVftablePtr == default)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
             {
-                // Handle the compat scenario where the source generator wasn't used or IDIC was used.
-                var initFallbackCCWVtable = (Action)typeof(IEnumeratorMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
-                    GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Action));
-                initFallbackCCWVtable();
+                // Simple invocation guarded by a direct runtime feature check to help the linker.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+                InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
+
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void InitFallbackCCWVTableIfNeeded()
+                {
+                    if (IEnumeratorMethods<T>.AbiToProjectionVftablePtr == default)
+                    {
+                        // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                        var initFallbackCCWVtable = (Action)typeof(IEnumeratorMethods<,>).MakeGenericType(typeof(T), Marshaler<T>.AbiType).
+                            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                            CreateDelegate(typeof(Action));
+                        initFallbackCCWVtable();
+                    }
+                }
             }
 
             AbiToProjectionVftablePtr = IEnumeratorMethods<T>.AbiToProjectionVftablePtr;
@@ -1027,7 +1106,9 @@ namespace ABI.System.Collections.Generic
         // This is left here for backwards compat purposes where older generated
         // projections can be using FindVftblType and using this to cast.
         [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public unsafe struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 

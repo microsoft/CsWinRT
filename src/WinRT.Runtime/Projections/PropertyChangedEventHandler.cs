@@ -38,7 +38,7 @@ namespace ABI.System.ComponentModel
                 Invoke = (IntPtr)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_Invoke
 #endif
             };
-            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(PropertyChangedEventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
+            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(PropertyChangedEventHandler), sizeof(global::WinRT.Interop.IDelegateVftbl));
             Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
             AbiToProjectionVftablePtr = nativeVftbl;
             IID = Projections.UiXamlModeSetting == Projections.UiXamlMode.WindowsUiXaml
@@ -68,8 +68,8 @@ namespace ABI.System.ComponentModel
             return new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke);
         }
 
-        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
+        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
         private sealed class NativeDelegateWrapper
 #else
         private sealed class NativeDelegateWrapper : IWinRTObject

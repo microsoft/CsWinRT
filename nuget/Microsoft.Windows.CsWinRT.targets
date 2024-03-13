@@ -18,10 +18,30 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess>
     <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' == '' and $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">true</CsWinRTAotOptimizerEnabled>
     <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' != 'true'">false</CsWinRTAotOptimizerEnabled>
+
+    <!--
+      If the AOT optimizer is enabled, and we're publishing with NativeAOT, automatically set CsWinRTAotExportsEnabled as well.
+      Only do this if the property is not already set by the user, so we respect any existing preference.
+    -->
+    <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' == '' and '$(CsWinRTAotOptimizerEnabled)' == 'true' and '$(PublishAot)' == 'true'">true</CsWinRTAotExportsEnabled>
+    <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">false</CsWinRTAotExportsEnabled>
+
+    <!--
+      These properties are defined in this property group and not in the 'CsWinRTGenerateProjection'
+      target, because they are also needed in authoring scenarios (which will not run that target).
+    -->
+    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
+    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 6">net6.0</CsWinRTExeTFM>
+    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 7">net7.0</CsWinRTExeTFM>
+    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">net8.0</CsWinRTExeTFM>
+    <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
   </PropertyGroup>
 
   <ItemGroup>
     <CompilerVisibleProperty Include="CsWinRTAotOptimizerEnabled" />
+    <CompilerVisibleProperty Include="CsWinRTAotExportsEnabled" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
@@ -63,8 +83,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.Extension)' == '.winmd'" />
       <ReferencePathWithRefAssemblies Remove="@(CsWinRTRemovedReferences)" 
         Condition="'%(CsWinRTRemovedReferences.Filename)%(CsWinRTRemovedReferences.Extension)' == '%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)'" />
-      <!--Do not publish projection source winmds -->
+      <!--Do not publish projection source winmds, but do include implementation dlls -->
       <ReferenceCopyLocalPaths Remove="@(CsWinRTRemovedReferences)" />
+      <ReferenceCopyLocalPaths Include="@(CsWinRTRemovedReferences->'%(RootDir)%(Directory)%(DestinationSubDirectory)%(Implementation)')" 
+                               Condition="'%(CsWinRTRemovedReferences.Implementation)' != '' AND Exists('%(CsWinRTRemovedReferences.RootDir)%(CsWinRTRemovedReferences.Directory)%(CsWinRTRemovedReferences.DestinationSubDirectory)%(CsWinRTRemovedReferences.Implementation)')" />
       <!--Remove winmd references from deps.json to prevent CLR failing unit test execution-->
       <ReferenceDependencyPaths Remove="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'"/>
     </ItemGroup>
@@ -96,8 +118,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
       <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
       <CsWinRTCommandPrivateProjection>"$(CsWinRTExe)" %40"$(CsWinRTResponseFilePrivateProjection)"</CsWinRTCommandPrivateProjection>
-      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
-      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
     </PropertyGroup>
 
@@ -151,9 +171,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
       <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedProjection>
       <CsWinRTEmbeddedEnums Condition="'$(CsWinRTEmbeddedPublicEnums)' == 'true'">-public_enums</CsWinRTEmbeddedEnums>
-      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
-      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) > 5">net6.0</CsWinRTExeTFM>
-      <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
 
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
@@ -230,5 +247,34 @@ $(CsWinRTInternalProjection)
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
+
+  <!-- Default values for all custom CsWinRT runtime feature switches -->
+  <PropertyGroup>
+    <CsWinRTEnableDynamicObjectsSupport Condition="'$(CsWinRTEnableDynamicObjectsSupport)' == ''">true</CsWinRTEnableDynamicObjectsSupport>
+    <CsWinRTUseExceptionResourceKeys Condition="'$(CsWinRTUseExceptionResourceKeys)' == ''">false</CsWinRTUseExceptionResourceKeys>
+    <CsWinRTEnableDefaultCustomTypeMappings Condition="'$(CsWinRTEnableDefaultCustomTypeMappings)' == ''">true</CsWinRTEnableDefaultCustomTypeMappings>
+  </PropertyGroup>
+
+  <!--
+    Configuration for the feature switches (to support IL trimming).
+    See the 'ILLink.Substitutions.xml' file for more details on that.
+  -->
+  <ItemGroup>
+
+    <!-- CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT"
+                                    Value="$(CsWinRTEnableDynamicObjectsSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_USE_EXCEPTION_RESOURCE_KEYS switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS"
+                                    Value="$(CsWinRTUseExceptionResourceKeys)"
+                                    Trim="true" />
+                                  
+    <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS"
+                                    Value="$(CsWinRTEnableDefaultCustomTypeMappings)"
+                                    Trim="true" />
+  </ItemGroup>
 
 </Project>

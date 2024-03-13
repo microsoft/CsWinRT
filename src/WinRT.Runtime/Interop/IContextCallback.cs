@@ -6,40 +6,83 @@ using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
 
-#pragma warning disable 0169 // warning CS0169: The field '...' is never used
-#pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
+#pragma warning disable CS8500, CS0169
 
-namespace WinRT.Interop
+namespace ABI.WinRT.Interop
 {
-    struct ComCallData
+    internal struct ComCallData
     {
         public int dwDispid;
         public int dwReserved;
         public IntPtr pUserDefined;
     }
 
-    unsafe delegate int PFNCONTEXTCALL(ComCallData* data);
-
-    [Guid("000001da-0000-0000-C000-000000000046")]
-    unsafe interface IContextCallback
+#if NET && CsWinRT_LANG_11_FEATURES
+    internal unsafe struct IContextCallbackVftbl
     {
-        // The pUnk parameter is intentionally excluded here
-        // since it is required to always be null.
-        void ContextCallback(
-            PFNCONTEXTCALL pfnCallback,
-            ComCallData* pParam,
-            Guid riid,
-            int iMethod);
+        private global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+        private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4;
+
+        public static void ContextCallback(IntPtr contextCallbackPtr, Action callback, Action onFailCallback)
+        {
+            ComCallData comCallData;
+            comCallData.dwDispid = 0;
+            comCallData.dwReserved = 0;
+
+            // Copy the callback into a local to make sure it really is a local that
+            // gets marked as address taken, rather than something that could potentially
+            // be inlined into the caller into some state machine or anything else not safe.
+            Action callbackAddressTaken = callback;
+
+            // We can just store a pointer to the callback to invoke in the context,
+            // so we don't need to allocate another closure or anything. The callback
+            // will be kept alive automatically, because 'comCallData' is address exposed.
+            // We only do this if we can use C# 11, and if we're on modern .NET, to be safe.
+            // In the callback below, we can then just retrieve the Action again to invoke it.
+            comCallData.pUserDefined = (IntPtr)(void*)&callbackAddressTaken;
+            
+            [UnmanagedCallersOnly]
+            static int InvokeCallback(ComCallData* comCallData)
+            {
+                try
+                {
+                    // Dereference the pointer to Action and invoke it (see notes above).
+                    // Once again, the pointer is not to the Action object, but just to the
+                    // local *reference* to the object, which is pinned (as it's a local).
+                    // That means that there's no pinning to worry about either.
+                    ((Action*)comCallData->pUserDefined)->Invoke();
+
+                    return 0; // S_OK
+                }
+                catch (Exception e)
+                {
+                    return e.HResult;
+                }
+            }
+
+            Guid iid = IID.IID_ICallbackWithNoReentrancyToApplicationSTA;
+
+            int hresult = (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback_4(
+                contextCallbackPtr,
+                (IntPtr)(delegate* unmanaged<ComCallData*, int>)&InvokeCallback,
+                &comCallData,
+                &iid,
+                /* iMethod */ 5,
+                IntPtr.Zero);
+
+            if (hresult < 0)
+            {
+                onFailCallback?.Invoke();
+            }
+        }
     }
-}
+#else
+    internal unsafe delegate int PFNCONTEXTCALL(ComCallData* data);
 
-
-namespace ABI.WinRT.Interop
-{
     [Guid("000001da-0000-0000-C000-000000000046")]
-    internal sealed unsafe class IContextCallback : global::WinRT.Interop.IContextCallback
+    internal sealed unsafe class IContextCallback
     {
-        internal static readonly Guid IID = InterfaceIIDs.IContextCallback_IID;
+        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IContextCallback;
 
         [Guid("000001da-0000-0000-C000-000000000046")]
         public struct Vftbl
@@ -66,13 +109,7 @@ namespace ABI.WinRT.Interop
             _obj = obj;
         }
 
-        private unsafe struct ContextCallData
-        {
-            public IntPtr delegateHandle;
-            public ComCallData* userData;
-        }
-
-        public unsafe void ContextCallback(global::WinRT.Interop.PFNCONTEXTCALL pfnCallback, ComCallData* pParam, Guid riid, int iMethod)
+        public unsafe void ContextCallback(PFNCONTEXTCALL pfnCallback, ComCallData* pParam, Guid riid, int iMethod)
         {
             var callback = Marshal.GetFunctionPointerForDelegate(pfnCallback);
             var result = _obj.Vftbl.ContextCallback_4(ThisPtr, callback, pParam, &riid, iMethod, IntPtr.Zero);
@@ -80,4 +117,5 @@ namespace ABI.WinRT.Interop
             Marshal.ThrowExceptionForHR(result);
         }
     }
+#endif
 }

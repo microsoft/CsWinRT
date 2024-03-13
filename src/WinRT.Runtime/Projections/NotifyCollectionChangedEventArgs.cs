@@ -10,7 +10,9 @@ using WinRT.Interop;
 
 namespace ABI.Microsoft.UI.Xaml.Interop
 {
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
     [WuxMuxProjectedType(wuxIID: "4cf68d33-e3f2-4964-b85e-945b4f7e2f21", muxIID: "DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
     internal sealed unsafe class INotifyCollectionChangedEventArgs
@@ -38,8 +40,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         private readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
         public INotifyCollectionChangedEventArgs(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         internal INotifyCollectionChangedEventArgs(ObjectReference<Vftbl> obj)
         {
@@ -117,7 +117,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         ObjectReferenceValue CreateInstanceWithAllParameters(global::System.Collections.Specialized.NotifyCollectionChangedAction action, global::System.Collections.IList newItems, global::System.Collections.IList oldItems, int newIndex, int oldIndex);
     }
 
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("5108EBA4-4892-5A20-8374-A96815E0FD27")]
     internal sealed unsafe class MUXNotifyCollectionChangedEventArgsRuntimeClassFactory : IWinRTNotifyCollectionChangedEventArgsRuntimeClassFactory
     {
@@ -209,8 +211,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         public static implicit operator WUXNotifyCollectionChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WUXNotifyCollectionChangedEventArgsRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
         public WUXNotifyCollectionChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         public WUXNotifyCollectionChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {

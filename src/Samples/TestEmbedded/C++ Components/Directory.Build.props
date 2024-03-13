@@ -1,2 +1,21 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <SDLCheck>true</SDLCheck>
+      <ControlFlowGuard Condition="'$(Configuration)'=='Release'">Guard</ControlFlowGuard>
+      <!-- /Qspectre Specifies compiler generation of instructions to mitigate certain Spectre variant 1 security vulnerabilities. BinSkim asks for this. -->
+      <!-- /ZH:SHA_256 Hash algorithm for file checksums in debug info -->
+      <AdditionalOptions>%(AdditionalOptions) /Qspectre /ZH:SHA_256</AdditionalOptions>
+    </ClCompile>
+    <Link Condition="'$(Configuration)'=='Release'">
+      <!-- /Brepro Enables deterministic output from the compiler toolchain -->
+      <!-- /PDBALTPATH Stops pdb's basepath from appearing in the Debug Directories of the image header -->
+      <!-- /CETCOMPAT enables Control-flow Enforcement Technology (CET) Shadow Stack mitigation.
+           BinSkim asks for this. /CETCOMPAT does not support arm64. -->
+      <AdditionalOptions Condition="'$(Platform)' == 'arm64'">%(AdditionalOptions) /Brepro /PDBALTPATH:$(TargetName).pdb</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Platform)' != 'arm64'">%(AdditionalOptions) /Brepro /PDBALTPATH:$(TargetName).pdb /CETCOMPAT</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+
 </Project>
