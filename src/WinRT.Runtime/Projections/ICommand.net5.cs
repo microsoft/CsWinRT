@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using ABI.System.ComponentModel;
+using ABI.WinRT.Interop;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -60,11 +61,9 @@ namespace ABI.System.Windows.Input
         }
         private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource> CanExecuteChanged => _CanExecuteChanged ?? MakeCanExecuteChangedTable();
 
-        public static unsafe (global::System.Action<global::System.EventHandler>,
-                              global::System.Action<global::System.EventHandler>)
-            Get_CanExecuteChanged(IObjectReference obj, object thisObj)
+        public static unsafe EventHandlerEventSource Get_CanExecuteChanged(IObjectReference obj, object thisObj)
         {
-            var eventSource = CanExecuteChanged.GetValue(thisObj, (key) =>
+            return CanExecuteChanged.GetValue(thisObj, (key) =>
             {
                 var ThisPtr = obj.ThisPtr;
 
@@ -72,7 +71,6 @@ namespace ABI.System.Windows.Input
                     (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
                     (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
             });
-            return eventSource.EventActions;
         }
     }
 
@@ -226,11 +224,11 @@ namespace ABI.System.Windows.Input
         {
             add
             {
-                _CanExecuteChanged((IWinRTObject)this).Item1(value);
+                _CanExecuteChanged((IWinRTObject)this).Subscribe(value);
             }
             remove
             {
-                _CanExecuteChanged((IWinRTObject)this).Item2(value);
+                _CanExecuteChanged((IWinRTObject)this).Unsubscribe(value);
             }
         }
     }

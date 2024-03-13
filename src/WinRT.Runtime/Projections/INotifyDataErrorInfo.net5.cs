@@ -53,29 +53,26 @@ namespace ABI.System.ComponentModel
             }
         }
 
-        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>> _ErrorsChanged;
-        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>> MakeErrorsChangedTable()
+        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>> _ErrorsChanged;
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>> MakeErrorsChangedTable()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _ErrorsChanged, new(), null);
             return _ErrorsChanged;
         }
-        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>> ErrorsChanged => _ErrorsChanged ?? MakeErrorsChangedTable();
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>> ErrorsChanged => _ErrorsChanged ?? MakeErrorsChangedTable();
 
 
-        public static unsafe (global::System.Action<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>, 
-                              global::System.Action<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>) 
-            Get_ErrorsChanged(IObjectReference obj, object thisObj)
+        public static unsafe EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs> Get_ErrorsChanged(IObjectReference obj, object thisObj)
         {
-            var eventSource = ErrorsChanged.GetValue(thisObj, (key) =>
+            return ErrorsChanged.GetValue(thisObj, (key) =>
             {
                 var ThisPtr = obj.ThisPtr;
 
-                return new EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>(obj,
+                return new EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>(obj,
                     (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[7],
                     (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[8],
                     0);
             });
-            return eventSource.EventActions;
         }
     }
 
@@ -226,8 +223,8 @@ namespace ABI.System.ComponentModel
 
         event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged
         {
-            add => _ErrorsChanged((IWinRTObject)this).Item1(value);
-            remove => _ErrorsChanged((IWinRTObject)this).Item2(value);
+            add => _ErrorsChanged((IWinRTObject)this).Subscribe(value);
+            remove => _ErrorsChanged((IWinRTObject)this).Unsubscribe(value);
         }
     }
     
