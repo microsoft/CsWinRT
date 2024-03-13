@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ABI.WinRT.Interop;
 using WinRT;
 using WinRT.Interop;
 

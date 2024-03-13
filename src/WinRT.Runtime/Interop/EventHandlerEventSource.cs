@@ -3,9 +3,13 @@
 
 using System;
 using System.ComponentModel;
+using WinRT;
+using WinRT.Interop;
 
-namespace WinRT.Interop
+namespace ABI.WinRT.Interop
 {
+    using EventRegistrationToken = global::WinRT.EventRegistrationToken;
+
     /// <summary>
     /// An <see cref="EventSource{TDelegate}"/> implementation for <see cref="EventHandler"/>.
     /// </summary>

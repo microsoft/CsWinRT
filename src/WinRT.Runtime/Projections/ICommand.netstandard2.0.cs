@@ -5,6 +5,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ABI.WinRT.Interop;
 using WinRT;
 using WinRT.Interop;
 

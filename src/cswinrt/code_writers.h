@@ -3784,7 +3784,7 @@ Vtable = %.AbiToProjectionVftablePtr
                 if ((eventType.TypeNamespace() == "Windows.Foundation" || eventType.TypeNamespace() == "System") && eventType.TypeName() == "EventHandler`1")
                 {
                     auto [add, remove] = get_event_methods(evt);
-                    w.write(R"( new global::WinRT.Interop.EventHandlerEventSource%(_obj,
+                    w.write(R"( new global::ABI.WinRT.Interop.EventHandlerEventSource%(_obj,
 %,
 %,
 %))",

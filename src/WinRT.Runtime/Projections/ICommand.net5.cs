@@ -204,7 +204,7 @@ namespace ABI.System.Windows.Input
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static global::WinRT.Interop.EventHandlerEventSource _CanExecuteChanged(IWinRTObject _this)
+        private static global::ABI.WinRT.Interop.EventHandlerEventSource _CanExecuteChanged(IWinRTObject _this)
         {
             var _obj = _this.GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle);
             return ICommandMethods.Get_CanExecuteChanged(_obj, _this);
