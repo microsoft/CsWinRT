@@ -14,5 +14,10 @@
         /// Message for marshalling or generic code requiring <see cref="System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute"/>.
         /// </summary>
         public const string MarshallingOrGenericInstantiationsRequiresDynamicCode = "The necessary marshalling code or generic instantiations might not be available.";
+
+        /// <summary>
+        /// Message for suppressing trim warnings for <see cref="System.Type.MakeGenericType"/> calls with ABI types as type arguments for <see langword="unmanaged"/> constrained type parameters.
+        /// </summary>
+        public const string AbiTypesNeverHaveConstructors = "All ABI types never have a constructor that would need to be accessed via reflection.";
     }
 }

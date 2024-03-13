@@ -261,16 +261,28 @@ namespace ABI.System.Collections.Generic
                 return;
             }
 
-            // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
-            // and due to that the function pointers haven't been initialized.
-            if (!IMapMethods<K, V>._RcwHelperInitialized)
-            {
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                var initRcwHelperFallback = (Func<bool>)typeof(IDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
-                    GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Func<bool>));
+            InitRcwHelperFallbackIfNeeded();
 #pragma warning restore IL3050
-                initRcwHelperFallback();
+
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+            [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void InitRcwHelperFallbackIfNeeded()
+            {
+                // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
+                // and due to that the function pointers haven't been initialized.
+                if (!IMapMethods<K, V>._RcwHelperInitialized)
+                {
+                    var initRcwHelperFallback = (Func<bool>)typeof(IDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                        GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
+                        CreateDelegate(typeof(Func<bool>));
+                    initRcwHelperFallback();
+                }
             }
         }
 
@@ -1217,6 +1229,7 @@ namespace ABI.System.Collections.Generic
         }
 
         public static readonly IntPtr AbiToProjectionVftablePtr;
+        
         static IDictionary()
         {
             if (RuntimeFeature.IsDynamicCodeCompiled)
@@ -1229,6 +1242,9 @@ namespace ABI.System.Collections.Generic
 
 #if NET8_0_OR_GREATER
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
