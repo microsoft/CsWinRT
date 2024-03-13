@@ -169,7 +169,7 @@ namespace ABI.System.Collections.Generic
             }
 
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-            InitFallbackCCWVTableIfNeeded();
+            InitRcwHelperFallbackIfNeeded();
 #pragma warning restore IL3050
 
 #if NET8_0_OR_GREATER
@@ -179,7 +179,7 @@ namespace ABI.System.Collections.Generic
             [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static void InitFallbackCCWVTableIfNeeded()
+            static void InitRcwHelperFallbackIfNeeded()
             {
                 // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
                 // and due to that the function pointers haven't been initialized.
