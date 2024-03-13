@@ -1980,14 +1980,12 @@ private static IObjectReference %
     get
     { 
         var factory = __%;
-        if (factory != null && factory.IsInCurrentContext)
+        if (factory is not null && factory.IsInCurrentContext)
         {
             return factory;
         }
-        else
-        {
-            return __% = ActivationFactory.Get("%.%");
-        }
+
+        return __% = ActivationFactory.Get("%.%");
     }
 }
 )",
@@ -2012,14 +2010,12 @@ private static ObjectReference<%> %
     get
     { 
         var factory = __%;
-        if (factory != null && factory.IsInCurrentContext)
+        if (factory is not null && factory.IsInCurrentContext)
         {
             return factory;
         }
-        else
-        {
-            return __% = ActivationFactory.Get<%>("%.%", %.IID);
-        }
+
+        return __% = ActivationFactory.Get<%>("%.%", %.IID);
     }
 }
 )",
@@ -2044,14 +2040,12 @@ private static IObjectReference %
     get
     { 
         var factory = __%;
-        if (factory != null && factory.IsInCurrentContext)
+        if (factory is not null && factory.IsInCurrentContext)
         {
             return factory;
         }
-        else
-        {
-            return __% = ActivationFactory.Get("%.%", %.IID);
-        }
+
+        return __% = ActivationFactory.Get("%.%", %.IID);
     }
 }
 )",
@@ -3838,16 +3832,14 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
     get
     {
         var table = _%_;
-        if (table != null)
+        if (table is not null)
         {
             return table;
         }
-        else
-        {
-            %
-            global::System.Threading.Interlocked.CompareExchange(ref _%_, new(), null);
-            return _%_;
-        }
+
+        %
+        global::System.Threading.Interlocked.CompareExchange(ref _%_, new(), null);
+        return _%_;
     }
 }
 )",
@@ -5215,7 +5207,7 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
                     else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                     {
                         w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled || _% != null)
+if (!RuntimeFeature.IsDynamicCodeCompiled || _% is not null)
 {
 % _%(_genericObj%%);
 }
@@ -5290,7 +5282,7 @@ else
                         else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
                             w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled || _% != null)
+if (!RuntimeFeature.IsDynamicCodeCompiled || _% is not null)
 {
 return _%(_genericObj);
 }
@@ -5340,7 +5332,7 @@ else
                         if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
                             w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled || _% != null)
+if (!RuntimeFeature.IsDynamicCodeCompiled || _% is not null)
 {
 _%(_genericObj, value);
 }
@@ -6557,15 +6549,13 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, g
     get
     {
         var tokenTables = _%_tokenTables;
-        if (tokenTables != null)
+        if (tokenTables is not null)
         {
             return tokenTables;
         }
-        else
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref _%_tokenTables, new(), null);
-            return _%_tokenTables;
-        }
+
+        global::System.Threading.Interlocked.CompareExchange(ref _%_tokenTables, new(), null);
+        return _%_tokenTables;
     }
 }
 )",
@@ -6625,7 +6615,7 @@ private static unsafe int Do_Abi_%%
 try
 {
 var __this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
-if(__this != null && _%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
+if(__this is not null && _%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
 {
 __this.% -= __handler;
 }
@@ -6659,15 +6649,13 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, g
     get
     {
         var tokenTables = _%_tokenTables;
-        if (tokenTables != null)
+        if (tokenTables is not null)
         {
             return tokenTables;
         }
-        else
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref _%_tokenTables, new(), null);
-            return _%_tokenTables;
-        }
+
+        global::System.Threading.Interlocked.CompareExchange(ref _%_tokenTables, new(), null);
+        return _%_tokenTables;
     }
 })",
             type_name,
@@ -6698,7 +6686,7 @@ return token;
 public static void Do_Abi_%(IntPtr thisPtr, global::WinRT.EventRegistrationToken token)
 {
 var __this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
-if(__this != null && _%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(token, out var __handler))
+if(__this is not null && _%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(token, out var __handler))
 {
 __this.% -= __handler;
 }
@@ -7262,7 +7250,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 {
 %
 internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr)%
-public static implicit operator %(IObjectReference obj) => (obj != null) ? new %(obj) : null;
+public static implicit operator %(IObjectReference obj) => (obj is not null) ? new %(obj) : null;
 protected readonly ObjectReference<Vftbl> _obj;
 public IObjectReference ObjRef { get => _obj; }
 public IntPtr ThisPtr => _obj.ThisPtr;
@@ -7385,15 +7373,13 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
     get
     {
         var cache = _queryInterfaceCache;
-        if (cache != null)
+        if (cache is not null)
         {
             return cache;
         }
-        else
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new(), null);
-            return _queryInterfaceCache;
-        }
+
+        global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new(), null);
+        return _queryInterfaceCache;
     }
 }
 private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
@@ -7402,15 +7388,13 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
     get
     {
         var typeData = _additionalTypeData;
-        if (typeData != null)
+        if (typeData is not null)
         {
             return typeData;
         }
-        else
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new(), null);
-            return _additionalTypeData;
-        }
+
+        global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new(), null);
+        return _additionalTypeData;
     }
 }
 %
@@ -7445,15 +7429,13 @@ private IObjectReference %
     get
     {
         var objRef = __%;
-        if (objRef != null)
+        if (objRef is not null)
         {
             return objRef;
         }
-        else
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(%.IID), null);
-            return __%;
-        }
+
+        global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(%.IID), null);
+        return __%;
     }
 }
 )",
@@ -8630,15 +8612,13 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
     get
     {
         var cache = _queryInterfaceCache;
-        if (cache != null)
+        if (cache is not null)
         {
             return cache;
         }
-        else
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new(), null);
-            return _queryInterfaceCache;
-        }
+
+        global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new(), null);
+        return _queryInterfaceCache;
     }
 }
 private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
@@ -8647,15 +8627,13 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
     get
     {
         var typeData = _additionalTypeData;
-        if (typeData != null)
+        if (typeData is not null)
         {
             return typeData;
         }
-        else
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new(), null);
-            return _additionalTypeData;
-        }
+
+        global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new(), null);
+        return _additionalTypeData;
     }
 }
 )");
@@ -8924,15 +8902,13 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
     get
     {
         var cache = _queryInterfaceCache;
-        if (cache != null)
+        if (cache is not null)
         {
             return cache;
         }
-        else
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new(), null);
-            return _queryInterfaceCache;
-        }
+
+        global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new(), null);
+        return _queryInterfaceCache;
     }
 }
 private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
@@ -8941,15 +8917,13 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
     get
     {
         var typeData = _additionalTypeData;
-        if (typeData != null)
+        if (typeData is not null)
         {
             return typeData;
         }
-        else
-        {
-            global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new(), null);
-            return _additionalTypeData;
-        }
+
+        global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new(), null);
+        return _additionalTypeData;
     }
 }
 #endif
@@ -9164,7 +9138,7 @@ Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof
                 if (!settings.netstandard_compat && have_generic_params)
                 {
                     w.write(R"(
-if (%._Invoke != null || !RuntimeFeature.IsDynamicCodeCompiled)
+if (%._Invoke is not null || !RuntimeFeature.IsDynamicCodeCompiled)
 {
 %._Invoke(_nativeDelegate, %);
 }
