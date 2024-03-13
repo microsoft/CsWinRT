@@ -61,7 +61,7 @@ namespace ABI.System.Windows.Input
         }
         private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource> CanExecuteChanged => _CanExecuteChanged ?? MakeCanExecuteChangedTable();
 
-        public static unsafe EventHandlerEventSource Get_CanExecuteChanged(IObjectReference obj, object thisObj)
+        public static unsafe EventHandlerEventSource Get_CanExecuteChanged2(IObjectReference obj, object thisObj)
         {
             return CanExecuteChanged.GetValue(thisObj, (key) =>
             {
@@ -205,7 +205,7 @@ namespace ABI.System.Windows.Input
         private static global::ABI.WinRT.Interop.EventHandlerEventSource _CanExecuteChanged(IWinRTObject _this)
         {
             var _obj = _this.GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle);
-            return ICommandMethods.Get_CanExecuteChanged(_obj, _this);
+            return ICommandMethods.Get_CanExecuteChanged2(_obj, _this);
         }
 
         unsafe bool global::System.Windows.Input.ICommand.CanExecute(object parameter)

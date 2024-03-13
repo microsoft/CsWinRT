@@ -26,7 +26,7 @@ namespace ABI.System.ComponentModel
         }
         private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, PropertyChangedEventSource> PropertyChanged => _PropertyChanged ?? MakePropertyChangedTable();
 
-        public static unsafe global::WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> Get_PropertyChanged(IObjectReference obj, object thisObj)
+        public static unsafe global::WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> Get_PropertyChanged2(IObjectReference obj, object thisObj)
         {
             return PropertyChanged.GetValue(thisObj, (key) =>
             {
@@ -124,7 +124,7 @@ namespace ABI.System.ComponentModel
         private static global::WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> _PropertyChanged(IWinRTObject _this)
         {
             var _obj = _this.GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
-            return INotifyPropertyChangedMethods.Get_PropertyChanged(_obj, _this);
+            return INotifyPropertyChangedMethods.Get_PropertyChanged2(_obj, _this);
         }
 
         event global::System.ComponentModel.PropertyChangedEventHandler global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged

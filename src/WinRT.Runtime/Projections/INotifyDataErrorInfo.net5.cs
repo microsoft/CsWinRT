@@ -62,7 +62,7 @@ namespace ABI.System.ComponentModel
         private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>> ErrorsChanged => _ErrorsChanged ?? MakeErrorsChangedTable();
 
 
-        public static unsafe EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs> Get_ErrorsChanged(IObjectReference obj, object thisObj)
+        public static unsafe EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs> Get_ErrorsChanged2(IObjectReference obj, object thisObj)
         {
             return ErrorsChanged.GetValue(thisObj, (key) =>
             {
@@ -203,7 +203,7 @@ namespace ABI.System.ComponentModel
         private static EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs> _ErrorsChanged(IWinRTObject _this)
         {
             var _obj = _this.GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle);
-            return INotifyDataErrorInfoMethods.Get_ErrorsChanged(_obj, _this);
+            return INotifyDataErrorInfoMethods.Get_ErrorsChanged2(_obj, _this);
         }
 
         unsafe global::System.Collections.IEnumerable global::System.ComponentModel.INotifyDataErrorInfo.GetErrors(string propertyName)

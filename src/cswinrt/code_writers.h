@@ -1055,7 +1055,7 @@ namespace cswinrt
 
     void write_abi_event_source_static_method_call(writer& w, type_semantics const& iface, Event const& evt, bool isSubscribeCall, std::string const& targetObjRef, bool is_static_event = false)
     {
-        w.write("%.Get_%(%, %).%(value)",
+        w.write("%.Get_%2(%, %).%(value)",
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             evt.Name(),
             targetObjRef,
@@ -3046,8 +3046,8 @@ remove => %.ErrorsChanged -= value;
 
 %event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> %ErrorsChanged
 {
-add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged(%, this).Subscribe(value);
-remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged(%, this).Unsubscribe(value);
+add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged2(%, this).Subscribe(value);
+remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.Get_ErrorsChanged2(%, this).Unsubscribe(value);
 }
 %bool %HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.get_HasErrors(%); }
 )",
@@ -4925,7 +4925,7 @@ bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is
         for (auto&& evt : type.EventList())
         {
             auto semantics = get_type_semantics(evt.EventType());
-            auto event_source = w.write_temp(settings.netstandard_compat ? "_%" : "Get_%()", evt.Name());
+            auto event_source = w.write_temp(settings.netstandard_compat ? "_%" : "Get_%2()", evt.Name());
             w.write(R"(
 %event % %%
 {
@@ -5061,7 +5061,7 @@ return %;
         for (auto&& evt : type.EventList())
         {
             auto semantics = get_type_semantics(evt.EventType());
-            auto event_source = w.write_temp(settings.netstandard_compat ? "_%" : "Get_%()", evt.Name());
+            auto event_source = w.write_temp(settings.netstandard_compat ? "_%" : "Get_%2()", evt.Name());
             w.write(R"(
 %event % %%
 {
@@ -5365,7 +5365,9 @@ else
         for (auto&& evt : iface.EventList())
         {
                     w.write(R"(%
-% static unsafe global::WinRT.Interop.EventSource<%> Get_%(% %, object _thisObj)
+%
+
+% static unsafe global::WinRT.Interop.EventSource<%> Get_%2(% %, object _thisObj)
 {
 return _%.GetValue(_thisObj, (key) =>
 {
@@ -5375,6 +5377,17 @@ return %;
 }
 )",
                         bind<write_event_source_table>(evt),
+                        isExclusiveInterface ? "" : w.write_temp(R"(public static unsafe (Action<%>, Action<%>) Get_%(% %, object _thisObj)
+{
+var eventSource = Get_%2(%, _thisObj);
+return (eventSource.Subscribe, eventSource.Unsubscribe);
+})", bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+     bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+     evt.Name(),
+     settings.netstandard_compat ? w.write_temp("ObjectReference<%.Vftbl>", bind<write_type_name>(iface, typedef_name_type::ABI, true)) : "IObjectReference",
+    generic_type ? "_genericObj" : "_obj",
+    evt.Name(),
+    generic_type ? "_genericObj" : "_obj"),
                         isExclusiveInterface ? "internal" : "public",
                         bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
                         evt.Name(),
