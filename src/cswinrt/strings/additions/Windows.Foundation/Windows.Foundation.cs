@@ -25,8 +25,10 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // TODO: Handle the scenario where the 'IAsyncAction' is actually a task (i.e. originated from native code
-            // but projected into an IAsyncAction)
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task task)
+            {
+                return task;
+            }
 
             switch (source.Status)
             {
@@ -63,8 +65,10 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // TODO: Handle the scenario where the 'IAsyncOperation' is actually a task (i.e. originated from native code
-            // but projected into an IAsyncOperation)
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task<TResult> task)
+            {
+                return task;
+            }
 
             switch (source.Status)
             {
@@ -101,8 +105,10 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // TODO: Handle the scenario where the 'IAsyncActionWithProgress' is actually a task (i.e. originated from native code
-            // but projected into an IAsyncActionWithProgress)
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task task)
+            {
+                return task;
+            }
 
             switch (source.Status)
             {
@@ -160,8 +166,10 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // TODO: Handle the scenario where the 'IAsyncOperationWithProgress' is actually a task (i.e. originated from native code
-            // but projected into an IAsyncOperationWithProgress)
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task<TResult> task)
+            {
+                return task;
+            }
 
             switch (source.Status)
             {
