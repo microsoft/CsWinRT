@@ -413,7 +413,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source.TryGetUnderlyingData(out dataArr, out dataOffs))
             {
                 Debug.Assert(source.Capacity < int.MaxValue);
-                return new MemoryStream(dataArr, dataOffs, (int)source.Capacity, true);
+                return new WindowsRuntimeBufferMemoryStream(source, dataArr, dataOffs);
             }
 
             unsafe
@@ -449,10 +449,80 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }
 
-#endregion Extensions for direct by-offset access to buffer data elements
+        #endregion Extensions for direct by-offset access to buffer data elements
 
 
-#region Private plumbing
+        #region Private plumbing
+
+        private sealed class WindowsRuntimeBufferMemoryStream : MemoryStream
+        {
+            private readonly IBuffer _sourceBuffer;
+
+            internal WindowsRuntimeBufferMemoryStream(IBuffer sourceBuffer, byte[] dataArr, int dataOffs)
+                : base(dataArr, dataOffs, (int)sourceBuffer.Capacity, true)
+            {
+                _sourceBuffer = sourceBuffer;
+
+                SetLength((long)sourceBuffer.Length);
+            }
+
+            public override void SetLength(long value)
+            {
+                base.SetLength(value);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                base.Write(buffer, offset, count);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+
+#if NET
+            public override void Write(ReadOnlySpan<byte> buffer)
+            {
+                base.Write(buffer);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+#endif
+
+            public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                await base.WriteAsync(buffer, offset, count, cancellationToken);
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+
+#if NET
+            public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+            {
+                await base.WriteAsync(buffer, cancellationToken);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+#endif
+
+            public override void WriteByte(byte value)
+            {
+                base.WriteByte(value);
+
+                // Length is limited by Capacity which should be a valid value.
+                // Therefore this cast is safe.
+                _sourceBuffer.Length = (uint)Length;
+            }
+        }  // class WindowsRuntimeBufferMemoryStream
 
         private sealed class WindowsRuntimeBufferUnmanagedMemoryStream : UnmanagedMemoryStream
         {
