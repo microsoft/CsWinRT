@@ -528,7 +528,8 @@ namespace Windows.ApplicationModel.DataTransfer
         internal static unsafe DataTransferManager GetForWindow(global::WinRT.IObjectReference _obj, global::System.IntPtr appWindow, in global::System.Guid riid)
         {
             global::System.IntPtr thisPtr = _obj.ThisPtr;
-            global::System.IntPtr ptr = new global::System.IntPtr();
+            global::System.IntPtr ptr = default;
+
 
             try
             {
