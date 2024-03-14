@@ -167,7 +167,7 @@ namespace UnitTest
         public void TestDataTransferManager()
         {
             Assert.Throws<COMException>(() => DataTransferManagerInterop.GetForWindow(new IntPtr(0)));
-            DataTransferManagerInterop.ShowShareUIForWindow(new IntPtr(0));
+            Assert.Throws<COMException>(() => DataTransferManagerInterop.ShowShareUIForWindow(new IntPtr(0)));
         }
     }
 }
