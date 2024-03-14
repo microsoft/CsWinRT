@@ -35,7 +35,7 @@ namespace UnitTest
         [Fact]
         public void TestHWND()
         {
-            var comInterop = Class.ComInterop.As<IComInteropGenerated>();
+            var comInterop = (IComInteropGenerated)(object)Class.ComInterop;
             if (System.Environment.Is64BitProcess)
             {
                 var hwnd = new IntPtr(0x0123456789ABCDEF);
