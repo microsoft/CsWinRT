@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using BenchmarkComponent;
 using BenchmarkDotNet.Attributes;
 
@@ -34,9 +35,9 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public async Task YieldReturn()
+        public async Task<int> YieldReturn()
         {
-            return await instance.Return(5);
+            return await instance.YieldReturn(5);
         }
     }
 }
