@@ -1815,6 +1815,31 @@ namespace UnitTest
             Assert.Equal(TaskStatus.Canceled, task.Status);
         }
 
+        [Fact]
+        public void TestAsyncActionRoundTrip()
+        {
+            var task = InvokeDoitAsync().AsAsyncAction().AsTask();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+
+            task = InvokeDoitAsync().AsAsyncAction().AsTask();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = InvokeDoitAsync().AsAsyncAction().AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
         async Task InvokeDoitAsyncWithProgress()
         {
             await TestObject.DoitAsyncWithProgress();
@@ -1881,6 +1906,33 @@ namespace UnitTest
 
             var src = new CancellationTokenSource();
             task = TestObject.AddAsync(0, 0).AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+
+        [Fact]
+        public void TestAsyncOperationRoundTrip()
+        {
+            var task = InvokeAddAsync(42, 8).AsAsyncOperation().AsTask();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.Equal(50, task.Result);
+
+            task = InvokeAddAsync(0, 0).AsAsyncOperation().AsTask();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = InvokeAddAsync(0, 0).AsAsyncOperation().AsTask(src.Token);
             Assert.False(task.Wait(25));
             src.Cancel();
             e = Assert.Throws<AggregateException>(() => task.Wait(1000));
