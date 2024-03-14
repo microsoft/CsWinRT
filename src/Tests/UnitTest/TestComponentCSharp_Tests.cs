@@ -271,12 +271,70 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestBufferAsStreamWithEmptyBuffer1()
+        public void TestBufferAsStreamUsingAsBufferWithOffset()
+        {
+            var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+            var buffer = arr.AsBuffer(1, 2);
+            Stream stream = buffer.AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 2);
+
+            stream.Write(new byte[] { 0x05, 0x06 });
+            Assert.True(stream.Length == 2);
+            Assert.True(buffer.Length == 2);
+
+            Assert.Equal((byte)0x05, arr[1]);
+            Assert.Equal((byte)0x06, arr[2]);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamUsingAsBufferWithOffsetAndCapacity()
+        {
+            var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+            var buffer = arr.AsBuffer(1, 2, 3);
+            Stream stream = buffer.AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 2);
+
+            stream.Write(new byte[] { 0x05, 0x06, 0x07 });
+            Assert.True(stream.Length == 3);
+            Assert.True(buffer.Length == 3);
+
+            Assert.Equal((byte)0x05, arr[1]);
+            Assert.Equal((byte)0x06, arr[2]);
+            Assert.Equal((byte)0x07, arr[3]);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamWithEmptyBuffer()
         {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             Stream stream = buffer.AsStream();
             Assert.True(stream != null);
             Assert.True(stream.Length == 0);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamRead()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            Stream stream = arr.AsBuffer().AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 2);
+            int byte1 = stream.ReadByte();
+            Assert.Equal(0x01, byte1);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamWrite()
+        {
+            var buffer = new Windows.Storage.Streams.Buffer(2);
+            Stream stream = buffer.AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 0);
+            stream.WriteByte(0x01);
+            Assert.True(stream.Length == 1);
+            Assert.True(buffer.Length == 1);
         }
 
         [Fact]
