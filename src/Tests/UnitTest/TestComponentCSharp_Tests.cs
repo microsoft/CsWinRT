@@ -3193,6 +3193,8 @@ namespace UnitTest
         }
 
         [Guid("59C7966B-AE52-5283-AD7F-A1B9E9678ADD")]
+        [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
+        [global::WinRT.WindowsRuntimeHelperType(typeof(ICustomGuidHelperStatics))]
         interface ICustomGuidHelperStatics
         {
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -3215,7 +3217,7 @@ namespace UnitTest
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.ICustomGuidHelperStatics>(thisPtr).CreateNewGuid();
+                    __result = global::WinRT.ComWrappersSupport.FindObject<ICustomGuidHelperStatics>(thisPtr).CreateNewGuid();
                     *result = __result;
 
                 }
@@ -3236,7 +3238,7 @@ namespace UnitTest
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.ICustomGuidHelperStatics>(thisPtr).Equals(*target, *value);
+                    __result = global::WinRT.ComWrappersSupport.FindObject<ICustomGuidHelperStatics>(thisPtr).Equals(*target, *value);
                     *result = (byte)(__result ? 1 : 0);
 
                 }
@@ -3257,7 +3259,7 @@ namespace UnitTest
 
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.ICustomGuidHelperStatics>(thisPtr).Empty;
+                    __value = global::WinRT.ComWrappersSupport.FindObject<ICustomGuidHelperStatics>(thisPtr).Empty;
                     *value = __value;
 
                 }
