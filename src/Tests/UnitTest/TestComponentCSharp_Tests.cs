@@ -3192,7 +3192,89 @@ namespace UnitTest
             Assert.Null(exception);
         }
 
-        class CustomGuidHelper : IGuidHelperStatics
+        [Guid("59C7966B-AE52-5283-AD7F-A1B9E9678ADD")]
+        interface ICustomGuidHelperStatics
+        {
+            public static readonly IntPtr AbiToProjectionVftablePtr;
+            static unsafe ICustomGuidHelperStatics()
+            {
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(ICustomGuidHelperStatics), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 3);
+                *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+                ((delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_CreateNewGuid_0;
+                ((delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>*)AbiToProjectionVftablePtr)[7] = &Do_Abi_get_Empty_1;
+                ((delegate* unmanaged[Stdcall]<IntPtr, Guid*, Guid*, byte*, int>*)AbiToProjectionVftablePtr)[8] = &Do_Abi_Equals_2;
+            }
+
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+            private static unsafe int Do_Abi_CreateNewGuid_0(IntPtr thisPtr, Guid* result)
+            {
+
+                Guid __result = default;
+
+                *result = default;
+
+                try
+                {
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.ICustomGuidHelperStatics>(thisPtr).CreateNewGuid();
+                    *result = __result;
+
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+            private static unsafe int Do_Abi_Equals_2(IntPtr thisPtr, Guid* target, Guid* value, byte* result)
+            {
+
+                bool __result = default;
+
+                *result = default;
+
+                try
+                {
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.ICustomGuidHelperStatics>(thisPtr).Equals(*target, *value);
+                    *result = (byte)(__result ? 1 : 0);
+
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+            private static unsafe int Do_Abi_get_Empty_1(IntPtr thisPtr, Guid* value)
+            {
+
+                Guid __value = default;
+
+                *value = default;
+
+                try
+                {
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.ICustomGuidHelperStatics>(thisPtr).Empty;
+                    *value = __value;
+
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+
+            Guid CreateNewGuid();
+            bool Equals(in Guid target, in Guid value);
+            Guid Empty { get; }
+        }
+
+        class CustomGuidHelper : ICustomGuidHelperStatics
         {
             public static Guid Mock { get; set; }
 
@@ -3217,7 +3299,7 @@ namespace UnitTest
                 Assert.Equal("Windows.Foundation.GuidHelper", name);
                 Assert.Equal(typeof(IGuidHelperStatics).GUID, iid);
 
-                return MarshalInterface<IGuidHelperStatics>.FromManaged(new CustomGuidHelper());
+                return MarshalInterface<ICustomGuidHelperStatics>.FromManaged(new CustomGuidHelper());
             };
 
             CustomGuidHelper.Mock = new Guid("78872A91-C365-4DDB-9509-1CCA002B6FD9");
