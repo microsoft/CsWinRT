@@ -504,7 +504,7 @@ namespace Windows.ApplicationModel.DataTransfer
         private static readonly global::System.Guid riid = new global::System.Guid(0xA5CAEE9B, 0x8708, 0x49D1, 0x8D, 0x36, 0x67, 0xD2, 0x5A, 0x8D, 0xA0, 0x0C);
 
 #if NET
-        private static global::WinRT.IObjectReference objectReference => global::WinRT.ActivationFactory.Get<global::WinRT.IObjectReference>("Windows.ApplicationModel.DataTransfer.DataTransferManager", IDataTransferManagerInterop_IID);
+        private static global::WinRT.IObjectReference objectReference => global::WinRT.ActivationFactory.Get("Windows.ApplicationModel.DataTransfer.DataTransferManager", IDataTransferManagerInterop_IID);
 #else
         private static global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> objectReference => global::WinRT.ActivationFactory.Get<global::WinRT.Interop.IUnknownVftbl>("Windows.ApplicationModel.DataTransfer.DataTransferManager", IDataTransferManagerInterop_IID);
 #endif
