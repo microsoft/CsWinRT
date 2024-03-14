@@ -3191,6 +3191,42 @@ namespace UnitTest
 
             Assert.Null(exception);
         }
+
+        class CustomGuidHelper : IGuidHelperStatics
+        {
+            public static Guid Mock { get; set; }
+
+            public Guid Empty => Mock;
+
+            public Guid CreateNewGuid()
+            {
+                return Mock;
+            }
+
+            public bool Equals(in Guid target, in Guid value)
+            {
+                return false;
+            }
+        };
+
+        [Fact]
+        public void TestActivationHandler()
+        {
+            ActivationFactory.ActivationHandler = (string name, Guid iid) =>
+            {
+                Assert.Equal("Windows.Foundation.GuidHelper", name);
+                Assert.Equal(typeof(IGuidHelperStatics).GUID, iid);
+
+                return MarshalInterface<IGuidHelperStatics>.FromManaged(new CustomGuidHelper());
+            };
+
+            CustomGuidHelper.Mock = new Guid("78872A91-C365-4DDB-9509-1CCA002B6FD9");
+
+            Guid guid = GuidHelper.CreateNewGuid();
+            Assert.Equal(CustomGuidHelper.Mock, guid);
+
+            ActivationFactory.ActivationHandler = null;
+        }
 #endif
 
         [Fact]
