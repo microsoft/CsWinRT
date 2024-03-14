@@ -499,14 +499,12 @@ namespace Windows.ApplicationModel.DataTransfer
 #endif
     static class DataTransferManagerInterop
     {
-        private static readonly global::System.Guid IDataTransferManagerInterop_IID = new global::System.Guid(0x3A3DCD6C, 0x3EAB, 0x43DC, 0xBC, 0xDE, 0x45, 0x67, 0x1C, 0xE8, 0x00, 0xC8);
-
         private static readonly global::System.Guid riid = new global::System.Guid(0xA5CAEE9B, 0x8708, 0x49D1, 0x8D, 0x36, 0x67, 0xD2, 0x5A, 0x8D, 0xA0, 0x0C);
 
 #if NET
-        private static global::WinRT.IObjectReference objectReference => global::WinRT.ActivationFactory.Get("Windows.ApplicationModel.DataTransfer.DataTransferManager", IDataTransferManagerInterop_IID);
+        private static global::WinRT.IObjectReference objectReference = global::WinRT.ActivationFactory.Get("Windows.ApplicationModel.DataTransfer.DataTransferManager", new global::System.Guid(0x3A3DCD6C, 0x3EAB, 0x43DC, 0xBC, 0xDE, 0x45, 0x67, 0x1C, 0xE8, 0x00, 0xC8));
 #else
-        private static global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> objectReference => global::WinRT.ActivationFactory.Get<global::WinRT.Interop.IUnknownVftbl>("Windows.ApplicationModel.DataTransfer.DataTransferManager", IDataTransferManagerInterop_IID);
+        private static global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> objectReference = global::WinRT.ActivationFactory.Get<global::WinRT.Interop.IUnknownVftbl>("Windows.ApplicationModel.DataTransfer.DataTransferManager", new global::System.Guid(0x3A3DCD6C, 0x3EAB, 0x43DC, 0xBC, 0xDE, 0x45, 0x67, 0x1C, 0xE8, 0x00, 0xC8));
 #endif
 
         public static global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::System.IntPtr appWindow)
@@ -523,11 +521,7 @@ namespace Windows.ApplicationModel.DataTransfer
 
     internal static class IDataTransferManagerInteropMethods
     {
-#if NET
         internal static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::WinRT.IObjectReference _obj, global::System.IntPtr appWindow, in global::System.Guid riid)
-#else
-        internal static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> _obj, global::System.IntPtr appWindow, in global::System.Guid riid)
-#endif
         {
             global::System.IntPtr thisPtr = _obj.ThisPtr;
             global::System.IntPtr ptr = default;
@@ -546,11 +540,7 @@ namespace Windows.ApplicationModel.DataTransfer
             }
         }
 
-# if NET
         internal static unsafe void ShowShowShareUIForWindow(global::WinRT.IObjectReference _obj, global::System.IntPtr appWindow)
-#else
-        internal static unsafe void ShowShowShareUIForWindow(global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> _obj, global::System.IntPtr appWindow)
-#endif
         {
             global::System.IntPtr thisPtr = _obj.ThisPtr;
 
