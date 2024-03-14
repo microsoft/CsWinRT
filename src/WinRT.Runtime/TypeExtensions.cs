@@ -17,27 +17,28 @@ namespace WinRT
 #endif
     static class TypeExtensions
     {
-        private readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
+        internal readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
 
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
                                             DynamicallyAccessedMemberTypes.PublicNestedTypes | 
                                             DynamicallyAccessedMemberTypes.PublicFields)]
+        [SuppressMessage("Trimming", "IL2073", Justification = "Matching trimming annotations are used at all callsites registering helper types present in the cache.")]
 #endif
         public static Type FindHelperType(this Type type)
         {
-            return HelperTypeCache.GetOrAdd(type,
 #if NET
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                                DynamicallyAccessedMemberTypes.PublicNestedTypes | 
+                                                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                                                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-            (type) =>
+            static Type FindHelperTypeNoCache(Type type)
             {
                 if (typeof(Exception).IsAssignableFrom(type))
                 {
                     type = typeof(Exception);
                 }
+
                 Type customMapping = Projections.FindCustomHelperTypeMapping(type);
                 if (customMapping is not null)
                 {
@@ -59,7 +60,6 @@ namespace WinRT
                         return GetHelperTypeFromAttribute(helperTypeAtribute, type);
                     }
                 }
-
 #if NET
                 // Using AOT requires using updated projections, which would never let the code below
                 // be reached (as it's just a fallback path for legacy projections). So we can trim it.
@@ -68,9 +68,10 @@ namespace WinRT
                     return null;
                 }
 #endif
-
                 return FindHelperTypeFallback(type);
-            });
+            }
+
+            return HelperTypeCache.GetOrAdd(type, FindHelperTypeNoCache);
 
 #if NET
             [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
@@ -79,9 +80,18 @@ namespace WinRT
 #endif
             static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
             {
-                if (type.IsGenericType)
+                if (type.IsGenericType && !type.IsGenericTypeDefinition)
                 {
+#if NET
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        throw new NotSupportedException($"Cannot retrieve the helper type from generic type '{type}'.");
+                    }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     return helperTypeAtribute.HelperType.MakeGenericType(type.GetGenericArguments());
+#pragma warning restore IL3050
                 }
                 else
                 {
@@ -152,7 +162,9 @@ namespace WinRT
             }
             if (helperType.IsGenericType && vftblType is object)
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
+#pragma warning restore IL3050
             }
             return vftblType;
         }

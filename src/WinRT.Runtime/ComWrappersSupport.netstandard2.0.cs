@@ -32,6 +32,8 @@ namespace WinRT
             return CreateRcwForComObject<T>(ptr, true);
         }
 
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
+
         private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
         {
             if (ptr == IntPtr.Zero)
@@ -56,7 +58,7 @@ namespace WinRT
 
                     if (typeof(T).IsSealed)
                     {
-                        runtimeWrapper = TypedObjectFactoryCacheForType.GetOrAdd(typeof(T), classType => CreateTypedRcwFactory(classType))(inspectable);
+                        runtimeWrapper = GetTypedRcwFactory(typeof(T))(inspectable);
                     }
                     else
                     {

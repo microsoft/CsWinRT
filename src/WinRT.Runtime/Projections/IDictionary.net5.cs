@@ -252,6 +252,8 @@ namespace ABI.System.Collections.Generic
     {
         unsafe static IDictionaryMethods()
         {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IDictionary<K, V>), typeof(global::ABI.System.Collections.Generic.IDictionary<K, V>));
+
             // Early return to ensure things are trimmed correctly on NAOT.
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
@@ -259,14 +261,28 @@ namespace ABI.System.Collections.Generic
                 return;
             }
 
-            // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
-            // and due to that the function pointers haven't been initialized.
-            if (!IMapMethods<K, V>._RcwHelperInitialized)
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+            InitRcwHelperFallbackIfNeeded();
+#pragma warning restore IL3050
+
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+            [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void InitRcwHelperFallbackIfNeeded()
             {
-                var initRcwHelperFallback = (Func<bool>)typeof(IDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
-                    GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
-                    CreateDelegate(typeof(Func<bool>));
-                initRcwHelperFallback();
+                // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
+                // and due to that the function pointers haven't been initialized.
+                if (!IMapMethods<K, V>._RcwHelperInitialized)
+                {
+                    var initRcwHelperFallback = (Func<bool>)typeof(IDictionaryMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                        GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
+                        CreateDelegate(typeof(Func<bool>));
+                    initRcwHelperFallback();
+                }
             }
         }
 
@@ -719,6 +735,9 @@ namespace ABI.System.Collections.Generic
             return true;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private unsafe static bool InitRcwHelperFallback()
         {
             return InitRcwHelper(
@@ -729,6 +748,9 @@ namespace ABI.System.Collections.Generic
                 &RemoveDynamic);
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private static unsafe V LookupDynamic(IObjectReference obj, K key)
         {
             var ThisPtr = obj.ThisPtr;
@@ -749,6 +771,9 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private static unsafe bool HasKeyDynamic(IObjectReference obj, K key)
         {
             var ThisPtr = obj.ThisPtr;
@@ -768,6 +793,9 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private static unsafe bool InsertDynamic(IObjectReference obj, K key, V value)
         {
             var ThisPtr = obj.ThisPtr;
@@ -791,6 +819,9 @@ namespace ABI.System.Collections.Generic
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private static unsafe void RemoveDynamic(IObjectReference obj, K key)
         {
             var ThisPtr = obj.ThisPtr;
@@ -838,11 +869,17 @@ namespace ABI.System.Collections.Generic
                 return false;
             }
 
+            // Register generic helper types referenced in CCW.
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>), typeof(global::ABI.System.Collections.Generic.IReadOnlyDictionary<K, V>));
+
             return true;
         }
 
         private static global::System.Delegate[] DelegateCache;
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         internal static unsafe void InitFallbackCCWVtable()
         {
             DelegateCache = new global::System.Delegate[]
@@ -856,20 +893,15 @@ namespace ABI.System.Collections.Generic
                 new IDictionary_Delegates.Clear_6(Do_Abi_Clear_6)
             };
 
-            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 7));
-            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
-            ((IntPtr*)abiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(DelegateCache[0]);
-            ((IntPtr*)abiToProjectionVftablePtr)[7] = Marshal.GetFunctionPointerForDelegate(DelegateCache[1]);
-            ((IntPtr*)abiToProjectionVftablePtr)[8] = Marshal.GetFunctionPointerForDelegate(DelegateCache[2]);
-            ((IntPtr*)abiToProjectionVftablePtr)[9] = Marshal.GetFunctionPointerForDelegate(DelegateCache[3]);
-            ((IntPtr*)abiToProjectionVftablePtr)[10] = Marshal.GetFunctionPointerForDelegate(DelegateCache[4]);
-            ((IntPtr*)abiToProjectionVftablePtr)[11] = Marshal.GetFunctionPointerForDelegate(DelegateCache[5]);
-            ((IntPtr*)abiToProjectionVftablePtr)[12] = Marshal.GetFunctionPointerForDelegate(DelegateCache[6]);
-
-            if (!IDictionaryMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
-            {
-                NativeMemory.Free((void*)abiToProjectionVftablePtr);
-            }
+            InitCcw(
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi, VAbi*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[0]),
+                (delegate* unmanaged[Stdcall]<IntPtr, uint*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[1]),
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi, byte*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[2]),
+                (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[3]),
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi, VAbi, byte*, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[4]),
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[5]),
+                (delegate* unmanaged[Stdcall]<IntPtr, int>) Marshal.GetFunctionPointerForDelegate(DelegateCache[6])
+            );
         }
 
         private static unsafe int Do_Abi_Lookup_0(void* thisPtr, KAbi key, VAbi* __return_value__)
@@ -998,8 +1030,17 @@ namespace ABI.System.Collections.Generic
         }
 
         private static global::System.Type _lookup_0_type;
-        private static global::System.Type Lookup_0_Type => _lookup_0_type ?? MakeLookupType();
+        private static global::System.Type Lookup_0_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+            get => _lookup_0_type ?? MakeLookupType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private static global::System.Type MakeLookupType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _lookup_0_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(KAbi), typeof(VAbi*), typeof(int) }), null);
@@ -1007,8 +1048,17 @@ namespace ABI.System.Collections.Generic
         }
 
         private static global::System.Type _hasKey_2_type;
-        private static global::System.Type HasKey_2_Type => _hasKey_2_type ?? MakeHasKeyType();
+        private static global::System.Type HasKey_2_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+            get => _hasKey_2_type ?? MakeHasKeyType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private static global::System.Type MakeHasKeyType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _hasKey_2_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(KAbi), typeof(byte*), typeof(int) }), null);
@@ -1016,8 +1066,17 @@ namespace ABI.System.Collections.Generic
         }
 
         private static global::System.Type _insert_4_type;
-        private static global::System.Type Insert_4_Type => _insert_4_type ?? MakeInsertType();
+        private static global::System.Type Insert_4_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+            get => _insert_4_type ?? MakeInsertType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private static global::System.Type MakeInsertType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _insert_4_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(KAbi), typeof(VAbi), typeof(byte*), typeof(int) }), null);
@@ -1025,14 +1084,26 @@ namespace ABI.System.Collections.Generic
         }
 
         private static global::System.Type _remove_5_type;
-        private static global::System.Type Remove_5_Type => _remove_5_type ?? MakeRemoveType();
+        private static global::System.Type Remove_5_Type
+        {
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+            get => _remove_5_type ?? MakeRemoveType();
+        }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private static global::System.Type MakeRemoveType()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _remove_5_type, Projections.GetAbiDelegateType(new global::System.Type[] { typeof(void*), typeof(KAbi), typeof(int) }), null);
             return _remove_5_type;
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
         private sealed class DelegateHelper
         {
             private readonly IntPtr _ptr;
@@ -1158,14 +1229,23 @@ namespace ABI.System.Collections.Generic
         }
 
         public static readonly IntPtr AbiToProjectionVftablePtr;
+        
         static IDictionary()
         {
             if (RuntimeFeature.IsDynamicCodeCompiled)
             {
                 // Simple invocation guarded by a direct runtime feature check to help the linker.
                 // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
 
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
                 {

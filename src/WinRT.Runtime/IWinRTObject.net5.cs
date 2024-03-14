@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 #if NET8_0_OR_GREATER
 using System.Runtime.InteropServices.Marshalling;
@@ -52,6 +53,14 @@ namespace WinRT
 
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IReadOnlyCollection<>))
             {
+#if NET
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type '{type}'.");
+                }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 Type itemType = type.GetGenericArguments()[0];
                 if (itemType.IsGenericType && itemType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
@@ -66,6 +75,7 @@ namespace WinRT
                     }
                 }
                 Type iReadOnlyList = typeof(IReadOnlyList<>).MakeGenericType(new[] { itemType });
+#pragma warning restore IL3050
                 if (IsInterfaceImplemented(iReadOnlyList.TypeHandle, throwIfNotImplemented))
                 {
                     if (QueryInterfaceCache.TryGetValue(iReadOnlyList.TypeHandle, out var typedObjRef) && !QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
@@ -79,6 +89,14 @@ namespace WinRT
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ICollection<>))
             {
+#if NET
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type '{type}'.");
+                }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 Type itemType = type.GetGenericArguments()[0];
                 if (itemType.IsGenericType && itemType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
@@ -93,6 +111,7 @@ namespace WinRT
                     }
                 }
                 Type iList = typeof(IList<>).MakeGenericType(new[] { itemType });
+#pragma warning restore IL3050
                 if (IsInterfaceImplemented(iList.TypeHandle, throwIfNotImplemented))
                 {
                     if (QueryInterfaceCache.TryGetValue(iList.TypeHandle, out var typedObjRef) && !QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
@@ -162,7 +181,17 @@ namespace WinRT
                     }
                     return true;
                 }
+
+#if NET
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException($"Cannot construct an object reference for vtable type '{vftblType}'.");
+                }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 IObjectReference typedObjRef = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
+#pragma warning restore IL3050
                 if (!QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
                 {
                     typedObjRef.Dispose();

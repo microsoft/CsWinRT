@@ -206,7 +206,14 @@ namespace WinRT
         {
             if (implementationType.IsGenericType)
             {
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException($"Cannot create an RCW factory for implementation type '{implementationType}'.");
+                }
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 Type genericImplType = GetGenericImplType(implementationType);
+#pragma warning restore IL3050
                 if (genericImplType != null)
                 {
                     var createRcw = genericImplType.GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(IInspectable) }, null);
@@ -252,6 +259,9 @@ namespace WinRT
                 return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
             }
 
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
             static Type GetGenericImplType(Type implementationType)
             {
