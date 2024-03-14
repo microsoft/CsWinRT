@@ -73,10 +73,59 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
             if (source.Length - offset < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
 
-            return new WindowsRuntimeBuffer(source.Slice(offset), source.Length);
+            return new WindowsRuntimeBuffer(source.Slice(offset), length);
         }
 
 #endregion (Memory<Byte>).AsBuffer extensions
+
+#region (Span<Byte>).CopyTo extensions for copying to an (IBuffer)
+
+        /// <summary>
+        /// Copies the contents of <code>source</code> to <code>destination</code> starting at offset 0.
+        /// This method does <em>NOT</em> update <code>destination.Length</code>.
+        /// </summary>
+        /// <param name="source">Array to copy data from.</param>
+        /// <param name="destination">The buffer to copy to.</param>
+        public static void CopyTo(this Span<byte> source, IBuffer destination)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
+
+            CopyTo(source, destination, 0);
+        }
+
+
+        /// <summary>
+        /// Copies <code>count</code> bytes from <code>source</code> starting at offset <code>sourceIndex</code>
+        /// to <code>destination</code> starting at <code>destinationIndex</code>.
+        /// This method does <em>NOT</em> update <code>destination.Length</code>.
+        /// </summary>
+        /// <param name="source">Array to copy data from.</param>
+        /// <param name="sourceIndex">Position in the array from where to start copying.</param>
+        /// <param name="destination">The buffer to copy to.</param>
+        /// <param name="destinationIndex">Position in the buffer to where to start copying.</param>
+        /// <param name="count">The number of bytes to copy.</param>
+        public static void CopyTo(this Span<byte> source, IBuffer destination, uint destinationIndex)
+        {
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
+            if (destination.Capacity < destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
+            if (destination.Capacity - destinationIndex < source.Length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
+            if (source.Length == 0) return;
+
+            Debug.Assert(destinationIndex <= int.MaxValue);
+
+            // If destination is backed by a managed memory, use the memory instead of the pointer as it does not require pinning:
+            Span<byte> destSpan = destination.TryGetUnderlyingData(out Memory<byte> destDataArr) ? destDataArr.Span.Slice(destinationIndex) : destination.GetSpanForCapacity(destinationIndex);
+            source.CopyTo(destSpan);
+
+            // Update Length last to make sure the data is valid
+            if (destinationIndex + source.Length > destination.Length)
+            {
+                destination.Length = destinationIndex + source.Length;
+            }
+        }
+
+#endregion (Span<Byte>).CopyTo extensions for copying to an (IBuffer)
 
 #region (Byte []).CopyTo extensions for copying to an (IBuffer)
 
@@ -89,9 +138,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         public static void CopyTo(this byte[] source, IBuffer destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (destination == null) throw new ArgumentNullException(nameof(destination));
 
-            CopyTo(source, 0, destination, 0, source.Length);
+            CopyTo(source.AsSpan(), destination, 0);
         }
 
 
@@ -108,23 +156,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         public static void CopyTo(this byte[] source, int sourceIndex, IBuffer destination, uint destinationIndex, int count)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (destination == null) throw new ArgumentNullException(nameof(destination));
-            if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
-            if (sourceIndex < 0) throw new ArgumentOutOfRangeException(nameof(sourceIndex));
-            if (source.Length < sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds, nameof(sourceIndex));
-            if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (destination.Capacity < destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
-            if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
-            if (count == 0) return;
 
-            // If destination is backed by a managed memory, use the memory instead of the pointer as it does not require pinning:
-            Memory<byte> destDataArr;
-            if (!destination.TryGetUnderlyingData(out destDataArr))
-            {
-                destDataArr = destination.AsMemory();
-            }
-
-            source.AsMemory(sourceIndex, count).CopyTo(destination.AsMemory().Slice((int)destinationIndex));
+            CopyTo(source.AsSpan(sourceIndex, count), destination, destinationIndex);
         }
 
 #endregion (Byte []).CopyTo extensions for copying to an (IBuffer)
@@ -168,7 +201,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Memory<byte> underlyingData;
             if (source.TryGetUnderlyingData(out underlyingData))
             {
-                return underlyingData;
+                return underlyingData.Slice(0, checked((int)source.Length));
             }
 
             return new IBufferMemoryManager(source).Memory;
@@ -176,6 +209,31 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
 #endregion (IBuffer).AsMemory extensions for copying to a new (Byte [])
 
+#region (IBuffer).CopyTo extensions for copying to a (Span<Byte>)
+
+        public static void CopyTo(this IBuffer source, Span<byte> destination)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            CopyTo(source, 0, destination, checked((int)source.Length));
+        }
+
+        public static void CopyTo(this IBuffer source, uint sourceIndex, Span<byte> destination, int count)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
+            if (source.Length < sourceIndex) throw new ArgumentException("The specified buffer index is not within the buffer length.");
+            if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
+            if (destination.Length < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (count == 0) return;
+
+            Debug.Assert(sourceIndex <= int.MaxValue);
+
+            Span<byte> srcSpan = source.TryGetUnderlyingData(out Memory<byte> srcDataArr) ? srcDataArr.Span.Slice((int)sourceIndex, count) : source.GetSpanForCapacity(sourceIndex);
+            srcSpan.CopyTo(destination);
+        }
+
+#endregion (IBuffer).CopyTo extensions for copying to a (Span<Byte>)
 
 #region (IBuffer).CopyTo extensions for copying to a (Byte [])
 
@@ -184,30 +242,15 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
 
-            CopyTo(source, 0, destination, 0, checked((int)source.Length));
+            CopyTo(source, destination.AsSpan());
         }
-
 
         public static void CopyTo(this IBuffer source, uint sourceIndex, byte[] destination, int destinationIndex, int count)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
-            if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
-            if (destinationIndex < 0) throw new ArgumentOutOfRangeException(nameof(destinationIndex));
-            if (source.Length < sourceIndex) throw new ArgumentException("The specified buffer index is not within the buffer length.");
-            if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
-            if (destination.Length < destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds);
-            if (destination.Length - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (count == 0) return;
 
-            // If source is backed by a managed array, use the array instead of the pointer as it does not require pinning:
-            Memory<byte> srcDataArr;
-            if (!source.TryGetUnderlyingData(out srcDataArr))
-            {
-                srcDataArr = source.AsMemory();
-            }
-
-            srcDataArr.Slice((int)sourceIndex, (int)count).CopyTo(destination.AsMemory().Slice(destinationIndex));
+            CopyTo(source, sourceIndex, destination.AsSpan(destinationIndex, count));
         }
 
 #endregion (IBuffer).CopyTo extensions for copying to a (Byte [])
@@ -234,23 +277,21 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
             if (count == 0) return;
 
-            // If source are destination are backed by managed arrays, use the arrays instead of the pointers as it does not require pinning:
-            Memory<byte> srcDataArr, destDataArr;
-
-            if (!source.TryGetUnderlyingData(out srcDataArr))
-            {
-                srcDataArr = source.AsMemory();
-            }
-            if (!destination.TryGetUnderlyingData(out destDataArr))
-            {
-                destDataArr = destination.AsMemory();
-            }
-
             Debug.Assert(count <= int.MaxValue);
             Debug.Assert(sourceIndex <= int.MaxValue);
             Debug.Assert(destinationIndex <= int.MaxValue);
 
-            srcDataArr.Slice((int)sourceIndex, (int)count).CopyTo(destDataArr.Slice((int)destinationIndex));
+            // If source are destination are backed by managed arrays, use the arrays instead of the pointers as it does not require pinning:
+            Span<byte> srcSpan = source.TryGetUnderlyingData(out Memory<byte> srcDataArr) ? srcDataArr.Span.Slice((int)sourceIndex, (int)count) : source.GetSpanForCapacity((int)sourceIndex);
+            Span<byte> destSpan = source.TryGetUnderlyingData(out Memory<byte> destDataArr) ? destDataArr.Span.Slice((int)destinationIndex) : destination.GetSpanForCapacity((int)destinationIndex);
+
+            srcSpan.CopyTo(destSpan);
+
+            // Update Length last to make sure the data is valid
+            if (destinationIndex + count > destination.Length)
+            {
+                destination.Length = destinationIndex + count;
+            }
         }
 
 #endregion (IBuffer).CopyTo extensions for copying to an (IBuffer)
@@ -415,7 +456,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source.TryGetUnderlyingData(out underlying) && MemoryMarshal.TryGetArray<byte>(underlying, out var dataArr))
             {
                 Debug.Assert(source.Capacity < int.MaxValue);
-                return new WindowsRuntimeBufferMemoryStream(source, dataArr, dataOffs);
+                return new WindowsRuntimeBufferMemoryStream(source, dataArr.Array, dataOffs.Offset);
             }
 
             unsafe
@@ -434,6 +475,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (source.Length <= byteOffset) throw new ArgumentException("The specified buffer offset is not within the buffer length.");
+
+            Debug.Assert(byteOffset <= int.MaxValue);
 
             Memory<byte> srcDataArr;
             if (source.TryGetUnderlyingData(out srcDataArr))
@@ -614,7 +657,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             public override Span<byte> GetSpan()
             {
                 IntPtr sourcePtr = _buffer.GetPointerAtOffset(0);
-                return new Span<byte>((byte*)sourcePtr.ToPointer(), (int)_buffer.Capacity);
+                return new Span<byte>((byte*)sourcePtr.ToPointer(), (int)_buffer.Length);
             }
 
             public override MemoryHandle Pin(int elementIndex = 0)
@@ -639,6 +682,18 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             {
                 IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
                 return new IntPtr((byte*)buffPtr + offset);
+            }
+        }
+
+        private static Span<byte> GetSpanForCapacity(this IBuffer buffer, uint offset)
+        {
+            Debug.Assert(0 <= offset);
+            Debug.Assert(offset < buffer.Length);
+
+            unsafe
+            {
+                IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
+                return new Span<byte>((byte*)buffPtr + offset, buffer.Capacity);
             }
         }
 
