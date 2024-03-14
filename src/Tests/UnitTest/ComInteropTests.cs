@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.DataTransfer.DragDrop.Core;
 using Windows.Graphics.Display;
 using Windows.Graphics.Printing;
@@ -160,6 +161,13 @@ namespace UnitTest
         {
             Assert.Throws<COMException>(() => DisplayInformationInterop.GetForWindow(new IntPtr(0)));
             Assert.Throws<COMException>(() => DisplayInformationInterop.GetForMonitor(new IntPtr(0)));
+        }
+
+        [Fact]
+        public void TestDataTransferManager()
+        {
+            Assert.Throws<COMException>(() => DataTransferManagerInterop.GetForWindow(new IntPtr(0)));
+            Assert.Throws<COMException>(() => DataTransferManagerInterop.ShowShareUIForWindow(new IntPtr(0)));
         }
     }
 }
