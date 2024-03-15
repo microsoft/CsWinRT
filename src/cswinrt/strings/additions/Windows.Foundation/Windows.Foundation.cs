@@ -27,7 +27,9 @@ namespace System
 
             if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task task)
             {
-                return task;
+                return cancellationToken.CanBeCanceled ?
+                    task.WaitAsync(cancellationToken) :
+                    task;
             }
 
             switch (source.Status)
@@ -67,7 +69,9 @@ namespace System
 
             if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task<TResult> task)
             {
-                return task;
+                return cancellationToken.CanBeCanceled ?
+                    task.WaitAsync(cancellationToken) :
+                    task;
             }
 
             switch (source.Status)
@@ -105,9 +109,12 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task task)
+            // fast path is underlying asyncInfo is Task and no IProgress provided
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task task && progress == null)
             {
-                return task;
+                return cancellationToken.CanBeCanceled ?
+                    task.WaitAsync(cancellationToken) :
+                    task;
             }
 
             switch (source.Status)
@@ -166,9 +173,12 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task<TResult> task)
+            // fast path is underlying asyncInfo is Task and no IProgress provided
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task<TResult> task && progress == null)
             {
-                return task;
+                return cancellationToken.CanBeCanceled ?
+                    task.WaitAsync(cancellationToken) :
+                    task;
             }
 
             switch (source.Status)
