@@ -514,7 +514,7 @@ namespace Windows.ApplicationModel.DataTransfer
 
         public static void ShowShareUIForWindow(global::System.IntPtr appWindow)
         {
-            IDataTransferManagerInteropMethods.ShowShowShareUIForWindow(objectReference, appWindow);
+            IDataTransferManagerInteropMethods.ShowShareUIForWindow(objectReference, appWindow);
         }
     }
 #endif
@@ -540,11 +540,11 @@ namespace Windows.ApplicationModel.DataTransfer
             }
         }
 
-        internal static unsafe void ShowShowShareUIForWindow(global::WinRT.IObjectReference _obj, global::System.IntPtr appWindow)
+        internal static unsafe void ShowShareUIForWindow(global::WinRT.IObjectReference _obj, global::System.IntPtr appWindow)
         {
             global::System.IntPtr thisPtr = _obj.ThisPtr;
 
-            // IDataTransferManagerInterop inherits IUnknown (3 functions) and provides ShowShowShareUIForWindow giving a total of 5 functions
+            // IDataTransferManagerInterop inherits IUnknown (3 functions) and provides ShowShareUIForWindow giving a total of 5 functions
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, int>**)thisPtr)[4](thisPtr, appWindow));
         }
     }
