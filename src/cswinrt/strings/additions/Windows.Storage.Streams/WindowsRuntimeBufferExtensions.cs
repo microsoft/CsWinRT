@@ -55,7 +55,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source.Length - offset < capacity) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
             if (capacity < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
 
-            return new WindowsRuntimeBuffer(source.AsMemory().Slice(offset, capacity - offset), length);
+            return new WindowsRuntimeBuffer(source.AsMemory().Slice(offset, capacity), length);
         }
 
 #endregion (Byte []).AsBuffer extensions
@@ -115,13 +115,13 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Debug.Assert(destinationIndex <= int.MaxValue);
 
             // If destination is backed by a managed memory, use the memory instead of the pointer as it does not require pinning:
-            Span<byte> destSpan = destination.TryGetUnderlyingData(out Memory<byte> destDataArr) ? destDataArr.Span.Slice(destinationIndex) : destination.GetSpanForCapacity(destinationIndex);
+            Span<byte> destSpan = destination.TryGetUnderlyingData(out Memory<byte> destDataArr) ? destDataArr.Span.Slice((int)destinationIndex) : destination.GetSpanForCapacity(destinationIndex);
             source.CopyTo(destSpan);
 
             // Update Length last to make sure the data is valid
             if (destinationIndex + source.Length > destination.Length)
             {
-                destination.Length = destinationIndex + source.Length;
+                destination.Length = destinationIndex + (uint)source.Length;
             }
         }
 
@@ -250,7 +250,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
 
-            CopyTo(source, sourceIndex, destination.AsSpan(destinationIndex, count));
+            CopyTo(source, sourceIndex, destination.AsSpan(destinationIndex, count), count);
         }
 
 #endregion (IBuffer).CopyTo extensions for copying to a (Byte [])
@@ -282,8 +282,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Debug.Assert(destinationIndex <= int.MaxValue);
 
             // If source are destination are backed by managed arrays, use the arrays instead of the pointers as it does not require pinning:
-            Span<byte> srcSpan = source.TryGetUnderlyingData(out Memory<byte> srcDataArr) ? srcDataArr.Span.Slice((int)sourceIndex, (int)count) : source.GetSpanForCapacity((int)sourceIndex);
-            Span<byte> destSpan = source.TryGetUnderlyingData(out Memory<byte> destDataArr) ? destDataArr.Span.Slice((int)destinationIndex) : destination.GetSpanForCapacity((int)destinationIndex);
+            Span<byte> srcSpan = source.TryGetUnderlyingData(out Memory<byte> srcDataArr) ? srcDataArr.Span.Slice((int)sourceIndex, (int)count) : source.GetSpanForCapacity(sourceIndex);
+            Span<byte> destSpan = destination.TryGetUnderlyingData(out Memory<byte> destDataArr) ? destDataArr.Span.Slice((int)destinationIndex) : destination.GetSpanForCapacity(destinationIndex);
 
             srcSpan.CopyTo(destSpan);
 
@@ -456,7 +456,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source.TryGetUnderlyingData(out underlying) && MemoryMarshal.TryGetArray<byte>(underlying, out var dataArr))
             {
                 Debug.Assert(source.Capacity < int.MaxValue);
-                return new WindowsRuntimeBufferMemoryStream(source, dataArr.Array, dataOffs.Offset);
+                return new WindowsRuntimeBufferMemoryStream(source, dataArr.Array, dataArr.Offset);
             }
 
             unsafe
@@ -693,7 +693,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             unsafe
             {
                 IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
-                return new Span<byte>((byte*)buffPtr + offset, buffer.Capacity);
+                return new Span<byte>((byte*)buffPtr + offset, (int)buffer.Capacity);
             }
         }
 
