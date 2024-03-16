@@ -30,6 +30,8 @@
     <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netcoreapp3.1;net6.0;net8.0</AppBuildTFMs>
     <LibBuildTFMs>netstandard2.0;net6.0;net8.0</LibBuildTFMs>
     <LibBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netstandard2.0;net6.0;net8.0</LibBuildTFMs>
+    <LibBuildTFMsNoNetStandard>net6.0;net8.0</LibBuildTFMsNoNetStandard>
+    <LibBuildTFMsNoNetStandard Condition="'$(CIBuildReason)' == 'CI'">net6.0;net8.0</LibBuildTFMsNoNetStandard>
     <TestsBuildTFMs>net6.0-windows10.0.19041.0;net7.0-windows10.0.19041.0</TestsBuildTFMs>
     <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net6.0-windows10.0.19041.0</TestsBuildTFMs>
     <FunctionalTestsBuildTFMs>net6.0;net8.0</FunctionalTestsBuildTFMs>

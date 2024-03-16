@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace ABI.System.ComponentModel
 {
@@ -14,7 +16,7 @@ namespace ABI.System.ComponentModel
 #endif
     static class INotifyPropertyChangedMethods
     {
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x01, 0x76, 0xB1, 0x90, 0x65, 0xB0, 0x6E, 0x58, 0x83, 0xD9, 0x9A, 0xDC, 0x3A, 0x69, 0x52, 0x84 }));
+        public static global::System.Guid IID { get; } = GuidGenerator.GetWuxMuxIID(typeof(INotifyPropertyChanged).GetCustomAttribute<WuxMuxProjectedTypeAttribute>());
 
         public static IntPtr AbiToProjectionVftablePtr => INotifyPropertyChanged.Vftbl.AbiToProjectionVftablePtr;
 
@@ -44,14 +46,17 @@ namespace ABI.System.ComponentModel
 
     [DynamicInterfaceCastableImplementation]
     [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
+    [WuxMuxProjectedType(wuxIID: "cf75d69c-f2f4-486b-b302-bb4c09baebfa", muxIID: "90B17601-B065-586E-83D9-9ADC3A695284")]
     internal unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
+        [WuxMuxProjectedType(wuxIID: "cf75d69c-f2f4-486b-b302-bb4c09baebfa", muxIID: "90B17601-B065-586E-83D9-9ADC3A695284")]
 #pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
 #pragma warning restore CA2257
         {
+
             internal IInspectable.Vftbl IInspectableVftbl;
 
             private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_PropertyChanged_0;
@@ -92,6 +97,7 @@ namespace ABI.System.ComponentModel
                 *token = default;
                 try
                 {
+                    global::System.Diagnostics.Debugger.Launch();
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.ComponentModel.INotifyPropertyChanged>(thisPtr);
                     var __handler = global::ABI.System.ComponentModel.PropertyChangedEventHandler.FromAbi(handler);
                     *token = _PropertyChanged_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);

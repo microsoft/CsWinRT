@@ -1062,6 +1062,11 @@ namespace ABI.System.Collections.Generic
                 // Should not be called.
                 throw new NotImplementedException();
             }
+            uint global::Windows.UI.Xaml.Interop.IBindableIterator.GetMany(ref object[] items)
+            {
+                // Should not be called.
+                throw new NotImplementedException();
+            }
         }
 
         public static readonly IntPtr AbiToProjectionVftablePtr;

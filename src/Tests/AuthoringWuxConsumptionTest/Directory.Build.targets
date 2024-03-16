@@ -1,0 +1,16 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <MsAppxPackageTargets>$(MSBuildProjectDirectory)/DoNotImport_MsAppxPackageTargets.targets</MsAppxPackageTargets>
+    <PrepareForRunDependsOn>CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
+  </PropertyGroup>
+
+  <Target Name="CopyTestAssets">
+    <Copy SourceFiles="$(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll"
+          DestinationFiles="$(OutDir)WinRT.Host.dll" 
+          UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+  </Target>  
+  
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+
+</Project>
