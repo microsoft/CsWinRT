@@ -25,8 +25,14 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // TODO: Handle the scenario where the 'IAsyncAction' is actually a task (i.e. originated from native code
-            // but projected into an IAsyncAction)
+#if NET
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task task)
+            {
+                return cancellationToken.CanBeCanceled ?
+                    task.WaitAsync(cancellationToken) :
+                    task;
+            }
+#endif
 
             switch (source.Status)
             {
@@ -62,8 +68,14 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // TODO: Handle the scenario where the 'IAsyncOperation' is actually a task (i.e. originated from native code
-            // but projected into an IAsyncOperation)
+#if NET
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task<TResult> task)
+            {
+                return cancellationToken.CanBeCanceled ?
+                    task.WaitAsync(cancellationToken) :
+                    task;
+            }
+#endif
 
             switch (source.Status)
             {
@@ -99,8 +111,15 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // TODO: Handle the scenario where the 'IAsyncActionWithProgress' is actually a task (i.e. originated from native code
-            // but projected into an IAsyncActionWithProgress)
+#if NET
+            // fast path is underlying asyncInfo is Task and no IProgress provided
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task task && progress == null)
+            {
+                return cancellationToken.CanBeCanceled ?
+                    task.WaitAsync(cancellationToken) :
+                    task;
+            }
+#endif
 
             switch (source.Status)
             {
@@ -157,8 +176,15 @@ namespace System
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // TODO: Handle the scenario where the 'IAsyncOperationWithProgress' is actually a task (i.e. originated from native code
-            // but projected into an IAsyncOperationWithProgress)
+#if NET
+            // fast path is underlying asyncInfo is Task and no IProgress provided
+            if (source is ITaskAwareAsyncInfo asyncInfo && asyncInfo.Task is Task<TResult> task && progress == null)
+            {
+                return cancellationToken.CanBeCanceled ?
+                    task.WaitAsync(cancellationToken) :
+                    task;
+            }
+#endif
 
             switch (source.Status)
             {
