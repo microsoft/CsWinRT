@@ -194,6 +194,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             Span<byte> srcSpan = source.TryGetUnderlyingData(out byte[] srcDataArr, out int srcOffset) ? srcDataArr.AsSpan(srcOffset + (int)sourceIndex, count) : source.GetSpanForCapacity(sourceIndex);
             srcSpan.CopyTo(destination);
+
+            GC.KeepAlive(source);
         }
 
 #endregion (IBuffer).CopyTo extensions for copying to a (Span<Byte>)
@@ -249,6 +251,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Span<byte> destSpan = destination.TryGetUnderlyingData(out byte[] destDataArr, out int destOffset) ? destDataArr.AsSpan(destOffset + (int)destinationIndex) : destination.GetSpanForCapacity(destinationIndex);
 
             srcSpan.CopyTo(destSpan);
+
+            GC.KeepAlive(source);
 
             // Update Length last to make sure the data is valid
             if (destinationIndex + count > destination.Length)
@@ -607,6 +611,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 _sourceBuffer.Length = (uint)Length;
             }
         }  // class WindowsRuntimeBufferUnmanagedMemoryStream
+
+        // 905a0fef-bc53-11df-8c49-001e4fc686da
+        private static readonly Guid IBufferByteAccess_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xEF, 0x0F, 0x5A, 0x90, 0x53, 0xBC, 0xDF, 0x11, 0x8C, 0x49, 0x00, 0x1E, 0x4F, 0xC6, 0x8, 0x6DA }));
 
         private static IntPtr GetPointerAtOffset(this IBuffer buffer, uint offset)
         {
