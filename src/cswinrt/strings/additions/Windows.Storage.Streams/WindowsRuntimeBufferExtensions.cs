@@ -612,9 +612,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }  // class WindowsRuntimeBufferUnmanagedMemoryStream
 
-        // 905a0fef-bc53-11df-8c49-001e4fc686da
-        private static readonly Guid IBufferByteAccess_IID = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xEF, 0x0F, 0x5A, 0x90, 0x53, 0xBC, 0xDF, 0x11, 0x8C, 0x49, 0x00, 0x1E, 0x4F, 0xC6, 0x8, 0x6DA }));
-
         private static IntPtr GetPointerAtOffset(this IBuffer buffer, uint offset)
         {
             Debug.Assert(0 <= offset);
@@ -630,15 +627,14 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         private static Span<byte> GetSpanForCapacity(this IBuffer buffer, uint offset)
         {
             Debug.Assert(0 <= offset);
-            Debug.Assert(offset < buffer.Length);
+            Debug.Assert(offset < buffer.Capacity);
 
             unsafe
             {
                 IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
-                return new Span<byte>((byte*)buffPtr + offset, (int)buffer.Capacity);
+                return new Span<byte>((byte*)buffPtr + offset, (int)(buffer.Capacity - offset));
             }
         }
-
 
         private static unsafe void MemCopy(IntPtr src, IntPtr dst, uint count)
         {
