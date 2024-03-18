@@ -3818,7 +3818,7 @@ new %%(_obj,
         for (auto&& evt : type.EventList())
         {
             w.write(R"(
-private global::WinRT.Interop.EventSource<%> _%;)",
+private global::ABI.WinRT.Interop.EventSource<%> _%;)",
 bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
 evt.Name());
         }
@@ -3827,14 +3827,14 @@ evt.Name());
     void write_event_source_table(writer& w, Event const& evt)
     {
         w.write(R"(
-private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.EventSource<%>> _%_;
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.EventSource<%>> Make%Table()
+private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::ABI.WinRT.Interop.EventSource<%>> _%_;
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::ABI.WinRT.Interop.EventSource<%>> Make%Table()
 {
     %
     global::System.Threading.Interlocked.CompareExchange(ref _%_, new(), null);
     return _%_;
 }
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::WinRT.Interop.EventSource<%>> _% => _%_ ?? Make%Table();
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, global::ABI.WinRT.Interop.EventSource<%>> _% => _%_ ?? Make%Table();
 )",
             bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
             evt.Name(),
@@ -5367,7 +5367,7 @@ else
                     w.write(R"(%
 %
 
-% static unsafe global::WinRT.Interop.EventSource<%> Get_%2(% %, object _thisObj)
+% static unsafe global::ABI.WinRT.Interop.EventSource<%> Get_%2(% %, object _thisObj)
 {
 return _%.GetValue(_thisObj, (key) =>
 {
@@ -9977,7 +9977,7 @@ public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
                 auto invokeMethodSig = get_event_invoke_method_signature(eventType);
                 w.write(R"(
-internal sealed unsafe class %% : global::WinRT.Interop.EventSource<%>
+internal sealed unsafe class %% : global::ABI.WinRT.Interop.EventSource<%>
 {
 %
 
@@ -9991,10 +9991,10 @@ delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> r
 protected override ObjectReferenceValue CreateMarshaler(% handler) =>
 %.CreateMarshaler2(handler);
 
-protected override global::WinRT.Interop.EventSourceState<%> CreateEventSourceState() =>
+protected override global::ABI.WinRT.Interop.EventSourceState<%> CreateEventSourceState() =>
 new EventState(ObjectReference.ThisPtr, Index);
 
-private sealed class EventState : global::WinRT.Interop.EventSourceState<%>
+private sealed class EventState : global::ABI.WinRT.Interop.EventSourceState<%>
 {
 public EventState(System.IntPtr obj, int index)
 : base(obj, index)

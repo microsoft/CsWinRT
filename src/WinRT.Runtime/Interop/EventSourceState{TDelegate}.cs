@@ -5,11 +5,14 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WinRT.Interop;
 
 #nullable enable
 
-namespace WinRT.Interop
+namespace ABI.WinRT.Interop
 {
+    using EventRegistrationToken = global::WinRT.EventRegistrationToken;
+
     /// <summary>
     /// A type representing all associated state for a given <see cref="EventSource{TDelegate}"/> instance.
     /// </summary>
@@ -30,7 +33,7 @@ namespace WinRT.Interop
         private bool disposedValue;
         private readonly IntPtr obj;
         private readonly int index;
-        private readonly System.WeakReference<object> cacheEntry;
+        private readonly global::System.WeakReference<object> cacheEntry;
         private IntPtr eventInvokePtr;
         private IntPtr referenceTrackerTargetPtr;
         internal EventRegistrationToken token;
@@ -47,7 +50,7 @@ namespace WinRT.Interop
             this.obj = thisPtr;
             this.index = index;
             eventInvoke = GetEventInvoke();
-            cacheEntry = new System.WeakReference<object>(this);
+            cacheEntry = new global::System.WeakReference<object>(this);
         }
 
         /// <summary>
@@ -58,7 +61,6 @@ namespace WinRT.Interop
             // The lifetime of this object is managed by the delegate / eventInvoke
             // through its target reference to it.  Once the delegate no longer has
             // any references, this object will also no longer have any references.
-
             Dispose(false);
         }
 
@@ -104,7 +106,7 @@ namespace WinRT.Interop
 
         // Allows to retrieve a singleton like weak reference to use
         // with the cache to allow for proper removal with comparision.
-        internal System.WeakReference<object> GetWeakReferenceForCache()
+        internal global::System.WeakReference<object> GetWeakReferenceForCache()
         {
             return cacheEntry;
         }

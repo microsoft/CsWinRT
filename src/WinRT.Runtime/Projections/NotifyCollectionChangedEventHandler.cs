@@ -165,7 +165,7 @@ namespace ABI.System.Collections.Specialized
         }
     }
 
-    internal sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
+    internal sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : global::ABI.WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
     {
         internal NotifyCollectionChangedEventHandlerEventSource(
             IObjectReference objectReference,
@@ -182,10 +182,10 @@ namespace ABI.System.Collections.Specialized
         protected override ObjectReferenceValue CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler del) =>
             NotifyCollectionChangedEventHandler.CreateMarshaler2(del);
 
-        protected override EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> CreateEventSourceState() =>
+        protected override global::ABI.WinRT.Interop.EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> CreateEventSourceState() =>
             new EventState(ObjectReference.ThisPtr, Index);
 
-        private sealed class EventState : EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
+        private sealed class EventState : global::ABI.WinRT.Interop.EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
         {
             public EventState(IntPtr obj, int index)
                 : base(obj, index)

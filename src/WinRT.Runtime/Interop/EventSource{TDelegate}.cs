@@ -5,11 +5,14 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using WinRT;
 
 #nullable enable
 
-namespace WinRT.Interop
+namespace ABI.WinRT.Interop
 {
+    using EventRegistrationToken = global::WinRT.EventRegistrationToken;
+
     /// <summary>
     /// A managed wrapper for an event to expose to a native WinRT consumer.
     /// </summary>
@@ -32,7 +35,7 @@ namespace WinRT.Interop
         private readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> _addHandler;
 #endif
         private readonly delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> _removeHandler;
-        private System.WeakReference<object>? _state;
+        private global::System.WeakReference<object>? _state;
 
         /// <summary>
         /// Creates a new <see cref="EventSource{TDelegate}"/> instance with the specified parameters.

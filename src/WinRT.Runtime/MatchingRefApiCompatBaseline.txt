@@ -211,8 +211,8 @@ TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the re
 TypesMustExist : Type 'WinRT.WinRTImplementationTypeRcwFactoryAttribute' does not exist in the reference but it does exist in the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'System.Type WinRT.Marshaler<T>.RefAbiType' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.Interop.IID' does not exist in the reference but it does exist in the implementation.
-TypesMustExist : Type 'WinRT.Interop.EventSource<TDelegate>' does not exist in the reference but it does exist in the implementation.
-TypesMustExist : Type 'WinRT.Interop.EventSourceState<TDelegate>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.WinRT.Interop.EventSource<TDelegate>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.WinRT.Interop.EventSourceState<TDelegate>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.EventHandlerEventSource' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.EventHandlerEventSource<T>' does not exist in the reference but it does exist in the implementation.
 Total Issues: 217

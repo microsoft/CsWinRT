@@ -163,7 +163,7 @@ namespace ABI.System.ComponentModel
         }
     }
 
-    internal sealed unsafe class PropertyChangedEventSource : EventSource<global::System.ComponentModel.PropertyChangedEventHandler>
+    internal sealed unsafe class PropertyChangedEventSource : global::ABI.WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler>
     {
         internal PropertyChangedEventSource(
             IObjectReference objectReference,
@@ -180,10 +180,10 @@ namespace ABI.System.ComponentModel
         protected override ObjectReferenceValue CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler del) =>
             PropertyChangedEventHandler.CreateMarshaler2(del);
 
-        protected override EventSourceState<global::System.ComponentModel.PropertyChangedEventHandler> CreateEventSourceState() =>
+        protected override global::ABI.WinRT.Interop.EventSourceState<global::System.ComponentModel.PropertyChangedEventHandler> CreateEventSourceState() =>
             new EventState(ObjectReference.ThisPtr, Index);
 
-        private sealed class EventState : EventSourceState<global::System.ComponentModel.PropertyChangedEventHandler>
+        private sealed class EventState : global::ABI.WinRT.Interop.EventSourceState<global::System.ComponentModel.PropertyChangedEventHandler>
         {
             public EventState(IntPtr obj, int index)
                 : base(obj, index)
