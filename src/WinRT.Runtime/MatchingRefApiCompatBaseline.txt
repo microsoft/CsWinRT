@@ -216,4 +216,5 @@ TypesMustExist : Type 'ABI.WinRT.Interop.EventSourceState<TDelegate>' does not e
 TypesMustExist : Type 'ABI.WinRT.Interop.EventHandlerEventSource' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.EventHandlerEventSource<T>' does not exist in the reference but it does exist in the implementation.
 CannotChangeAttribute : Attribute 'System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute' on 'WinRT.WindowsRuntimeHelperTypeAttribute.HelperType' changed from '[DynamicallyAccessedMembersAttribute(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicMethods)]' in the implementation to '[DynamicallyAccessedMembersAttribute(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicNestedTypes)]' in the reference.
-Total Issues: 218
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.TypeExtensions.FindVftblType(System.Type)' in the implementation but not the reference.
+Total Issues: 219
