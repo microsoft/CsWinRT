@@ -479,43 +479,4 @@ namespace ABI.System
         }
 #endif
     }
-
-    internal sealed unsafe class EventHandlerEventSource : EventSource<global::System.EventHandler>
-    {
-        internal EventHandlerEventSource(IObjectReference obj,
-#if NET
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::WinRT.EventRegistrationToken*, int> addHandler,
-#else
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
-#endif
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
-            : base(obj, addHandler, removeHandler)
-        {
-        }
-
-        protected override ObjectReferenceValue CreateMarshaler(global::System.EventHandler del) => 
-            EventHandler.CreateMarshaler2(del);
-
-        protected override State CreateEventState() =>
-            new EventState(_obj.ThisPtr, _index);
-
-        private sealed class EventState : State
-        {
-            public EventState(IntPtr obj, int index)
-                : base(obj, index)
-            {
-            }
-
-            protected override Delegate GetEventInvoke()
-            {
-                global::System.EventHandler handler = (global::System.Object obj, global::System.EventArgs e) =>
-                {
-                    var localDel = (global::System.EventHandler) del;
-                    if (localDel != null)
-                        localDel.Invoke(obj, e);
-                };
-                return handler;
-            }
-        }
-    }
 }
