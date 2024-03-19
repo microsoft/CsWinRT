@@ -270,6 +270,25 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
 #endregion (IBuffer).CopyTo extensions for copying to an (IBuffer)
 
+#region (IBuffer).TryGetBuffer extensions for getting the underlying managed array if backed by one
+
+        public static void TryGetBuffer(this IBuffer source, out ArraySegment<byte> array)
+        {
+            // If source is backed by a managed array, return it
+            byte[] srcDataArr;
+            int srcDataOffs;
+            if (source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs))
+            {
+                array = new ArraySegment<byte>(srcDataArr, offset: srcDataOffs, count: source.Length);
+                return true;
+            }
+
+            buffer = default;
+            return false;
+        }
+
+#endregion
+
 
 #region Access to underlying array optimised for IBuffers backed by managed arrays (to avoid pinning)
 
@@ -501,7 +520,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             private readonly IBuffer _sourceBuffer;
 
             internal WindowsRuntimeBufferMemoryStream(IBuffer sourceBuffer, byte[] dataArr, int dataOffs)
-                : base(dataArr, dataOffs, (int)sourceBuffer.Capacity, true)
+                : base(dataArr, dataOffs, (int)sourceBuffer.Capacity, writable: true, publiclyVisible: true)
             {
                 _sourceBuffer = sourceBuffer;
 
