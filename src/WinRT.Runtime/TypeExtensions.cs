@@ -168,7 +168,7 @@ namespace WinRT
                 {
                     return null;
                 }
-                if (helperType.IsGenericType && vftblType is object)
+                if (helperType.IsGenericType)
                 {
                     vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
                 }
