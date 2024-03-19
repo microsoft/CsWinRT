@@ -456,12 +456,16 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
 
             IntPtr srcPtr = source.GetPointerAtOffset(byteOffset);
+
+            byte value = default;
             unsafe
             {
                 // Let's avoid an unnesecary call to Marshal.ReadByte():
                 byte* ptr = (byte*)srcPtr;
-                return *ptr;
+                value = *ptr;
             }
+            GC.KeepAlive(source);
+            return value;
         }
 
         #endregion Extensions for direct by-offset access to buffer data elements
