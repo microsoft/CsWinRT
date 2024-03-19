@@ -137,7 +137,8 @@ namespace WinRT
         }
 
 #if NET
-        [SuppressMessage("Trimming", "IL2070", Justification = "The fallback path is not trim-safe by design (to avoid annotations).")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "The fallback path is not AOT-safe by design (to avoid annotations).")]
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "The fallback path is not trim-safe by design (to avoid annotations).")]
 #endif
         public static Type FindVftblType(this Type helperType)
         {
@@ -148,18 +149,33 @@ namespace WinRT
             }
 #endif
 
-            Type vftblType = helperType.GetNestedType("Vftbl");
-            if (vftblType is null)
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.IAsyncActionWithProgress`1+Vftbl", "Microsoft.Windows.SDK.NET")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.IAsyncOperationWithProgress`2+Vftbl", "Microsoft.Windows.SDK.NET")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.IAsyncOperation`1+Vftbl", "Microsoft.Windows.SDK.NET")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.Collections.IMapChangedEventArgs`1+Vftbl", "WinRT.Runtime")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.Collections.IObservableMap`2+Vftbl", "WinRT.Runtime")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.Collections.IObservableVector`1+Vftbl", "WinRT.Runtime")]
+            [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
+            static Type FindVftblTypeFallback(Type helperType)
             {
-                return null;
+                Type vftblType = helperType.GetNestedType("Vftbl");
+                if (vftblType is null)
+                {
+                    return null;
+                }
+                if (helperType.IsGenericType && vftblType is object)
+                {
+                    vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
+                }
+                return vftblType;
             }
-            if (helperType.IsGenericType && vftblType is object)
-            {
-#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
-#pragma warning restore IL3050
-            }
-            return vftblType;
+
+            return FindVftblTypeFallback(helperType);
         }
 
 #if NET
