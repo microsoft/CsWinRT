@@ -2241,7 +2241,7 @@ private IObjectReference Make__%()
                         {
                             w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, GetDefaultInterfaceObjRef(%), null);)", objrefname, get_class_hierarchy_index(classType));
                         } 
-                        else if (distance(ifaceType.GenericParam()) == 0 || ifaceType.TypeNamespace() == "Windows.Foundation.Collections")
+                        else
                         {
                             if (distance(ifaceType.GenericParam()) != 0)
                             {
@@ -2268,12 +2268,6 @@ private IObjectReference Make__%()
                                 objrefname,
                                 bind<write_type_name>(semantics, typedef_name_type::StaticAbiClass, true)
                             );
-                        }
-                        else
-                        {
-                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).GetHelperType().FindVftblType()).Invoke(((IWinRTObject)this).NativeObject, null), null);)",
-                                objrefname,
-                                bind<write_type_name>(semantics, typedef_name_type::Projected, false));
                         }
 
                         w.write(R"(
