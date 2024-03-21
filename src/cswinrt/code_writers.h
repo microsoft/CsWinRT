@@ -9202,12 +9202,20 @@ abiInvokeType = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(i
                 if (!settings.netstandard_compat && have_generic_params)
                 {
                     w.write(R"(
-if (%._Invoke != null || !RuntimeFeature.IsDynamicCodeCompiled)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
+{
+    %._Invoke(_nativeDelegate, %);
+    return;
+}
+
+if (%._Invoke != null)
 {
 %._Invoke(_nativeDelegate, %);
 }
 else
 )",
+                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                        bind_list<write_parameter_name>(", ", signature.params()),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind_list<write_parameter_name>(", ", signature.params()));
