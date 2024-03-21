@@ -9095,25 +9095,45 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
                 else
                 {
                     w.write(R"(
-%
-
-if (RuntimeFeature.IsDynamicCodeCompiled && %.AbiToProjectionVftablePtr == default)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
 {
-AbiInvokeDelegate = %;
-AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@%), sizeof(IntPtr) * 4);
-*(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
-((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate);
+    AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
 }
 else
 {
-AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
+#if NET8_0_OR_GREATER
+    [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
+#endif
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    static global::System.Delegate InitializeAbiToProjectionVftablePtrFallback(%)
+    {
+%
+
+global::System.Delegate abiInvokeDelegate = null;
+if (%.AbiToProjectionVftablePtr == default)
+{
+    abiInvokeDelegate = %;
+    AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@%), sizeof(IntPtr) * 4);
+    *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
+    ((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(abiInvokeDelegate);
+}
+else
+{
+    AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
+}
+return abiInvokeDelegate;
+    }
+
+    AbiInvokeDelegate = InitializeAbiToProjectionVftablePtrFallback(%);
 }
 )",
+                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                        !have_generic_params ? "" : "ref Type abiInvokeType",
                         !have_generic_params ? "" :
                             w.write_temp(R"( 
-if (RuntimeFeature.IsDynamicCodeCompiled && (%.AbiToProjectionVftablePtr == default || %._Invoke == default))
+if ((%.AbiToProjectionVftablePtr == default || %._Invoke == default))
 {
-Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(int) });
+abiInvokeType = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(int) });
 }
 )",
                                 bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
@@ -9152,7 +9172,8 @@ Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof
                         },
                         type.TypeName(),
                         type_params,
-                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false));
+                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                        !have_generic_params ? "" : "ref Abi_Invoke_Type");
                 }
 
                 w.write("global::WinRT.ComWrappersSupport.RegisterDelegateFactory(typeof(%), CreateRcw);", bind<write_type_name>(type, typedef_name_type::Projected, false));
