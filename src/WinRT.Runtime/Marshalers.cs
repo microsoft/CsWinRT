@@ -1570,7 +1570,11 @@ namespace WinRT
 #else
     public
 #endif
-    static class MarshalInspectable<T>
+    static class MarshalInspectable<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+#endif
+        T>
     {
         public static IObjectReference CreateMarshaler<V>(
             T o,
