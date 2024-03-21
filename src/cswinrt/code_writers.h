@@ -5206,16 +5206,23 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
 if (%)
 {
     % _%(_genericObj%%);
-    %
-}
-
-if (% != null)
-{
-% _%(_genericObj%%);
 }
 else
 {
-%
+    % %Fallback(_genericObj%%);
+}
+
+[MethodImpl(MethodImplOptions.NoInlining)]
+static % %Fallback(% %%%)
+{
+    if (_% != null)
+    {
+        % _%(_genericObj%%);
+    }
+    else
+    {
+        %
+    }   
 }
 )",
                             // Early return to ensure things are trimmed correctly on NAOT.
@@ -5225,9 +5232,20 @@ else
                             method.Name(),
                             signature.has_params() ? ", " : "",
                             bind_list<write_parameter_name>(", ", signature.params()),
-                            signature.return_signature() ? "" : "return;",
 
                             // CoreCLR paths
+                            signature.return_signature() ? "return " : "",
+                            method.Name(),
+                            signature.has_params() ? ", " : "",
+                            bind_list<write_parameter_name>(", ", signature.params()),
+
+                            // Fallback method
+                            bind<write_projection_return_type>(signature),
+                            method.Name(),
+                            settings.netstandard_compat ? w.write_temp("ObjectReference<%.Vftbl>", bind<write_type_name>(iface, typedef_name_type::ABI, true)) : "IObjectReference",
+                            generic_type ? "_genericObj" : "_obj",
+                            signature.has_params() ? ", " : "",
+                            bind_list<write_projection_parameter>(", ", signature.params()),
                             method.Name(),
                             signature.return_signature() ? "return " : "",
                             method.Name(),
