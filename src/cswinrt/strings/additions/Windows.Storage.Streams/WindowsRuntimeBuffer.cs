@@ -29,7 +29,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     sealed class WindowsRuntimeBuffer : IBuffer, IBufferByteAccess, IMarshal
     {
         [DllImport("api-ms-win-core-winrt-robuffer-l1-1-0.dll")]
-        private static extern int RoGetBufferMarshaler(IntPtr* bufferMarshalerPtr);
+        private static extern unsafe int RoGetBufferMarshaler(IntPtr* bufferMarshalerPtr);
         #region Constants
 
         private const string WinTypesDLL = "WinTypes.dll";
