@@ -29,7 +29,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     sealed class WindowsRuntimeBuffer : IBuffer, IBufferByteAccess, IMarshal
     {
         [DllImport("api-ms-win-core-winrt-robuffer-l1-1-0.dll")]
-        private static extern int RoGetBufferMarshaler(out IntPtr bufferMarshalerPtr);
+        private static extern unsafe int RoGetBufferMarshaler(IntPtr* bufferMarshalerPtr);
         #region Constants
 
         private const string WinTypesDLL = "WinTypes.dll";
@@ -72,14 +72,15 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         [ThreadStatic]
         private static IMarshal t_winRtMarshalProxy = null;
 
-        private static void EnsureHasMarshalProxy()
+        private static unsafe void EnsureHasMarshalProxy()
         {
             if (t_winRtMarshalProxy != null)
                 return;
 
             try
             {
-                int hr = RoGetBufferMarshaler(out IntPtr proxyPtr);
+                IntPtr proxyPtr = default;
+                int hr = RoGetBufferMarshaler(&proxyPtr);
                 IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.Com.IMarshal.Vftbl>.Attach(ref proxyPtr));
                 t_winRtMarshalProxy = proxy;
 
