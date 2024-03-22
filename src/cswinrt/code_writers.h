@@ -5203,15 +5203,49 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
                     else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                     {
                         w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled || _% != null)
+if (%)
 {
-% _%(_genericObj%%);
+    % _%(_genericObj%%);
 }
 else
 {
-%
+    % %Fallback(_genericObj%%);
+}
+
+[MethodImpl(MethodImplOptions.NoInlining)]
+static % %Fallback(% %%%)
+{
+    if (_% != null)
+    {
+        % _%(_genericObj%%);
+    }
+    else
+    {
+    %
+    }   
 }
 )",
+                            // Early return to ensure things are trimmed correctly on NAOT.
+                            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                            settings.netstandard_compat ? "false" : "!RuntimeFeature.IsDynamicCodeCompiled",
+                            signature.return_signature() ? "return " : "",
+                            method.Name(),
+                            signature.has_params() ? ", " : "",
+                            bind_list<write_parameter_name>(", ", signature.params()),
+
+                            // CoreCLR paths
+                            signature.return_signature() ? "return " : "",
+                            method.Name(),
+                            signature.has_params() ? ", " : "",
+                            bind_list<write_parameter_name>(", ", signature.params()),
+
+                            // Fallback method
+                            bind<write_projection_return_type>(signature),
+                            method.Name(),
+                            settings.netstandard_compat ? w.write_temp("ObjectReference<%.Vftbl>", bind<write_type_name>(iface, typedef_name_type::ABI, true)) : "IObjectReference",
+                            generic_type ? "_genericObj" : "_obj",
+                            signature.has_params() ? ", " : "",
+                            bind_list<write_projection_parameter>(", ", signature.params()),
                             method.Name(),
                             signature.return_signature() ? "return " : "",
                             method.Name(),
@@ -5278,15 +5312,30 @@ else
                         else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
                             w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled || _% != null)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
 {
-return _%(_genericObj);
+    return _%(_genericObj);
 }
-else
+
+return get_%Fallback(_genericObj);
+
+[MethodImpl(MethodImplOptions.NoInlining)]
+static % get_%Fallback(IObjectReference _genericObj)
 {
-%
+    if (_% != null)
+    {
+        return _%(_genericObj);
+    }
+    else
+    {
+    %
+    }
 }
 )",
+                                getter.Name(),
+                                prop.Name(),
+                                write_prop_type(w, prop),
+                                prop.Name(),
                                 getter.Name(),
                                 getter.Name(),
                                 bind([&](writer& w) {
@@ -5328,15 +5377,32 @@ else
                         if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
                             w.write(R"(
-if (!RuntimeFeature.IsDynamicCodeCompiled || _% != null)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
 {
-_%(_genericObj, value);
+    _%(_genericObj, value);
 }
 else
 {
-%
+    set_%Fallback(_genericObj, value);
+}
+
+[MethodImpl(MethodImplOptions.NoInlining)]
+static void set_%Fallback(IObjectReference _genericObj, % value)
+{
+    if (_% != null)
+    {
+        _%(_genericObj, value);
+    }
+    else
+    {
+    %
+    }
 }
 )",
+                                setter.Name(),
+                                prop.Name(),
+                                prop.Name(),
+                                write_prop_type(w, prop),
                                 setter.Name(),
                                 setter.Name(),
                                 bind([&](writer& w) {
@@ -7538,18 +7604,32 @@ internal volatile static bool _RcwHelperInitialized;
 unsafe static @Methods()
 {
 ComWrappersSupport.RegisterHelperType(typeof(%), typeof(%));
-if (RuntimeFeature.IsDynamicCodeCompiled && !_RcwHelperInitialized)
+if (RuntimeFeature.IsDynamicCodeCompiled)
 {
-var ensureInitializedFallback = (Func<bool>)typeof(@Methods<%>).MakeGenericType(%).
-GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
-CreateDelegate(typeof(Func<bool>));
-ensureInitializedFallback();
+#if NET8_0_OR_GREATER
+    [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
+#endif
+    [SuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    static void @MethodsFallback()
+    {
+        if (!_RcwHelperInitialized)
+        {
+            var ensureInitializedFallback = (Func<bool>)typeof(@Methods<%>).MakeGenericType(%).
+            GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
+            CreateDelegate(typeof(Func<bool>));
+            ensureInitializedFallback();
+        }
+    }
+
+    @MethodsFallback();
 }
 }
 )",
                     iface.TypeName(),
                     bind<write_type_name>(iface, typedef_name_type::Projected, false),
                     bind<write_type_name>(iface, typedef_name_type::ABI, false),
+                    iface.TypeName(),
                     iface.TypeName(),
                     bind([&](writer& w)
                     {
@@ -7571,7 +7651,8 @@ ensureInitializedFallback();
                                 bind<write_generic_type_name>(i),
                                 bind<write_generic_type_name>(i));
                         }
-                    }));
+                    }),
+                    iface.TypeName());
                 }
                 // If the interface inherits other generic interfaces, but itself isn't generic,
                 // we need to handle the case where the class implementing the interface can be trimmed
@@ -7972,12 +8053,25 @@ public static Guid PIID = %.IID;
 public static readonly IntPtr AbiToProjectionVftablePtr;
 static unsafe @()
 {
-if (RuntimeFeature.IsDynamicCodeCompiled && %.AbiToProjectionVftablePtr == default)
+if (RuntimeFeature.IsDynamicCodeCompiled)
 {
-var initFallbackCCWVtable = (Action)typeof(@Methods<%>).MakeGenericType(%).
-GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
-CreateDelegate(typeof(Action));
-initFallbackCCWVtable();
+#if NET8_0_OR_GREATER
+    [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
+#endif
+    [SuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    static void @Fallback()
+    {
+        if (%.AbiToProjectionVftablePtr == default)
+        {
+            var initFallbackCCWVtable = (Action)typeof(@Methods<%>).MakeGenericType(%).
+            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+            CreateDelegate(typeof(Action));
+            initFallbackCCWVtable();
+        }
+    }
+
+    @Fallback();
 }
 
 AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
@@ -7994,6 +8088,7 @@ public static Guid PIID = %.IID;
 }
 )",
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                        type.TypeName(),
                         type.TypeName(),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         type.TypeName(),
@@ -8018,6 +8113,7 @@ public static Guid PIID = %.IID;
                                     bind<write_generic_type_name>(i));
                             }
                         }),
+                        type.TypeName(),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind<write_guid_attribute>(type),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
@@ -8999,25 +9095,45 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
                 else
                 {
                     w.write(R"(
-%
-
-if (RuntimeFeature.IsDynamicCodeCompiled && %.AbiToProjectionVftablePtr == default)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
 {
-AbiInvokeDelegate = %;
-AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@%), sizeof(IntPtr) * 4);
-*(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
-((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate);
+    AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
 }
 else
 {
-AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
+#if NET8_0_OR_GREATER
+    [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
+#endif
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    static global::System.Delegate InitializeAbiToProjectionVftablePtrFallback(%)
+    {
+%
+
+global::System.Delegate abiInvokeDelegate = null;
+if (%.AbiToProjectionVftablePtr == default)
+{
+    abiInvokeDelegate = %;
+    AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@%), sizeof(IntPtr) * 4);
+    *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
+    ((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(abiInvokeDelegate);
+}
+else
+{
+    AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
+}
+return abiInvokeDelegate;
+    }
+
+    AbiInvokeDelegate = InitializeAbiToProjectionVftablePtrFallback(%);
 }
 )",
+                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                        !have_generic_params ? "" : "ref Type abiInvokeType",
                         !have_generic_params ? "" :
                             w.write_temp(R"( 
-if (RuntimeFeature.IsDynamicCodeCompiled && (%.AbiToProjectionVftablePtr == default || %._Invoke == default))
+if (%.AbiToProjectionVftablePtr == default || %._Invoke == default)
 {
-Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(int) });
+abiInvokeType = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(int) });
 }
 )",
                                 bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
@@ -9056,7 +9172,8 @@ Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof
                         },
                         type.TypeName(),
                         type_params,
-                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false));
+                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                        !have_generic_params ? "" : "ref Abi_Invoke_Type");
                 }
 
                 w.write("global::WinRT.ComWrappersSupport.RegisterDelegateFactory(typeof(%), CreateRcw);", bind<write_type_name>(type, typedef_name_type::Projected, false));
@@ -9085,12 +9202,20 @@ Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof
                 if (!settings.netstandard_compat && have_generic_params)
                 {
                     w.write(R"(
-if (%._Invoke != null || !RuntimeFeature.IsDynamicCodeCompiled)
+if (!RuntimeFeature.IsDynamicCodeCompiled)
+{
+    %._Invoke(_nativeDelegate, %);
+    return;
+}
+
+if (%._Invoke != null)
 {
 %._Invoke(_nativeDelegate, %);
 }
 else
 )",
+                        bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                        bind_list<write_parameter_name>(", ", signature.params()),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
                         bind_list<write_parameter_name>(", ", signature.params()));
