@@ -9131,7 +9131,7 @@ return abiInvokeDelegate;
                         !have_generic_params ? "" : "ref Type abiInvokeType",
                         !have_generic_params ? "" :
                             w.write_temp(R"( 
-if ((%.AbiToProjectionVftablePtr == default || %._Invoke == default))
+if (%.AbiToProjectionVftablePtr == default || %._Invoke == default)
 {
 abiInvokeType = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(int) });
 }
