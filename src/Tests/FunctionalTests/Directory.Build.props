@@ -13,6 +13,9 @@
   <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
     <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
+
+    <!-- Treat all AOT warnings as errors (see more info in .props file in the \AuthoringTest folder) -->
+    <WarningsAsErrors>$(WarningsAsErrors);IL3050;IL3051;IL3052;IL3053;IL3054;IL3055;IL3056</WarningsAsErrors>
   </PropertyGroup>
  
 </Project>
