@@ -355,10 +355,14 @@ namespace WinRT
             {
                 builder.Append("Object");
             }
+            else if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0 && type.IsTypeOfType())
+            {
+                builder.Append("Windows.UI.Xaml.Interop.TypeName");
+            }
             else
             {
                 var projectedAbiTypeName = Projections.FindCustomAbiTypeNameForType(type);
-                if (projectedAbiTypeName is object)
+                if (projectedAbiTypeName is not null)
                 {
                     builder.Append(projectedAbiTypeName);
                 }

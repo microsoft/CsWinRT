@@ -73,7 +73,7 @@ namespace ABI.System
                 {
                     kind = TypeKind.Primitive;
                 }
-                else if (value == typeof(object) || value == typeof(string) || value == typeof(Guid) || value == typeof(System.Type))
+                else if (value == typeof(object) || value == typeof(string) || value == typeof(Guid) || value == typeof(global::System.Type))
                 {
                     kind = TypeKind.Metadata;
                 }

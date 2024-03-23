@@ -2388,6 +2388,9 @@ namespace UnitTest
             Assert.Equal("Windows.Foundation.IReference`1<Int32>", Class.GetName(arr3.GetValue(0)));
             Assert.Equal(string.Empty, Class.GetName(arr4[0]));
             Assert.Equal("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>", Class.GetName(arr5.GetValue(0)));
+
+            Assert.Equal("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(IProperties1)));
+            Assert.Equal("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(Type)));
         }
 
         [Fact]
@@ -2473,6 +2476,13 @@ namespace UnitTest
             var typeName = Class.GetTypeNameForType(typeof(IList<int>));
 
             Assert.Equal("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
+        }
+
+        [Fact]
+        public void TypeInfoType()
+        {
+            var typeName = Class.GetTypeNameForType(typeof(Type));
+            Assert.Equal("Windows.UI.Xaml.Interop.TypeName", typeName);
         }
 
         [Fact]
