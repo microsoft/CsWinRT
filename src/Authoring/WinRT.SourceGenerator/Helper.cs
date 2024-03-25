@@ -267,7 +267,7 @@ namespace Generator
         public static bool IsWinRTType(MemberDeclarationSyntax node)
         {
             bool isProjectedType = node.AttributeLists.SelectMany(list => list.Attributes).
-                Any(attribute => string.CompareOrdinal(attribute.Name.NormalizeWhitespace().ToFullString(), "WindowsRuntimeTypeAttribute") == 0);
+                Any(attribute => string.CompareOrdinal(attribute.Name.NormalizeWhitespace().ToFullString(), "global::WinRT.WindowsRuntimeType") == 0);
             return isProjectedType;
         }
 
