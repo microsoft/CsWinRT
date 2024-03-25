@@ -454,6 +454,26 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Private plumbing
 
+#if NET
+        private sealed class StreamWinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+        {
+            public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+            {
+                return new ComWrappers.ComInterfaceEntry[]
+                {
+                    new ComWrappers.ComInterfaceEntry
+                    {
+                        IID = typeof(global::System.IDisposable).GUID,
+                        Vtable = global::ABI.System.IDisposableMethods.AbiToProjectionVftablePtr
+                    },
+                };
+            }
+        }
+#endif
+
+#if NET
+        [global::WinRT.WinRTExposedType(typeof(StreamWinRTTypeDetails))]
+#endif
         private sealed class WindowsRuntimeBufferMemoryStream : MemoryStream
         {
             private readonly IBuffer _sourceBuffer;
@@ -524,6 +544,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }  // class WindowsRuntimeBufferMemoryStream
 
+#if NET
+        [global::WinRT.WinRTExposedType(typeof(StreamWinRTTypeDetails))]
+#endif
         private sealed class WindowsRuntimeBufferUnmanagedMemoryStream : UnmanagedMemoryStream
         {
             // We need this class because if we construct an UnmanagedMemoryStream on an IBuffer backed by native memory,

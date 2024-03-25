@@ -21,7 +21,7 @@ namespace System.IO
     /// the region Interface adapters to implement WinRT ifaces and create instances of those types.
     /// See comment in that region for technical details.
     /// </summary>
-    internal abstract class NetFxToWinRtStreamAdapter : IDisposable
+    internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
     {
         private const int E_ILLEGAL_METHOD_CALL = unchecked((int)0x8000000E);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
@@ -42,7 +42,7 @@ namespace System.IO
         // The latter is much more elegant, and likely also faster.
 
 
-        private sealed class InputStream : NetFxToWinRtStreamAdapter, IInputStream, IDisposable
+        private sealed partial class InputStream : NetFxToWinRtStreamAdapter, IInputStream, IDisposable
         {
             internal InputStream(Stream stream, StreamReadOperationOptimization readOptimization)
                 : base(stream, readOptimization)
@@ -51,7 +51,7 @@ namespace System.IO
         }
 
 
-        private sealed class OutputStream : NetFxToWinRtStreamAdapter, IOutputStream, IDisposable
+        private sealed partial class OutputStream : NetFxToWinRtStreamAdapter, IOutputStream, IDisposable
         {
             internal OutputStream(Stream stream, StreamReadOperationOptimization readOptimization)
                 : base(stream, readOptimization)
@@ -60,7 +60,7 @@ namespace System.IO
         }
 
 
-        private sealed class RandomAccessStream : NetFxToWinRtStreamAdapter, IRandomAccessStream, IInputStream, IOutputStream, IDisposable
+        private sealed partial class RandomAccessStream : NetFxToWinRtStreamAdapter, IRandomAccessStream, IInputStream, IOutputStream, IDisposable
         {
             internal RandomAccessStream(Stream stream, StreamReadOperationOptimization readOptimization)
                 : base(stream, readOptimization)
@@ -69,7 +69,7 @@ namespace System.IO
         }
 
 
-        private sealed class InputOutputStream : NetFxToWinRtStreamAdapter, IInputStream, IOutputStream, IDisposable
+        private sealed partial class InputOutputStream : NetFxToWinRtStreamAdapter, IInputStream, IOutputStream, IDisposable
         {
             internal InputOutputStream(Stream stream, StreamReadOperationOptimization readOptimization)
                 : base(stream, readOptimization)
