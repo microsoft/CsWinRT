@@ -9,6 +9,8 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using WinRT.SourceGenerator;
 
+#nullable enable
+
 namespace Generator;
 
 [Generator]
@@ -17,50 +19,70 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Get all the names of the projected types to root
-        IncrementalValueProvider<EquatableArray<string>> projectedTypeNames = context.CompilationProvider.Select(static (compilation, token) =>
+        // Gather all PE references from the current compilation
+        IncrementalValuesProvider<EquatablePortableExecutableReference> executableReferences =
+            context.CompilationProvider
+            .SelectMany(static (compilation, token) =>
         {
-            ITypeSymbol windowsRuntimeTypeAttributeSymbol = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
-
-            ImmutableArray<string>.Builder projectedTypeNames = ImmutableArray.CreateBuilder<string>();
+            var executableReferences = ImmutableArray.CreateBuilder<EquatablePortableExecutableReference>();
 
             foreach (MetadataReference metadataReference in compilation.References)
             {
-                // We only care about resolved assembly symbols (this should always be the case anyway)
-                if (compilation.GetAssemblyOrModuleSymbol(metadataReference) is not IAssemblySymbol assemblySymbol)
+                // We are only interested in PE references (not project references)
+                if (metadataReference is not PortableExecutableReference executableReference)
                 {
                     continue;
                 }
 
-                // If the assembly is not an old projections assembly, we have nothing to do
-                if (!IsOldProjectionAssembly(assemblySymbol))
+                executableReferences.Add(new EquatablePortableExecutableReference(executableReference, compilation));
+            }
+
+            return executableReferences.ToImmutable();
+        });
+
+        // Get all the names of the projected types to root
+        IncrementalValuesProvider<EquatableArray<string>> projectedTypeNames = executableReferences.Select(static (executableReference, token) =>
+        {
+            Compilation compilation = executableReference.GetCompilationUnsafe();
+
+            // We only care about resolved assembly symbols (this should always be the case anyway)
+            if (compilation.GetAssemblyOrModuleSymbol(executableReference.Reference) is not IAssemblySymbol assemblySymbol)
+            {
+                return EquatableArray<string>.FromImmutableArray(ImmutableArray<string>.Empty);
+            }
+
+            // If the assembly is not an old projections assembly, we have nothing to do
+            if (!IsOldProjectionAssembly(assemblySymbol))
+            {
+                return EquatableArray<string>.FromImmutableArray(ImmutableArray<string>.Empty);
+            }
+
+            ITypeSymbol windowsRuntimeTypeAttributeSymbol = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute")!;
+
+            ImmutableArray<string>.Builder projectedTypeNames = ImmutableArray.CreateBuilder<string>();
+
+            // Process all type symbols in the current assembly
+            foreach (INamedTypeSymbol typeSymbol in VisitNamedTypeSymbolsExceptABI(assemblySymbol))
+            {
+                // We only care about public or internal classes
+                if (typeSymbol is not { TypeKind: TypeKind.Class, DeclaredAccessibility: Accessibility.Public or Accessibility.Internal })
                 {
                     continue;
                 }
 
-                // Process all type symbols in the current assembly
-                foreach (INamedTypeSymbol typeSymbol in VisitNamedTypeSymbolsExceptABI(assemblySymbol))
+                // If the type is not a generated projected type, do nothing
+                if (ContainsAttributeWithType(typeSymbol, windowsRuntimeTypeAttributeSymbol))
                 {
-                    // We only care about public or internal classes
-                    if (typeSymbol is not { TypeKind: TypeKind.Class, DeclaredAccessibility: Accessibility.Public or Accessibility.Internal })
-                    {
-                        continue;
-                    } 
-
-                    // If the type is not a generated projected type, do nothing
-                    if (ContainsAttributeWithType(typeSymbol, windowsRuntimeTypeAttributeSymbol))
-                    {
-                        continue;
-                    }
-
-                    // Double check we can in fact access this type (or we can't reference it)
-                    if (!compilation.IsSymbolAccessibleWithin(typeSymbol, compilation.Assembly))
-                    {
-                        continue;
-                    }
-
-                    projectedTypeNames.Add(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                    continue;
                 }
+
+                // Double check we can in fact access this type (or we can't reference it)
+                if (!compilation.IsSymbolAccessibleWithin(typeSymbol, compilation.Assembly))
+                {
+                    continue;
+                }
+
+                projectedTypeNames.Add(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
             }
 
             return EquatableArray<string>.FromImmutableArray(projectedTypeNames.ToImmutable());
@@ -96,13 +118,13 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
 
             foreach (string projectedTypeName in projectedTypeNames)
             {
-                builder.AppendLine("[DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(");
+                builder.AppendLine("        [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(");
                 builder.Append(projectedTypeName);
                 builder.AppendLine("))]");
             }
 
             builder.Append("""
-                public static void InitializeRcwFallback()
+                        public static void InitializeRcwFallback()
                         {
                         }
                     }
@@ -184,7 +206,56 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 return true;
             }
         }
-
         return false;
+    }
+
+    /// <summary>
+    /// An equatable <see cref="PortableExecutableReference"/> type that weakly references a <see cref="Microsoft.CodeAnalysis.Compilation"/> object.
+    /// </summary>
+    /// <param name="executableReference">The <see cref="PortableExecutableReference"/> object to wrap.</param>
+    /// <param name="compilation">The <see cref="Microsoft.CodeAnalysis.Compilation"/> instance where <paramref name="executableReference"/> comes from.</param>
+    public sealed class EquatablePortableExecutableReference(
+        PortableExecutableReference executableReference,
+        Compilation compilation) : IEquatable<EquatablePortableExecutableReference>
+    {
+        /// <summary>
+        /// A weak reference to the <see cref="Microsoft.CodeAnalysis.Compilation"/> object owning <see cref="Reference"/>.
+        /// </summary>
+        private readonly WeakReference<Compilation> Compilation = new(compilation);
+
+        /// <summary>
+        /// Gets the <see cref="PortableExecutableReference"/> object for this instance.
+        /// </summary>
+        public PortableExecutableReference Reference { get; } = executableReference;
+
+        /// <summary>
+        /// Gets the <see cref="Microsoft.CodeAnalysis.Compilation"/> object for <see cref="Reference"/>.
+        /// </summary>
+        /// <returns>The <see cref="Microsoft.CodeAnalysis.Compilation"/> object for <see cref="Reference"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the <see cref="Microsoft.CodeAnalysis.Compilation"/> object has been collected.</exception>
+        /// <remarks>
+        /// This method should only be used from incremental steps immediastely following a change in the metadata reference
+        /// being used, as that would guarantee that that <see cref="Microsoft.CodeAnalysis.Compilation"/> object would be alive.
+        /// </remarks>
+        public Compilation GetCompilationUnsafe()
+        {
+            if (Compilation.TryGetTarget(out Compilation? compilation))
+            {
+                return compilation;
+            }
+
+            throw new InvalidOperationException("No compilation object is available.");
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(EquatablePortableExecutableReference other)
+        {
+            if (other is null)
+            {
+                return false;
+            }
+
+            return other.Reference.GetMetadataId() == Reference.GetMetadataId();
+        }
     }
 }
