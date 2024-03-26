@@ -150,7 +150,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
     private static bool IsOldProjectionAssembly(IAssemblySymbol assemblySymbol)
     {
         // We only care about assemblies that have some dependent assemblies
-        if (assemblySymbol.ContainingModule is not { ReferencedAssemblies: { Length: > 0 } dependentAssemblies })
+        if (assemblySymbol.Modules.First() is not { ReferencedAssemblies: { Length: > 0 } dependentAssemblies })
         {
             return false;
         }
