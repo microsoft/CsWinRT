@@ -18,6 +18,20 @@ namespace ABI.Windows.Storage.Streams
     using global::System.Runtime.InteropServices;
     using global::System.ComponentModel;
 
+    internal static class IBufferByteAccessMethods
+    {
+        public static unsafe IntPtr get_Buffer(IObjectReference _obj)
+        {
+            var ThisPtr = _obj.ThisPtr;
+
+            IntPtr __retval = default;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval));
+            return __retval;
+        }
+
+        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xEF, 0x0F, 0x5A, 0x90, 0x53, 0xBC, 0xDF, 0x11, 0x8C, 0x49, 0x00, 0x1E, 0x4F, 0xC6, 0x86, 0xDA }));
+    }
+
 #if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("905a0fef-bc53-11df-8c49-001e4fc686da")]
