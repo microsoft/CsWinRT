@@ -125,7 +125,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
 
             foreach (string projectedTypeName in projectedTypeNames)
             {
-                builder.AppendLine("        [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(");
+                builder.Append("        [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(");
                 builder.Append(projectedTypeName);
                 builder.AppendLine("))]");
             }
