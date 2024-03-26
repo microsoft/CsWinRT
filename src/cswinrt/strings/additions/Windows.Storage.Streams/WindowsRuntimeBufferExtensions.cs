@@ -278,7 +278,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return false;
             }
 
-            if (ComWrappersSupport.TryUnwrapObject(buffer, out var objRef))
+            if (ComWrappersSupport.TryUnwrapObject(buffer, out var unwrapped) &&
+                unwrapped.TryAs<IUnknownVftbl>(global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.IID, out var objRef) >= 0))
             {
                 using (objRef)
                 {
