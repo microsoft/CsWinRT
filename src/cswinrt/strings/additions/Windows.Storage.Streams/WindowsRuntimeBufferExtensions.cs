@@ -463,7 +463,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 {
                     new ComWrappers.ComInterfaceEntry
                     {
-                        IID = typeof(global::System.IDisposable).GUID,
+                        IID = global::ABI.System.IDisposableMethods.IID,
                         Vtable = global::ABI.System.IDisposableMethods.AbiToProjectionVftablePtr
                     },
                 };
