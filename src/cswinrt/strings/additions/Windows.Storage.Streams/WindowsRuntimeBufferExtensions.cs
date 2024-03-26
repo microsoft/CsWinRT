@@ -271,9 +271,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         public static bool TryGetDataUnsafe(this IBuffer buffer, out IntPtr dataPtr)
         {
-            if (buffer is IWinRTObject winrtObj && winrtObj.HasUnwrappableNativeObject)
+            if (buffer is IWinRTObject winrtObj && winrtObj.HasUnwrappableNativeObject &&
+                winrtObj.NativeObject.TryAs<IUnknownVftbl>(global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.IID, out var objRef) >= 0)
             {
-                if (winrtObj.NativeObject.TryAs<IUnknownVftbl>(global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.IID, out var objRef) >= 0)
+                using (objRef)
                 {
                     dataPtr = global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.get_Buffer(objRef);
                     return true;
