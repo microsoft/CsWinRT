@@ -12,6 +12,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using System.Threading.Tasks;
     using global::Windows.Foundation;
     using global::Windows.Storage.Streams;
+    using WinRT;
     /// <summary>
     /// Contains extension methods that expose operations on WinRT <code>Windows.Foundation.IBuffer</code>.
     /// </summary>
