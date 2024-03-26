@@ -41,7 +41,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
         });
 
         // Get all the names of the projected types to root
-        IncrementalValuesProvider<EquatableArray<string>> projectedTypeNames = executableReferences.Select(static (executableReference, token) =>
+        IncrementalValuesProvider<EquatableArray<string>> executableTypeNames = executableReferences.Select(static (executableReference, token) =>
         {
             Compilation compilation = executableReference.GetCompilationUnsafe();
 
@@ -59,7 +59,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
 
             ITypeSymbol windowsRuntimeTypeAttributeSymbol = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute")!;
 
-            ImmutableArray<string>.Builder projectedTypeNames = ImmutableArray.CreateBuilder<string>();
+            ImmutableArray<string>.Builder executableTypeNames = ImmutableArray.CreateBuilder<string>();
 
             // Process all type symbols in the current assembly
             foreach (INamedTypeSymbol typeSymbol in VisitNamedTypeSymbolsExceptABI(assemblySymbol))
@@ -82,11 +82,18 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                     continue;
                 }
 
-                projectedTypeNames.Add(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                executableTypeNames.Add(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
             }
 
-            return EquatableArray<string>.FromImmutableArray(projectedTypeNames.ToImmutable());
+            return EquatableArray<string>.FromImmutableArray(executableTypeNames.ToImmutable());
         });
+
+        // Combine all names into a single sequence
+        IncrementalValueProvider<ImmutableArray<string>> projectedTypeNames =
+            executableTypeNames
+            .Where(static names => !names.IsEmpty)
+            .SelectMany(static (executableTypeNames, token) => executableTypeNames.AsImmutableArray())
+            .Collect();
 
         // Generate the [DynamicDependency] attributes
         context.RegisterImplementationSourceOutput(projectedTypeNames, static (context, projectedTypeNames) =>
