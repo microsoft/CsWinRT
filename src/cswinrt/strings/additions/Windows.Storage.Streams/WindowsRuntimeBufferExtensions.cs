@@ -12,6 +12,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using System.Threading.Tasks;
     using global::Windows.Foundation;
     using global::Windows.Storage.Streams;
+    using WinRT;
     /// <summary>
     /// Contains extension methods that expose operations on WinRT <code>Windows.Foundation.IBuffer</code>.
     /// </summary>
@@ -248,6 +249,33 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
 #endregion (IBuffer).CopyTo extensions for copying to an (IBuffer)
 
+        public static bool TryGetDataUnsafe(this IBuffer buffer, out IntPtr dataPtr)
+        {
+            if (buffer == null)
+            {
+                dataPtr = IntPtr.Zero;
+                return false;
+            }
+
+            if (ComWrappersSupport.TryUnwrapObject(buffer, out var unwrapped) &&
+                unwrapped.TryAs<IUnknownVftbl>(global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.IID, out var objRef) >= 0))
+            {
+                using (objRef)
+                {
+                    dataPtr = global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.get_Buffer(objRef);
+                    return true;
+                }
+            }
+
+            if (buffer is IBufferByteAccess managedBuffer)
+            {
+                dataPtr = managedBuffer.Buffer;
+                return true;
+            }
+
+            dataPtr = IntPtr.Zero;
+            return false;
+        }
 
 #region Access to underlying array optimised for IBuffers backed by managed arrays (to avoid pinning)
 
@@ -315,13 +343,13 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (thisIsManaged)
                 return (thisDataArr == otherDataArr) && (thisDataOffs == otherDataOffs);
 
-            IBufferByteAccess thisBuff = buffer.As<IBufferByteAccess>();
-            IBufferByteAccess otherBuff = otherBuffer.As<IBufferByteAccess>();
-
-            unsafe
+            if (!buffer.TryGetDataUnsafe(out IntPtr thisBuff) ||
+                !otherBuffer.TryGetDataUnsafe(out IntPtr otherBuff))
             {
-                return (thisBuff.Buffer == otherBuff.Buffer);
+                return false;
             }
+
+            return thisBuff == otherBuff;
         }
 
 #endregion Access to underlying array optimised for IBuffers backed by managed arrays (to avoid pinning)
@@ -416,11 +444,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return new WindowsRuntimeBufferMemoryStream(source, dataArr, dataOffs);
             }
 
-            unsafe
+            if (!source.TryGetDataUnsafe(out IntPtr sourceBuff))
             {
-                IBufferByteAccess bufferByteAccess = source.As<IBufferByteAccess>();
-                return new WindowsRuntimeBufferUnmanagedMemoryStream(source, (byte*)bufferByteAccess.Buffer);
+                throw new InvalidCastException();
             }
+
+            return new WindowsRuntimeBufferUnmanagedMemoryStream(source, sourceBuff);
         }
 
 #endregion Extensions for co-operation with memory streams (share mem stream data; expose data as managed/unmanaged mem stream)
@@ -532,9 +561,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             private readonly IBuffer _sourceBuffer;
 
-            internal unsafe WindowsRuntimeBufferUnmanagedMemoryStream(IBuffer sourceBuffer, byte* dataPtr)
+            internal unsafe WindowsRuntimeBufferUnmanagedMemoryStream(IBuffer sourceBuffer, IntPtr dataPtr)
 
-                : base(dataPtr, (long)sourceBuffer.Length, (long)sourceBuffer.Capacity, FileAccess.ReadWrite)
+                : base((byte*)dataPtr, (long)sourceBuffer.Length, (long)sourceBuffer.Capacity, FileAccess.ReadWrite)
             {
                 _sourceBuffer = sourceBuffer;
             }
@@ -602,11 +631,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Debug.Assert(0 <= offset);
             Debug.Assert(offset < buffer.Capacity);
 
-            unsafe
+            if (!buffer.TryGetDataUnsafe(out IntPtr thisBuff))
             {
-                IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
-                return new IntPtr((byte*)buffPtr + offset);
+                throw new InvalidCastException();
             }
+
+            return IntPtr.Add(thisBuff, (int)offset);
         }
 
         private static unsafe void MemCopy(IntPtr src, IntPtr dst, uint count)
