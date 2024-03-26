@@ -71,7 +71,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 }
 
                 // If the type is not a generated projected type, do nothing
-                if (ContainsAttributeWithType(typeSymbol, windowsRuntimeTypeAttributeSymbol))
+                if (!ContainsAttributeWithType(typeSymbol, windowsRuntimeTypeAttributeSymbol))
                 {
                     continue;
                 }
