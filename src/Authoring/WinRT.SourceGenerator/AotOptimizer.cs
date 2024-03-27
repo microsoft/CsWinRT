@@ -48,6 +48,7 @@ namespace Generator
         {
             return node is ClassDeclarationSyntax declaration &&
                 !declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword)) &&
+                declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)) &&
                 !GeneratorHelper.IsWinRTType(declaration); // Making sure it isn't an RCW we are projecting.
         }
 
