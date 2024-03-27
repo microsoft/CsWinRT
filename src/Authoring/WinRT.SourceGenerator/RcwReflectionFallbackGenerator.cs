@@ -40,13 +40,34 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
             return executableReferences.ToImmutable();
         });
 
-        // Get all the names of the projected types to root
-        IncrementalValuesProvider<EquatableArray<string>> executableTypeNames = executableReferences.Select(static (executableReference, token) =>
+        // Get whether the current project is an .exe
+        IncrementalValueProvider<bool> isOutputTypeExe = context.CompilationProvider.Select(static (compilation, token) =>
         {
-            Compilation compilation = executableReference.GetCompilationUnsafe();
+            return compilation.Options.OutputKind is OutputKind.ConsoleApplication or OutputKind.WindowsApplication or OutputKind.WindowsRuntimeApplication;
+        });
+
+        // Get whether the generator is explicitly set as opt-in
+        IncrementalValueProvider<bool> isGeneratorForceOptIn = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
+        {
+            return options.GetCsWinRTRcwFactoryFallbackGeneratorForceOptIn();
+        });
+
+        // Get whether the generator should actually run or not
+        IncrementalValueProvider<bool> isGeneratorEnabled = isOutputTypeExe.Combine(isGeneratorForceOptIn).Select(static (flags, token) => flags.Left || flags.Right);
+
+        // Bypass all items if the flag is not set
+        IncrementalValuesProvider<(EquatablePortableExecutableReference Value, bool)> enabledExecutableReferences =
+            executableReferences
+            .Combine(isGeneratorEnabled)
+            .Where(static item => item.Right);
+
+        // Get all the names of the projected types to root
+        IncrementalValuesProvider<EquatableArray<string>> executableTypeNames = enabledExecutableReferences.Select(static (executableReference, token) =>
+        {
+            Compilation compilation = executableReference.Value.GetCompilationUnsafe();
 
             // We only care about resolved assembly symbols (this should always be the case anyway)
-            if (compilation.GetAssemblyOrModuleSymbol(executableReference.Reference) is not IAssemblySymbol assemblySymbol)
+            if (compilation.GetAssemblyOrModuleSymbol(executableReference.Value.Reference) is not IAssemblySymbol assemblySymbol)
             {
                 return EquatableArray<string>.FromImmutableArray(ImmutableArray<string>.Empty);
             }
@@ -57,6 +78,8 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 return EquatableArray<string>.FromImmutableArray(ImmutableArray<string>.Empty);
             }
 
+            token.ThrowIfCancellationRequested();
+
             ITypeSymbol attributeSymbol = compilation.GetTypeByMetadataName("System.Attribute")!;
             ITypeSymbol windowsRuntimeTypeAttributeSymbol = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute")!;
 
@@ -65,6 +88,8 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
             // Process all type symbols in the current assembly
             foreach (INamedTypeSymbol typeSymbol in VisitNamedTypeSymbolsExceptABI(assemblySymbol))
             {
+                token.ThrowIfCancellationRequested();
+
                 // We only care about public or internal classes
                 if (typeSymbol is not { TypeKind: TypeKind.Class, DeclaredAccessibility: Accessibility.Public or Accessibility.Internal })
                 {
@@ -97,6 +122,8 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
 
                 executableTypeNames.Add(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
             }
+
+            token.ThrowIfCancellationRequested();
 
             return EquatableArray<string>.FromImmutableArray(executableTypeNames.ToImmutable());
         });
