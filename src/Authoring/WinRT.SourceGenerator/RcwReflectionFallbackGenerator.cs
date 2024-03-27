@@ -71,6 +71,12 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                     continue;
                 }
 
+                // Ignore static types (we only care about actual RCW types we can instantiate)
+                if (typeSymbol.IsStatic)
+                {
+                    continue;
+                }
+
                 // Ignore attribute types (they're never instantiated like normal RCWs)
                 if (IsDerivedFromType(typeSymbol, attributeSymbol))
                 {
