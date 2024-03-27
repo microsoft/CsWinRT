@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
@@ -249,6 +250,11 @@ namespace Generator
             {
                 return argument.TypeKind == TypeKind.TypeParameter;
             }
+        }
+
+        public static bool IsPartial(INamedTypeSymbol symbol)
+        {
+            return symbol.DeclaringSyntaxReferences.Any(syntax => syntax.GetSyntax() is BaseTypeDeclarationSyntax declaration && declaration.Modifiers.Any(SyntaxKind.PartialKeyword));
         }
 
         public static bool HasPrivateclass(ITypeSymbol symbol)

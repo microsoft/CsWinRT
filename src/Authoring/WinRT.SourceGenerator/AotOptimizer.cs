@@ -20,15 +20,11 @@ namespace Generator
         {
             var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent()));
 
-            var vtableAttributesOrDiagnostics = context.SyntaxProvider.CreateSyntaxProvider(
+            var vtableAttributesToAdd = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => NeedVtableAttribute(n),
                     static (n, _) => GetVtableAttributeToAdd(n)
                 ).Where(vtableAttribute => vtableAttribute != null);
 
-            var diagnostics = vtableAttributesOrDiagnostics.Where(vtableAttribute => vtableAttribute.Diagnostic != null);
-            var vtableAttributesToAdd = vtableAttributesOrDiagnostics.Where(vtableAttribute => vtableAttribute.Diagnostic == null);
-
-            context.RegisterImplementationSourceOutput(diagnostics.Collect().Combine(properties), GenerateDiagnostics);
             context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect().Combine(properties), GenerateVtableAttributes);
 
             var vtablesToAddOnLookupTable = context.SyntaxProvider.CreateSyntaxProvider(
@@ -57,10 +53,8 @@ namespace Generator
 
         private static VtableAttribute GetVtableAttributeToAdd(GeneratorSyntaxContext context)
         {
-            var classDeclaration = context.Node as ClassDeclarationSyntax;
-            var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
-            bool isPartial = classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
-            return GetVtableAttributeToAdd(symbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false, "", !isPartial);
+            var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node as ClassDeclarationSyntax);
+            return GetVtableAttributeToAdd(symbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false);
         }
 
         private static string ToFullyQualifiedString(ISymbol symbol)
@@ -98,8 +92,7 @@ namespace Generator
             Func<ISymbol, bool> isWinRTType, 
             IAssemblySymbol assemblySymbol, 
             bool isAuthoring, 
-            string authoringDefaultInterface = "", 
-            bool reportDiagnosticForNonPartialType = false)
+            string authoringDefaultInterface = "")
         {
             if (GeneratorHelper.HasNonInstantiatedWinRTGeneric(symbol))
             {
@@ -170,23 +163,6 @@ namespace Generator
             if (!isGlobalNamespace)
             {
                 typeName = typeName[(@namespace.Length + 1)..];
-            }
-
-            if (reportDiagnosticForNonPartialType)
-            {
-                var diagnostic = Diagnostic.Create(WinRTRules.ClassNotAotCompatible, symbol.Locations.First(), typeName);
-                return new VtableAttribute(
-                    string.Empty,
-                    false,
-                    string.Empty,
-                    ImmutableArray<TypeInfo>.Empty,
-                    string.Empty,
-                    ImmutableArray<string>.Empty,
-                    ImmutableArray<GenericInterface>.Empty,
-                    false,
-                    false,
-                    false,
-                    diagnostic);
             }
 
             EquatableArray<TypeInfo> classHierarchy = ImmutableArray<TypeInfo>.Empty;
@@ -325,19 +301,6 @@ namespace Generator
             }
 
             return true;
-        }
-
-        private static void GenerateDiagnostics(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
-        {
-            if (!value.properties.isCsWinRTAotOptimizerEnabled || value.properties.isCsWinRTComponent)
-            {
-                return;
-            }
-
-            foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet())
-            {
-                sourceProductionContext.ReportDiagnostic(vtableAttribute.Diagnostic);
-            }
         }
 
         private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
@@ -907,8 +870,7 @@ namespace Generator
         EquatableArray<GenericInterface> GenericInterfaces,
         bool IsArray,
         bool IsDelegate,
-        bool IsPublic,
-        Diagnostic Diagnostic = null);
+        bool IsPublic);
 
     /// <summary>
     /// A model describing a type info in a type hierarchy.
