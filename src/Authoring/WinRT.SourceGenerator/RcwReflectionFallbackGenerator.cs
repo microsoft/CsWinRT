@@ -57,6 +57,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 return EquatableArray<string>.FromImmutableArray(ImmutableArray<string>.Empty);
             }
 
+            ITypeSymbol attributeSymbol = compilation.GetTypeByMetadataName("System.Attribute")!;
             ITypeSymbol windowsRuntimeTypeAttributeSymbol = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute")!;
 
             ImmutableArray<string>.Builder executableTypeNames = ImmutableArray.CreateBuilder<string>();
@@ -66,6 +67,12 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
             {
                 // We only care about public or internal classes
                 if (typeSymbol is not { TypeKind: TypeKind.Class, DeclaredAccessibility: Accessibility.Public or Accessibility.Internal })
+                {
+                    continue;
+                }
+
+                // Ignore attribute types (they're never instantiated like normal RCWs)
+                if (IsDerivedFromType(typeSymbol, attributeSymbol))
                 {
                     continue;
                 }
@@ -216,6 +223,27 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 return true;
             }
         }
+        return false;
+    }
+
+    /// <summary>
+    /// Checks whether a given type is derived from a specified type.
+    /// </summary>
+    /// <param name="typeSymbol">The input <see cref="ITypeSymbol"/> instance to check.</param>
+    /// <param name="baseTypeSymbol">The base type to look for.</param>
+    /// <returns>Whether <paramref name="typeSymbol"/> derives from <paramref name="baseTypeSymbol"/>.</returns>
+    private static bool IsDerivedFromType(ITypeSymbol typeSymbol, ITypeSymbol baseTypeSymbol)
+    {
+        for (ITypeSymbol? currentSymbol = typeSymbol.BaseType;
+             currentSymbol is { SpecialType: not SpecialType.System_Object };
+             currentSymbol = currentSymbol.BaseType)
+        {
+            if (SymbolEqualityComparer.Default.Equals(currentSymbol, baseTypeSymbol))
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 
