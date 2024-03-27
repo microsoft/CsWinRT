@@ -116,6 +116,17 @@ namespace WinRT
                 throw new ArgumentNullException(nameof(thisPtr));
             }
             _thisPtr = thisPtr;
+
+            // We are holding onto a native object or one of its interfaces.
+            // This causes for there to be native memory being held onto by
+            // this that the .NET GC isn't aware of.  So we use memory pressure
+            // to make the .NET GC aware of it.  In theory all the interface QIs
+            // can be holding onto the same native object.  Here we are taking the simplified
+            // approach of having each IObjectReference represent some basic native memory
+            // pressure rather than tracking all the IObjectReferences that are connected
+            // to the same object and only releasing the memory pressure once all of them
+            // have been finalized.
+            GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
         }
 
         ~IObjectReference()
@@ -283,6 +294,7 @@ namespace WinRT
                 }
 
                 DisposeTrackerSource();
+                GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
                 disposed = true;
             }
         }

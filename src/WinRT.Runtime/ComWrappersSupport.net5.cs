@@ -148,6 +148,9 @@ namespace WinRT
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr, CreateObjectFlags createObjectFlags) =>
             ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, createObjectFlags, obj);
+        
+        internal static void RegisterObjectForInterface(object obj, IntPtr thisPtr, IntPtr inner, CreateObjectFlags createObjectFlags) => 
+            ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, createObjectFlags, obj, inner);
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => 
             TryRegisterObjectForInterface(obj, thisPtr);
@@ -301,37 +304,9 @@ namespace WinRT
                 IntPtr instanceToWrap = newInstance;
 
                 // The instance supports IReferenceTracker.
-                if (referenceTracker != default(IntPtr))
+                if (referenceTracker != default)
                 {
                     createObjectFlags |= CreateObjectFlags.TrackerObject;
-                }
-
-                // Update flags if the native instance is being used in an aggregation scenario.
-                if (isAggregation)
-                {
-                    // Indicate the scenario is aggregation
-                    createObjectFlags |= (CreateObjectFlags)4;
-
-                    // The instance supports IReferenceTracker.
-                    if (referenceTracker != default(IntPtr))
-                    {
-                        // IReferenceTracker is not needed in aggregation scenarios.
-                        // It is not needed because all QueryInterface() calls on an
-                        // object are followed by an immediately release of the returned
-                        // pointer - see below for details.
-                        Marshal.Release(referenceTracker);
-
-                        // .NET 5 limitation
-                        //
-                        // For aggregated scenarios involving IReferenceTracker
-                        // the API handles object cleanup. In .NET 5 the API
-                        // didn't expose an option to handle this so we pass the inner
-                        // in order to handle its lifetime.
-                        //
-                        // The API doesn't handle inner lifetime in any other scenario
-                        // in the .NET 5 timeframe.
-                        instanceToWrap = inner;
-                    }
                 }
 
                 // Create a native object wrapper (i.e. RCW).
@@ -340,7 +315,31 @@ namespace WinRT
                 // therefore it is important that the enclosing CCW forwards to its inner
                 // if aggregation is involved. This is typically accomplished through an
                 // implementation of ICustomQueryInterface.
-                ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, createObjectFlags);
+                if (isAggregation)
+                {
+                    // Indicate the scenario is aggregation
+                    createObjectFlags |= CreateObjectFlags.Aggregation;
+
+                    // The instance supports IReferenceTracker.
+                    if (referenceTracker != default)
+                    {
+                        // IReferenceTracker is not needed in aggregation scenarios.
+                        // It is not needed because all QueryInterface() calls on an
+                        // object are followed by an immediately release of the returned
+                        // pointer - see below for details.
+                        Marshal.Release(referenceTracker);
+
+                        ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, inner, createObjectFlags);
+                    }
+                    else
+                    {
+                        ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, createObjectFlags);
+                    }
+                }
+                else
+                {
+                    ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, createObjectFlags);
+                }
             }
 
             // The following sets up the object reference to correctly handle AddRefs and releases
@@ -361,11 +360,11 @@ namespace WinRT
                 // IsAggregated and PreventReleaseOnDispose properties on IObjectReference.
                 objRef.IsAggregated = true;
                 // In WinUI scenario don't release inner
-                objRef.PreventReleaseOnDispose = referenceTracker != default(IntPtr);
+                objRef.PreventReleaseOnDispose = referenceTracker != default;
             }
             else
             {
-                if (referenceTracker != default(IntPtr))
+                if (referenceTracker != default)
                 {
                     // WinUI scenario
                     // This instance should be used to tell the
