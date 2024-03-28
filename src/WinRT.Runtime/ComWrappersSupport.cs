@@ -232,9 +232,15 @@ namespace WinRT
                     var helperType = type.FindHelperType();
                     if (helperType is object)
                     {
+                        [SuppressMessage("Trimming", "IL2067", Justification = "'GetIID' always goes through the helper type, because the type is a delegate type.")]
+                        static Guid GetDelegateIID(Type delegateType)
+                        {
+                            return GuidGenerator.GetIID(delegateType);
+                        }
+
                         entries.Add(new ComInterfaceEntry
                         {
-                            IID = GuidGenerator.GetIID(type),
+                            IID = GetDelegateIID(type),
                             Vtable = helperType.GetAbiToProjectionVftblPtr()
                         });
                     }
