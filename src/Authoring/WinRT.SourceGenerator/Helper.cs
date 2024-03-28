@@ -226,6 +226,40 @@ namespace Generator
             return isProjectedType;
         }
 
+        public static bool IsWinRTType(ISymbol type, ITypeSymbol winrtRuntimeTypeAttribute, bool isComponentProject, IAssemblySymbol currentAssembly)
+        {
+            if (IsFundamentalType(type))
+            {
+                return true;
+            }
+
+            if (isComponentProject &&
+                // Make sure type is in component project.
+                SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, currentAssembly) &&
+                type.DeclaredAccessibility == Accessibility.Public)
+            {
+                // Authoring diagnostics will make sure all public types are valid WinRT types.
+                return true;
+            }
+
+            bool isProjectedType = HasAttributeWithType(type, winrtRuntimeTypeAttribute);
+            if (!isProjectedType & type.ContainingNamespace != null)
+            {
+                isProjectedType = MappedCSharpTypes.ContainsKey(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+            }
+
+            // Ensure all generic parameters are WinRT types.
+            if (isProjectedType && 
+                type is INamedTypeSymbol namedType && 
+                namedType.IsGenericType && 
+                !namedType.IsDefinition)
+            {
+                isProjectedType = namedType.TypeArguments.All(t => IsWinRTType(t, winrtRuntimeTypeAttribute, isComponentProject, currentAssembly));
+            }
+
+            return isProjectedType;
+        }
+
         // Checks if the interface references any internal types (either the interface itself or within its generic types).
         public static bool IsInternalInterfaceFromReferences(INamedTypeSymbol iface, IAssemblySymbol currentAssembly)
         {

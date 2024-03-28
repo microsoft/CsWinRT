@@ -29,12 +29,12 @@ namespace WinRT.SourceGenerator
 
             context.RegisterCompilationStartAction(static context =>
             {
-                if (!context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTAotOptimizerEnabled() ||
-                    context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTComponent())
+                if (!context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTAotOptimizerEnabled())
                 {
                     return;
                 }
 
+                bool isComponentProject = context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTComponent();
                 var winrtTypeAttribute = context.Compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
                 var winrtExposedTypeAttribute = context.Compilation.GetTypeByMetadataName("WinRT.WinRTExposedTypeAttribute");
                 if (winrtTypeAttribute is null || winrtExposedTypeAttribute is null)
@@ -53,13 +53,13 @@ namespace WinRT.SourceGenerator
                         // Make sure this is a class that we would generate the WinRTExposedType attribute on
                         // and that it isn't already partial.
                         if (!GeneratorHelper.IsPartial(namedType) &&
-                            !GeneratorHelper.HasAttributeWithType(namedType, winrtTypeAttribute) &&
+                            !GeneratorHelper.IsWinRTType(namedType, winrtTypeAttribute, isComponentProject, context.Compilation.Assembly) &&
                             !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType) &&
                             !GeneratorHelper.HasAttributeWithType(namedType, winrtExposedTypeAttribute))
                         {
                             foreach (var iface in namedType.AllInterfaces)
                             {
-                                if (GeneratorHelper.IsWinRTType(iface))
+                                if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, isComponentProject, context.Compilation.Assembly))
                                 {
                                     context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassNotAotCompatible, namedType.Locations[0], namedType.Name));
                                     return;
