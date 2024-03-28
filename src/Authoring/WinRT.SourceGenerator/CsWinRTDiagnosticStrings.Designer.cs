@@ -19,7 +19,7 @@ namespace WinRT.SourceGenerator {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class CsWinRTDiagnosticStrings {
@@ -192,6 +192,24 @@ namespace WinRT.SourceGenerator {
         internal static string ClassConstructorRule_Text {
             get {
                 return ResourceManager.GetString("ClassConstructorRule_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class is not marked partial.
+        /// </summary>
+        internal static string ClassNotMarkedPartial_Brief {
+            get {
+                return ResourceManager.GetString("ClassNotMarkedPartial_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; implements WinRT interfaces but isn&apos;t marked partial.  Type should be marked partial for trimming and AOT compatibility if passed across the ABI..
+        /// </summary>
+        internal static string ClassNotMarkedPartial_Text {
+            get {
+                return ResourceManager.GetString("ClassNotMarkedPartial_Text", resourceCulture);
             }
         }
         

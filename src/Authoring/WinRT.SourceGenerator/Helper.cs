@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
@@ -225,6 +226,40 @@ namespace Generator
             return isProjectedType;
         }
 
+        public static bool IsWinRTType(ISymbol type, ITypeSymbol winrtRuntimeTypeAttribute, bool isComponentProject, IAssemblySymbol currentAssembly)
+        {
+            if (IsFundamentalType(type))
+            {
+                return true;
+            }
+
+            if (isComponentProject &&
+                // Make sure type is in component project.
+                SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, currentAssembly) &&
+                type.DeclaredAccessibility == Accessibility.Public)
+            {
+                // Authoring diagnostics will make sure all public types are valid WinRT types.
+                return true;
+            }
+
+            bool isProjectedType = HasAttributeWithType(type, winrtRuntimeTypeAttribute);
+            if (!isProjectedType & type.ContainingNamespace != null)
+            {
+                isProjectedType = MappedCSharpTypes.ContainsKey(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+            }
+
+            // Ensure all generic parameters are WinRT types.
+            if (isProjectedType && 
+                type is INamedTypeSymbol namedType && 
+                namedType.IsGenericType && 
+                !namedType.IsDefinition)
+            {
+                isProjectedType = namedType.TypeArguments.All(t => IsWinRTType(t, winrtRuntimeTypeAttribute, isComponentProject, currentAssembly));
+            }
+
+            return isProjectedType;
+        }
+
         // Checks if the interface references any internal types (either the interface itself or within its generic types).
         public static bool IsInternalInterfaceFromReferences(INamedTypeSymbol iface, IAssemblySymbol currentAssembly)
         {
@@ -251,6 +286,11 @@ namespace Generator
             }
         }
 
+        public static bool IsPartial(INamedTypeSymbol symbol)
+        {
+            return symbol.DeclaringSyntaxReferences.Any(syntax => syntax.GetSyntax() is BaseTypeDeclarationSyntax declaration && declaration.Modifiers.Any(SyntaxKind.PartialKeyword));
+        }
+
         public static bool HasPrivateclass(ITypeSymbol symbol)
         {
             return symbol is INamedTypeSymbol namedType &&
@@ -267,8 +307,27 @@ namespace Generator
         public static bool IsWinRTType(MemberDeclarationSyntax node)
         {
             bool isProjectedType = node.AttributeLists.SelectMany(list => list.Attributes).
-                Any(attribute => string.CompareOrdinal(attribute.Name.NormalizeWhitespace().ToFullString(), "WindowsRuntimeTypeAttribute") == 0);
+                Any(attribute => string.CompareOrdinal(attribute.Name.NormalizeWhitespace().ToFullString(), "global::WinRT.WindowsRuntimeType") == 0);
             return isProjectedType;
+        }
+
+        /// <summary>
+        /// Checks whether or not a given symbol has an attribute with the specified type.
+        /// </summary>
+        /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
+        /// <param name="attributeTypeSymbol">The <see cref="ITypeSymbol"/> instance for the attribute type to look for.</param>
+        /// <returns>Whether or not <paramref name="symbol"/> has an attribute with the specified type.</returns>
+        public static bool HasAttributeWithType(ISymbol symbol, ITypeSymbol attributeTypeSymbol)
+        {
+            foreach (AttributeData attribute in symbol.GetAttributes())
+            {
+                if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeTypeSymbol))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string GetAbiTypeForFundamentalType(ISymbol type)

@@ -88,7 +88,12 @@ namespace Generator
             }
         }
 
-        internal static VtableAttribute GetVtableAttributeToAdd(ITypeSymbol symbol, Func<ISymbol, bool> isWinRTType, IAssemblySymbol assemblySymbol, bool isAuthoring, string authoringDefaultInterface = "")
+        internal static VtableAttribute GetVtableAttributeToAdd(
+            ITypeSymbol symbol, 
+            Func<ISymbol, bool> isWinRTType, 
+            IAssemblySymbol assemblySymbol, 
+            bool isAuthoring, 
+            string authoringDefaultInterface = "")
         {
             if (GeneratorHelper.HasNonInstantiatedWinRTGeneric(symbol))
             {

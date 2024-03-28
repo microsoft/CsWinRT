@@ -103,6 +103,12 @@
   <data name="ClassConstructorRule_Text" xml:space="preserve">
     <value>Classes cannot have multiple constructors of the same arity in the Windows Runtime, class {0} has multiple {1}-arity constructors</value>
   </data>
+  <data name="ClassNotMarkedPartial_Brief" xml:space="preserve">
+    <value>Class is not marked partial</value>
+  </data>
+  <data name="ClassNotMarkedPartial_Text" xml:space="preserve">
+    <value>Class '{0}' implements WinRT interfaces but isn't marked partial.  Type should be marked partial for trimming and AOT compatibility if passed across the ABI.</value>
+  </data>
   <data name="DisjointNamespaceRule_Brief" xml:space="preserve">
     <value>Namespace is disjoint from main (winmd) namespace</value>
   </data>
