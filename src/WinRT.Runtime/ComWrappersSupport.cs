@@ -485,7 +485,11 @@ namespace WinRT
             };
         }
 
-        private static Func<IInspectable, object> CreateCustomTypeMappingFactory(Type customTypeHelperType)
+        private static Func<IInspectable, object> CreateCustomTypeMappingFactory(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
+#endif
+            Type customTypeHelperType)
         {
             var fromAbiMethod = customTypeHelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static);
             if (fromAbiMethod is null)
