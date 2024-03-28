@@ -27,38 +27,48 @@ namespace WinRT.SourceGenerator
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
             context.EnableConcurrentExecution();
 
-            context.RegisterSymbolAction(static (c) => 
+            context.RegisterCompilationStartAction(static context =>
             {
-                if (!c.Options.AnalyzerConfigOptionsProvider.IsCsWinRTAotOptimizerEnabled() || 
-                    c.Options.AnalyzerConfigOptionsProvider.IsCsWinRTComponent())
+                if (!context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTAotOptimizerEnabled() ||
+                    context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTComponent())
                 {
                     return;
                 }
 
-                // Filter to classes that can be passed as objects.
-                if (c.Symbol is INamedTypeSymbol namedType && 
-                    namedType.TypeKind == TypeKind.Class &&
-                    !namedType.IsAbstract &&
-                    !namedType.IsStatic)
+                var winrtTypeAttribute = context.Compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
+                var winrtExposedTypeAttribute = context.Compilation.GetTypeByMetadataName("WinRT.WinRTExposedTypeAttribute");
+                if (winrtTypeAttribute is null || winrtExposedTypeAttribute is null)
                 {
-                    // Make sure this is a class that we would generate the WinRTExposedType attribute on
-                    // and that it isn't already partial.
-                    if (!GeneratorHelper.IsPartial(namedType) &&
-                        !GeneratorHelper.IsWinRTType(namedType) &&
-                        !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType) &&
-                        !GeneratorHelper.HasWinRTExposedTypeAttribute(namedType))
+                    return;
+                }
+
+                context.RegisterSymbolAction(context =>
+                {
+                    // Filter to classes that can be passed as objects.
+                    if (context.Symbol is INamedTypeSymbol namedType &&
+                        namedType.TypeKind == TypeKind.Class &&
+                        !namedType.IsAbstract &&
+                        !namedType.IsStatic)
                     {
-                        foreach (var iface in namedType.AllInterfaces)
+                        // Make sure this is a class that we would generate the WinRTExposedType attribute on
+                        // and that it isn't already partial.
+                        if (!GeneratorHelper.IsPartial(namedType) &&
+                            !GeneratorHelper.HasAttributeWithType(namedType, winrtTypeAttribute) &&
+                            !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType) &&
+                            !GeneratorHelper.HasAttributeWithType(namedType, winrtExposedTypeAttribute))
                         {
-                            if (GeneratorHelper.IsWinRTType(iface))
+                            foreach (var iface in namedType.AllInterfaces)
                             {
-                                c.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassNotAotCompatible, namedType.Locations[0], namedType.Name));
-                                return;
+                                if (GeneratorHelper.IsWinRTType(iface))
+                                {
+                                    context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassNotAotCompatible, namedType.Locations[0], namedType.Name));
+                                    return;
+                                }
                             }
                         }
                     }
-                }
-            }, SymbolKind.NamedType);
+                }, SymbolKind.NamedType);
+            });
         }
     }
 

@@ -277,6 +277,25 @@ namespace Generator
             return isProjectedType;
         }
 
+        /// <summary>
+        /// Checks whether or not a given symbol has an attribute with the specified type.
+        /// </summary>
+        /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
+        /// <param name="attributeTypeSymbol">The <see cref="ITypeSymbol"/> instance for the attribute type to look for.</param>
+        /// <returns>Whether or not <paramref name="symbol"/> has an attribute with the specified type.</returns>
+        public static bool HasAttributeWithType(ISymbol symbol, ITypeSymbol attributeTypeSymbol)
+        {
+            foreach (AttributeData attribute in symbol.GetAttributes())
+            {
+                if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeTypeSymbol))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static string GetAbiTypeForFundamentalType(ISymbol type)
         {
             if (type is INamedTypeSymbol namedTypeSymbol)
