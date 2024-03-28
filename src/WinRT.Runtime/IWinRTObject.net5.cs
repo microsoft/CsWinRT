@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
@@ -148,9 +149,10 @@ namespace WinRT
                 AdditionalTypeData.GetOrAdd(projectIEnum, (_) => new ABI.System.Collections.IEnumerable.AdaptiveFromAbiHelper(type, this));
             }
 
-            var vftblType = helperType.FindVftblType();
             using (objRef)
             {
+                var vftblType = helperType.FindVftblType();
+
                 if (vftblType is null)
                 {
                     var qiObjRef = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
@@ -167,14 +169,22 @@ namespace WinRT
                     throw new NotSupportedException($"Cannot construct an object reference for vtable type '{vftblType}'.");
                 }
 #endif
-
+                [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static IObjectReference GetObjectReferenceViaVftbl(IObjectReference objRef, Type vftblType)
+                {
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                IObjectReference typedObjRef = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
+                    return (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
 #pragma warning restore IL3050
+                }
+
+                IObjectReference typedObjRef = GetObjectReferenceViaVftbl(objRef, vftblType);
+
                 if (!QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
                 {
                     typedObjRef.Dispose();
                 }
+
                 return true;
             }
         }
