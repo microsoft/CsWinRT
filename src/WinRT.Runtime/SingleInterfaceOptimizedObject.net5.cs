@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
@@ -33,13 +34,27 @@ namespace WinRT
 
                 if (RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    var vftblType = helperType.FindVftblType();
-
-                    if (vftblType is not null)
+                    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
+                    [MethodImpl(MethodImplOptions.NoInlining)]
+                    static IObjectReference TryGetObjectReferenceViaVftbl(IObjectReference objRef, Type helperType)
                     {
+                        var vftblType = helperType.FindVftblType();
+
+                        if (vftblType is not null)
+                        {
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                        _obj = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
+                            return (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
 #pragma warning restore IL3050
+                        }
+
+                        return null;
+                    }
+
+                    IObjectReference objRefViaVftbl = TryGetObjectReferenceViaVftbl(objRef, helperType);
+
+                    if (objRefViaVftbl is not null)
+                    {
+                        _obj = objRefViaVftbl;
 
                         return;
                     }

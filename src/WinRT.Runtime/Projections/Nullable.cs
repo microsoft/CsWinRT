@@ -392,6 +392,12 @@ namespace ABI.System
         public static implicit operator Nullable<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable<T>(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
+
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [SuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
 
 #if NET

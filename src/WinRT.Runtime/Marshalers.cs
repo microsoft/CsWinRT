@@ -1402,7 +1402,10 @@ namespace WinRT
 
         private static Guid GetIID()
         {
-            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
+            // The JIT and linker cannot fully combine the 'IsGenericType' and generic type definition checks, and we don't
+            // want to root unnecessary code here for the shared generic instantiation. So we can give them a little nudge
+            // by also explicitly checking whether 'T' is a value type. If it is not, the whole branch will short-cirtuit.
+            if (typeof(T).IsValueType && typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
             {
                 return GuidGenerator.CreateIID(typeof(T));
             }

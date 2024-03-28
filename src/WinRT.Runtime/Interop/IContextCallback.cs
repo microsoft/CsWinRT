@@ -20,8 +20,10 @@ namespace ABI.WinRT.Interop
 #if NET && CsWinRT_LANG_11_FEATURES
     internal unsafe struct IContextCallbackVftbl
     {
+#pragma warning disable CS0649 // Native layout
         private global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
         private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4;
+#pragma warning restore CS0649
 
         public static void ContextCallback(IntPtr contextCallbackPtr, Action callback, Action onFailCallback)
         {
