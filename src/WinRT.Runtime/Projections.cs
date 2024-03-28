@@ -429,6 +429,9 @@ namespace WinRT
 #if NET8_0_OR_GREATER
         [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         private static HashSet<Type> GetCompatibleTypes(Type type, Stack<Type> typeStack)
         {
             HashSet<Type> compatibleTypes = new HashSet<Type>();
@@ -508,6 +511,9 @@ namespace WinRT
 
 #if NET8_0_OR_GREATER
         [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
 #endif
         internal static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(Type type, Stack<Type> typeStack, out IEnumerable<Type> compatibleTypes)
         {

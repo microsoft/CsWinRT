@@ -225,4 +225,5 @@ CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribut
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.AsInterface<I>()' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
-Total Issues: 227
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.TryGetCompatibleWindowsRuntimeTypeForVariantType(System.Type, System.Type)' in the implementation but not the reference.
+Total Issues: 228
