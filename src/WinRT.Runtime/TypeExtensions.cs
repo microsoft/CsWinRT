@@ -131,7 +131,11 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-        public static Type GetGuidType(this Type type)
+        public static Type GetGuidType(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            this Type type)
         {
             return type.IsDelegate() ? type.GetHelperType() : type;
         }

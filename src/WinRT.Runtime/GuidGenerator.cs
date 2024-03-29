@@ -16,6 +16,9 @@ namespace WinRT
 #endif
     static class GuidGenerator
     {
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "This method only accesses 'Type.GUID', no fields are ever needed.")]
+#endif
         public static Guid GetGUID(Type type)
         {
             return type.GetGuidType().GUID;
