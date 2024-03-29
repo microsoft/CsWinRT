@@ -569,22 +569,6 @@ namespace WinRT
 
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
             {
-                // Manual helper to save binary size (no LINQ, no lambdas) and get better performance
-                static bool HasAnyTypeMatches(Type[] interfaceTypes, Type targetType)
-                {
-                    Type genericTargetType = targetType.GetGenericTypeDefinition();
-
-                    foreach (Type interfaceType in interfaceTypes)
-                    {
-                        if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == genericTargetType)
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-
                 // We have a static type which we can use to construct the object.  But, we can't just use it for all scenarios
                 // and primarily use it for tear off scenarios and for scenarios where runtimeclass isn't accurate.
                 // For instance if the static type is an interface, we return an IInspectable to represent the interface.
@@ -595,8 +579,7 @@ namespace WinRT
                 // If it isn't, we use the statically determined type as it is a tear off.
                 if (!(implementationType != null &&
                     (staticallyDeterminedType == implementationType ||
-                     staticallyDeterminedType.IsAssignableFrom(implementationType) ||
-                     staticallyDeterminedType.IsGenericType && HasAnyTypeMatches(implementationType.GetInterfaces(), staticallyDeterminedType))))
+                     staticallyDeterminedType.IsAssignableFrom(implementationType))))
                 {
                     return staticallyDeterminedType;
                 }
