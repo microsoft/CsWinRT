@@ -658,7 +658,7 @@ namespace ABI.System.Collections.Generic
             return global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionVftablePtr, ptr, IntPtr.Zero) == IntPtr.Zero;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IDictionary<K, V>));
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IDictionary<K, V>));
         public static Guid IID => PIID;
 
         public static V Abi_Lookup_0(IntPtr thisPtr, K key)

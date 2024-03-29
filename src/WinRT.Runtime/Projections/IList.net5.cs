@@ -438,7 +438,7 @@ namespace ABI.System.Collections.Generic
             return IList<T>.FindAdapter(thisPtr).Size;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IList<T>));
         public static Guid IID => PIID;
 
         internal unsafe static bool EnsureEnumerableInitialized()

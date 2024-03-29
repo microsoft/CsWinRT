@@ -267,7 +267,7 @@ namespace ABI.System.Collections.Generic
             return IReadOnlyList<T>.FindAdapter(thisPtr).Size;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IReadOnlyList<T>));
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReadOnlyList<T>));
         public static Guid IID => PIID;
     }
 

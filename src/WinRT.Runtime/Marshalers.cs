@@ -1407,7 +1407,7 @@ namespace WinRT
             // by also explicitly checking whether 'T' is a value type. If it is not, the whole branch will short-cirtuit.
             if (typeof(T).IsValueType && typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                return GuidGenerator.CreateIID(typeof(T));
+                return GuidGenerator.CreateIIDUnsafe(typeof(T));
             }
             
             return GuidGenerator.GetIID(HelperType);

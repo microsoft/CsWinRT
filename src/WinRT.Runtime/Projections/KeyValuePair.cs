@@ -97,7 +97,7 @@ namespace ABI.System.Collections.Generic
             return _GetValue(obj);
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(KeyValuePair<K, V>));
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(KeyValuePair<K, V>));
         public static Guid IID => PIID;
 
         private static IntPtr abiToProjectionVftablePtr;

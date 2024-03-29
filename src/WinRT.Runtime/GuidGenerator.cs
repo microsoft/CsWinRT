@@ -107,6 +107,7 @@ namespace WinRT
                                 var isFlags = type.IsDefined(typeof(FlagsAttribute));
                                 return "enum(" + type.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
                             }
+
                             if (!type.IsPrimitive)
                             {
                                 var winrtTypeAttribute = type.GetCustomAttribute<WindowsRuntimeTypeAttribute>();
@@ -114,30 +115,30 @@ namespace WinRT
                                 {
                                     return winrtTypeAttribute.GuidSignature;
                                 }
-                                else if (winrtTypeAttribute == null && 
+                                
+                                if (winrtTypeAttribute == null && 
                                     (winrtTypeAttribute = type.GetAuthoringMetadataType()?.GetCustomAttribute<WindowsRuntimeTypeAttribute>()) != null && 
                                     !string.IsNullOrEmpty(winrtTypeAttribute.GuidSignature))
                                 {
                                     return winrtTypeAttribute.GuidSignature;
                                 }
-                                else
+
+                                static string[] SelectSignaturesForFields(FieldInfo[] fields)
                                 {
-                                    static string[] SelectSignaturesForFields(FieldInfo[] fields)
+                                    string[] signatures = new string[fields.Length];
+
+                                    for (int i = 0; i < fields.Length; i++)
                                     {
-                                        string[] signatures = new string[fields.Length];
-
-                                        for (int i = 0; i < fields.Length; i++)
-                                        {
-                                            signatures[i] = GetSignature(fields[i].FieldType);
-                                        }
-
-                                        return signatures;
+                                        signatures[i] = GetSignature(fields[i].FieldType);
                                     }
 
-                                    var args = SelectSignaturesForFields(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
-                                    return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
+                                    return signatures;
                                 }
+
+                                var args = SelectSignaturesForFields(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
+                                return "struct(" + type.FullName + ";" + string.Join(";", args) + ")";
                             }
+
                             throw new InvalidOperationException("unsupported value type");
                         }
                 }
@@ -192,7 +193,11 @@ namespace WinRT
 
         private readonly static Guid wrt_pinterface_namespace = new(0xd57af411, 0x737b, 0xc042, 0xab, 0xae, 0x87, 0x8b, 0x1e, 0x16, 0xad, 0xee);
 
-        public static Guid CreateIID(Type type)
+        public static Guid CreateIID(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            Type type)
         {
             var sig = GetSignature(type);
             if (!type.IsGenericType)
@@ -203,6 +208,20 @@ namespace WinRT
             {
                 return CreateIIDForGenericType(sig);
             }
+        }
+
+        /// <summary>
+        /// Gets the IID of a given type, just like <see cref="CreateIID(Type)"/>, but without rooting reflection metadata
+        /// for all public fields of that type. It can be used internally where we know that extra info is not actually needed.
+        /// </summary>
+        /// <param name="type">The type to get the IID for.</param>
+        /// <returns>The IID for <paramref name="type"/>.</returns>
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "This method is only used for types (eg. generics) where fields aren't needed.")]
+#endif
+        internal static Guid CreateIIDUnsafe(Type type)
+        {
+            return CreateIID(type);
         }
 
         internal static Guid CreateIIDForGenericType(string signature)
