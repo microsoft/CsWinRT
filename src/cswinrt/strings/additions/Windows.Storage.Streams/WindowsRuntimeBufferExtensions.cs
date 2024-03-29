@@ -272,18 +272,18 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
 #region (IBuffer).TryGetBuffer extensions for getting the underlying managed array if backed by one
 
-        public static void TryGetBuffer(this IBuffer source, out ArraySegment<byte> array)
+        public static bool TryGetBuffer(this IBuffer source, out ArraySegment<byte> array)
         {
             // If source is backed by a managed array, return it
             byte[] srcDataArr;
             int srcDataOffs;
             if (source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs))
             {
-                array = new ArraySegment<byte>(srcDataArr, offset: srcDataOffs, count: source.Length);
+                array = new ArraySegment<byte>(srcDataArr, offset: srcDataOffs, count: (int)source.Length);
                 return true;
             }
 
-            buffer = default;
+            array = default;
             return false;
         }
 
