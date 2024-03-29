@@ -56,6 +56,9 @@ namespace WinRT
 
             if (type.IsGenericType)
             {
+#if NET
+                [UnconditionalSuppressMessage("Trimming", "IL2062", Justification = "Fallback path for old projections, not trim-safe by design.")]
+#endif
                 static string[] SelectSignaturesForTypes(Type[] types)
                 {
                     string[] signatures = new string[types.Length];
@@ -123,6 +126,9 @@ namespace WinRT
                                     return winrtTypeAttribute.GuidSignature;
                                 }
 
+#if NET
+                                [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Fallback path for old projections, not trim-safe by design.")]
+#endif
                                 static string[] SelectSignaturesForFields(FieldInfo[] fields)
                                 {
                                     string[] signatures = new string[fields.Length];
