@@ -1002,7 +1002,9 @@ namespace ABI.System.Collections.Generic
 
     [DynamicInterfaceCastableImplementation]
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
+#pragma warning disable CA2256 // Not implementing IMapView<K, V> for [DynamicInterfaceCastableImplementation], as we don't expect to need IDIC for WinRT types
     interface IReadOnlyDictionary<K, V> : global::System.Collections.Generic.IReadOnlyDictionary<K, V>, global::Windows.Foundation.Collections.IMapView<K, V>
+#pragma warning restore CA2256
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyDictionary<K, V> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(obj, PIID);

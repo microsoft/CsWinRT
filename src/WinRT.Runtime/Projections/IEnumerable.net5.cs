@@ -76,7 +76,9 @@ namespace ABI.Windows.Foundation.Collections
 
     [DynamicInterfaceCastableImplementation]
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
+#pragma warning disable CA2256 // Not implementing IIterable<T> for [DynamicInterfaceCastableImplementation], as we don't expect to need IDIC for WinRT types
     internal interface IIterable<T> : ABI.System.Collections.Generic.IEnumerable<T>
+#pragma warning restore CA2256
     {
         public static new Guid PIID = ABI.System.Collections.Generic.IEnumerableMethods<T>.PIID;
     }
@@ -331,7 +333,9 @@ namespace ABI.System.Collections.Generic
 
     [DynamicInterfaceCastableImplementation]
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
+#pragma warning disable CA2256 // Not implementing IIterable<T> for [DynamicInterfaceCastableImplementation], as we don't expect to need IDIC for WinRT types
     interface IEnumerable<T> : global::System.Collections.Generic.IEnumerable<T>, global::Windows.Foundation.Collections.IIterable<T>
+#pragma warning restore CA2256
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerable<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(obj, PIID);
@@ -940,7 +944,9 @@ namespace ABI.System.Collections.Generic
 
     [DynamicInterfaceCastableImplementation]
     [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
+#pragma warning disable CA2256 // Not implementing IIterator<T> for [DynamicInterfaceCastableImplementation], as we don't expect to need IDIC for WinRT types
     interface IEnumerator<T> : global::System.Collections.Generic.IEnumerator<T>, global::Windows.Foundation.Collections.IIterator<T>
+#pragma warning restore CA2256
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerator<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(obj, PIID);
