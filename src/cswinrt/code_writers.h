@@ -1263,7 +1263,8 @@ namespace cswinrt
                 access_spec, method_spec, platform_attribute, static_method_params);
         }
 
-        if (is_overridable || !is_exclusive_to(method.Parent()))
+        // If overridable or private, we need to generate the explcit method
+        if (is_overridable || is_private)
         {
             w.write(R"(
 %% %.%(%) => %;)",
@@ -1550,7 +1551,8 @@ remove => %;
                 visibility, ""sv, platform_attribute, call_static_method.has_value() ? std::optional(std::tuple(call_static_method.value(), event, false)) : std::nullopt);
         }
 
-        if (is_overridable || !is_exclusive_to(event.Parent()))
+        // If overridable or private, we need to generate the explicit event
+        if (is_overridable || is_private)
         {
             write_event(
                 w, 
@@ -3324,8 +3326,8 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                     is_public |= !is_overridable_interface && !is_protected_interface;
                     XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
                 }
-                // If this interface is overridable then we need to emit an explicit implementation of the property for that interface.
-                if (is_overridable_interface || !is_exclusive_to(interface_type))
+                // If this interface is overridable or private then we need to emit an explicit implementation of the property for that interface.
+                if (is_overridable_interface || is_private)
                 {
                     w.write("\n%% %.% {%%}",
                         platform_attribute,
@@ -8163,9 +8165,12 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
             bind<write_interface_members>(type),
             "",
             [&](writer& w) {
-                for (auto required_interface : required_interfaces)
+                if (!is_exclusive_to(type))
                 {
-                    w.write("%", required_interface.second.members);
+                    for (auto required_interface : required_interfaces)
+                    {
+                        w.write("%", required_interface.second.members);
+                    }
                 }
             }
         );
