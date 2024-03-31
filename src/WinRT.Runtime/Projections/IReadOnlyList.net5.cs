@@ -295,6 +295,7 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IReadOnlyList<T>),
                 IReadOnlyListImpl<T>.CreateRcw);
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IReadOnlyList<T>), typeof(global::ABI.System.Collections.Generic.IReadOnlyList<T>));
 
             ABI.Windows.Foundation.Collections.IVectorViewMethods<T>._RcwHelperInitialized = true;
             return true;

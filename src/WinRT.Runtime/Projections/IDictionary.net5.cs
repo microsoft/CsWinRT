@@ -731,6 +731,8 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IDictionary<K, V>),
                 IDictionaryImpl<K, V>.CreateRcw);
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IDictionary<K, V>), typeof(global::ABI.System.Collections.Generic.IDictionary<K, V>));
+
             IMapMethods<K, V>._RcwHelperInitialized = true;
             return true;
         }

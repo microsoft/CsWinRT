@@ -187,6 +187,33 @@ namespace WinRT
             {
                 if (genericTypes != null)
                 {
+                    if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
+                    {
+                        resolvedType = typeof(ABI.System.Nullable_Delegate<>);
+                    }
+
+                    StringBuilder nameBuilder = nameForTypeBuilderInstance ??= new StringBuilder();
+                    nameBuilder.Clear();
+                    nameBuilder.Append(resolvedType.FullName);
+                    nameBuilder.Append('[');
+                    for (int i = 0; i < genericTypes.Length; i++)
+                    {
+                        if (i > 0)
+                        {
+                            nameBuilder.Append(',');
+                        }
+
+                        nameBuilder.Append('[');
+                        nameBuilder.Append(genericTypes[i].AssemblyQualifiedName);
+                        nameBuilder.Append(']');
+                    }
+                    nameBuilder.Append(']');
+                    var resolvedGenericType = resolvedType.Assembly.GetType(nameBuilder.ToString());
+                    if (resolvedGenericType is not null)
+                    {
+                        return resolvedGenericType;
+                    }
+
 #if NET
                     if (!RuntimeFeature.IsDynamicCodeCompiled)
                     {
@@ -195,10 +222,6 @@ namespace WinRT
 #endif
 
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                    if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
-                    {
-                        return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
-                    }
                     resolvedType = resolvedType.MakeGenericType(genericTypes);
 #pragma warning restore IL3050
                 }
