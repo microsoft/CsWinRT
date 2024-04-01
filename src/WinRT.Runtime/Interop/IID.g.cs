@@ -15,6 +15,7 @@ namespace WinRT.Interop
 #endif
     static class IID
     {
+
         /// <summary>The IID for <c>IUnknown</c> (00000000-0000-0000-C000-000000000046).</summary>
         public static ref readonly Guid IID_IUnknown
         {
@@ -39,6 +40,7 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
 
         /// <summary>The IID for <c>IInspectable</c> (AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90).</summary>
         public static ref readonly Guid IID_IInspectable
@@ -65,6 +67,7 @@ namespace WinRT.Interop
             }
         }
 
+
         /// <summary>The IID for <c>IWeakReference</c> (00000037-0000-0000-C000-000000000046).</summary>
         internal static ref readonly Guid IID_IWeakReference
         {
@@ -89,6 +92,7 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
 
         /// <summary>The IID for <c>IWeakReferenceSource</c> (00000038-0000-0000-C000-000000000046).</summary>
         internal static ref readonly Guid IID_IWeakReferenceSource
@@ -115,6 +119,7 @@ namespace WinRT.Interop
             }
         }
 
+
         /// <summary>The IID for <c>IReferenceTracker</c> (11D3B13A-180E-4789-A8BE-7712882893E6).</summary>
         internal static ref readonly Guid IID_IReferenceTracker
         {
@@ -139,6 +144,7 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
 
         /// <summary>The IID for <c>IReferenceTrackerTarget</c> (64BD43F8-BFEE-4EC4-B7EB-2935158DAE21).</summary>
         internal static ref readonly Guid IID_IReferenceTrackerTarget
@@ -165,6 +171,7 @@ namespace WinRT.Interop
             }
         }
 
+
         /// <summary>The IID for <c>IActivationFactory</c> (00000035-0000-0000-C000-000000000046).</summary>
         public static ref readonly Guid IID_IActivationFactory
         {
@@ -189,6 +196,7 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
 
         /// <summary>The IID for <c>IAgileObject</c> (94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90).</summary>
         internal static ref readonly Guid IID_IAgileObject
@@ -215,6 +223,7 @@ namespace WinRT.Interop
             }
         }
 
+
         /// <summary>The IID for <c>IMarshal</c> (00000003-0000-0000-C000-000000000046).</summary>
         internal static ref readonly Guid IID_IMarshal
         {
@@ -239,6 +248,7 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
 
         /// <summary>The IID for <c>IContextCallback</c> (000001DA-0000-0000-C000-000000000046).</summary>
         internal static ref readonly Guid IID_IContextCallback
@@ -265,6 +275,7 @@ namespace WinRT.Interop
             }
         }
 
+
         /// <summary>The IID for <c>ICallbackWithNoReentrancyToApplicationSTA</c> (0A299774-3E4E-FC42-1D9D-72CEE105CA57).</summary>
         internal static ref readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA
         {
@@ -289,6 +300,7 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
 
         /// <summary>The IID for <c>IErrorInfo</c> (1CF2B120-547D-101B-8E65-08002B2BD119).</summary>
         internal static ref readonly Guid IID_IErrorInfo
@@ -315,6 +327,7 @@ namespace WinRT.Interop
             }
         }
 
+
         /// <summary>The IID for <c>ISupportErrorInfo</c> (DF0B3D60-548F-101B-8E65-08002B2BD119).</summary>
         internal static ref readonly Guid IID_ISupportErrorInfo
         {
@@ -339,6 +352,7 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
 
         /// <summary>The IID for <c>ILanguageExceptionErrorInfo</c> (04A2DBF3-DF83-116C-0946-0812ABF6E07D).</summary>
         internal static ref readonly Guid IID_ILanguageExceptionErrorInfo
@@ -365,6 +379,7 @@ namespace WinRT.Interop
             }
         }
 
+
         /// <summary>The IID for <c>IRestrictedErrorInfo</c> (82BA7092-4C88-427D-A7BC-16DD93FEB67E).</summary>
         internal static ref readonly Guid IID_IRestrictedErrorInfo
         {
@@ -389,5 +404,58 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
+
+        /// <summary>The IID for <c>INotifyCollectionChangedEventArgsFactory</c> (5108EBA4-4892-5A20-8374-A96815E0FD27).</summary>
+        internal static ref readonly Guid IID_INotifyCollectionChangedEventArgsFactory
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xA4, 0xEB, 0x08, 0x51,
+                    0x92, 0x48,
+                    0x20, 0x5A,
+                    0x83,
+                    0x74,
+                    0xA9,
+                    0x68,
+                    0x15,
+                    0xE0,
+                    0xFD,
+                    0x27
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+
+        /// <summary>The IID for <c>INotifyCollectionChangedEventArgs</c> (DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F).</summary>
+        internal static ref readonly Guid IID_INotifyCollectionChangedEventArgs
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xF2, 0x9F, 0x04, 0xDA,
+                    0xE0, 0xD2,
+                    0xE8, 0x5F,
+                    0x8C,
+                    0x7B,
+                    0xF8,
+                    0x7F,
+                    0x26,
+                    0x06,
+                    0x0B,
+                    0x6F
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
     }
 }
