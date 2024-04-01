@@ -96,8 +96,11 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Debug.Assert(destinationIndex <= int.MaxValue);
 
             // If destination is backed by a managed memory, use the memory instead of the pointer as it does not require pinning:
-            Span<byte> destSpan = destination.TryGetUnderlyingData(out byte[] destDataArr, out int destOffset) ? destDataArr.AsSpan(destOffset + (int)destinationIndex) : destination.GetSpanForCapacity(destinationIndex);
+            Span<byte> destSpan = destination.TryGetUnderlyingData(out byte[] destDataArr, out int destOffset) ? destDataArr.AsSpan(destOffset + (int)destinationIndex) : destination.GetSpanForCapacityUnsafe(destinationIndex);
             source.CopyTo(destSpan);
+
+            // Ensure destination stays alive for the copy operation
+            GC.KeepAlive(destination);
 
             // Update Length last to make sure the data is valid
             if (destinationIndex + source.Length > destination.Length)
@@ -192,9 +195,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             Debug.Assert(sourceIndex <= int.MaxValue);
 
-            Span<byte> srcSpan = source.TryGetUnderlyingData(out byte[] srcDataArr, out int srcOffset) ? srcDataArr.AsSpan(srcOffset + (int)sourceIndex, count) : source.GetSpanForCapacity(sourceIndex);
+            Span<byte> srcSpan = source.TryGetUnderlyingData(out byte[] srcDataArr, out int srcOffset) ? srcDataArr.AsSpan(srcOffset + (int)sourceIndex, count) : source.GetSpanForCapacityUnsafe(sourceIndex);
             srcSpan.CopyTo(destination);
 
+            // Ensure source and destination stay alive for the copy operation
             GC.KeepAlive(source);
         }
 
@@ -247,12 +251,14 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Debug.Assert(destinationIndex <= int.MaxValue);
 
             // If source are destination are backed by managed arrays, use the arrays instead of the pointers as it does not require pinning:
-            Span<byte> srcSpan = source.TryGetUnderlyingData(out byte[] srcDataArr, out int srcOffset) ? srcDataArr.AsSpan(srcOffset + (int)sourceIndex, (int)count) : source.GetSpanForCapacity(sourceIndex);
-            Span<byte> destSpan = destination.TryGetUnderlyingData(out byte[] destDataArr, out int destOffset) ? destDataArr.AsSpan(destOffset + (int)destinationIndex) : destination.GetSpanForCapacity(destinationIndex);
+            Span<byte> srcSpan = source.TryGetUnderlyingData(out byte[] srcDataArr, out int srcOffset) ? srcDataArr.AsSpan(srcOffset + (int)sourceIndex, (int)count) : source.GetSpanForCapacityUnsafe(sourceIndex);
+            Span<byte> destSpan = destination.TryGetUnderlyingData(out byte[] destDataArr, out int destOffset) ? destDataArr.AsSpan(destOffset + (int)destinationIndex) : destination.GetSpanForCapacityUnsafe(destinationIndex);
 
             srcSpan.CopyTo(destSpan);
 
+            // Ensure source and destination stay alive for the copy operation
             GC.KeepAlive(source);
+            GC.KeepAlive(destination);
 
             // Update Length last to make sure the data is valid
             if (destinationIndex + count > destination.Length)
@@ -455,7 +461,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return srcDataArr[srcDataOffs + byteOffset];
             }
 
-            IntPtr srcPtr = source.GetPointerAtOffset(byteOffset);
+            IntPtr srcPtr = source.GetPointerAtOffsetUnsafe(byteOffset);
 
             byte value = default;
             unsafe
@@ -464,6 +470,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 byte* ptr = (byte*)srcPtr;
                 value = *ptr;
             }
+
+            // Ensure source stays alive while we read values.
             GC.KeepAlive(source);
             return value;
         }
@@ -616,7 +624,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }  // class WindowsRuntimeBufferUnmanagedMemoryStream
 
-        private static IntPtr GetPointerAtOffset(this IBuffer buffer, uint offset)
+        private static IntPtr GetPointerAtOffsetUnsafe(this IBuffer buffer, uint offset)
         {
             Debug.Assert(0 <= offset);
             Debug.Assert(offset < buffer.Capacity);
@@ -628,7 +636,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }
 
-        private static Span<byte> GetSpanForCapacity(this IBuffer buffer, uint offset)
+        private static Span<byte> GetSpanForCapacityUnsafe(this IBuffer buffer, uint offset)
         {
             Debug.Assert(0 <= offset);
             Debug.Assert(offset < buffer.Capacity);
