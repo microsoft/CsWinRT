@@ -461,15 +461,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return srcDataArr[srcDataOffs + byteOffset];
             }
 
-            IntPtr srcPtr = source.GetPointerAtOffsetUnsafe(byteOffset);
-
-            byte value = default;
-            unsafe
-            {
-                // Let's avoid an unnesecary call to Marshal.ReadByte():
-                byte* ptr = (byte*)srcPtr;
-                value = *ptr;
-            }
+            Span<byte> srcSpan = source.GetSpanForCapacityUnsafe(byteOffset);
+            byte value = srcSpan[0];
 
             // Ensure source stays alive while we read values.
             GC.KeepAlive(source);
@@ -624,18 +617,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }  // class WindowsRuntimeBufferUnmanagedMemoryStream
 
-        private static IntPtr GetPointerAtOffsetUnsafe(this IBuffer buffer, uint offset)
-        {
-            Debug.Assert(0 <= offset);
-            Debug.Assert(offset < buffer.Capacity);
-
-            unsafe
-            {
-                IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
-                return new IntPtr((byte*)buffPtr + offset);
-            }
-        }
-
         private static Span<byte> GetSpanForCapacityUnsafe(this IBuffer buffer, uint offset)
         {
             Debug.Assert(0 <= offset);
@@ -646,28 +627,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
                 return new Span<byte>((byte*)buffPtr + offset, (int)(buffer.Capacity - offset));
             }
-        }
-
-        private static unsafe void MemCopy(IntPtr src, IntPtr dst, uint count)
-        {
-            if (count > int.MaxValue)
-            {
-                MemCopy(src, dst, int.MaxValue);
-                MemCopy(src + int.MaxValue, dst + int.MaxValue, count - int.MaxValue);
-                return;
-            }
-
-            Debug.Assert(count <= int.MaxValue);
-            int bCount = (int)count;
-
-
-            // Copy via buffer.
-            // Note: if becomes perf critical, we will port the routine that
-            // copies the data without using Marshal (and byte[])
-            byte[] tmp = new byte[bCount];
-            Marshal.Copy(src, tmp, 0, bCount);
-            Marshal.Copy(tmp, 0, dst, bCount);
-            return;
         }
 #endregion Private plumbing
     }  // class WindowsRuntimeBufferExtensions
