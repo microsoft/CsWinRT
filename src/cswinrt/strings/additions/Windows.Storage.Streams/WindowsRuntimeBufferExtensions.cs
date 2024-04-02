@@ -65,7 +65,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// Copies the contents of <code>source</code> to <code>destination</code> starting at offset 0.
         /// This method does <em>NOT</em> update <code>destination.Length</code>.
         /// </summary>
-        /// <param name="source">Array to copy data from.</param>
+        /// <param name="source">Span to copy data from.</param>
         /// <param name="destination">The buffer to copy to.</param>
         public static void CopyTo(this Span<byte> source, IBuffer destination)
         {
@@ -81,8 +81,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// to <code>destination</code> starting at <code>destinationIndex</code>.
         /// This method does <em>NOT</em> update <code>destination.Length</code>.
         /// </summary>
-        /// <param name="source">Array to copy data from.</param>
-        /// <param name="sourceIndex">Position in the array from where to start copying.</param>
+        /// <param name="source">Span to copy data from.</param>
+        /// <param name="sourceIndex">Position in the span from where to start copying.</param>
         /// <param name="destination">The buffer to copy to.</param>
         /// <param name="destinationIndex">Position in the buffer to where to start copying.</param>
         /// <param name="count">The number of bytes to copy.</param>
