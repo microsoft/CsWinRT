@@ -227,4 +227,9 @@ CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribut
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.TryGetCompatibleWindowsRuntimeTypeForVariantType(System.Type, System.Type)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.GuidGenerator.GetGUID(System.Type)' in the implementation but not the reference.
-Total Issues: 229
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'ABI.System.Nullable<T>.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'ABI.System.Collections.Generic.KeyValuePair<K, V>.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.TypeExtensions.FindHelperType(System.Type)' in the implementation but not the reference.
+Total Issues: 234

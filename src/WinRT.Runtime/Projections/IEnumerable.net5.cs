@@ -382,7 +382,7 @@ namespace ABI.System.Collections.Generic
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
@@ -540,7 +540,7 @@ namespace ABI.System.Collections.Generic
             [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-            [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+            [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
             [MethodImpl(MethodImplOptions.NoInlining)]
             static void InitRcwHelperFallbackIfNeeded()
@@ -1085,7 +1085,7 @@ namespace ABI.System.Collections.Generic
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()

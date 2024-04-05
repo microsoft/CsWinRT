@@ -7603,7 +7603,7 @@ if (RuntimeFeature.IsDynamicCodeCompiled)
 #if NET8_0_OR_GREATER
     [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
 #endif
-    [SuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
     [MethodImpl(MethodImplOptions.NoInlining)]
     static void @MethodsFallback()
     {
@@ -8052,7 +8052,7 @@ if (RuntimeFeature.IsDynamicCodeCompiled)
 #if NET8_0_OR_GREATER
     [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
 #endif
-    [SuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
     [MethodImpl(MethodImplOptions.NoInlining)]
     static void @Fallback()
     {
