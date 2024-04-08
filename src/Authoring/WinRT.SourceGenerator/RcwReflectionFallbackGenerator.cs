@@ -109,7 +109,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 }
 
                 // If the type is not a generated projected type, do nothing
-                if (!ContainsAttributeWithType(typeSymbol, windowsRuntimeTypeAttributeSymbol))
+                if (!GeneratorHelper.HasAttributeWithType(typeSymbol, windowsRuntimeTypeAttributeSymbol))
                 {
                     continue;
                 }
@@ -239,24 +239,6 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
         }
 
         return Visit(assemblySymbol.GlobalNamespace);
-    }
-
-    /// <summary>
-    /// Checks whether a given type symbol has an attribute with a specified type.
-    /// </summary>
-    /// <param name="typeSymbol">The type to check.</param>
-    /// <param name="attributeTypeSymbol">The attribute to look for.</param>
-    /// <returns>Whether <paramref name="typeSymbol"/> has an attribute with type <paramref name="attributeTypeSymbol"/>.</returns>
-    private static bool ContainsAttributeWithType(ITypeSymbol typeSymbol, ITypeSymbol attributeTypeSymbol)
-    {
-        foreach (AttributeData attributeData in typeSymbol.GetAttributes())
-        {
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, attributeTypeSymbol))
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     /// <summary>
