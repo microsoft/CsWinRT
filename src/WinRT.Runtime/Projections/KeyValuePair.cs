@@ -66,7 +66,7 @@ namespace ABI.System.Collections.Generic
             [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-            [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+            [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
             [MethodImpl(MethodImplOptions.NoInlining)]
             static void InitRcwHelperFallbackIfNeeded()
@@ -97,7 +97,7 @@ namespace ABI.System.Collections.Generic
             return _GetValue(obj);
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(KeyValuePair<K, V>));
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(KeyValuePair<K, V>));
         public static Guid IID => PIID;
 
         private static IntPtr abiToProjectionVftablePtr;
@@ -395,7 +395,7 @@ namespace ABI.System.Collections.Generic
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
@@ -451,6 +451,12 @@ namespace ABI.System.Collections.Generic
         public IObjectReference ObjRef { get => _obj; }
 
         public IntPtr ThisPtr => _obj.ThisPtr;
+
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
 
 #if NET

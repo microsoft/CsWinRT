@@ -392,6 +392,12 @@ namespace ABI.System
         public static implicit operator Nullable<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable<T>(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
+
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
 
 #if NET
@@ -1845,7 +1851,7 @@ namespace ABI.System
             return 0;
         }
 
-        public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
+        public static Guid PIID = Nullable<T>.PIID;
 
         public static unsafe Nullable GetValue(IInspectable inspectable)
         {
@@ -2048,7 +2054,7 @@ namespace ABI.System
             if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceIIDs.IReferenceVector3_IID;
             if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceIIDs.IReferenceVector4_IID;
 
-            return GuidGenerator.CreateIID(typeof(Nullable<T>));
+            return GuidGenerator.CreateIIDUnsafe(typeof(Nullable<T>));
         }
 
         public static Func<IInspectable, object> GetValueFactory(global::System.Type type)
@@ -2181,7 +2187,7 @@ namespace ABI.System
 
     public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T: struct where TAbi : unmanaged
     {
-        private static readonly Guid PIID = GuidGenerator.CreateIID(typeof(ABI.System.Nullable<T>));
+        private static readonly Guid PIID = ABI.System.Nullable<T>.PIID;
 
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
@@ -2227,7 +2233,7 @@ namespace ABI.System
 
     public abstract class DelegateTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : global::System.Delegate
     {
-        private static readonly Guid PIID = GuidGenerator.CreateIID(typeof(ABI.System.Nullable<T>));
+        private static readonly Guid PIID = ABI.System.Nullable<T>.PIID;
 
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {

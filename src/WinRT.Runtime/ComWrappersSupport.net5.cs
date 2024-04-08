@@ -247,7 +247,7 @@ namespace WinRT
 
             return CreateRcwFallback(implementationType);
 
-            [SuppressMessage("Trimming", "IL2070", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
+            [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
             static Func<IInspectable, object> CreateRcwFallback(Type implementationType)
             {
                 var constructor = implementationType.GetConstructor(
