@@ -189,39 +189,25 @@ namespace WinRT
                 {
                     if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
                     {
-                        resolvedType = typeof(ABI.System.Nullable_Delegate<>);
-                    }
-
-                    StringBuilder nameBuilder = nameForTypeBuilderInstance ??= new StringBuilder();
-                    nameBuilder.Clear();
-                    nameBuilder.Append(resolvedType.FullName);
-                    nameBuilder.Append('[');
-                    for (int i = 0; i < genericTypes.Length; i++)
-                    {
-                        if (i > 0)
-                        {
-                            nameBuilder.Append(',');
-                        }
-
-                        nameBuilder.Append('[');
-                        nameBuilder.Append(genericTypes[i].AssemblyQualifiedName);
-                        nameBuilder.Append(']');
-                    }
-                    nameBuilder.Append(']');
-                    var resolvedGenericType = resolvedType.Assembly.GetType(nameBuilder.ToString());
-                    if (resolvedGenericType is not null)
-                    {
-                        return resolvedGenericType;
+#pragma warning disable IL3050 // Generic type is reference type.
+                        return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+#pragma warning restore IL3050
                     }
 
 #if NET
-                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    foreach (var type in genericTypes)
                     {
-                        throw new NotSupportedException($"Cannot provide generic type from '{runtimeClassName}'.");
+                        if (type.IsValueType)
+                        {
+                            if (!RuntimeFeature.IsDynamicCodeCompiled)
+                            {
+                                throw new NotSupportedException($"Cannot provide generic type from '{runtimeClassName}'.");
+                            }
+                        }
                     }
 #endif
 
-#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+#pragma warning disable IL3050 // Generic types have been ensured to be reference types.
                     resolvedType = resolvedType.MakeGenericType(genericTypes);
 #pragma warning restore IL3050
                 }
