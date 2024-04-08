@@ -305,7 +305,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
         /// <returns>The <see cref="Microsoft.CodeAnalysis.Compilation"/> object for <see cref="Reference"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the <see cref="Microsoft.CodeAnalysis.Compilation"/> object has been collected.</exception>
         /// <remarks>
-        /// This method should only be used from incremental steps immediastely following a change in the metadata reference
+        /// This method should only be used from incremental steps immediately following a change in the metadata reference
         /// being used, as that would guarantee that that <see cref="Microsoft.CodeAnalysis.Compilation"/> object would be alive.
         /// </remarks>
         public Compilation GetCompilationUnsafe()
