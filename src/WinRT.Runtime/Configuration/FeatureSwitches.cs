@@ -37,6 +37,11 @@ internal static class FeatureSwitches
     private const string EnableDefaultCustomTypeMappingsPropertyName = "CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS";
 
     /// <summary>
+    /// The configuration property name for <see cref="EnableICustomPropertyProviderSupport"/>.
+    /// </summary>
+    private const string EnableICustomPropertyProviderSupportPropertyName = "CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT";
+
+    /// <summary>
     /// The backing field for <see cref="IsDynamicObjectsSupportEnabled"/>.
     /// </summary>
     private static int _isDynamicObjectsSupportEnabled;
@@ -50,6 +55,11 @@ internal static class FeatureSwitches
     /// The backing field for <see cref="EnableDefaultCustomTypeMappings"/>.
     /// </summary>
     private static int _enableDefaultCustomTypeMappings;
+
+    /// <summary>
+    /// The backing field for <see cref="EnableICustomPropertyProviderSupport"/>.
+    /// </summary>
+    private static int _enableICustomPropertyProviderSupport;
 
     /// <summary>
     /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -76,6 +86,15 @@ internal static class FeatureSwitches
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => GetConfigurationValue(EnableDefaultCustomTypeMappingsPropertyName, ref _enableDefaultCustomTypeMappings, true);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether or not <see cref="ABI.Microsoft.UI.Xaml.Data.ManagedCustomPropertyProviderVftbl"/> should be enabled (defaults to <see langword="true"/>).
+    /// </summary>
+    public static bool EnableICustomPropertyProviderSupport
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => GetConfigurationValue(EnableICustomPropertyProviderSupportPropertyName, ref _enableICustomPropertyProviderSupport, true);
     }
 
     /// <summary>
