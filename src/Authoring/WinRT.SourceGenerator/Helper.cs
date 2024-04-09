@@ -111,6 +111,16 @@ namespace Generator
             return false;
         }
 
+        public static bool GetCsWinRTRcwFactoryFallbackGeneratorForceOptIn(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTRcwFactoryFallbackGeneratorForceOptIn", out var csWinRTRcwFactoryFallbackGeneratorForceOptIn))
+            {
+                return bool.TryParse(csWinRTRcwFactoryFallbackGeneratorForceOptIn, out var isCsWinRTRcwFactoryFallbackGeneratorForceOptIn) && isCsWinRTRcwFactoryFallbackGeneratorForceOptIn;
+            }
+
+            return false;
+        }
+
         public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
         {
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateWinMDOnly", out var CsWinRTGenerateWinMDOnlyStr))

@@ -26,6 +26,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' == '' and '$(CsWinRTAotOptimizerEnabled)' == 'true' and '$(PublishAot)' == 'true'">true</CsWinRTAotExportsEnabled>
     <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">false</CsWinRTAotExportsEnabled>
 
+    <!-- Set the RCW factory fallback generator to not be opt-in by default -->
+    <CsWinRTRcwFactoryFallbackGeneratorForceOptIn Condition="'$(CsWinRTRcwFactoryFallbackGeneratorForceOptIn)' != 'true'">false</CsWinRTRcwFactoryFallbackGeneratorForceOptIn>
+
     <!--
       These properties are defined in this property group and not in the 'CsWinRTGenerateProjection'
       target, because they are also needed in authoring scenarios (which will not run that target).
@@ -42,6 +45,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <ItemGroup>
     <CompilerVisibleProperty Include="CsWinRTAotOptimizerEnabled" />
     <CompilerVisibleProperty Include="CsWinRTAotExportsEnabled" />
+    <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptIn" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
