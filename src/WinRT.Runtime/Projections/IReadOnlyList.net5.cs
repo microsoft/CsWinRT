@@ -113,7 +113,7 @@ namespace ABI.Windows.Foundation.Collections
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitRcwHelperFallbackIfNeeded()
@@ -267,7 +267,7 @@ namespace ABI.System.Collections.Generic
             return IReadOnlyList<T>.FindAdapter(thisPtr).Size;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IReadOnlyList<T>));
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReadOnlyList<T>));
         public static Guid IID => PIID;
     }
 
@@ -509,7 +509,9 @@ namespace ABI.System.Collections.Generic
 
     [DynamicInterfaceCastableImplementation]
     [Guid("BBE1FA4C-B0E3-4583-BAEF-1F1B2E483E56")]
+#pragma warning disable CA2256 // Not implementing IVectorView<T> for [DynamicInterfaceCastableImplementation], as we don't expect to need IDIC for WinRT types
     interface IReadOnlyList<T> : global::System.Collections.Generic.IReadOnlyList<T>, global::Windows.Foundation.Collections.IVectorView<T>
+#pragma warning restore CA2256
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyList<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(obj, PIID);
@@ -642,7 +644,7 @@ namespace ABI.System.Collections.Generic
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()

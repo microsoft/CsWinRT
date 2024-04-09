@@ -22,7 +22,7 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
                                             DynamicallyAccessedMemberTypes.PublicFields)]
-        [SuppressMessage("Trimming", "IL2073", Justification = "Matching trimming annotations are used at all callsites registering helper types present in the cache.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2073", Justification = "Matching trimming annotations are used at all callsites registering helper types present in the cache.")]
 #endif
         public static Type FindHelperType(this Type type)
         {
@@ -131,7 +131,11 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-        public static Type GetGuidType(this Type type)
+        public static Type GetGuidType(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            this Type type)
         {
             return type.IsDelegate() ? type.GetHelperType() : type;
         }
@@ -187,7 +191,7 @@ namespace WinRT
         }
 
 #if NET
-        [SuppressMessage("Trimming", "IL2075", Justification = "The path using vtable types is a fallback and is not trim-safe by design.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "The path using vtable types is a fallback and is not trim-safe by design.")]
 #endif
         internal static IntPtr GetAbiToProjectionVftblPtr(
 #if NET
