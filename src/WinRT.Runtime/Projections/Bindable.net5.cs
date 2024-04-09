@@ -400,14 +400,11 @@ namespace ABI.System.Collections
             private readonly Func<IWinRTObject, global::System.Collections.IEnumerator> _enumerator;
 
             public AdaptiveFromAbiHelper(Type runtimeType, IWinRTObject winRTObject)
-                :base(winRTObject)
+                : base(winRTObject)
             {
-                Type enumGenericType = (runtimeType.IsGenericType && runtimeType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.IEnumerable<>)) ? 
-                    runtimeType : runtimeType.GetInterface("System.Collections.Generic.IEnumerable`1");
-                if(enumGenericType != null)
+                if (typeof(IEnumerable).IsAssignableFrom(runtimeType))
                 {
-                    var getEnumerator = enumGenericType.GetMethod("GetEnumerator");
-                    _enumerator = (IWinRTObject obj) => (global::System.Collections.IEnumerator)getEnumerator.Invoke(obj, null);
+                    _enumerator = (IWinRTObject obj) => ((global::System.Collections.IEnumerable)obj).GetEnumerator();
                 }
             }
 
