@@ -206,11 +206,11 @@ namespace WinRT
                 }
 
 #if NET
-                foreach (var type in genericTypes)
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    if (type.IsValueType)
+                    foreach (var type in genericTypes)
                     {
-                        if (!RuntimeFeature.IsDynamicCodeCompiled)
+                        if (type.IsValueType)
                         {
                             throw new NotSupportedException($"Cannot provide generic type from '{runtimeClassName}'.");
                         }
