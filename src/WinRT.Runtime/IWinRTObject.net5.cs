@@ -235,6 +235,10 @@ namespace WinRT
                     result = (IIUnknownCacheStrategy.TableInfo)newInfo;
                     objRef.Dispose();
                 }
+                else
+                {
+                    QueryInterfaceCache.TryAdd(interfaceType, objRef);
+                }
 
                 return true;
             }
@@ -265,7 +269,7 @@ namespace WinRT
                 Marshal.ThrowExceptionForHR(qiHResult);
             }
 
-            return new((void*)NativeObject.ThisPtr, result.Value.Table);
+            return new(result.Value.ThisPtr, result.Value.Table);
         }
 #endif
 
