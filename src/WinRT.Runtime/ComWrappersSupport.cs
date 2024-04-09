@@ -316,11 +316,14 @@ namespace WinRT
                 Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
             });
 
-            entries.Add(new ComInterfaceEntry
+            if (FeatureSwitches.EnableICustomPropertyProviderSupport)
             {
-                IID = ManagedCustomPropertyProviderVftbl.IID,
-                Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
-            });
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = ManagedCustomPropertyProviderVftbl.IID,
+                    Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
+                });
+            }
 
             entries.Add(new ComInterfaceEntry
             {
