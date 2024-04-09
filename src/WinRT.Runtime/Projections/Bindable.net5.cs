@@ -399,7 +399,11 @@ namespace ABI.System.Collections
         public sealed class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
 #pragma warning restore CA2257
         {
+#if NET8_0_OR_GREATER
+            private readonly MethodInvoker _enumerator;
+#else
             private readonly MethodInfo _enumerator;
+#endif
 
 #if NET
             [DynamicDependency(DynamicallyAccessedMemberTypes.PublicMethods, typeof(IEnumerable<>))]
@@ -449,14 +453,25 @@ namespace ABI.System.Collections
                     enumGenericType = GetEnumerableOfTInterface(runtimeType);
                 }
 
+#if NET8_0_OR_GREATER
+                var methodInfo = enumGenericType?.GetMethod("GetEnumerator");
+
+                _enumerator = methodInfo is null ? null : MethodInvoker.Create(methodInfo);
+#else
                 _enumerator = enumGenericType?.GetMethod("GetEnumerator");
+#endif
             }
 
             public override IEnumerator GetEnumerator()
             {
                 if (_enumerator is not null)
                 {
-                    return (IEnumerator)_enumerator.Invoke(_winrtObject, null);
+                    // The method returns IEnumerator<>, which implements IEnumerator
+#if NET8_0_OR_GREATER
+                    return Unsafe.As<IEnumerator>(_enumerator.Invoke(_winrtObject));
+#else
+                    return Unsafe.As<IEnumerator>(_enumerator.Invoke(_winrtObject, null));
+#endif
                 }
 
                 return base.GetEnumerator();
@@ -596,7 +611,7 @@ namespace ABI.System.Collections
     internal
 #else
     public 
-#endif 
+#endif
     static class IEnumerable_Delegates
     {
         public unsafe delegate int First_0(IntPtr thisPtr, IntPtr* result);
