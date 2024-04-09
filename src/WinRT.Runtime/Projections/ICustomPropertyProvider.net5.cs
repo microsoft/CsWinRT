@@ -387,13 +387,4 @@ namespace ABI.Microsoft.UI.Xaml.Data
             return 0;
         }
     }
-
-    internal static class ICustomPropertyProvider_Delegates
-    {
-        public unsafe delegate int GetCustomProperty_0(IntPtr thisPtr, IntPtr name, IntPtr* result);
-        public unsafe delegate int GetIndexedProperty_1(IntPtr thisPtr, IntPtr name, global::ABI.System.Type type, IntPtr* result);
-        public unsafe delegate int GetStringRepresentation_2(IntPtr thisPtr, IntPtr* result);
-        public unsafe delegate int get_Type_3(IntPtr thisPtr, global::ABI.System.Type* value);
-    }
-
 }
