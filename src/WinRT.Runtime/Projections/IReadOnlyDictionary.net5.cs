@@ -475,6 +475,9 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>),
                 IReadOnlyDictionaryImpl<K, V>.CreateRcw);
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>), typeof(global::ABI.System.Collections.Generic.IReadOnlyDictionary<K, V>));
+            ComWrappersSupport.RegisterHelperType(typeof(global::Windows.Foundation.Collections.IMapView<K, V>), typeof(global::ABI.System.Collections.Generic.IReadOnlyDictionary<K, V>));
+
             ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>._RcwHelperInitialized = true;
             return true;
         }

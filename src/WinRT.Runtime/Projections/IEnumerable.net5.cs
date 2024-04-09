@@ -276,6 +276,7 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IEnumerable<T>),
                 IEnumerableImpl<T>.CreateRcw);
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerable<T>), typeof(global::ABI.System.Collections.Generic.IEnumerable<T>));
 
             ABI.Windows.Foundation.Collections.IIterableMethods<T>._RcwHelperInitialized = true;
             return true;
@@ -626,6 +627,8 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IEnumerator<T>),
                 IEnumeratorImpl<T>.CreateRcw);
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerator<T>), typeof(global::ABI.System.Collections.Generic.IEnumerator<T>));
+
             IIteratorMethods<T>._RcwHelperInitialized = true;
             return true;
         }

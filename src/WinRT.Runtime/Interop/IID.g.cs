@@ -389,5 +389,55 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
+        /// <summary>The IID for <c>INotifyCollectionChangedEventArgsFactory</c> (5108EBA4-4892-5A20-8374-A96815E0FD27).</summary>
+        internal static ref readonly Guid IID_INotifyCollectionChangedEventArgsFactory
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xA4, 0xEB, 0x08, 0x51,
+                    0x92, 0x48,
+                    0x20, 0x5A,
+                    0x83,
+                    0x74,
+                    0xA9,
+                    0x68,
+                    0x15,
+                    0xE0,
+                    0xFD,
+                    0x27
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>INotifyCollectionChangedEventArgs</c> (DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F).</summary>
+        internal static ref readonly Guid IID_INotifyCollectionChangedEventArgs
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xF2, 0x9F, 0x04, 0xDA,
+                    0xE0, 0xD2,
+                    0xE8, 0x5F,
+                    0x8C,
+                    0x7B,
+                    0xF8,
+                    0x7F,
+                    0x26,
+                    0x06,
+                    0x0B,
+                    0x6F
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
     }
 }

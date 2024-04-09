@@ -481,6 +481,8 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IList<T>),
                 IListImpl<T>.CreateRcw);
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IList<T>), typeof(global::ABI.System.Collections.Generic.IList<T>));
+
             IVectorMethods<T>._RcwHelperInitialized = true;
             return true;
         }
