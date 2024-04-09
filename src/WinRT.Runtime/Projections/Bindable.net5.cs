@@ -397,18 +397,23 @@ namespace ABI.System.Collections
         public sealed class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
 #pragma warning restore CA2257
         {
-            private readonly Func<IWinRTObject, global::System.Collections.IEnumerator> _enumerator;
+            private readonly bool _isEnumerable;
 
             public AdaptiveFromAbiHelper(Type runtimeType, IWinRTObject winRTObject)
                 : base(winRTObject)
             {
-                if (typeof(IEnumerable).IsAssignableFrom(runtimeType))
-                {
-                    _enumerator = (IWinRTObject obj) => ((global::System.Collections.IEnumerable)obj).GetEnumerator();
-                }
+                _isEnumerable = typeof(IEnumerable).IsAssignableFrom(runtimeType);
             }
 
-            public override global::System.Collections.IEnumerator GetEnumerator() => _enumerator != null ? _enumerator(_winrtObject) : base.GetEnumerator();
+            public override global::System.Collections.IEnumerator GetEnumerator()
+            {
+                if (_isEnumerable)
+                {
+                    return ((global::System.Collections.IEnumerable)_winrtObject).GetEnumerator();
+                }
+
+                return base.GetEnumerator();
+            }
         }
 
 #pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
