@@ -399,17 +399,17 @@ namespace ABI.System.Collections
         public sealed class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
 #pragma warning restore CA2257
         {
+            /// <summary>
+            /// The cached <see cref="IEnumerable{T}.GetEnumerator"/> method.
+            /// </summary>
+            private static readonly MethodInfo EnumerableOfTGetEnumerator = typeof(IEnumerable<>).GetMethod("GetEnumerator");
+
 #if NET8_0_OR_GREATER
             private readonly MethodInvoker _enumerator;
 #else
             private readonly MethodInfo _enumerator;
 #endif
 
-#if NET
-            [DynamicDependency(DynamicallyAccessedMemberTypes.PublicMethods, typeof(IEnumerable<>))]
-            [SuppressMessage("Trimming", "IL2070", Justification = "We're using '[DynamicDependency]' to preserve public methods of 'IEnumerable<T>'.")]
-            [SuppressMessage("Trimming", "IL2075", Justification = "We're using '[DynamicDependency]' to preserve public methods of 'IEnumerable<T>'.")]
-#endif
             public AdaptiveFromAbiHelper(Type runtimeType, IWinRTObject winRTObject)
                 :base(winRTObject)
             {
@@ -428,14 +428,12 @@ namespace ABI.System.Collections
                 }
                 else
                 {
-#if NET
                     [SuppressMessage("Trimming", "IL2070", Justification =
                         """
                         'SomeType.GetInterfaces().Any(t => t.GetGenericTypeDefinition() == typeof(IEnumerable<>)' is safe,
                         provided you obtained someType from something like an analyzable 'Type.GetType' or 'object.GetType'
                         (i.e. it is safe when the type you're asking about can exist on the GC heap as allocated).
                         """)]
-#endif
                     [MethodImpl(MethodImplOptions.NoInlining)]
                     static Type GetEnumerableOfTInterface(Type runtimeType)
                     {
@@ -454,7 +452,7 @@ namespace ABI.System.Collections
                 }
 
 #if NET8_0_OR_GREATER
-                var methodInfo = enumGenericType?.GetMethod("GetEnumerator");
+                var methodInfo = (MethodBase)enumGenericType?.GetMemberWithSameMetadataDefinitionAs(EnumerableOfTGetEnumerator);
 
                 _enumerator = methodInfo is null ? null : MethodInvoker.Create(methodInfo);
 #else
