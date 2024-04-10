@@ -196,7 +196,7 @@ namespace WinRT
             return null;
 
 #if NET
-            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Calls to MakeGenericType are done with reference types")]
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Calls to MakeGenericType are done with reference types.")]
 #endif
             static Type ResolveGenericType(Type resolvedType, Type[] genericTypes, string runtimeClassName)
             {
