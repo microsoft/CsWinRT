@@ -451,12 +451,12 @@ namespace ABI.System.Collections
                     enumGenericType = GetEnumerableOfTInterface(runtimeType);
                 }
 
-#if NET8_0_OR_GREATER
-                var methodInfo = (MethodBase)enumGenericType?.GetMemberWithSameMetadataDefinitionAs(EnumerableOfTGetEnumerator);
+                var methodInfo = (MethodInfo)enumGenericType?.GetMemberWithSameMetadataDefinitionAs(EnumerableOfTGetEnumerator);
 
+#if NET8_0_OR_GREATER
                 _enumerator = methodInfo is null ? null : MethodInvoker.Create(methodInfo);
 #else
-                _enumerator = enumGenericType?.GetMethod("GetEnumerator");
+                _enumerator = methodInfo;
 #endif
             }
 
