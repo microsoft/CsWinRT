@@ -13,6 +13,10 @@
       <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS switch -->
       <method signature="System.Boolean get_EnableDefaultCustomTypeMappings()" body="stub" value="false" feature="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS" featurevalue="false"/>
       <method signature="System.Boolean get_EnableDefaultCustomTypeMappings()" body="stub" value="true" feature="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS" featurevalue="true"/>
+
+      <!-- CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT switch -->
+      <method signature="System.Boolean get_EnableICustomPropertyProviderSupport()" body="stub" value="false" feature="CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT" featurevalue="false"/>
+      <method signature="System.Boolean get_EnableICustomPropertyProviderSupport()" body="stub" value="true" feature="CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT" featurevalue="true"/>
     </type>
   </assembly>
 

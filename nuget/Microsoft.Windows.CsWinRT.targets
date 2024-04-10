@@ -26,6 +26,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' == '' and '$(CsWinRTAotOptimizerEnabled)' == 'true' and '$(PublishAot)' == 'true'">true</CsWinRTAotExportsEnabled>
     <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">false</CsWinRTAotExportsEnabled>
 
+    <!-- Set the RCW factory fallback generator to not be opt-in by default -->
+    <CsWinRTRcwFactoryFallbackGeneratorForceOptIn Condition="'$(CsWinRTRcwFactoryFallbackGeneratorForceOptIn)' != 'true'">false</CsWinRTRcwFactoryFallbackGeneratorForceOptIn>
+
     <!--
       These properties are defined in this property group and not in the 'CsWinRTGenerateProjection'
       target, because they are also needed in authoring scenarios (which will not run that target).
@@ -42,6 +45,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <ItemGroup>
     <CompilerVisibleProperty Include="CsWinRTAotOptimizerEnabled" />
     <CompilerVisibleProperty Include="CsWinRTAotExportsEnabled" />
+    <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptIn" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
@@ -107,7 +111,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="CsWinRTGenerateProjection"
           DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences"
           Condition="'$(CsWinRTGenerateProjection)' == 'true'"
-          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExe);$(CsWinRTExcludes);$(CsWinRTIncludes);$(CsWinRTExcludesPrivate);$(CsWinRTIncludesPrivate);$(CsWinRTFilters);$(CsWinRTWindowsMetadata)"
+          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExe)"
           Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
 
     <PropertyGroup>
@@ -246,6 +250,7 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableDynamicObjectsSupport Condition="'$(CsWinRTEnableDynamicObjectsSupport)' == ''">true</CsWinRTEnableDynamicObjectsSupport>
     <CsWinRTUseExceptionResourceKeys Condition="'$(CsWinRTUseExceptionResourceKeys)' == ''">false</CsWinRTUseExceptionResourceKeys>
     <CsWinRTEnableDefaultCustomTypeMappings Condition="'$(CsWinRTEnableDefaultCustomTypeMappings)' == ''">true</CsWinRTEnableDefaultCustomTypeMappings>
+    <CsWinRTEnableICustomPropertyProviderSupport Condition="'$(CsWinRTEnableICustomPropertyProviderSupport)' == ''">true</CsWinRTEnableICustomPropertyProviderSupport>
   </PropertyGroup>
 
   <!--
@@ -267,6 +272,11 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS"
                                     Value="$(CsWinRTEnableDefaultCustomTypeMappings)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT"
+                                    Value="$(CsWinRTEnableICustomPropertyProviderSupport)"
                                     Trim="true" />
   </ItemGroup>
 

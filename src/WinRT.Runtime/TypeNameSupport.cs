@@ -187,26 +187,39 @@ namespace WinRT
             {
                 if (genericTypes != null)
                 {
-#if NET
-                    if (!RuntimeFeature.IsDynamicCodeCompiled)
-                    {
-                        throw new NotSupportedException($"Cannot provide generic type from '{runtimeClassName}'.");
-                    }
-#endif
-
-#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                    if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
-                    {
-                        return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
-                    }
-                    resolvedType = resolvedType.MakeGenericType(genericTypes);
-#pragma warning restore IL3050
+                    return ResolveGenericType(resolvedType, genericTypes, runtimeClassName);
                 }
                 return resolvedType;
             }
 
             Debug.WriteLine($"FindTypeByNameCore: Unable to find a type named '{runtimeClassName}'");
             return null;
+
+#if NET
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Calls to MakeGenericType are done with reference types")]
+#endif
+            static Type ResolveGenericType(Type resolvedType, Type[] genericTypes, string runtimeClassName)
+            {
+                if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
+                {
+                    return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+                }
+
+#if NET
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    foreach (var type in genericTypes)
+                    {
+                        if (type.IsValueType)
+                        {
+                            throw new NotSupportedException($"Cannot provide generic type from '{runtimeClassName}'.");
+                        }
+                    }
+                }
+#endif
+
+                return resolvedType.MakeGenericType(genericTypes);
+            }
         }
 
         public static Type ResolvePrimitiveType(string primitiveTypeName)
@@ -355,10 +368,14 @@ namespace WinRT
             {
                 builder.Append("Object");
             }
+            else if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0 && type.IsTypeOfType())
+            {
+                builder.Append("Windows.UI.Xaml.Interop.TypeName");
+            }
             else
             {
                 var projectedAbiTypeName = Projections.FindCustomAbiTypeNameForType(type);
-                if (projectedAbiTypeName is object)
+                if (projectedAbiTypeName is not null)
                 {
                     builder.Append(projectedAbiTypeName);
                 }

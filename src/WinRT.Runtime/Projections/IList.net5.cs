@@ -176,7 +176,7 @@ namespace ABI.System.Collections.Generic
             [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-            [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+            [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
             [MethodImpl(MethodImplOptions.NoInlining)]
             static void InitRcwHelperFallbackIfNeeded()
@@ -438,7 +438,7 @@ namespace ABI.System.Collections.Generic
             return IList<T>.FindAdapter(thisPtr).Size;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IList<T>));
         public static Guid IID => PIID;
 
         internal unsafe static bool EnsureEnumerableInitialized()
@@ -481,6 +481,8 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IList<T>),
                 IListImpl<T>.CreateRcw);
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IList<T>), typeof(global::ABI.System.Collections.Generic.IList<T>));
+
             IVectorMethods<T>._RcwHelperInitialized = true;
             return true;
         }
@@ -1138,7 +1140,9 @@ namespace ABI.System.Collections.Generic
 
     [DynamicInterfaceCastableImplementation]
     [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
+#pragma warning disable CA2256 // Not implementing IVector<T> for [DynamicInterfaceCastableImplementation], as we don't expect to need IDIC for WinRT types
     interface IList<T> : global::System.Collections.Generic.IList<T>, global::Windows.Foundation.Collections.IVector<T>
+#pragma warning restore CA2256
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IList<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(obj, PIID);
@@ -1361,7 +1365,7 @@ namespace ABI.System.Collections.Generic
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()

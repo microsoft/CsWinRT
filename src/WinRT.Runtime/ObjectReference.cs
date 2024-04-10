@@ -254,7 +254,7 @@ namespace WinRT
                 return (T)rcwInstance;
             }
 
-            [SuppressMessage("Trimming", "IL2090", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
+            [UnconditionalSuppressMessage("Trimming", "IL2090", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
             static bool TryCreateRcwFallback(IObjectReference objectReference, out object rcwInstance)
             {
                 var constructor = typeof(T).GetConstructor(

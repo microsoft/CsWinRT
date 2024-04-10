@@ -76,7 +76,9 @@ namespace ABI.Windows.Foundation.Collections
 
     [DynamicInterfaceCastableImplementation]
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
+#pragma warning disable CA2256 // Not implementing IIterable<T> for [DynamicInterfaceCastableImplementation], as we don't expect to need IDIC for WinRT types
     internal interface IIterable<T> : ABI.System.Collections.Generic.IEnumerable<T>
+#pragma warning restore CA2256
     {
         public static new Guid PIID = ABI.System.Collections.Generic.IEnumerableMethods<T>.PIID;
     }
@@ -254,7 +256,7 @@ namespace ABI.System.Collections.Generic
             return new ToAbiEnumeratorAdapter<T>(__this.GetEnumerator());
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerable<T>));
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerable<T>));
         public static Guid IID => PIID;
     }
 
@@ -276,6 +278,7 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IEnumerable<T>),
                 IEnumerableImpl<T>.CreateRcw);
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerable<T>), typeof(global::ABI.System.Collections.Generic.IEnumerable<T>));
 
             ABI.Windows.Foundation.Collections.IIterableMethods<T>._RcwHelperInitialized = true;
             return true;
@@ -331,7 +334,9 @@ namespace ABI.System.Collections.Generic
 
     [DynamicInterfaceCastableImplementation]
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
+#pragma warning disable CA2256 // Not implementing IIterable<T> for [DynamicInterfaceCastableImplementation], as we don't expect to need IDIC for WinRT types
     interface IEnumerable<T> : global::System.Collections.Generic.IEnumerable<T>, global::Windows.Foundation.Collections.IIterable<T>
+#pragma warning restore CA2256
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerable<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(obj, PIID);
@@ -378,7 +383,7 @@ namespace ABI.System.Collections.Generic
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()
@@ -536,7 +541,7 @@ namespace ABI.System.Collections.Generic
             [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-            [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+            [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
             [MethodImpl(MethodImplOptions.NoInlining)]
             static void InitRcwHelperFallbackIfNeeded()
@@ -600,7 +605,7 @@ namespace ABI.System.Collections.Generic
             return IEnumerator<T>.FindAdapter(thisPtr).HasCurrent;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerator<T>));
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerator<T>));
         public static Guid IID => PIID;
     }
 
@@ -626,6 +631,8 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.IEnumerator<T>),
                 IEnumeratorImpl<T>.CreateRcw);
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.IEnumerator<T>), typeof(global::ABI.System.Collections.Generic.IEnumerator<T>));
+
             IIteratorMethods<T>._RcwHelperInitialized = true;
             return true;
         }
@@ -940,7 +947,9 @@ namespace ABI.System.Collections.Generic
 
     [DynamicInterfaceCastableImplementation]
     [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
+#pragma warning disable CA2256 // Not implementing IIterator<T> for [DynamicInterfaceCastableImplementation], as we don't expect to need IDIC for WinRT types
     interface IEnumerator<T> : global::System.Collections.Generic.IEnumerator<T>, global::Windows.Foundation.Collections.IIterator<T>
+#pragma warning restore CA2256
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerator<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(obj, PIID);
@@ -1079,7 +1088,7 @@ namespace ABI.System.Collections.Generic
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-                [SuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+                [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
 #endif
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static void InitFallbackCCWVTableIfNeeded()

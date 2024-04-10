@@ -33,6 +33,28 @@ namespace WinRT
             }
         }
 #endif
+
+#if NET8_0_OR_GREATER
+#nullable enable
+        /// <summary>
+        /// Tries to create a <see cref="MethodInvoker"/> for a given method on a helper type.
+        /// </summary>
+        /// <param name="helperType">The input helper type.</param>
+        /// <param name="methodName">The name of the method to get.</param>
+        /// <returns>The resulting <see cref="MethodInvoker"/> instance, if the method was present.</returns>
+        public static MethodInvoker? TryGetMethodInvoker([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type helperType, string methodName)
+        {
+            MethodInfo? method = helperType.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static);
+
+            if (method is null)
+            {
+                return null;
+            }
+
+            return MethodInvoker.Create(method);
+        }
+#nullable restore
+#endif
     }
 
 #if EMBED
@@ -725,6 +747,23 @@ namespace WinRT
 
     internal sealed class MarshalGenericFallback<T>
     {
+#if NET8_0_OR_GREATER
+        private readonly MethodInvoker _createMarshaler;
+        private readonly MethodInvoker _getAbi;
+        private readonly MethodInvoker _copyAbi;
+        private readonly MethodInvoker _fromAbi;
+        private readonly MethodInvoker _fromManaged;
+        private readonly MethodInvoker _copyManaged;
+        private readonly MethodInvoker _disposeMarshaler;
+        private readonly MethodInvoker _createMarshaler2;
+        private readonly MethodInvoker _disposeAbi;
+        private readonly MethodInvoker _createMarshalerArray;
+        private readonly MethodInvoker _getAbiArray;
+        private readonly MethodInvoker _fromAbiArray;
+        private readonly MethodInvoker _fromManagedArray;
+        private readonly MethodInvoker _disposeMarshalerArray;
+        private readonly MethodInvoker _disposeAbiArray;
+#else
         private readonly MethodInfo _createMarshaler;
         private readonly MethodInfo _getAbi;
         private readonly MethodInfo _copyAbi;
@@ -740,6 +779,7 @@ namespace WinRT
         private readonly MethodInfo _fromManagedArray;
         private readonly MethodInfo _disposeMarshalerArray;
         private readonly MethodInfo _disposeAbiArray;
+#endif
 
         public MarshalGenericFallback(
 #if NET
@@ -747,6 +787,23 @@ namespace WinRT
 #endif
             Type helperType)
         {
+#if NET8_0_OR_GREATER
+            _createMarshaler = MarshalExtensions.TryGetMethodInvoker(helperType, "CreateMarshaler");
+            _getAbi = MarshalExtensions.TryGetMethodInvoker(helperType, "GetAbi");
+            _copyAbi = MarshalExtensions.TryGetMethodInvoker(helperType, "CopyAbi");
+            _fromAbi = MarshalExtensions.TryGetMethodInvoker(helperType, "FromAbi");
+            _fromManaged = MarshalExtensions.TryGetMethodInvoker(helperType, "FromManaged");
+            _copyManaged = MarshalExtensions.TryGetMethodInvoker(helperType, "CopyManaged");
+            _disposeMarshaler = MarshalExtensions.TryGetMethodInvoker(helperType, "DisposeMarshaler");
+            _createMarshaler2 = MarshalExtensions.TryGetMethodInvoker(helperType, "CreateMarshaler2");
+            _disposeAbi = MarshalExtensions.TryGetMethodInvoker(helperType, "DisposeAbi");
+            _createMarshalerArray = MarshalExtensions.TryGetMethodInvoker(helperType, "CreateMarshalerArray");
+            _getAbiArray = MarshalExtensions.TryGetMethodInvoker(helperType, "GetAbiArray");
+            _fromAbiArray = MarshalExtensions.TryGetMethodInvoker(helperType, "FromAbiArray");
+            _fromManagedArray = MarshalExtensions.TryGetMethodInvoker(helperType, "FromManagedArray");
+            _disposeMarshalerArray = MarshalExtensions.TryGetMethodInvoker(helperType, "DisposeMarshalerArray");
+            _disposeAbiArray = MarshalExtensions.TryGetMethodInvoker(helperType, "DisposeAbiArray");
+#else
             _createMarshaler = helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.Static);
             _getAbi = helperType.GetMethod("GetAbi", BindingFlags.Public | BindingFlags.Static);
             _copyAbi = helperType.GetMethod("CopyAbi", BindingFlags.Public | BindingFlags.Static);
@@ -762,11 +819,26 @@ namespace WinRT
             _fromManagedArray = helperType.GetMethod("FromManagedArray", BindingFlags.Public | BindingFlags.Static);
             _disposeMarshalerArray = helperType.GetMethod("DisposeMarshalerArray", BindingFlags.Public | BindingFlags.Static);
             _disposeAbiArray = helperType.GetMethod("DisposeAbiArray", BindingFlags.Public | BindingFlags.Static);
+#endif
         }
 
-        public object CreateMarshaler(T arg) => _createMarshaler.Invoke(null, new object[] { arg });
+        public object CreateMarshaler(T arg)
+        {
+#if NET8_0_OR_GREATER
+            return _createMarshaler.Invoke(null, arg);
+#else
+            return _createMarshaler.Invoke(null, new object[] { arg });
+#endif
+        }
 
-        public object CreateMarshaler2(T arg) => _createMarshaler2.Invoke(null, new object[] { arg });
+        public object CreateMarshaler2(T arg)
+        {
+#if NET8_0_OR_GREATER
+            return _createMarshaler2.Invoke(null, arg);
+#else
+            return _createMarshaler2.Invoke(null, new object[] { arg });
+#endif
+        }
 
         public object GetAbi(object arg)
         {
@@ -778,16 +850,48 @@ namespace WinRT
                 return objectReferenceValue.GetAbi();
             }
 
-            return _getAbi.Invoke(null, new[] { arg });
+#if NET8_0_OR_GREATER
+            return _getAbi.Invoke(null, arg);
+#else
+            return _getAbi.Invoke(null, new object[] { arg });
+#endif
         }
 
-        public void CopyAbi(object arg, IntPtr dest) => _copyAbi.Invoke(null, new[] { arg, dest });
+        public void CopyAbi(object arg, IntPtr dest)
+        {
+#if NET8_0_OR_GREATER
+            _ = _copyAbi.Invoke(null, arg, dest);
+#else
+            _ = _copyAbi.Invoke(null, new[] { arg, dest });
+#endif
+        }
 
-        public T FromAbi(object arg) => (T)_fromAbi.Invoke(null, new[] { arg });
+        public T FromAbi(object arg)
+        {
+#if NET8_0_OR_GREATER
+            return (T)_fromAbi.Invoke(null, arg);
+#else
+            return (T)_fromAbi.Invoke(null, new[] { arg });
+#endif
+        }
 
-        public object FromManaged(T arg) => _fromManaged.Invoke(null, new object[] { arg });
+        public object FromManaged(T arg)
+        {
+#if NET8_0_OR_GREATER
+            return _fromManaged.Invoke(null, arg);
+#else
+            return _fromManaged.Invoke(null, new object[] { arg });
+#endif
+        }
 
-        public void CopyManaged(T arg, IntPtr dest) => _copyManaged.Invoke(null, new object[] { arg, dest });
+        public void CopyManaged(T arg, IntPtr dest)
+        {
+#if NET8_0_OR_GREATER
+            _ = _copyManaged.Invoke(null, arg, dest);
+#else
+            _ = _copyManaged.Invoke(null, new object[] { arg, dest });
+#endif
+        }
 
         public void DisposeMarshaler(object arg)
         {
@@ -798,23 +902,76 @@ namespace WinRT
             }
             else
             {
+#if NET8_0_OR_GREATER
+                _disposeMarshaler.Invoke(null, arg);
+#else
                 _disposeMarshaler.Invoke(null, new[] { arg });
+#endif
             }
         }
 
-        public void DisposeAbi(object arg) => _disposeAbi.Invoke(null, new[] { arg });
+        public void DisposeAbi(object arg)
+        {
+#if NET8_0_OR_GREATER
+            _ = _disposeAbi.Invoke(null, arg);
+#else
+            _ = _disposeAbi.Invoke(null, new object[] { arg });
+#endif
+        }
 
-        public object CreateMarshalerArray(T[] arg) => _createMarshalerArray.Invoke(null, new object[] { arg });
+        public object CreateMarshalerArray(T[] arg)
+        {
+#if NET8_0_OR_GREATER
+            return _createMarshalerArray.Invoke(null, arg);
+#else
+            return _createMarshalerArray.Invoke(null, new[] { arg });
+#endif
+        }
 
-        public (int, IntPtr) GetAbiArray(object arg) => ((int, IntPtr))_getAbiArray.Invoke(null, new object[] { arg });
+        public (int, IntPtr) GetAbiArray(object arg)
+        {
+#if NET8_0_OR_GREATER
+            return ((int, IntPtr))_getAbiArray.Invoke(null, arg);
+#else
+            return ((int, IntPtr))_getAbiArray.Invoke(null, new object[] { arg });
+#endif
+        }
 
-        public T[] FromAbiArray(object arg) => (T[])_fromAbiArray.Invoke(null, new[] { arg });
+        public T[] FromAbiArray(object arg)
+        {
+#if NET8_0_OR_GREATER
+            return (T[])_fromAbiArray.Invoke(null,  arg);
+#else
+            return (T[])_fromAbiArray.Invoke(null, new[] { arg });
+#endif
+        }
 
-        public (int, IntPtr) FromManagedArray(T[] arg) => ((int, IntPtr))_fromManagedArray.Invoke(null, new object[] { arg });
+        public (int, IntPtr) FromManagedArray(T[] arg)
+        {
+#if NET8_0_OR_GREATER
+            return ((int, IntPtr))_fromManagedArray.Invoke(null, arg);
+#else
+            return ((int, IntPtr))_fromManagedArray.Invoke(null, new object[] { arg });
+#endif
+        }
 
-        public void DisposeMarshalerArray(object arg) => _disposeMarshalerArray.Invoke(null, new object[] { arg });
+        public void DisposeMarshalerArray(object arg)
+        {
+#if NET8_0_OR_GREATER
+            _ = _disposeMarshalerArray.Invoke(null, arg);
+#else
+            _ = _disposeMarshalerArray.Invoke(null, new object[] { arg });
+#endif
+        }
 
-        public void DisposeAbiArray(object arg) => _disposeAbiArray.Invoke(null, new object[] { arg });
+        public void DisposeAbiArray(object arg)
+        {
+#if NET8_0_OR_GREATER
+            _ = _disposeAbiArray.Invoke(null, arg);
+#else
+            _ = _disposeAbiArray.Invoke(null, new object[] { arg });
+#endif
+        }
     }
 
     internal static class MarshalGenericHelper<T>
@@ -1375,7 +1532,6 @@ namespace WinRT
 #if NET
         [DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicFields |
-            DynamicallyAccessedMemberTypes.PublicNestedTypes |
             DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
         private static Type _HelperType;
@@ -1383,7 +1539,6 @@ namespace WinRT
 #if NET
         [DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicFields |
-            DynamicallyAccessedMemberTypes.PublicNestedTypes |
             DynamicallyAccessedMemberTypes.PublicMethods)]
 #endif
         private static Type HelperType => _HelperType ??= typeof(T).GetHelperType();
@@ -1404,9 +1559,12 @@ namespace WinRT
 
         private static Guid GetIID()
         {
-            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
+            // The JIT and linker cannot fully combine the 'IsGenericType' and generic type definition checks, and we don't
+            // want to root unnecessary code here for the shared generic instantiation. So we can give them a little nudge
+            // by also explicitly checking whether 'T' is a value type. If it is not, the whole branch will short-cirtuit.
+            if (typeof(T).IsValueType && typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                return GuidGenerator.CreateIID(typeof(T));
+                return GuidGenerator.CreateIIDUnsafe(typeof(T));
             }
             
             return GuidGenerator.GetIID(HelperType);
