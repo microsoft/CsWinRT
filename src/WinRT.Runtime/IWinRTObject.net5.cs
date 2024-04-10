@@ -190,16 +190,19 @@ namespace WinRT
                 }
 #endif
 
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
                 [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static IObjectReference GetObjectReferenceViaVftbl(IObjectReference objRef, Type vftblType)
                 {
-#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     return (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
-#pragma warning restore IL3050
                 }
 
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 IObjectReference typedObjRef = GetObjectReferenceViaVftbl(objRef, vftblType);
+#pragma warning restore IL3050
 
                 if (!QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
                 {
