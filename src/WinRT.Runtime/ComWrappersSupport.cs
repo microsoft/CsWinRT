@@ -159,7 +159,6 @@ namespace WinRT
             Type type,
 #if NET
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                        DynamicallyAccessedMemberTypes.PublicNestedTypes |
                                         DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type helperType) => TypeExtensions.HelperTypeCache.TryAdd(type, helperType);
@@ -227,48 +226,76 @@ namespace WinRT
             else if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
             {
-                if (type.IsDelegate())
+                static void AddInterfaceToVtable(Type iface, List<ComInterfaceEntry> entries, bool hasCustomIMarshalInterface)
                 {
-                    // Delegates have no interfaces that they implement, so adding default WinRT entries.
-                    var helperType = type.FindHelperType();
-                    if (helperType is object)
+                    var interfaceHelperType = iface.FindHelperType();
+                    Guid iid = GuidGenerator.GetIID(interfaceHelperType);
+                    entries.Add(new ComInterfaceEntry
                     {
-                        entries.Add(new ComInterfaceEntry
-                        {
-                            IID = GuidGenerator.GetIID(type),
-                            Vtable = helperType.GetAbiToProjectionVftblPtr()
-                        });
-                    }
+                        IID = GuidGenerator.GetIID(interfaceHelperType),
+                        Vtable = interfaceHelperType.GetAbiToProjectionVftblPtr()
+                    });
 
-                    if (type.ShouldProvideIReference())
+                    if (!hasCustomIMarshalInterface && iid == IID.IID_IMarshal)
                     {
-                        entries.Add(IPropertyValueEntry);
-                        entries.Add(ProvideIReference(type));
+                        hasCustomIMarshalInterface = true;
                     }
                 }
-                else
+
+#if NET
+                [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
+                [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
+                [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
+                [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
+                [MethodImpl(MethodImplOptions.NoInlining)]
+#endif
+                static void GetInterfaceTableEntriesForJitEnvironment(Type type, List<ComInterfaceEntry> entries, bool hasCustomIMarshalInterface)
                 {
-                    var objType = type.GetRuntimeClassCCWType() ?? type;
-                    var interfaces = objType.GetInterfaces();
-                    foreach (var iface in interfaces)
+                    if (type.IsDelegate())
                     {
-                        if (Projections.IsTypeWindowsRuntimeType(iface))
+                        // Delegates have no interfaces that they implement, so adding default WinRT entries.
+                        var helperType = type.FindHelperType();
+                        if (helperType is object)
                         {
-                            AddInterfaceToVtable(iface);
+                            entries.Add(new ComInterfaceEntry
+                            {
+                                IID = GuidGenerator.GetIID(type),
+                                Vtable = helperType.GetAbiToProjectionVftblPtr()
+                            });
                         }
 
-                        if (iface.IsConstructedGenericType
-#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                            && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, out var compatibleIfaces))
-#pragma warning restore IL3050
+                        if (type.ShouldProvideIReference())
                         {
-                            foreach (var compatibleIface in compatibleIfaces)
+                            entries.Add(IPropertyValueEntry);
+                            entries.Add(ProvideIReference(type));
+                        }
+                    }
+                    else
+                    {
+                        var objType = type.GetRuntimeClassCCWType() ?? type;
+                        var interfaces = objType.GetInterfaces();
+                        foreach (var iface in interfaces)
+                        {
+                            if (Projections.IsTypeWindowsRuntimeType(iface))
                             {
-                                AddInterfaceToVtable(compatibleIface);
+                                AddInterfaceToVtable(iface, entries, hasCustomIMarshalInterface);
+                            }
+
+                            if (iface.IsConstructedGenericType
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+                                && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, out var compatibleIfaces))
+#pragma warning restore IL3050
+                            {
+                                foreach (var compatibleIface in compatibleIfaces)
+                                {
+                                    AddInterfaceToVtable(compatibleIface, entries, hasCustomIMarshalInterface);
+                                }
                             }
                         }
                     }
                 }
+
+                GetInterfaceTableEntriesForJitEnvironment(type, entries, hasCustomIMarshalInterface);
             }
 
 #if !NET
@@ -317,11 +344,14 @@ namespace WinRT
                 Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
             });
 
-            entries.Add(new ComInterfaceEntry
+            if (FeatureSwitches.EnableICustomPropertyProviderSupport)
             {
-                IID = ManagedCustomPropertyProviderVftbl.IID,
-                Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
-            });
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = ManagedCustomPropertyProviderVftbl.IID,
+                    Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
+                });
+            }
 
             entries.Add(new ComInterfaceEntry
             {
@@ -361,22 +391,6 @@ namespace WinRT
             });
 
             return entries;
-
-            void AddInterfaceToVtable(Type iface)
-            {
-                var interfaceHelperType = iface.FindHelperType();
-                Guid iid = GuidGenerator.GetIID(interfaceHelperType);
-                entries.Add(new ComInterfaceEntry
-                {
-                    IID = GuidGenerator.GetIID(interfaceHelperType),
-                    Vtable = interfaceHelperType.GetAbiToProjectionVftblPtr()
-                });
-
-                if (!hasCustomIMarshalInterface && iid == IID.IID_IMarshal)
-                {
-                    hasCustomIMarshalInterface = true;
-                }
-            }
         }
 
 #if NET
@@ -486,7 +500,11 @@ namespace WinRT
             };
         }
 
-        private static Func<IInspectable, object> CreateCustomTypeMappingFactory(Type customTypeHelperType)
+        private static Func<IInspectable, object> CreateCustomTypeMappingFactory(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
+#endif
+            Type customTypeHelperType)
         {
             var fromAbiMethod = customTypeHelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.Static);
             if (fromAbiMethod is null)
@@ -570,22 +588,6 @@ namespace WinRT
 
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
             {
-                // Manual helper to save binary size (no LINQ, no lambdas) and get better performance
-                static bool HasAnyTypeMatches(Type[] interfaceTypes, Type targetType)
-                {
-                    Type genericTargetType = targetType.GetGenericTypeDefinition();
-
-                    foreach (Type interfaceType in interfaceTypes)
-                    {
-                        if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == genericTargetType)
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-
                 // We have a static type which we can use to construct the object.  But, we can't just use it for all scenarios
                 // and primarily use it for tear off scenarios and for scenarios where runtimeclass isn't accurate.
                 // For instance if the static type is an interface, we return an IInspectable to represent the interface.
@@ -596,8 +598,7 @@ namespace WinRT
                 // If it isn't, we use the statically determined type as it is a tear off.
                 if (!(implementationType != null &&
                     (staticallyDeterminedType == implementationType ||
-                     staticallyDeterminedType.IsAssignableFrom(implementationType) ||
-                     staticallyDeterminedType.IsGenericType && HasAnyTypeMatches(implementationType.GetInterfaces(), staticallyDeterminedType))))
+                     staticallyDeterminedType.IsAssignableFrom(implementationType))))
                 {
                     return staticallyDeterminedType;
                 }

@@ -113,8 +113,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public static implicit operator WUXPropertyChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WUXPropertyChangedEventArgsRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
         public WUXPropertyChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         public WUXPropertyChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {

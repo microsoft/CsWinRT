@@ -28,11 +28,9 @@ namespace ABI.System.ComponentModel
         }
         private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, PropertyChangedEventSource> PropertyChanged => _PropertyChanged ?? MakePropertyChangedTable();
 
-        public static unsafe (global::System.Action<global::System.ComponentModel.PropertyChangedEventHandler>,
-                              global::System.Action<global::System.ComponentModel.PropertyChangedEventHandler>)
-            Get_PropertyChanged(IObjectReference obj, object thisObj)
+        public static unsafe global::ABI.WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> Get_PropertyChanged2(IObjectReference obj, object thisObj)
         {
-            var eventSource = PropertyChanged.GetValue(thisObj, (key) =>
+            return PropertyChanged.GetValue(thisObj, (key) =>
             {
                 var ThisPtr = obj.ThisPtr;
 
@@ -40,7 +38,6 @@ namespace ABI.System.ComponentModel
                     (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
                     (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
             });
-            return eventSource.EventActions;
         }
     }
 
@@ -130,18 +127,16 @@ namespace ABI.System.ComponentModel
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static (global::System.Action<global::System.ComponentModel.PropertyChangedEventHandler>,
-                        global::System.Action<global::System.ComponentModel.PropertyChangedEventHandler>)
-            _PropertyChanged(IWinRTObject _this)
+        private static global::ABI.WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> _PropertyChanged(IWinRTObject _this)
         {
             var _obj = _this.GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
-            return INotifyPropertyChangedMethods.Get_PropertyChanged(_obj, _this);
+            return INotifyPropertyChangedMethods.Get_PropertyChanged2(_obj, _this);
         }
 
         event global::System.ComponentModel.PropertyChangedEventHandler global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged
         {
-            add => _PropertyChanged((IWinRTObject)this).Item1(value);
-            remove => _PropertyChanged((IWinRTObject)this).Item2(value);
+            add => _PropertyChanged((IWinRTObject)this).Subscribe(value);
+            remove => _PropertyChanged((IWinRTObject)this).Unsubscribe(value);
         }
     }
 }

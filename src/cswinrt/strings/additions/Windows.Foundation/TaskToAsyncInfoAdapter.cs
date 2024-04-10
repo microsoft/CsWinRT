@@ -22,7 +22,7 @@ namespace System.Threading.Tasks
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
     internal partial class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>
-                                                                                : IAsyncInfo, IProgress<TProgressInfo>
+                                                                                : IAsyncInfo, IProgress<TProgressInfo>, ITaskAwareAsyncInfo
                                                                                 where TCompletedHandler : class
                                                                                 where TProgressHandler : class
     {
@@ -367,7 +367,7 @@ namespace System.Threading.Tasks
         }
 
 
-        internal Task Task
+        Task ITaskAwareAsyncInfo.Task
         {
             get
             {

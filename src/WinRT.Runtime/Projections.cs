@@ -122,7 +122,7 @@ namespace WinRT
                 RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedAction), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedAction), "Windows.UI.Xaml.Interop.NotifyCollectionChangedAction");
                 RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventArgs), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs), "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", isRuntimeClass: true);
                 RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventHandler), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler), "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler");
-                CustomTypeToHelperTypeMappings.Add(typeof(Windows.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList));
+                CustomTypeToHelperTypeMappings.Add(typeof(Microsoft.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList)); // We can use the same type for both MUX and WUX because the IIDs are the same.
             }
 #endif
 
@@ -166,7 +166,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType, 
@@ -189,7 +188,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type helperType)
@@ -210,7 +208,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type helperType)
@@ -223,7 +220,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType, 
@@ -246,7 +242,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType)
@@ -267,7 +262,6 @@ namespace WinRT
 #if NET
             [DynamicallyAccessedMembers(
                 DynamicallyAccessedMemberTypes.PublicMethods |
-                DynamicallyAccessedMemberTypes.PublicNestedTypes |
                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type abiType)
@@ -279,7 +273,6 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicMethods |
-            DynamicallyAccessedMemberTypes.PublicNestedTypes |
             DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         public static Type FindCustomHelperTypeMapping(Type publicType, bool filterToRuntimeClass = false)
@@ -431,6 +424,9 @@ namespace WinRT
         }
 
         // Use TryGetCompatibleWindowsRuntimeTypesForVariantType instead.
+#if NET
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
+#endif
         public static bool TryGetCompatibleWindowsRuntimeTypeForVariantType(Type type, out Type compatibleType)
         {
             compatibleType = null;
@@ -483,6 +479,9 @@ namespace WinRT
 
 #if NET8_0_OR_GREATER
         [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
 #endif
         private static HashSet<Type> GetCompatibleTypes(Type type, Stack<Type> typeStack)
         {
@@ -537,8 +536,8 @@ namespace WinRT
             [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
-                Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
+            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
+            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
 #endif
             void GetAllPossibleTypeCombinationsCore(List<Type> accum, Stack<Type> stack, IEnumerable<Type>[] compatibleTypes, int index)
             {
@@ -563,6 +562,9 @@ namespace WinRT
 
 #if NET8_0_OR_GREATER
         [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
 #endif
         internal static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(Type type, Stack<Type> typeStack, out IEnumerable<Type> compatibleTypes)
         {

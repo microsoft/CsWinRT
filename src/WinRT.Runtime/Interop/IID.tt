@@ -36,7 +36,11 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("IErrorInfo", "1CF2B120-547D-101B-8E65-08002B2BD119", false),
     ("ISupportErrorInfo", "DF0B3D60-548F-101B-8E65-08002B2BD119", false),
     ("ILanguageExceptionErrorInfo", "04A2DBF3-DF83-116C-0946-0812ABF6E07D", false),
-    ("IRestrictedErrorInfo", "82BA7092-4C88-427D-A7BC-16DD93FEB67E", false)
+    ("IRestrictedErrorInfo", "82BA7092-4C88-427D-A7BC-16DD93FEB67E", false),
+    ("MUX_INotifyCollectionChangedEventArgsFactory", "5108EBA4-4892-5A20-8374-A96815E0FD27", false),
+    ("WUX_INotifyCollectionChangedEventArgsFactory", "b30c3e3a-df8d-44a5-9a38-7ac0d08ce63d", false),
+    ("MUX_INotifyCollectionChangedEventArgs", "DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F", false),
+    ("WUX_INotifyCollectionChangedEventArgs", "4CF68D33-E3F2-4964-B85E-945B4F7E2F21", false),
 };
 
 for (int i = 0; i < entries.Length; i++)

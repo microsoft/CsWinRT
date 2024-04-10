@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using ABI.System.ComponentModel;
+using ABI.WinRT.Interop;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -60,11 +61,9 @@ namespace ABI.System.Windows.Input
         }
         private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource> CanExecuteChanged => _CanExecuteChanged ?? MakeCanExecuteChangedTable();
 
-        public static unsafe (global::System.Action<global::System.EventHandler>,
-                              global::System.Action<global::System.EventHandler>)
-            Get_CanExecuteChanged(IObjectReference obj, object thisObj)
+        public static unsafe EventHandlerEventSource Get_CanExecuteChanged2(IObjectReference obj, object thisObj)
         {
-            var eventSource = CanExecuteChanged.GetValue(thisObj, (key) =>
+            return CanExecuteChanged.GetValue(thisObj, (key) =>
             {
                 var ThisPtr = obj.ThisPtr;
 
@@ -72,7 +71,6 @@ namespace ABI.System.Windows.Input
                     (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
                     (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
             });
-            return eventSource.EventActions;
         }
     }
 
@@ -205,12 +203,10 @@ namespace ABI.System.Windows.Input
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static (global::System.Action<global::System.EventHandler>,
-                        global::System.Action<global::System.EventHandler>)
-            _CanExecuteChanged(IWinRTObject _this)
+        private static global::ABI.WinRT.Interop.EventHandlerEventSource _CanExecuteChanged(IWinRTObject _this)
         {
             var _obj = _this.GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle);
-            return ICommandMethods.Get_CanExecuteChanged(_obj, _this);
+            return ICommandMethods.Get_CanExecuteChanged2(_obj, _this);
         }
 
         unsafe bool global::System.Windows.Input.ICommand.CanExecute(object parameter)
@@ -229,11 +225,11 @@ namespace ABI.System.Windows.Input
         {
             add
             {
-                _CanExecuteChanged((IWinRTObject)this).Item1(value);
+                _CanExecuteChanged((IWinRTObject)this).Subscribe(value);
             }
             remove
             {
-                _CanExecuteChanged((IWinRTObject)this).Item2(value);
+                _CanExecuteChanged((IWinRTObject)this).Unsubscribe(value);
             }
         }
     }

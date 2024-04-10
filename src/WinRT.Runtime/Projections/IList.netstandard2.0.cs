@@ -475,7 +475,7 @@ namespace ABI.System.Collections.Generic
             public IList_Delegates.Clear_9 Clear_9;
             public IList_Delegates.GetMany_10 GetMany_10;
             public IList_Delegates.ReplaceAll_11 ReplaceAll_11;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
+            public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IList<T>));
             private static readonly Type GetAt_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type IndexOf_3_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
             private static readonly Type SetAt_4_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });

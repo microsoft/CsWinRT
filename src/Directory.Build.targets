@@ -18,10 +18,6 @@
     <None Include="$(GeneratedFilesRootDir)**/*.cs" />
     <Compile Condition="'$(GeneratedFilesDir)' != '$(GeneratedFilesRootDir)'" Include="$(GeneratedFilesDir)*.cs" />
   </ItemGroup>
-
-  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.8.0-2.final" />
-  </ItemGroup>
 	
   <ItemGroup>
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
