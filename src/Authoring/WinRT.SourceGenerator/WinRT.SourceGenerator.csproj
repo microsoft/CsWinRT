@@ -15,6 +15,7 @@
     <Description>C#/WinRT Authoring Source Generator Preview $(VersionString)</Description>
     <AssemblyTitle>C#/WinRT Authoring Source Generator Preview v$(VersionString)</AssemblyTitle>
     <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+	<IsRoslynComponent>true</IsRoslynComponent>
   </PropertyGroup>
 
   <ItemGroup>
