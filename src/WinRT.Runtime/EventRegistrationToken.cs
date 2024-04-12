@@ -15,7 +15,7 @@ namespace WinRT
 #else 
     public
 #endif
-struct EventRegistrationToken : IEquatable<EventRegistrationToken>
+    struct EventRegistrationToken : IEquatable<EventRegistrationToken>
     {
         public long Value;
 

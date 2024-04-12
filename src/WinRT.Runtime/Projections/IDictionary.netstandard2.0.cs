@@ -521,7 +521,7 @@ namespace ABI.System.Collections.Generic
             public global::System.Delegate Insert_4;
             public global::System.Delegate Remove_5;
             public IDictionary_Delegates.Clear_6 Clear_6;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IDictionary<K, V>));
+            public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IDictionary<K, V>));
             private static readonly Type Lookup_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type HasKey_2_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });
             private static readonly Type Insert_4_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, Marshaler<V>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });

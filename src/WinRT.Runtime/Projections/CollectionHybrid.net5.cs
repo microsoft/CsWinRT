@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 
@@ -20,10 +21,19 @@ namespace ABI.System.Collections.Generic
             var genericType = typeof(T);
             if (genericType.IsGenericType && genericType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.KeyValuePair<,>))
             {
+#if NET
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type argument '{typeof(T)}'.");
+                }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var iReadOnlyDictionary = typeof(global::System.Collections.Generic.IReadOnlyDictionary<,>).MakeGenericType(genericType.GetGenericArguments());
                 if (_this.IsInterfaceImplemented(iReadOnlyDictionary.TypeHandle, false))
                 {
                     var iReadOnlyDictionaryImpl = typeof(global::System.Collections.Generic.IReadOnlyDictionaryImpl<,>).MakeGenericType(genericType.GetGenericArguments());
+#pragma warning restore IL3050
                     return (global::System.Collections.Generic.IReadOnlyCollection<T>)
                         iReadOnlyDictionaryImpl.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, new global::System.Type[] { typeof(IObjectReference) }, null)
                         .Invoke(new object[] { _this.NativeObject });
@@ -64,10 +74,19 @@ namespace ABI.System.Collections.Generic
             var genericType = typeof(T);
             if (genericType.IsGenericType && genericType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.KeyValuePair<,>))
             {
+#if NET
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type argument '{typeof(T)}'.");
+                }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var iDictionary = typeof(global::System.Collections.Generic.IDictionary<,>).MakeGenericType(genericType.GetGenericArguments());
                 if (_this.IsInterfaceImplemented(iDictionary.TypeHandle, false))
                 {
                     var iDictionaryImpl = typeof(global::System.Collections.Generic.IDictionaryImpl<,>).MakeGenericType(genericType.GetGenericArguments());
+#pragma warning restore IL3050
                     return (global::System.Collections.Generic.ICollection<T>)
                         iDictionaryImpl.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, new global::System.Type[] { typeof(IObjectReference) }, null)
                         .Invoke(new object[] { _this.NativeObject });

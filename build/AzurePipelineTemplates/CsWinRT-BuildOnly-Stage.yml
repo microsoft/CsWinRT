@@ -3,10 +3,19 @@ stages:
   displayName: Build for Release|x64
   jobs: 
   - job: Build
-    pool:
-      vmImage: windows-2022
-    timeoutInMinutes: 90
-    # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
+    templateContext:
+      outputs:
+      - output: pipelineArtifact
+        displayName: 'Publish Native'
+        condition: succeeded()
+        targetPath: $(Build.ArtifactStagingDirectory)\native
+        artifactName: release_x64
+      - output: pipelineArtifact
+        displayName: 'Publish ResX files'
+        condition: succeeded()
+        targetPath: $(Build.ArtifactStagingDirectory)\resx
+        artifactName: ResX
+    timeoutInMinutes: 180
     strategy:
       maxParallel: 10
       matrix:
@@ -19,4 +28,4 @@ stages:
       persistCredentials: true
 
 # Build Steps 
-    - template: CsWinRT-Build-Steps.yml
+    - template: CsWinRT-Build-Steps.yml@self

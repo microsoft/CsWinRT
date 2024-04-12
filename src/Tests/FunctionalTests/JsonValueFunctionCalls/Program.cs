@@ -1,4 +1,5 @@
-﻿using Windows.Foundation;
+﻿using System;
+using Windows.Foundation;
 
 // Static function calls and create RCW for existing object.
 IStringable[] a = new IStringable[] {
@@ -18,4 +19,10 @@ foreach (var str in a)
 // Class function call
 result += (int)(a[1] as Windows.Data.Json.JsonValue).GetNumber();
 
-return result == 16 ? 100 : 101;
+var enumVal = TestComponentCSharp.Class.BoxedEnum;
+if (enumVal is TestComponentCSharp.EnumValue val && val == TestComponentCSharp.EnumValue.Two)
+{
+    result += 1;
+}
+
+return result == 17 ? 100 : 101;

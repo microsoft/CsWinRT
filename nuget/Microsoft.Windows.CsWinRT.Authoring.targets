@@ -27,6 +27,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
     <CompilerVisibleProperty Include="CsWinRTGeneratedFilesDir" />
     <CompilerVisibleProperty Include="CsWinRTExe" />
+    <CompilerVisibleProperty Include="CsWinRTExeTFM" />
     <CompilerVisibleProperty Include="CsWinRTKeepGeneratedSources" />
     <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
     <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
@@ -52,8 +53,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     
     <PropertyGroup>
       <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTAuthoringDistinctWinMDs->'"%(FullPath)"', ' ') </CsWinRTAuthoringInputs>
-    </PropertyGroup>
-    
+    </PropertyGroup>    
   </Target>
 
   <!--

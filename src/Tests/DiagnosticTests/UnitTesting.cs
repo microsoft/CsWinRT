@@ -120,6 +120,7 @@ namespace DiagnosticTests
                 yield return new TestCaseData(PropertyNoGetter, WinRTRules.PrivateGetterRule).SetName("Property. No Get, public Setter");
                 // namespace tests
                 yield return new TestCaseData(SameNameNamespacesDisjoint, WinRTRules.DisjointNamespaceRule).SetName("Namespace. isn't accessible without Test prefix, doesn't use type");
+                yield return new TestCaseData(UnrelatedNamespaceWithPublicPartialTypes, WinRTRules.DisjointNamespaceRule).SetName("Namespace. Component has public types in different namespaces");
                 yield return new TestCaseData(NamespacesDifferByCase, WinRTRules.NamespacesDifferByCase).SetName("Namespace. names only differ by case");
                 yield return new TestCaseData(DisjointNamespaces, WinRTRules.DisjointNamespaceRule).SetName("Namespace. isn't accessible without Test prefix, doesn't use type");
                 yield return new TestCaseData(DisjointNamespaces2, WinRTRules.DisjointNamespaceRule).SetName("Namespace. using type from inaccessible namespace");
@@ -415,6 +416,7 @@ namespace DiagnosticTests
             get
             {
                 yield return new TestCaseData(Valid_UnrelatedNamespaceWithNoPublicTypes).SetName("Valid. Namespace. Helper namespace with no public types");
+                yield return new TestCaseData(Valid_UnrelatedNamespaceWithNoPublicTypes2).SetName("Valid. Namespace. Helper namespace with partial types but aren't public");
                 yield return new TestCaseData(Valid_SubNamespacesWithOverlappingNames).SetName("Valid. Namespace. Overlapping namesepaces names is OK if in different namespaces");
                 yield return new TestCaseData(Valid_PrivateSetter).SetName("Valid. Property. Private Setter");
                 yield return new TestCaseData(Valid_RollYourOwnAsyncAction).SetName("Valid. AsyncInterfaces. Implementing your own IAsyncAction");

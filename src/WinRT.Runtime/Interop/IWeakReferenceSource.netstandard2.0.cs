@@ -99,7 +99,7 @@ namespace ABI.WinRT.Interop
             }
         }
 
-        internal static readonly Guid IID = InterfaceIIDs.IWeakReferenceSource_IID;
+        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IWeakReferenceSource;
         public static IntPtr AbiToProjectionVftablePtr => Vftbl.AbiToProjectionVftablePtr;
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 

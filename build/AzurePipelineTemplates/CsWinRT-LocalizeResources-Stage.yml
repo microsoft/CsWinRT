@@ -3,8 +3,6 @@ stages:
   displayName: Call TDBuild to Localize Resources
   jobs:
   - job: Localize
-    pool: 
-      vmImage: windows-2022
     timeoutInMinutes: 90
     steps:
     - checkout: self
@@ -17,22 +15,20 @@ stages:
         git config --global user.name "TDBuild"
 
     # Download x64
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       displayName: Download x64
       inputs:
         artifactName: release_x64
         itemPattern: ''
-        downloadPath: $(Build.SourcesDirectory)
-        extractTars: false
+        targetPath: $(Build.SourcesDirectory)\release_x64
 
     # Download RESX
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       displayName: Download ResX
       inputs:
         artifactName: ResX
         itemPattern: ''
-        downloadPath: $(Build.SourcesDirectory)
-        extractTars: false
+        targetPath: $(Build.SourcesDirectory)\ResX
 
     # Run TouchdownBuild
     - task: TouchdownBuildTask@1
@@ -114,9 +110,10 @@ stages:
         TargetFolder: $(Build.ArtifactStagingDirectory)\loc
 
     # Publish TDBuild Output
-    - task: PublishBuildArtifacts@1
-      displayName: Publish TouchdownBuild Output
-      condition: succeeded()
-      inputs:
-        PathtoPublish: $(Build.ArtifactStagingDirectory)\loc
-        ArtifactName: LocalizedResources
+    templateContext:
+      outputs:
+      - output: pipelineArtifact
+        displayName: 'Publish TouchdownBuild Output'
+        condition: succeeded()
+        targetPath: $(Build.ArtifactStagingDirectory)\loc
+        artifactName: LocalizedResources

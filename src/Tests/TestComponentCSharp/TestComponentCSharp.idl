@@ -131,6 +131,11 @@ namespace TestComponentCSharp
         static Int32 NumObjects{ get; };
     }
 
+    interface IDerivedGenericInterface requires Microsoft.UI.Xaml.Input.ICommand, Microsoft.UI.Xaml.Interop.INotifyCollectionChanged, Windows.Foundation.Collections.IPropertySet
+    {
+        Int32 Number;
+    }
+
     interface ISingleton
     {
         Int32 IntProperty;
@@ -650,6 +655,18 @@ And this is another one"
         attribute Warning2Attribute
         {
         };
+    }
+
+    // Compile time test for sub WinRT namespace
+    namespace WinRT
+    {
+        runtimeclass Class
+        {
+            Class();
+            static void StaticMethod();
+            void Method();
+            void Method2(Windows.Foundation.IStringable stringable);
+        }
     }
 
     namespace AnotherAssembly

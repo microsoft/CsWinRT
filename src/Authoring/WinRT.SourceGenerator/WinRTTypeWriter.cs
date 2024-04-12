@@ -2018,7 +2018,9 @@ namespace Generator
                     TypeAttributes.BeforeFieldInit;
 
                 // extends
-                if (type.BaseType != null)
+                // WinRT doesn't support projecting abstract classes.
+                // If the base class is one, ignore it.
+                if (type.BaseType != null && !type.BaseType.IsAbstract)
                 {
                     baseType = GetTypeReference(type.BaseType);
                 }

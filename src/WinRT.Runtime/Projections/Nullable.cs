@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -26,11 +27,11 @@ namespace ABI.Windows.Foundation
             AbiToProjectionVftable = new global::ABI.System.Nullable<T>.Vftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                get_Value_0 = GetValueDelegateForAbi()
+                get_Value_0 = GetValueDelegateForAbi(out IntPtr nativePtr)
             };
-            var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedValueIReferenceImpl<T>), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+            var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedValueIReferenceImpl<T>), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
             Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
-            nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Value_0);
+            nativeVftbl[6] = nativePtr;
 
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
@@ -106,7 +107,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-        internal static unsafe Delegate GetValueDelegateForAbi()
+        internal static unsafe Delegate GetValueDelegateForAbi(out IntPtr nativePtr)
         {
             if (typeof(T) == typeof(int) ||
                 typeof(T) == typeof(byte) ||
@@ -135,12 +136,20 @@ namespace ABI.Windows.Foundation
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
             {
-                return (Nullable_Delegates.GetValueDelegateAbi)Do_Abi_get_Value_0_Blittable;
+                Nullable_Delegates.GetValueDelegateAbi stub = new(Do_Abi_get_Value_0_Blittable);
+
+                nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
+
+                return stub;
             }
 
             if (typeof(T) == typeof(global::System.DateTimeOffset))
             {
-                return (Nullable_Delegates.GetValueDelegateAbiDateTimeOffset)Do_Abi_get_Value_0_DateTimeOffset;
+                Nullable_Delegates.GetValueDelegateAbiDateTimeOffset stub = new(Do_Abi_get_Value_0_DateTimeOffset);
+
+                nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
+
+                return stub;
             }
 
 #if NET
@@ -149,11 +158,17 @@ namespace ABI.Windows.Foundation
             if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 Nullable<T>.Vftbl.get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
 
-                return Delegate.CreateDelegate(
+                Delegate stub = Delegate.CreateDelegate(
                     Nullable<T>.Vftbl.get_Value_0_Type,
                     typeof(BoxedValueIReferenceImpl<T>).GetMethod(nameof(Do_Abi_get_Value_0), BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(Marshaler<T>.AbiType));
+
+                nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
+
+                return stub;
+#pragma warning restore IL3050
             }
 
             throw new NotSupportedException($"Failed to get the marshalling delegate for BoxedValueIReferenceImpl`1 with type '{typeof(T)}'.");
@@ -218,7 +233,9 @@ namespace ABI.Windows.Foundation
 
 namespace ABI.System
 {
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
 #if EMBED
     internal
@@ -358,55 +375,35 @@ namespace ABI.System
                 if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
                 {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
 
                     return Marshal.GetDelegateForFunctionPointer(ptr, get_Value_0_Type);
+#pragma warning restore IL3050
                 }
 
                 throw new NotSupportedException($"Failed to get the marshalling delegate for Nullable`1 with type '{typeof(T)}'.");
             }
         }
 
-        public static readonly Guid PIID = CreatePIID();
-
-        private static Guid CreatePIID()
-        {
-#if NET
-            if (typeof(T) == typeof(int)) return Nullable_int.IID;
-            if (typeof(T) == typeof(byte)) return Nullable_byte.IID;
-            if (typeof(T) == typeof(bool)) return Nullable_bool.IID;
-            if (typeof(T) == typeof(sbyte)) return Nullable_sbyte.IID;
-            if (typeof(T) == typeof(short)) return Nullable_short.IID;
-            if (typeof(T) == typeof(ushort)) return Nullable_ushort.IID;
-            if (typeof(T) == typeof(char)) return Nullable_char.IID;
-            if (typeof(T) == typeof(uint)) return Nullable_uint.IID;
-            if (typeof(T) == typeof(long)) return Nullable_long.IID;
-            if (typeof(T) == typeof(ulong)) return Nullable_ulong.IID;
-            if (typeof(T) == typeof(float)) return Nullable_float.IID;
-            if (typeof(T) == typeof(double)) return Nullable_double.IID;
-            if (typeof(T) == typeof(Guid)) return Nullable_guid.IID;
-            if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.IID;
-            if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.IID;
-            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
-            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
-            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IReferenceIIDs.IReferenceMatrix3x2_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IReferenceIIDs.IReferenceMatrix4x4_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IReferenceIIDs.IReferencePlane_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IReferenceIIDs.IReferenceQuaternion_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IReferenceIIDs.IReferenceVector2_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceIIDs.IReferenceVector3_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceIIDs.IReferenceVector4_IID;
-#endif
-
-            return GuidGenerator.CreateIID(typeof(Nullable<T>));
-        }
+        public static readonly Guid PIID = NullableType.GetIID<T>();
 
         public static implicit operator Nullable<T>(IObjectReference obj) => (obj != null) ? new Nullable<T>(obj) : null;
         public static implicit operator Nullable<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable<T>(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
+
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public A As<A>() => _obj.AsType<A>();
         public Nullable(IObjectReference obj) : this(obj.As<Vftbl>(Vftbl.PIID)) { }
         public Nullable(ObjectReference<Vftbl> obj)
@@ -543,7 +540,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, int*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -568,22 +565,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe int GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                int __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -620,7 +601,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -698,7 +679,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -723,22 +704,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe byte GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                byte __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -775,7 +740,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, sbyte*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -800,22 +765,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe sbyte GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                sbyte __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, sbyte*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -852,7 +801,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, short*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -877,22 +826,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe short GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                short __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, short*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -929,7 +862,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, ushort*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -954,22 +887,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe ushort GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                ushort __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, ushort*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -1006,7 +923,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, uint*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1031,22 +948,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe uint GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                uint __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -1083,7 +984,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, long*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1108,22 +1009,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe long GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                long __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, long*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -1160,7 +1045,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, ulong*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1185,22 +1070,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe ulong GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                ulong __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, ulong*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -1237,7 +1106,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, float*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1262,22 +1131,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe float GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                float __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, float*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -1314,7 +1167,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, double*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1339,22 +1192,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe double GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                double __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, double*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -1391,7 +1228,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, char*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1416,22 +1253,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe char GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                char __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, char*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -1468,7 +1289,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, bool*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1493,22 +1314,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe bool GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                bool __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, bool*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -1545,7 +1350,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, Guid*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1570,22 +1375,6 @@ namespace ABI.System
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
-            }
-        }
-
-        public static unsafe Guid GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            try
-            {
-                Guid __retval = default;
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return __retval;
-            }
-            finally
-            {
-                Marshal.Release(nullablePtr);
             }
         }
     }
@@ -1622,7 +1411,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, DateTimeOffset*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1650,7 +1439,7 @@ namespace ABI.System
             }
         }
 
-        public static unsafe global::System.DateTimeOffset GetValue(IInspectable inspectable)
+        public static unsafe object GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             DateTimeOffset __retval = default;
@@ -1700,7 +1489,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, TimeSpan*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1728,7 +1517,7 @@ namespace ABI.System
             }
         }
 
-        public static unsafe global::System.TimeSpan GetValue(IInspectable inspectable)
+        public static unsafe object GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             TimeSpan __retval = default;
@@ -1778,7 +1567,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1839,7 +1628,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, Type*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1917,7 +1706,7 @@ namespace ABI.System
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, Exception*, int>)&Do_Abi_get_Value_0
 #endif
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -2062,7 +1851,7 @@ namespace ABI.System
             return 0;
         }
 
-        public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
+        public static Guid PIID = Nullable<T>.PIID;
 
         public static unsafe Nullable GetValue(IInspectable inspectable)
         {
@@ -2125,6 +1914,23 @@ namespace ABI.System
         {
             return GuidGenerator.CreateIIDForGenericType("pinterface({61c17706-2d65-11e0-9ae8-d48564015472};enum(" + enumType.FullName + ";i4))");
         }
+
+        internal static unsafe object GetValue(global::System.Type enumType, IInspectable inspectable)
+        {
+            var IID = GetIID(enumType);
+            IntPtr nullablePtr = IntPtr.Zero;
+            try
+            {
+                int __retval = default;
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return Enum.ToObject(enumType, __retval);
+            }
+            finally
+            {
+                Marshal.Release(nullablePtr);
+            }
+        }
     }
 
     internal static class Nullable_FlagsEnum
@@ -2170,6 +1976,23 @@ namespace ABI.System
         {
             return GuidGenerator.CreateIIDForGenericType("pinterface({61c17706-2d65-11e0-9ae8-d48564015472};enum(" + enumType.FullName + ";u4))");
         }
+
+        internal static unsafe object GetValue(global::System.Type enumType, IInspectable inspectable)
+        {
+            var IID = GetIID(enumType);
+            IntPtr nullablePtr = IntPtr.Zero;
+            try
+            {
+                uint __retval = default;
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return Enum.ToObject(enumType, __retval);
+            }
+            finally
+            {
+                Marshal.Release(nullablePtr);
+            }
+        }
     }
 
     internal static class Nullable_Delegates
@@ -2177,6 +2000,139 @@ namespace ABI.System
         public unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
         public unsafe delegate int GetValueDelegateAbi(void* thisPtr, void* value);
         public unsafe delegate int GetValueDelegateAbiDateTimeOffset(void* ptr, DateTimeOffset* result);
+    }
+
+    internal static class NullableBlittable<T> where T: unmanaged
+    {
+        private readonly static Guid IID = NullableType.GetIID<T>();
+
+        public static unsafe object GetValue(IInspectable inspectable)
+        {
+            IntPtr nullablePtr = IntPtr.Zero;
+            try
+            {
+                T __retval = default;
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return __retval;
+            }
+            finally
+            {
+                Marshal.Release(nullablePtr);
+            }
+        }
+    }
+
+    internal static class NullableType
+    {
+        internal static Guid GetIID<T>()
+        {
+            if (typeof(T) == typeof(int)) return Nullable_int.IID;
+            if (typeof(T) == typeof(byte)) return Nullable_byte.IID;
+            if (typeof(T) == typeof(bool)) return Nullable_bool.IID;
+            if (typeof(T) == typeof(sbyte)) return Nullable_sbyte.IID;
+            if (typeof(T) == typeof(short)) return Nullable_short.IID;
+            if (typeof(T) == typeof(ushort)) return Nullable_ushort.IID;
+            if (typeof(T) == typeof(char)) return Nullable_char.IID;
+            if (typeof(T) == typeof(uint)) return Nullable_uint.IID;
+            if (typeof(T) == typeof(long)) return Nullable_long.IID;
+            if (typeof(T) == typeof(ulong)) return Nullable_ulong.IID;
+            if (typeof(T) == typeof(float)) return Nullable_float.IID;
+            if (typeof(T) == typeof(double)) return Nullable_double.IID;
+            if (typeof(T) == typeof(Guid)) return Nullable_guid.IID;
+            if (typeof(T) == typeof(global::System.Type)) return Nullable_Type.IID;
+            if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.IID;
+            if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IReferenceIIDs.IReferenceMatrix3x2_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IReferenceIIDs.IReferenceMatrix4x4_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IReferenceIIDs.IReferencePlane_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IReferenceIIDs.IReferenceQuaternion_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IReferenceIIDs.IReferenceVector2_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceIIDs.IReferenceVector3_IID;
+            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceIIDs.IReferenceVector4_IID;
+
+            return GuidGenerator.CreateIIDUnsafe(typeof(Nullable<T>));
+        }
+
+        public static Func<IInspectable, object> GetValueFactory(global::System.Type type)
+        {
+            return ComWrappersSupport.CreateReferenceCachingFactory(GetValueFactoryInternal(type));
+        }
+
+        private static Func<IInspectable, object> GetValueFactoryInternal(global::System.Type type)
+        {
+            if (type == typeof(string)) return Nullable_string.GetValue;
+            if (type == typeof(int)) return NullableBlittable<int>.GetValue;
+            if (type == typeof(byte)) return NullableBlittable<byte>.GetValue;
+            if (type == typeof(bool)) return NullableBlittable<bool>.GetValue;
+            if (type == typeof(sbyte)) return NullableBlittable<sbyte>.GetValue;
+            if (type == typeof(short)) return NullableBlittable<short>.GetValue;
+            if (type == typeof(ushort)) return NullableBlittable<ushort>.GetValue;
+            if (type == typeof(char)) return NullableBlittable<char>.GetValue;
+            if (type == typeof(uint)) return NullableBlittable<uint>.GetValue;
+            if (type == typeof(long)) return NullableBlittable<long>.GetValue;
+            if (type == typeof(ulong)) return NullableBlittable<ulong>.GetValue;
+            if (type == typeof(float)) return NullableBlittable<float>.GetValue;
+            if (type == typeof(double)) return NullableBlittable<double>.GetValue;
+            if (type == typeof(Guid)) return NullableBlittable<Guid>.GetValue;
+            if (type == typeof(global::System.Type)) return Nullable_Type.GetValue;
+            if (type == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.GetValue;
+            if (type == typeof(global::System.Exception)) return Nullable_Exception.GetValue;
+            if (type == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.GetValue;
+            if (type == typeof(global::Windows.Foundation.Point)) return NullableBlittable<global::Windows.Foundation.Point>.GetValue;
+            if (type == typeof(global::Windows.Foundation.Size)) return NullableBlittable<global::Windows.Foundation.Size>.GetValue;
+            if (type == typeof(global::Windows.Foundation.Rect)) return NullableBlittable<global::Windows.Foundation.Rect>.GetValue;
+            if (type == typeof(global::System.Numerics.Matrix3x2)) return NullableBlittable<global::System.Numerics.Matrix3x2>.GetValue;
+            if (type == typeof(global::System.Numerics.Matrix4x4)) return NullableBlittable<global::System.Numerics.Matrix4x4>.GetValue;
+            if (type == typeof(global::System.Numerics.Plane)) return NullableBlittable<global::System.Numerics.Plane>.GetValue;
+            if (type == typeof(global::System.Numerics.Quaternion)) return NullableBlittable<global::System.Numerics.Quaternion>.GetValue;
+            if (type == typeof(global::System.Numerics.Vector2)) return NullableBlittable<global::System.Numerics.Vector2>.GetValue;
+            if (type == typeof(global::System.Numerics.Vector3)) return NullableBlittable<global::System.Numerics.Vector3>.GetValue;
+            if (type == typeof(global::System.Numerics.Vector4)) return NullableBlittable<global::System.Numerics.Vector4>.GetValue;
+            if (type == typeof(global::System.EventHandler)) return Nullable_EventHandler.GetValue;
+            if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(int)) return (inspectable) => Nullable_IntEnum.GetValue(type, inspectable);
+            if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint)) return (inspectable) => Nullable_FlagsEnum.GetValue(type, inspectable);
+
+#if NET
+            var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+            if (winrtExposedClassAttribute == null)
+            {
+                var authoringMetadaType = type.GetAuthoringMetadataType();
+                if (authoringMetadaType != null)
+                {
+                    winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+                }
+            }
+
+            if (winrtExposedClassAttribute != null && winrtExposedClassAttribute.WinRTExposedTypeDetails != null)
+            {
+                if (Activator.CreateInstance(winrtExposedClassAttribute.WinRTExposedTypeDetails) is IWinRTNullableTypeDetails nullableTypeDetails)
+                {
+                    return nullableTypeDetails.GetNullableValue;
+                }
+            }
+
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Failed to get the value from nullable with type '{type}'.");
+            }
+#endif
+
+            // Fallback for .NET standard and pre-existing projections.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+            if (type.IsDelegate())
+            {
+                return ComWrappersSupport.CreateAbiNullableTFactory(typeof(Nullable_Delegate<>).MakeGenericType(type));
+            }
+            else
+            {
+                return ComWrappersSupport.CreateNullableTFactory(typeof(global::System.Nullable<>).MakeGenericType(type));
+            }
+#pragma warning restore IL3050
+        }
     }
 
     internal static class IReferenceSignatures
@@ -2207,6 +2163,9 @@ namespace ABI.System
         internal static readonly Guid IReferenceVector3_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xff, 0x70, 0xe7, 0x1e, 0x54, 0xc9, 0xca, 0x59, 0xa7, 0x54, 0x61, 0x99, 0xa9, 0xbe, 0x28, 0x2c }));
         internal static readonly Guid IReferenceVector4_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xc9, 0x43, 0xe8, 0xa5, 0x20, 0xed, 0x39, 0x53, 0x8f, 0x8d, 0x9f, 0xe4, 0x04, 0xcf, 0x36, 0x54 }));
 #else
+        internal static readonly Guid IReferenceOfPoint_IID = new(0x84F14C22, 0xA00A, 0x5272, 0x8D, 0x3D, 0x82, 0x11, 0x2E, 0x66, 0xDF, 0x00);
+        internal static readonly Guid IReferenceOfSize_IID = new(0x61723086, 0x8E53, 0x5276, 0x9F, 0x36, 0x2A, 0x4B, 0xB9, 0x3E, 0x2B, 0x75);
+        internal static readonly Guid IReferenceOfRect_IID = new(0x80423F11, 0x054F, 0x5EAC, 0xAF, 0xD3, 0x63, 0xB6, 0xCE, 0x15, 0xE7, 0x7B);
         internal static readonly Guid IReferenceMatrix3x2_IID = new(0x76358cfd, 0x2cbd, 0x525b, 0xa4, 0x9e, 0x90, 0xee, 0x18, 0x24, 0x7b, 0x71);
         internal static readonly Guid IReferenceMatrix4x4_IID = new(0xdacbffdc, 0x68ef, 0x5fd0, 0xb6, 0x57, 0x78, 0x2d, 0x0a, 0xc9, 0x80, 0x7e);
         internal static readonly Guid IReferencePlane_IID = new(0x46d542a1, 0x52f7, 0x58e7, 0xac, 0xfc, 0x9a, 0x6d, 0x36, 0x4d, 0xa0, 0x22);
@@ -2221,9 +2180,14 @@ namespace ABI.System
 #if NET
     namespace WinRT
 {
-    public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails where T: struct where TAbi : unmanaged
+    internal interface IWinRTNullableTypeDetails
     {
-        private static readonly Guid PIID = GuidGenerator.CreateIID(typeof(ABI.System.Nullable<T>));
+        object GetNullableValue(IInspectable inspectable);
+    }
+
+    public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T: struct where TAbi : unmanaged
+    {
+        private static readonly Guid PIID = ABI.System.Nullable<T>.PIID;
 
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
@@ -2241,11 +2205,35 @@ namespace ABI.System
                 }
             };
         }
+
+        unsafe object IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable)
+        {
+            IntPtr nullablePtr = IntPtr.Zero;
+            TAbi __retval = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                if (typeof(T) == typeof(TAbi))
+                {
+                    return __retval;
+                }
+                else 
+                {
+                    return Marshaler<T>.FromAbi(__retval);
+                }
+            }
+            finally
+            {
+                Marshaler<T>.DisposeAbi(__retval);
+                Marshal.Release(nullablePtr);
+            }
+        }
     }
 
-    public abstract class DelegateTypeDetails<T> : IWinRTExposedTypeDetails where T : global::System.Delegate
+    public abstract class DelegateTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : global::System.Delegate
     {
-        private static readonly Guid PIID = GuidGenerator.CreateIID(typeof(ABI.System.Nullable<T>));
+        private static readonly Guid PIID = ABI.System.Nullable<T>.PIID;
 
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
@@ -2271,6 +2259,23 @@ namespace ABI.System
         }
 
         public abstract ComWrappers.ComInterfaceEntry GetDelegateInterface();
+
+        unsafe object IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable)
+        {
+            IntPtr nullablePtr = IntPtr.Zero;
+            IntPtr __retval = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return new ABI.System.Nullable(Marshaler<T>.FromAbi(__retval));
+            }
+            finally
+            {
+                Marshaler<T>.DisposeAbi(__retval);
+                Marshal.Release(nullablePtr);
+            }
+        }
     }
 }
 #endif

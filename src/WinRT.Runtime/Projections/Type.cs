@@ -73,7 +73,7 @@ namespace ABI.System
                 {
                     kind = TypeKind.Primitive;
                 }
-                else if (value == typeof(object) || value == typeof(string) || value == typeof(Guid) || value == typeof(System.Type))
+                else if (value == typeof(object) || value == typeof(string) || value == typeof(Guid) || value == typeof(global::System.Type))
                 {
                     kind = TypeKind.Metadata;
                 }
@@ -221,6 +221,7 @@ namespace ABI.System
 
         public override string Name => throw new InvalidOperationException();
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
@@ -241,64 +242,74 @@ namespace ABI.System
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override EventInfo GetEvent(string name, BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override EventInfo[] GetEvents(BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override FieldInfo GetField(string name, BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override FieldInfo[] GetFields(BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
         }
 
-#if NET6_0_OR_GREATER
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
-#endif
+        [UnconditionalSuppressMessage("Trimming", "IL2093", Justification = "This method will always throw.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override global::System.Type GetInterface(string name, bool ignoreCase)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override global::System.Type[] GetInterfaces()
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override MemberInfo[] GetMembers(BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override global::System.Type GetNestedType(string name, BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override global::System.Type[] GetNestedTypes(BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override PropertyInfo[] GetProperties(BindingFlags bindingAttr)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         public override object InvokeMember(string name, BindingFlags invokeAttr, Binder binder, object target, object[] args, ParameterModifier[] modifiers, CultureInfo culture, string[] namedParameters)
         {
             throw new InvalidOperationException();
@@ -314,16 +325,19 @@ namespace ABI.System
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         protected override ConstructorInfo GetConstructorImpl(BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, global::System.Type[] types, ParameterModifier[] modifiers)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         protected override MethodInfo GetMethodImpl(string name, BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, global::System.Type[] types, ParameterModifier[] modifiers)
         {
             throw new InvalidOperationException();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2094", Justification = "This method will always throw.")]
         protected override PropertyInfo GetPropertyImpl(string name, BindingFlags bindingAttr, Binder binder, global::System.Type returnType, global::System.Type[] types, ParameterModifier[] modifiers)
         {
             throw new InvalidOperationException();

@@ -109,7 +109,7 @@ namespace ABI.System
 #endif
     static class EventHandler<T>
     {
-        public static Guid PIID = GuidGenerator.CreateIID(typeof(global::System.EventHandler<T>));
+        public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(global::System.EventHandler<T>));
 
         /// <summary>
         /// The ABI delegate type for the fallback, non-AOT scenario.
@@ -121,6 +121,9 @@ namespace ABI.System
 
         static unsafe EventHandler()
         {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.EventHandler<T>), typeof(global::ABI.System.EventHandler<T>));
+            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.EventHandler<T>), CreateRcw);
+
 #if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
@@ -139,6 +142,7 @@ namespace ABI.System
             }
             else
             {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 // Initialize the ABI invoke delegate type (we don't want to do that from a method in this type, or it will get rooted).
                 // That is because there's other reflection paths just preserving members from EventHandler<T> unconditionally.
                 _abi_invoke_type = Projections.GetAbiDelegateType(typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int));
@@ -149,9 +153,8 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler<T>), sizeof(global::WinRT.Interop.IDelegateVftbl));
                 *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
                 ((IntPtr*)AbiToProjectionVftablePtr)[3] = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate);
+#pragma warning restore IL3050
             }
-
-            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.EventHandler<T>), CreateRcw);
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
@@ -175,8 +178,8 @@ namespace ABI.System
             return new global::System.EventHandler<T>(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, PIID)).Invoke);
         }
 
-        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
+        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
         private sealed class NativeDelegateWrapper
 #else
         private sealed class NativeDelegateWrapper : IWinRTObject
@@ -227,6 +230,7 @@ namespace ABI.System
                 }
                 else
                 {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     // Same as in the static constructor, we initialize the ABI delegate type manually here if needed.
                     // We gate this behind a null check to avoid unnecessarily calling Projections.GetAbiDelegateType.
                     if (Volatile.Read(ref _abi_invoke_type) is null)
@@ -236,6 +240,7 @@ namespace ABI.System
 
                     IntPtr ThisPtr = _nativeDelegate.ThisPtr;
                     var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, _abi_invoke_type);
+#pragma warning restore IL3050
                     ObjectReferenceValue __sender = default;
                     object __args = default;
                     var __params = new object[] { ThisPtr, null, null };
@@ -315,7 +320,7 @@ namespace ABI.System
                 Invoke = (IntPtr)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_Invoke
 #endif
             };
-            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
+            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler), sizeof(global::WinRT.Interop.IDelegateVftbl));
             Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
             AbiToProjectionVftablePtr = nativeVftbl;
         }
@@ -345,8 +350,8 @@ namespace ABI.System
             return new global::System.EventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke);
         }
 
-        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
+        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
         private sealed class NativeDelegateWrapper
 #else
         private sealed class NativeDelegateWrapper : IWinRTObject
@@ -473,44 +478,5 @@ namespace ABI.System
             };
         }
 #endif
-    }
-
-    internal sealed unsafe class EventHandlerEventSource : EventSource<global::System.EventHandler>
-    {
-        internal EventHandlerEventSource(IObjectReference obj,
-#if NET
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::WinRT.EventRegistrationToken*, int> addHandler,
-#else
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
-#endif
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
-            : base(obj, addHandler, removeHandler)
-        {
-        }
-
-        protected override ObjectReferenceValue CreateMarshaler(global::System.EventHandler del) => 
-            EventHandler.CreateMarshaler2(del);
-
-        protected override State CreateEventState() =>
-            new EventState(_obj.ThisPtr, _index);
-
-        private sealed class EventState : State
-        {
-            public EventState(IntPtr obj, int index)
-                : base(obj, index)
-            {
-            }
-
-            protected override Delegate GetEventInvoke()
-            {
-                global::System.EventHandler handler = (global::System.Object obj, global::System.EventArgs e) =>
-                {
-                    var localDel = (global::System.EventHandler) del;
-                    if (localDel != null)
-                        localDel.Invoke(obj, e);
-                };
-                return handler;
-            }
-        }
     }
 }

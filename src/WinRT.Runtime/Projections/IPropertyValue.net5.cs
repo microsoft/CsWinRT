@@ -191,8 +191,7 @@ namespace ABI.Windows.Foundation
         }
 
         /// <summary>
-        /// Unbox a value of a projected Windows.Foundation struct type
-        /// to a structurally equivalent type with the same name.
+        /// Unbox a value of a projected Windows.Foundation struct type.
         /// </summary>
         /// <typeparam name="T">The target type.</typeparam>
         /// <param name="value">The object to unbox.</param>
@@ -200,23 +199,13 @@ namespace ABI.Windows.Foundation
         private static T UnboxValue<T>(object value)
             where T : struct
         {
-            Type valueType = value.GetType();
-
-            if (valueType.FullName == typeof(T).FullName && Marshal.SizeOf(valueType) == Marshal.SizeOf<T>())
+            if (value.GetType() == typeof(T))
             {
-                return Unsafe.As<Boxed<T>>(value).Value;
+                return (T)value;
             }
 
             throw new InvalidCastException("", TYPE_E_TYPEMISMATCH);
         }
-
-#pragma warning disable CS0649
-        private sealed class Boxed<T>
-            where T : struct
-        {
-            public T Value;
-        }
-#pragma warning restore CS0649
 
         private static T[] UnboxArray<T>(object value)
             where T : struct
@@ -1292,7 +1281,9 @@ namespace ABI.Windows.Foundation
     internal unsafe interface IPropertyValue : global::Windows.Foundation.IPropertyValue
     {
         [Guid("4BD682DD-7554-40E9-9A9B-82654EDE7E62")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             internal void* _get_Type_0;

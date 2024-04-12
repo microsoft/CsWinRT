@@ -17,27 +17,26 @@ namespace WinRT
 #endif
     static class TypeExtensions
     {
-        private readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
+        internal readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
 
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                            DynamicallyAccessedMemberTypes.PublicNestedTypes | 
                                             DynamicallyAccessedMemberTypes.PublicFields)]
+        [UnconditionalSuppressMessage("Trimming", "IL2073", Justification = "Matching trimming annotations are used at all callsites registering helper types present in the cache.")]
 #endif
         public static Type FindHelperType(this Type type)
         {
-            return HelperTypeCache.GetOrAdd(type,
 #if NET
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                                DynamicallyAccessedMemberTypes.PublicNestedTypes | 
                                                 DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-            (type) =>
+            static Type FindHelperTypeNoCache(Type type)
             {
                 if (typeof(Exception).IsAssignableFrom(type))
                 {
                     type = typeof(Exception);
                 }
+
                 Type customMapping = Projections.FindCustomHelperTypeMapping(type);
                 if (customMapping is not null)
                 {
@@ -59,7 +58,6 @@ namespace WinRT
                         return GetHelperTypeFromAttribute(helperTypeAtribute, type);
                     }
                 }
-
 #if NET
                 // Using AOT requires using updated projections, which would never let the code below
                 // be reached (as it's just a fallback path for legacy projections). So we can trim it.
@@ -68,20 +66,30 @@ namespace WinRT
                     return null;
                 }
 #endif
-
                 return FindHelperTypeFallback(type);
-            });
+            }
+
+            return HelperTypeCache.GetOrAdd(type, FindHelperTypeNoCache);
 
 #if NET
             [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
                 Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
-            [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicNestedTypes | DynamicallyAccessedMemberTypes.PublicFields)]
+            [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
             {
-                if (type.IsGenericType)
+                if (type.IsGenericType && !type.IsGenericTypeDefinition)
                 {
+#if NET
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        throw new NotSupportedException($"Cannot retrieve the helper type from generic type '{type}'.");
+                    }
+#endif
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                     return helperTypeAtribute.HelperType.MakeGenericType(type.GetGenericArguments());
+#pragma warning restore IL3050
                 }
                 else
                 {
@@ -109,8 +117,7 @@ namespace WinRT
         }
 
 #if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | 
-                                            DynamicallyAccessedMemberTypes.PublicNestedTypes |
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
                                             DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         public static Type GetHelperType(this Type type)
@@ -124,19 +131,20 @@ namespace WinRT
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-        public static Type GetGuidType(this Type type)
+        public static Type GetGuidType(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            this Type type)
         {
             return type.IsDelegate() ? type.GetHelperType() : type;
         }
 
 #if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "The fallback path is not AOT-safe by design (to avoid annotations).")]
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "The fallback path is not trim-safe by design (to avoid annotations).")]
 #endif
-        public static Type FindVftblType(
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicNestedTypes)]
-#endif
-            this Type helperType)
+        public static Type FindVftblType(this Type helperType)
         {
 #if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
@@ -145,21 +153,49 @@ namespace WinRT
             }
 #endif
 
-            Type vftblType = helperType.GetNestedType("Vftbl");
-            if (vftblType is null)
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.IAsyncActionWithProgress`1+Vftbl", "Microsoft.Windows.SDK.NET")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.IAsyncOperationWithProgress`2+Vftbl", "Microsoft.Windows.SDK.NET")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.IAsyncOperation`1+Vftbl", "Microsoft.Windows.SDK.NET")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.Collections.IMapChangedEventArgs`1+Vftbl", "Microsoft.Windows.SDK.NET")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.Collections.IObservableMap`2+Vftbl", "Microsoft.Windows.SDK.NET")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.Windows.Foundation.Collections.IObservableVector`1+Vftbl", "Microsoft.Windows.SDK.NET")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.System.EventHandler`1+Vftbl", "WinRT.Runtime")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.System.Collections.Generic.KeyValuePair`2+Vftbl", "WinRT.Runtime")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.System.Collections.Generic.IEnumerable`1+Vftbl", "WinRT.Runtime")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.System.Collections.Generic.IEnumerator`1+Vftbl", "WinRT.Runtime")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.System.Collections.Generic.IList`1+Vftbl", "WinRT.Runtime")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.System.Collections.Generic.IReadOnlyList`1+Vftbl", "WinRT.Runtime")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.System.Collections.Generic.IDictionary`2+Vftbl", "WinRT.Runtime")]
+            [DynamicDependency(DynamicallyAccessedMemberTypes.All, "ABI.System.Collections.Generic.IReadOnlyDictionary`2+Vftbl", "WinRT.Runtime")]
+            [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
+            static Type FindVftblTypeFallback(Type helperType)
             {
-                return null;
+                Type vftblType = helperType.GetNestedType("Vftbl");
+                if (vftblType is null)
+                {
+                    return null;
+                }
+                if (helperType.IsGenericType)
+                {
+                    vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
+                }
+                return vftblType;
             }
-            if (helperType.IsGenericType && vftblType is object)
-            {
-                vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
-            }
-            return vftblType;
+
+            return FindVftblTypeFallback(helperType);
         }
 
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "The path using vtable types is a fallback and is not trim-safe by design.")]
+#endif
         internal static IntPtr GetAbiToProjectionVftblPtr(
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicNestedTypes)]
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             this Type helperType)
         {

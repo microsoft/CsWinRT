@@ -37,6 +37,11 @@ internal static class FeatureSwitches
     private const string EnableDefaultCustomTypeMappingsPropertyName = "CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS";
 
     /// <summary>
+    /// The configuration property name for <see cref="EnableICustomPropertyProviderSupport"/>.
+    /// </summary>
+    private const string EnableICustomPropertyProviderSupportPropertyName = "CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT";
+
+    /// <summary>
     /// The backing field for <see cref="IsDynamicObjectsSupportEnabled"/>.
     /// </summary>
     private static int _isDynamicObjectsSupportEnabled;
@@ -52,12 +57,17 @@ internal static class FeatureSwitches
     private static int _enableDefaultCustomTypeMappings;
 
     /// <summary>
+    /// The backing field for <see cref="EnableICustomPropertyProviderSupport"/>.
+    /// </summary>
+    private static int _enableICustomPropertyProviderSupport;
+
+    /// <summary>
     /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
     /// </summary>
     public static bool IsDynamicObjectsSupportEnabled
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => GetConfigurationValue(IsDynamicObjectsSupportEnabledPropertyName, ref _isDynamicObjectsSupportEnabled);
+        get => GetConfigurationValue(IsDynamicObjectsSupportEnabledPropertyName, ref _isDynamicObjectsSupportEnabled, true);
     }
 
     /// <summary>
@@ -66,7 +76,7 @@ internal static class FeatureSwitches
     public static bool UseExceptionResourceKeys
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => GetConfigurationValue(UseExceptionResourceKeysPropertyName, ref _useExceptionResourceKeys);
+        get => GetConfigurationValue(UseExceptionResourceKeysPropertyName, ref _useExceptionResourceKeys, false);
     }
 
     /// <summary>
@@ -75,7 +85,16 @@ internal static class FeatureSwitches
     public static bool EnableDefaultCustomTypeMappings
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => GetConfigurationValue(EnableDefaultCustomTypeMappingsPropertyName, ref _enableDefaultCustomTypeMappings);
+        get => GetConfigurationValue(EnableDefaultCustomTypeMappingsPropertyName, ref _enableDefaultCustomTypeMappings, true);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether or not <see cref="ABI.Microsoft.UI.Xaml.Data.ManagedCustomPropertyProviderVftbl"/> should be enabled (defaults to <see langword="true"/>).
+    /// </summary>
+    public static bool EnableICustomPropertyProviderSupport
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => GetConfigurationValue(EnableICustomPropertyProviderSupportPropertyName, ref _enableICustomPropertyProviderSupport, true);
     }
 
     /// <summary>
@@ -84,7 +103,7 @@ internal static class FeatureSwitches
     /// <param name="propertyName">The property name to retrieve the value for.</param>
     /// <param name="cachedResult">The cached result for the target configuration value.</param>
     /// <returns>The value of the specified configuration setting.</returns>
-    private static bool GetConfigurationValue(string propertyName, ref int cachedResult)
+    private static bool GetConfigurationValue(string propertyName, ref int cachedResult, bool defaultValue)
     {
         // The cached switch value has 3 states:
         //   0: unknown.
@@ -107,7 +126,7 @@ internal static class FeatureSwitches
         // All feature switches have a default set in the .targets file.
         if (!AppContext.TryGetSwitch(propertyName, out bool isEnabled))
         {
-            isEnabled = false;
+            isEnabled = defaultValue;
         }
 
         // Update the cached result

@@ -11,7 +11,7 @@
     <CsWinRTEnabled>false</CsWinRTEnabled>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+  <PropertyGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">
     <CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
   </PropertyGroup>
   
@@ -41,14 +41,14 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+  <ItemGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">
     <Compile Remove="**/*.net5.cs" />
     <None Include="**/*.net5.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="$(IsTargetFrameworkNet5OrGreater)">
-    <Compile Remove="**/*.netcoreapp2.0.cs" />
-    <None Include="**/*.netcoreapp2.0.cs" />
+    <Compile Remove="**/*.netstandard2.0.cs" />
+    <None Include="**/*.netstandard2.0.cs" />
   </ItemGroup>
 
 </Project>

@@ -77,6 +77,7 @@
     <None Include="strings\additions\Windows.Foundation\AsyncInfo.cs" />
     <None Include="strings\additions\Windows.Foundation\AsyncInfoIdGenerator.cs" />
     <None Include="strings\additions\Windows.Foundation\ExceptionDispatchHelper.cs" />
+    <None Include="strings\additions\Windows.Foundation\ITaskAwareAsyncInfo.cs" />
     <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionAdapter.cs" />
     <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionWithProgressAdapter.cs" />
     <None Include="strings\additions\Windows.Foundation\TaskToAsyncInfoAdapter.cs" />
@@ -117,7 +118,7 @@
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs" />
     <None Include="strings\additions\Windows.UI\Windows.UI.cs" />
     <None Include="strings\ComInteropHelpers.cs" />
-    <None Include="strings\WinRT.cs" />
+    <None Include="strings\InitalizeProjection.cs" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WinRT.Interop.idl" />

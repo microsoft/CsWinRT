@@ -39,7 +39,6 @@ namespace WinRT
         internal static readonly ConditionalWeakTable<Type, InspectableInfo> InspectableInfoTable = new();
         
         [ThreadStatic]
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
         internal static Type CreateRCWType;
 
         private static ComWrappers _comWrappers;
@@ -87,12 +86,12 @@ namespace WinRT
             return InspectableInfoTable.GetValue(_this.GetType(), o => PregenerateNativeTypeInformation(o).inspectableInfo);
         }
 
-        public static T CreateRcwForComObject<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr ptr)
+        public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
             return CreateRcwForComObject<T>(ptr, true);
         }
 
-        private static T CreateRcwForComObject<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr ptr, bool tryUseCache)
+        private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
         {
             if (ptr == IntPtr.Zero)
             {
@@ -161,7 +160,7 @@ namespace WinRT
         public static IObjectReference CreateCCWForObject(object obj)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
-            return ObjectReference<IUnknownVftbl>.Attach(ref ccw, InterfaceIIDs.IUnknown_IID);
+            return ObjectReference<IUnknownVftbl>.Attach(ref ccw, IID.IID_IUnknown);
         }
 
         internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
@@ -199,15 +198,22 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
 
         public static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => TypedObjectFactoryCacheForType.TryAdd(implementationType, rcwFactory);
 
-        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type implementationType)
+        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
         {
             if (implementationType.IsGenericType)
             {
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException($"Cannot create an RCW factory for implementation type '{implementationType}'.");
+                }
+
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 Type genericImplType = GetGenericImplType(implementationType);
+#pragma warning restore IL3050
                 if (genericImplType != null)
                 {
                     var createRcw = genericImplType.GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(IInspectable) }, null);
@@ -220,9 +226,42 @@ namespace WinRT
                 return obj => obj;
             }
 
-            var constructor = implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null);
-            return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
+            // We never look for attributes on base types, since each [WinRTImplementationTypeRcwFactory] type acts as
+            // a factory type specifically for the annotated implementation type, so it has to be on that derived type.
+            var attribute = implementationType.GetCustomAttribute<WinRTImplementationTypeRcwFactoryAttribute>(inherit: false);
 
+            // For update projections, get the derived [WinRTImplementationTypeRcwFactory]
+            // attribute instance and use its overridden 'CreateInstance' method as factory.
+            if (attribute is not null)
+            {
+                return attribute.CreateInstance;
+            }
+
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"Cannot create an RCW factory for implementation type '{implementationType}', because it doesn't have " +
+                    "a [WinRTImplementationTypeRcwFactory] derived attribute on it. The fallback path for older projections " +
+                    "is not trim-safe, and isn't supported in AOT environments. Make sure to reference updated projections.");
+            }
+
+            return CreateRcwFallback(implementationType);
+
+            [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
+            static Func<IInspectable, object> CreateRcwFallback(Type implementationType)
+            {
+                var constructor = implementationType.GetConstructor(
+                    bindingAttr: BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance,
+                    binder: null,
+                    types: new[] { typeof(IObjectReference) },
+                    modifiers: null);
+
+                return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
+            }
+
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
             static Type GetGenericImplType(Type implementationType)
             {
@@ -333,7 +372,7 @@ namespace WinRT
                 // otherwise the new instance will be used. Since the inner was composed
                 // it should answer immediately without going through the outer. Either way
                 // the reference count will go to the new instance.
-                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IReferenceTrackerVftbl.IID), out referenceTracker);
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(in IID.IID_IReferenceTracker), out referenceTracker);
                 if (hr != 0)
                 {
                     referenceTracker = default;
@@ -433,7 +472,7 @@ namespace WinRT
         {
             if (objRef.ReferenceTrackerPtr == IntPtr.Zero)
             {
-                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(IReferenceTrackerVftbl.IID), out var referenceTracker);
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref Unsafe.AsRef(in IID.IID_IReferenceTracker), out var referenceTracker);
                 if (hr == 0)
                 {
                     // WinUI scenario
@@ -526,7 +565,7 @@ namespace WinRT
 
         private static object CreateObject(IntPtr externalComObject)
         {
-            Guid inspectableIID = InterfaceIIDs.IInspectable_IID;
+            Guid inspectableIID = IID.IID_IInspectable;
             Guid weakReferenceIID = ABI.WinRT.Interop.IWeakReference.IID;
             IntPtr ptr = IntPtr.Zero;
 

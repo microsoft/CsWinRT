@@ -373,6 +373,8 @@ namespace ABI.System.Collections
 {
     using global::Microsoft.UI.Xaml.Interop;
     using global::System;
+    using global::System.Diagnostics.CodeAnalysis;
+    using global::System.Reflection;
     using global::System.Runtime.CompilerServices;
 
 #if EMBED
@@ -393,26 +395,90 @@ namespace ABI.System.Collections
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable));
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
+#pragma warning restore CA2257
         {
-            private readonly Func<IWinRTObject, global::System.Collections.IEnumerator> _enumerator;
+            /// <summary>
+            /// The cached <see cref="IEnumerable{T}.GetEnumerator"/> method.
+            /// </summary>
+            private static readonly MethodInfo EnumerableOfTGetEnumerator = typeof(IEnumerable<>).GetMethod("GetEnumerator");
+
+#if NET8_0_OR_GREATER
+            private readonly MethodInvoker _enumerator;
+#else
+            private readonly MethodInfo _enumerator;
+#endif
 
             public AdaptiveFromAbiHelper(Type runtimeType, IWinRTObject winRTObject)
                 :base(winRTObject)
             {
-                Type enumGenericType = (runtimeType.IsGenericType && runtimeType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.IEnumerable<>)) ? 
-                    runtimeType : runtimeType.GetInterface("System.Collections.Generic.IEnumerable`1");
-                if(enumGenericType != null)
+                Type enumGenericType;
+
+                // First, look for and get the IEnumerable<> interface implemented by this type, if one exists. The scenario is, imagine you
+                // got an 'IList<string>' from somewhere, and then you use LINQ with it. What LINQ does is it converts both to object. Then
+                // it does a cast to 'IEnumerable'. At this point, you are trying an IDIC cast for 'IEnumerable' and asking the IDIC 'IEnumerable'
+                // interface to handle it. The question to answer is, what version of 'IEnumerable' is it. Is it the one provided by 'IList<string>'
+                // or is it the one that maps to 'IBindableIterable'. We actually don't know at this point which one to use, especially given the
+                // 'IBindableIterable' interface may not even be implemented on the native object, as it was an 'IList<string>' originally. This is
+                // also why we can't just check whether the object implements 'IEnumerable' and just call 'GetEnumerator()' on that.
+                if (runtimeType.IsGenericType && runtimeType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-                    var getEnumerator = enumGenericType.GetMethod("GetEnumerator");
-                    _enumerator = (IWinRTObject obj) => (global::System.Collections.IEnumerator)getEnumerator.Invoke(obj, null);
+                    enumGenericType = runtimeType;
                 }
+                else
+                {
+                    [SuppressMessage("Trimming", "IL2070", Justification =
+                        """
+                        'SomeType.GetInterfaces().Any(t => t.GetGenericTypeDefinition() == typeof(IEnumerable<>)' is safe,
+                        provided you obtained someType from something like an analyzable 'Type.GetType' or 'object.GetType'
+                        (i.e. it is safe when the type you're asking about can exist on the GC heap as allocated).
+                        """)]
+                    [MethodImpl(MethodImplOptions.NoInlining)]
+                    static Type GetEnumerableOfTInterface(Type runtimeType)
+                    {
+                        foreach (Type interfaceType in runtimeType.GetInterfaces())
+                        {
+                            if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                            {
+                                return interfaceType;
+                            }
+                        }
+
+                        return null;
+                    }
+
+                    enumGenericType = GetEnumerableOfTInterface(runtimeType);
+                }
+
+                var methodInfo = (MethodInfo)enumGenericType?.GetMemberWithSameMetadataDefinitionAs(EnumerableOfTGetEnumerator);
+
+#if NET8_0_OR_GREATER
+                _enumerator = methodInfo is null ? null : MethodInvoker.Create(methodInfo);
+#else
+                _enumerator = methodInfo;
+#endif
             }
 
-            public override global::System.Collections.IEnumerator GetEnumerator() => _enumerator != null ? _enumerator(_winrtObject) : base.GetEnumerator();
+            public override IEnumerator GetEnumerator()
+            {
+                if (_enumerator is not null)
+                {
+                    // The method returns IEnumerator<>, which implements IEnumerator
+#if NET8_0_OR_GREATER
+                    return Unsafe.As<IEnumerator>(_enumerator.Invoke(_winrtObject));
+#else
+                    return Unsafe.As<IEnumerator>(_enumerator.Invoke(_winrtObject, null));
+#endif
+                }
+
+                return base.GetEnumerator();
+            }
         }
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public class FromAbiHelper : global::System.Collections.IEnumerable
+#pragma warning restore CA2257
         {
             private readonly global::System.Collections.IEnumerable _iterable;
             protected readonly IWinRTObject _winrtObject;
@@ -449,7 +515,9 @@ namespace ABI.System.Collections
             }
         }
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class ToAbiHelper : IBindableIterable
+#pragma warning restore CA2257
         {
             private readonly IEnumerable m_enumerable;
 
@@ -541,7 +609,7 @@ namespace ABI.System.Collections
     internal
 #else
     public 
-#endif 
+#endif
     static class IEnumerable_Delegates
     {
         public unsafe delegate int First_0(IntPtr thisPtr, IntPtr* result);
@@ -565,7 +633,9 @@ namespace ABI.System.Collections
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList));
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class FromAbiHelper : global::System.Collections.IList
+#pragma warning restore CA2257
         {
             private readonly global::Microsoft.UI.Xaml.Interop.IBindableVector _vector;
 
@@ -801,7 +871,9 @@ namespace ABI.System.Collections
             }
         }
 
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class ToAbiHelper : IBindableVector
+#pragma warning restore CA2257
         {
             private global::System.Collections.IList _list;
 

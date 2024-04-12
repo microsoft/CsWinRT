@@ -118,7 +118,7 @@ namespace WinRT
         }
 
         // Retrieve restricted error info from thread without removing it, for propagation and debugging (watch, locals, etc)
-        private static IObjectReference BorrowRestrictedErrorInfo()
+        private static ObjectReference<IUnknownVftbl> BorrowRestrictedErrorInfo()
         {
             if (getRestrictedErrorInfo == null)
                 return null;
@@ -131,10 +131,10 @@ namespace WinRT
             if (setRestrictedErrorInfo != null)
             {
                 setRestrictedErrorInfo(restrictedErrorInfoPtr);
-                return ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.FromAbi(restrictedErrorInfoPtr);
+                return ObjectReference<IUnknownVftbl>.FromAbi(restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
             }
 
-            return ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.Attach(ref restrictedErrorInfoPtr);
+            return ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
         }
 
         public static Exception GetExceptionForHR(int hr) => hr >= 0 ? null : GetExceptionForHR(hr, true, out _);
@@ -143,7 +143,7 @@ namespace WinRT
         {
             restoredExceptionFromGlobalState = false;
 
-            IObjectReference restrictedErrorInfoToSave = null;
+            ObjectReference<IUnknownVftbl> restrictedErrorInfoToSave = null;
             Exception ex;
             string description = null;
             string restrictedError = null;
@@ -157,14 +157,18 @@ namespace WinRT
                 using var restrictedErrorInfoRef = BorrowRestrictedErrorInfo();
                 if (restrictedErrorInfoRef != null)
                 {
-                    restrictedErrorInfoToSave = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>();
-                    ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
+                    restrictedErrorInfoToSave = restrictedErrorInfoRef.As<IUnknownVftbl>(IID.IID_IRestrictedErrorInfo);
+                    ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new(restrictedErrorInfoRef);
                     restrictedErrorInfo.GetErrorDetails(out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
                     restrictedErrorReference = restrictedErrorInfo.GetReference();
-                    if (restrictedErrorInfoRef.TryAs<ABI.WinRT.Interop.ILanguageExceptionErrorInfo.Vftbl>(out var languageErrorInfoRef) >= 0)
+                    if (restrictedErrorInfoRef.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo, out var languageErrorInfoRef) >= 0)
                     {
-                        ILanguageExceptionErrorInfo languageErrorInfo = new ABI.WinRT.Interop.ILanguageExceptionErrorInfo(languageErrorInfoRef);
+#if NET
+                        using IObjectReference languageException = ABI.WinRT.Interop.ILanguageExceptionErrorInfo.GetLanguageException(languageErrorInfoRef);
+#else
+                        ABI.WinRT.Interop.ILanguageExceptionErrorInfo languageErrorInfo = new(languageErrorInfoRef);
                         using IObjectReference languageException = languageErrorInfo.GetLanguageException();
+#endif
                         if (languageException is object)
                         {
                             if (languageException.IsReferenceToManagedObject)
@@ -392,40 +396,13 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             }
         }
 
-        //
-        // Exception requires anything to be added into Data dictionary is serializable
-        // This wrapper is made serializable to satisfy this requirement but does NOT serialize
-        // the object and simply ignores it during serialization, because we only need
-        // the exception instance in the app to hold the error object alive.
-        //
-        [Serializable]
-        internal sealed class __RestrictedErrorObject
-        {
-            // Hold the error object instance but don't serialize/deserialize it
-            [NonSerialized]
-            private readonly IObjectReference _realErrorObject;
-
-            internal __RestrictedErrorObject(IObjectReference errorObject)
-            {
-                _realErrorObject = errorObject;
-            }
-
-            public IObjectReference RealErrorObject
-            {
-                get
-                {
-                    return _realErrorObject;
-                }
-            }
-        }
-
         internal static void AddExceptionDataForRestrictedErrorInfo(
             this Exception ex,
             string description,
             string restrictedError,
             string restrictedErrorReference,
             string restrictedCapabilitySid,
-            IObjectReference restrictedErrorObject,
+            ObjectReference<IUnknownVftbl> restrictedErrorObject,
             bool hasRestrictedLanguageErrorObject = false)
         {
             IDictionary dict = ex.Data;
@@ -438,14 +415,14 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
                 // Keep the error object alive so that user could retrieve error information
                 // using Data["RestrictedErrorReference"]
-                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject);
+                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
                 dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
             }
         }
 
         internal static bool TryGetRestrictedLanguageErrorObject(
             this Exception ex,
-            out IObjectReference restrictedErrorObject)
+            out ObjectReference<IUnknownVftbl> restrictedErrorObject)
         {
             restrictedErrorObject = null;
             IDictionary dict = ex.Data;
@@ -453,8 +430,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             {
                 if (dict.Contains("__RestrictedErrorObjectReference"))
                 {
-                    if (dict["__RestrictedErrorObjectReference"] is __RestrictedErrorObject restrictedObject)
-                        restrictedErrorObject = restrictedObject.RealErrorObject;
+                    restrictedErrorObject = (ObjectReference<IUnknownVftbl>)dict["__RestrictedErrorObjectReference"];
                 }
                 return (bool)dict["__HasRestrictedLanguageErrorObject"]!;
             }
@@ -480,7 +456,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
                     if (restrictedErrorInfoPtr != IntPtr.Zero)
                     {
-                        IObjectReference restrictedErrorInfoRef = ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.Attach(ref restrictedErrorInfoPtr);
+                        ObjectReference<IUnknownVftbl> restrictedErrorInfoRef = ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
 
                         ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
 
@@ -501,7 +477,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                                                                     restrictedDescription,
                                                                      restrictedErrorInfo.GetReference(),
                                                                      capabilitySid,
-                                                                     restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>());
+                                                                     restrictedErrorInfoRef.As<IUnknownVftbl>(IID.IID_IRestrictedErrorInfo));
                         }
                     }
                 }
@@ -552,10 +528,8 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
 namespace Microsoft.UI.Xaml
 {
-    using System.Runtime.Serialization;
     namespace Automation
     {
-        [Serializable]
 #if EMBED
         internal
 #else
@@ -579,11 +553,6 @@ namespace Microsoft.UI.Xaml
                 : base(message, innerException)
             {
                 HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTAVAILABLE;
-            }
-
-            protected ElementNotAvailableException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-                : base(serializationInfo, streamingContext)
-            {
             }
         }
 
@@ -642,7 +611,7 @@ namespace Microsoft.UI.Xaml
             }
         }
     }
-    [Serializable]
+
 #if EMBED
     internal
 #else
@@ -666,11 +635,6 @@ namespace Microsoft.UI.Xaml
             : base(message, innerException)
         {
             HResult = WinRT.ExceptionHelpers.E_LAYOUTCYCLE;
-        }
-
-        protected LayoutCycleException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-            : base(serializationInfo, streamingContext)
-        {
         }
     }
 }

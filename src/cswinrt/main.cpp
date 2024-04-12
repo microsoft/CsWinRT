@@ -33,7 +33,7 @@ namespace cswinrt
         { "output", 0, 1, "<path>", "Location of generated projection" },
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
-        { "target", 0, 1, "<net7.0|net6.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with newest TFM (net6.0)." },
+        { "target", 0, 1, "<net8.0|net7.0|net6.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with .NET 6." },
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "internal", 0, 0, {}, "Generates a private projection."},
@@ -96,7 +96,7 @@ Where <spec> is one or more of:
             throw usage_exception();
         }
         settings.netstandard_compat = target == "netstandard2.0";
-        settings.net7_0_or_greater = target == "net7.0" || target == "net8.0";
+        settings.net7_0_or_greater = starts_with(target, "net7.0") || starts_with(target, "net8.0");
         settings.component = args.exists("component");
         settings.internal = args.exists("internal");
         settings.embedded = args.exists("embedded");
@@ -289,6 +289,7 @@ Where <spec> is one or more of:
                                         {
                                             write_winrt_exposed_type_class(w, type, true);
                                         }
+                                        write_winrt_implementation_type_rcw_factory_attribute_type(w, type);
                                         break;
                                     case category::delegate_type:
                                         write_abi_delegate(w, type);

@@ -1474,6 +1474,10 @@ namespace AuthoringTest
         }
     }
 
+    public sealed class TestCollection : CollectionBase
+    {
+    }
+
     public partial interface IPartialInterface
     {
         public string GetNumberAsString();
@@ -1737,6 +1741,30 @@ namespace ABI.AuthoringTest
             public static Guid IID => typeof(global::AuthoringTest.SomeInternalType.IInternalInterface2).GUID;
 
             public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.SomeInternalType.IInternalInterface2.Vftbl.AbiToProjectionVftablePtr;
+        }
+    }
+}
+
+namespace AnotherNamespace
+{
+    internal partial class PartialClass3
+    {
+        public void InternalFunction()
+        {
+        }
+    }
+
+    partial class PartialClass3
+    {
+        public void InternalFunction2()
+        {
+        }
+    }
+
+    internal class InternalClass
+    {
+        public void InternalFunction()
+        {
         }
     }
 }

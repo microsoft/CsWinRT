@@ -24,6 +24,30 @@ namespace Utilities
     }
 }";
 
+        private const string Valid_UnrelatedNamespaceWithNoPublicTypes2 = @"
+namespace DiagnosticTests
+{
+    namespace Foo
+    {
+        public sealed class Dog
+        {
+            public int Woof { get; set; }
+        }
+    }
+}
+namespace Utilities
+{
+    internal partial class Sandwich
+    {
+        private int BreadCount { get; set; }
+    }
+
+    partial class Sandwich
+    {
+        private int BreadCount2 { get; set; }
+    }
+}";
+
         private const string Valid_SubNamespacesWithOverlappingNames = @"
 namespace DiagnosticTests
 {

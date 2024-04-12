@@ -6,8 +6,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace WinRT
@@ -45,9 +45,6 @@ namespace WinRT
             projectionTypeNameToBaseTypeNameMappings.Add(typeNameToBaseTypeNameMapping);
         }
 
-#if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
         public static Type FindRcwTypeByNameCached(string runtimeClassName)
         {
             // Try to get the given type name. If it is not found, the type might have been trimmed.
@@ -56,9 +53,6 @@ namespace WinRT
             if (rcwType is null)
             {
                 rcwType = baseRcwTypeCache.GetOrAdd(runtimeClassName,
-#if NET
-                    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
                     (runtimeClassName) =>
                     {
                         var resolvedBaseType = projectionTypeNameToBaseTypeNameMappings.Find((dict) => dict.ContainsKey(runtimeClassName))?[runtimeClassName];
@@ -74,15 +68,9 @@ namespace WinRT
         /// </summary>
         /// <param name="runtimeClassName">The runtime class name to attempt to parse.</param>
         /// <returns>The type, if found.  Null otherwise</returns>
-#if NET
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
         public static Type FindTypeByNameCached(string runtimeClassName)
         {
             return typeNameCache.GetOrAdd(runtimeClassName,
-#if NET
-                [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
                 (runtimeClassName) =>
                 {
                     Type implementationType = null;
@@ -114,9 +102,9 @@ namespace WinRT
                 }
 
                 throw new NotSupportedException(
-                    $"""The requested runtime class name is "{runtimeClassName.ToString()}", which maps to a dynamic projected type. """ +
-                    """This can only be used when support for dynamic objects is enabled in the CsWinRT configuration. To enable it, """ +
-                    """make sure that the "CsWinRTEnableDynamicObjectsSupport" MSBuild property is not being set to 'false' anywhere.""");
+                    $"The requested runtime class name is '{runtimeClassName.ToString()}', which maps to a dynamic projected type. " +
+                    "This can only be used when support for dynamic objects is enabled in the CsWinRT configuration. To enable it, " +
+                    "make sure that the 'CsWinRTEnableDynamicObjectsSupport' MSBuild property is not being set to 'false' anywhere.");
             }
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
             else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<String>".AsSpan(), StringComparison.Ordinal) == 0)
@@ -155,7 +143,6 @@ namespace WinRT
 #if NET
         [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
             Justification = "Any types which are trimmed are not used by user code and there is fallback logic to handle that.")]
-        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 #endif
         private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
         {
@@ -200,17 +187,39 @@ namespace WinRT
             {
                 if (genericTypes != null)
                 {
-                    if(resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
-                    {
-                        return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
-                    }
-                    resolvedType = resolvedType.MakeGenericType(genericTypes);
+                    return ResolveGenericType(resolvedType, genericTypes, runtimeClassName);
                 }
                 return resolvedType;
             }
 
             Debug.WriteLine($"FindTypeByNameCore: Unable to find a type named '{runtimeClassName}'");
             return null;
+
+#if NET
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Calls to MakeGenericType are done with reference types.")]
+#endif
+            static Type ResolveGenericType(Type resolvedType, Type[] genericTypes, string runtimeClassName)
+            {
+                if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
+                {
+                    return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+                }
+
+#if NET
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    foreach (var type in genericTypes)
+                    {
+                        if (type.IsValueType)
+                        {
+                            throw new NotSupportedException($"Cannot provide generic type from '{runtimeClassName}'.");
+                        }
+                    }
+                }
+#endif
+
+                return resolvedType.MakeGenericType(genericTypes);
+            }
         }
 
         public static Type ResolvePrimitiveType(string primitiveTypeName)
@@ -359,10 +368,14 @@ namespace WinRT
             {
                 builder.Append("Object");
             }
+            else if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0 && type.IsTypeOfType())
+            {
+                builder.Append("Windows.UI.Xaml.Interop.TypeName");
+            }
             else
             {
                 var projectedAbiTypeName = Projections.FindCustomAbiTypeNameForType(type);
-                if (projectedAbiTypeName is object)
+                if (projectedAbiTypeName is not null)
                 {
                     builder.Append(projectedAbiTypeName);
                 }
@@ -392,7 +405,21 @@ namespace WinRT
 
             var visitedTypes = visitedTypesInstance ??= new Stack<VisitedType>();
 
-            if (visitedTypes.Any(visited => visited.Type == type))
+            // Manual helper to save binary size (no LINQ, no lambdas) and get better performance
+            static bool HasAnyVisitedTypes(Stack<VisitedType> visitedTypes, Type type)
+            {
+                foreach (VisitedType visitedType in visitedTypes)
+                {
+                    if (visitedType.Type == type)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            if (HasAnyVisitedTypes(visitedTypes, type))
             {
                 // In this case, we've already visited the type when recursing through generic parameters.
                 // Try to fall back to object if the parameter is covariant and the argument is compatable with object.

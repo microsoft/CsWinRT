@@ -28,15 +28,17 @@ steps:
 - task: UseDotNet@2
   displayName: Use .NET Core SDK 3.1
   inputs:
+    packageType: runtime
     version: 3.1.x
-    installationPath: C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\
+    installationPath: $(LocalAppData)\Microsoft\dotnet\
     performMultiLevelLookup: true
 
 - task: UseDotNet@2
   displayName: Use .NET Core SDK 3.1
   inputs:
+    packageType: runtime
     version: 3.1.x
-    installationPath: C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\x86
+    installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
     performMultiLevelLookup: true
   env:
     PROCESSOR_ARCHITECTURE: x86
@@ -52,9 +54,22 @@ steps:
      
      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
      
-     dotnet new globaljson --sdk-version "$($env:NET6_SDK_VERSION)" 
-     
      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
+
+# Install .NET 8 SDK 
+- task: PowerShell@2
+  displayName: Install .NET 8 SDK
+  inputs:
+    targetType: inline
+    failOnStderr: true
+    script: |
+     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
+     
+     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
+     
+     dotnet new globaljson --sdk-version "$($env:NET8_SDK_VERSION)" 
+     
+     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET8_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 # Verify .NET SDK
 - task: CmdLine@2
@@ -189,31 +204,15 @@ steps:
     Contents: cswinrt.binlog
     TargetFolder: $(Build.ArtifactStagingDirectory)\binlog
 
-# Publish BinLog
-- task: PublishBuildArtifacts@1
-  displayName: Publish BinLog
-  condition: always()
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\binlog
-    ArtifactName: $(BuildConfiguration)_$(BuildPlatform)_binlog
-
 # Stage Windows projection
 - task: ArchiveFiles@2
   displayName: Stage Windows projection
-  enabled: False
+  condition: and(succeeded(), eq(variables['PublishGeneratedFiles'], 'true'))
   inputs:
     rootFolderOrFile: $(Build.SourcesDirectory)\Projections\Windows\Generated Files
     includeRootFolder: false
     sevenZipCompression: 5
     archiveFile: $(Build.ArtifactStagingDirectory)\Windows\sources.zip
-
-# Publish Windows projection
-- task: PublishBuildArtifacts@1
-  displayName: Publish Windows projection
-  enabled: False
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\Windows
-    ArtifactName: $(BuildConfiguration)_$(BuildPlatform)_Windows
 
 # Stage CsWinRT
 - task: CopyFiles@2
@@ -259,13 +258,6 @@ steps:
       unittest.pdb
     TargetFolder: $(Build.ArtifactStagingDirectory)\native
 
-# Publish Native
-- task: PublishBuildArtifacts@1
-  displayName: Publish Native
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\native
-    ArtifactName: $(BuildConfiguration)_$(BuildPlatform)
-
 # Stage NetStandard 2.0
 - task: CopyFiles@2
   displayName: Stage NetStandard 2.0
@@ -287,14 +279,6 @@ steps:
       WinRT.SourceGenerator.dll
       WinRT.SourceGenerator.pdb
     TargetFolder: $(Build.ArtifactStagingDirectory)\release_netstandard2.0\
-
-# Publish NetStandard 2.0 
-- task: PublishBuildArtifacts@1
-  displayName: Publish NetStandard 2.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\release_netstandard2.0
-    ArtifactName: netstandard2.0
 
 # Stage Net6.0
 - task: CopyFiles@2
@@ -386,36 +370,3 @@ steps:
       Microsoft.CodeAnalysis.CSharp.dll
       Microsoft.CodeAnalysis.dll
     TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0\CsWinMD
-
-# Publish ResX
-- task: PublishBuildArtifacts@1
-  displayName: Publish ResX files
-  condition: succeeded()
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\resx
-    ArtifactName: ResX
-
-# Publish Net6.0
-- task: PublishBuildArtifacts@1
-  displayName: Publish Net6.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\release_net6.0
-    ArtifactName: net6.0
-
-# Generate SBOM 
-- task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-  displayName: 'SBOM Generator Task'
-  condition: eq(variables['BuildConfiguration'],'Release')
-  inputs:
-    BuildDropPath: '$(Build.ArtifactStagingDirectory)'
-    PackageName: 'Microsoft.Windows.CsWinRT'
-    PackageVersion: '$(NugetVersion)'
-
-# Stage SBOM
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish SBOM to build artifacts'
-  condition: eq(variables['BuildConfiguration'],'Release')
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)\_manifest'
-    ArtifactName: SBOM_$(BuildPlatform)

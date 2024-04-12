@@ -23,8 +23,9 @@ namespace ABI.Microsoft.UI.Xaml.Data
         IObjectReference CreateInstance(string name, object baseInterface, out IObjectReference innerInterface);
         ObjectReferenceValue CreateInstance(string name);
     }
-
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("7C0C27A8-0B41-5070-B160-FC9AE960A36C")]
     internal sealed unsafe class MUXPropertyChangedEventArgsRuntimeClassFactory : IWinRTPropertyChangedEventArgsRuntimeClassFactory
     {
@@ -42,8 +43,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public static implicit operator MUXPropertyChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new MUXPropertyChangedEventArgsRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
         public MUXPropertyChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         public MUXPropertyChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {
@@ -114,8 +113,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public static implicit operator WUXPropertyChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WUXPropertyChangedEventArgsRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
         public WUXPropertyChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         public WUXPropertyChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {

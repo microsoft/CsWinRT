@@ -3,8 +3,6 @@ stages:
   displayName: Build/Test Stage
   jobs: 
   - job: BuildAndTest
-    pool:
-      vmImage: windows-latest
     timeoutInMinutes: 270
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
@@ -34,7 +32,7 @@ stages:
       persistCredentials: true
     
 # Build Steps 
-    - template: CsWinRT-Build-Steps.yml
+    - template: CsWinRT-Build-Steps.yml@self
 
 # Set Dotnet paths
     - task: PowerShell@2
@@ -42,8 +40,8 @@ stages:
       inputs:
         targetType: inline
         script: |
-          Write-Host "##vso[task.setvariable variable=DOTNET_ROOT;]C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\"
-          Write-Host "##vso[task.setvariable variable=DOTNET_ROOT(x86);]C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\x86\"
+          Write-Host "##vso[task.setvariable variable=DOTNET_ROOT;]$env:LOCALAPPDATA\Microsoft\dotnet\"
+          Write-Host "##vso[task.setvariable variable=DOTNET_ROOT(x86);]$env:LOCALAPPDATA\Microsoft\dotnet\x86\"
 
 # Run Unit Tests
     - task: DotNetCoreCLI@2
@@ -72,22 +70,6 @@ stages:
       inputs:
         testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
-
-# Publish Test Log
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Test Log
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-      inputs:
-        PathtoPublish: $(Build.ArtifactStagingDirectory)\unittest
-        ArtifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTest
-
-# Publish Embedded Test Log
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Embedded Test Log
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-      inputs:
-        PathtoPublish: $(Build.ArtifactStagingDirectory)\unittestembedded
-        ArtifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTestEmbedded
 
 # Run Host Tests
     - task: CmdLine@2
@@ -135,13 +117,62 @@ stages:
           set CIBuildReason=CI
           set cswinrt_label=functionaltest
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
+    templateContext:
+      outputs:
+      - output: pipelineArtifact
+        displayName: 'Publish Test Log'
+        condition: and(failed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+        targetPath: $(Build.ArtifactStagingDirectory)\unittest
+        artifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTest
+      - output: pipelineArtifact
+        displayName: 'Publish Embedded Test Log'
+        condition: and(failed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+        targetPath: $(Build.ArtifactStagingDirectory)\unittestembedded
+        artifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTestEmbedded
+      - output: pipelineArtifact
+        displayName: 'Publish BinLog'
+        condition: failed()
+        targetPath: $(Build.ArtifactStagingDirectory)\binlog
+        artifactName: $(BuildConfiguration)_$(BuildPlatform)_binlog
+      - output: pipelineArtifact
+        displayName: 'Publish Windows projection'
+        condition: and(succeeded(), eq(variables['PublishGeneratedFiles'], 'true'))
+        targetPath: $(Build.ArtifactStagingDirectory)\Windows
+        artifactName: $(BuildConfiguration)_$(BuildPlatform)_Windows
+      - output: pipelineArtifact
+        displayName: 'Publish Native'
+        condition: or(failed(), eq(variables['BuildConfiguration'], 'release'))
+        targetPath: $(Build.ArtifactStagingDirectory)\native
+        artifactName: $(BuildConfiguration)_$(BuildPlatform)
+      - output: pipelineArtifact
+        displayName: 'Publish NetStandard 2.0'
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+        targetPath: $(Build.ArtifactStagingDirectory)\release_netstandard2.0
+        artifactName: netstandard2.0
+      - output: pipelineArtifact
+        displayName: 'Publish ResX files'
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+        targetPath: $(Build.ArtifactStagingDirectory)\resx
+        artifactName: ResX
+      - output: pipelineArtifact
+        displayName: 'Publish Net6.0'
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+        targetPath: $(Build.ArtifactStagingDirectory)\release_net6.0
+        artifactName: net6.0
 
   - job: Benchmarks
     displayName: Run Benchmarks
     condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
     dependsOn: []
-    pool:
-      vmImage: windows-latest
     timeoutInMinutes: 120
     steps:
-    - template: CsWinRT-Benchmarks-Steps.yml
+    - template: CsWinRT-Benchmarks-Steps.yml@self
+
+    templateContext:
+      outputs:
+      - output: pipelineArtifact
+        displayName: 'Publish Results'
+        condition: always()
+        targetPath: $(Build.ArtifactStagingDirectory)\benchmarks
+        artifactName: benchmarks
+

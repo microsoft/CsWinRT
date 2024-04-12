@@ -26,6 +26,26 @@
     <DefineConstants>$(DefineConstants);CsWinRT_LANG_11_FEATURES</DefineConstants>
   </PropertyGroup>
 
+  <!-- NativeAOT specific options, only starting from .NET 8 -->
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
+
+    <!--
+      Explicitly mark critical warnings for NativeAOT publishing as errors, to enforce they're not present.
+
+      "IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT"
+      "IL3051: 'RequiresDynamicCodeAttribute' attribute must be consistently applied on virtual and interface methods"
+      "IL3052: COM interop is not supported with full ahead of time compilation"
+      "IL3054: Generic expansion to a method or type was aborted due to generic recursion"
+      "IL3055: P/Invoke method declares a parameter with an abstract delegate"
+      "IL3056: RequiresDynamicCodeAttribute cannot be placed directly on a static constructor"
+
+      We're skipping IL3053 on purpose, as that's not a working that could be produced in this scenario.
+      For more info, see: https://learn.microsoft.com/dotnet/core/deploying/native-aot/fixing-warnings.
+    -->
+    <WarningsAsErrors>$(WarningsAsErrors);IL3050;IL3051;IL3052;IL3054;IL3055;IL3056</WarningsAsErrors>
+  </PropertyGroup>
+
   <!-- Include the ILLink file (to properly trim configuration switches in publish builds) -->
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
     <EmbeddedResource Include="Configuration\ILLink.Substitutions.xml" LogicalName="ILLink.Substitutions.xml" />
@@ -45,7 +65,7 @@
   </ItemGroup>
     
   <ItemGroup>
-    <Compile Include="../cswinrt/strings/WinRT*.cs" Link="cswinrt/%(FileName)%(Extension)" />
+    <Compile Include="../cswinrt/strings/InitalizeProjection.cs" Link="cswinrt/InitalizeProjection.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

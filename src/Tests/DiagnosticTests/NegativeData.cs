@@ -43,6 +43,31 @@ namespace A
     public sealed class Blank { public Blank() {} }
 }";
 
+        private const string UnrelatedNamespaceWithPublicPartialTypes = @"
+namespace DiagnosticTests
+{
+    namespace Foo
+    {
+        public sealed class Dog
+        {
+            public int Woof { get; set; }
+        }
+    }
+}
+namespace Utilities
+{
+    public sealed partial class Sandwich
+    {
+        private int BreadCount { get; set; }
+    }
+
+    partial class Sandwich
+    {
+        private int BreadCount2 { get; set; }
+    }
+}
+";
+
         // note the below test should only fail if the AssemblyName is "DiagnosticTests.A", this is valid under the default "DiagnosticTests" 
         private const string NamespaceDifferByDot = @"
 namespace DiagnosticTests.A

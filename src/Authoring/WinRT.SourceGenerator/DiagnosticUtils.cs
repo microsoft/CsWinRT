@@ -47,7 +47,7 @@ namespace Generator
         {
             WinRTSyntaxReceiver syntaxReceiver = (WinRTSyntaxReceiver)_context.SyntaxReceiver;
 
-            // Used to check for conflicitng namespace names
+            // Used to check for conflicting namespace names
             HashSet<string> namespaceNames = new();
 
             foreach (var @namespace in syntaxReceiver.Namespaces)

@@ -85,7 +85,6 @@ namespace ABI.Windows.Foundation
         }
     }
 
-    [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("61C17707-2D65-11E0-9AE8-D48564015472")]
     internal sealed class IReferenceArray<T> : global::Windows.Foundation.IReferenceArray<T>
     {
@@ -147,20 +146,10 @@ namespace ABI.Windows.Foundation
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReferenceArray<T>));
 
-        [Guid("61C17707-2D65-11E0-9AE8-D48564015472")]
-        public unsafe struct Vftbl
-        {
-            internal IInspectable.Vftbl IInspectableVftbl;
-
-            public static Guid PIID = IReferenceArray<T>.PIID;
-        }
-
-        public static Guid PIID = GuidGenerator.CreateIID(typeof(IReferenceArray<T>));
+        public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReferenceArray<T>));
 
         private readonly ObjectReference<IUnknownVftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-
-        public A As<A>() => _obj.AsType<A>();
 
         public IReferenceArray(ObjectReference<IUnknownVftbl> obj)
         {

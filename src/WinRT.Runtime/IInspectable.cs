@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 
@@ -20,7 +22,9 @@ namespace WinRT
     }
 
     // IInspectable
-    [ObjectReferenceWrapper(nameof(_obj))]
+#if !NET
+    [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
 #if EMBED
     internal
@@ -67,7 +71,7 @@ namespace WinRT
                     _GetTrustLevel = (void*)(delegate* unmanaged<IntPtr, TrustLevel*, int>)&Do_Abi_GetTrustLevel
 #endif
                 };
-                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
+                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(sizeof(Vftbl));
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
             }
 
@@ -124,6 +128,12 @@ namespace WinRT
         public IntPtr ThisPtr => _obj.ThisPtr;
         public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>();
         public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
+
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public ObjectReference<I> As<I>() => _obj.As<I>();
         public IObjectReference ObjRef { get => _obj; }
         public IInspectable(IObjectReference obj) : this(obj.As<Vftbl>()) { }

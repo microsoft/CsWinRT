@@ -14,9 +14,20 @@ steps:
 - task: UseDotNet@2
   displayName: Use .NET Core SDK 3.1
   inputs:
+    packageType: runtime
     version: 3.1.x
-    installationPath: C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\
+    installationPath: $(LocalAppData)\Microsoft\dotnet\
     performMultiLevelLookup: true
+
+- task: UseDotNet@2
+  displayName: Use .NET Core SDK 3.1
+  inputs:
+    packageType: runtime
+    version: 3.1.x
+    installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
+    performMultiLevelLookup: true
+  env:
+    PROCESSOR_ARCHITECTURE: x86
 
 # Install .NET 6 SDK 
 - task: PowerShell@2
@@ -27,11 +38,24 @@ steps:
     script: |
       Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
         
-      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-         
-      dotnet new globaljson --sdk-version "$($env:NET6_SDK_VERSION)" 
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
          
       &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
+
+# Install .NET 8 SDK 
+- task: PowerShell@2
+  displayName: Install .NET 8 SDK
+  inputs:
+    targetType: inline
+    failOnStderr: true
+    script: |
+     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
+     
+     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
+     
+     dotnet new globaljson --sdk-version "$($env:NET8_SDK_VERSION)" 
+     
+     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET8_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 # Verify .NET SDK
 - task: CmdLine@2
@@ -68,11 +92,3 @@ steps:
     SourceFolder: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
     Contents: '*'
     TargetFolder: $(Build.ArtifactStagingDirectory)\benchmarks
-
-# Publish Results
-- task: PublishBuildArtifacts@1
-  displayName: Publish Results
-  condition: always()
-  inputs:
-    PathtoPublish: $(Build.ArtifactStagingDirectory)\benchmarks
-    ArtifactName: benchmarks

@@ -36,7 +36,7 @@ namespace ABI.WinRT.Interop
     [Guid("00000003-0000-0000-c000-000000000046")]
     internal sealed class IMarshal
     {
-        internal static readonly Guid IID = InterfaceIIDs.IMarshal_IID;
+        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IMarshal;
 
         private const string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
 
@@ -113,10 +113,10 @@ namespace ABI.WinRT.Interop
                     _ReleaseMarshalData_4 = Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new IMarshal_Delegates.ReleaseMarshalData_4(Do_Abi_ReleaseMarshalData_4)).ToPointer(),
                     _DisconnectObject_5 = Marshal.GetFunctionPointerForDelegate(DelegateCache[5] = new IMarshal_Delegates.DisconnectObject_5(Do_Abi_DisconnectObject_5)).ToPointer(),
                 };
-                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
+                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(sizeof(Vftbl));
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
 #else
-                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.Interop.IUnknownVftbl>() + sizeof(IntPtr) * 6);
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.Interop.IUnknownVftbl) + sizeof(IntPtr) * 6);
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
@@ -274,8 +274,6 @@ namespace ABI.WinRT.Interop
         private readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
         public IMarshal(IObjectReference obj) : this(obj.As<Vftbl>(IID)) { }
         internal IMarshal(ObjectReference<Vftbl> obj)
         {

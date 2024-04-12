@@ -3,8 +3,6 @@ stages:
   displayName: Publish To Internal Nuget Feed Stage
   jobs:
   - job: PublishTo_CsWinRT_InternalFeed
-    pool:
-      vmImage: windows-latest
     steps:
     - checkout: self
       clean: True
@@ -28,49 +26,44 @@ stages:
       displayName: Component Detection
 
 # Download x86 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       displayName: 'Download x86 '
       inputs:
         artifactName: release_x86
         itemPattern: ''
-        downloadPath: $(Build.SourcesDirectory)
-        extractTars: false
+        targetPath: $(Build.SourcesDirectory)\release_x86
 
 # Download x64
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       displayName: Download x64
       inputs:
         artifactName: release_x64
         itemPattern: ''
-        downloadPath: $(Build.SourcesDirectory)
-        extractTars: false
+        targetPath: $(Build.SourcesDirectory)\release_x64
 
 # Download arm64 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       displayName: Download arm64
       inputs:
         artifactName: release_arm64
         itemPattern: ''
-        downloadPath: $(Build.SourcesDirectory)
-        extractTars: false
+        targetPath: $(Build.SourcesDirectory)\release_arm64
 
 # Download NetStandard2.0 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       displayName: Download NetStandard 2.0
       inputs:
         artifactName: netstandard2.0
         itemPattern: ''
-        downloadPath: $(Build.SourcesDirectory)
-        extractTars: false
+        targetPath: $(Build.SourcesDirectory)\netstandard2.0
 
 # Download Net6.0
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifact@2
       displayName: 'Download Net6.0'
       inputs:
         artifactName: net6.0
         itemPattern: ''
-        downloadPath: $(Build.SourcesDirectory)
-        extractTars: false
+        targetPath: $(Build.SourcesDirectory)\net6.0
 
 # Stage Binaries
     - task: CmdLine@2
@@ -255,22 +248,6 @@ stages:
             }
           ]
 
-# NuGet push
-    - task: NuGetCommand@2
-      displayName: NuGet push
-      inputs:
-        command: push
-        searchPatternPush: $(Build.ArtifactStagingDirectory)/**/*.nupkg
-        feedPublish: cfbb8a6b-97b7-4070-a6e8-a4081b046ae0
-        externalEndpoint: 80b1372e-52e9-486d-934f-92d5590c2241
-
-# NuGet publish 
-    - task: PublishPipelineArtifact@1
-      displayName: NuGet publish
-      inputs:
-        path: $(Build.ArtifactStagingDirectory)
-        artifactName: Publish
-
 # Publish Symbols
     - task: PublishSymbols@2
       displayName: Publish Symbols
@@ -279,3 +256,17 @@ stages:
         IndexSources: false
         SymbolServerType: TeamServices
         SymbolsProduct: C#/WinRT
+
+# NuGet push and publish
+    templateContext:
+      outputs:
+      - output: nuget
+        displayName: 'NuGet push'
+        packagesToPush: $(Build.ArtifactStagingDirectory)/**/*.nupkg
+        packageParentPath: '$(Build.ArtifactStagingDirectory)'
+        publishVstsFeed: CsWinRT
+        nuGetFeedType: internal
+      - output: pipelineArtifact
+        displayName: 'NuGet publish'
+        targetPath: $(Build.ArtifactStagingDirectory)
+        artifactName: Publish        

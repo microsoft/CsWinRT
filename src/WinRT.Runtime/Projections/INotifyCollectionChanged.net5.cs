@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -16,27 +17,26 @@ namespace ABI.System.Collections.Specialized
 #endif
     static class INotifyCollectionChangedMethods
     {
-        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventSource> _CollectionChanged;
-        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventSource> MakeCollectionChangedTable()
+        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventHandlerEventSource> _CollectionChanged;
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventHandlerEventSource> MakeCollectionChangedTable()
         {
             global::System.Threading.Interlocked.CompareExchange(ref _CollectionChanged, new(), null);
             return _CollectionChanged;
         }
-        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventSource> CollectionChanged => _CollectionChanged ?? MakeCollectionChangedTable();
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventHandlerEventSource> CollectionChanged => _CollectionChanged ?? MakeCollectionChangedTable();
 
-
-        public static unsafe (Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>, Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>) Get_CollectionChanged(IObjectReference obj, object thisObj)
+        public static unsafe global::ABI.WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> Get_CollectionChanged2(IObjectReference obj, object thisObj)
         {
-            var eventSource = _CollectionChanged.GetValue(thisObj, (key) =>
+            return CollectionChanged.GetValue(thisObj, (key) =>
             {
                 var ThisPtr = obj.ThisPtr;
 
-                return new NotifyCollectionChangedEventSource(obj,
+                return new NotifyCollectionChangedEventHandlerEventSource(obj,
                     (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
                     (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
             });
-            return eventSource.EventActions;
         }
+
         public static global::System.Guid IID { get; } = new(GetIID());
 
         private static ReadOnlySpan<byte> GetIID()
@@ -49,12 +49,14 @@ namespace ABI.System.Collections.Specialized
     [DynamicInterfaceCastableImplementation]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
-    [WuxMuxProjectedType(wuxIID: "28b167d5-1a31-465b-9b25-d5c3ae686c40", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
+    [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
     internal unsafe interface INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
-        [WuxMuxProjectedType(wuxIID: "28b167d5-1a31-465b-9b25-d5c3ae686c40", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
+        [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
@@ -76,7 +78,7 @@ namespace ABI.System.Collections.Specialized
                     _remove_CollectionChanged_1 = &Do_Abi_remove_CollectionChanged_1,
 
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 2);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 2);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -129,16 +131,16 @@ namespace ABI.System.Collections.Specialized
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static (Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>, Action<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>) _CollectionChanged(IWinRTObject _this)
+        private static global::ABI.WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> _CollectionChanged(IWinRTObject _this)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)_this).GetObjectReferenceForType(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle));
-            return INotifyCollectionChangedMethods.Get_CollectionChanged(_obj, _this);
+            var _obj = _this.GetObjectReferenceForType(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle);
+            return INotifyCollectionChangedMethods.Get_CollectionChanged2(_obj, _this);
         }
 
         event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged
         {
-            add => _CollectionChanged((IWinRTObject)this).Item1(value);
-            remove => _CollectionChanged((IWinRTObject)this).Item2(value);
+            add => _CollectionChanged((IWinRTObject)this).Subscribe(value);
+            remove => _CollectionChanged((IWinRTObject)this).Unsubscribe(value);
         }
     }
 }

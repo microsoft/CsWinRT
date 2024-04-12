@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -140,15 +141,11 @@ namespace WinRT
 
         public ObjectReference<T> As<
 #if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
         T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
 
-        public unsafe ObjectReference<T> As<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        T>(Guid iid)
+        public unsafe ObjectReference<T> As<T>(Guid iid)
         {
             Marshal.ThrowExceptionForHR(TryAs<T>(iid, out var objRef));
             return objRef;
@@ -179,15 +176,11 @@ namespace WinRT
 
         public int TryAs<
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)]
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
 
-        public unsafe int TryAs<
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-            T>(Guid iid, out ObjectReference<T> objRef)
+        public unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
         {
             // Check the marker interface for ObjectReferenceWithContext<T>. If that is the case, we inline
             // the special logic for such objects. This avoids having to use a generic virtual method here,
@@ -231,15 +224,64 @@ namespace WinRT
 
         public unsafe IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
 
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public T AsType<T>()
         {
             ThrowIfDisposed();
+
+#if NET
+            // Same logic as in 'ComWrappersSupport.CreateFactoryForImplementationType', see notes there
+            var attribute = typeof(T).GetCustomAttribute<WinRTImplementationTypeRcwFactoryAttribute>(inherit: false);
+
+            if (attribute is not null)
+            {
+                return (T)attribute.CreateInstance(new IInspectable(this));
+            }
+
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"Cannot create an RCW instance for type '{typeof(T)}', because it doesn't have a " +
+                    "[WinRTImplementationTypeRcwFactory] derived attribute on it. The fallback path for older projections " +
+                    "is not trim-safe, and isn't supported in AOT environments. Make sure to reference updated projections.");
+            }
+
+            if (TryCreateRcwFallback(this, out object rcwInstance))
+            {
+                return (T)rcwInstance;
+            }
+
+            [UnconditionalSuppressMessage("Trimming", "IL2090", Justification = "This fallback path is not trim-safe by design (to avoid annotations).")]
+            static bool TryCreateRcwFallback(IObjectReference objectReference, out object rcwInstance)
+            {
+                var constructor = typeof(T).GetConstructor(
+                    bindingAttr: BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance,
+                    binder: null,
+                    types: new[] { typeof(IObjectReference) },
+                    modifiers: null);
+
+                if (constructor is not null)
+                {
+                    rcwInstance = constructor.Invoke(new[] { objectReference });
+
+                    return true;
+                }
+
+                rcwInstance = null;
+
+                return false;
+            }
+#else
             var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
-            if (ctor != null)
+            if (ctor is not null)
             {
                 return (T)ctor.Invoke(new[] { this });
             }
-            throw new InvalidOperationException("Target type is not a projected interface.");
+#endif
+            throw new InvalidOperationException($"Target type '{typeof(T)}' is not a projected type.");
         }
 
         public IntPtr GetRef()
@@ -424,11 +466,7 @@ namespace WinRT
 #else
     public
 #endif
-    class ObjectReference<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        T> : IObjectReference
+    class ObjectReference<T> : IObjectReference
     {
         private readonly T _vftbl;
         public T Vftbl
@@ -571,27 +609,29 @@ namespace WinRT
 
         private static unsafe T GetVtable(IntPtr thisPtr)
         {
-            T vftblT;
             // With our vtable types, the generic vtables will have System.Delegate fields
-            // and the non-generic types will have only void* fields.
-            // On .NET 5, we can use RuntimeHelpers.IsReferenceorContainsReferences
-            // to disambiguate between generic and non-generic vtables since it's a JIT-time constant.
-            // Since it is a JIT time constant, this function will be branchless on .NET 5.
+            // and the non-generic types will have only void* fields. On .NET 6+, we can use
+            // RuntimeHelpers.IsReferenceorContainsReferences to disambiguate between generic
+            // and non-generic vtables since it's a JIT-time constant. Projections for .NET 6+
+            // never use such vtables, so this path will just always throw. This also allows
+            // dropping the trimming annotations preserving all non public constructors.
+            // Since it is a JIT time constant, this function will be branchless on .NET 6+.
             // On .NET Standard 2.0, the IsReferenceOrContainsReferences method does not exist,
-            // so we instead fall back to typeof(T).IsGenericType, which sadly is not a JIT-time constant.
-#if !NET
-            if (typeof(T).IsGenericType)
-#else
+            // so we instead fall back to typeof(T).IsGenericType, which is not a JIT-time constant.
+#if NET
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            {
+                throw new NotSupportedException("Managed vtable types (ie. containing any reference types) are not supported.");
+            }
+#else
+            if (typeof(T).IsGenericType)
+            {
+                return (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
+            }
 #endif
-            {
-                vftblT = (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
-            }
-            else
-            {
-                vftblT = Unsafe.Read<T>(*(void***)thisPtr);
-            }
-            return vftblT;
+
+            // Blittable vtables can just be read directly from the input pointer
+            return Unsafe.Read<T>(*(void***)thisPtr);
         }
 
         private protected virtual T GetVftblForCurrentContext()
@@ -624,11 +664,7 @@ namespace WinRT
         }
     }
 
-    internal sealed class ObjectReferenceWithContext<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        T> : ObjectReference<T>, IObjectReferenceWithContext
+    internal sealed class ObjectReferenceWithContext<T> : ObjectReference<T>, IObjectReferenceWithContext
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;

@@ -148,7 +148,7 @@ namespace ABI.Windows.Foundation
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public IReferenceArray_Delegates.get_Value_0 get_Value_0;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IReferenceArray<T>));
+            public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReferenceArray<T>));
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {

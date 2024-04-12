@@ -42,8 +42,10 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTEnableLogging | true \| *false | Generates a log.txt file to help with diagnosing issues with generating the metadata file and sources for a C#/WinRT authoring component |
 | CsWinRTWindowsMetadata | \<path\> \| "local" \| "sdk" \| *$(WindowsSDKVersion) | Specifies the source for Windows metadata |
 | CsWinRTGenerateProjection | *true \| false | Indicates whether to generate and compile projection sources (true), or only to compile them (false) |
+| CsWinRTPrivateProjection | true \| *false | Indicates if a projection based on `CsWinRTIncludesPrivate` and related 'private' properties should be generated as `internal` |
 | CsWinRTGeneratedFilesDir | *"$(IntermediateOutputPath)\Generated Files" | Specifies the location for generated project source files |
 | CsWinRTIIDOptimizerOptOut | true \| *false | Determines whether to run the IIDOptimizer on the projection assembly |
+| CsWinRTRcwFactoryFallbackGeneratorForceOptIn | true \| *false | Forces the RCW factory fallback generator to be enabled (it only runs on .exe projects by default)  |
 \*Default value
 
 **If CsWinRTFilters is not defined, the following effective value is used:

@@ -4,9 +4,6 @@ stages:
   jobs:
   - job: TriggerWinUIPipelines
     condition: or(eq(variables['_IsRelease'],'true'), eq(variables['Build.Reason'],'Schedule'))
-    pool: 
-      name: Azure Pipelines
-      vmImage: windows-latest
     steps:
     - script: |
         rem Parse the build-generated Build.BuildNumber into components that 

@@ -24,7 +24,7 @@ namespace WinRT.Interop
 #endif
     interface IAgileObject
     {
-        public static readonly Guid IID = InterfaceIIDs.IAgileObject_IID;
+        public static readonly Guid IID = global::WinRT.Interop.IID.IID_IAgileObject;
     }
 
     [WindowsRuntimeType]
@@ -155,8 +155,6 @@ namespace ABI.WinRT.Interop
         public static implicit operator IGlobalInterfaceTable(ObjectReference<Vftbl> obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
 
         public IGlobalInterfaceTable(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         public IGlobalInterfaceTable(ObjectReference<Vftbl> obj)

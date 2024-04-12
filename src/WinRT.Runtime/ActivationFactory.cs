@@ -157,11 +157,7 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe (ObjectReference<I> obj, int hr) GetActivationFactory<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-#endif
-        I>(string runtimeClassId, Guid iid)
+        public static unsafe (ObjectReference<I> obj, int hr) GetActivationFactory<I>(string runtimeClassId, Guid iid)
         {
             var module = Instance; // Ensure COM is initialized
             IntPtr instancePtr = IntPtr.Zero;
@@ -201,12 +197,31 @@ namespace WinRT
 #endif
     static class ActivationFactory
     {
+#if NET
+        /// <summary>
+        /// This provides a hook into activation to hook/mock activation of WinRT types.
+        /// </summary>
+        public static Func<string, Guid, IntPtr> ActivationHandler { get; set; }
+#endif
+
         public static IObjectReference Get(string typeName)
         {
+#if NET
+            // Check hook first
+            if (ActivationHandler != null)
+            {
+                var factoryFromhandler = GetFromActivationHandler(typeName, IID.IID_IActivationFactory);
+                if (factoryFromhandler != null)
+                {
+                    return factoryFromhandler;
+                }
+            }
+#endif
+
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<IUnknownVftbl> factory;
-            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(typeName, InterfaceIIDs.IActivationFactory_IID);
+            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(typeName, IID.IID_IActivationFactory);
             if (factory != null)
             {
                 return factory;
@@ -240,6 +255,18 @@ namespace WinRT
         public static ObjectReference<I> Get<I>(string typeName, Guid iid)
 #endif
         {
+#if NET
+            // Check hook first
+            if (ActivationHandler != null)
+            {
+                var factoryFromhandler = GetFromActivationHandler(typeName, iid);
+                if (factoryFromhandler != null)
+                {
+                    return factoryFromhandler;
+                }
+            }
+#endif
+
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
 #if NET
@@ -287,5 +314,30 @@ namespace WinRT
                 }
             }
         }
+
+#if NET
+        private static IObjectReference GetFromActivationHandler(string typeName, Guid iid)
+        {
+            var activationHandler = ActivationHandler;
+            if (activationHandler != null)
+            {
+                IntPtr instancePtr = IntPtr.Zero;
+                try
+                {
+                    instancePtr = activationHandler(typeName, iid);
+                    if (instancePtr != IntPtr.Zero)
+                    {
+                        return ObjectReference<IUnknownVftbl>.Attach(ref instancePtr);
+                    }
+                }
+                finally
+                {
+                    MarshalInspectable<object>.DisposeAbi(instancePtr);
+                }
+            }
+
+            return null;
+        }
+#endif
     }
 }
