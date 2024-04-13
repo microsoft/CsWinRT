@@ -2671,7 +2671,7 @@ namespace Generator
             {
                 if (!SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, context.Compilation.Assembly))
                 {
-                    return GeneratorHelper.IsWinRTType(symbol, mapper, symbol => IsWinRTType(symbol, mapper));
+                    return GeneratorHelper.IsWinRTType(symbol, (symbol, mapper) => IsWinRTType(symbol, mapper), mapper);
                 }
 
                 if (symbol is INamedTypeSymbol namedType)

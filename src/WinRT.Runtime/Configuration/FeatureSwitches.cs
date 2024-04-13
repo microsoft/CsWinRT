@@ -145,6 +145,6 @@ internal static class FeatureSwitches
     public static bool IsWuxMode
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => GetConfigurationValue("CSWINRT_ENABLE_WUX_MODE", ref _isWuxMode);
+        get => GetConfigurationValue("CSWINRT_ENABLE_WUX_MODE", ref _isWuxMode, false);
     }
 }

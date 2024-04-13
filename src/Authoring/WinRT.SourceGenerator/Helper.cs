@@ -211,7 +211,7 @@ namespace Generator
 
         public static bool IsWinRTType(ISymbol type, TypeMapper mapper)
         {
-            return IsWinRTType(type, mapper, null);
+            return IsWinRTType(type, null, mapper);
         }
 
         public static bool IsWinRTType(ISymbol type, Func<ISymbol, TypeMapper, bool> isAuthoringWinRTType, TypeMapper mapper)
@@ -229,14 +229,14 @@ namespace Generator
             if (isProjectedType && type is INamedTypeSymbol namedType && namedType.IsGenericType && !namedType.IsDefinition)
             {
                 isProjectedType = namedType.TypeArguments.All(t => 
-                    IsWinRTType(t, mapper, isAuthoringWinRTType) || 
-                    (isAuthoringWinRTType != null && isAuthoringWinRTType(t)));
+                    IsWinRTType(t, isAuthoringWinRTType, mapper) || 
+                    (isAuthoringWinRTType != null && isAuthoringWinRTType(t, mapper)));
             }
 
             return isProjectedType;
         }
 
-        public static bool IsWinRTType(ISymbol type, ITypeSymbol winrtRuntimeTypeAttribute, bool isComponentProject, IAssemblySymbol currentAssembly)
+        public static bool IsWinRTType(ISymbol type, ITypeSymbol winrtRuntimeTypeAttribute, TypeMapper mapper, bool isComponentProject, IAssemblySymbol currentAssembly)
         {
             if (IsFundamentalType(type))
             {
@@ -255,7 +255,7 @@ namespace Generator
             bool isProjectedType = HasAttributeWithType(type, winrtRuntimeTypeAttribute);
             if (!isProjectedType & type.ContainingNamespace != null)
             {
-                isProjectedType = MappedCSharpTypes.ContainsKey(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+                isProjectedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
             }
 
             // Ensure all generic parameters are WinRT types.
@@ -264,7 +264,7 @@ namespace Generator
                 namedType.IsGenericType && 
                 !namedType.IsDefinition)
             {
-                isProjectedType = namedType.TypeArguments.All(t => IsWinRTType(t, winrtRuntimeTypeAttribute, isComponentProject, currentAssembly));
+                isProjectedType = namedType.TypeArguments.All(t => IsWinRTType(t, winrtRuntimeTypeAttribute, mapper, isComponentProject, currentAssembly));
             }
 
             return isProjectedType;
