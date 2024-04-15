@@ -118,11 +118,6 @@ namespace Generator
             {
                 return ToFullyQualifiedString(type);
             }
-            else if (GeneratorHelper.MappedCSharpTypes.ContainsKey(metadataName))
-            {
-                var mapping = GeneratorHelper.MappedCSharpTypes[metadataName].GetMapping();
-                return mapping.Item1 + "." + mapping.Item2;
-            }
             else if (type.SpecialType == SpecialType.System_Object)
             {
                 return "Object";
@@ -134,6 +129,11 @@ namespace Generator
             else if (type.SpecialType == SpecialType.System_SByte)
             {
                 return "Int8";
+            }
+            else if (GeneratorHelper.MappedCSharpTypes.ContainsKey(metadataName))
+            {
+                var mapping = GeneratorHelper.MappedCSharpTypes[metadataName].GetMapping();
+                return mapping.Item1 + "." + mapping.Item2;
             }
             else if (type.SpecialType != SpecialType.None)
             {
