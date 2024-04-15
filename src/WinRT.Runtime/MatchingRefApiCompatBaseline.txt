@@ -233,4 +233,5 @@ CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.Unconditional
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.TypeExtensions.FindHelperType(System.Type)' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.WinRTRuntimeClassNameAttribute' does not exist in the reference but it does exist in the implementation.
-Total Issues: 235
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterTypeRuntimeClassNameLookup(System.Func<System.Type, System.String>)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 236
