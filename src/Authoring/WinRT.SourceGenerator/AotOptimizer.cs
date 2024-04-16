@@ -89,34 +89,36 @@ namespace Generator
             }
         }
 
-        private static string GetRuntimeClassName(INamedTypeSymbol type)
+        private static string GetRuntimeClassName(INamedTypeSymbol type, Func<ISymbol, bool> isWinRTType)
         {
             if (type == null)
             {
                 return string.Empty;
             }
 
-            string metadataName = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
+            string metadataName = string.Join(".", type.ContainingNamespace?.ToDisplayString(), type.MetadataName);
             if (type.IsGenericType && !type.IsDefinition)
             {
                 StringBuilder builder = new();
 
-                builder.Append(GetRuntimeClassName(type.OriginalDefinition));
+                builder.Append(GetRuntimeClassName(type.OriginalDefinition, isWinRTType));
                 builder.Append("<");
 
+                bool first = true;
                 foreach (var genericArg in type.TypeArguments)
                 {
-                    builder.Append(GetRuntimeClassName(genericArg as INamedTypeSymbol));
+                    if (!first)
+                    {
+                        builder.Append(", ");
+                    }
+
+                    builder.Append(GetRuntimeClassName(genericArg as INamedTypeSymbol, isWinRTType));
+                    first = false;
                 }
 
                 builder.Append(">");
 
                 return builder.ToString();
-            }
-            else if (type.GetAttributes().
-                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0))
-            {
-                return ToFullyQualifiedString(type);
             }
             else if (type.SpecialType == SpecialType.System_Object)
             {
@@ -139,13 +141,16 @@ namespace Generator
             {
                 return type.Name;
             }
+            else if (isWinRTType(type))
+            {
+                return metadataName;
+            }
             else
             {
                 Debug.Assert(false, type.Name);
                 return string.Empty;
             }
         }
-
 
         internal static VtableAttribute GetVtableAttributeToAdd(
             ITypeSymbol symbol, 
@@ -208,6 +213,9 @@ namespace Generator
             {
                 interfacesToAddToVtable.Add(ToFullyQualifiedString(symbol));
                 AddGenericInterfaceInstantiation(symbol as INamedTypeSymbol);
+
+                // KeyValuePair is projected as an interface.
+                CheckForInterfaceToUseForRuntimeClassName(symbol as INamedTypeSymbol);
             }
 
             bool isDelegate = false;
@@ -261,7 +269,7 @@ namespace Generator
                 symbol is IArrayTypeSymbol,
                 isDelegate,
                 symbol.DeclaredAccessibility == Accessibility.Public,
-                GetRuntimeClassName(interfaceToUseForRuntimeClassName));
+                GetRuntimeClassName(interfaceToUseForRuntimeClassName, isWinRTType));
 
             void AddGenericInterfaceInstantiation(INamedTypeSymbol iface)
             {
