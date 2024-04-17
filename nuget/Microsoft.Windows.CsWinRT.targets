@@ -251,6 +251,7 @@ $(CsWinRTInternalProjection)
     <CsWinRTUseExceptionResourceKeys Condition="'$(CsWinRTUseExceptionResourceKeys)' == ''">false</CsWinRTUseExceptionResourceKeys>
     <CsWinRTEnableDefaultCustomTypeMappings Condition="'$(CsWinRTEnableDefaultCustomTypeMappings)' == ''">true</CsWinRTEnableDefaultCustomTypeMappings>
     <CsWinRTEnableICustomPropertyProviderSupport Condition="'$(CsWinRTEnableICustomPropertyProviderSupport)' == ''">true</CsWinRTEnableICustomPropertyProviderSupport>
+    <CsWinRTEnableIReferenceSupport Condition="'$(CsWinRTEnableIReferenceSupport)' == ''">true</CsWinRTEnableIReferenceSupport>
   </PropertyGroup>
 
   <!--
@@ -277,6 +278,11 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT"
                                     Value="$(CsWinRTEnableICustomPropertyProviderSupport)"
+                                    Trim="true" />
+    
+    <!-- CSWINRT_ENABLE_IREFERENCE_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IREFERENCE_SUPPORT"
+                                    Value="$(CsWinRTEnableIReferenceSupport)"
                                     Trim="true" />
   </ItemGroup>
 
