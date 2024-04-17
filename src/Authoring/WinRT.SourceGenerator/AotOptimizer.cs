@@ -174,8 +174,10 @@ namespace Generator
             }
 
             // If the attribute is already placed on the type, don't generate a new one as we will
-            // use the specified one.
-            var checkForRuntimeClasName = !GeneratorHelper.HasWinRTRuntimeClassNameAttribute(symbol);
+            // use the specified one.  Also for authoring scenarios where we call this for authored WinRT types,
+            // don't generate the runtimeclass name for them as we will rely on the full name for them as we do today.
+            var checkForRuntimeClasName = !GeneratorHelper.HasWinRTRuntimeClassNameAttribute(symbol) && 
+                (!isAuthoring || (isAuthoring && !isWinRTType(symbol)));
             INamedTypeSymbol interfaceToUseForRuntimeClassName = null;
             foreach (var iface in symbol.AllInterfaces)
             {
