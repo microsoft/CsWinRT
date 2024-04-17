@@ -16,7 +16,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Input;
 using Windows.Foundation.Collections;
-using WinRT.Interop;
 
 namespace WinRT
 {
@@ -628,43 +627,6 @@ namespace WinRT
                 throw new ArgumentException($"The provided type '{runtimeClass.FullName}' is not a WinRT projected runtime class.", nameof(runtimeClass));
             }
             return defaultInterface;
-        }
-
-        internal static bool TryGetMarshalerTypeForProjectedRuntimeClass<T>(IObjectReference objectReference, out Type type)
-        {
-            Type projectedType = typeof(T);
-            if (projectedType == typeof(object))
-            {
-                if (objectReference.TryAs<IInspectable.Vftbl>(IID.IID_IInspectable, out var inspectablePtr) == 0)
-                {
-                    rwlock.EnterReadLock();
-                    try
-                    {
-                        IInspectable inspectable = inspectablePtr;
-                        string runtimeClassName = inspectable.GetRuntimeClassName(true);
-                        if (runtimeClassName is object)
-                        {
-                            if (ProjectedRuntimeClassNames.Contains(runtimeClassName))
-                            {
-                                type = CustomTypeToHelperTypeMappings[CustomAbiTypeNameToTypeMappings[runtimeClassName]];
-                                return true;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        inspectablePtr.Dispose();
-                        rwlock.ExitReadLock();
-                    }
-                }
-            }
-            else
-            {
-                type = FindCustomHelperTypeMapping(projectedType, true);
-                return type != null;
-            }
-            type = null;
-            return false;
         }
 
 #if NET
