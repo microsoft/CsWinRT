@@ -141,8 +141,7 @@ namespace WinRT
         /// the full type closure of the application.
         /// </remarks>
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
-            Justification = "Any types which are trimmed are not used by user code and there is fallback logic to handle that.")]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Any types which are trimmed are not used by user code and there is fallback logic to handle that.")]
 #endif
         private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
         {
@@ -196,6 +195,7 @@ namespace WinRT
             return null;
 
 #if NET
+            [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "The 'MakeGenericType' call is guarded by explicit checks in our code.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Calls to MakeGenericType are done with reference types.")]
 #endif
             static Type ResolveGenericType(Type resolvedType, Type[] genericTypes, string runtimeClassName)
