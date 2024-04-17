@@ -616,6 +616,11 @@ namespace WinRT
 
         private static ComInterfaceEntry ProvideIReference(Type type)
         {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReference<T>' is not enabled.");
+            }
+
             if (type == typeof(int))
             {
                 return new ComInterfaceEntry
@@ -888,6 +893,11 @@ namespace WinRT
 
         private static ComInterfaceEntry ProvideIReferenceArray(Type arrayType)
         {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReferenceArray<T>' is not enabled.");
+            }
+
             Type type = arrayType.GetElementType();
             if (type == typeof(int))
             {

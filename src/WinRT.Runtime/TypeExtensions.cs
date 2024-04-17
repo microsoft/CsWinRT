@@ -248,6 +248,11 @@ namespace WinRT
 
         internal static bool ShouldProvideIReference(this Type type)
         {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                return false;
+            }
+
             return type.IsPrimitive ||
                 type == typeof(string) ||
                 type == typeof(Guid) ||
