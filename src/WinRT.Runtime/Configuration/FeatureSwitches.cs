@@ -108,7 +108,7 @@ internal static class FeatureSwitches
     }
 
     /// <summary>
-    /// Gets a value indicating whether or not <c>IReference&lt;T&gt;</c> and <c>IReferenceArray&lt;T&gt;</c> CCW implementations should be supported (defaults to <see langword="true"/>).
+    /// Gets a value indicating whether or not <c>IReference&lt;T&gt;</c>, <c>IReferenceArray&lt;T&gt;</c> and <c>IPropertyValue</c> CCW implementations should be supported (defaults to <see langword="true"/>).
     /// </summary>
     public static bool EnableIReferenceSupport
     {
