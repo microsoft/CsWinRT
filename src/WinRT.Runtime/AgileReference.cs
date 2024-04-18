@@ -67,7 +67,7 @@ namespace WinRT
                     &iid,
                     thisPtr,
                     &agileReference));
-                _agileReference = ObjectReference<IUnknownVftbl>.Attach(ref agileReference);
+                _agileReference = ObjectReference<IUnknownVftbl>.Attach(ref agileReference, IID.IID_IUnknown);
             }
             catch (TypeLoadException)
             {

@@ -199,13 +199,13 @@ namespace WinRT
             }
 
             // Normal path for IObjectReference or any IObjectReference<T>
-            return ObjectReference<T>.TryAs(this, iid, out objRef);            
+            return ObjectReference<T>.TryAs(this, iid, out objRef);
         }
 
         public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
             AddRef(true);
-            var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr);
+            var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr, IID.IID_IUnknown);
             objRef.IsAggregated = IsAggregated;
             objRef.PreventReleaseOnDispose = IsAggregated;
             objRef.ReferenceTrackerPtr = ReferenceTrackerPtr;
@@ -497,6 +497,9 @@ namespace WinRT
         {
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public static ObjectReference<T> Attach(ref IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
@@ -546,6 +549,9 @@ namespace WinRT
             }
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
         {
             if (thisPtr == IntPtr.Zero)
@@ -595,6 +601,9 @@ namespace WinRT
             }
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public static ObjectReference<T> FromAbi(IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
@@ -662,7 +671,7 @@ namespace WinRT
 
                 sourceRef.AddRefFromTrackerSource();
 
-                objRef = ObjectReference<T>.Attach(ref thatPtr);
+                objRef = Attach(ref thatPtr, iid);
                 objRef.IsAggregated = sourceRef.IsAggregated;
                 objRef.PreventReleaseOnDispose = sourceRef.IsAggregated;
                 objRef.ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr;
@@ -705,6 +714,9 @@ namespace WinRT
 
         private readonly Guid _iid;
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken)
             : base(thisPtr)
         {
@@ -712,12 +724,18 @@ namespace WinRT
             _contextToken = contextToken;
         }
 
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "This constructor is setting the '_iid' field directly.")]
+#endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : this(thisPtr, contextCallbackPtr, contextToken)
         {
             _iid = iid;
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken)
             : base(thisPtr, vftblT)
         {
@@ -725,6 +743,9 @@ namespace WinRT
             _contextToken = contextToken;
         }
 
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "This constructor is setting the '_iid' field directly.")]
+#endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : this(thisPtr, vftblT, contextCallbackPtr, contextToken)
         {
@@ -778,6 +799,9 @@ namespace WinRT
 
             return Unsafe.As<ObjectReference<T>>(objectReference);
 
+#if NET
+            [UnconditionalSuppressMessage("Trimming", "IL2087", Justification = "The '_iid' field is only empty when using annotated APIs not trim-safe.")]
+#endif
             IObjectReference CreateForCurrentContext(IntPtr _)
             {
                 var agileReference = AgileReference;
@@ -822,7 +846,7 @@ namespace WinRT
         public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
             AddRef(true);
-            var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken())
+            var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken(), IID.IID_IUnknown)
             {
                 IsAggregated = IsAggregated,
                 PreventReleaseOnDispose = IsAggregated,

@@ -122,7 +122,7 @@ namespace WinRT
         }
 
         public static IInspectable FromAbi(IntPtr thisPtr) =>
-            new IInspectable(ObjectReference<Vftbl>.FromAbi(thisPtr));
+            new IInspectable(ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_IInspectable));
 
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
