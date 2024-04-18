@@ -40,6 +40,11 @@ namespace WinRT
 
         public static string GetSignature(
 #if NET
+            // This '[DynamicallyAccessedMembers]' annotation is here just for backwards-compatibility with old projections. Those are
+            // not trim-safe, but we didn't want to break existing consumers that had code that happened to still work in this case.
+            // The only case where 'GetSignature' actually uses reflection is in that scenario, but when using updated projections, the
+            // generated attributes are always used instead, which are trim-safe. Therefore, it's safe to call this method suppressing
+            // the trim warning for the 'type' parameter if legacy projections are not a concern, or for a "best effort" support there.
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type type)
@@ -160,10 +165,28 @@ namespace WinRT
                 return "delegate({" + GetGUID(type) + "})";
             }
 
-            if (type.IsClass && Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
+#if NET
+            [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "'GetSignature' will only actually use reflection when using old projections.")]
+#endif
+            static bool TryGetSignatureFromDefaultInterfaceTypeForRuntimeClassType(Type type, out string signature)
             {
-                return "rc(" + type.FullName + ";" + GetSignature(iface) + ")";
+                if (type.IsClass && Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
+                {
+                    signature = "rc(" + type.FullName + ";" + GetSignature(iface) + ")";
+
+                    return true;
+                }
+
+                signature = null;
+
+                return false;
             }
+
+            if (TryGetSignatureFromDefaultInterfaceTypeForRuntimeClassType(type, out string signature))
+            {
+                return signature;
+            }
+            
 
             return "{" + type.GUID.ToString() + "}";
         }
