@@ -72,7 +72,7 @@ namespace ABI.WinRT.Interop
                 ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr);
+                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid);
             }
             finally
             {
@@ -149,7 +149,7 @@ namespace ABI.WinRT.Interop
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int> GetInterfaceFromGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)_GetInterfaceFromGlobal;
         }
 
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IGlobalInterfaceTable);
 
         public static implicit operator IGlobalInterfaceTable(IObjectReference obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
         public static implicit operator IGlobalInterfaceTable(ObjectReference<Vftbl> obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;

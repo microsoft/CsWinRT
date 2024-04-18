@@ -113,9 +113,12 @@ namespace WinRT
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
         {
-            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject);
+            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject, IID.IID_IUnknown);
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject)
         {
             if (externalComObject == IntPtr.Zero)
@@ -1157,7 +1160,7 @@ namespace WinRT
         internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
         {
             IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
-            return ObjectReference<T>.Attach(ref ccw);
+            return ObjectReference<T>.Attach(ref ccw, iid);
         }
 
         internal static ObjectReferenceValue CreateCCWForObjectForMarshaling(object obj, Guid iid)

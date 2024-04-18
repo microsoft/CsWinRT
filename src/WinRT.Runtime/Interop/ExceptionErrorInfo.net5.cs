@@ -242,7 +242,7 @@ namespace ABI.WinRT.Interop
 
                 GC.KeepAlive(obj);
 
-                return ObjectReference<IUnknownVftbl>.Attach(ref __return_value__);
+                return ObjectReference<IUnknownVftbl>.Attach(ref __return_value__, IID.IID_IUnknown);
             }
             finally
             {
