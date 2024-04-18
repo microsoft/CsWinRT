@@ -90,7 +90,7 @@ namespace ABI.System.Collections.Specialized
             try
             {
                 _value = CreateMarshaler2(value);
-                return ObjectReference<IUnknownVftbl>.FromAbi(_value.GetAbi());
+                return ObjectReference<IUnknownVftbl>.FromAbi(_value.GetAbi(), IID.IID_IUnknown);
             }
             finally
             {

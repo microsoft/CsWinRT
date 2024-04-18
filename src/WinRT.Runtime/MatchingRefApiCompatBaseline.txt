@@ -237,4 +237,8 @@ MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterTypeRunt
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.FindCustomHelperTypeMapping(System.Type, System.Boolean)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.Object>)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.Object>)' in the implementation but not the reference.
-Total Issues: 239
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ObjectReference<T>.Attach(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ComWrappersSupport.GetObjectReferenceForInterface<T>(System.IntPtr)' in the implementation but not the reference.
+Total Issues: 242
