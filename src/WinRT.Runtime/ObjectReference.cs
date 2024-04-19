@@ -824,6 +824,15 @@ namespace WinRT
 
                 try
                 {
+#if NET
+                    // On NAOT, we can always assume the IID will not be empty, as the only way to reach that path is by
+                    // going through a trim-unsafe constructor, which is explicitly not supported in this configuration.
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        return agileReference.Get<T>(_iid);
+                    }
+#endif
+
                     if (_iid == Guid.Empty)
                     {
                         return agileReference.Get<T>(GuidGenerator.GetIID(typeof(T)));
