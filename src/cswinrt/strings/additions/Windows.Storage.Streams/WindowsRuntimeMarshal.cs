@@ -23,7 +23,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 #endif
     static partial class WindowsRuntimeMarshal
     {
-        public static bool TryGetDataUnsafe(IBuffer buffer, out IntPtr dataPtr)
+        public static unsafe bool TryGetDataUnsafe(IBuffer buffer, out IntPtr dataPtr)
         {
             if (buffer == null)
             {
@@ -32,12 +32,18 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
 
             if (ComWrappersSupport.TryUnwrapObject(buffer, out var unwrapped) &&
-                unwrapped.TryAs<IUnknownVftbl>(global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.IID, out var objRef) >= 0)
+                unwrapped.TryAs(global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.IID, out IntPtr ThisPtr) >= 0)
             {
-                using (objRef)
+                try
                 {
-                    dataPtr = global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.get_Buffer(objRef);
+                    IntPtr __retval = default;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[3](ThisPtr, &__retval));
+                    dataPtr = __retval;
                     return true;
+                }
+                finally
+                {
+                    Marshal.Release(ThisPtr);
                 }
             }
 

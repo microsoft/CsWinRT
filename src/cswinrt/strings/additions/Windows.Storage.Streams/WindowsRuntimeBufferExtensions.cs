@@ -647,9 +647,13 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Debug.Assert(0 <= offset);
             Debug.Assert(offset < buffer.Capacity);
 
-            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(buffer, out IntPtr thisBuff))
+            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(buffer, out IntPtr buffPtr))
             {
-                IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
+                throw new InvalidCastException();
+            }
+
+            unsafe
+            {
                 return new Span<byte>((byte*)buffPtr + offset, (int)(buffer.Capacity - offset));
             }
         }
