@@ -722,6 +722,11 @@ namespace WinRT
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : this(thisPtr, contextCallbackPtr, contextToken)
         {
+            if (iid == default)
+            {
+                ObjectReferenceWithContextHelper.ThrowArgumentExceptionForEmptyIid();
+            }
+
             _iid = iid;
         }
 
@@ -741,6 +746,11 @@ namespace WinRT
         internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : this(thisPtr, vftblT, contextCallbackPtr, contextToken)
         {
+            if (iid == default)
+            {
+                ObjectReferenceWithContextHelper.ThrowArgumentExceptionForEmptyIid();
+            }
+
             _iid = iid;
         }
 
@@ -871,6 +881,14 @@ namespace WinRT
             }
 
             return hr;
+        }
+    }
+
+    internal static class ObjectReferenceWithContextHelper
+    {
+        public static void ThrowArgumentExceptionForEmptyIid()
+        {
+            throw new ArgumentException("The input argument 'iid' cannot be empty and must be set to a valid IID.");
         }
     }
 
