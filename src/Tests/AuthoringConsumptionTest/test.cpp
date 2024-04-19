@@ -677,3 +677,22 @@ TEST(AuthoringTest, MixedWinRTClassicCOM)
     EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface2.get()))[3])(internalInterface2.get(), &number), S_OK);
     EXPECT_EQ(number, 123);
 }
+
+TEST(AuthoringTest, GetRuntimeClassName)
+{
+    CustomDictionary2 dictionary;
+    EXPECT_EQ(winrt::get_class_name(dictionary), L"AuthoringTest.CustomDictionary2");
+
+    DisposableClass disposed;
+    EXPECT_EQ(winrt::get_class_name(disposed), L"AuthoringTest.DisposableClass");
+
+    TestMixedWinRTCOMWrapper wrapper;
+    EXPECT_EQ(winrt::get_class_name(wrapper), L"AuthoringTest.TestMixedWinRTCOMWrapper");
+
+    TestClass testClass;
+    testClass.SetNonProjectedDisposableObject();
+    EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"Windows.Foundation.IClosable");
+
+    testClass.SetProjectedDisposableObject();
+    EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"AuthoringTest.DisposableClass");
+}

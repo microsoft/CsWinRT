@@ -314,6 +314,17 @@ namespace Generator
                 Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WinRTExposedTypeAttribute") == 0);
         }
 
+        public static bool HasWinRTRuntimeClassNameAttribute(ISymbol type, Compilation compilation)
+        {
+            var winrtRuntimeClassNameAttribute = compilation.GetTypeByMetadataName("WinRT.WinRTRuntimeClassNameAttribute");
+            if (winrtRuntimeClassNameAttribute is null)
+            {
+                return false;
+            }
+
+            return HasAttributeWithType(type, winrtRuntimeClassNameAttribute);
+        }
+
         public static bool IsWinRTType(MemberDeclarationSyntax node)
         {
             bool isProjectedType = node.AttributeLists.SelectMany(list => list.Attributes).
@@ -759,6 +770,7 @@ namespace Generator
 
             throw new ArgumentException();
         }
+
         public static string EscapeTypeNameForIdentifier(string typeName)
         {
             return Regex.Replace(typeName, """[(\ |:<>,\.)]""", "_");

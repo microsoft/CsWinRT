@@ -2703,7 +2703,7 @@ namespace Generator
                     symbol.TypeKind == TypeKind.Class && 
                     !symbol.IsStatic)
                 {
-                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, context.Compilation.Assembly, true, typeDeclaration.DefaultInterface));
+                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, context.Compilation, true, typeDeclaration.DefaultInterface));
                     WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, IsWinRTType, vtableAttributesToAddOnLookupTable);
                 }
             }

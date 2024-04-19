@@ -428,7 +428,7 @@ namespace ABI.System.Collections
                 }
                 else
                 {
-                    [SuppressMessage("Trimming", "IL2070", Justification =
+                    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification =
                         """
                         'SomeType.GetInterfaces().Any(t => t.GetGenericTypeDefinition() == typeof(IEnumerable<>)' is safe,
                         provided you obtained someType from something like an analyzable 'Type.GetType' or 'object.GetType'

@@ -340,6 +340,45 @@ namespace WinRT
             return null;
         }
 
+        private static readonly ReaderWriterLockSlim RuntimeClassNameForNonWinRTTypeLookupRcwLock = new();
+        private static readonly List<Func<Type, string>> RuntimeClassNameForNonWinRTTypeLookup = new();
+
+        public static void RegisterTypeRuntimeClassNameLookup(Func<Type, string> runtimeClassNameLookup)
+        {
+            RuntimeClassNameForNonWinRTTypeLookupRcwLock.EnterWriteLock();
+            try
+            {
+                RuntimeClassNameForNonWinRTTypeLookup.Add(runtimeClassNameLookup);
+            }
+            finally
+            {
+                RuntimeClassNameForNonWinRTTypeLookupRcwLock.ExitWriteLock();
+            }
+        }
+
+        internal static string GetRuntimeClassNameForNonWinRTTypeFromLookupTable(Type type)
+        {
+            RuntimeClassNameForNonWinRTTypeLookupRcwLock.EnterReadLock();
+
+            try
+            {
+                foreach (var func in RuntimeClassNameForNonWinRTTypeLookup)
+                {
+                    var runtimeClasName = func(type);
+                    if (!string.IsNullOrEmpty(runtimeClasName))
+                    {
+                        return runtimeClasName;
+                    }
+                }
+            }
+            finally
+            {
+                RuntimeClassNameForNonWinRTTypeLookupRcwLock.ExitReadLock();
+            }
+
+            return null;
+        }
+
         private readonly static ConcurrentDictionary<Type, ComInterfaceEntry[]> ComInterfaceEntriesForType = new();
         public static void RegisterComInterfaceEntries(Type implementationType, ComInterfaceEntry[] comInterfaceEntries) => ComInterfaceEntriesForType.TryAdd(implementationType, comInterfaceEntries);
     }

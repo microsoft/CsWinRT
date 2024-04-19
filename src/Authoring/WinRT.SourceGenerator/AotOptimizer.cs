@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using WinRT.SourceGenerator;
@@ -55,7 +56,7 @@ namespace Generator
         private static VtableAttribute GetVtableAttributeToAdd(GeneratorSyntaxContext context)
         {
             var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node as ClassDeclarationSyntax);
-            return GetVtableAttributeToAdd(symbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false);
+            return GetVtableAttributeToAdd(symbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
         }
 
         private static string ToFullyQualifiedString(ISymbol symbol)
@@ -88,10 +89,73 @@ namespace Generator
             }
         }
 
+        private static string GetRuntimeClassName(INamedTypeSymbol type, Func<ISymbol, bool> isWinRTType)
+        {
+            if (type == null)
+            {
+                return string.Empty;
+            }
+
+            string metadataName = string.Join(".", type.ContainingNamespace?.ToDisplayString(), type.MetadataName);
+            if (type.IsGenericType && !type.IsDefinition)
+            {
+                StringBuilder builder = new();
+
+                builder.Append(GetRuntimeClassName(type.OriginalDefinition, isWinRTType));
+                builder.Append("<");
+
+                bool first = true;
+                foreach (var genericArg in type.TypeArguments)
+                {
+                    if (!first)
+                    {
+                        builder.Append(", ");
+                    }
+
+                    builder.Append(GetRuntimeClassName(genericArg as INamedTypeSymbol, isWinRTType));
+                    first = false;
+                }
+
+                builder.Append(">");
+
+                return builder.ToString();
+            }
+            else if (type.SpecialType == SpecialType.System_Object)
+            {
+                return "Object";
+            }
+            else if (type.SpecialType == SpecialType.System_Byte)
+            {
+                return "UInt8";
+            }
+            else if (type.SpecialType == SpecialType.System_SByte)
+            {
+                return "Int8";
+            }
+            else if (GeneratorHelper.MappedCSharpTypes.ContainsKey(metadataName))
+            {
+                var mapping = GeneratorHelper.MappedCSharpTypes[metadataName].GetMapping();
+                return mapping.Item1 + "." + mapping.Item2;
+            }
+            else if (type.SpecialType != SpecialType.None)
+            {
+                return type.Name;
+            }
+            else if (isWinRTType(type))
+            {
+                return metadataName;
+            }
+            else
+            {
+                Debug.Assert(false, type.Name);
+                return string.Empty;
+            }
+        }
+
         internal static VtableAttribute GetVtableAttributeToAdd(
             ITypeSymbol symbol, 
             Func<ISymbol, bool> isWinRTType, 
-            IAssemblySymbol assemblySymbol, 
+            Compilation compilation,
             bool isAuthoring, 
             string authoringDefaultInterface = "")
         {
@@ -108,12 +172,19 @@ namespace Generator
                 interfacesToAddToVtable.Add(authoringDefaultInterface);
             }
 
+            // If the attribute is already placed on the type, don't generate a new one as we will
+            // use the specified one.  Also for authoring scenarios where we call this for authored WinRT types,
+            // don't generate the runtimeclass name for them as we will rely on the full name for them as we do today.
+            var checkForRuntimeClasName = !GeneratorHelper.HasWinRTRuntimeClassNameAttribute(symbol, compilation) && 
+                (!isAuthoring || (isAuthoring && !isWinRTType(symbol)));
+            INamedTypeSymbol interfaceToUseForRuntimeClassName = null;
             foreach (var iface in symbol.AllInterfaces)
             {
                 if (isWinRTType(iface))
                 {
                     interfacesToAddToVtable.Add(ToFullyQualifiedString(iface));
                     AddGenericInterfaceInstantiation(iface);
+                    CheckForInterfaceToUseForRuntimeClassName(iface);
                 }
 
                 if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, null, isWinRTType, out var compatibleIfaces))
@@ -126,13 +197,14 @@ namespace Generator
                         // If this scenarios matters where native callers do indeed QI for these exclusive
                         // covariant interfaces, we can in the future project them as public, but for now
                         // leaving as is.
-                        if (GeneratorHelper.IsInternalInterfaceFromReferences(compatibleIface, assemblySymbol))
+                        if (GeneratorHelper.IsInternalInterfaceFromReferences(compatibleIface, compilation.Assembly))
                         {
                             continue;
                         }
 
                         interfacesToAddToVtable.Add(ToFullyQualifiedString(compatibleIface));
                         AddGenericInterfaceInstantiation(compatibleIface);
+                        CheckForInterfaceToUseForRuntimeClassName(compatibleIface);
                     }
                 }
             }
@@ -142,6 +214,9 @@ namespace Generator
             {
                 interfacesToAddToVtable.Add(ToFullyQualifiedString(symbol));
                 AddGenericInterfaceInstantiation(symbol as INamedTypeSymbol);
+
+                // KeyValuePair is projected as an interface.
+                CheckForInterfaceToUseForRuntimeClassName(symbol as INamedTypeSymbol);
             }
 
             bool isDelegate = false;
@@ -194,7 +269,8 @@ namespace Generator
                 genericInterfacesToAddToVtable.ToImmutableArray(),
                 symbol is IArrayTypeSymbol,
                 isDelegate,
-                symbol.DeclaredAccessibility == Accessibility.Public);
+                symbol.DeclaredAccessibility == Accessibility.Public,
+                GetRuntimeClassName(interfaceToUseForRuntimeClassName, isWinRTType));
 
             void AddGenericInterfaceInstantiation(INamedTypeSymbol iface)
             {
@@ -226,8 +302,24 @@ namespace Generator
 
             bool IsExternalInternalInterface(INamedTypeSymbol iface)
             {
-                return (iface.DeclaredAccessibility == Accessibility.Internal && !SymbolEqualityComparer.Default.Equals(iface.ContainingAssembly, assemblySymbol)) || 
+                return (iface.DeclaredAccessibility == Accessibility.Internal && !SymbolEqualityComparer.Default.Equals(iface.ContainingAssembly, compilation.Assembly)) || 
                     (iface.IsGenericType && iface.TypeArguments.Any(typeArgument => IsExternalInternalInterface(typeArgument as INamedTypeSymbol)));
+            }
+
+            // Determines the interface to use to represent the type when GetRuntimeClassName is called.
+            // Given these are non WinRT types implementing WinRT interfaces, we find the most derived
+            // interface to represent it so that it applies for most scenarios.
+            void CheckForInterfaceToUseForRuntimeClassName(INamedTypeSymbol iface)
+            {
+                if (!checkForRuntimeClasName)
+                {
+                    return;
+                }
+
+                if (interfaceToUseForRuntimeClassName is null || compilation.HasImplicitConversion(iface, interfaceToUseForRuntimeClassName))
+                {
+                    interfaceToUseForRuntimeClassName = iface;
+                }
             }
         }
 
@@ -408,6 +500,11 @@ namespace Generator
                     // Simple case when the type is not nested
                     if (vtableAttribute.ClassHierarchy.IsEmpty)
                     {
+                        if (!string.IsNullOrEmpty(vtableAttribute.RuntimeClassName))
+                        {
+                            source.AppendLine($$"""[global::WinRT.WinRTRuntimeClassName("{{vtableAttribute.RuntimeClassName}}")]""");
+                        }
+
                         source.AppendLine($$"""
                             [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
                             partial class {{vtableAttribute.ClassName}}
@@ -429,6 +526,11 @@ namespace Generator
                         }
 
                         // Define the inner-most item with the attribute
+                        if (!string.IsNullOrEmpty(vtableAttribute.RuntimeClassName))
+                        {
+                            source.AppendLine($$"""[global::WinRT.WinRTRuntimeClassName("{{vtableAttribute.RuntimeClassName}}")]""");
+                        }
+
                         source.AppendLine($$"""
                             [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
                             partial {{classHierarchy[0].GetTypeKeyword()}} {{classHierarchy[0].QualifiedName}}
@@ -588,7 +690,7 @@ namespace Generator
                             {
                                 if (methodSymbol.Parameters[paramsIdx].Type is not IArrayTypeSymbol)
                                 {
-                                    var vtableAtribute = GetVtableAttributeToAdd(arrayType, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false);
+                                    var vtableAtribute = GetVtableAttributeToAdd(arrayType, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
                                     if (vtableAtribute != default)
                                     {
                                         vtableAttributes.Add(vtableAtribute);
@@ -614,7 +716,7 @@ namespace Generator
                                     methodSymbol.Parameters[paramsIdx].Type.SpecialType == SpecialType.System_Object)
                                 {
                                     var argumentClassNamedTypeSymbol = argumentClassTypeSymbol as INamedTypeSymbol;
-                                    vtableAttributes.Add(GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false));
+                                    vtableAttributes.Add(GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false));
                                 }
 
                                 // This handles the case where the source generator wasn't able to run
@@ -633,7 +735,7 @@ namespace Generator
                                         // we let the WinRTExposedType attribute generator handle it.
                                         !SymbolEqualityComparer.Default.Equals(argumentClassTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly))))
                                 {
-                                    var vtableAtribute = GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false);
+                                    var vtableAtribute = GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
                                     if (vtableAtribute != default)
                                     {
                                         vtableAttributes.Add(vtableAtribute);
@@ -671,7 +773,7 @@ namespace Generator
                     {
                         if (propertySymbol.Type is not IArrayTypeSymbol)
                         {
-                            var vtableAtribute = GetVtableAttributeToAdd(arrayType, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false);
+                            var vtableAtribute = GetVtableAttributeToAdd(arrayType, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
                             if (vtableAtribute != default)
                             {
                                 vtableAttributes.Add(vtableAtribute);
@@ -697,7 +799,7 @@ namespace Generator
                             propertySymbol.Type.SpecialType == SpecialType.System_Object)
                         {
                             var argumentClassNamedTypeSymbol = argumentClassTypeSymbol as INamedTypeSymbol;
-                            vtableAttributes.Add(GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false));
+                            vtableAttributes.Add(GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false));
                         }
 
                         if (argumentClassTypeSymbol.TypeKind == TypeKind.Class &&
@@ -708,7 +810,7 @@ namespace Generator
                                 // we let the WinRTExposedType attribute generator handle it.
                                 !SymbolEqualityComparer.Default.Equals(argumentClassTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly))))
                         {
-                            var vtableAtribute = GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation.Assembly, false);
+                            var vtableAtribute = GetVtableAttributeToAdd(argumentClassTypeSymbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
                             if (vtableAtribute != default)
                             {
                                 vtableAttributes.Add(vtableAtribute);
@@ -739,7 +841,7 @@ namespace Generator
                     {
                         var enumeratorAdapterType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1").
                             Construct(compatibleIface.TypeArguments[0]);
-                        vtableAttributes.Add(GetVtableAttributeToAdd(enumeratorAdapterType, isWinRTType, compilation.Assembly, false));
+                        vtableAttributes.Add(GetVtableAttributeToAdd(enumeratorAdapterType, isWinRTType, compilation, false));
                     }
                 }
             }
@@ -769,21 +871,21 @@ namespace Generator
                 {
                     var readOnlyDictionaryType = compilation.GetTypeByMetadataName("System.Collections.ObjectModel.ReadOnlyDictionary`2").
                         Construct([.. iface.TypeArguments]);
-                    vtableAttributes.Add(GetVtableAttributeToAdd(readOnlyDictionaryType, isWinRTType, compilation.Assembly, false));
+                    vtableAttributes.Add(GetVtableAttributeToAdd(readOnlyDictionaryType, isWinRTType, compilation, false));
 
                     var keyValuePairType = compilation.GetTypeByMetadataName("System.Collections.Generic.KeyValuePair`2").
                         Construct([.. iface.TypeArguments]);
-                    vtableAttributes.Add(GetVtableAttributeToAdd(keyValuePairType, isWinRTType, compilation.Assembly, false));
+                    vtableAttributes.Add(GetVtableAttributeToAdd(keyValuePairType, isWinRTType, compilation, false));
 
                     var constantSplittableMapType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ConstantSplittableMap`2").
                         Construct([.. iface.TypeArguments]);
-                    vtableAttributes.Add(GetVtableAttributeToAdd(constantSplittableMapType, isWinRTType, compilation.Assembly, false));
+                    vtableAttributes.Add(GetVtableAttributeToAdd(constantSplittableMapType, isWinRTType, compilation, false));
                 }
                 else if (iface.MetadataName == "IList`1")
                 {
                     var readOnlyCollectionType = compilation.GetTypeByMetadataName("System.Collections.ObjectModel.ReadOnlyCollection`1").
                         Construct([.. iface.TypeArguments]);
-                    vtableAttributes.Add(GetVtableAttributeToAdd(readOnlyCollectionType, isWinRTType, compilation.Assembly, false));
+                    vtableAttributes.Add(GetVtableAttributeToAdd(readOnlyCollectionType, isWinRTType, compilation, false));
                 }
             }
         }
@@ -803,6 +905,14 @@ namespace Generator
             StringBuilder source = new();
             string classPrefix = isComponentGenerator ? "Authoring" : "";
 
+            // The generated lookup table is based on lookup by string rather than type to avoid 2 different issues:
+            //
+            //     1) We can run into nested private types in generics which we can't reference from here but still need to be able to create the vtable for.
+            //     2) While looking for a type in the lookup table, you can trigger module initializers for other modules
+            //        referenced and that can run into issues because they can have their own lookup tables that
+            //        get registered in their module initializer, but will fail to due to the reader writer lock we have around it
+            //        (i.e. we are traversing the lookup tables here while one is being registered).
+            var hasRuntimeClasNameEntries = value.vtableAttributes.Any(v => !string.IsNullOrEmpty(v.RuntimeClassName));
             if (value.vtableAttributes.Any())
             {
                 source.AppendLine($$"""
@@ -820,6 +930,7 @@ namespace Generator
                                             internal static void InitializeGlobalVtableLookup()
                                             {
                                                 ComWrappersSupport.RegisterTypeComInterfaceEntriesLookup(LookupVtableEntries);
+                                                {{(hasRuntimeClasNameEntries ? "ComWrappersSupport.RegisterTypeRuntimeClassNameLookup(LookupRuntimeClassName);" : "")}}
                                             }
 
                                             private static ComWrappers.ComInterfaceEntry[] LookupVtableEntries(Type type)
@@ -843,6 +954,33 @@ namespace Generator
                 source.AppendLine($$"""
                                                 return default;
                                             }
+                                    """);
+
+                if (hasRuntimeClasNameEntries)
+                {
+                    source.AppendLine($$"""
+                                private static string LookupRuntimeClassName(Type type)
+                                {
+                                    string typeName = type.ToString();
+                                """);
+
+                    foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet().Where(v => !string.IsNullOrEmpty(v.RuntimeClassName)))
+                    {
+                        source.AppendLine($$"""
+                                if (typeName == "{{vtableAttribute.VtableLookupClassName}}")
+                                {
+                                    return "{{vtableAttribute.RuntimeClassName}}";
+                                }
+                                """);
+                    }
+
+                    source.AppendLine($$"""
+                                                return default;
+                                            }
+                                    """);
+                }
+
+                source.AppendLine($$"""
                                         }
                                     }
                                     """);
@@ -871,7 +1009,8 @@ namespace Generator
         EquatableArray<GenericInterface> GenericInterfaces,
         bool IsArray,
         bool IsDelegate,
-        bool IsPublic);
+        bool IsPublic,
+        string RuntimeClassName = default);
 
     /// <summary>
     /// A model describing a type info in a type hierarchy.

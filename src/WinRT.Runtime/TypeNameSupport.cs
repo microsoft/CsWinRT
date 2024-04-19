@@ -403,6 +403,29 @@ namespace WinRT
             Debug.Assert((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0);
             Debug.Assert(!type.IsGenericTypeDefinition);
 
+#if NET
+            var runtimeClassNameAttribute = type.GetCustomAttribute<WinRTRuntimeClassNameAttribute>();
+            if (runtimeClassNameAttribute is not null)
+            {
+                builder.Append(runtimeClassNameAttribute.RuntimeClassName);
+                return true;
+            }
+
+            var runtimeClassNameFromLookupTable = ComWrappersSupport.GetRuntimeClassNameForNonWinRTTypeFromLookupTable(type);
+            if (!string.IsNullOrEmpty(runtimeClassNameFromLookupTable))
+            {
+                builder.Append(runtimeClassNameFromLookupTable);
+                return true;
+            }
+
+            // AOT source generator should have generated the attribute with the class name.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return false;
+            }
+#endif
+
+
             var visitedTypes = visitedTypesInstance ??= new Stack<VisitedType>();
 
             // Manual helper to save binary size (no LINQ, no lambdas) and get better performance
@@ -433,29 +456,40 @@ namespace WinRT
             }
             else
             {
-                visitedTypes.Push(new VisitedType { Type = type });
-                Type interfaceTypeToUse = null;
-                foreach (var iface in type.GetInterfaces())
+#if NET
+                [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Updated binaries will have WinRTRuntimeClassNameAttribute which will be used instead.")]
+#endif
+                static bool TryAppendWinRTInterfaceNameForTypeJit(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
                 {
-                    if (Projections.IsTypeWindowsRuntimeType(iface))
+                    var visitedTypes = visitedTypesInstance;
+
+                    visitedTypes.Push(new VisitedType { Type = type });
+
+                    Type interfaceTypeToUse = null;
+                    foreach (var iface in type.GetInterfaces())
                     {
-                        if (interfaceTypeToUse is null || interfaceTypeToUse.IsAssignableFrom(iface))
+                        if (Projections.IsTypeWindowsRuntimeType(iface))
                         {
-                            interfaceTypeToUse = iface;
+                            if (interfaceTypeToUse is null || interfaceTypeToUse.IsAssignableFrom(iface))
+                            {
+                                interfaceTypeToUse = iface;
+                            }
                         }
                     }
+
+                    bool success = false;
+
+                    if (interfaceTypeToUse is not null)
+                    {
+                        success = TryAppendTypeName(interfaceTypeToUse, builder, flags);
+                    }
+
+                    visitedTypes.Pop();
+
+                    return success;
                 }
 
-                bool success = false;
-
-                if (interfaceTypeToUse is object)
-                {
-                    success = TryAppendTypeName(interfaceTypeToUse, builder, flags); 
-                }
-
-                visitedTypes.Pop();
-
-                return success;
+                return TryAppendWinRTInterfaceNameForTypeJit(type, builder, flags);
             }
         }
 
