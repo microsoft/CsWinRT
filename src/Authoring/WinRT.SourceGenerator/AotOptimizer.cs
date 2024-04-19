@@ -905,6 +905,13 @@ namespace Generator
             StringBuilder source = new();
             string classPrefix = isComponentGenerator ? "Authoring" : "";
 
+            // The generated lookup table is based on lookup by string rather than type to avoid 2 different issues:
+            //
+            //     1) We can run into nested private types which we can't reference from here but still need to be able to create the vtable for.
+            //     2) While looking for a type in the lookup table, you can trigger module initializers for other modules
+            //        referenced and that can run into issues because they can have their own lookup tables that
+            //        get registered in their module initializer, but will fail to due to the reader writer lock we have around it
+            //        (i.e. we are traversing the lookup tables here while one is being registered).
             var hasRuntimeClasNameEntries = value.vtableAttributes.Any(v => !string.IsNullOrEmpty(v.RuntimeClassName));
             if (value.vtableAttributes.Any())
             {
