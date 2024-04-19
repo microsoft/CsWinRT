@@ -1,0 +1,5 @@
+MembersMustExist : Member 'public void WinRT.ExceptionHelpers.add_UnhandledWinRTServerException(System.EventHandler<WinRT.ExceptionHelpers.UnhandledWinRTServerExceptionEventArgs>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ExceptionHelpers.remove_UnhandledWinRTServerException(System.EventHandler<WinRT.ExceptionHelpers.UnhandledWinRTServerExceptionEventArgs>)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.ExceptionHelpers.UnhandledWinRTServerExceptionEventArgs' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean WinRT.ExceptionHelpers.TryHandleWinRTServerException(System.Object, System.Exception)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 4

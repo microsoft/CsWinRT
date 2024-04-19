@@ -98,6 +98,29 @@ namespace WinRT
             return true;
         }
 
+        /// <summary>
+        /// Unhandled WinRT server exception event.
+        /// </summary>
+        public static event EventHandler<UnhandledWinRTServerExceptionEventArgs> UnhandledWinRTServerException;
+
+        public class UnhandledWinRTServerExceptionEventArgs : EventArgs
+        {
+            public Exception Exception { get; }
+            public bool Handled { get; set; }
+
+            public UnhandledWinRTServerExceptionEventArgs(Exception exception)
+            {
+                Exception = exception;
+            }
+        }
+
+        public static bool TryHandleWinRTServerException(object sender, Exception ex)
+        {
+            UnhandledWinRTServerExceptionEventArgs args = new UnhandledWinRTServerExceptionEventArgs(ex);
+            UnhandledWinRTServerException?.Invoke(sender, args);
+            return args.Handled;
+        }
+
         public static void ThrowExceptionForHR(int hr)
         {
             if (hr < 0)

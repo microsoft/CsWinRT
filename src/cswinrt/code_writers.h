@@ -5242,7 +5242,7 @@ return eventSource.EventActions;
         return std::pair{ marshalers, managed_marshaler{} };
     }
 
-    void write_managed_method_call(writer& w, method_signature signature, std::string invoke_expression_format)
+    void write_managed_method_call(writer& w, method_signature signature, std::string type_name, std::string invoke_expression_format)
     {
         auto generic_abi_types = get_generic_abi_types(w, signature);
         bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
@@ -5255,6 +5255,7 @@ return eventSource.EventActions;
         w.write(
 R"(%
 %
+%
 try
 {
 %
@@ -5262,10 +5263,17 @@ try
 }
 catch (Exception __exception__)
 {
+if (global::WinRT.ExceptionHelpers.TryHandleWinRTServerException(__this__, __exception__))
+{
+return 0;
+}
 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
 }
 return 0;)",
+            [&](writer& w) {
+                w.write(R"(% __this__ = default;)", type_name);
+            },
             [&](writer& w) {
                 if (!return_sig) return;
                 return_marshaler.write_local(w);
@@ -5340,7 +5348,8 @@ private static unsafe int Do_Abi_%%
             bind<write_abi_signature>(method),
             bind<write_managed_method_call>(
                 signature,
-                w.write_temp("global::WinRT.ComWrappersSupport.FindObject<%>(%).%%",
+                type_name,
+                w.write_temp("(__this__ = global::WinRT.ComWrappersSupport.FindObject<%>(%)).%%",
                     type_name,
                     have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     method.Name(),
@@ -5376,7 +5385,8 @@ private static unsafe int Do_Abi_%%
             bind<write_abi_signature>(setter),
             bind<write_managed_method_call>(
                 setter_sig,
-                w.write_temp("global::WinRT.ComWrappersSupport.FindObject<%>(%).% = %",
+                type_name,
+                w.write_temp("(__this__ = global::WinRT.ComWrappersSupport.FindObject<%>(%)).% = %",
                     type_name,
                     have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     prop.Name(),
@@ -5406,7 +5416,8 @@ private static unsafe int Do_Abi_%%
                 bind<write_abi_signature>(getter),
                 bind<write_managed_method_call>(
                     getter_sig,
-                    w.write_temp("global::WinRT.ComWrappersSupport.FindObject<%>(%).%%",
+                    type_name,
+                    w.write_temp("(__this__ = global::WinRT.ComWrappersSupport.FindObject<%>(%)).%%",
                         type_name,
                         have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                         prop.Name(),
@@ -5455,10 +5466,11 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, g
 %
 private static unsafe int Do_Abi_%%
 {
+% __this = default;
 %% = default;
 try
 {
-var __this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
+__this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
 var __handler = %.FromAbi(%);
 %% = _%_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
 __this.% += __handler;
@@ -5466,12 +5478,17 @@ return 0;
 }
 catch (Exception __ex)
 {
+if (global::WinRT.ExceptionHelpers.TryHandleWinRTServerException(__this, __ex))
+{
+return 0;
+}
 return __ex.HResult;
 }
 })",
             !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
             get_vmethod_name(w, add_method.Parent(), add_method),
             bind<write_abi_signature>(add_method),
+            type_name,
             settings.netstandard_compat ? "" : "*",
             add_handler_event_token_name,
             type_name,
@@ -5486,9 +5503,10 @@ return __ex.HResult;
 %
 private static unsafe int Do_Abi_%%
 {
+% __this = default;
 try
 {
-var __this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
+__this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
 if(__this != null && _%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
 {
 __this.% -= __handler;
@@ -5497,12 +5515,17 @@ return 0;
 }
 catch (Exception __ex)
 {
+if (global::WinRT.ExceptionHelpers.TryHandleWinRTServerException(__this, __ex))
+{
+return 0;
+}
 return __ex.HResult;
 }
 })",
             !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
             get_vmethod_name(w, remove_method.Parent(), remove_method),
             bind<write_abi_signature>(remove_method),
+            type_name,
             type_name,
             evt.Name(),
             remove_handler_event_token_name,
@@ -7082,7 +7105,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             [&](writer& w) {
                 if (settings.netstandard_compat)
                 {
-                    write_managed_method_call(w, signature,
+                    write_managed_method_call(w, signature, type_name,
                         w.write_temp(R"(
 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(%, (% invoke) =>
 {
@@ -7105,9 +7128,9 @@ global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(%, (% invoke) =>
                 }
                 else
                 {
-                    write_managed_method_call(w, signature,
+                    write_managed_method_call(w, signature, type_name,
                         w.write_temp(R"(
-global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
+(__this__ = global::WinRT.ComWrappersSupport.FindObject<%>(%)).Invoke(%)
 )",
                             type_name,
                             is_generic ? "new IntPtr(thisPtr)" : "thisPtr",
