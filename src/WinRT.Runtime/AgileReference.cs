@@ -106,7 +106,7 @@ namespace WinRT
         private static unsafe IGlobalInterfaceTable GetGitTable()
         {
             Guid gitClsid = CLSID_StdGlobalInterfaceTable;
-            Guid gitIid = ABI.WinRT.Interop.IGlobalInterfaceTable.IID;
+            Guid gitIid = IID.IID_IGlobalInterfaceTable;
             IntPtr gitPtr = default;
 
             try

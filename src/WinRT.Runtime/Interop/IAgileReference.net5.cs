@@ -134,7 +134,7 @@ namespace ABI.WinRT.Interop
     [Guid("00000146-0000-0000-C000-000000000046")]
     internal sealed unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
     {
-        internal static readonly Guid IID = new(0x00000146, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IGlobalInterfaceTable;
 
         [Guid("00000146-0000-0000-C000-000000000046")]
         [StructLayout(LayoutKind.Sequential)]
