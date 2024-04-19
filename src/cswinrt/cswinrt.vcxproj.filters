@@ -174,6 +174,9 @@
     <None Include="strings\additions\Windows.Foundation\ITaskAwareAsyncInfo.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeMarshal.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WinRT.Interop.idl" />

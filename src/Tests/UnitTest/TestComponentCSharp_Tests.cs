@@ -466,7 +466,7 @@ namespace UnitTest
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
             arr.CopyTo(1, buf, 3, 0);
 
-            Assert.True(buf.TryGetDataUnsafe(out IntPtr dataPtr));
+            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(buf, out IntPtr dataPtr));
             Assert.True(dataPtr != IntPtr.Zero);
 
             unsafe

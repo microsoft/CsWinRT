@@ -270,33 +270,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
 #endregion (IBuffer).CopyTo extensions for copying to an (IBuffer)
 
-        public static bool TryGetDataUnsafe(this IBuffer buffer, out IntPtr dataPtr)
-        {
-            if (buffer == null)
-            {
-                dataPtr = IntPtr.Zero;
-                return false;
-            }
-
-            if (ComWrappersSupport.TryUnwrapObject(buffer, out var unwrapped) &&
-                unwrapped.TryAs<IUnknownVftbl>(global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.IID, out var objRef) >= 0)
-            {
-                using (objRef)
-                {
-                    dataPtr = global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.get_Buffer(objRef);
-                    return true;
-                }
-            }
-
-            if (buffer is IBufferByteAccess managedBuffer)
-            {
-                dataPtr = managedBuffer.Buffer;
-                return true;
-            }
-
-            dataPtr = IntPtr.Zero;
-            return false;
-        }
 
 #region Access to underlying array optimised for IBuffers backed by managed arrays (to avoid pinning)
 
@@ -364,8 +337,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (thisIsManaged)
                 return (thisDataArr == otherDataArr) && (thisDataOffs == otherDataOffs);
 
-            if (!buffer.TryGetDataUnsafe(out IntPtr thisBuff) ||
-                !otherBuffer.TryGetDataUnsafe(out IntPtr otherBuff))
+            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(buffer, out IntPtr thisBuff) ||
+                !WindowsRuntimeMarshal.TryGetDataUnsafe(otherBuffer, out IntPtr otherBuff))
             {
                 return false;
             }
@@ -465,7 +438,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return new WindowsRuntimeBufferMemoryStream(source, dataArr, dataOffs);
             }
 
-            if (!source.TryGetDataUnsafe(out IntPtr sourceBuff))
+            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(source, out IntPtr sourceBuff))
             {
                 throw new InvalidCastException();
             }
@@ -674,7 +647,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Debug.Assert(0 <= offset);
             Debug.Assert(offset < buffer.Capacity);
 
-            if (!buffer.TryGetDataUnsafe(out IntPtr thisBuff))
+            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(buffer, out IntPtr thisBuff))
             {
                 IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
                 return new Span<byte>((byte*)buffPtr + offset, (int)(buffer.Capacity - offset));
