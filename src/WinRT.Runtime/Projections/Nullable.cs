@@ -2189,21 +2189,28 @@ namespace ABI.System
     {
         private static readonly Guid PIID = ABI.System.Nullable<T>.PIID;
 
+        [SkipLocalsInit]
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
-            return new ComWrappers.ComInterfaceEntry[]
+            Span<ComWrappers.ComInterfaceEntry> entries = stackalloc ComWrappers.ComInterfaceEntry[2];
+            int count = 0;
+
+            if (FeatureSwitches.EnableIReferenceSupport)
             {
-                new ComWrappers.ComInterfaceEntry
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
+                };
+
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = PIID,
                     Vtable = ABI.Windows.Foundation.BoxedValueIReferenceImpl<T, TAbi>.AbiToProjectionVftablePtr
-                }
-            };
+                };
+            }
+
+            return entries.Slice(0, count).ToArray();
         }
 
         unsafe object IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable)
@@ -2242,20 +2249,27 @@ namespace ABI.System
 
         public static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces(ComWrappers.ComInterfaceEntry delegateInterface)
         {
-            return new ComWrappers.ComInterfaceEntry[]
+            Span<ComWrappers.ComInterfaceEntry> entries = stackalloc ComWrappers.ComInterfaceEntry[3];
+            int count = 0;
+
+            entries[count++] = delegateInterface;
+
+            if (FeatureSwitches.EnableIReferenceSupport)
             {
-                delegateInterface,
-                new ComWrappers.ComInterfaceEntry
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
+                };
+
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = PIID,
                     Vtable = ABI.System.Nullable_Delegate<T>.AbiToProjectionVftablePtr
-                }
-            };
+                };
+            }
+
+            return entries.Slice(0, count).ToArray();
         }
 
         public abstract ComWrappers.ComInterfaceEntry GetDelegateInterface();

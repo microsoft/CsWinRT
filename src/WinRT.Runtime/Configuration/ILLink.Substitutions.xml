@@ -17,6 +17,10 @@
       <!-- CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT switch -->
       <method signature="System.Boolean get_EnableICustomPropertyProviderSupport()" body="stub" value="false" feature="CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT" featurevalue="false"/>
       <method signature="System.Boolean get_EnableICustomPropertyProviderSupport()" body="stub" value="true" feature="CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT" featurevalue="true"/>
+
+      <!-- CSWINRT_ENABLE_IREFERENCE_SUPPORT switch -->
+      <method signature="System.Boolean get_EnableIReferenceSupport()" body="stub" value="false" feature="CSWINRT_ENABLE_IREFERENCE_SUPPORT" featurevalue="false"/>
+      <method signature="System.Boolean get_EnableIReferenceSupport()" body="stub" value="true" feature="CSWINRT_ENABLE_IREFERENCE_SUPPORT" featurevalue="true"/>
     </type>
   </assembly>
 

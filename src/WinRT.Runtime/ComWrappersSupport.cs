@@ -332,10 +332,15 @@ namespace WinRT
                     });
                 }
             }
-            else if (!hasWinrtExposedClassAttribute && type.ShouldProvideIReference())
+            else if (!hasWinrtExposedClassAttribute)
             {
-                entries.Add(IPropertyValueEntry);
-                entries.Add(ProvideIReference(type));
+                // Splitting this check to ensure the linker can recognize the pattern correctly.
+                // See: https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                if (type.ShouldProvideIReference())
+                {
+                    entries.Add(IPropertyValueEntry);
+                    entries.Add(ProvideIReference(type));
+                }
             }
             
             entries.Add(new ComInterfaceEntry
@@ -607,15 +612,30 @@ namespace WinRT
             return implementationType;
         }
 
-        private static ComInterfaceEntry IPropertyValueEntry =>
-            new ComInterfaceEntry
+        private static ComInterfaceEntry IPropertyValueEntry
+        {
+            get
             {
-                IID = ManagedIPropertyValueImpl.IID,
-                Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
-            };
+                if (!FeatureSwitches.EnableIReferenceSupport)
+                {
+                    throw new NotSupportedException("Support for 'IPropertyValue' is not enabled (it depends on the support for 'IReference<T>').");
+                }
+
+                return new ComInterfaceEntry
+                {
+                    IID = ManagedIPropertyValueImpl.IID,
+                    Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
+                };
+            }
+        }
 
         private static ComInterfaceEntry ProvideIReference(Type type)
         {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReference<T>' is not enabled.");
+            }
+
             if (type == typeof(int))
             {
                 return new ComInterfaceEntry
@@ -888,6 +908,11 @@ namespace WinRT
 
         private static ComInterfaceEntry ProvideIReferenceArray(Type arrayType)
         {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReferenceArray<T>' is not enabled.");
+            }
+
             Type type = arrayType.GetElementType();
             if (type == typeof(int))
             {

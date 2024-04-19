@@ -456,26 +456,34 @@ namespace ABI.System
         }
 
 #if NET
+        [SkipLocalsInit]
         internal static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
-            return new ComWrappers.ComInterfaceEntry[]
+            Span<ComWrappers.ComInterfaceEntry> entries = stackalloc ComWrappers.ComInterfaceEntry[3];
+            int count = 0;
+
+            entries[count++] = new ComWrappers.ComInterfaceEntry
             {
-                new ComWrappers.ComInterfaceEntry
-                {
-                    IID = IID,
-                    Vtable = AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
+                IID = IID,
+                Vtable = AbiToProjectionVftablePtr
+            };
+
+            if (FeatureSwitches.EnableIReferenceSupport)
+            {
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
+                };
+
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = Nullable_EventHandler.IID,
                     Vtable = Nullable_EventHandler.AbiToProjectionVftablePtr
-                }
-            };
+                };
+            }
+
+            return entries.Slice(0, count).ToArray();
         }
 #endif
     }

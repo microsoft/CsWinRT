@@ -106,28 +106,54 @@ namespace WinRT
                     "This can only be used when support for dynamic objects is enabled in the CsWinRT configuration. To enable it, " +
                     "make sure that the 'CsWinRTEnableDynamicObjectsSupport' MSBuild property is not being set to 'false' anywhere.");
             }
+
+            // Helper to get an exception if the input type is 'IReference<T>' when support for it is disabled
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static Exception GetExceptionForUnsupportedIReferenceType(ReadOnlySpan<char> runtimeClassName)
+            {
+                return new NotSupportedException(
+                    $"The requested runtime class name is '{runtimeClassName.ToString()}', which maps to an 'IReference<T>' projected type. " +
+                    "This can only be used when support for 'IReference<T>' types is enabled in the CsWinRT configuration. To enable it, " +
+                    "make sure that the 'CsWinRTEnableIReferenceSupport' MSBuild property is not being set to 'false' anywhere.");
+            }
+
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
-            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<String>".AsSpan(), StringComparison.Ordinal) == 0)
+            if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<String>".AsSpan(), StringComparison.Ordinal) == 0)
             {
-                return (typeof(ABI.System.Nullable_string), 0);
-            }
-            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>".AsSpan(), StringComparison.Ordinal) == 0)
-            {
-                return (typeof(ABI.System.Nullable_Type), 0);
-            }
-            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.Foundation.HResult>".AsSpan(), StringComparison.Ordinal) == 0)
-            {
-                return (typeof(ABI.System.Nullable_Exception), 0);
-            }
-            else
-            {
-                var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
-                if (genericTypeName == null)
+                if (FeatureSwitches.EnableIReferenceSupport)
                 {
-                    return (null, -1);
+                    return (typeof(ABI.System.Nullable_string), 0);
                 }
-                return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
+
+                throw GetExceptionForUnsupportedIReferenceType(runtimeClassName);
             }
+            
+            if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>".AsSpan(), StringComparison.Ordinal) == 0)
+            {
+                if (FeatureSwitches.EnableIReferenceSupport)
+                {
+                    return (typeof(ABI.System.Nullable_Type), 0);
+                }
+
+                throw GetExceptionForUnsupportedIReferenceType(runtimeClassName);
+            }
+            
+            if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.Foundation.HResult>".AsSpan(), StringComparison.Ordinal) == 0)
+            {
+                if (FeatureSwitches.EnableIReferenceSupport)
+                {
+                    return (typeof(ABI.System.Nullable_Exception), 0);
+                }
+
+                throw GetExceptionForUnsupportedIReferenceType(runtimeClassName);
+            }
+
+            var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
+            if (genericTypeName == null)
+            {
+                return (null, -1);
+            }
+            return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
         }
 
         /// <summary>
