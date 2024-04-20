@@ -65,6 +65,12 @@ if (artistCCW == null)
     return 106;
 }
 
+// Testing for overrided name using attribute specified by author on type.
+if (!CheckRuntimeClassName(ccw, "ManagedWarningClass"))
+{
+    return 120;
+}
+
 var managedWarningClass2 = new ManagedWarningClass2();
 ccw = MarshalInspectable<object>.CreateMarshaler(managedWarningClass2);
 ccw.TryAs<IUnknownVftbl>(IID_IWarning1, out var warningCCW2);
@@ -97,7 +103,7 @@ if (properties2CCW == null)
 
 if (!CheckRuntimeClassName(ccw, "TestComponentCSharp.IProperties2"))
 {
-    return 120;
+    return 121;
 }
 
 Guid IID_IlistInt = new("B939AF5B-B45D-5489-9149-61442C1905FE");
@@ -118,7 +124,7 @@ if (enumerableCCW == null)
 
 if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<Int32>"))
 {
-    return 121;
+    return 122;
 }
 
 Guid IID_IEnumerableDerived = new ("A70EC662-9975-51BB-9A28-82A876E01177");
@@ -146,7 +152,7 @@ if (enumerableRequiredTwo == null)
 
 if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<TestComponent.Derived>"))
 {
-    return 122;
+    return 123;
 }
 
 var nestedClass = TestClass2.GetInstance();
@@ -178,7 +184,7 @@ if (commandCCW == null)
 
 if (!CheckRuntimeClassName(ccw, "Microsoft.UI.Xaml.Input.ICommand"))
 {
-    return 123;
+    return 124;
 }
 
 // These scenarios aren't supported today on AOT, but testing to ensure they
@@ -251,6 +257,7 @@ sealed partial class ManagedProperties : IProperties1, IUriHandler
     void IUriHandler.AddUriHandler(ProvideUri provideUri) => AddUriHandler(provideUri);
 }
 
+[WinRTRuntimeClassName("ManagedWarningClass")]
 sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
 {
     public int Test => 4;
