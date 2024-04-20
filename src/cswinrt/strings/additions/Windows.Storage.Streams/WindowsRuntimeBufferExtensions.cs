@@ -642,7 +642,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }  // class WindowsRuntimeBufferUnmanagedMemoryStream
 
-        private static Span<byte> GetSpanForCapacityUnsafe(this IBuffer buffer, uint offset)
+        private static unsafe Span<byte> GetSpanForCapacityUnsafe(this IBuffer buffer, uint offset)
         {
             Debug.Assert(0 <= offset);
             Debug.Assert(offset < buffer.Capacity);
@@ -652,10 +652,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 throw new InvalidCastException();
             }
 
-            unsafe
-            {
-                return new Span<byte>((byte*)buffPtr + offset, (int)(buffer.Capacity - offset));
-            }
+            var span = new Span<byte>((byte*)buffPtr + offset, (int)(buffer.Capacity - offset));
+            GC.KeepAlive(buffer);
+            return span;
         }
 #endregion Private plumbing
     }  // class WindowsRuntimeBufferExtensions
