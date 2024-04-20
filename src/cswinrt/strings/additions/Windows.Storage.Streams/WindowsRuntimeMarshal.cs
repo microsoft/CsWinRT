@@ -18,6 +18,11 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 #endif
     static partial class WindowsRuntimeMarshal
     {
+#if NET
+        private static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xEF, 0x0F, 0x5A, 0x90, 0x53, 0xBC, 0xDF, 0x11, 0x8C, 0x49, 0x00, 0x1E, 0x4F, 0xC6, 0x86, 0xDA }));
+#else
+        private static global::System.Guid IID { get; } = new Guid(new byte[] { 0xEF, 0x0F, 0x5A, 0x90, 0x53, 0xBC, 0xDF, 0x11, 0x8C, 0x49, 0x00, 0x1E, 0x4F, 0xC6, 0x86, 0xDA });
+#endif
         /// <summary>
         /// Returns a pointer to the underlying data representation of the <see cref="IBuffer"/>.
         /// Callers are responsible for ensuring that the buffer is kept alive while the pointer is in use.
