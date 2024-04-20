@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 namespace System.Runtime.InteropServices.WindowsRuntime
 {
     using System.Diagnostics;
