@@ -61,6 +61,11 @@ namespace System
             return AsTask(source).GetAwaiter();
         }
 
+        public static void Wait(this IAsyncAction source)
+        {
+            return AsTask(source).Wait();
+        }
+
         public static Task<TResult> AsTask<TResult>(this IAsyncOperation<TResult> source, CancellationToken cancellationToken)
         {
             if (source == null)
@@ -102,6 +107,11 @@ namespace System
         public static TaskAwaiter<TResult> GetAwaiter<TResult>(this IAsyncOperation<TResult> source)
         {
             return AsTask(source).GetAwaiter();
+        }
+
+        public static TResult Get(this IAsyncOperation<TResult> source)
+        {
+            return AsTask(source).Result;
         }
 
         public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source, CancellationToken cancellationToken, IProgress<TProgress> progress)
@@ -169,6 +179,11 @@ namespace System
             return AsTask(source).GetAwaiter();
         }
 
+        public static void Wait(this IAsyncActionWithProgress<TProgress> source)
+        {
+            return AsTask(source).Wait();
+        }
+
         public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source, CancellationToken cancellationToken, IProgress<TProgress> progress)
         {
             if (source == null)
@@ -232,6 +247,11 @@ namespace System
         public static TaskAwaiter<TResult> GetAwaiter<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source)
         {
             return AsTask(source).GetAwaiter();
+        }
+
+        public static TResult Get(this IAsyncOperationWithProgress<TResult, TProgress> source)
+        {
+            return AsTask(source).Result;
         }
 
         public static IAsyncAction AsAsyncAction(this Task source)
