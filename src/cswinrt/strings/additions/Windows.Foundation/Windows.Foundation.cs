@@ -63,7 +63,7 @@ namespace System
 
         public static void Wait(this IAsyncAction source)
         {
-            return AsTask(source).Wait();
+            AsTask(source).Wait();
         }
 
         public static Task<TResult> AsTask<TResult>(this IAsyncOperation<TResult> source, CancellationToken cancellationToken)
@@ -109,7 +109,12 @@ namespace System
             return AsTask(source).GetAwaiter();
         }
 
-        public static TResult Get(this IAsyncOperation<TResult> source)
+        public static void Wait<TResult>(this IAsyncOperation<TResult> source)
+        {
+            AsTask(source).Wait();
+        }
+
+        public static TResult Get<TResult>(this IAsyncOperation<TResult> source)
         {
             return AsTask(source).Result;
         }
@@ -179,9 +184,9 @@ namespace System
             return AsTask(source).GetAwaiter();
         }
 
-        public static void Wait(this IAsyncActionWithProgress<TProgress> source)
+        public static void Wait<TProgress>(this IAsyncActionWithProgress<TProgress> source)
         {
-            return AsTask(source).Wait();
+            AsTask(source).Wait();
         }
 
         public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source, CancellationToken cancellationToken, IProgress<TProgress> progress)
@@ -249,7 +254,12 @@ namespace System
             return AsTask(source).GetAwaiter();
         }
 
-        public static TResult Get(this IAsyncOperationWithProgress<TResult, TProgress> source)
+        public static void Wait<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source)
+        {
+            AsTask(source).Wait();
+        }
+
+        public static TResult Get<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source)
         {
             return AsTask(source).Result;
         }

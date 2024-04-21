@@ -1816,6 +1816,27 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestAsyncActionWait()
+        {
+            var asyncAction = TestObject.DoitAsync();
+            TestObject.CompleteAsync();
+            asyncAction.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsync();
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsync();
+            asyncAction.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncAction.Status);
+        }
+
+        [Fact]
         public void TestAsyncActionRoundTrip()
         {
             var task = InvokeDoitAsync().AsAsyncAction().AsTask();
@@ -1882,6 +1903,27 @@ namespace UnitTest
             Assert.Equal(TaskStatus.Canceled, task.Status);
         }
 
+        [Fact]
+        public void TestAsyncActionWithProgressWait()
+        {
+            var asyncAction = TestObject.DoitAsyncWithProgress();
+            TestObject.CompleteAsync();
+            asyncAction.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsyncWithProgress();
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsyncWithProgress();
+            asyncAction.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncAction.Status);
+        }
+
         async Task<int> InvokeAddAsync(int lhs, int rhs)
         {
             return await TestObject.AddAsync(lhs, rhs);
@@ -1911,6 +1953,27 @@ namespace UnitTest
             e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestAsyncOperationWait()
+        {
+            var asyncOperation = TestObject.AddAsync(42, 8);
+            TestObject.CompleteAsync();
+            asyncOperation.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsync(42, 8);
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsync(42, 8);
+            asyncOperation.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncOperation.Status);
         }
 
 
@@ -1981,6 +2044,27 @@ namespace UnitTest
             e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestAsyncOperationWithProgressWait()
+        {
+            var asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
+            TestObject.CompleteAsync();
+            asyncOperation.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
+            asyncOperation.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncOperation.Status);
         }
 
         [Fact]

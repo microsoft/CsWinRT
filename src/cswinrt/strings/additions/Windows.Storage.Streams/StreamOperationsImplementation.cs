@@ -53,11 +53,11 @@ namespace Windows.Storage.Streams
                 if (dataBuffer.Length > 0)
                     memStream.Seek(dataBuffer.Length, SeekOrigin.Current);
 
-                return AsyncInfo.CreateCompletedOperation<IBuffer, uint>(dataBuffer);
+                return AsyncInfo.FromResultWithProgress<IBuffer, uint>(dataBuffer);
             }
             catch (Exception ex)
             {
-                return AsyncInfo.CreateFaultedOperation<IBuffer, uint>(ex);
+                return AsyncInfo.FromExceptionWithProgress<IBuffer, uint>(ex);
             }
         }  // ReadAsync_MemoryStream
 
