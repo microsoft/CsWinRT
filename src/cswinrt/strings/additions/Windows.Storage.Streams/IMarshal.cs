@@ -27,6 +27,8 @@ namespace Com
 namespace ABI.Com
 {
     using global::System;
+    using global::System.ComponentModel;
+    using global::System.Diagnostics.CodeAnalysis;
     using global::System.Runtime.CompilerServices;
     using global::System.Runtime.InteropServices;
 
@@ -200,6 +202,12 @@ namespace ABI.Com
         private readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
+
+#if NET
+        [Obsolete("This method is deprecated and will be removed in a future release.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = "This method is not trim-safe, and is only supported for use when not using trimming (or AOT).")]
+#endif
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
         public IMarshal(IObjectReference obj) : this(obj.As<Vftbl>()) { }
