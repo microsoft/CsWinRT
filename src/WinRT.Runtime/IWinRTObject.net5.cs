@@ -26,11 +26,21 @@ namespace WinRT
     {
         bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                return false;
+            }
+
             return IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
         }
 
         bool IsInterfaceImplementedFallback(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                throw new NotSupportedException($"Support for 'IDynamicInterfaceCastable' is disabled (make sure that the 'CsWinRTEnableIDynamicInterfaceCastableSupport' property is not set to 'false').");
+            }
+
             if (QueryInterfaceCache.ContainsKey(interfaceType))
             {
                 return true;
@@ -302,7 +312,8 @@ namespace WinRT
             {
                 return QueryInterfaceCache[type];
             }
-            throw new Exception("Interface " + Type.GetTypeFromHandle(type) +" is not implemented.");
+
+            throw new Exception("Interface '" + Type.GetTypeFromHandle(type) + "' is not implemented.");
         }
 
         ConcurrentDictionary<RuntimeTypeHandle, object> AdditionalTypeData { get; }

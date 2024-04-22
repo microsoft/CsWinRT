@@ -21,6 +21,10 @@
       <!-- CSWINRT_ENABLE_IREFERENCE_SUPPORT switch -->
       <method signature="System.Boolean get_EnableIReferenceSupport()" body="stub" value="false" feature="CSWINRT_ENABLE_IREFERENCE_SUPPORT" featurevalue="false"/>
       <method signature="System.Boolean get_EnableIReferenceSupport()" body="stub" value="true" feature="CSWINRT_ENABLE_IREFERENCE_SUPPORT" featurevalue="true"/>
+
+      <!-- CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE switch -->
+      <method signature="System.Boolean get_EnableIDynamicInterfaceCastableSupport()" body="stub" value="false" feature="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE" featurevalue="false"/>
+      <method signature="System.Boolean get_EnableIDynamicInterfaceCastableSupport()" body="stub" value="true" feature="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE" featurevalue="true"/>
     </type>
   </assembly>
 

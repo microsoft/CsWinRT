@@ -47,6 +47,11 @@ internal static class FeatureSwitches
     private const string EnableIReferenceSupportPropertyName = "CSWINRT_ENABLE_IREFERENCE_SUPPORT";
 
     /// <summary>
+    /// The configuration property name for <see cref="EnableIDynamicInterfaceCastableSupport"/>.
+    /// </summary>
+    private const string EnableIDynamicInterfaceCastableSupportPropertyName = "CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE";
+
+    /// <summary>
     /// The backing field for <see cref="IsDynamicObjectsSupportEnabled"/>.
     /// </summary>
     private static int _isDynamicObjectsSupportEnabled;
@@ -70,6 +75,11 @@ internal static class FeatureSwitches
     /// The backing field for <see cref="EnableIReferenceSupport"/>.
     /// </summary>
     private static int _enableIReferenceSupport;
+
+    /// <summary>
+    /// The backing field for <see cref="EnableIDynamicInterfaceCastableSupport"/>.
+    /// </summary>
+    private static int _enableIDynamicInterfaceCastableSupport;
 
     /// <summary>
     /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -114,6 +124,15 @@ internal static class FeatureSwitches
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => GetConfigurationValue(EnableIReferenceSupportPropertyName, ref _enableIReferenceSupport, true);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether or not <see cref="System.Runtime.InteropServices.IDynamicInterfaceCastable"/> should be supported by RCW types (defaults to <see langword="true"/>).
+    /// </summary>
+    public static bool EnableIDynamicInterfaceCastableSupport
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => GetConfigurationValue(EnableIDynamicInterfaceCastableSupportPropertyName, ref _enableIDynamicInterfaceCastableSupport, true);
     }
 
     /// <summary>
