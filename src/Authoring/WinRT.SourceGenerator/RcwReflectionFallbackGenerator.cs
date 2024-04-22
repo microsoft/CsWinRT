@@ -203,7 +203,8 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
         {
             if (assemblyIdentity.Name == "WinRT.Runtime")
             {
-                return assemblyIdentity.Version < new Version(2, 0, 8);
+                return assemblyIdentity.Version < new Version(2, 0, 8) && 
+                    assemblyIdentity.Version != new Version(0, 0, 0, 0);
             }
         }
 
