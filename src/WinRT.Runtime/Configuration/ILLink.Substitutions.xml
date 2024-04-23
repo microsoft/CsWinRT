@@ -3,8 +3,8 @@
     <type fullname="WinRT.FeatureSwitches">
 
       <!-- CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT switch -->
-      <method signature="System.Boolean get_IsDynamicObjectsSupportEnabled()" body="stub" value="false" feature="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT" featurevalue="false"/>
-      <method signature="System.Boolean get_IsDynamicObjectsSupportEnabled()" body="stub" value="true" feature="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT" featurevalue="true"/>
+      <method signature="System.Boolean get_EnableDynamicObjectsSupport()" body="stub" value="false" feature="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT" featurevalue="false"/>
+      <method signature="System.Boolean get_EnableDynamicObjectsSupport()" body="stub" value="true" feature="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT" featurevalue="true"/>
         
       <!-- CSWINRT_USE_EXCEPTION_RESOURCE_KEYS switch -->
       <method signature="System.Boolean get_UseExceptionResourceKeys()" body="stub" value="false" feature="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS" featurevalue="false"/>

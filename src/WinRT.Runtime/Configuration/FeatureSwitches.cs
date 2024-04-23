@@ -22,12 +22,12 @@ namespace WinRT;
 internal static class FeatureSwitches
 {
     /// <summary>
-    /// The configuration property name for <see cref="IsDebugOutputEnabled"/>.
+    /// The configuration property name for <see cref="EnableDynamicObjectsSupport"/>.
     /// </summary>
-    private const string IsDynamicObjectsSupportEnabledPropertyName = "CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT";
+    private const string EnablesDynamicObjectsSupportPropertyName = "CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT";
 
     /// <summary>
-    /// The configuration property name for <see cref="IsDebugOutputEnabled"/>.
+    /// The configuration property name for <see cref="UseExceptionResourceKeys"/>.
     /// </summary>
     private const string UseExceptionResourceKeysPropertyName = "CSWINRT_USE_EXCEPTION_RESOURCE_KEYS";
 
@@ -52,9 +52,9 @@ internal static class FeatureSwitches
     private const string EnableIDynamicInterfaceCastableSupportPropertyName = "CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE";
 
     /// <summary>
-    /// The backing field for <see cref="IsDynamicObjectsSupportEnabled"/>.
+    /// The backing field for <see cref="EnableDynamicObjectsSupport"/>.
     /// </summary>
-    private static int _isDynamicObjectsSupportEnabled;
+    private static int _enableDynamicObjectsSupportEnabled;
 
     /// <summary>
     /// The backing field for <see cref="UseExceptionResourceKeys"/>.
@@ -84,10 +84,10 @@ internal static class FeatureSwitches
     /// <summary>
     /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
     /// </summary>
-    public static bool IsDynamicObjectsSupportEnabled
+    public static bool EnableDynamicObjectsSupport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => GetConfigurationValue(IsDynamicObjectsSupportEnabledPropertyName, ref _isDynamicObjectsSupportEnabled, true);
+        get => GetConfigurationValue(EnablesDynamicObjectsSupportPropertyName, ref _enableDynamicObjectsSupportEnabled, true);
     }
 
     /// <summary>

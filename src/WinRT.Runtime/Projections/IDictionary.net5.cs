@@ -1161,7 +1161,7 @@ namespace ABI.System.Collections.Generic
                 return null;
             }
 
-            if (!FeatureSwitches.IsDynamicObjectsSupportEnabled)
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
             {
                 throw new NotSupportedException(
                     "'IDictionary<K, V>.FromAbi' relies on 'IDynamicInterfaceCastable' support, which is not currently " +

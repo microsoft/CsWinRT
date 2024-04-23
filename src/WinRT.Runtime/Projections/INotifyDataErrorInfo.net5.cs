@@ -33,7 +33,7 @@ namespace ABI.System.ComponentModel
 
         public static unsafe global::System.Collections.IEnumerable GetErrors(IObjectReference obj, string propertyName)
         {
-            if (!FeatureSwitches.IsDynamicObjectsSupportEnabled)
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
             {
                 throw new NotSupportedException(
                     "'INotifyDataErrorInfo.GetErrors' relies on 'IDynamicInterfaceCastable' support, which is not currently " +
