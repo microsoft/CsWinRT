@@ -33,6 +33,13 @@ namespace ABI.System.ComponentModel
 
         public static unsafe global::System.Collections.IEnumerable GetErrors(IObjectReference obj, string propertyName)
         {
+            if (!FeatureSwitches.IsDynamicObjectsSupportEnabled)
+            {
+                throw new NotSupportedException(
+                    "'INotifyDataErrorInfo.GetErrors' relies on 'IDynamicInterfaceCastable' support, which is not currently " +
+                    "available. Make sure the 'EnableIDynamicInterfaceCastableSupport' property is not set to 'false'.");
+            }
+
             var ThisPtr = obj.ThisPtr;
             IntPtr __retval = default;
             try

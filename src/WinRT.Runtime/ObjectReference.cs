@@ -167,6 +167,14 @@ namespace WinRT
                 }
             }
 
+            if (!FeatureSwitches.IsDynamicObjectsSupportEnabled)
+            {
+                throw new NotSupportedException(
+                    "Using ' AsInterface<TInterface>' to cast an RCW to an interface type not present in " +
+                    "metadata relies on 'IDynamicInterfaceCastable' support, which is not currently available. " +
+                    "Make sure the 'EnableIDynamicInterfaceCastableSupport' property is not set to 'false'.");
+            }
+
 #if !NET
             return (TInterface)typeof(TInterface).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { this });
 #else
