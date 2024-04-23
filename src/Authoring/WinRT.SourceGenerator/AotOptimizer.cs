@@ -664,7 +664,8 @@ namespace Generator
         private static bool NeedVtableOnLookupTable(SyntaxNode node)
         {
             return (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Arguments.Count != 0) ||
-                    node is AssignmentExpressionSyntax;
+                    node is AssignmentExpressionSyntax ||
+                    node is VariableDeclarationSyntax;
         }
 
         private static List<VtableAttribute> GetVtableAttributesToAddOnLookupTable(GeneratorSyntaxContext context)
@@ -714,6 +715,28 @@ namespace Generator
                      SymbolEqualityComparer.Default.Equals(propertySymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
                     AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), propertySymbol.Type);
+                }
+                else if (leftSymbol is IFieldSymbol fieldSymbol &&
+                    (GeneratorHelper.IsWinRTType(fieldSymbol.ContainingSymbol) || 
+                     SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
+                {
+                    AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), fieldSymbol.Type);
+                }
+            }
+            // Detect scenarios where the variable declaration is to a boxed or cast type during initialization.
+            else if (context.Node is VariableDeclarationSyntax variableDeclaration)
+            {
+                var leftSymbol = context.SemanticModel.GetSymbolInfo(variableDeclaration.Type).Symbol;
+                foreach (var variable in variableDeclaration.Variables)
+                {
+                    if (variable.Initializer != null)
+                    {
+                        var instantiatedType = context.SemanticModel.GetTypeInfo(variable.Initializer.Value);
+                        if (leftSymbol is INamedTypeSymbol namedType)
+                        {
+                            AddVtableAttributesForType(instantiatedType, namedType);
+                        }
+                    }
                 }
             }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TestComponent;
+using Windows.Foundation;
 using WinRT;
 using WinRT.Interop;
 
@@ -33,6 +34,9 @@ if (iEnumerableCCW == null)
 {
     return 104;
 }
+
+IList<List<Point>> list2 = new List<List<Point>>();
+instance2.IterableOfPointIterablesProperty = list2;
 
 return 100;
 
