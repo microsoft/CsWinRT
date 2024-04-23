@@ -805,16 +805,21 @@ namespace WinRT
             // of ConcurrentDictionary<,> and transitively dependent types for every vtable type T, since it's not
             // something we actually need. Because the cache is private and we're the only ones using it, we can
             // just store the per-context agile references as IObjectReference values, and then cast them on return.
-            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
+#if NET
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, CreateForCurrentContext, this);
+#else
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, ptr => CreateForCurrentContext(ptr, this));
+#endif
 
             return Unsafe.As<ObjectReference<T>>(objectReference);
 
 #if NET
             [UnconditionalSuppressMessage("Trimming", "IL2087", Justification = "The '_iid' field is only empty when using annotated APIs not trim-safe.")]
 #endif
-            IObjectReference CreateForCurrentContext(IntPtr _)
+            static IObjectReference CreateForCurrentContext(IntPtr _, ObjectReferenceWithContext<T> @this)
             {
-                var agileReference = AgileReference;
+                var agileReference = @this.AgileReference;
+
                 // We may fail to switch context and thereby not get an agile reference.
                 // In these cases, fallback to using the current context.
                 if (agileReference == null)
@@ -829,17 +834,17 @@ namespace WinRT
                     // going through a trim-unsafe constructor, which is explicitly not supported in this configuration.
                     if (!RuntimeFeature.IsDynamicCodeCompiled)
                     {
-                        return agileReference.Get<T>(_iid);
+                        return agileReference.Get<T>(@this._iid);
                     }
 #endif
 
-                    if (_iid == Guid.Empty)
+                    if (@this._iid == Guid.Empty)
                     {
                         return agileReference.Get<T>(GuidGenerator.GetIID(typeof(T)));
                     }
                     else
                     {
-                        return agileReference.Get<T>(_iid);
+                        return agileReference.Get<T>(@this._iid);
                     }
                 }
                 catch (Exception)

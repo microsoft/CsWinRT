@@ -52,7 +52,7 @@ namespace WinRT
                     return 0;
                 }, &data, IID.IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
             } 
-            catch(Exception)
+            catch (Exception)
             {
                 onFailCallback?.Invoke();
             }
