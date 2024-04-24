@@ -51,7 +51,7 @@ namespace ABI.System.Collections.Generic
 
         private static global::System.Collections.Generic.IReadOnlyCollection<T> GetHelper(IWinRTObject _this)
         {
-            return (global::System.Collections.Generic.IReadOnlyCollection<T>)_this.GetOrCreateTypeHelperData(
+            return (global::System.Collections.Generic.IReadOnlyCollection<T>)_this.AdditionalTypeData.GetOrAdd(
                 typeof(global::System.Collections.Generic.IReadOnlyCollection<T>).TypeHandle,
                 CreateHelper, _this);
         }
@@ -104,7 +104,7 @@ namespace ABI.System.Collections.Generic
 
         private static global::System.Collections.Generic.ICollection<T> GetHelper(IWinRTObject _this)
         {
-            return (global::System.Collections.Generic.ICollection<T>)_this.GetOrCreateTypeHelperData(
+            return (global::System.Collections.Generic.ICollection<T>)_this.AdditionalTypeData.GetOrAdd(
                 typeof(global::System.Collections.Generic.ICollection<T>).TypeHandle,
                 CreateHelper, _this);
         }
@@ -156,7 +156,7 @@ namespace ABI.System.Collections
 
         private static global::System.Collections.ICollection GetHelper(IWinRTObject _this)
         {
-            return (global::System.Collections.ICollection)_this.GetOrCreateTypeHelperData(
+            return (global::System.Collections.ICollection)_this.AdditionalTypeData.GetOrAdd(
                 typeof(global::System.Collections.ICollection).TypeHandle,
                 CreateHelper, _this);
         }

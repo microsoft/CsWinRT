@@ -237,6 +237,4 @@ MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterTypeRunt
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.FindCustomHelperTypeMapping(System.Type, System.Boolean)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.Object>)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.Object>)' in the implementation but not the reference.
-InterfacesShouldHaveSameMembers : Default interface member 'public System.Object WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.RuntimeTypeHandle, WinRT.IWinRTObject, System.Object>, WinRT.IWinRTObject)' is present in the implementation but not in the reference.
-MembersMustExist : Member 'public System.Object WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.RuntimeTypeHandle, WinRT.IWinRTObject, System.Object>, WinRT.IWinRTObject)' does not exist in the reference but it does exist in the implementation.
-Total Issues: 241
+Total Issues: 239

@@ -319,16 +319,11 @@ namespace WinRT
 
         ConcurrentDictionary<RuntimeTypeHandle, object> AdditionalTypeData { get; }
 
-        [Obsolete("Use the 'Func<RuntimeTypeHandle, IWinRTObject, object>' overload.")]
+        [Obsolete("Use the 'AdditionalTypeData' property instead.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         object GetOrCreateTypeHelperData(RuntimeTypeHandle type, Func<object> helperDataFactory)
         {
-            throw new NotSupportedException("'GetOrCreateTypeHelperData(RuntimeTypeHandle, Func<object>)' is not supported, use the 'Func<RuntimeTypeHandle, IWinRTObject, object>' overload.");
-        }
-
-        object GetOrCreateTypeHelperData(RuntimeTypeHandle type, Func<RuntimeTypeHandle, IWinRTObject, object> helperDataFactory, IWinRTObject state)
-        {
-            return AdditionalTypeData.GetOrAdd(type, helperDataFactory, state);
+            throw new NotSupportedException("'GetOrCreateTypeHelperData(RuntimeTypeHandle, Func<object>)' is not supported, use 'AdditionalTypeData' instead.");
         }
     }
 }
