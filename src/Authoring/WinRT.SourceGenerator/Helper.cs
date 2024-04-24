@@ -273,8 +273,46 @@ namespace Generator
         // Checks if the interface references any internal types (either the interface itself or within its generic types).
         public static bool IsInternalInterfaceFromReferences(INamedTypeSymbol iface, IAssemblySymbol currentAssembly)
         {
-            return (iface.DeclaredAccessibility == Accessibility.Internal && !SymbolEqualityComparer.Default.Equals(iface.ContainingAssembly, currentAssembly)) ||
-                (iface.IsGenericType && iface.TypeArguments.Any(typeArgument => IsInternalInterfaceFromReferences(typeArgument as INamedTypeSymbol, currentAssembly)));
+            if (iface.DeclaredAccessibility == Accessibility.Internal &&
+                !SymbolEqualityComparer.Default.Equals(iface.ContainingAssembly, currentAssembly))
+            {
+                return true;
+            }
+
+            if (iface.IsGenericType)
+            {
+                // Making use of HashSet to avoid checking multiple times for same type and to avoid doing recursive calls.
+                HashSet<ITypeSymbol> genericArgumentsToProcess = new(iface.TypeArguments, SymbolEqualityComparer.Default);
+                HashSet<ITypeSymbol> visitedTypes = new(SymbolEqualityComparer.Default);
+                while (genericArgumentsToProcess.Count != 0)
+                {
+                    var currentType = genericArgumentsToProcess.First();
+                    visitedTypes.Add(currentType);
+                    genericArgumentsToProcess.Remove(currentType);
+
+                    if (currentType.DeclaredAccessibility == Accessibility.Internal &&
+                        !SymbolEqualityComparer.Default.Equals(currentType.ContainingAssembly, currentAssembly))
+                    {
+                        return true;
+                    }
+
+                    if (currentType is INamedTypeSymbol currentNamedTypeSymbol)
+                    {
+                        if (currentNamedTypeSymbol.IsGenericType)
+                        {
+                            foreach (var typeArgument in currentNamedTypeSymbol.TypeArguments)
+                            {
+                                if (!visitedTypes.Contains(typeArgument))
+                                {
+                                    genericArgumentsToProcess.Add(typeArgument);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         // Checks whether the symbol references any generic that hasn't been instantiated
@@ -410,10 +448,13 @@ namespace Generator
                 }
             }
 
-            string customTypeMapKey = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
-            if (MappedCSharpTypes.ContainsKey(customTypeMapKey))
+            if (type.ContainingNamespace != null)
             {
-                return MappedCSharpTypes[customTypeMapKey].IsBlittable();
+                string customTypeMapKey = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
+                if (MappedCSharpTypes.ContainsKey(customTypeMapKey))
+                {
+                    return MappedCSharpTypes[customTypeMapKey].IsBlittable();
+                }
             }
 
             if (type.TypeKind == TypeKind.Enum)
@@ -425,7 +466,9 @@ namespace Generator
             {
                 foreach (var typeMember in type.GetMembers())
                 {
-                    if (typeMember is IFieldSymbol field && !IsBlittableValueType(field.Type))
+                    if (typeMember is IFieldSymbol field &&
+                        !field.IsStatic &&
+                        !IsBlittableValueType(field.Type))
                     {
                         return false;
                     }
@@ -460,20 +503,23 @@ namespace Generator
                     return prefix + typeStr;
                 }
 
-                var winrtHelperAttribute = type.GetAttributes().
-                    Where(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeHelperTypeAttribute") == 0).
-                    FirstOrDefault();
-                if (winrtHelperAttribute != null && 
-                    winrtHelperAttribute.ConstructorArguments.Any())
+                if (!IsBlittableValueType(type))
                 {
-                    return winrtHelperAttribute.ConstructorArguments[0].Value.ToString();
-                }
-                // Handling authoring scenario where Impl type has the attributes and
-                // if the current component is the one being authored, it may not be
-                // generated yet to check given it is the same compilation.
-                else if (!IsBlittableValueType(type))
-                {
-                    return "ABI." + typeStr;
+                    var winrtHelperAttribute = type.GetAttributes().
+                        Where(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeHelperTypeAttribute") == 0).
+                        FirstOrDefault();
+                    if (winrtHelperAttribute != null &&
+                        winrtHelperAttribute.ConstructorArguments.Any())
+                    {
+                        return winrtHelperAttribute.ConstructorArguments[0].Value.ToString();
+                    }
+                    // Handling authoring scenario where Impl type has the attributes and
+                    // if the current component is the one being authored, it may not be
+                    // generated yet to check given it is the same compilation.
+                    else
+                    {
+                        return "ABI." + typeStr;
+                    }
                 }
                 else
                 {

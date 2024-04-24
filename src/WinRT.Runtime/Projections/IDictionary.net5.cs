@@ -1154,8 +1154,22 @@ namespace ABI.System.Collections.Generic
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
-        public static global::System.Collections.Generic.IDictionary<K, V> FromAbi(IntPtr thisPtr) =>
-            thisPtr == IntPtr.Zero ? null : (global::System.Collections.Generic.IDictionary<K, V>)(object)new IInspectable(ObjRefFromAbi(thisPtr));
+        public static global::System.Collections.Generic.IDictionary<K, V> FromAbi(IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                throw new NotSupportedException(
+                    "'IDictionary<K, V>.FromAbi' relies on 'IDynamicInterfaceCastable' support, which is not currently " +
+                    "available. Make sure the 'EnableIDynamicInterfaceCastableSupport' property is not set to 'false'.");
+            }
+
+            return (global::System.Collections.Generic.IDictionary<K, V>)(object)new IInspectable(ObjRefFromAbi(thisPtr));
+        }
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IDictionary<K, V> value) =>
             (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();

@@ -96,7 +96,7 @@ namespace WinRT
             // It may be necessary to detect otherwise and return System.Object.
             if (runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan(), StringComparison.Ordinal))
             {
-                if (FeatureSwitches.IsDynamicObjectsSupportEnabled)
+                if (FeatureSwitches.EnableDynamicObjectsSupport)
                 {
                     return (typeof(System.Dynamic.ExpandoObject), 0);
                 }

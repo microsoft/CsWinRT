@@ -95,6 +95,12 @@ namespace WinRT
             {
                 return true;
             }
+
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                return false;
+            }
+
             return (this as IWinRTObject).IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
         }
 
