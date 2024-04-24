@@ -198,7 +198,7 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, CreateTypedRcwFactory);
 
         public static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => TypedObjectFactoryCacheForType.TryAdd(implementationType, rcwFactory);
 
