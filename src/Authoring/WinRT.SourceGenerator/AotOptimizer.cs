@@ -922,6 +922,9 @@ namespace Generator
             //        referenced and that can run into issues because they can have their own lookup tables that
             //        get registered in their module initializer, but will fail to due to the reader writer lock we have around it
             //        (i.e. we are traversing the lookup tables here while one is being registered).
+            //
+            // Note: just like with the authoring metadata function, we don't use a method group expression but rather construct a 'Func<Type, string>' ourselves.
+            // This is done to opt-out of the implicit caching that Roslyn does. We don't need that extra code and overhead, as this is only done once.
             var hasRuntimeClasNameEntries = value.vtableAttributes.Any(v => !string.IsNullOrEmpty(v.RuntimeClassName));
             if (value.vtableAttributes.Any())
             {
@@ -940,7 +943,7 @@ namespace Generator
                                             internal static void InitializeGlobalVtableLookup()
                                             {
                                                 ComWrappersSupport.RegisterTypeComInterfaceEntriesLookup(LookupVtableEntries);
-                                                {{(hasRuntimeClasNameEntries ? "ComWrappersSupport.RegisterTypeRuntimeClassNameLookup(LookupRuntimeClassName);" : "")}}
+                                                {{(hasRuntimeClasNameEntries ? "ComWrappersSupport.RegisterTypeRuntimeClassNameLookup(new Func<Type, string>(LookupRuntimeClassName));" : "")}}
                                             }
 
                                             private static ComWrappers.ComInterfaceEntry[] LookupVtableEntries(Type type)
