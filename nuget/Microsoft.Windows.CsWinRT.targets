@@ -252,6 +252,7 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableDefaultCustomTypeMappings Condition="'$(CsWinRTEnableDefaultCustomTypeMappings)' == ''">true</CsWinRTEnableDefaultCustomTypeMappings>
     <CsWinRTEnableICustomPropertyProviderSupport Condition="'$(CsWinRTEnableICustomPropertyProviderSupport)' == ''">true</CsWinRTEnableICustomPropertyProviderSupport>
     <CsWinRTEnableIReferenceSupport Condition="'$(CsWinRTEnableIReferenceSupport)' == ''">true</CsWinRTEnableIReferenceSupport>
+    <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
   </PropertyGroup>
 
   <!--
@@ -283,6 +284,11 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_ENABLE_IREFERENCE_SUPPORT switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IREFERENCE_SUPPORT"
                                     Value="$(CsWinRTEnableIReferenceSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE"
+                                    Value="$(CsWinRTEnableIDynamicInterfaceCastableSupport)"
                                     Trim="true" />
   </ItemGroup>
 
