@@ -698,9 +698,18 @@ namespace WinRT
         private volatile bool _isAgileReferenceSet;
         private volatile AgileReference __agileReference;
         private AgileReference AgileReference => _isAgileReferenceSet ? __agileReference : Make_AgileReference();
-        private AgileReference Make_AgileReference()
+        private unsafe AgileReference Make_AgileReference()
         {
-            Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null, this);
+            Context.CallInContext(
+                _contextCallbackPtr,
+                _contextToken,
+#if NET && CsWinRT_LANG_11_FEATURES
+                &InitAgileReference,
+#else
+                InitAgileReference,
+#endif
+                null,
+                this);
 
             // Set after CallInContext callback given callback can fail to occur.
             _isAgileReferenceSet = true;
@@ -866,7 +875,18 @@ namespace WinRT
                 CachedContext.Clear();
             }
 
-            Context.CallInContext(_contextCallbackPtr, _contextToken, Release, ReleaseWithoutContext, this);
+            Context.CallInContext(
+                _contextCallbackPtr,
+                _contextToken,
+#if NET && CsWinRT_LANG_11_FEATURES
+                &Release,
+                &ReleaseWithoutContext,
+#else
+                Release,
+                ReleaseWithoutContext,
+#endif
+                this);
+
             Context.DisposeContextCallback(_contextCallbackPtr);
 
             static void Release(object state)

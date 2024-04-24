@@ -29,7 +29,21 @@ namespace WinRT
         // On any exception, calls onFail callback if any set.
         // If not set, exception is handled due to today we don't
         // have any scenario to propagate it from here.
-        public unsafe static void CallInContext(IntPtr contextCallbackPtr, IntPtr contextToken, Action<object> callback, Action<object> onFailCallback, object state)
+        //
+        // On modern .NET, we can use function pointers to avoid the
+        // small binary size increase from all generated fields and
+        // logic to cache delegates, since we don't need any of that.
+        public unsafe static void CallInContext(
+            IntPtr contextCallbackPtr,
+            IntPtr contextToken,
+#if NET && CsWinRT_LANG_11_FEATURES
+            delegate*<object, void> callback,
+            delegate*<object, void> onFailCallback,
+#else
+            Action<object> callback,
+            Action<object> onFailCallback,
+#endif
+            object state)
         {
             // Check if we are already on the same context, if so we do not need to switch.
             if(contextCallbackPtr == IntPtr.Zero || GetContextToken() == contextToken)

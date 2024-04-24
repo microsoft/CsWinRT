@@ -18,9 +18,9 @@ namespace ABI.WinRT.Interop
     }
 
 #if NET && CsWinRT_LANG_11_FEATURES
-    internal struct CallbackData
+    internal unsafe struct CallbackData
     {
-        public Action<object> Callback;
+        public delegate*<object, void> Callback;
         public object State;
     }
 #endif
@@ -33,7 +33,7 @@ namespace ABI.WinRT.Interop
         private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4;
 #pragma warning restore CS0649
 
-        public static void ContextCallback(IntPtr contextCallbackPtr, Action<object> callback, Action<object> onFailCallback, object state)
+        public static void ContextCallback(IntPtr contextCallbackPtr, delegate*<object, void> callback, delegate*<object, void> onFailCallback, object state)
         {
             ComCallData comCallData;
             comCallData.dwDispid = 0;
@@ -79,7 +79,10 @@ namespace ABI.WinRT.Interop
 
             if (hresult < 0)
             {
-                onFailCallback?.Invoke(state);
+                if (onFailCallback is not null)
+                {
+                    onFailCallback(state);
+                }
             }
         }
     }
