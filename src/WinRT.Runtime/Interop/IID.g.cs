@@ -216,7 +216,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IMarshal</c> (00000003-0000-0000-C000-000000000046).</summary>
-        internal static ref readonly Guid IID_IMarshal
+        public static ref readonly Guid IID_IMarshal
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
