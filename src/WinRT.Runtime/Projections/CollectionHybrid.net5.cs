@@ -53,7 +53,7 @@ namespace ABI.System.Collections.Generic
         {
             return (global::System.Collections.Generic.IReadOnlyCollection<T>)_this.GetOrCreateTypeHelperData(
                 typeof(global::System.Collections.Generic.IReadOnlyCollection<T>).TypeHandle,
-                () => CreateHelper(_this));
+                static (_, _this) => CreateHelper(_this), _this);
         }
 
         int global::System.Collections.Generic.IReadOnlyCollection<T>.Count
@@ -106,7 +106,7 @@ namespace ABI.System.Collections.Generic
         {
             return (global::System.Collections.Generic.ICollection<T>)_this.GetOrCreateTypeHelperData(
                 typeof(global::System.Collections.Generic.ICollection<T>).TypeHandle,
-                () => CreateHelper(_this));
+                static (_, _this) => CreateHelper(_this), _this);
         }
 
         int global::System.Collections.Generic.ICollection<T>.Count
@@ -158,7 +158,7 @@ namespace ABI.System.Collections
         {
             return (global::System.Collections.ICollection)_this.GetOrCreateTypeHelperData(
                 typeof(global::System.Collections.ICollection).TypeHandle,
-                () => CreateHelper(_this));
+                static (_, _this) => CreateHelper(_this), _this);
         }
 
         int global::System.Collections.ICollection.Count
