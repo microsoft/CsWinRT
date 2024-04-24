@@ -16,7 +16,7 @@ namespace ABI.System.Collections.Generic
     [DynamicInterfaceCastableImplementation]
     interface IReadOnlyCollection<T> : global::System.Collections.Generic.IReadOnlyCollection<T>
     {
-        private static global::System.Collections.Generic.IReadOnlyCollection<T> CreateHelper(IWinRTObject _this)
+        private static global::System.Collections.Generic.IReadOnlyCollection<T> CreateHelper(RuntimeTypeHandle type, IWinRTObject _this)
         {
             var genericType = typeof(T);
             if (genericType.IsGenericType && genericType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.KeyValuePair<,>))
@@ -53,7 +53,7 @@ namespace ABI.System.Collections.Generic
         {
             return (global::System.Collections.Generic.IReadOnlyCollection<T>)_this.GetOrCreateTypeHelperData(
                 typeof(global::System.Collections.Generic.IReadOnlyCollection<T>).TypeHandle,
-                static (_, _this) => CreateHelper(_this), _this);
+                CreateHelper, _this);
         }
 
         int global::System.Collections.Generic.IReadOnlyCollection<T>.Count
@@ -69,7 +69,7 @@ namespace ABI.System.Collections.Generic
     [DynamicInterfaceCastableImplementation]
     interface ICollection<T> : global::System.Collections.Generic.ICollection<T>
     {
-        private static global::System.Collections.Generic.ICollection<T> CreateHelper(IWinRTObject _this)
+        private static global::System.Collections.Generic.ICollection<T> CreateHelper(RuntimeTypeHandle type, IWinRTObject _this)
         {
             var genericType = typeof(T);
             if (genericType.IsGenericType && genericType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.KeyValuePair<,>))
@@ -106,7 +106,7 @@ namespace ABI.System.Collections.Generic
         {
             return (global::System.Collections.Generic.ICollection<T>)_this.GetOrCreateTypeHelperData(
                 typeof(global::System.Collections.Generic.ICollection<T>).TypeHandle,
-                static (_, _this) => CreateHelper(_this), _this);
+                CreateHelper, _this);
         }
 
         int global::System.Collections.Generic.ICollection<T>.Count
@@ -143,7 +143,7 @@ namespace ABI.System.Collections
     [DynamicInterfaceCastableImplementation]
     interface ICollection : global::System.Collections.ICollection
     {
-        private static global::System.Collections.ICollection CreateHelper(IWinRTObject _this)
+        private static global::System.Collections.ICollection CreateHelper(RuntimeTypeHandle type, IWinRTObject _this)
         {
             var iList = typeof(global::System.Collections.IList);
             if (_this.IsInterfaceImplemented(iList.TypeHandle, false))
@@ -158,7 +158,7 @@ namespace ABI.System.Collections
         {
             return (global::System.Collections.ICollection)_this.GetOrCreateTypeHelperData(
                 typeof(global::System.Collections.ICollection).TypeHandle,
-                static (_, _this) => CreateHelper(_this), _this);
+                CreateHelper, _this);
         }
 
         int global::System.Collections.ICollection.Count
