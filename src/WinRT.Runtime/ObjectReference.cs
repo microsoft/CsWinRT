@@ -818,18 +818,29 @@ namespace WinRT
             // something we actually need. Because the cache is private and we're the only ones using it, we can
             // just store the per-context agile references as IObjectReference values, and then cast them on return.
 #if NET
-            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, CreateForCurrentContext, this);
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, ContextCallbackHolder.Value, this);
 #else
-            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, ptr => CreateForCurrentContext(ptr, this));
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, ptr => ContextCallbackHolder.Value(ptr, this));
 #endif
 
             return Unsafe.As<ObjectReference<T>>(objectReference);
+        }
+
+        private static class ContextCallbackHolder
+        {
+            // We have a single lambda expression in this type, so we can manually rewrite it to a 'static readonly'
+            // field. This avoids the extra logic to lazily initialized it (it's already lazily initialized because
+            // it's in a 'beforefieldinit' type which is only used when the lambda is actually needed), and also it
+            // allows storing the entire delegate in the Frozen Object Heap (FOH) on modern runtimes.
+            public static readonly Func<IntPtr, IObjectReference, IObjectReference> Value = CreateForCurrentContext;
 
 #if NET
             [UnconditionalSuppressMessage("Trimming", "IL2087", Justification = "The '_iid' field is only empty when using annotated APIs not trim-safe.")]
 #endif
-            static IObjectReference CreateForCurrentContext(IntPtr _, ObjectReferenceWithContext<T> @this)
+            private static IObjectReference CreateForCurrentContext(IntPtr _, IObjectReference state)
             {
+                ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
+
                 var agileReference = @this.AgileReference;
 
                 // We may fail to switch context and thereby not get an agile reference.
