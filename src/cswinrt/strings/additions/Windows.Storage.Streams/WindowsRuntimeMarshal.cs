@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace System.Runtime.InteropServices.WindowsRuntime
+namespace WinRT
 {
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
@@ -41,7 +41,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
 
             if (ComWrappersSupport.TryUnwrapObject(buffer, out var unwrapped) &&
-                unwrapped.TryAs(global::ABI.Windows.Storage.Streams.IBufferByteAccessMethods.IID, out IntPtr ThisPtr) >= 0)
+                unwrapped.TryAs(IID, out IntPtr ThisPtr) >= 0)
             {
                 try
                 {
