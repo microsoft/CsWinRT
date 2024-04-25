@@ -121,28 +121,28 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Factory methods for creating IAsyncInfo instances that have already completed synchronously
 
-        internal static IAsyncAction CreateCompletedAction()
+        public static IAsyncAction CompletedAction()
         {
             var asyncInfo = new TaskToAsyncActionAdapter(isCanceled: false);
             return asyncInfo;
         }
 
 
-        internal static IAsyncActionWithProgress<TProgress> CreateCompletedAction<TProgress>()
+        public static IAsyncActionWithProgress<TProgress> CompletedActionWithProgress<TProgress>()
         {
             var asyncInfo = new TaskToAsyncActionWithProgressAdapter<TProgress>(isCanceled: false);
             return asyncInfo;
         }
 
 
-        internal static IAsyncOperation<TResult> CreateCompletedOperation<TResult>(TResult synchronousResult)
+        public static IAsyncOperation<TResult> FromResult<TResult>(TResult synchronousResult)
         {
             var asyncInfo = new TaskToAsyncOperationAdapter<TResult>(synchronousResult);
             return asyncInfo;
         }
 
 
-        internal static IAsyncOperationWithProgress<TResult, TProgress> CreateCompletedOperation<TResult, TProgress>(TResult synchronousResult)
+        public static IAsyncOperationWithProgress<TResult, TProgress> FromResultWithProgress<TResult, TProgress>(TResult synchronousResult)
         {
             var asyncInfo = new TaskToAsyncOperationWithProgressAdapter<TResult, TProgress>(synchronousResult);
             return asyncInfo;
@@ -150,10 +150,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #endregion Factory methods for creating IAsyncInfo instances that have already completed synchronously
 
-
         #region Factory methods for creating IAsyncInfo instances that have already completed synchronously with an error
 
-        internal static IAsyncAction CreateFaultedAction(Exception error)
+        public static IAsyncAction FromException(Exception error)
         {
             if (error == null)
                 throw new ArgumentNullException(nameof(error));
@@ -167,7 +166,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        internal static IAsyncActionWithProgress<TProgress> CreateFaultedAction<TProgress>(Exception error)
+        public static IAsyncActionWithProgress<TProgress> FromExceptionWithProgress<TProgress>(Exception error)
         {
             if (error == null)
                 throw new ArgumentNullException(nameof(error));
@@ -181,7 +180,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        internal static IAsyncOperation<TResult> CreateFaultedOperation<TResult>(Exception error)
+        public static IAsyncOperation<TResult> FromException<TResult>(Exception error)
         {
             if (error == null)
                 throw new ArgumentNullException(nameof(error));
@@ -195,7 +194,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        internal static IAsyncOperationWithProgress<TResult, TProgress> CreateFaultedOperation<TResult, TProgress>(Exception error)
+        public static IAsyncOperationWithProgress<TResult, TProgress> FromExceptionWithProgress<TResult, TProgress>(Exception error)
         {
             if (error == null)
                 throw new ArgumentNullException(nameof(error));
@@ -207,7 +206,39 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             return asyncInfo;
         }
+
         #endregion Factory methods for creating IAsyncInfo instances that have already completed synchronously with an error
+
+        #region Factory methods for creating IAsyncInfo instances that have already been canceled synchronously
+
+        public static IAsyncAction CanceledAction()
+        {
+            var asyncInfo = new TaskToAsyncActionAdapter(isCanceled: true);
+            return asyncInfo;
+        }
+
+
+        public static IAsyncActionWithProgress<TProgress> CanceledActionWithProgress<TProgress>()
+        {
+            var asyncInfo = new TaskToAsyncActionWithProgressAdapter<TProgress>(isCanceled: true);
+            return asyncInfo;
+        }
+
+
+        public static IAsyncOperation<TResult> CanceledOperation<TResult>()
+        {
+            var asyncInfo = new TaskToAsyncOperationAdapter<TResult>(isCanceled: true);
+            return asyncInfo;
+        }
+
+
+        public static IAsyncOperationWithProgress<TResult, TProgress> CanceledOperationWithProgress<TResult, TProgress>()
+        {
+            var asyncInfo = new TaskToAsyncOperationWithProgressAdapter<TResult, TProgress>(isCanceled: true);
+            return asyncInfo;
+        }
+
+        #endregion Factory methods for creating IAsyncInfo instances that have already been canceled synchronously
 
     }  // class AsyncInfo
 }  // namespace
