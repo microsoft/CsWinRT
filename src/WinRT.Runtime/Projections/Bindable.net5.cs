@@ -578,8 +578,8 @@ namespace ABI.System.Collections
 
         private static FromAbiHelper _AbiHelper(IWinRTObject _this)
         {
-            return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.IEnumerable).TypeHandle,
-                () => new FromAbiHelper((global::System.Collections.IEnumerable)_this));
+            return (FromAbiHelper)_this.AdditionalTypeData.GetOrAdd(typeof(global::System.Collections.IEnumerable).TypeHandle,
+                static (_, _this) => new FromAbiHelper((global::System.Collections.IEnumerable)_this), _this);
         }
 
         unsafe global::Microsoft.UI.Xaml.Interop.IBindableIterator global::Microsoft.UI.Xaml.Interop.IBindableIterable.First()
@@ -1286,8 +1286,8 @@ namespace ABI.System.Collections
 
         internal static FromAbiHelper _VectorToList(IWinRTObject _this)
         {
-            return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.IList).TypeHandle,
-                () => new FromAbiHelper((global::Microsoft.UI.Xaml.Interop.IBindableVector)_this));
+            return (FromAbiHelper)_this.AdditionalTypeData.GetOrAdd(typeof(global::System.Collections.IList).TypeHandle,
+                static (_, _this) => new FromAbiHelper((global::Microsoft.UI.Xaml.Interop.IBindableVector)_this), _this);
         }
 
         unsafe object global::Microsoft.UI.Xaml.Interop.IBindableVector.GetAt(uint index)

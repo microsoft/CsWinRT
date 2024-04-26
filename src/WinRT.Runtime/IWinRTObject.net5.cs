@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -318,9 +319,11 @@ namespace WinRT
 
         ConcurrentDictionary<RuntimeTypeHandle, object> AdditionalTypeData { get; }
 
+        [Obsolete("Use the 'AdditionalTypeData' property instead.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         object GetOrCreateTypeHelperData(RuntimeTypeHandle type, Func<object> helperDataFactory)
         {
-            return AdditionalTypeData.GetOrAdd(type, (type) => helperDataFactory());
+            throw new NotSupportedException("'GetOrCreateTypeHelperData(RuntimeTypeHandle, Func<object>)' is not supported, use 'AdditionalTypeData' instead.");
         }
     }
 }

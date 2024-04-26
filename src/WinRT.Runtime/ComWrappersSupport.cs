@@ -526,7 +526,12 @@ namespace WinRT
             };
         }
 
-        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType)
+        {
+            return CreateTypedRcwFactory(implementationType, null);
+        }
+
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName)
         {
             // If runtime class name is empty or "Object", then just use IInspectable.
             if (implementationType == null || implementationType == typeof(object))
