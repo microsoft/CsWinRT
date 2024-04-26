@@ -4,6 +4,18 @@
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
+    <!--
+      Don't fail builds for well known warnings in projections that are lower priority:
+
+      "CS0108: 'PivotItemDataAutomationPeer.Realize()' hides inherited member 'ItemAutomationPeer.Realize()'. Use the new keyword if hiding was intended."
+      "CS0109: The member 'IChatMessage2.Status' does not hide an accessible member. The new keyword is not required."
+      "CS0219: The variable '__retval' is assigned but its value is never used."
+      "CS0628: 'ToggleSwitch.OnToggled()': new protected member declared in sealed type"
+      "CA2257: The 'ABI.Windows.Foundation.Collections.IMapChangedEventArgs<K>.Vftbl' member on the 'ABI.Windows.Foundation.Collections.IMapChangedEventArgs<K>'
+          type should be marked 'static' as 'ABI.Windows.Foundation.Collections.IMapChangedEventArgs<K>' has the 'DynamicInterfaceImplementationAttribute' applied"
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0108;CS0109;CS0219;CS0628;CA2257</WarningsNotAsErrors>
+
     <!-- Projections should not require runtime marshalling. -->
     <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
   </PropertyGroup>
