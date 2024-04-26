@@ -143,7 +143,7 @@ namespace ABI.WinRT.Interop
                 {
                     IntPtr proxyPtr;
                     Marshal.ThrowExceptionForHR(Platform.CoCreateFreeThreadedMarshaler(IntPtr.Zero, &proxyPtr));
-                    using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref proxyPtr);
+                    using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref proxyPtr, global::WinRT.Interop.IID.IID_IUnknown);
                     IMarshal proxy = new IMarshal(objRef);
                     t_freeThreadedMarshaler = proxy;
                 }
@@ -268,7 +268,7 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IMarshal);
 
         public static implicit operator IMarshal(IObjectReference obj) => (obj != null) ? new IMarshal(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;

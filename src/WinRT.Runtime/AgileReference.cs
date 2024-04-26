@@ -67,7 +67,7 @@ namespace WinRT
                     &iid,
                     thisPtr,
                     &agileReference));
-                _agileReference = ObjectReference<IUnknownVftbl>.Attach(ref agileReference);
+                _agileReference = ObjectReference<IUnknownVftbl>.Attach(ref agileReference, IID.IID_IUnknown);
             }
             catch (TypeLoadException)
             {
@@ -94,7 +94,7 @@ namespace WinRT
                     {
                         Git.RevokeInterfaceFromGlobal(_cookie);
                     }
-                    catch(ArgumentException)
+                    catch (ArgumentException)
                     {
                         // Revoking cookie from GIT table may fail if apartment is gone.
                     }
@@ -106,7 +106,7 @@ namespace WinRT
         private static unsafe IGlobalInterfaceTable GetGitTable()
         {
             Guid gitClsid = CLSID_StdGlobalInterfaceTable;
-            Guid gitIid = ABI.WinRT.Interop.IGlobalInterfaceTable.IID;
+            Guid gitIid = IID.IID_IGlobalInterfaceTable;
             IntPtr gitPtr = default;
 
             try

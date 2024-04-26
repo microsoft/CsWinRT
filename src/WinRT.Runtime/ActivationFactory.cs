@@ -110,7 +110,7 @@ namespace WinRT
                     int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ObjectReference<IUnknownVftbl>.Attach(ref instancePtr);
+                        var objRef = ObjectReference<IUnknownVftbl>.Attach(ref instancePtr, IID.IID_IUnknown);
                         return (objRef, hr);
                     }
                     else
@@ -169,7 +169,7 @@ namespace WinRT
                     int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &iid, &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ObjectReference<I>.Attach(ref instancePtr);
+                        var objRef = ObjectReference<I>.Attach(ref instancePtr, iid);
                         return (objRef, hr);
                     }
                     else
@@ -327,7 +327,7 @@ namespace WinRT
                     instancePtr = activationHandler(typeName, iid);
                     if (instancePtr != IntPtr.Zero)
                     {
-                        return ObjectReference<IUnknownVftbl>.Attach(ref instancePtr);
+                        return ObjectReference<IUnknownVftbl>.Attach(ref instancePtr, iid);
                     }
                 }
                 finally

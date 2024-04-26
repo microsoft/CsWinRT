@@ -422,7 +422,7 @@ namespace ABI.System.Collections.Generic
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
         }
 
         public static Guid PIID = ABI.System.Collections.Generic.IEnumerableMethods<T>.PIID;
@@ -812,7 +812,7 @@ namespace ABI.System.Collections.Generic
             {
                 return null;
             }
-            return new FromAbiEnumerator<T>(ObjectReference<IUnknownVftbl>.FromAbi(abi));
+            return new FromAbiEnumerator<T>(ObjectReference<IUnknownVftbl>.FromAbi(abi, IID.IID_IUnknown));
         }
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::Windows.Foundation.Collections.IIterator<T>>.DisposeAbi(abi);
@@ -1135,7 +1135,7 @@ namespace ABI.System.Collections.Generic
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
         }
         public static Guid PIID = IEnumeratorMethods<T>.PIID;
 

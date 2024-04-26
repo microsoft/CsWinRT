@@ -199,13 +199,13 @@ namespace WinRT
             }
 
             // Normal path for IObjectReference or any IObjectReference<T>
-            return ObjectReference<T>.TryAs(this, iid, out objRef);            
+            return ObjectReference<T>.TryAs(this, iid, out objRef);
         }
 
         public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
             AddRef(true);
-            var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr);
+            var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr, IID.IID_IUnknown);
             objRef.IsAggregated = IsAggregated;
             objRef.PreventReleaseOnDispose = IsAggregated;
             objRef.ReferenceTrackerPtr = ReferenceTrackerPtr;
@@ -497,6 +497,9 @@ namespace WinRT
         {
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public static ObjectReference<T> Attach(ref IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
@@ -546,6 +549,9 @@ namespace WinRT
             }
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
         {
             if (thisPtr == IntPtr.Zero)
@@ -595,6 +601,9 @@ namespace WinRT
             }
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public static ObjectReference<T> FromAbi(IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
@@ -662,7 +671,7 @@ namespace WinRT
 
                 sourceRef.AddRefFromTrackerSource();
 
-                objRef = ObjectReference<T>.Attach(ref thatPtr);
+                objRef = Attach(ref thatPtr, iid);
                 objRef.IsAggregated = sourceRef.IsAggregated;
                 objRef.PreventReleaseOnDispose = sourceRef.IsAggregated;
                 objRef.ReferenceTrackerPtr = sourceRef.ReferenceTrackerPtr;
@@ -689,22 +698,37 @@ namespace WinRT
         private volatile bool _isAgileReferenceSet;
         private volatile AgileReference __agileReference;
         private AgileReference AgileReference => _isAgileReferenceSet ? __agileReference : Make_AgileReference();
-        private AgileReference Make_AgileReference()
+        private unsafe AgileReference Make_AgileReference()
         {
-            Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
+            Context.CallInContext(
+                _contextCallbackPtr,
+                _contextToken,
+#if NET && CsWinRT_LANG_11_FEATURES
+                &InitAgileReference,
+#else
+                InitAgileReference,
+#endif
+                null,
+                this);
 
             // Set after CallInContext callback given callback can fail to occur.
             _isAgileReferenceSet = true;
+
             return __agileReference;
 
-            void InitAgileReference()
+            static void InitAgileReference(object state)
             {
-                global::System.Threading.Interlocked.CompareExchange(ref __agileReference, new AgileReference(this), null);
+                ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
+
+                global::System.Threading.Interlocked.CompareExchange(ref @this.__agileReference, new AgileReference(@this), null);
             }
         }
 
         private readonly Guid _iid;
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken)
             : base(thisPtr)
         {
@@ -712,12 +736,23 @@ namespace WinRT
             _contextToken = contextToken;
         }
 
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "This constructor is setting the '_iid' field directly.")]
+#endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : this(thisPtr, contextCallbackPtr, contextToken)
         {
+            if (iid == default)
+            {
+                ObjectReferenceWithContextHelper.ThrowArgumentExceptionForEmptyIid();
+            }
+
             _iid = iid;
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken)
             : base(thisPtr, vftblT)
         {
@@ -725,9 +760,17 @@ namespace WinRT
             _contextToken = contextToken;
         }
 
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "This constructor is setting the '_iid' field directly.")]
+#endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : this(thisPtr, vftblT, contextCallbackPtr, contextToken)
         {
+            if (iid == default)
+            {
+                ObjectReferenceWithContextHelper.ThrowArgumentExceptionForEmptyIid();
+            }
+
             _iid = iid;
         }
 
@@ -774,13 +817,32 @@ namespace WinRT
             // of ConcurrentDictionary<,> and transitively dependent types for every vtable type T, since it's not
             // something we actually need. Because the cache is private and we're the only ones using it, we can
             // just store the per-context agile references as IObjectReference values, and then cast them on return.
-            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
+#if NET
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, ContextCallbackHolder.Value, this);
+#else
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, ptr => ContextCallbackHolder.Value(ptr, this));
+#endif
 
             return Unsafe.As<ObjectReference<T>>(objectReference);
+        }
 
-            IObjectReference CreateForCurrentContext(IntPtr _)
+        private static class ContextCallbackHolder
+        {
+            // We have a single lambda expression in this type, so we can manually rewrite it to a 'static readonly'
+            // field. This avoids the extra logic to lazily initialized it (it's already lazily initialized because
+            // it's in a 'beforefieldinit' type which is only used when the lambda is actually needed), and also it
+            // allows storing the entire delegate in the Frozen Object Heap (FOH) on modern runtimes.
+            public static readonly Func<IntPtr, IObjectReference, IObjectReference> Value = CreateForCurrentContext;
+
+#if NET
+            [UnconditionalSuppressMessage("Trimming", "IL2087", Justification = "The '_iid' field is only empty when using annotated APIs not trim-safe.")]
+#endif
+            private static IObjectReference CreateForCurrentContext(IntPtr _, IObjectReference state)
             {
-                var agileReference = AgileReference;
+                ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
+
+                var agileReference = @this.AgileReference;
+
                 // We may fail to switch context and thereby not get an agile reference.
                 // In these cases, fallback to using the current context.
                 if (agileReference == null)
@@ -790,13 +852,22 @@ namespace WinRT
 
                 try
                 {
-                    if (_iid == Guid.Empty)
+#if NET
+                    // On NAOT, we can always assume the IID will not be empty, as the only way to reach that path is by
+                    // going through a trim-unsafe constructor, which is explicitly not supported in this configuration.
+                    if (!RuntimeFeature.IsDynamicCodeCompiled)
+                    {
+                        return agileReference.Get<T>(@this._iid);
+                    }
+#endif
+
+                    if (@this._iid == Guid.Empty)
                     {
                         return agileReference.Get<T>(GuidGenerator.GetIID(typeof(T)));
                     }
                     else
                     {
-                        return agileReference.Get<T>(_iid);
+                        return agileReference.Get<T>(@this._iid);
                     }
                 }
                 catch (Exception)
@@ -815,14 +886,48 @@ namespace WinRT
                 CachedContext.Clear();
             }
 
-            Context.CallInContext(_contextCallbackPtr, _contextToken, base.Release, ReleaseWithoutContext);
+            Context.CallInContext(
+                _contextCallbackPtr,
+                _contextToken,
+#if NET && CsWinRT_LANG_11_FEATURES
+                &Release,
+                &ReleaseWithoutContext,
+#else
+                Release,
+                ReleaseWithoutContext,
+#endif
+                this);
+
             Context.DisposeContextCallback(_contextCallbackPtr);
+
+            static void Release(object state)
+            {
+                ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
+
+                @this.ReleaseFromBase();
+            }
+
+            static void ReleaseWithoutContext(object state)
+            {
+                ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
+
+                @this.ReleaseWithoutContext();
+            }
+        }
+
+        // Helper stub to invoke 'base.Release()' on a given 'ObjectReferenceWithContext<T>' input parameter.
+        // We can't just do 'param.base.Release()' (or something like that), so the only way to specifically
+        // invoke the base implementation of an overridden method on that object is to go through a helper
+        // instance method invoked on it that just calls the base implementation of the method we want.
+        private void ReleaseFromBase()
+        {
+            base.Release();
         }
 
         public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
             AddRef(true);
-            var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken())
+            var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken(), IID.IID_IUnknown)
             {
                 IsAggregated = IsAggregated,
                 PreventReleaseOnDispose = IsAggregated,
@@ -855,6 +960,14 @@ namespace WinRT
             }
 
             return hr;
+        }
+    }
+
+    internal static class ObjectReferenceWithContextHelper
+    {
+        public static void ThrowArgumentExceptionForEmptyIid()
+        {
+            throw new ArgumentException("The input argument 'iid' cannot be empty and must be set to a valid IID.");
         }
     }
 

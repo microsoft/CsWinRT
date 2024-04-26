@@ -158,7 +158,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             return 0;
         }
 
-        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
 
         unsafe bool global::Microsoft.UI.Xaml.Interop.IBindableIterator.MoveNext()
         {
@@ -297,7 +297,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             return 0;
         }
 
-        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IUnknown);
 
         private static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, ABI.System.Collections.IEnumerable.FromAbiHelper> _helperTable = new();
 
@@ -573,7 +573,7 @@ namespace ABI.System.Collections
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
         }
 
         private static FromAbiHelper _AbiHelper(IWinRTObject _this)
@@ -1281,7 +1281,7 @@ namespace ABI.System.Collections
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
         }
 
         internal static FromAbiHelper _VectorToList(IWinRTObject _this)

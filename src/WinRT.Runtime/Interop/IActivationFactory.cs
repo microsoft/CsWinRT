@@ -70,7 +70,7 @@ namespace ABI.WinRT.Interop
 
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr);
+                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, global::WinRT.Interop.IID.IID_IUnknown);
             }
             finally
             {
@@ -142,7 +142,7 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_IActivationFactory);
 
         public static implicit operator IActivationFactory(IObjectReference obj) => (obj != null) ? new IActivationFactory(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;

@@ -1412,7 +1412,7 @@ namespace ABI.System.Collections.Generic
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
         }
 
         public static Guid PIID = IListMethods<T>.PIID;
