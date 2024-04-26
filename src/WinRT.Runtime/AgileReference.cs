@@ -94,7 +94,7 @@ namespace WinRT
                     {
                         Git.RevokeInterfaceFromGlobal(_cookie);
                     }
-                    catch(ArgumentException)
+                    catch (ArgumentException)
                     {
                         // Revoking cookie from GIT table may fail if apartment is gone.
                     }
