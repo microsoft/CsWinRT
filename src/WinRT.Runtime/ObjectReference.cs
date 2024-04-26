@@ -698,17 +698,29 @@ namespace WinRT
         private volatile bool _isAgileReferenceSet;
         private volatile AgileReference __agileReference;
         private AgileReference AgileReference => _isAgileReferenceSet ? __agileReference : Make_AgileReference();
-        private AgileReference Make_AgileReference()
+        private unsafe AgileReference Make_AgileReference()
         {
-            Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
+            Context.CallInContext(
+                _contextCallbackPtr,
+                _contextToken,
+#if NET && CsWinRT_LANG_11_FEATURES
+                &InitAgileReference,
+#else
+                InitAgileReference,
+#endif
+                null,
+                this);
 
             // Set after CallInContext callback given callback can fail to occur.
             _isAgileReferenceSet = true;
+
             return __agileReference;
 
-            void InitAgileReference()
+            static void InitAgileReference(object state)
             {
-                global::System.Threading.Interlocked.CompareExchange(ref __agileReference, new AgileReference(this), null);
+                ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
+
+                global::System.Threading.Interlocked.CompareExchange(ref @this.__agileReference, new AgileReference(@this), null);
             }
         }
 
@@ -806,18 +818,29 @@ namespace WinRT
             // something we actually need. Because the cache is private and we're the only ones using it, we can
             // just store the per-context agile references as IObjectReference values, and then cast them on return.
 #if NET
-            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, CreateForCurrentContext, this);
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, ContextCallbackHolder.Value, this);
 #else
-            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, ptr => CreateForCurrentContext(ptr, this));
+            IObjectReference objectReference = CachedContext.GetOrAdd(currentContext, ptr => ContextCallbackHolder.Value(ptr, this));
 #endif
 
             return Unsafe.As<ObjectReference<T>>(objectReference);
+        }
+
+        private static class ContextCallbackHolder
+        {
+            // We have a single lambda expression in this type, so we can manually rewrite it to a 'static readonly'
+            // field. This avoids the extra logic to lazily initialized it (it's already lazily initialized because
+            // it's in a 'beforefieldinit' type which is only used when the lambda is actually needed), and also it
+            // allows storing the entire delegate in the Frozen Object Heap (FOH) on modern runtimes.
+            public static readonly Func<IntPtr, IObjectReference, IObjectReference> Value = CreateForCurrentContext;
 
 #if NET
             [UnconditionalSuppressMessage("Trimming", "IL2087", Justification = "The '_iid' field is only empty when using annotated APIs not trim-safe.")]
 #endif
-            static IObjectReference CreateForCurrentContext(IntPtr _, ObjectReferenceWithContext<T> @this)
+            private static IObjectReference CreateForCurrentContext(IntPtr _, IObjectReference state)
             {
+                ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
+
                 var agileReference = @this.AgileReference;
 
                 // We may fail to switch context and thereby not get an agile reference.
@@ -863,8 +886,42 @@ namespace WinRT
                 CachedContext.Clear();
             }
 
-            Context.CallInContext(_contextCallbackPtr, _contextToken, base.Release, ReleaseWithoutContext);
+            Context.CallInContext(
+                _contextCallbackPtr,
+                _contextToken,
+#if NET && CsWinRT_LANG_11_FEATURES
+                &Release,
+                &ReleaseWithoutContext,
+#else
+                Release,
+                ReleaseWithoutContext,
+#endif
+                this);
+
             Context.DisposeContextCallback(_contextCallbackPtr);
+
+            static void Release(object state)
+            {
+                ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
+
+                @this.ReleaseFromBase();
+            }
+
+            static void ReleaseWithoutContext(object state)
+            {
+                ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
+
+                @this.ReleaseWithoutContext();
+            }
+        }
+
+        // Helper stub to invoke 'base.Release()' on a given 'ObjectReferenceWithContext<T>' input parameter.
+        // We can't just do 'param.base.Release()' (or something like that), so the only way to specifically
+        // invoke the base implementation of an overridden method on that object is to go through a helper
+        // instance method invoked on it that just calls the base implementation of the method we want.
+        private void ReleaseFromBase()
+        {
+            base.Release();
         }
 
         public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
