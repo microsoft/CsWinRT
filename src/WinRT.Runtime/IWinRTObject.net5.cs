@@ -35,7 +35,7 @@ namespace WinRT
             return IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
         }
 
-        bool IsInterfaceImplementedFallback(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
+        internal sealed bool IsInterfaceImplementedFallback(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {
             if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
             {
@@ -225,7 +225,7 @@ namespace WinRT
         }
         
 #if NET8_0_OR_GREATER
-        unsafe bool LookupGeneratedVTableInfo(RuntimeTypeHandle interfaceType, [NotNullWhen(true)] out IIUnknownCacheStrategy.TableInfo? result, out int qiResult)
+        internal sealed unsafe bool LookupGeneratedVTableInfo(RuntimeTypeHandle interfaceType, [NotNullWhen(true)] out IIUnknownCacheStrategy.TableInfo? result, out int qiResult)
         {
             result = null;
             qiResult = 0;
@@ -307,7 +307,7 @@ namespace WinRT
             return GetObjectReferenceForTypeFallback(type);
         }
 
-        IObjectReference GetObjectReferenceForTypeFallback(RuntimeTypeHandle type)
+        internal sealed IObjectReference GetObjectReferenceForTypeFallback(RuntimeTypeHandle type)
         {
             if (IsInterfaceImplemented(type, true))
             {
@@ -318,12 +318,5 @@ namespace WinRT
         }
 
         ConcurrentDictionary<RuntimeTypeHandle, object> AdditionalTypeData { get; }
-
-        [Obsolete("Use the 'AdditionalTypeData' property instead.")]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        object GetOrCreateTypeHelperData(RuntimeTypeHandle type, Func<object> helperDataFactory)
-        {
-            throw new NotSupportedException("'GetOrCreateTypeHelperData(RuntimeTypeHandle, Func<object>)' is not supported, use 'AdditionalTypeData' instead.");
-        }
     }
 }
