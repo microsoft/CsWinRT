@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
@@ -15,14 +16,6 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
     <PublishAot>true</PublishAot>
     <NativeLib>Shared</NativeLib>
-
-    <!--
-      Treat all AOT warnings as errors. We want to make sure that we really are not producing any AOT
-      warnings anywhere (from ILC, not just from the analyzers) when publishing this project. This means
-      we must validate there's no AOT warnings coming from WinRT.Runtime nor from generated code here.
-      Keep in sync with: https://learn.microsoft.com/dotnet/core/deploying/native-aot/fixing-warnings.
-    -->
-    <WarningsAsErrors>$(WarningsAsErrors);IL3050;IL3051;IL3052;IL3053;IL3054;IL3055;IL3056</WarningsAsErrors>
   </PropertyGroup>
 
 </Project>

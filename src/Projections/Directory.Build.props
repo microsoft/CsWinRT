@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <!-- Projections should not require runtime marshalling. -->
     <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
