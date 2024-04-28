@@ -9,6 +9,14 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsTrimmable>true</IsTrimmable>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+
+    <!--
+      Don't fail builds for well known warnings in functional tests that are expected:
+
+      "CS0067: The event 'CustomCommand.CanExecuteChanged' is never used."
+      "CA1416: This call site is reachable on all platforms."
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0067;CA1416</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
