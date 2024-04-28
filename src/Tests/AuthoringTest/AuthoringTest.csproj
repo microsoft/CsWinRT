@@ -9,6 +9,15 @@
     <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
     <!--<CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>--> 
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+	  
+    <!--
+      Don't fail builds for well known warnings in the authoring tests that are expected:
+
+      "CS0067: The event 'BasicClass.ComplexDelegateEvent' is never used."
+      "CS0282: There is no defined ordering between fields in multiple declarations of partial struct 'PartialStruct'.
+	      To specify an ordering, all instance fields must be in the same declaration."
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0067;CS0282</WarningsNotAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
