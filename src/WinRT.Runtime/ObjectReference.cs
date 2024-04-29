@@ -139,11 +139,12 @@ namespace WinRT
             Dispose();
         }
 
-        public ObjectReference<T> As<
 #if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
-        T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
+        public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
 
         public unsafe ObjectReference<T> As<T>(Guid iid)
         {

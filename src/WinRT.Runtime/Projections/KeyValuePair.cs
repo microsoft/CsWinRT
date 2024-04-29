@@ -455,7 +455,7 @@ namespace ABI.System.Collections.Generic
 #if NET
         [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
 #endif
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
 
