@@ -252,4 +252,7 @@ CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribut
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T)' in the implementation but not the reference.
-Total Issues: 253
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IObjectReference.TryAs<T>(WinRT.ObjectReference<T>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IObjectReference.TryAs<T>(WinRT.ObjectReference<T>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.IObjectReference.TryAs<T>(WinRT.ObjectReference<T>)' in the implementation but not the reference.
+Total Issues: 256

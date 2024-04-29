@@ -183,11 +183,12 @@ namespace WinRT
 #endif
         }
 
-        public int TryAs<
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
-            T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
+        public int TryAs<T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
 
         public unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
         {
