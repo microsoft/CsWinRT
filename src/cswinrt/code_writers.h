@@ -9955,7 +9955,7 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
 
         w.write(R"(
 %
-internal class % : IActivationFactory%
+internal sealed class % : IActivationFactory%
 {
 
 static %()
