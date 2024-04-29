@@ -9969,15 +9969,24 @@ public static IntPtr Make()
 }
 
 static readonly % _factory = new %();
-public static ObjectReference<I> ActivateInstance<
-#if NET5_0_OR_GREATER
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+
+#if NET6_0_OR_GREATER
+[RequiresUnreferencedCode("This method is not trim-safe, and is only supported for use when not using trimming (or AOT).")]
+[Obsolete("This method is deprecated and will be removed in a future release.")]
+[EditorBrowsable(EditorBrowsableState.Never)]
 #endif
-    I>()
+public static ObjectReference<I> ActivateInstance<I>()
 {
     IntPtr instance = _factory.ActivateInstance();
 
     return ObjectReference<IInspectable.Vftbl>.Attach(ref instance, global::WinRT.Interop.IID.IID_IInspectable).As<I>();
+}
+
+public static ObjectReference<I> ActivateInstance<I>(Guid iid)
+{
+    IntPtr instance = _factory.ActivateInstance();
+
+    return ObjectReference<IInspectable.Vftbl>.Attach(ref instance, global::WinRT.Interop.IID.IID_IInspectable).As<I>(iid);
 }
 
 public IntPtr ActivateInstance()
