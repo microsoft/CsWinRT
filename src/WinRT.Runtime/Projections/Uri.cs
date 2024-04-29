@@ -57,7 +57,7 @@ namespace ABI.System
         public static implicit operator WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public WinRTUriRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public WinRTUriRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_UriRuntimeClassFactory)) { }
         public WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
