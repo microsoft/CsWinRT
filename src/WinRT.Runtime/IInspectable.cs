@@ -126,7 +126,7 @@ namespace WinRT
 
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>();
+        public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>(IID.IID_IInspectable);
         public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
 
 #if NET
@@ -136,7 +136,7 @@ namespace WinRT
 #endif
         public ObjectReference<I> As<I>() => _obj.As<I>();
         public IObjectReference ObjRef { get => _obj; }
-        public IInspectable(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public IInspectable(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_IInspectable)) { }
         public IInspectable(ObjectReference<Vftbl> obj)
         {
             _obj = obj;

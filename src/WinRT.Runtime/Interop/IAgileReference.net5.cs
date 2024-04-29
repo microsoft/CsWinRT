@@ -156,7 +156,7 @@ namespace ABI.WinRT.Interop
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-        public IGlobalInterfaceTable(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public IGlobalInterfaceTable(IObjectReference obj) : this(obj.As<Vftbl>(global::WinRT.Interop.IID.IID_IGlobalInterfaceTable)) { }
         public IGlobalInterfaceTable(ObjectReference<Vftbl> obj)
         {
             _obj = obj;

@@ -161,7 +161,7 @@ namespace ABI.WinRT.Interop
         [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
         public A As<A>() => _obj.AsType<A>();
-        public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_IActivationFactory)) { }
         internal IActivationFactory(ObjectReference<Vftbl> obj)
         {
             _obj = obj;

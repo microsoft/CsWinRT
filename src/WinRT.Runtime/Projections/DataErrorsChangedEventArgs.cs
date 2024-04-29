@@ -42,7 +42,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public static implicit operator WinRTDataErrorsChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTDataErrorsChangedEventArgsRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public WinRTDataErrorsChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public WinRTDataErrorsChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_DataErrorsChangedEventArgsRuntimeClassFactory)) { }
         public WinRTDataErrorsChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
