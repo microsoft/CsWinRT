@@ -15,8 +15,19 @@
 
       "CS0067: The event 'CustomCommand.CanExecuteChanged' is never used."
       "CA1416: This call site is reachable on all platforms."
+      "IL2075: ABI.Microsoft.UI.Xaml.Data.ManagedCustomPropertyProviderVftbl.Do_Abi_GetCustomProperty_0(IntPtr, IntPtr, IntPtr*):
+          'this' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicProperties' in call to 
+          System.Type.GetProperty(String, BindingFlags)'. The return value of method 'System.Object.GetType()' does not have
+          matching annotations. The source value must declare at least the same requirements as those declared on the target
+          location it is assigned to."
+      "IL2087: <GuidPatcherImplementationDetails>.<SignatureCache>ABI.Windows.Foundation.AsyncActionProgressHandler<!0>..cctor():
+          'type' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicFields' in call to
+          'WinRT.GuidGenerator.GetSignature(Type)'. The generic parameter '!0' of
+          '<GuidPatcherImplementationDetails>.<SignatureCache>ABI.Windows.Foundation.AsyncActionProgressHandler<!0>' does not have
+          matching annotations. The source value must declare at least the same requirements as those declared on the target
+          location it is assigned to."
     -->
-    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0067;CA1416</WarningsNotAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0067;CA1416;IL2075;IL2087</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
