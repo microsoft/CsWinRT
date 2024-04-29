@@ -224,6 +224,7 @@ namespace WinRT
         }
 
 #if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "The type arguments are guaranteed to be valid for the generic ABI types.")]
         [UnconditionalSuppressMessage("Trimming", "IL2068", Justification = "All types added to 'CustomTypeToHelperTypeMappings' have metadata explicitly preserved.")]
         [return: DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicMethods |
@@ -270,6 +271,9 @@ namespace WinRT
             }
         }
 
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "The type arguments are guaranteed to be valid for the generic ABI types.")]
+#endif
         public static Type FindCustomPublicTypeForAbiType(Type abiType)
         {
             rwlock.EnterReadLock();
@@ -374,7 +378,7 @@ namespace WinRT
 
         // Use TryGetCompatibleWindowsRuntimeTypesForVariantType instead.
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
 #endif
         public static bool TryGetCompatibleWindowsRuntimeTypeForVariantType(Type type, out Type compatibleType)
         {
@@ -485,8 +489,8 @@ namespace WinRT
             [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
-            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
+            [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
 #endif
             void GetAllPossibleTypeCombinationsCore(List<Type> accum, Stack<Type> stack, IEnumerable<Type>[] compatibleTypes, int index)
             {
@@ -578,7 +582,7 @@ namespace WinRT
         private readonly static ConcurrentDictionary<Type, Type> DefaultInterfaceTypeCache = new();
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070",
+        [UnconditionalSuppressMessage("Trimming", "IL2070",
             Justification =
             "The path using reflection to retrieve the default interface property is only used with legacy projections. " +
             "Applications which make use of trimming will make use of updated projections and won't hit that code path.")]

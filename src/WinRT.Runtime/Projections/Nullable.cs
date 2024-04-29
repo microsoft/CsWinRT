@@ -20,7 +20,7 @@ namespace ABI.Windows.Foundation
         public static IntPtr AbiToProjectionVftablePtr;
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification = "ABI types used with MakeGenericType are not reflected on.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode", Justification = "ABI types used with MakeGenericType are not reflected on.")]
 #endif
         static unsafe BoxedValueIReferenceImpl()
         {

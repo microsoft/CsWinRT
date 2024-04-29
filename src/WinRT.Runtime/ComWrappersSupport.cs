@@ -402,7 +402,7 @@ namespace WinRT
         }
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+        [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
             Justification = "The existence of the ABI type implies the non-ABI type exists, as in authoring scenarios the ABI type is constructed from the non-ABI type.")] 
 #endif
         internal static (InspectableInfo inspectableInfo, List<ComInterfaceEntry> interfaceTableEntries) PregenerateNativeTypeInformation(Type type)
@@ -437,7 +437,7 @@ namespace WinRT
         }
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2067",
+        [UnconditionalSuppressMessage("Trimming", "IL2067",
             Justification = "The type is a delegate type, so 'GuidGenerator.GetIID' doesn't need to access public fields from it (it uses the helper type).")]
 #endif
         private static Func<IntPtr, object> CreateDelegateFactory(Type type)

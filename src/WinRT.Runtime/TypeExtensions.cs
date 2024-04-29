@@ -72,8 +72,8 @@ namespace WinRT
             return HelperTypeCache.GetOrAdd(type, FindHelperTypeNoCache);
 
 #if NET
-            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
-                Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
+            [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "The type arguments are guaranteed to be valid for the generic ABI types.")]
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             static Type GetHelperTypeFromAttribute(WindowsRuntimeHelperTypeAttribute helperTypeAtribute, Type type)
@@ -98,8 +98,11 @@ namespace WinRT
             }
 
 #if NET
-            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
-                Justification = "This is a fallback for compat purposes with existing projections.  " +
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+                "This is a fallback for compat purposes with existing projections. " +
+                "Applications which make use of trimming will make use of updated projections that won't hit this code path.")]
+            [UnconditionalSuppressMessage("Trimming", "IL2057", Justification =
+                "This is a fallback for compat purposes with existing projections. " +
                 "Applications which make use of trimming will make use of updated projections that won't hit this code path.")]
 #endif
             static Type FindHelperTypeFallback(Type type)
@@ -318,7 +321,7 @@ namespace WinRT
         }
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+        [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
             Justification = "This is a fallback for compat purposes with existing projections.  " +
             "Applications making use of updated projections won't hit this code path.")]
 #endif
