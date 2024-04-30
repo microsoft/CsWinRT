@@ -616,10 +616,10 @@ namespace WinRT
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {
-                    var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IInspectable.Vftbl>(ptr, IID.IID_IInspectable);
+                    var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID.IID_IInspectable);
                     ComWrappersHelper.Init(inspectableObjRef);
 
-                    IInspectable inspectable = new IInspectable(inspectableObjRef);
+                    IInspectable inspectable = new(inspectableObjRef);
 
                     if (ComWrappersSupport.CreateRCWType != null
                         && ComWrappersSupport.CreateRCWType.IsSealed)
