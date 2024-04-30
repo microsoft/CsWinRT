@@ -443,7 +443,7 @@ namespace ABI.System.Collections.Generic
             return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
         }
 
-        public static Guid PIID = KeyValuePairMethods<K, V>.IID;
+        public static readonly Guid PIID = KeyValuePairMethods<K, V>.IID;
 
         public static implicit operator KeyValuePair<K, V>(IObjectReference obj) => (obj != null) ? new KeyValuePair<K, V>(obj) : null;
         public static implicit operator KeyValuePair<K, V>(ObjectReference<IUnknownVftbl> obj) => (obj != null) ? new KeyValuePair<K, V>(obj) : null;
