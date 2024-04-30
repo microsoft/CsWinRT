@@ -36,4 +36,5 @@ MembersMustExist : Member 'public A ABI.System.Collections.Generic.KeyValuePair<
 MembersMustExist : Member 'public WinRT.ObjectReference<I> ABI.System.Collections.Generic.KeyValuePair<K, V>.AsInterface<I>()' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public A ABI.WinRT.Interop.IActivationFactory.As<A>()' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public WinRT.ObjectReference<I> ABI.WinRT.Interop.IActivationFactory.AsInterface<I>()' does not exist in the implementation but it does exist in the contract.
-Total Issues: 37
+MembersMustExist : Member 'protected WinRT.ObjectReference<ABI.WinRT.Interop.IActivationFactory.Vftbl> WinRT.ObjectReference<ABI.WinRT.Interop.IActivationFactory.Vftbl> ABI.WinRT.Interop.IActivationFactory._obj' does not exist in the implementation but it does exist in the contract.
+Total Issues: 38
