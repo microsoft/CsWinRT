@@ -12,6 +12,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using global::Windows.Storage.Streams;
     using WinRT;
 
+#nullable enable
     /// <summary>
     /// An unsafe class that provides a set of methods to access the underlying data representations of WinRT types.
     /// </summary>
@@ -22,18 +23,17 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 #endif
     static partial class WindowsRuntimeMarshal
     {
-#if NET
-        private static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xEF, 0x0F, 0x5A, 0x90, 0x53, 0xBC, 0xDF, 0x11, 0x8C, 0x49, 0x00, 0x1E, 0x4F, 0xC6, 0x86, 0xDA }));
-#else
-        private static global::System.Guid IID { get; } = new Guid(new byte[] { 0xEF, 0x0F, 0x5A, 0x90, 0x53, 0xBC, 0xDF, 0x11, 0x8C, 0x49, 0x00, 0x1E, 0x4F, 0xC6, 0x86, 0xDA });
-#endif
         /// <summary>
         /// Returns a pointer to the underlying data representation of the <see cref="IBuffer"/>.
         /// Callers are responsible for ensuring that the buffer is kept alive while the pointer is in use.
         /// </summary>
         /// <param name="buffer">The buffer to get the data pointer for.</param>
         /// <param name="dataPtr">The pointer to the underlying data representation of the buffer.</param>
-        public static unsafe bool TryGetDataUnsafe(IBuffer buffer, out IntPtr dataPtr)
+        public static unsafe bool TryGetDataUnsafe(
+#if NET
+            [NotNullWhen(true)]
+#endif
+            IBuffer? buffer, out IntPtr dataPtr)
         {
             if (buffer == null)
             {
@@ -42,7 +42,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
 
             if (ComWrappersSupport.TryUnwrapObject(buffer, out var unwrapped) &&
-                unwrapped.TryAs(IID, out IntPtr ThisPtr) >= 0)
+                unwrapped.TryAs(global::WinRT.Interop.IID.IID_IBufferByteAccess, out IntPtr ThisPtr) >= 0)
             {
                 try
                 {
@@ -67,6 +67,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             return false;
         }
     }  // class WindowsRuntimeMarshal
+#nullable restore
 }  // namespace
 
 // WindowsRuntimeMarshal.cs
