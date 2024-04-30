@@ -167,7 +167,7 @@ namespace WinRT
         /// the full type closure of the application.
         /// </remarks>
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Any types which are trimmed are not used by user code and there is fallback logic to handle that.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Any types which are trimmed are not used by user code and there is fallback logic to handle that.")]
 #endif
         private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
         {

@@ -81,7 +81,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             {
                 IntPtr proxyPtr = default;
                 int hr = RoGetBufferMarshaler(&proxyPtr);
-                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.Com.IMarshal.Vftbl>.Attach(ref proxyPtr));
+                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.Com.IMarshal.Vftbl>.Attach(ref proxyPtr, global::WinRT.Interop.IID.IID_IMarshal));
                 t_winRtMarshalProxy = proxy;
 
                 if (hr != 0)

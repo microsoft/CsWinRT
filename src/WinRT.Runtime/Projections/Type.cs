@@ -128,7 +128,7 @@ namespace ABI.System
         }
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2057", 
+        [UnconditionalSuppressMessage("Trimming", "IL2057", 
             Justification = "Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]
 #endif
         public static global::System.Type FromAbi(Type value)

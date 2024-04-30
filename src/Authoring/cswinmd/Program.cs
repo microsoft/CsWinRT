@@ -15,11 +15,13 @@ namespace Generator
     class ConfigOptions : AnalyzerConfigOptions
     {
         public Dictionary<string, string> Values { get; set; } = new();
-        public override bool TryGetValue(string key, [NotNullWhen(true)] out string value)
+
+        public override bool TryGetValue(string key, [NotNullWhen(true)] out string? value)
         {
             return Values.TryGetValue(key, out value);
         }
     }
+
     class ConfigProvider : AnalyzerConfigOptionsProvider
     {
         public override AnalyzerConfigOptions GlobalOptions { get; } = new ConfigOptions();
@@ -34,9 +36,9 @@ namespace Generator
             return GlobalOptions;
         }
     }
+
     class Program
     {
-#nullable enable
         public static void Main(string[] args)
         {
             var i = new List<string>();
@@ -44,7 +46,8 @@ namespace Generator
             string? sdkVersion = null;
             bool? verbose = false;
             bool? nologo = false;
-            string a = null;
+            string? a = null;
+
             for (int idx = 0; idx < args.Length; idx++)
             {
                 if (args[idx] == "-i")
@@ -79,6 +82,7 @@ namespace Generator
 
             DoMain(i.ToArray(), o!, a!, sdkVersion, verbose, nologo);
         }
+
         /// <summary>
         /// CSWinMD - Compile C# definitions to WinMD
         /// </summary>
@@ -95,14 +99,18 @@ namespace Generator
             {
                 Console.WriteLine($"CSWinMD {Assembly.GetExecutingAssembly().GetName().Version}");
             }
+
             var outFolder = string.IsNullOrEmpty(o) ? Environment.GetEnvironmentVariable("TEMP")! : o!;
+
             try
             {
                 if (i.Length == 0)
                 {
                     Console.Error.WriteLine("No C# source files specified");
+
                     return;
-                } else if (i.Length > 1)
+                }
+                else if (i.Length > 1)
                 {
                     throw new NotImplementedException("Compiling more than one file is not yet implemented");
                 }
@@ -151,8 +159,8 @@ namespace Generator
                     );
 
                 var d = driver.RunGenerators(compilation);
-
                 var res = d.GetRunResult();
+
                 if (!res.Diagnostics.IsEmpty)
                 {
                     Console.WriteLine();
@@ -162,7 +170,8 @@ namespace Generator
                         Console.WriteLine($"\t\tIn {v.Location.GetLineSpan()}");
                     }
                     Console.WriteLine();
-                } else
+                }
+                else
                 {
                     Console.WriteLine($" => {outFolder}\\{componentName}.winmd");
                 }
@@ -171,14 +180,18 @@ namespace Generator
             {
                 Console.WriteLine();
                 Console.Error.WriteLine(e);
+
                 if (verbose.HasValue && verbose.Value)
                 {
                     var log_txt = Path.Join(outFolder, "log.txt");
+
                     try
                     {
                         Console.Error.WriteLine(File.ReadAllText(log_txt));
                     }
-                    catch { }
+                    catch
+                    {
+                    }
                 }
             }
         }
@@ -196,6 +209,7 @@ namespace Generator
             using var roots = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows Kits\Installed Roots");
             var kitsRoot10 = (string)roots!.GetValue("KitsRoot10")!;
             var unionMetadata = Path.Combine(kitsRoot10, "UnionMetadata");
+
             if (sdkVersion == null)
             {
                 var dirs = Directory.EnumerateDirectories(unionMetadata);
@@ -203,10 +217,10 @@ namespace Generator
                 versions.Sort();
                 sdkVersion = Path.GetFileName(versions.Last());
             }
+
             var path = Path.Combine(kitsRoot10, "UnionMetadata", sdkVersion, "Windows.winmd");
+
             return path;
         }
-
-        #nullable restore
     }
 }

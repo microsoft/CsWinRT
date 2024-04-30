@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -67,13 +68,17 @@ namespace ABI.Windows.Foundation
                 return 0;
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IActivationFactory);
 
         public static implicit operator IActivationFactory(IObjectReference obj) => (obj != null) ? new IActivationFactory(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+        public ObjectReference<I> AsInterface<
+#if NET
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
         public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         internal IActivationFactory(ObjectReference<Vftbl> obj)
@@ -115,7 +120,12 @@ namespace WinRT
 {
     public static class Module
     {
-        public static unsafe IntPtr GetActivationFactory(String runtimeClassId)
+#if NET
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(TestHost.ProbeByClass))]
+        [UnconditionalSuppressMessage("Trimming", "IL2057", Justification = "We're manually keeping the target type around.")]
+
+#endif
+        public static unsafe IntPtr GetActivationFactory(string runtimeClassId)
         {
             if (string.CompareOrdinal(runtimeClassId, "TestHost.ProbeByClass") == 0)
             {
@@ -139,6 +149,9 @@ namespace TestHost
 {
     public class ProbeByClass : IStringable
     {
+#if NET
+        [UnconditionalSuppressMessage("SingleFile", "IL3000", Justification = "We're not publishing this test as single file.")]
+#endif
         public override string ToString()
         {
             return new System.IO.FileInfo(Assembly.GetExecutingAssembly().Location).Name;
