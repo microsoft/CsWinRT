@@ -124,7 +124,7 @@ namespace ABI.Windows.Storage.Streams
                 return 0;
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IBufferByteAccess);
 
         IntPtr global::Windows.Storage.Streams.IBufferByteAccess.Buffer
         {
