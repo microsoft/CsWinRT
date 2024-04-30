@@ -324,17 +324,17 @@ namespace ABI.System.Runtime.InteropServices.WindowsRuntime
             {
                 new ComWrappers.ComInterfaceEntry
                 {
-                    IID = typeof(global::Windows.Storage.Streams.IBuffer).GUID,
+                    IID = global::WinRT.Interop.IID.IID_IBuffer,
                     Vtable = global::ABI.Windows.Storage.Streams.IBuffer.AbiToProjectionVftablePtr
                 },
                 new ComWrappers.ComInterfaceEntry
                 {
-                    IID = typeof(global::Windows.Storage.Streams.IBufferByteAccess).GUID,
+                    IID = global::WinRT.Interop.IID.IID_IBufferByteAccess,
                     Vtable = global::ABI.Windows.Storage.Streams.IBufferByteAccess.Vftbl.AbiToProjectionVftablePtr
                 },
                 new ComWrappers.ComInterfaceEntry
                 {
-                    IID = typeof(global::Com.IMarshal).GUID,
+                    IID = global::WinRT.Interop.IID.IID_IMarshal,
                     Vtable = global::ABI.Com.IMarshal.Vftbl.AbiToProjectionVftablePtr
                 }
             };

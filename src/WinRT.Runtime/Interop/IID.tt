@@ -31,6 +31,8 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("IActivationFactory", "00000035-0000-0000-C000-000000000046", true),
     ("IAgileObject", "94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90", false),
     ("IMarshal", "00000003-0000-0000-C000-000000000046", true),
+    ("IBuffer", "905A0FE0-BC53-11DF-8C49-001E4FC686DA", true),
+    ("IBufferByteAccess", "905A0FEF-BC53-11DF-8C49-001E4FC686DA", true),
     ("IContextCallback", "000001DA-0000-0000-C000-000000000046", false),
     ("ICallbackWithNoReentrancyToApplicationSTA", "0A299774-3E4E-FC42-1D9D-72CEE105CA57", false),
     ("IErrorInfo", "1CF2B120-547D-101B-8E65-08002B2BD119", false),
