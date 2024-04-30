@@ -258,4 +258,5 @@ CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnref
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'ABI.System.Nullable<T>.AsInterface<I>()' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'ABI.System.Collections.Generic.KeyValuePair<K, V>.AsInterface<I>()' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.AsInterface<I>()' in the implementation but not the reference.
-Total Issues: 259
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
+Total Issues: 260
