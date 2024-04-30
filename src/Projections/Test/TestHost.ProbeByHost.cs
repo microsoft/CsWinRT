@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -75,13 +74,6 @@ namespace ABI.Windows.Foundation
         protected readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
-#if NET
-        [RequiresUnreferencedCode("This method is not trim-safe, and is only supported for use when not using trimming (or AOT).")]
-        [Obsolete("This method is deprecated and will be removed in a future release.")]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
         public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>(global::WinRT.Interop.IID.IID_IActivationFactory)) { }
         internal IActivationFactory(ObjectReference<Vftbl> obj)
         {
