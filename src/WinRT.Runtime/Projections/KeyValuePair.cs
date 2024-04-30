@@ -453,9 +453,9 @@ namespace ABI.System.Collections.Generic
         public IntPtr ThisPtr => _obj.ThisPtr;
 
 #if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
         [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
 #endif
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
 
