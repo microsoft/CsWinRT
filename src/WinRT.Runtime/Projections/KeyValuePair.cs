@@ -42,6 +42,11 @@ namespace ABI.System.Collections.Generic
         internal volatile unsafe static delegate*<IObjectReference, V> _GetValue;
         internal volatile static bool _RcwHelperInitialized;
 
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
+            "The 'AsInterface<I>()' method will never be invoked via reflection from the helper type registration. " +
+            "Additionally, the method is obsolete and hidden. When it is removed, this suppression can also be removed.")]
+#endif
         static KeyValuePairMethods()
         {
             ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.KeyValuePair<K, V>), typeof(global::ABI.System.Collections.Generic.KeyValuePair<K, V>));
