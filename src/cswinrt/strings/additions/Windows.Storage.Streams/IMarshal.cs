@@ -204,13 +204,13 @@ namespace ABI.Com
         public IntPtr ThisPtr => _obj.ThisPtr;
 
 #if NET
+        [RequiresUnreferencedCode("This method is not trim-safe, and is only supported for use when not using trimming (or AOT).")]
         [Obsolete("This method is deprecated and will be removed in a future release.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = "This method is not trim-safe, and is only supported for use when not using trimming (or AOT).")]
 #endif
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
-        public IMarshal(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public IMarshal(IObjectReference obj) : this(obj.As<Vftbl>(global::WinRT.Interop.IID.IID_IMarshal)) { }
         internal IMarshal(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
