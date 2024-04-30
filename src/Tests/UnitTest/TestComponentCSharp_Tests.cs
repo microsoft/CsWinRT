@@ -465,7 +465,7 @@ namespace UnitTest
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            arr.CopyTo(1, buf, 3, 0);
+            arr.CopyTo(0, buf, 0, 3);
 
             Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(buf, out IntPtr dataPtr));
             Assert.True(dataPtr != IntPtr.Zero);
