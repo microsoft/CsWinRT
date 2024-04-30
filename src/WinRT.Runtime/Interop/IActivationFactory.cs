@@ -90,6 +90,10 @@ namespace ABI.WinRT.Interop
 #endif
     unsafe class IActivationFactory : global::WinRT.Interop.IActivationFactory
     {
+#if NET
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         [Guid("00000035-0000-0000-C000-000000000046")]
         public struct Vftbl
         {
@@ -142,10 +146,13 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_IActivationFactory);
 
         public static implicit operator IActivationFactory(IObjectReference obj) => (obj != null) ? new IActivationFactory(obj) : null;
+#if NET
+        protected readonly ObjectReference<IUnknownVftbl> _obj;
+#else
         protected readonly ObjectReference<Vftbl> _obj;
+#endif
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
 
@@ -161,10 +168,13 @@ namespace ABI.WinRT.Interop
         [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
         public A As<A>() => _obj.AsType<A>();
-        public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_IActivationFactory)) { }
-        internal IActivationFactory(ObjectReference<Vftbl> obj)
+        public IActivationFactory(IObjectReference obj)
         {
-            _obj = obj;
+#if NET
+            _obj = obj.As<IUnknownVftbl>(IID.IID_IActivationFactory);
+#else
+            _obj = obj.As<Vftbl>(IID.IID_IActivationFactory);
+#endif
         }
 
         public unsafe IntPtr ActivateInstance()
@@ -172,7 +182,12 @@ namespace ABI.WinRT.Interop
             IntPtr __retval = default;
             try
             {
+#if NET
+                IntPtr thisPtr = ThisPtr;
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[6])(thisPtr, &__retval));
+#else
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ActivateInstance_0(ThisPtr, &__retval));
+#endif
                 return __retval;
             }
             finally
