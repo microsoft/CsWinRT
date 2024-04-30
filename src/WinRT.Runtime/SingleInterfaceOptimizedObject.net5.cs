@@ -15,10 +15,10 @@ namespace WinRT
 #else 
     public
 #endif
-    class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
+    sealed class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
     {
-        private Type _type;
-        private IObjectReference _obj;
+        private readonly Type _type;
+        private readonly IObjectReference _obj;
 
         public SingleInterfaceOptimizedObject(Type type, IObjectReference objRef)
             : this(type, objRef, true)
@@ -101,7 +101,7 @@ namespace WinRT
                 return false;
             }
 
-            return (this as IWinRTObject).IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
+            return ((IWinRTObject)this).IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
         }
 
         IObjectReference IWinRTObject.GetObjectReferenceForType(RuntimeTypeHandle interfaceType)
@@ -110,7 +110,7 @@ namespace WinRT
             {
                 return _obj;
             }
-            return (this as IWinRTObject).GetObjectReferenceForTypeFallback(interfaceType);
+            return ((IWinRTObject)this).GetObjectReferenceForTypeFallback(interfaceType);
         }
 
     }
