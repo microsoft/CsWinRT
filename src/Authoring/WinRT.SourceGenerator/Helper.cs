@@ -123,6 +123,16 @@ namespace Generator
             return false;
         }
 
+        public static bool GetCsWinRTRcwFactoryFallbackGeneratorForceOptOut(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTRcwFactoryFallbackGeneratorForceOptOut", out var csWinRTRcwFactoryFallbackGeneratorForceOptOut))
+            {
+                return bool.TryParse(csWinRTRcwFactoryFallbackGeneratorForceOptOut, out var isCsWinRTRcwFactoryFallbackGeneratorForceOptOut) && isCsWinRTRcwFactoryFallbackGeneratorForceOptOut;
+            }
+
+            return false;
+        }
+
         public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
         {
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateWinMDOnly", out var CsWinRTGenerateWinMDOnlyStr))
