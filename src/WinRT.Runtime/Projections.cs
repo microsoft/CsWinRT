@@ -58,18 +58,8 @@ namespace WinRT
 
             // This should be in sync with cswinrt/helpers.h and the reverse mapping from WinRT.SourceGenerator/WinRTTypeWriter.cs.            
             RegisterCustomAbiTypeMappingNoLock(typeof(EventRegistrationToken), typeof(ABI.WinRT.EventRegistrationToken), "Windows.Foundation.EventRegistrationToken");
-
-#if NET
-            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
-                "The 'AsInterface<I>()' method will never be invoked via reflection from the helper type registration. " +
-                "Additionally, the method is obsolete and hidden. When it is removed, this suppression can also be removed.")]
-#endif
-            static void RegisterNullableAbiTypeMappingNoLock()
-            {
-                RegisterCustomAbiTypeMappingNoLock(typeof(Nullable<>), typeof(ABI.System.Nullable<>), "Windows.Foundation.IReference`1");
-            }
-
-            RegisterNullableAbiTypeMappingNoLock();
+            
+            RegisterCustomAbiTypeMappingNoLock(typeof(Nullable<>), typeof(ABI.System.Nullable<>), "Windows.Foundation.IReference`1");
 
             RegisterCustomAbiTypeMappingNoLock(typeof(DateTimeOffset), typeof(ABI.System.DateTimeOffset), "Windows.Foundation.DateTime");
             RegisterCustomAbiTypeMappingNoLock(typeof(Exception), typeof(ABI.System.Exception), "Windows.Foundation.HResult");
@@ -84,18 +74,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(IServiceProvider), typeof(ABI.System.IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider");
             RegisterCustomAbiTypeMappingNoLock(typeof(EventHandler<>), typeof(ABI.System.EventHandler<>), "Windows.Foundation.EventHandler`1");
 
-#if NET
-            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
-                "The 'AsInterface<I>()' method will never be invoked via reflection from the helper type registration. " +
-                "Additionally, the method is obsolete and hidden. When it is removed, this suppression can also be removed.")]
-#endif
-            static void RegisterKeyValuePairAbiTypeMappingNoLock()
-            {
-                RegisterCustomAbiTypeMappingNoLock(typeof(KeyValuePair<,>), typeof(ABI.System.Collections.Generic.KeyValuePair<,>), "Windows.Foundation.Collections.IKeyValuePair`2");
-            }
-
-            RegisterKeyValuePairAbiTypeMappingNoLock();
-
+            RegisterCustomAbiTypeMappingNoLock(typeof(KeyValuePair<,>), typeof(ABI.System.Collections.Generic.KeyValuePair<,>), "Windows.Foundation.Collections.IKeyValuePair`2");
             RegisterCustomAbiTypeMappingNoLock(typeof(IEnumerable<>), typeof(ABI.System.Collections.Generic.IEnumerable<>), "Windows.Foundation.Collections.IIterable`1");
             RegisterCustomAbiTypeMappingNoLock(typeof(IEnumerator<>), typeof(ABI.System.Collections.Generic.IEnumerator<>), "Windows.Foundation.Collections.IIterator`1");
             RegisterCustomAbiTypeMappingNoLock(typeof(IList<>), typeof(ABI.System.Collections.Generic.IList<>), "Windows.Foundation.Collections.IVector`1");

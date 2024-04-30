@@ -42,11 +42,6 @@ namespace ABI.System.Collections.Generic
         internal volatile unsafe static delegate*<IObjectReference, V> _GetValue;
         internal volatile static bool _RcwHelperInitialized;
 
-#if NET
-        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification =
-            "The 'AsInterface<I>()' method will never be invoked via reflection from the helper type registration. " +
-            "Additionally, the method is obsolete and hidden. When it is removed, this suppression can also be removed.")]
-#endif
         static KeyValuePairMethods()
         {
             ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.KeyValuePair<K, V>), typeof(global::ABI.System.Collections.Generic.KeyValuePair<K, V>));
@@ -457,18 +452,6 @@ namespace ABI.System.Collections.Generic
 
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-#if NET
-        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
-        public A As<A>() => _obj.AsType<A>();
         public KeyValuePair(IObjectReference obj) : this(obj.As<IUnknownVftbl>(PIID)) { }
         public KeyValuePair(ObjectReference<IUnknownVftbl> obj)
         {

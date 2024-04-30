@@ -149,18 +149,6 @@ namespace ABI.WinRT.Interop
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-#if NET
-        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
-        public A As<A>() => _obj.AsType<A>();
         public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_IActivationFactory)) { }
         internal IActivationFactory(ObjectReference<Vftbl> obj)
         {
