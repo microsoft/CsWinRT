@@ -244,6 +244,4 @@ CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnref
 CannotChangeAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' on 'ABI.System.Type.FromAbi(ABI.System.Type)' changed from '[UnconditionalSuppressMessageAttribute("Trimming", "IL2057", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the implementation to '[UnconditionalSuppressMessageAttribute("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the reference.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.FindCustomPublicTypeForAbiType(System.Type)' in the implementation but not the reference.
 MembersMustExist : Member 'protected WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.WinRT.Interop.IActivationFactory._obj' does not exist in the reference but it does exist in the implementation.
-CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.Vftbl' in the implementation but not the reference.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.Vftbl' in the implementation but not the reference.
-Total Issues: 247
+Total Issues: 245

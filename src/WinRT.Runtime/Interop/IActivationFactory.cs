@@ -90,10 +90,6 @@ namespace ABI.WinRT.Interop
 #endif
     unsafe class IActivationFactory : global::WinRT.Interop.IActivationFactory
     {
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
         [Guid("00000035-0000-0000-C000-000000000046")]
         public struct Vftbl
         {
