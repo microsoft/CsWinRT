@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace WinRT
+namespace System.Runtime.InteropServices.WindowsRuntime
 {
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
@@ -11,10 +11,11 @@ namespace WinRT
     using global::Windows.Foundation;
     using global::Windows.Storage.Streams;
     using WinRT;
+
     /// <summary>
     /// An unsafe class that provides a set of methods to access the underlying data representations of WinRT types.
     /// </summary>
-#if EMBED
+#if EMBED || !NET // for netstandard this type conflicts with the type in the BCL so make it internal
     internal
 #else
     public

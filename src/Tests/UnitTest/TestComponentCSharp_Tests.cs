@@ -459,6 +459,7 @@ namespace UnitTest
             Assert.True(array.Length == 0);
         }
 
+#if NET
         [Fact]
         public void TestTryGetDataUnsafe()
         {
@@ -480,6 +481,7 @@ namespace UnitTest
             // Ensure buf doesn't get collected while we use the data pointer
             GC.KeepAlive(buf);
         }
+#endif
 
         [Fact]
         public void TestTypePropertyWithSystemType()
