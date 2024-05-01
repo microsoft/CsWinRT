@@ -388,8 +388,10 @@ namespace ABI.System
 
         public static readonly Guid PIID = NullableType.GetIID<T>();
 
+#if !NET
         public static implicit operator Nullable<T>(IObjectReference obj) => (obj != null) ? new Nullable<T>(obj) : null;
         public static implicit operator Nullable<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable<T>(obj) : null;
+#endif
         protected readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
 

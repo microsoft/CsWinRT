@@ -31,4 +31,10 @@ InterfacesShouldHaveSameMembers : Default interface member 'public System.Boolea
 MembersMustExist : Member 'public System.Boolean WinRT.IWinRTObject.IsInterfaceImplementedFallback(System.RuntimeTypeHandle, System.Boolean)' does not exist in the implementation but it does exist in the contract.
 CannotSealType : Type 'WinRT.SingleInterfaceOptimizedObject' is actually (has the sealed modifier) sealed in the implementation but not sealed in the contract.
 MembersMustExist : Member 'protected WinRT.ObjectReference<ABI.WinRT.Interop.IActivationFactory.Vftbl> WinRT.ObjectReference<ABI.WinRT.Interop.IActivationFactory.Vftbl> ABI.WinRT.Interop.IActivationFactory._obj' does not exist in the implementation but it does exist in the contract.
-Total Issues: 32
+MembersMustExist : Member 'public ABI.System.Nullable<T> ABI.System.Nullable<T>.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public ABI.System.Nullable<T> ABI.System.Nullable<T>.op_Implicit(WinRT.ObjectReference<ABI.System.Nullable<T>.Vftbl>)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public ABI.System.Collections.Generic.KeyValuePair<K, V> ABI.System.Collections.Generic.KeyValuePair<K, V>.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public ABI.WinRT.Interop.IActivationFactory ABI.WinRT.Interop.IActivationFactory.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public WinRT.IInspectable WinRT.IInspectable.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public WinRT.IInspectable WinRT.IInspectable.op_Implicit(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' does not exist in the implementation but it does exist in the contract.
+Total Issues: 38

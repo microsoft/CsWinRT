@@ -126,13 +126,12 @@ namespace WinRT
 
         private readonly ObjectReference<IUnknownVftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public static implicit operator IInspectable(IObjectReference obj) => new(obj.As<IUnknownVftbl>(IID.IID_IInspectable));
 
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
+
+#if !NET
+        public static implicit operator IInspectable(IObjectReference obj) => new(obj.As<IUnknownVftbl>(IID.IID_IInspectable));
         public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new(obj);
+#endif
 
 #if NET
         [Obsolete(AttributeMessages.GenericDeprecatedMessage)]

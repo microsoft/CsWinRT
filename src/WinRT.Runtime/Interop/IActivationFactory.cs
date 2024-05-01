@@ -143,7 +143,9 @@ namespace ABI.WinRT.Interop
             }
         }
 
+#if !NET
         public static implicit operator IActivationFactory(IObjectReference obj) => (obj != null) ? new IActivationFactory(obj) : null;
+#endif
 #if NET
         protected readonly ObjectReference<IUnknownVftbl> _obj;
 #else

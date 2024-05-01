@@ -69,8 +69,6 @@ namespace ABI.Windows.Foundation
             }
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IActivationFactory);
-
-        public static implicit operator IActivationFactory(IObjectReference obj) => (obj != null) ? new IActivationFactory(obj) : null;
         protected readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;

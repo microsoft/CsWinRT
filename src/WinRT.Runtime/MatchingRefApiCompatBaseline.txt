@@ -246,6 +246,4 @@ CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.Unconditional
 MembersMustExist : Member 'protected WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.WinRT.Interop.IActivationFactory._obj' does not exist in the reference but it does exist in the implementation.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IInspectable..ctor(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IInspectable..ctor(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
-CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IInspectable.op_Implicit(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IInspectable.op_Implicit(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
 Total Issues: 249
