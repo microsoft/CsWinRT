@@ -3,11 +3,9 @@
 
 namespace System.Runtime.InteropServices.WindowsRuntime
 {
+    using System;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
-    using System.Threading;
-    using System.Threading.Tasks;
     using global::Windows.Foundation;
     using global::Windows.Storage.Streams;
     using WinRT;
