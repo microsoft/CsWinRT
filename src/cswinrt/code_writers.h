@@ -8264,12 +8264,20 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         }
 
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
+        auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
         auto default_interface_name = get_default_interface_name(w, type, false, true);
+        auto base_semantics = get_type_semantics(type.Extends());
+        auto from_abi_new = !std::holds_alternative<object_type>(base_semantics) ? "new " : "";
 
         // This type can be empty, as it is only used for metadata lookup, but not as implementation
         w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 %internal % partial class %
 {
+public static %% FromAbi(IntPtr thisPtr)
+{
+if (thisPtr == IntPtr.Zero) return null;
+return MarshalInspectable<%>.FromAbi(thisPtr);
+}
 }
 )",
         bind<write_winrt_attribute>(type),
@@ -8277,7 +8285,10 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         default_interface_name,
         bind<write_type_custom_attributes>(type, false),
         bind<write_class_modifiers>(type),
-        type_name);
+        type_name,
+        from_abi_new,
+        wrapped_type_name,
+        wrapped_type_name);
     }
 
     void write_class_netstandard(writer& w, TypeDef const& type)
