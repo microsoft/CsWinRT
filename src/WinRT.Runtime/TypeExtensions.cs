@@ -302,10 +302,14 @@ namespace WinRT
             return AuthoringMetadataTypeCache.GetOrAdd(type,
                 (type) =>
                 {
-                    var lookupFunc = AuthoringMetadaTypeLookup.Find(lookupFunc => lookupFunc(type) != null);
-                    if (lookupFunc != null)
+                    foreach (Func<Type, Type> func in AuthoringMetadaTypeLookup)
                     {
-                        return lookupFunc(type);
+                        Type metadataType = func(type);
+
+                        if (metadataType is not null)
+                        {
+                            return metadataType;
+                        }
                     }
 
 #if NET
