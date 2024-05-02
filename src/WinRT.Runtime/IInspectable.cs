@@ -72,7 +72,7 @@ namespace WinRT
 #endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(sizeof(Vftbl));
-                Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
+                *(Vftbl*)AbiToProjectionVftablePtr = AbiToProjectionVftable;
             }
 
 #if NET
