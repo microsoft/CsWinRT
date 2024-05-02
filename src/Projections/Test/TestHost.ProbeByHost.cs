@@ -74,13 +74,7 @@ namespace ABI.Windows.Foundation
         protected readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<
-#if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
-#endif
-            I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>(global::WinRT.Interop.IID.IID_IActivationFactory)) { }
         internal IActivationFactory(ObjectReference<Vftbl> obj)
         {
             _obj = obj;

@@ -130,9 +130,9 @@ namespace WinRT
         public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
 
 #if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
         [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
 #endif
         public ObjectReference<I> As<I>() => _obj.As<I>();
         public IObjectReference ObjRef { get => _obj; }

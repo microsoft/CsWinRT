@@ -9955,7 +9955,7 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
 
         w.write(R"(
 %
-internal class % : IActivationFactory%
+internal sealed class % : IActivationFactory%
 {
 
 static %()
@@ -9969,16 +9969,6 @@ public static IntPtr Make()
 }
 
 static readonly % _factory = new %();
-public static ObjectReference<I> ActivateInstance<
-#if NET5_0_OR_GREATER
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
-#endif
-    I>()
-{
-    IntPtr instance = _factory.ActivateInstance();
-
-    return ObjectReference<IInspectable.Vftbl>.Attach(ref instance, global::WinRT.Interop.IID.IID_IInspectable).As<I>();
-}
 
 public IntPtr ActivateInstance()
 {
