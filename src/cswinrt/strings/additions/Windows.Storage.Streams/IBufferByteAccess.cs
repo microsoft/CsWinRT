@@ -101,7 +101,7 @@ namespace ABI.Windows.Storage.Streams
 
             static unsafe Vftbl()
             {
-                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.Interop.IUnknownVftbl>() + sizeof(IntPtr) * 1);
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.Interop.IUnknownVftbl) + sizeof(IntPtr));
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
