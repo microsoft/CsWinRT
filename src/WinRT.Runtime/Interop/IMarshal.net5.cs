@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
@@ -11,25 +10,8 @@ using WinRT.Interop;
 namespace WinRT.Interop
 {
     internal enum MSHCTX : int { Local = 0, NoSharedMem = 1, DifferentMachine = 2, InProc = 3, CrossCtx = 4 }
+
     internal enum MSHLFLAGS : int { Normal = 0, TableStrong = 1, TableWeak = 2, NoPing = 4 }
-
-    [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
-    [Guid("00000003-0000-0000-c000-000000000046")]
-    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IMarshal))]
-    internal interface IMarshal
-    {
-        unsafe void GetUnmarshalClass(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, Guid* pCid);
-
-        unsafe void GetMarshalSizeMax(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags, uint* pSize);
-
-        unsafe void MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags);
-
-        unsafe void UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv);
-
-        void ReleaseMarshalData(IntPtr pStm);
-
-        void DisconnectObject(uint dwReserved);
-    }
 }
 
 namespace ABI.WinRT.Interop
