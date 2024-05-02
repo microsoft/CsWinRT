@@ -8267,8 +8267,66 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
         auto default_interface_name = get_default_interface_name(w, type, false, true);
 
-        // This type can be empty, as it is only used for metadata lookup, but not as implementation
-        w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+        if (settings.netstandard_compat)
+        {
+            auto base_semantics = get_type_semantics(type.Extends());
+            auto from_abi_new = !std::holds_alternative<object_type>(base_semantics) ? "new " : "";
+
+            // Fallback path for .NET Standard, with all interfaces of the user defined type implemented
+            // on the authoring metadata type as well. This is because on this target, CsWinRT will go
+            // through the list of implemented interfaces to construct the CCW and do other things. In
+            // theory, the type could be abstract and without actually providing an implementation of the
+            // interfaces it's declaring, but given this is a fallback path for backwards compatibility,
+            // it's simpler to just keep the existing code without any changes, to minimize risk.
+            w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+%internal % partial class %%
+{
+public %(% comp)
+{
+_comp = comp;
+}
+public static implicit operator %(% comp)
+{
+return comp._comp;
+}
+public static implicit operator %(% comp)
+{
+return new %(comp);
+}
+public static %% FromAbi(IntPtr thisPtr)
+{
+if (thisPtr == IntPtr.Zero) return null;
+return MarshalInspectable<%>.FromAbi(thisPtr);
+}
+%
+private readonly % _comp;
+}
+)",
+                bind<write_winrt_attribute>(type),
+                bind<write_winrt_helper_type_attribute>(type),
+                default_interface_name,
+                bind<write_type_custom_attributes>(type, false),
+                bind<write_class_modifiers>(type),
+                type_name,
+                bind<write_type_inheritance>(type, base_semantics, false, true),
+                type_name,
+                wrapped_type_name,
+                wrapped_type_name,
+                type_name,
+                type_name,
+                wrapped_type_name,
+                type_name,
+                from_abi_new,
+                wrapped_type_name,
+                wrapped_type_name,
+                bind<write_class_members>(type, true, false),
+                wrapped_type_name);
+        }
+        else
+        {
+            // This type can be empty, as it is only used for metadata lookup, but not as implementation.
+            // On modern .NET, we use [WinRTExposedType] to get all implemented interfaces for the vtable.
+            w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 %internal % partial class %
 {
 public static % FromAbi(IntPtr thisPtr)
@@ -8278,14 +8336,15 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 }
 }
 )",
-        bind<write_winrt_attribute>(type),
-        bind<write_winrt_helper_type_attribute>(type),
-        default_interface_name,
-        bind<write_type_custom_attributes>(type, false),
-        bind<write_class_modifiers>(type),
-        type_name,
-        wrapped_type_name,
-        wrapped_type_name);
+                bind<write_winrt_attribute>(type),
+                bind<write_winrt_helper_type_attribute>(type),
+                default_interface_name,
+                bind<write_type_custom_attributes>(type, false),
+                bind<write_class_modifiers>(type),
+                type_name,
+                wrapped_type_name,
+                wrapped_type_name);
+        }
     }
 
     void write_class_netstandard(writer& w, TypeDef const& type)
