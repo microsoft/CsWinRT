@@ -37,4 +37,10 @@ MembersMustExist : Member 'public WinRT.ObjectReference<I> ABI.System.Collection
 MembersMustExist : Member 'public A ABI.WinRT.Interop.IActivationFactory.As<A>()' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public WinRT.ObjectReference<I> ABI.WinRT.Interop.IActivationFactory.AsInterface<I>()' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'protected WinRT.ObjectReference<ABI.WinRT.Interop.IActivationFactory.Vftbl> WinRT.ObjectReference<ABI.WinRT.Interop.IActivationFactory.Vftbl> ABI.WinRT.Interop.IActivationFactory._obj' does not exist in the implementation but it does exist in the contract.
-Total Issues: 38
+MembersMustExist : Member 'public ABI.System.Nullable<T> ABI.System.Nullable<T>.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public ABI.System.Nullable<T> ABI.System.Nullable<T>.op_Implicit(WinRT.ObjectReference<ABI.System.Nullable<T>.Vftbl>)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public ABI.System.Collections.Generic.KeyValuePair<K, V> ABI.System.Collections.Generic.KeyValuePair<K, V>.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public ABI.WinRT.Interop.IActivationFactory ABI.WinRT.Interop.IActivationFactory.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public WinRT.IInspectable WinRT.IInspectable.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public WinRT.IInspectable WinRT.IInspectable.op_Implicit(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' does not exist in the implementation but it does exist in the contract.
+Total Issues: 44

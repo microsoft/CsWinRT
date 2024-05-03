@@ -126,8 +126,10 @@ namespace WinRT
 
         private readonly ObjectReference<IUnknownVftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
+#if !NET
         public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>(IID.IID_IInspectable);
         public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
+#endif
 
 #if NET
         [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]

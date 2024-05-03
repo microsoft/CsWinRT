@@ -201,7 +201,6 @@ namespace ABI.Com
 #else
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IMarshal);
 #endif
-        public static implicit operator IMarshal(IObjectReference obj) => (obj != null) ? new IMarshal(obj) : null;
 #if NET
         private readonly ObjectReference<global::WinRT.Interop.IUnknownVftbl> _obj;
 #else

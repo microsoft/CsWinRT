@@ -445,8 +445,10 @@ namespace ABI.System.Collections.Generic
 
         public static readonly Guid PIID = KeyValuePairMethods<K, V>.IID;
 
+#if !NET
         public static implicit operator KeyValuePair<K, V>(IObjectReference obj) => (obj != null) ? new KeyValuePair<K, V>(obj) : null;
         public static implicit operator KeyValuePair<K, V>(ObjectReference<IUnknownVftbl> obj) => (obj != null) ? new KeyValuePair<K, V>(obj) : null;
+#endif
         protected readonly ObjectReference<IUnknownVftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
 
