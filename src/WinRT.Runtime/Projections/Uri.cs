@@ -53,8 +53,6 @@ namespace ABI.System
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_UriRuntimeClassFactory);
 
-        public static implicit operator WinRTUriRuntimeClassFactory(IObjectReference obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
-        public static implicit operator WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
         public WinRTUriRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_UriRuntimeClassFactory)) { }
@@ -95,7 +93,7 @@ namespace ABI.System
 #endif
     unsafe struct Uri
     {
-        private static WinRTUriRuntimeClassFactory Instance = ActivationFactory.Get("Windows.Foundation.Uri");
+        private static readonly WinRTUriRuntimeClassFactory Instance = new(ActivationFactory.Get("Windows.Foundation.Uri"));
 
         public static IObjectReference CreateMarshaler(global::System.Uri value)
         {
