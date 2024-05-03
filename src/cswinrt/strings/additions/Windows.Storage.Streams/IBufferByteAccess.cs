@@ -101,7 +101,7 @@ namespace ABI.Windows.Storage.Streams
 
             static unsafe Vftbl()
             {
-                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.Interop.IUnknownVftbl>() + sizeof(IntPtr) * 1);
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.Interop.IUnknownVftbl) + sizeof(IntPtr));
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
@@ -124,16 +124,16 @@ namespace ABI.Windows.Storage.Streams
                 return 0;
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IBufferByteAccess);
+        internal static ObjectReference<global::WinRT.Interop.IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<global::WinRT.Interop.IUnknownVftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IBufferByteAccess);
 
         IntPtr global::Windows.Storage.Streams.IBufferByteAccess.Buffer
         {
             get
             {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Storage.Streams.IBufferByteAccess).TypeHandle));
+                var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Storage.Streams.IBufferByteAccess).TypeHandle);
                 var ThisPtr = _obj.ThisPtr;
                 IntPtr buffer = default;
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.Get_Buffer_0(ThisPtr, &buffer));
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)ThisPtr)[3])(ThisPtr, &buffer));
                 return buffer;
             }
         }
