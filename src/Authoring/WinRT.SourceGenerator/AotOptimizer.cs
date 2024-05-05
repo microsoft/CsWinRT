@@ -19,7 +19,8 @@ namespace Generator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent()));
+            var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => 
+                (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent(), provider.IsCsWinRTCcwLookupTableGeneratorEnabled()));
 
             var vtableAttributesToAdd = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => NeedVtableAttribute(n),
@@ -400,7 +401,9 @@ namespace Generator
             return true;
         }
 
-        private static void GenerateVtableAttributes(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
+        private static void GenerateVtableAttributes(
+            SourceProductionContext sourceProductionContext,
+            (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool) properties) value)
         {
             if (!value.properties.isCsWinRTAotOptimizerEnabled)
             {
@@ -616,8 +619,10 @@ namespace Generator
             }
         }
 
-        private static void GenerateCCWForGenericInstantiation(SourceProductionContext sourceProductionContext, 
-            ((ImmutableArray<GenericInterface> list1, ImmutableArray<GenericInterface> list2) genericInterfaces, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
+        private static void GenerateCCWForGenericInstantiation(
+            SourceProductionContext sourceProductionContext, 
+            ((ImmutableArray<GenericInterface> list1, ImmutableArray<GenericInterface> list2) genericInterfaces,
+            (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties) value)
         {
             if (value.properties.isCsWinRTComponent || !value.properties.isCsWinRTAotOptimizerEnabled)
             {
@@ -625,7 +630,9 @@ namespace Generator
                 return;
             }
 
-            GenerateCCWForGenericInstantiation(sourceProductionContext.AddSource, value.genericInterfaces.list1.AddRange(value.genericInterfaces.list2));
+            var genericInterfaces = value.properties.isCsWinRTCcwLookupTableGeneratorEnabled ? 
+                value.genericInterfaces.list1.AddRange(value.genericInterfaces.list2) : value.genericInterfaces.list1;
+            GenerateCCWForGenericInstantiation(sourceProductionContext.AddSource, genericInterfaces);
         }
 
         internal static void GenerateCCWForGenericInstantiation(Action<string, string> addSource, ImmutableArray<GenericInterface> genericInterfaces)
@@ -900,14 +907,19 @@ namespace Generator
             }
         }
 
-        private static void GenerateVtableLookupTable(SourceProductionContext sourceProductionContext, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value)
+        private static void GenerateVtableLookupTable(
+            SourceProductionContext sourceProductionContext,
+            (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties) value)
         {
             GenerateVtableLookupTable(sourceProductionContext.AddSource, value);
         }
 
-        internal static void GenerateVtableLookupTable(Action<string, string> addSource, (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent) properties) value, bool isComponentGenerator = false)
+        internal static void GenerateVtableLookupTable(
+            Action<string, string> addSource, 
+            (ImmutableArray<VtableAttribute> vtableAttributes, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties) value,
+            bool isComponentGenerator = false)
         {
-            if (!value.properties.isCsWinRTAotOptimizerEnabled)
+            if (!value.properties.isCsWinRTAotOptimizerEnabled || !value.properties.isCsWinRTCcwLookupTableGeneratorEnabled)
             {
                 return;
             }

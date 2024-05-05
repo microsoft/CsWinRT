@@ -48,12 +48,28 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTAotExportsEnabled" />
     <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptIn" />
     <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptOut" />
+    <CompilerVisibleProperty Include="CsWinRTCcwLookupTableGeneratorEnabled" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
   
   <Target Name="CsWinRTNet5EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5" BeforeTargets="CsWinRTPrepareProjection">
     <Error Text="Support for .NET 5 ended with C#/WinRT 2.0. For .NET 5 support, use C#/WinRT version 1.6.5. See https://github.com/microsoft/CsWinRT/discussions/1232" />
+  </Target>
+
+  <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
+  <Target Name="CsWinRTSetGeneratorProperties" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore">
+    <PropertyGroup>
+      <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == '' and
+                                                        '$(CsWinRTComponent)' == 'true'">true</CsWinRTCcwLookupTableGeneratorEnabled>		
+      <!-- If the lookup generator is enabled, the AOT source generator generates vtable entries for generic types and boxing scenarios that it detects. -->
+	  <!-- This is intended to be ran on projections, so we try to detect that and disable it if a projection is being generated. -->
+	  <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == '' and
+                                                        '$(CsWinRTGenerateProjection)' == 'true' and
+                                                        '$(OutputType)' == 'Library' and
+                                                        ('@(CsWinRTIncludes)' != ''or $(CsWinRTFilters.Contains('-include')))">false</CsWinRTCcwLookupTableGeneratorEnabled>
+	  <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == ''">true</CsWinRTCcwLookupTableGeneratorEnabled>
+	</PropertyGroup>
   </Target>
 
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
