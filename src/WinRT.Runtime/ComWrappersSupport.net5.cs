@@ -9,7 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using WinRT.Interop;
 using static System.Runtime.InteropServices.ComWrappers;
 
@@ -310,7 +309,7 @@ namespace WinRT
 
         internal static ComInterfaceEntry[] GetComInterfaceEntriesForTypeFromLookupTable(Type type)
         {
-            // Using for loop to avoid exception from list changing with for each.
+            // Using for loop to avoid exception from list changing when using for each.
             // List is only added to and if any are added while looping, we can ignore those.
             int count = ComInterfaceEntriesLookup.Count;
             for (int i = 0; i < count; i++)
@@ -334,7 +333,7 @@ namespace WinRT
 
         internal static string GetRuntimeClassNameForNonWinRTTypeFromLookupTable(Type type)
         {
-            // Using for loop to avoid exception from list changing with for each.
+            // Using for loop to avoid exception from list changing when using for each.
             // List is only added to and if any are added while looping, we can ignore those.
             int count = RuntimeClassNameForNonWinRTTypeLookup.Count;
             for (int i = 0; i < count; i++)

@@ -300,12 +300,14 @@ namespace WinRT
         internal static Type GetAuthoringMetadataType(this Type type)
         {
             return AuthoringMetadataTypeCache.GetOrAdd(type,
-                (type) =>
+                static (type) =>
                 {
-                    foreach (Func<Type, Type> func in AuthoringMetadaTypeLookup)
+                    // Using for loop to avoid exception from list changing when using for each.
+                    // List is only added to and if any are added while looping, we can ignore those.
+                    int count = AuthoringMetadaTypeLookup.Count;
+                    for (int i = 0; i < count; i++)
                     {
-                        Type metadataType = func(type);
-
+                        Type metadataType = AuthoringMetadaTypeLookup[i](type);
                         if (metadataType is not null)
                         {
                             return metadataType;

@@ -55,7 +55,7 @@ namespace WinRT
                 rcwType = baseRcwTypeCache.GetOrAdd(runtimeClassName,
                     static (runtimeClassName) =>
                     {
-                        // Using for loop to avoid exception from list changing with for each.
+                        // Using for loop to avoid exception from list changing when using for each.
                         // List is only added to and if any are added while looping, we can ignore those.
                         int count = projectionTypeNameToBaseTypeNameMappings.Count;
                         for (int i = 0; i < count; i++)
@@ -81,7 +81,7 @@ namespace WinRT
         public static Type FindTypeByNameCached(string runtimeClassName)
         {
             return typeNameCache.GetOrAdd(runtimeClassName,
-                (runtimeClassName) =>
+                static (runtimeClassName) =>
                 {
                     Type implementationType = null;
                     try
@@ -194,7 +194,7 @@ namespace WinRT
                     }
                 }
 
-                // Using for loop to avoid exception from list changing with for each.
+                // Using for loop to avoid exception from list changing when using for each.
                 // List is only added to and if any are added while looping, we can ignore those.
                 int count = projectionAssemblies.Count;
                 for (int i = 0; i < count; i++)
