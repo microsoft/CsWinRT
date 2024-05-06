@@ -289,6 +289,11 @@ namespace WinRT
             return type.IsClass && !type.IsArray ? type.GetAuthoringMetadataType() : null;
         }
 
+        internal static Type GetCCWType(this Type type)
+        {
+            return !type.IsArray ? type.GetAuthoringMetadataType() : null;
+        }
+
         private readonly static ConcurrentDictionary<Type, Type> AuthoringMetadataTypeCache = new();
         private readonly static List<Func<Type, Type>> AuthoringMetadaTypeLookup = new();
 
