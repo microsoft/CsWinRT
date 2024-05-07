@@ -24,12 +24,17 @@ internal static class FeatureSwitches
     /// <summary>
     /// The configuration property name for <see cref="EnableDynamicObjectsSupport"/>.
     /// </summary>
-    private const string EnablesDynamicObjectsSupportPropertyName = "CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT";
+    private const string EnableDynamicObjectsSupportPropertyName = "CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT";
+
+    /// <summary>
+    /// The configuration property name for <see cref="UseUtcDateTimeOffsetMarshalling"/>.
+    /// </summary>
+    private const string UseExceptionResourceKeysPropertyName = "CSWINRT_USE_EXCEPTION_RESOURCE_KEYS";
 
     /// <summary>
     /// The configuration property name for <see cref="UseExceptionResourceKeys"/>.
     /// </summary>
-    private const string UseExceptionResourceKeysPropertyName = "CSWINRT_USE_EXCEPTION_RESOURCE_KEYS";
+    private const string UseUtcDateTimeOffsetMarshallingPropertyName = "CSWINRT_USE_UTC_DATETIMEOFFSET_MARSHALLING";
 
     /// <summary>
     /// The configuration property name for <see cref="EnableDefaultCustomTypeMappings"/>.
@@ -62,6 +67,11 @@ internal static class FeatureSwitches
     private static int _useExceptionResourceKeys;
 
     /// <summary>
+    /// The backing field for <see cref="UseUtcDateTimeOffsetMarshalling"/>.
+    /// </summary>
+    private static int _useUtcDateTimeOffsetMarshalling;
+
+    /// <summary>
     /// The backing field for <see cref="EnableDefaultCustomTypeMappings"/>.
     /// </summary>
     private static int _enableDefaultCustomTypeMappings;
@@ -87,7 +97,7 @@ internal static class FeatureSwitches
     public static bool EnableDynamicObjectsSupport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => GetConfigurationValue(EnablesDynamicObjectsSupportPropertyName, ref _enableDynamicObjectsSupportEnabled, true);
+        get => GetConfigurationValue(EnableDynamicObjectsSupportPropertyName, ref _enableDynamicObjectsSupportEnabled, true);
     }
 
     /// <summary>
@@ -97,6 +107,15 @@ internal static class FeatureSwitches
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => GetConfigurationValue(UseExceptionResourceKeysPropertyName, ref _useExceptionResourceKeys, false);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether or not <see cref="DateTimeOffset"/> values should be marshalled as UTC (defaults to <see langword="false"/>).
+    /// </summary>
+    public static bool UseUtcDateTimeOffsetMarshalling
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => GetConfigurationValue(UseUtcDateTimeOffsetMarshallingPropertyName, ref _useUtcDateTimeOffsetMarshalling, false);
     }
 
     /// <summary>
