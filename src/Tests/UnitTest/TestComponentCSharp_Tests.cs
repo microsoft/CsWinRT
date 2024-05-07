@@ -484,23 +484,12 @@ namespace UnitTest
 #endif
 
         [Fact]
-        public void TestBufferTryGetBuffer()
+        public void TestBufferTryGetArray()
         {
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
             var buffer = arr.AsBuffer();
 
-            Assert.True(buffer.TryGetBuffer(out ArraySegment<byte> array));
-            Assert.Equal(arr, array.Array);
-        }
-
-        [Fact]
-        public void TestBufferAsStreamTryGetBuffer()
-        {
-            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            var stream = arr.AsBuffer().AsStream();
-            Assert.True(stream is MemoryStream);
-
-            Assert.True(((MemoryStream)stream).TryGetBuffer(out ArraySegment<byte> array));
+            Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
             Assert.Equal(arr, array.Array);
         }
 

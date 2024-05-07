@@ -64,6 +64,34 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             dataPtr = IntPtr.Zero;
             return false;
         }
+
+        /// <summary>
+        /// Tries to get an array segment from the underlying buffer. The return value indicates the success of the operation.
+        /// </summary>
+        /// <param name="buffer">The buffer to get the array segment for.</param>
+        /// <param name="dataPtr">When this method returns, contains the array segment retrieved from the underlying  buffer. If the method fails, the method returns a default array segment.</param>
+        public static bool TryGetArray(
+#if NET
+            [NotNullWhen(true)]
+# endif
+            IBuffer source,
+#if NET
+            [NotNullWhen(true)]
+# endif
+            out ArraySegment<byte> array)
+        {
+            // If source is backed by a managed array, return it
+            byte[] srcDataArr;
+            int srcDataOffs;
+            if (source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs))
+            {
+                array = new ArraySegment<byte>(srcDataArr, offset: srcDataOffs, count: (int)source.Length);
+                return true;
+            }
+
+            array = default;
+            return false;
+        }
     }  // class WindowsRuntimeMarshal
 #nullable restore
 }  // namespace
