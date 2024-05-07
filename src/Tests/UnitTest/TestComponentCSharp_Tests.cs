@@ -481,7 +481,6 @@ namespace UnitTest
             // Ensure buf doesn't get collected while we use the data pointer
             GC.KeepAlive(buf);
         }
-#endif
 
         [Fact]
         public void TestBufferTryGetArray()
@@ -492,6 +491,7 @@ namespace UnitTest
             Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
             Assert.Equal(arr, array.Array);
         }
+#endif
 
         [Fact]
         public void TestTypePropertyWithSystemType()
