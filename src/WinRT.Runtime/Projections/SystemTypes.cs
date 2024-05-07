@@ -86,12 +86,7 @@ namespace ABI.System
         public static global::System.DateTimeOffset FromAbi(DateTimeOffset value)
         {
             var utcTime = new global::System.DateTimeOffset(value.UniversalTime + ManagedUtcTicksAtNativeZero, global::System.TimeSpan.Zero);
-            var offset = TimeZoneInfo.Local.GetUtcOffset(utcTime);
-            long localTicks = utcTime.Ticks + offset.Ticks;
-            if (localTicks < DateTime.MinValue.Ticks || localTicks > DateTime.MaxValue.Ticks)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+
             return utcTime.ToLocalTime();
         }
 
