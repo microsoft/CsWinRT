@@ -38,8 +38,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_DataErrorsChangedEventArgsRuntimeClassFactory);
 
-        public static implicit operator WinRTDataErrorsChangedEventArgsRuntimeClassFactory(IObjectReference obj) => (obj != null) ? new WinRTDataErrorsChangedEventArgsRuntimeClassFactory(obj) : null;
-        public static implicit operator WinRTDataErrorsChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTDataErrorsChangedEventArgsRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
         public WinRTDataErrorsChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_DataErrorsChangedEventArgsRuntimeClassFactory)) { }
@@ -90,7 +88,7 @@ namespace ABI.System.ComponentModel
 #endif
     unsafe struct DataErrorsChangedEventArgs
     {
-        private static ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance = ActivationFactory.Get("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs");
+        private static readonly ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance = new(ActivationFactory.Get("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs"));
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.DataErrorsChangedEventArgs value)
         {

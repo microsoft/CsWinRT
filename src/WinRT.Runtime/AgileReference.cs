@@ -118,11 +118,15 @@ namespace WinRT
                     &gitIid,
                     &gitPtr));
 
+#if NET
+                return new ABI.WinRT.Interop.IGlobalInterfaceTable(gitPtr);
+#else
                 return new ABI.WinRT.Interop.IGlobalInterfaceTable(ABI.WinRT.Interop.IGlobalInterfaceTable.FromAbi(gitPtr));
+#endif
             }
             finally
             {
-                MarshalInterface<IGlobalInterfaceTable>.DisposeAbi(gitPtr);
+                Marshal.Release(gitPtr);
             }
         }
 

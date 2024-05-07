@@ -139,11 +139,12 @@ namespace WinRT
             Dispose();
         }
 
-        public ObjectReference<T> As<
 #if NET
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
-        T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
+        public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
 
         public unsafe ObjectReference<T> As<T>(Guid iid)
         {
@@ -182,11 +183,12 @@ namespace WinRT
 #endif
         }
 
-        public int TryAs<
 #if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
-            T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
+        public int TryAs<T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
 
         public unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
         {
@@ -499,6 +501,8 @@ namespace WinRT
 
 #if NET
         [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
         public static ObjectReference<T> Attach(ref IntPtr thisPtr)
         {
@@ -551,6 +555,8 @@ namespace WinRT
 
 #if NET
         [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
         public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
         {
@@ -603,6 +609,8 @@ namespace WinRT
 
 #if NET
         [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
         public static ObjectReference<T> FromAbi(IntPtr thisPtr)
         {
@@ -728,6 +736,8 @@ namespace WinRT
 
 #if NET
         [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken)
             : base(thisPtr)
@@ -752,6 +762,8 @@ namespace WinRT
 
 #if NET
         [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken)
             : base(thisPtr, vftblT)

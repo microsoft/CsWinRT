@@ -204,7 +204,7 @@ namespace WinRT
 #if NET8_0_OR_GREATER
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
-                [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
+                [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static IObjectReference GetObjectReferenceViaVftbl(IObjectReference objRef, Type vftblType)
                 {

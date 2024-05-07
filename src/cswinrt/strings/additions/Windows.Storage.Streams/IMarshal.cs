@@ -83,7 +83,7 @@ namespace ABI.Com
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
 #else
-                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.Interop.IUnknownVftbl>() + sizeof(IntPtr) * 6);
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.Interop.IUnknownVftbl) + sizeof(IntPtr) * 6);
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
@@ -196,57 +196,94 @@ namespace ABI.Com
                 return 0;
             }
         }
+#if NET
+        internal static ObjectReference<global::WinRT.Interop.IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<global::WinRT.Interop.IUnknownVftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IMarshal);
+#else
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IMarshal);
-
-        public static implicit operator IMarshal(IObjectReference obj) => (obj != null) ? new IMarshal(obj) : null;
+#endif
+#if NET
+        private readonly ObjectReference<global::WinRT.Interop.IUnknownVftbl> _obj;
+#else
         private readonly ObjectReference<Vftbl> _obj;
+#endif
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
 
 #if NET
-        [Obsolete("This method is deprecated and will be removed in a future release.")]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = "This method is not trim-safe, and is only supported for use when not using trimming (or AOT).")]
-#endif
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
+        public IMarshal(IObjectReference obj)
+        {
+            _obj = obj.As<global::WinRT.Interop.IUnknownVftbl>(global::WinRT.Interop.IID.IID_IMarshal);
+        }
+#else
         public IMarshal(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         internal IMarshal(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
         }
+#endif
 
         public unsafe void GetUnmarshalClass(Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, Guid* pCid)
         {
+#if NET
+            IntPtr thisPtr = ThisPtr;
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, Guid*, int>)(*(void***)thisPtr)[3])(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid));
+#else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.GetUnmarshalClass_0(ThisPtr, riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid));
+#endif
         }
 
         public unsafe void GetMarshalSizeMax(Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, uint* pSize)
         {
+#if NET
+            IntPtr thisPtr = ThisPtr;
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, uint*, int>)(*(void***)thisPtr)[4])(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize));
+#else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.GetMarshalSizeMax_1(ThisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize));
+#endif
         }
 
         public unsafe void MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
         {
+#if NET
+            IntPtr thisPtr = ThisPtr;
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, int>)(*(void***)thisPtr)[5])(thisPtr, pStm, riid, pv, dwDestContext, pvDestContext, mshlflags));
+#else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.MarshalInterface_2(ThisPtr, pStm, riid, pv, dwDestContext, pvDestContext, mshlflags));
+#endif
         }
 
         public unsafe void UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv)
         {
+#if NET
+            IntPtr thisPtr = ThisPtr;
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)(*(void***)thisPtr)[6])(thisPtr, pStm, riid, ppv));
+#else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.UnmarshalInterface_3(ThisPtr, pStm, riid, ppv));
+#endif
         }
 
         public unsafe void ReleaseMarshalData(IntPtr pStm)
         {
+#if NET
+            IntPtr thisPtr = ThisPtr;
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)(*(void***)thisPtr)[7])(thisPtr, pStm));
+#else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.ReleaseMarshalData_4(ThisPtr, pStm));
+#endif
         }
 
         public unsafe void DisconnectObject(uint dwReserved)
         {
+#if NET
+            IntPtr thisPtr = ThisPtr;
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, uint, int>)(*(void***)thisPtr)[8])(thisPtr, dwReserved));
+#else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.DisconnectObject_5(ThisPtr, dwReserved));
+#endif
         }
     }
 
+#if !NET
     internal static unsafe class IMarshal_Delegates
     {
         public delegate int GetUnmarshalClass_0(IntPtr thisPtr, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, Guid* pCid);
@@ -256,4 +293,5 @@ namespace ABI.Com
         public delegate int ReleaseMarshalData_4(IntPtr thisPtr, IntPtr pStm);
         public delegate int DisconnectObject_5(IntPtr thisPtr, uint dwReserved);
     }
+#endif
 }

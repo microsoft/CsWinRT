@@ -38,7 +38,7 @@ namespace ABI.System.ComponentModel
 #endif
             };
             var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(PropertyChangedEventHandler), sizeof(global::WinRT.Interop.IDelegateVftbl));
-            Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
+            *(IDelegateVftbl*)nativeVftbl = AbiToProjectionVftable;
             AbiToProjectionVftablePtr = nativeVftbl;
         }
 
