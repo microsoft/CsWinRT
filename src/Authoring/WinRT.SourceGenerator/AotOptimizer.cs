@@ -118,20 +118,45 @@ namespace Generator
             return default;
         }
 
-        // Detect if AsAsyncOperation is being called and if so, make sure the generic adapter class
-        // we use for it is on the lookup table.
+        private static readonly Dictionary<string, string> AsyncMethodToTaskAdapter = new()
+        {
+            // AsAsyncOperation is an extension method, due to that using the format of ReducedFrom.
+            { "System.WindowsRuntimeSystemExtensions.AsAsyncOperation<TResult>(System.Threading.Tasks.Task<TResult>)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TResult>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>>)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1"},
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult<TResult>(TResult)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromException<TResult>(System.Exception)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledOperation<TResult>()", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TResult, TProgress>(System.Func<System.Threading.CancellationToken, System.IProgress<TProgress>, System.Threading.Tasks.Task<TResult>>)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResultWithProgress<TResult, TProgress>(TResult)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromExceptionWithProgress<TResult, TProgress>(System.Exception)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledOperationWithProgress<TResult, TProgress>()", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TProgress>(System.Func<System.Threading.CancellationToken, System.IProgress<TProgress>, System.Threading.Tasks.Task>)", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CompletedActionWithProgress<TProgress>()", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromExceptionWithProgress<TProgress>(System.Exception)", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledActionWithProgress<TProgress>()", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" }
+        };
+
+        // Detect if AsAsyncOperation or similar function is being called and if so,
+        // make sure the generic adapter type we use for it is on the lookup table.
         private static VtableAttribute GetVtableAttributesForTaskAdapters(GeneratorSyntaxContext context)
         {
-            var symbol = context.SemanticModel.GetSymbolInfo(context.Node as InvocationExpressionSyntax).Symbol as IMethodSymbol;
-            if (symbol?.ReducedFrom?.ToString() == "System.WindowsRuntimeSystemExtensions.AsAsyncOperation<TResult>(System.Threading.Tasks.Task<TResult>)")
+            if (context.SemanticModel.GetSymbolInfo(context.Node as InvocationExpressionSyntax).Symbol is IMethodSymbol symbol)
             {
-                var taskToAsyncOperationAdapter = context.SemanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.TaskToAsyncOperationAdapter`1");
-                if (taskToAsyncOperationAdapter != null)
+                var symbolStr = symbol.IsExtensionMethod ? symbol.ReducedFrom?.ToDisplayString() : symbol.OriginalDefinition?.ToDisplayString();
+                if (!string.IsNullOrEmpty(symbolStr))
                 {
-                    var constructedTaskToAsyncOperationAdapter = taskToAsyncOperationAdapter.Construct([.. symbol.TypeArguments]);
-                    return GetVtableAttributeToAdd(constructedTaskToAsyncOperationAdapter, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
+                    if (AsyncMethodToTaskAdapter.TryGetValue(symbolStr, out var adapterTypeStr))
+                    {
+                        var adpaterType = context.SemanticModel.Compilation.GetTypeByMetadataName(adapterTypeStr);
+                        if (adpaterType != null)
+                        {
+                            var constructedAdapterType = adpaterType.Construct([.. symbol.TypeArguments]);
+                            return GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
+                        }
+                    }
                 }
             }
+
             return default;
         }
 

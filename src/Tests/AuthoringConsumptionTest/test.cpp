@@ -360,6 +360,14 @@ TEST(AuthoringTest, CustomTypes)
 #endif
 }
 
+TEST(AuthoringTest, Async)
+{
+    TestClass testClass;
+    auto asyncOperation = testClass.GetDoubleAsyncOperation();
+    EXPECT_EQ(asyncOperation.wait_for(std::chrono::seconds(2)), AsyncStatus::Completed);
+    EXPECT_EQ(asyncOperation.GetResults(), 4.0);
+}
+
 TEST(AuthoringTest, CustomDictionaryImplementations)
 {
     CustomDictionary dictionary;

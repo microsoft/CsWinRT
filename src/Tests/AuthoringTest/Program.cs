@@ -11,6 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -338,6 +339,15 @@ namespace AuthoringTest
                 return val;
             });
             return task.AsAsyncOperation();
+        }
+
+        public IAsyncOperationWithProgress<double, double> GetDoubleAsyncOperation()
+        {
+            return AsyncInfo.Run<double, double>(async (cancellationToken, progress) =>
+            {
+                await Task.Delay(100);
+                return 4.0;
+            });
         }
 
         public int SetIntAsyncOperation(IAsyncOperation<Int32> op)
