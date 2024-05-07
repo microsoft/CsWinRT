@@ -74,11 +74,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 #if NET
             [NotNullWhen(true)]
 # endif
-            IBuffer? source,
-#if NET
-            [NotNullWhen(true)]
-# endif
-            out ArraySegment<byte> array)
+            IBuffer? source, out ArraySegment<byte> array)
         {
             if (buffer == null)
             {
@@ -87,9 +83,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
 
             // If source is backed by a managed array, return it
-            byte[] srcDataArr;
-            int srcDataOffs;
-            if (source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs))
+            if (source.TryGetUnderlyingData(out byte[]? srcDataArr, out int srcDataOffs))
             {
                 array = new ArraySegment<byte>(srcDataArr, offset: srcDataOffs, count: (int)source.Length);
                 return true;
