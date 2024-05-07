@@ -48,11 +48,17 @@ namespace Generator
                     static (n, _) => GetVtableAttributesToAddOnLookupTable(n)
                 ).Where(vtableAttribute => vtableAttribute != null);
 
+            var instantiatedTaskAdapters = context.SyntaxProvider.CreateSyntaxProvider(
+                    static (n, _) => n is InvocationExpressionSyntax,
+                    static (n, _) => GetVtableAttributesForTaskAdapters(n)
+                ).Where(vtableAttribute => vtableAttribute != null).Collect();
+
             // Merge both adapter types list and instantiated types list 
             var vtablesToAddOnLookupTable = 
                 instantiatedTypesToAddOnLookupTable.SelectMany(static (vtable, _) => vtable).Collect().
                 Combine(adapterTypesToAddOnLookupTable.Collect()).
-                SelectMany((value, _) => value.Left.AddRange(value.Right));
+                Combine(instantiatedTaskAdapters).
+                SelectMany((value, _) => value.Left.Left.AddRange(value.Left.Right).AddRange(value.Right).Distinct());
 
             var genericInterfacesFromVtableAttribute = vtableAttributesToAdd.Combine(properties).SelectMany(
                 static ((VtableAttribute vtableAttribute, (bool, bool isCsWinRTComponent, bool) properties) value, CancellationToken _) =>
@@ -109,6 +115,23 @@ namespace Generator
                 return (vtableAttribute, vtableAttributesForLookupTable.ToList());
             }
 
+            return default;
+        }
+
+        // Detect if AsAsyncOperation is being called and if so, make sure the generic adapter class
+        // we use for it is on the lookup table.
+        private static VtableAttribute GetVtableAttributesForTaskAdapters(GeneratorSyntaxContext context)
+        {
+            var symbol = context.SemanticModel.GetSymbolInfo(context.Node as InvocationExpressionSyntax).Symbol as IMethodSymbol;
+            if (symbol?.ReducedFrom?.ToString() == "System.WindowsRuntimeSystemExtensions.AsAsyncOperation<TResult>(System.Threading.Tasks.Task<TResult>)")
+            {
+                var taskToAsyncOperationAdapter = context.SemanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.TaskToAsyncOperationAdapter`1");
+                if (taskToAsyncOperationAdapter != null)
+                {
+                    var constructedTaskToAsyncOperationAdapter = taskToAsyncOperationAdapter.Construct([.. symbol.TypeArguments]);
+                    return GetVtableAttributeToAdd(constructedTaskToAsyncOperationAdapter, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
+                }
+            }
             return default;
         }
 

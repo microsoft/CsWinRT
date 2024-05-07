@@ -347,6 +347,8 @@ TEST(AuthoringTest, CustomTypes)
         EXPECT_EQ(pv, nullptr);
     }
 
+    // Array marshaling on AOT needs dynamic code.
+#ifndef AOT
     auto erasedProjectedArrays = testClass.GetTypeErasedProjectedArrays();
     EXPECT_EQ(erasedProjectedArrays.Size(), 7);
     for (auto obj : erasedProjectedArrays)
@@ -355,6 +357,7 @@ TEST(AuthoringTest, CustomTypes)
         EXPECT_NE(ra, nullptr);
         auto type = ra.Type();
     }
+#endif
 }
 
 TEST(AuthoringTest, CustomDictionaryImplementations)
