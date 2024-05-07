@@ -74,12 +74,18 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 #if NET
             [NotNullWhen(true)]
 # endif
-            IBuffer source,
+            IBuffer? source,
 #if NET
             [NotNullWhen(true)]
 # endif
             out ArraySegment<byte> array)
         {
+            if (buffer == null)
+            {
+                array = default;
+                return false;
+            }
+
             // If source is backed by a managed array, return it
             byte[] srcDataArr;
             int srcDataOffs;
