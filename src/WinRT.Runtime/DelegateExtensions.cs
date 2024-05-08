@@ -95,5 +95,16 @@ namespace WinRT
         {
             action.Invoke(arg1, arg2);
         }
+
+        // This extension method allows us to create a new delegate directly pointing to this method, which
+        // also adds the resulting object to the conditional weak table before returning it to callers.
+        public static object InvokeWithBoxedValueReferenceCacheInsertion(this Func<IInspectable, object> factory, IInspectable inspectable)
+        {
+            object resultingObject = factory(inspectable);
+
+            ComWrappersSupport.BoxedValueReferenceCache.Add(resultingObject, inspectable);
+
+            return resultingObject;
+        }
     }
 }
