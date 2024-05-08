@@ -2049,6 +2049,11 @@ namespace ABI.System
 
         public static Func<IInspectable, object> GetValueFactory(global::System.Type type)
         {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReference<T>' is not enabled.");
+            }
+
             return ComWrappersSupport.CreateReferenceCachingFactory(GetValueFactoryInternal(type));
         }
 
