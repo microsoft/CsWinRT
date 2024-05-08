@@ -50,7 +50,7 @@ namespace Generator
                   Where(static vtableAttribute => vtableAttribute != null);
 
             var instantiatedTaskAdapters = context.SyntaxProvider.CreateSyntaxProvider(
-                    static (n, _) => n is InvocationExpressionSyntax,
+                    static (n, _) => IsAsyncOperationMethodCall(n),
                     static (n, _) => GetVtableAttributesForTaskAdapters(n)
                 ).Where(static vtableAttribute => vtableAttribute != null).Collect();
 
@@ -136,6 +136,20 @@ namespace Generator
             { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromExceptionWithProgress<TProgress>(System.Exception)", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
             { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledActionWithProgress<TProgress>()", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" }
         };
+
+        // There are several async operation related methods that can be called.
+        // But they are all under the AsyncInfo static class or is the AsAsyncOperation
+        // extension method.
+        static bool IsAsyncOperationMethodCall(SyntaxNode node)        
+        {
+            if (node is InvocationExpressionSyntax method)
+            {
+                var methodStr = method.ToString();
+                return methodStr.Contains(".AsAsyncOperation") || methodStr.Contains("AsyncInfo.");
+            }
+
+            return false;
+        }
 
         // Detect if AsAsyncOperation or similar function is being called and if so,
         // make sure the generic adapter type we use for it is on the lookup table.
