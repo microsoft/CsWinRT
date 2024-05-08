@@ -248,8 +248,9 @@ namespace Generator
             }
             else
             {
-                Debug.Assert(false, type.Name);
-                return string.Empty;
+                // If we end up here, this is most likely an authoring scenario where the type is being authored
+                // for WinRT projection in this component.
+                return metadataName;
             }
         }
 
