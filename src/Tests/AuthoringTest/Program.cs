@@ -350,6 +350,11 @@ namespace AuthoringTest
             });
         }
 
+        public IAsyncOperation<BasicStruct> GetStructAsyncOperation()
+        {
+            return AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
+        }
+
         public int SetIntAsyncOperation(IAsyncOperation<Int32> op)
         {
             return op.GetResults();

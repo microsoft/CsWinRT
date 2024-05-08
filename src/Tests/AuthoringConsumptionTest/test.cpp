@@ -366,6 +366,13 @@ TEST(AuthoringTest, Async)
     auto asyncOperation = testClass.GetDoubleAsyncOperation();
     EXPECT_EQ(asyncOperation.wait_for(std::chrono::seconds(2)), AsyncStatus::Completed);
     EXPECT_EQ(asyncOperation.GetResults(), 4.0);
+
+    auto asyncOperation2 = testClass.GetStructAsyncOperation();
+    EXPECT_EQ(asyncOperation2.wait_for(std::chrono::seconds(2)), AsyncStatus::Completed);
+    auto result = asyncOperation2.GetResults();
+    EXPECT_EQ(result.X, 2);
+    EXPECT_EQ(result.Y, 4);
+    EXPECT_EQ(result.Value, L"Test");
 }
 
 TEST(AuthoringTest, CustomDictionaryImplementations)

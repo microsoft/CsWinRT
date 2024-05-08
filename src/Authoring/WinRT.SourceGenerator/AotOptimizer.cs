@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -52,7 +51,13 @@ namespace Generator
             var instantiatedTaskAdapters = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => IsAsyncOperationMethodCall(n),
                     static (n, _) => GetVtableAttributesForTaskAdapters(n)
-                ).Where(static vtableAttribute => vtableAttribute != null).Collect();
+                ).Where(static vtableAttribute => vtableAttribute != default).
+                 Combine(properties).
+                  // Get component types if only authoring scenario
+                  Select(static (((VtableAttribute vtableAttribute, VtableAttribute componentVtableAttribute) vtableAttributes, (bool, bool isCsWinRTComponent, bool) properties) value, CancellationToken _) =>
+                        value.properties.isCsWinRTComponent ? value.vtableAttributes.componentVtableAttribute : value.vtableAttributes.vtableAttribute).
+                  Where(static vtableAttribute => vtableAttribute != default).
+                  Collect();
 
             // Merge both adapter types list and instantiated types list 
             var vtablesToAddOnLookupTable = 
@@ -153,7 +158,10 @@ namespace Generator
 
         // Detect if AsAsyncOperation or similar function is being called and if so,
         // make sure the generic adapter type we use for it is on the lookup table.
-        private static VtableAttribute GetVtableAttributesForTaskAdapters(GeneratorSyntaxContext context)
+        // We do this both assuming this is not an authoring component and is an authoring
+        // component as we don't know that at this stage and the results can vary based on that.
+        // We will choose the right one later when we can combine with properties.
+        private static (VtableAttribute, VtableAttribute) GetVtableAttributesForTaskAdapters(GeneratorSyntaxContext context)
         {
             if (context.SemanticModel.GetSymbolInfo(context.Node as InvocationExpressionSyntax).Symbol is IMethodSymbol symbol)
             {
@@ -163,16 +171,23 @@ namespace Generator
                     if (AsyncMethodToTaskAdapter.TryGetValue(symbolStr, out var adapterTypeStr))
                     {
                         var adpaterType = context.SemanticModel.Compilation.GetTypeByMetadataName(adapterTypeStr);
-                        if (adpaterType != null)
+                        if (adpaterType is not null)
                         {
                             var constructedAdapterType = adpaterType.Construct([.. symbol.TypeArguments]);
-                            return GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
+                            return (GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false), 
+                                    GetVtableAttributeToAdd(constructedAdapterType, IsWinRTTypeWithPotentialAuthoringComponentTypes, context.SemanticModel.Compilation, false));
                         }
                     }
                 }
             }
 
             return default;
+
+            bool IsWinRTTypeWithPotentialAuthoringComponentTypes(ISymbol type)
+            {
+                var winrtTypeAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
+                return GeneratorHelper.IsWinRTType(type, winrtTypeAttribute, true, context.SemanticModel.Compilation.Assembly);
+            }
         }
 
         private static string ToFullyQualifiedString(ISymbol symbol)
