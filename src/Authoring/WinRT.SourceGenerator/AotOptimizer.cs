@@ -39,8 +39,8 @@ namespace Generator
                     static (n, _) => GetVtableAttributeToAdd(n)
                 ).Where(static vtableAttribute => vtableAttribute != default).Collect().Combine(properties).
                   // Get component types if only authoring scenario
-                  SelectMany(static ((ImmutableArray<(VtableAttribute vtableAttribute, List<VtableAttribute> adapterTypes)> classTypes, (bool, bool isCsWinRTComponent, bool) properties) value, CancellationToken _) =>
-                        value.properties.isCsWinRTComponent ? value.classTypes : ImmutableArray<(VtableAttribute, List<VtableAttribute>)>.Empty);
+                  SelectMany(static ((ImmutableArray<(VtableAttribute vtableAttribute, EquatableArray<VtableAttribute> adapterTypes)> classTypes, (bool, bool isCsWinRTComponent, bool) properties) value, CancellationToken _) =>
+                        value.properties.isCsWinRTComponent ? value.classTypes : ImmutableArray<(VtableAttribute, EquatableArray<VtableAttribute>)>.Empty);
 
             var instantiatedTypesToAddOnLookupTable = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => NeedVtableOnLookupTable(n),
@@ -77,7 +77,7 @@ namespace Generator
             // The component generator generates vtable attributes for public types.  The generic interfaces used by those types or its adapter types
             // can overlap with the ones being generated here.  So get which ones are already generated to be able to filter them out.
             var genericInterfacesGeneratedByComponentGenerator = vtablesFromComponentTypes.
-                SelectMany(static ((VtableAttribute vtableAttribute, List<VtableAttribute> adapterTypes) classType, CancellationToken _) =>
+                SelectMany(static ((VtableAttribute vtableAttribute, EquatableArray<VtableAttribute> adapterTypes) classType, CancellationToken _) =>
                         classType.vtableAttribute.GenericInterfaces.Union(classType.adapterTypes.SelectMany(static v => v.GenericInterfaces)).Distinct()).
                 Collect();
 
@@ -108,7 +108,7 @@ namespace Generator
                 !GeneratorHelper.IsWinRTType(declaration); // Making sure it isn't an RCW we are projecting.
         }
 
-        private static (VtableAttribute, List<VtableAttribute>) GetVtableAttributeToAdd(GeneratorSyntaxContext context)
+        private static (VtableAttribute, EquatableArray<VtableAttribute>) GetVtableAttributeToAdd(GeneratorSyntaxContext context)
         {
             var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node as ClassDeclarationSyntax);
             var vtableAttribute = GetVtableAttributeToAdd(symbol, GeneratorHelper.IsWinRTType, context.SemanticModel.Compilation, false);
@@ -118,7 +118,7 @@ namespace Generator
                 // Add any adapter types which may be needed if certain functions
                 // from some known interfaces are called.
                 AddVtableAdapterTypeForKnownInterface(symbol, context.SemanticModel.Compilation, GeneratorHelper.IsWinRTType, vtableAttributesForLookupTable);
-                return (vtableAttribute, vtableAttributesForLookupTable.ToList());
+                return (vtableAttribute, vtableAttributesForLookupTable.ToImmutableArray());
             }
 
             return default;
@@ -817,7 +817,7 @@ namespace Generator
                     node is ReturnStatementSyntax;
         }
 
-        private static List<VtableAttribute> GetVtableAttributesToAddOnLookupTable(GeneratorSyntaxContext context)
+        private static EquatableArray<VtableAttribute> GetVtableAttributesToAddOnLookupTable(GeneratorSyntaxContext context)
         {
             HashSet<ITypeSymbol> visitedTypes = new(SymbolEqualityComparer.Default);
             HashSet<VtableAttribute> vtableAttributes = new();
@@ -912,7 +912,7 @@ namespace Generator
                 }
             }
 
-            return vtableAttributes.ToList();
+            return vtableAttributes.ToImmutableArray();
 
             // This handles adding vtable information for types for which we can not directly put an attribute on them.
             // This includes generic types that are boxed and and non-WinRT types for which our AOT source generator hasn't
