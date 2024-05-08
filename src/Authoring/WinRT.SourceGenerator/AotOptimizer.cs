@@ -26,7 +26,7 @@ namespace Generator
             var vtablesToAddFromClassTypes = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => NeedVtableAttribute(n),
                     static (n, _) => GetVtableAttributeToAdd(n)
-                ).Where(vtableAttribute => vtableAttribute != default);
+                ).Where(static vtableAttribute => vtableAttribute != default);
 
             var vtableAttributesToAdd = vtablesToAddFromClassTypes.Select(static (vtable, _) => vtable.Item1);
             var adapterTypesToAddOnLookupTable = vtablesToAddFromClassTypes.SelectMany(static (vtable, _) => vtable.Item2);
@@ -38,7 +38,7 @@ namespace Generator
             var vtablesFromComponentTypes = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => IsComponentType(n),
                     static (n, _) => GetVtableAttributeToAdd(n)
-                ).Where(vtableAttribute => vtableAttribute != default).Collect().Combine(properties).
+                ).Where(static vtableAttribute => vtableAttribute != default).Collect().Combine(properties).
                   // Get component types if only authoring scenario
                   SelectMany(static ((ImmutableArray<(VtableAttribute vtableAttribute, List<VtableAttribute> adapterTypes)> classTypes, (bool, bool isCsWinRTComponent, bool) properties) value, CancellationToken _) =>
                         value.properties.isCsWinRTComponent ? value.classTypes : ImmutableArray<(VtableAttribute, List<VtableAttribute>)>.Empty);
@@ -46,19 +46,20 @@ namespace Generator
             var instantiatedTypesToAddOnLookupTable = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => NeedVtableOnLookupTable(n),
                     static (n, _) => GetVtableAttributesToAddOnLookupTable(n)
-                ).Where(vtableAttribute => vtableAttribute != null);
+                ).SelectMany(static (vtable, _) => vtable).
+                  Where(static vtableAttribute => vtableAttribute != null);
 
             var instantiatedTaskAdapters = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => n is InvocationExpressionSyntax,
                     static (n, _) => GetVtableAttributesForTaskAdapters(n)
-                ).Where(vtableAttribute => vtableAttribute != null).Collect();
+                ).Where(static vtableAttribute => vtableAttribute != null).Collect();
 
             // Merge both adapter types list and instantiated types list 
             var vtablesToAddOnLookupTable = 
-                instantiatedTypesToAddOnLookupTable.SelectMany(static (vtable, _) => vtable).Collect().
+                instantiatedTypesToAddOnLookupTable.Collect().
                 Combine(adapterTypesToAddOnLookupTable.Collect()).
                 Combine(instantiatedTaskAdapters).
-                SelectMany((value, _) => value.Left.Left.AddRange(value.Left.Right).AddRange(value.Right).Distinct());
+                SelectMany(static (value, _) => value.Left.Left.AddRange(value.Left.Right).AddRange(value.Right).Distinct());
 
             var genericInterfacesFromVtableAttribute = vtableAttributesToAdd.Combine(properties).SelectMany(
                 static ((VtableAttribute vtableAttribute, (bool, bool isCsWinRTComponent, bool) properties) value, CancellationToken _) =>
@@ -72,7 +73,7 @@ namespace Generator
             // can overlap with the ones being generated here.  So get which ones are already generated to be able to filter them out.
             var genericInterfacesGeneratedByComponentGenerator = vtablesFromComponentTypes.
                 SelectMany(static ((VtableAttribute vtableAttribute, List<VtableAttribute> adapterTypes) classType, CancellationToken _) =>
-                        classType.vtableAttribute.GenericInterfaces.Union(classType.adapterTypes.SelectMany(v => v.GenericInterfaces)).Distinct()).
+                        classType.vtableAttribute.GenericInterfaces.Union(classType.adapterTypes.SelectMany(static v => v.GenericInterfaces)).Distinct()).
                 Collect();
 
             context.RegisterImplementationSourceOutput(
@@ -999,18 +1000,6 @@ namespace Generator
             }
         }
 
-        internal static void AddEnumeratorAdapterForEnumerableInterface(ITypeSymbol classType, Compilation compilation, Func<ISymbol, bool> isWinRTType, HashSet<VtableAttribute> vtableAttributes)
-        {
-            // Type may implement multiple unique IEnumerable interfaces.
-            foreach (var iface in classType.AllInterfaces)
-            {
-                if (iface.MetadataName == "IEnumerable`1")
-                {
-                    AddEnumeratorAdapterForType(iface.TypeArguments[0], compilation, isWinRTType, vtableAttributes);
-                }
-            }
-        }
-
         internal static void AddVtableAdapterTypeForKnownInterface(ITypeSymbol classType, Compilation compilation, Func<ISymbol, bool> isWinRTType, HashSet<VtableAttribute> vtableAttributes)
         {
             foreach (var iface in classType.AllInterfaces)
@@ -1021,34 +1010,26 @@ namespace Generator
                 }
                 else if (iface.MetadataName == "IDictionary`2")
                 {
-                    var readOnlyDictionaryType = compilation.GetTypeByMetadataName("System.Collections.ObjectModel.ReadOnlyDictionary`2");
-                    if (readOnlyDictionaryType != null)
-                    {
-                        var constructedReadOnlyDictionaryType = readOnlyDictionaryType.Construct([.. iface.TypeArguments]);
-                        vtableAttributes.Add(GetVtableAttributeToAdd(constructedReadOnlyDictionaryType, isWinRTType, compilation, false));
-                    }
-
-                    var keyValuePairType = compilation.GetTypeByMetadataName("System.Collections.Generic.KeyValuePair`2");
-                    if (keyValuePairType != null)
-                    {
-                        var constructedKeyValuePairType = keyValuePairType.Construct([.. iface.TypeArguments]);
-                        vtableAttributes.Add(GetVtableAttributeToAdd(constructedKeyValuePairType, isWinRTType, compilation, false));
-                    }
-
-                    var constantSplittableMapType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ConstantSplittableMap`2");
-                    if (constantSplittableMapType != null)
-                    {
-                        var constructedConstantSplittableMapType = constantSplittableMapType.Construct([.. iface.TypeArguments]);
-                        vtableAttributes.Add(GetVtableAttributeToAdd(constructedConstantSplittableMapType, isWinRTType, compilation, false));
-                    }
+                    LookupAndAddVtableAttributeForGenericType("System.Collections.ObjectModel.ReadOnlyDictionary`2", iface.TypeArguments);
+                    LookupAndAddVtableAttributeForGenericType("System.Collections.Generic.KeyValuePair`2", iface.TypeArguments);
+                    LookupAndAddVtableAttributeForGenericType("ABI.System.Collections.Generic.ConstantSplittableMap`2", iface.TypeArguments);
                 }
                 else if (iface.MetadataName == "IList`1")
                 {
-                    var readOnlyCollectionType = compilation.GetTypeByMetadataName("System.Collections.ObjectModel.ReadOnlyCollection`1");
-                    if (readOnlyCollectionType != null)
+                    LookupAndAddVtableAttributeForGenericType("System.Collections.ObjectModel.ReadOnlyCollection`1", iface.TypeArguments);
+                }
+            }
+
+            void LookupAndAddVtableAttributeForGenericType(string type, ImmutableArray<ITypeSymbol> genericArgs)
+            {
+                var genericType = compilation.GetTypeByMetadataName(type);
+                if (genericType != default)
+                {
+                    var constructedGenericType = genericType.Construct([.. genericArgs]);
+                    var vtableAttribute = GetVtableAttributeToAdd(constructedGenericType, isWinRTType, compilation, false);
+                    if (vtableAttribute != default)
                     {
-                        var constructedReadOnlyCollectionType = readOnlyCollectionType.Construct([.. iface.TypeArguments]);
-                        vtableAttributes.Add(GetVtableAttributeToAdd(constructedReadOnlyCollectionType, isWinRTType, compilation, false));
+                        vtableAttributes.Add(vtableAttribute);
                     }
                 }
             }
