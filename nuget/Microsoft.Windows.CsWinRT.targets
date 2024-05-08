@@ -63,7 +63,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == '' and
                                                         '$(CsWinRTComponent)' == 'true'">true</CsWinRTCcwLookupTableGeneratorEnabled>		
       <!-- If the lookup generator is enabled, the AOT source generator generates vtable entries for generic types and boxing scenarios that it detects. -->
-	  <!-- This is intended to be ran on projections, so we try to detect that and disable it if a projection is being generated. -->
+	  <!-- This is not intended to be ran on projections, so we try to detect that and disable it if a projection is being generated. -->
 	  <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == '' and
                                                         '$(CsWinRTGenerateProjection)' == 'true' and
                                                         '$(OutputType)' == 'Library' and
