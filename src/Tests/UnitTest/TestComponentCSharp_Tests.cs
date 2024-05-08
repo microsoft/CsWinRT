@@ -459,6 +459,30 @@ namespace UnitTest
             Assert.True(array.Length == 0);
         }
 
+#if NET
+        [Fact]
+        public void TestTryGetDataUnsafe()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(0, buf, 0, 3);
+
+            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(buf, out IntPtr dataPtr));
+            Assert.True(dataPtr != IntPtr.Zero);
+
+            unsafe
+            {
+                Span<byte> buffSpan = new Span<byte>((byte*)dataPtr, (int)buf.Length);
+
+                byte[] arr2 = buffSpan.ToArray();
+                Assert.True(arr.SequenceEqual(arr2));
+            }
+
+            // Ensure buf doesn't get collected while we use the data pointer
+            GC.KeepAlive(buf);
+        }
+#endif
+
         [Fact]
         public void TestTypePropertyWithSystemType()
         {
