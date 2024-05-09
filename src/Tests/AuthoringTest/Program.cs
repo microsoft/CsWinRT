@@ -352,7 +352,7 @@ namespace AuthoringTest
 
         public IAsyncOperation<BasicStruct> GetStructAsyncOperation()
         {
-            return AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
+            return System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
         }
 
         public int SetIntAsyncOperation(IAsyncOperation<Int32> op)
