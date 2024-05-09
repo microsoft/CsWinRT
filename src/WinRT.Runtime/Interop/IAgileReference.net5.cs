@@ -26,16 +26,6 @@ namespace WinRT.Interop
     {
         public static readonly Guid IID = global::WinRT.Interop.IID.IID_IAgileObject;
     }
-
-    [WindowsRuntimeType]
-    [Guid("00000146-0000-0000-C000-000000000046")]
-    [WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IGlobalInterfaceTable))]
-    internal interface IGlobalInterfaceTable
-    {
-        IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid);
-        void RevokeInterfaceFromGlobal(IntPtr cookie);
-        IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid);
-    }
 }
 
 namespace ABI.WinRT.Interop
@@ -132,7 +122,7 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("00000146-0000-0000-C000-000000000046")]
-    internal sealed unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
+    internal sealed unsafe class IGlobalInterfaceTable
     {
         internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IGlobalInterfaceTable;
 
@@ -155,10 +145,20 @@ namespace ABI.WinRT.Interop
 
         }
 
-        public void RevokeInterfaceFromGlobal(IntPtr cookie)
+        public void TryRevokeInterfaceFromGlobal(IntPtr cookie)
         {
             IntPtr thisPtr = ThisPtr;
-            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)(*(void***)thisPtr)[4])(thisPtr, cookie));
+            int hresult = ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)(*(void***)thisPtr)[4])(thisPtr, cookie);
+
+            if (hresult == ExceptionHelpers.E_INVALIDARG)
+            {
+                // Revoking cookie from GIT table may fail if apartment is gone.
+            }
+            else
+            {
+                // Only throw for other errors (this should technically never happen)
+                Marshal.ThrowExceptionForHR(hresult);
+            }
         }
 
         public IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid)
