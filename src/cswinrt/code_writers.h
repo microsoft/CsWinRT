@@ -3653,7 +3653,7 @@ public override ComWrappers.ComInterfaceEntry GetDelegateInterface()
 {
 return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
 {
-IID = global::WinRT.GuidGenerator.GetIID(typeof(%)),
+IID = %.IID,
 Vtable = %.AbiToProjectionVftablePtr
 };
 }
@@ -4371,9 +4371,13 @@ event % %;)",
                 {
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
-                    if (settings.netstandard_compat || (type.TypeNamespace() == "Windows.Foundation" && type.TypeName() == "IReference`1"))
+                    if (settings.netstandard_compat)
                     {
                         m.interface_guid = w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+                    }
+                    else if (type.TypeNamespace() == "Windows.Foundation" && type.TypeName() == "IReference`1")
+                    {
+                        m.interface_guid = w.write_temp("%.PIID", bind<write_type_name>(semantics, typedef_name_type::ABI, false));
                     }
                     else
                     {
@@ -8953,10 +8957,10 @@ static unsafe @()
 }
 %
 public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => 
-managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(@%)));
+managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);
 
 public static unsafe ObjectReferenceValue CreateMarshaler2(% managedDelegate) => 
-MarshalDelegate.CreateMarshaler2(managedDelegate, GuidGenerator.GetIID(typeof(@%)));
+MarshalDelegate.CreateMarshaler2(managedDelegate, IID);
 
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
@@ -8967,7 +8971,7 @@ return MarshalDelegate.FromAbi<%>(nativeDelegate);
 
 public static % CreateRcw(IntPtr ptr)
 {
-return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, GuidGenerator.GetIID(typeof(@%)))).Invoke);
+return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID)).Invoke);
 }
 
 #if !NET
@@ -9037,11 +9041,33 @@ private static unsafe int Do_Abi_Invoke%
             type.TypeName(),
             type_params,
             [&](writer& w) {
-                if (type_params.empty()) return;
-                w.write(R"(
-public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
-                    type_name
-                );
+                if (!type_params.empty())
+                {
+                    // Generating both PIID and IID for backcompat consistency and to have a common property to rely on
+                    // similar to what we do in the manual projections.
+                    w.write(R"(
+public static global::System.Guid PIID = GuidGenerator.CreateIID(typeof(%));
+public static global::System.Guid IID => PIID;
+)",
+                        type_name);
+                }
+                else
+                {
+                    if (settings.netstandard_compat)
+                    {
+                        w.write(R"(
+public static global::System.Guid IID{ get; } = new Guid(new byte[]{ % });
+)",
+                            bind<write_guid_bytes>(type));
+                    }
+                    else
+                    {
+                        w.write(R"(
+public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
+)",
+                            bind<write_guid_bytes>(type));
+                    }
+                }
             },
             [&](writer& w) {
                 if (!have_generic_params)
@@ -9213,11 +9239,7 @@ abiInvokeType = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(i
             settings.netstandard_compat || is_generic ? "\npublic static global::System.Delegate AbiInvokeDelegate { get; }\n" : "",
             // CreateMarshaler
             type_name,
-            type.TypeName(),
-            type_params,
             type_name,
-            type.TypeName(),
-            type_params,
             // GetAbi
             type_name,
             // FromAbi
@@ -9225,8 +9247,6 @@ abiInvokeType = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(i
             type_name,
             type_name,
             type_name,
-            type.TypeName(),
-            type_params,
             // NativeDelegateWrapper.Invoke
             bind<write_projection_return_type>(signature),
             bind_list<write_projection_parameter>(", ", signature.params()),
