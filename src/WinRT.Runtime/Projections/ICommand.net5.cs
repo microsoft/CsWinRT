@@ -5,6 +5,7 @@ using ABI.System.ComponentModel;
 using ABI.WinRT.Interop;
 using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 
@@ -85,14 +86,10 @@ namespace ABI.System.Windows.Input
 #pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            private void* _add_CanExecuteChanged_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> add_CanExecuteChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_add_CanExecuteChanged_0; set => _add_CanExecuteChanged_0 = value; }
-            private void* _remove_CanExecuteChanged_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CanExecuteChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CanExecuteChanged_1; set => _remove_CanExecuteChanged_1 = value; }
-            private void* _CanExecute_2;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int> CanExecute_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int>)_CanExecute_2; set => _CanExecute_2 = value; }
-            private void* _Execute_3;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int> Execute_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)_Execute_3; set => _Execute_3 = value; }
+            private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_CanExecuteChanged_0;
+            private delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_CanExecuteChanged_1;
+            private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int> _CanExecute_2;
+            private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int> _Execute_3;
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -103,10 +100,10 @@ namespace ABI.System.Windows.Input
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
-                    _add_CanExecuteChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)&Do_Abi_add_CanExecuteChanged_0,
-                    _remove_CanExecuteChanged_1 = (delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int>)&Do_Abi_remove_CanExecuteChanged_1,
-                    _CanExecute_2 = (delegate* unmanaged<IntPtr, IntPtr, byte*, int>)&Do_Abi_CanExecute_2,
-                    _Execute_3 = (delegate* unmanaged<IntPtr, IntPtr, int>)&Do_Abi_Execute_3,
+                    _add_CanExecuteChanged_0 = &Do_Abi_add_CanExecuteChanged_0,
+                    _remove_CanExecuteChanged_1 = &Do_Abi_remove_CanExecuteChanged_1,
+                    _CanExecute_2 = &Do_Abi_CanExecute_2,
+                    _Execute_3 = &Do_Abi_Execute_3,
 
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 4);
@@ -115,7 +112,7 @@ namespace ABI.System.Windows.Input
             }
 
 
-            [UnmanagedCallersOnly]
+            [UnmanagedCallersOnly(CallConvs = new global::System.Type[] { typeof(CallConvStdcall) })]
 
             private static unsafe int Do_Abi_CanExecute_2(IntPtr thisPtr, IntPtr parameter, byte* result)
             {
@@ -137,7 +134,7 @@ namespace ABI.System.Windows.Input
             }
 
 
-            [UnmanagedCallersOnly]
+            [UnmanagedCallersOnly(CallConvs = new global::System.Type[] { typeof(CallConvStdcall) })]
 
             private static unsafe int Do_Abi_Execute_3(IntPtr thisPtr, IntPtr parameter)
             {
@@ -161,7 +158,7 @@ namespace ABI.System.Windows.Input
             }
             private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTables => _canExecuteChanged_TokenTables ?? MakeConditionalWeakTable();
 
-            [UnmanagedCallersOnly]
+            [UnmanagedCallersOnly(CallConvs = new global::System.Type[] { typeof(CallConvStdcall) })]
 
             private static unsafe int Do_Abi_add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)
             {
@@ -181,7 +178,7 @@ namespace ABI.System.Windows.Input
             }
 
 
-            [UnmanagedCallersOnly]
+            [UnmanagedCallersOnly(CallConvs = new global::System.Type[] { typeof(CallConvStdcall) })]
 
             private static unsafe int Do_Abi_remove_CanExecuteChanged_1(IntPtr thisPtr, global::WinRT.EventRegistrationToken token)
             {
@@ -231,18 +228,5 @@ namespace ABI.System.Windows.Input
                 _CanExecuteChanged((IWinRTObject)this).Unsubscribe(value);
             }
         }
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-#if EMBED
-    internal
-#else
-    public
-#endif
-    static class ICommand_Delegates
-    {
-        public unsafe delegate int add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token);
-        public unsafe delegate int CanExecute_2(IntPtr thisPtr, IntPtr parameter, byte* result);
-        public unsafe delegate int Execute_3(IntPtr thisPtr, IntPtr parameter);
     }
 }
