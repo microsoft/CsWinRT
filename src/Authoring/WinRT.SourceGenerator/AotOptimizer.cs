@@ -147,10 +147,29 @@ namespace Generator
         // extension method.
         static bool IsAsyncOperationMethodCall(SyntaxNode node)        
         {
-            if (node is InvocationExpressionSyntax method)
+            if (node is InvocationExpressionSyntax methodInvoke &&
+                methodInvoke.Expression is MemberAccessExpressionSyntax methodAccess)
             {
-                var methodStr = method.ToString();
-                return methodStr.Contains(".AsAsyncOperation") || methodStr.Contains("AsyncInfo.");
+                // Check for static class as a way of handling all the async functions from it.
+                if (methodAccess.Expression is IdentifierNameSyntax className && 
+                    className.Identifier.ValueText == "AsyncInfo")
+                {
+                    return true;
+                }
+
+                // Check for calling the fully qualified static class.
+                // i.e. System.Runtime.InteropServices.WindowsRuntime.AsyncInfo
+                if (methodAccess.Expression is MemberAccessExpressionSyntax memberAccess &&
+                    memberAccess.Name.Identifier.ValueText == "AsyncInfo")
+                {
+                    return true;
+                }
+
+                // Check for function call for the scenario that doesn't use the static class.
+                if (methodAccess.Name is IdentifierNameSyntax methodName)
+                {
+                    return methodName.Identifier.ValueText == "AsAsyncOperation";
+                }
             }
 
             return false;
