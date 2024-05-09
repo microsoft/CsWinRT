@@ -497,16 +497,11 @@ namespace WinRT
 
         // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
         // This is done to avoid pointer reuse until GC cleans up the boxed object
-        private static readonly ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
+        internal static readonly ConditionalWeakTable<object, IInspectable> BoxedValueReferenceCache = new();
 
         internal static Func<IInspectable, object> CreateReferenceCachingFactory(Func<IInspectable, object> internalFactory)
         {
-            return inspectable =>
-            {
-                object resultingObject = internalFactory(inspectable);
-                _boxedValueReferenceCache.Add(resultingObject, inspectable);
-                return resultingObject;
-            };
+            return internalFactory.InvokeWithBoxedValueReferenceCacheInsertion;
         }
 
         private static Func<IInspectable, object> CreateCustomTypeMappingFactory(
