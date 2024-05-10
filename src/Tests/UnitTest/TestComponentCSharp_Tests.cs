@@ -1354,12 +1354,12 @@ namespace UnitTest
             IntPtr hstr;
 
             // Access nonstatic class factory 
-            var instanceFactory = Class.As<IStringableInterop>();
+            var instanceFactory = ActivationFactory.Get("TestComponent.Class").AsInterface<IStringableInterop>();
             instanceFactory.ToString(out hstr);
             Assert.Equal("Class", MarshalString.FromAbi(hstr));
 
             // Access static class factory
-            var staticFactory = ComImports.As<IStringableInterop>();
+            var staticFactory = ActivationFactory.Get("TestComponent.ComImports").AsInterface<IStringableInterop>();
             staticFactory.ToString(out hstr);
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
         }
