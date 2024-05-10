@@ -76,7 +76,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 # endif
             IBuffer? source, out ArraySegment<byte> array)
         {
-            if (buffer == null)
+            if (source == null)
+
             {
                 array = default;
                 return false;
