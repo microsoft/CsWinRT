@@ -2501,8 +2501,6 @@ Marshal.Release(inner);
 
     void write_attributed_types(writer& w, TypeDef const& type)
     {
-        bool factory_written{};
-
         for (auto&& [interface_name, factory] : get_attributed_types(w, type))
         {
             if (factory.activatable)
@@ -2512,43 +2510,6 @@ Marshal.Release(inner);
             else if (factory.composable)
             {
                 write_composable_constructors(w, factory.type, type, factory.visible ? "public"sv : "protected"sv);
-            }
-            else if (factory.statics)
-            {
-                if (!factory_written)
-                {
-                    factory_written = true;
-
-                    bool has_base_factory{};
-                    auto extends = type.Extends();
-                    while(!has_base_factory)
-                    {
-                        auto base_semantics = get_type_semantics(extends);
-                        if (std::holds_alternative<object_type>(base_semantics))
-                        {
-                            break;
-                        }
-                        for_typedef(w, base_semantics, [&](auto base_type)
-                        {
-                            for (auto&& [_, base_factory] : get_attributed_types(w, base_type))
-                            {
-                                if (base_factory.statics)
-                                {
-                                    has_base_factory = true;
-                                    break;
-                                }
-                            }
-                            extends = base_type.Extends();
-                        });
-                    }
-
-                     w.write(R"(
-public static %I As<I>() => ActivationFactory.Get("%.%").AsInterface<I>();
-)",
-                        has_base_factory ? "new " : "",
-                        type.TypeNamespace(),
-                        type.TypeName());
-                }
             }
         }
 
