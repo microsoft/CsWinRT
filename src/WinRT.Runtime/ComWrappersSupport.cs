@@ -181,7 +181,8 @@ namespace WinRT
             // which means the attribute lives on the authoring metadata type.
             if (winrtExposedClassAttribute == null)
             {
-                var authoringMetadaType = type.GetRuntimeClassCCWType();
+                // Using GetCCWType rather than GetRuntimeClassCCWType given we want to handle boxed value types.
+                var authoringMetadaType = type.GetCCWType();
                 if (authoringMetadaType != null)
                 {
                     winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);

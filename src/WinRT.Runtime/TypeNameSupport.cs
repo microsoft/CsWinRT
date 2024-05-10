@@ -53,10 +53,20 @@ namespace WinRT
             if (rcwType is null)
             {
                 rcwType = baseRcwTypeCache.GetOrAdd(runtimeClassName,
-                    (runtimeClassName) =>
+                    static (runtimeClassName) =>
                     {
-                        var resolvedBaseType = projectionTypeNameToBaseTypeNameMappings.Find((dict) => dict.ContainsKey(runtimeClassName))?[runtimeClassName];
-                        return resolvedBaseType is not null ? FindRcwTypeByNameCached(resolvedBaseType) : null;
+                        // Using for loop to avoid exception from list changing when using for each.
+                        // List is only added to and if any are added while looping, we can ignore those.
+                        int count = projectionTypeNameToBaseTypeNameMappings.Count;
+                        for (int i = 0; i < count; i++)
+                        {
+                            if (projectionTypeNameToBaseTypeNameMappings[i].ContainsKey(runtimeClassName))
+                            {
+                                return FindRcwTypeByNameCached(projectionTypeNameToBaseTypeNameMappings[i][runtimeClassName]);
+                            }
+                        }
+
+                        return null;
                     });
             }
 
@@ -71,7 +81,7 @@ namespace WinRT
         public static Type FindTypeByNameCached(string runtimeClassName)
         {
             return typeNameCache.GetOrAdd(runtimeClassName,
-                (runtimeClassName) =>
+                static (runtimeClassName) =>
                 {
                     Type implementationType = null;
                     try
@@ -184,9 +194,12 @@ namespace WinRT
                     }
                 }
 
-                foreach (var assembly in projectionAssemblies)
+                // Using for loop to avoid exception from list changing when using for each.
+                // List is only added to and if any are added while looping, we can ignore those.
+                int count = projectionAssemblies.Count;
+                for (int i = 0; i < count; i++)
                 {
-                    Type type = assembly.GetType(runtimeClassName);
+                    Type type = projectionAssemblies[i].GetType(runtimeClassName);
                     if (type is not null)
                     {
                         resolvedType = type;

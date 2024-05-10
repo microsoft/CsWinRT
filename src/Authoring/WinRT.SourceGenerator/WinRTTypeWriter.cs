@@ -2725,7 +2725,7 @@ namespace Generator
 
             if (vtableAttributesToAddOnLookupTable.Any())
             {
-                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), (true, true)), true);
+                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), (true, true, true)), true);
             }
         }
 
