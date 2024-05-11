@@ -481,6 +481,28 @@ namespace UnitTest
             // Ensure buf doesn't get collected while we use the data pointer
             GC.KeepAlive(buf);
         }
+
+        [Fact]
+        public void TestBufferTryGetArray()
+        {
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = arr.AsBuffer();
+
+            Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.Equal(arr, array.Array);
+        }
+
+        [Fact]
+        public void TestBufferTryGetArraySubset()
+        {
+            var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+            var buffer = arr.AsBuffer(1, 2);
+
+            Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.Equal(arr, array.Array);
+            Assert.Equal(1, array.Offset);
+            Assert.Equal(2, array.Count);
+        }
 #endif
 
         [Fact]

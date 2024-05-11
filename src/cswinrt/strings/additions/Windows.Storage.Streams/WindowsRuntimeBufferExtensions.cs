@@ -501,7 +501,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             private readonly IBuffer _sourceBuffer;
 
             internal WindowsRuntimeBufferMemoryStream(IBuffer sourceBuffer, byte[] dataArr, int dataOffs)
-                : base(dataArr, dataOffs, (int)sourceBuffer.Capacity, true)
+                : base(dataArr, dataOffs, (int)sourceBuffer.Capacity, writable: true)
             {
                 _sourceBuffer = sourceBuffer;
 
