@@ -69,23 +69,23 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// Tries to get an array segment from the underlying buffer. The return value indicates the success of the operation.
         /// </summary>
         /// <param name="buffer">The buffer to get the array segment for.</param>
-        /// <param name="dataPtr">When this method returns, contains the array segment retrieved from the underlying  buffer. If the method fails, the method returns a default array segment.</param>
+        /// <param name="array">When this method returns, contains the array segment retrieved from the underlying  buffer. If the method fails, the method returns a default array segment.</param>
         public static bool TryGetArray(
 #if NET
             [NotNullWhen(true)]
 # endif
-            IBuffer? source, out ArraySegment<byte> array)
+            IBuffer? buffer, out ArraySegment<byte> array)
         {
-            if (source == null)
+            if (buffer == null)
             {
                 array = default;
                 return false;
             }
 
-            // If source is backed by a managed array, return it
-            if (source.TryGetUnderlyingData(out byte[]? srcDataArr, out int srcDataOffs))
+            // If buffer is backed by a managed array, return it
+            if (buffer.TryGetUnderlyingData(out byte[]? srcDataArr, out int srcDataOffs))
             {
-                array = new ArraySegment<byte>(srcDataArr, offset: srcDataOffs, count: (int)source.Length);
+                array = new ArraySegment<byte>(srcDataArr, offset: srcDataOffs, count: (int)buffer.Length);
                 return true;
             }
 
