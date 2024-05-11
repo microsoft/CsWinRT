@@ -133,6 +133,16 @@ namespace Generator
             return false;
         }
 
+        public static bool IsCsWinRTCcwLookupTableGeneratorEnabled(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTCcwLookupTableGeneratorEnabled", out var csWinRTCcwLookupTableGeneratorEnabled))
+            {
+                return bool.TryParse(csWinRTCcwLookupTableGeneratorEnabled, out var isCsWinRTCcwLookupTableGeneratorEnabled) && isCsWinRTCcwLookupTableGeneratorEnabled;
+            }
+
+            return false;
+        }
+
         public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
         {
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateWinMDOnly", out var CsWinRTGenerateWinMDOnlyStr))

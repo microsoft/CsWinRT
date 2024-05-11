@@ -9,7 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using WinRT.Interop;
 using static System.Runtime.InteropServices.ComWrappers;
 
@@ -301,79 +300,49 @@ namespace WinRT
             }
         }
 
-        private static readonly ReaderWriterLockSlim ComInterfaceEntriesLookupRwLock = new();
         private static readonly List<Func<Type, ComInterfaceEntry[]>> ComInterfaceEntriesLookup = new();
 
         public static void RegisterTypeComInterfaceEntriesLookup(Func<Type, ComInterfaceEntry[]> comInterfaceEntriesLookup)
         {
-            ComInterfaceEntriesLookupRwLock.EnterWriteLock();
-            try
-            {
-                ComInterfaceEntriesLookup.Add(comInterfaceEntriesLookup);
-            }
-            finally
-            {
-                ComInterfaceEntriesLookupRwLock.ExitWriteLock();
-            }
+            ComInterfaceEntriesLookup.Add(comInterfaceEntriesLookup);
         }
 
         internal static ComInterfaceEntry[] GetComInterfaceEntriesForTypeFromLookupTable(Type type)
         {
-            ComInterfaceEntriesLookupRwLock.EnterReadLock();
-
-            try
+            // Using for loop to avoid exception from list changing when using for each.
+            // List is only added to and if any are added while looping, we can ignore those.
+            int count = ComInterfaceEntriesLookup.Count;
+            for (int i = 0; i < count; i++)
             {
-                foreach (var func in ComInterfaceEntriesLookup)
+                var comInterfaceEntries = ComInterfaceEntriesLookup[i](type);
+                if (comInterfaceEntries != null)
                 {
-                    var comInterfaceEntries = func(type);
-                    if (comInterfaceEntries != null)
-                    {
-                        return comInterfaceEntries;
-                    }
+                    return comInterfaceEntries;
                 }
-            }
-            finally
-            {
-                ComInterfaceEntriesLookupRwLock.ExitReadLock();
             }
 
             return null;
         }
 
-        private static readonly ReaderWriterLockSlim RuntimeClassNameForNonWinRTTypeLookupRcwLock = new();
         private static readonly List<Func<Type, string>> RuntimeClassNameForNonWinRTTypeLookup = new();
 
         public static void RegisterTypeRuntimeClassNameLookup(Func<Type, string> runtimeClassNameLookup)
         {
-            RuntimeClassNameForNonWinRTTypeLookupRcwLock.EnterWriteLock();
-            try
-            {
-                RuntimeClassNameForNonWinRTTypeLookup.Add(runtimeClassNameLookup);
-            }
-            finally
-            {
-                RuntimeClassNameForNonWinRTTypeLookupRcwLock.ExitWriteLock();
-            }
+            RuntimeClassNameForNonWinRTTypeLookup.Add(runtimeClassNameLookup);
         }
 
         internal static string GetRuntimeClassNameForNonWinRTTypeFromLookupTable(Type type)
         {
-            RuntimeClassNameForNonWinRTTypeLookupRcwLock.EnterReadLock();
-
-            try
+            // Using for loop to avoid exception from list changing when using for each.
+            // List is only added to and if any are added while looping, we can ignore those.
+            int count = RuntimeClassNameForNonWinRTTypeLookup.Count;
+            for (int i = 0; i < count; i++)
             {
-                foreach (var func in RuntimeClassNameForNonWinRTTypeLookup)
+                var runtimeClasName = RuntimeClassNameForNonWinRTTypeLookup[i](type);
+                if (!string.IsNullOrEmpty(runtimeClasName))
                 {
-                    var runtimeClasName = func(type);
-                    if (!string.IsNullOrEmpty(runtimeClasName))
-                    {
-                        return runtimeClasName;
-                    }
+                    return runtimeClasName;
                 }
-            }
-            finally
-            {
-                RuntimeClassNameForNonWinRTTypeLookupRcwLock.ExitReadLock();
             }
 
             return null;
