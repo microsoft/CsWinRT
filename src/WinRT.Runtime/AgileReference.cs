@@ -17,17 +17,29 @@ namespace WinRT
     {
         private readonly static Guid CLSID_StdGlobalInterfaceTable = new(0x00000323, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
         private static readonly object _lock = new();
+#if NET
+        private static volatile ABI.WinRT.Interop.IGlobalInterfaceTable _git;
+#else
         private static volatile IGlobalInterfaceTable _git;
+#endif
 
         // Simple singleton lazy-initialization scheme (and saving the Lazy<T> size)
+#if NET
+        internal static ABI.WinRT.Interop.IGlobalInterfaceTable Git
+#else
         internal static IGlobalInterfaceTable Git
+#endif
         {
             get
             {
                 return _git ?? Git_Slow();
 
                 [MethodImpl(MethodImplOptions.NoInlining)]
+#if NET
+                static ABI.WinRT.Interop.IGlobalInterfaceTable Git_Slow()
+#else
                 static IGlobalInterfaceTable Git_Slow()
+#endif
                 {
                     lock (_lock)
                     {
@@ -90,6 +102,9 @@ namespace WinRT
             {
                 if (_cookie != IntPtr.Zero)
                 {
+#if NET
+                    Git.TryRevokeInterfaceFromGlobal(_cookie);
+#else
                     try
                     {
                         Git.RevokeInterfaceFromGlobal(_cookie);
@@ -98,12 +113,17 @@ namespace WinRT
                     {
                         // Revoking cookie from GIT table may fail if apartment is gone.
                     }
+#endif
                 }
                 disposed = true;
             }
         }
 
+#if NET
+        private static unsafe ABI.WinRT.Interop.IGlobalInterfaceTable GetGitTable()
+#else
         private static unsafe IGlobalInterfaceTable GetGitTable()
+#endif
         {
             Guid gitClsid = CLSID_StdGlobalInterfaceTable;
             Guid gitIid = IID.IID_IGlobalInterfaceTable;
