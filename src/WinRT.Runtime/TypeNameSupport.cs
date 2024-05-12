@@ -95,6 +95,16 @@ namespace WinRT
                 });
         }
 
+        // Helper to get an exception if the input type is 'IReference<T>' when support for it is disabled
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Exception GetExceptionForUnsupportedIReferenceType(ReadOnlySpan<char> runtimeClassName)
+        {
+            return new NotSupportedException(
+                $"The requested runtime class name is '{runtimeClassName.ToString()}', which maps to an 'IReference<T>' projected type. " +
+                "This can only be used when support for 'IReference<T>' types is enabled in the CsWinRT configuration. To enable it, " +
+                "make sure that the 'CsWinRTEnableIReferenceSupport' MSBuild property is not being set to 'false' anywhere.");
+        }
+
         /// <summary>
         /// Parse the first full type name within the provided span.
         /// </summary>
@@ -115,16 +125,6 @@ namespace WinRT
                     $"The requested runtime class name is '{runtimeClassName.ToString()}', which maps to a dynamic projected type. " +
                     "This can only be used when support for dynamic objects is enabled in the CsWinRT configuration. To enable it, " +
                     "make sure that the 'CsWinRTEnableDynamicObjectsSupport' MSBuild property is not being set to 'false' anywhere.");
-            }
-
-            // Helper to get an exception if the input type is 'IReference<T>' when support for it is disabled
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static Exception GetExceptionForUnsupportedIReferenceType(ReadOnlySpan<char> runtimeClassName)
-            {
-                return new NotSupportedException(
-                    $"The requested runtime class name is '{runtimeClassName.ToString()}', which maps to an 'IReference<T>' projected type. " +
-                    "This can only be used when support for 'IReference<T>' types is enabled in the CsWinRT configuration. To enable it, " +
-                    "make sure that the 'CsWinRTEnableIReferenceSupport' MSBuild property is not being set to 'false' anywhere.");
             }
 
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
@@ -241,7 +241,12 @@ namespace WinRT
             {
                 if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
                 {
-                    return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+                    if (FeatureSwitches.EnableIReferenceSupport)
+                    {
+                        return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+                    }
+
+                    throw GetExceptionForUnsupportedIReferenceType(runtimeClassName.AsSpan());
                 }
 
 #if NET
