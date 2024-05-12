@@ -33,7 +33,6 @@ using System.Diagnostics;
 using Windows.Devices.Enumeration;
 using Windows.UI.Notifications;
 
-
 #if NET
 using WeakRefNS = System;
 #else

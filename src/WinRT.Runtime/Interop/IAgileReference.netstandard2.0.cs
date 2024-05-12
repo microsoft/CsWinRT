@@ -245,7 +245,7 @@ namespace ABI.WinRT.Interop
             ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInterfaceFromGlobal(ThisPtr, cookie, ref riid, out IntPtr ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, false);
             }
             finally
             {
