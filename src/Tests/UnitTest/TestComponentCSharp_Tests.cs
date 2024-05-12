@@ -1040,14 +1040,14 @@ namespace UnitTest
         public void TestFactoriesWithExplicitlyImplementedIUnknown()
         {
             var cls1 = new ClassWithExplicitIUnknown();
-            Assert.Equal(cls1.Value, 0);
+            Assert.Equal(0, cls1.Value);
             cls1.Value = 42;
-            Assert.Equal(cls1.Value, 42);
+            Assert.Equal(42, cls1.Value);
 
             var cls2 = new ClassWithExplicitIUnknown(42);
             Assert.Equal(42, cls2.Value);
             cls2.Value = 22;
-            Assert.Equal(cls2.Value, 22);
+            Assert.Equal(22, cls2.Value);
         }
 
         [Fact]
