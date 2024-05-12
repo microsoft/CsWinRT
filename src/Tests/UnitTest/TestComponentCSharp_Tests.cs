@@ -33,6 +33,7 @@ using System.Diagnostics;
 using Windows.Devices.Enumeration;
 using Windows.UI.Notifications;
 
+
 #if NET
 using WeakRefNS = System;
 #else
@@ -1033,6 +1034,20 @@ namespace UnitTest
             var cls3 = new Class(42, "foo");
             Assert.Equal(42, cls3.IntProperty);
             Assert.Equal("foo", cls3.StringProperty);
+        }
+
+        [Fact]
+        public void TestFactoriesWithExplicitlyImplementedIUnknown()
+        {
+            var cls1 = new ClassWithExplicitIUnknown();
+            Assert.Equal(cls1.Value, 0);
+            cls1.Value = 42;
+            Assert.Equal(cls1.Value, 42);
+
+            var cls2 = new ClassWithExplicitIUnknown(42);
+            Assert.Equal(42, cls2.Value);
+            cls2.Value = 22;
+            Assert.Equal(cls2.Value, 22);
         }
 
         [Fact]
@@ -2392,6 +2407,12 @@ namespace UnitTest
             Assert.Equal(vector3.Y, TestObject.Vector3Property.Y);
             Assert.Equal(vector3.Z, TestObject.Vector3Property.Z);
             Assert.True(TestObject.Vector3Property == vector3);
+
+            TestObject.Vector3NullableProperty = Vector3.Zero;
+            Assert.Equal(0, TestObject.Vector3Property.X);
+            Assert.Equal(0, TestObject.Vector3Property.Y);
+            Assert.Equal(0, TestObject.Vector3Property.Z);
+            Assert.Equal(Vector3.Zero, TestObject.Vector3NullableProperty);
         }
 
         [Fact]
@@ -2582,7 +2603,6 @@ namespace UnitTest
         public void TypeInfoGenerics()
         {
             var typeName = Class.GetTypeNameForType(typeof(IList<int>));
-
             Assert.Equal("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
         }
 

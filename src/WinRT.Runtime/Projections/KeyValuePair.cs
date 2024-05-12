@@ -440,7 +440,7 @@ namespace ABI.System.Collections.Generic
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
 
         public static readonly Guid PIID = KeyValuePairMethods<K, V>.IID;

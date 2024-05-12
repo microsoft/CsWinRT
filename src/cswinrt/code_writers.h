@@ -2128,7 +2128,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                 }
                 else
                 {
-                    auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(class_type)), [&](auto&& iface) { return iface; });
+                    auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
+                    auto default_interface_typedef = for_typedef(w, default_type_semantics, [&](auto&& iface) { return iface; });
                     auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
                     bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(class_type.Extends()));
@@ -2139,7 +2140,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 IntPtr ptr = (_%.%(%%%)); 
 try 
 { 
-_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
+_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr, %.IID, false); 
 %
 } 
 finally 
@@ -2156,6 +2157,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                         cache_object,
                         signature.has_params() ? ", " : "",
                         bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
+                        bind<write_type_name>(default_type_semantics, typedef_name_type::StaticAbiClass, true),
                         bind([&](writer& w)
                         {
                             if (is_manually_gen_default_interface)
@@ -2178,17 +2180,46 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
             write_activation_factory_objref_definition(w, class_type);
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(class_type));
 
-            w.write(R"(
-public %() : this(%(global::ABI.WinRT.Interop.IActivationFactoryMethods.ActivateInstanceUnsafe(%)))
+            if (settings.netstandard_compat)
+            {
+                w.write(R"(
+public %() : this(new %(global::ABI.WinRT.Interop.IActivationFactoryMethods.ActivateInstanceUnsafe(%)))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+}
+)",
+                    class_type.TypeName(),
+                    default_interface_name,
+                    objrefname);
+            }
+            else
+            {
+                bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(class_type.Extends()));
+                auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
+                auto default_interface_typedef = for_typedef(w, default_type_semantics, [&](auto&& iface) { return iface; });
+                auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
+
+                w.write(R"(
+public %() %
+{
+_inner = global::ABI.WinRT.Interop.IActivationFactoryMethods.ActivateInstanceUnsafe(%, %.IID);
+ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+ComWrappersHelper.Init(_inner, false);
 %
 }
 )",
-                class_type.TypeName(),
-                settings.netstandard_compat ? "new " + default_interface_name : "",
-                objrefname,
-                settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
+                    class_type.TypeName(),
+                    has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
+                    objrefname,
+                    bind<write_type_name>(default_type_semantics, typedef_name_type::StaticAbiClass, true),
+                    bind([&](writer& w)
+                    {
+                        if (is_manually_gen_default_interface)
+                        {
+                            w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
+                        }
+                    }));
+            }
         }
     }
 
@@ -2299,7 +2330,8 @@ private IObjectReference % => __% ?? Make__%();
 
         auto default_interface_name = get_default_interface_name(w, class_type, false);
         auto default_interface_abi_name = get_default_interface_name(w, class_type);
-        auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(class_type)), [&](auto&& iface) { return iface; });
+        auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
+        auto default_interface_typedef = for_typedef(w, default_type_semantics, [&](auto&& iface) { return iface; });
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
         for (auto&& method : composable_type.MethodList())
@@ -2356,7 +2388,7 @@ object baseInspectable = isAggregation ? this : null;
 IntPtr composed = _%.%(%, %%baseInspectable, out IntPtr inner);
 try
 {
-ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner);
+ComWrappersHelper.Init(isAggregation, this, composed, inner, %.IID, out _inner);
 %
 }
 finally
@@ -2376,6 +2408,7 @@ Marshal.Release(inner);
                     cache_object,
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                    bind<write_type_name>(default_type_semantics, typedef_name_type::StaticAbiClass, true),
                     bind([&](writer& w)
                         {
                             if (is_manually_gen_default_interface)

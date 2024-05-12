@@ -113,7 +113,10 @@ namespace WinRT
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
         {
-            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject, IID.IID_IUnknown);
+            // Here the ptr itself might not point to IUnknown, but we are using IUnknown for the purposes of getting
+            // an agile reference if needed.  Due to that and to keep back compat, making sure to not trigger a QI
+            // In addition, the ptr is already pointing to the correct interface which the IObjectReference is expected for.
+            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject, IID.IID_IUnknown, false);
         }
 
 #if NET
@@ -132,6 +135,11 @@ namespace WinRT
         public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid)
         {
             return GetObjectReferenceForInterface<T>(externalComObject, iid, true);
+        }
+
+        public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject, Guid iid, bool requireQI)
+        {
+            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject, iid, requireQI);
         }
 
         internal static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid, bool requireQI)

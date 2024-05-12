@@ -54,7 +54,7 @@ namespace ABI.WinRT.Interop
                 ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, false);
             }
             finally
             {
@@ -72,7 +72,7 @@ namespace ABI.WinRT.Interop
                 ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid);
+                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid, false);
             }
             finally
             {

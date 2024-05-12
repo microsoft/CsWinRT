@@ -259,4 +259,6 @@ CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnref
 MembersMustExist : Member 'protected WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.WinRT.Interop.IActivationFactory._obj' does not exist in the reference but it does exist in the implementation.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IInspectable..ctor(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IInspectable..ctor(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
-Total Issues: 260
+MembersMustExist : Member 'public WinRT.IObjectReference WinRT.ComWrappersSupport.GetObjectReferenceForInterface(System.IntPtr, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersHelper.Init(System.Boolean, System.Object, System.IntPtr, System.IntPtr, System.Guid, WinRT.IObjectReference)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 262

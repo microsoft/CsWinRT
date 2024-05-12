@@ -125,6 +125,11 @@ namespace TestComponentCSharp
         void AddUriHandler(ProvideUri provideUri);
     };
 
+    interface IBoolChanged
+    {
+        void InvokeBoolChanged(Windows.Foundation.EventHandler<Boolean> boolChanged);
+    };
+
     static runtimeclass ComImports
     {
         static Object MakeObject();
@@ -158,6 +163,7 @@ namespace TestComponentCSharp
         , Microsoft.UI.Xaml.Input.ICommand 
         //, Windows.Foundation.Collections.IVector<String>
         //, Windows.Foundation.Collections.IMap<Int32, String>
+        , IBoolChanged
     {
         // factory
         Class();
@@ -319,6 +325,9 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVectorView<Object> GetObjectVector();
         Windows.Foundation.Collections.IVectorView<IProperties1> GetInterfaceVector();
         [noexcept] Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
+        Windows.Foundation.Collections.IVector<Int32> GetIntVector2();
+        Windows.Foundation.Collections.IVector<ComposedBlittableStruct> GetBlittableStructVector2();
+        Windows.Foundation.Collections.IVector<ComposedNonBlittableStruct> GetNonBlittableStructVector2();
 
         Windows.Foundation.Collections.IMap<Int32, Int32> GetIntToIntDictionary();
         Windows.Foundation.Collections.IMap<String, ComposedBlittableStruct> GetStringToBlittableDictionary();
@@ -381,6 +390,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Numerics.Vector2 Vector2Property;
         Windows.Foundation.Numerics.Vector3 Vector3Property;
         Windows.Foundation.Numerics.Vector4 Vector4Property;
+        Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector3> Vector3NullableProperty;
 
         // Structs mapped to equivalent ones in the System namespace
         Windows.Foundation.TimeSpan TimeSpanProperty;
@@ -401,6 +411,7 @@ namespace TestComponentCSharp
         static String[] UnboxStringArray(Object obj);
         static Object BoxedDelegate{ get; };
         static Object BoxedEnum{ get; };
+        static Object BoxedEventHandler{ get; };
 
         static Int32 GetPropertyType(Object obj);
         static String GetName(Object obj);
@@ -426,6 +437,7 @@ namespace TestComponentCSharp
         static IProperties1 NativeProperties1{ get; };
         static Object ServiceProvider{ get; };
         static Object ComInterop{ get; };
+        static Windows.Foundation.Collections.IPropertySet PropertySet{ get; };
 
         // INotifyDataErrorInfo
         void RaiseDataErrorChanged();
@@ -629,6 +641,14 @@ And this is another one"
         CustomExperimentClass();
         Int32 Value{ get; set; };
         void f();
+    }
+
+    [default_interface]
+    runtimeclass ClassWithExplicitIUnknown
+    {
+        ClassWithExplicitIUnknown();
+        ClassWithExplicitIUnknown(Int32 defaultValue);
+        Int32 Value{ get; set; };
     }
 
     // Compile time test for sub windows namespace

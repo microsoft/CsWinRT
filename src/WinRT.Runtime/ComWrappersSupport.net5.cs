@@ -366,7 +366,20 @@ namespace WinRT
             IntPtr inner,
             out IObjectReference objRef)
         {
-            objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance);
+            // To keep pre-existing behavior when we don't know the IID, passing it as IUnknown
+            // as we would have done before.
+            Init(isAggregation, thisInstance, newInstance, inner, IID.IID_IUnknown, out objRef);
+        }
+
+        public unsafe static void Init(
+            bool isAggregation,
+            object thisInstance,
+            IntPtr newInstance,
+            IntPtr inner,
+            Guid iidForObjRef,
+            out IObjectReference objRef)
+        {
+            objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance, iidForObjRef, false);
 
             IntPtr referenceTracker;
             {
@@ -585,7 +598,7 @@ namespace WinRT
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {
-                    var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID.IID_IInspectable);
+                    var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID.IID_IInspectable, false);
                     ComWrappersHelper.Init(inspectableObjRef);
 
                     IInspectable inspectable = new(inspectableObjRef);

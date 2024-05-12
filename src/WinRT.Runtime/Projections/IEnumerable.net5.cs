@@ -422,7 +422,7 @@ namespace ABI.System.Collections.Generic
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
 
         public static Guid PIID = ABI.System.Collections.Generic.IEnumerableMethods<T>.PIID;
@@ -1135,7 +1135,7 @@ namespace ABI.System.Collections.Generic
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
         public static Guid PIID = IEnumeratorMethods<T>.PIID;
 

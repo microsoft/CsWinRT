@@ -49,6 +49,7 @@ namespace ABI.WinRT.Interop
 
         public static IntPtr AbiToProjectionVftablePtr => IActivationFactory.Vftbl.AbiToProjectionVftablePtr;
 
+#if !NET
         /// <summary>
         /// Activates an instance from a given activation factory <see cref="IObjectReference"/> instance.
         /// </summary>
@@ -70,13 +71,45 @@ namespace ABI.WinRT.Interop
 
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, global::WinRT.Interop.IID.IID_IUnknown);
+                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, global::WinRT.Interop.IID.IID_IInspectable, false);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(instancePtr);
             }
         }
+#else
+        /// <summary>
+        /// Activates an instance from a given activation factory <see cref="IObjectReference"/> instance with the result
+        /// pointing to the interface for the given iid.
+        /// </summary>
+        /// <param name="objectReference">The input activation factory <see cref="IObjectReference"/> instance to use.</param>
+        /// <param name="iid">The iid for the interface which the resulting <see cref="IObjectReference"/> will be for.</param>
+        /// <returns>The resulting <see cref="IObjectReference"/> instance created from <paramref name="objectReference"/> and QI to the given <paramref name="iid"/>.</returns>
+        /// <remarks>
+        /// <para>This method assumes <paramref name="objectReference"/> is wrapping an <c>IActivationFactory</c> instance (with no validation).</para>
+        /// <para>This method is only meant to be used by the generated projections, and not by consumers of CsWinRT directly.</para>
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static unsafe IObjectReference ActivateInstanceUnsafe(IObjectReference objectReference, Guid iid)
+        {
+            IntPtr thisPtr = objectReference.ThisPtr;
+            IntPtr instancePtr;
+
+            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[6](thisPtr, &instancePtr));
+
+            GC.KeepAlive(objectReference);
+
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, iid, true);
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
+            }
+        }
+#endif
     }
 
 #if !NET
