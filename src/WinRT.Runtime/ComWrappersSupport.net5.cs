@@ -376,10 +376,13 @@ namespace WinRT
             object thisInstance,
             IntPtr newInstance,
             IntPtr inner,
-            Guid iidForObjRef,
+            Guid iidForNewInstance,
             out IObjectReference objRef)
         {
-            objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance, iidForObjRef, false);
+            objRef = ComWrappersSupport.GetObjectReferenceForInterface(
+                isAggregation ? inner : newInstance,
+                isAggregation ? IID.IID_IInspectable : iidForNewInstance,
+                false);
 
             IntPtr referenceTracker;
             {
