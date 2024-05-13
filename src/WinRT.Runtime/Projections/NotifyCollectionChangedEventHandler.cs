@@ -46,7 +46,7 @@ namespace ABI.System.Collections.Specialized
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        public static Guid IID { get; } = global::WinRT.Interop.IID.IID_NotifyCollectionChangedEventHandler;
+        public static Guid IID => global::WinRT.Interop.IID.IID_NotifyCollectionChangedEventHandler;
 
         public static unsafe IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);
