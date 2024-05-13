@@ -45,7 +45,7 @@ namespace ABI.System.ComponentModel
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        public static Guid IID { get; } = global::WinRT.Interop.IID.IID_PropertyChangedEventHandler;
+        public static Guid IID => global::WinRT.Interop.IID.IID_PropertyChangedEventHandler;
 
         public static unsafe IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);
