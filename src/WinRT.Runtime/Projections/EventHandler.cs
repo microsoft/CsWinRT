@@ -332,7 +332,8 @@ namespace ABI.System
         public static global::System.Delegate AbiInvokeDelegate { get; }
 #endif
 
-        public static Guid IID { get; } = global::WinRT.Interop.IID.IID_EventHandler;
+        public static Guid IID => global::WinRT.Interop.IID.IID_EventHandler;
+
 
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);
