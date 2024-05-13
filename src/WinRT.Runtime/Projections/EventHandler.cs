@@ -111,6 +111,8 @@ namespace ABI.System
     {
         public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(global::System.EventHandler<T>));
 
+        public static Guid IID => PIID;
+
         /// <summary>
         /// The ABI delegate type for the fallback, non-AOT scenario.
         /// This is lazily-initialized from the fallback paths below.
@@ -323,13 +325,14 @@ namespace ABI.System
             var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler), sizeof(global::WinRT.Interop.IDelegateVftbl));
             *(global::WinRT.Interop.IDelegateVftbl*)nativeVftbl = AbiToProjectionVftable;
             AbiToProjectionVftablePtr = nativeVftbl;
+            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.EventHandler), CreateRcw);
         }
 
 #if !NET
         public static global::System.Delegate AbiInvokeDelegate { get; }
 #endif
 
-        private static readonly Guid IID = new(0xc50898f6, 0xc536, 0x5f47, 0x85, 0x83, 0x8b, 0x2c, 0x24, 0x38, 0xa1, 0x3b);
+        public static Guid IID { get; } = global::WinRT.Interop.IID.IID_EventHandler;
 
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);

@@ -581,7 +581,7 @@ namespace Generator
                 source.AppendLine($$"""
                                 var delegateInterface = new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
                                 {
-                                    IID = global::WinRT.GuidGenerator.GetIID(typeof(global::{{@interface}}).GetHelperType()),
+                                    IID = global::ABI.{{@interface}}.IID,
                                     Vtable = global::ABI.{{@interface}}.AbiToProjectionVftablePtr
                                 };
 
