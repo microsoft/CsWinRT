@@ -302,12 +302,12 @@ namespace System
 
         internal void CompleteFromAsyncOperation(IAsyncOperation<TResult> asyncInfo, AsyncStatus asyncStatus)
         {
-            Complete(asyncInfo, ai => ai.As<IAsyncOperation<TResult>>().GetResults(), asyncStatus);
+            Complete(asyncInfo, ai => ((IAsyncOperation<TResult>)ai).GetResults(), asyncStatus);
         }
 
         internal void CompleteFromAsyncOperationWithProgress(IAsyncOperationWithProgress<TResult, TProgress> asyncInfo, AsyncStatus asyncStatus)
         {
-            Complete(asyncInfo, ai => ai.As<IAsyncOperationWithProgress<TResult, TProgress>>().GetResults(), asyncStatus);
+            Complete(asyncInfo, ai => ((IAsyncOperationWithProgress<TResult, TProgress>)ai).GetResults(), asyncStatus);
         }
 
         private void Complete(IAsyncInfo asyncInfo, Func<IAsyncInfo, TResult> getResultsFunction, AsyncStatus asyncStatus)
