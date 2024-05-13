@@ -1309,10 +1309,9 @@ namespace WinRT
                     // In this case, we need to check if the object is of the same type as the one we're trying to cast to.
                     // If it's not, we need to create an RCW for the object.
                     // We cannot use T directly here as it may lead to invalid cast due to the above reason.
-                    var obj = ComWrappersSupport.FindObject<object>(iunknownPtr);
-                    if (typeof(T).IsAssignableFrom(obj.GetType()))
+                    if (ComWrappersSupport.FindObject<object>(iunknownPtr) is T obj)
                     {
-                        return (T)obj;
+                        return obj;
                     }
                     else
                     {
@@ -1432,10 +1431,9 @@ namespace WinRT
                 // In this case, we need to check if the object is of the same type as the one we're trying to cast to.
                 // If it's not, we need to create an RCW for the object.
                 // We cannot use T directly here as it may lead to invalid cast due to the above reason.
-                var obj = ComWrappersSupport.FindObject<object>(nativeDelegate);
-                if (typeof(T).IsAssignableFrom(obj.GetType()))
+                if (ComWrappersSupport.FindObject<object>(nativeDelegate) is T obj)
                 {
-                    return (T)obj;
+                    return obj;
                 }
                 else
                 {
