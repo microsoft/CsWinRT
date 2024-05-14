@@ -1711,7 +1711,13 @@ namespace ABI.System
             Exception __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableException), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IID.IID_NullableException, out nullablePtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableException), out nullablePtr)
+#endif
+                    );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Exception*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(Exception.FromAbi(__retval));
             }
@@ -1828,7 +1834,13 @@ namespace ABI.System
             IntPtr __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in PIID, out nullablePtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr)
+#endif
+                    );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(Marshaler<T>.FromAbi(__retval));
             }

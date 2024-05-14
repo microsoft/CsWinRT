@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -87,7 +88,13 @@ namespace ABI.Windows.Foundation
             IntPtr __retval_data = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out referenceArrayPtr));
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in PIID, out referenceArrayPtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out referenceArrayPtr)
+#endif
+                    );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
                 return Marshaler<T>.FromAbiArray((__retval_length, __retval_data));
             }
