@@ -351,7 +351,13 @@ namespace ABI.System
 
         public static global::System.EventHandler CreateRcw(IntPtr ptr)
         {
-            return new global::System.EventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke);
+            return new global::System.EventHandler(new NativeDelegateWrapper(
+#if NET
+                ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID)).Invoke
+#else
+                ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke
+#endif
+                );
         }
 
 #if !NET
@@ -361,9 +367,19 @@ namespace ABI.System
         private sealed class NativeDelegateWrapper : IWinRTObject
 #endif
         {
+#if NET
+            private readonly ObjectReference<global::WinRT.Interop.IUnknownVftbl> _nativeDelegate;
+#else
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
+#endif
 
-            public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
+            public NativeDelegateWrapper(
+#if NET
+                ObjectReference<global::WinRT.Interop.IUnknownVftbl> nativeDelegate
+#else
+                ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate
+#endif
+                )
             {
                 _nativeDelegate = nativeDelegate;
             }
@@ -394,7 +410,7 @@ namespace ABI.System
 #if !NET
                 var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
 #else
-                var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(_nativeDelegate.Vftbl.Invoke);
+                var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(*(void***)ThisPtr)[3];
 #endif
                 ObjectReferenceValue __sender = default;
                 ObjectReferenceValue __args = default;
