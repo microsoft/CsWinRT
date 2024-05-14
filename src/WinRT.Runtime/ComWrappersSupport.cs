@@ -116,7 +116,7 @@ namespace WinRT
             // Here the ptr itself might not point to IUnknown, but we are using IUnknown for the purposes of getting
             // an agile reference if needed.  Due to that and to keep back compat, making sure to not trigger a QI
             // In addition, the ptr is already pointing to the correct interface which the IObjectReference is expected for.
-            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject, IID.IID_IUnknown, false);
+            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject, IID.IID_IUnknown, requireQI: false);
         }
 
 #if NET
@@ -134,9 +134,19 @@ namespace WinRT
 
         public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid)
         {
-            return GetObjectReferenceForInterface<T>(externalComObject, iid, true);
+            return GetObjectReferenceForInterface<T>(externalComObject, iid, requireQI: true);
         }
 
+        /// <summary>
+        /// Creates a <see cref="IObjectReference"/> object for a given <see cref="IntPtr"/> COM pointer.
+        /// As part of this, the <see cref="Guid"/> IID is set in the <see cref="IObjectReference"/> object
+        /// which is used in non agile scenarios.  In addition, if <paramref name="requireQI"/> is set to true, a QI to that <paramref name="iid"/> is done.
+        /// Otherwise it is assumed, the passed COM pointer already points to the interface represented by the <paramref name="iid"/>.
+        /// </summary>
+        /// <param name="externalComObject">The native <see cref="IntPtr"/> object for which to construct the <see cref="IObjectReference"/> object.</param>
+        /// <param name="iid">The <see cref="Guid"/> IID that represents the interface which the resulting <see cref="IObjectReference"/> object will be pointing to.</param>
+        /// <param name="requireQI">Whether to QI as part of returning the object.</param>
+        /// <returns>The <see cref="IObjectReference"/> holding onto the <paramref name="externalComObject"/> pointer passed or its QI.</returns>
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject, Guid iid, bool requireQI)
         {
             return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject, iid, requireQI);

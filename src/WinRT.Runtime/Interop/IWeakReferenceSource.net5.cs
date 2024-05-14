@@ -191,7 +191,7 @@ namespace ABI.WinRT.Interop
             ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](ThisPtr, &riid, &objRef));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(objRef, riid, false);
+                return ComWrappersSupport.GetObjectReferenceForInterface(objRef, riid, requireQI: false);
             }
             finally
             {

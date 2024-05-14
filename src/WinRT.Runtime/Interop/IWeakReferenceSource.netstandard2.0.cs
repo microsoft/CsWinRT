@@ -195,7 +195,7 @@ namespace ABI.WinRT.Interop
             ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Resolve(ThisPtr, ref riid, out IntPtr objRef));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(objRef, riid, false);
+                return ComWrappersSupport.GetObjectReferenceForInterface(objRef, riid, requireQI: false);
             }
             finally
             {

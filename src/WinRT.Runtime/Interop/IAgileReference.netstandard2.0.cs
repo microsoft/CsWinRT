@@ -53,7 +53,7 @@ namespace ABI.WinRT.Interop
                 ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, false);
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);
             }
             finally
             {
@@ -71,7 +71,7 @@ namespace ABI.WinRT.Interop
                 ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid, false);
+                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid, requireQI: false);
             }
             finally
             {
@@ -245,7 +245,7 @@ namespace ABI.WinRT.Interop
             ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInterfaceFromGlobal(ThisPtr, cookie, ref riid, out IntPtr ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, false);
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);
             }
             finally
             {

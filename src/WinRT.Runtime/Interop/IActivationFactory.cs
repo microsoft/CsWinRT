@@ -71,7 +71,7 @@ namespace ABI.WinRT.Interop
 
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, global::WinRT.Interop.IID.IID_IInspectable, false);
+                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, global::WinRT.Interop.IID.IID_IInspectable, requireQI: false);
             }
             finally
             {
@@ -102,7 +102,7 @@ namespace ABI.WinRT.Interop
 
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, iid, true);
+                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, iid, requireQI: true);
             }
             finally
             {

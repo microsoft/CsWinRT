@@ -382,7 +382,7 @@ namespace WinRT
             objRef = ComWrappersSupport.GetObjectReferenceForInterface(
                 isAggregation ? inner : newInstance,
                 isAggregation ? IID.IID_IInspectable : iidForNewInstance,
-                false);
+                requireQI: false);
 
             IntPtr referenceTracker;
             {
