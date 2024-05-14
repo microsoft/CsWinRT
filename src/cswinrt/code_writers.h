@@ -7737,7 +7737,15 @@ public static global::System.Guid IID => GuidGenerator.CreateIID(typeof(%));
                 else
                 {
                     w.write(R"(
-public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
+public static ref readonly global::System.Guid IID
+{
+[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+get
+{
+global::System.ReadOnlySpan<byte> data = new byte[] { % };
+return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
+}
+}
 )",
                         bind<write_guid_bytes>(iface));
                 }
@@ -9096,7 +9104,15 @@ public static global::System.Guid IID{ get; } = new Guid(new byte[]{ % });
                     else
                     {
                         w.write(R"(
-public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
+public static ref readonly global::System.Guid IID
+{
+[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+get
+{
+global::System.ReadOnlySpan<byte> data = new byte[] { % };
+return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
+}
+}
 )",
                             bind<write_guid_bytes>(type));
                     }
