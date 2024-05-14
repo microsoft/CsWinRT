@@ -674,7 +674,7 @@ namespace ABI.System.Collections.Generic
 
             public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.IReadOnlyList<T>.AbiToProjectionVftablePtr;
 
-            public static Guid PIID = ABI.System.Collections.Generic.IReadOnlyList<T>.PIID;
+            public static readonly Guid PIID = ABI.System.Collections.Generic.IReadOnlyList<T>.PIID;
         }
 
         private static readonly ConditionalWeakTable<global::System.Collections.Generic.IReadOnlyList<T>, ToAbiHelper> _adapterTable = new();
@@ -694,7 +694,7 @@ namespace ABI.System.Collections.Generic
             return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
 
-        public static Guid PIID = IReadOnlyListMethods<T>.PIID;
+        public static readonly Guid PIID = IReadOnlyListMethods<T>.PIID;
 
         int global::System.Collections.Generic.IReadOnlyCollection<T>.Count
         {

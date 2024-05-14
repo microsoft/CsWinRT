@@ -1395,7 +1395,7 @@ namespace ABI.System.Collections.Generic
 
             public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.IList<T>.AbiToProjectionVftablePtr;
 
-            public static Guid PIID = ABI.System.Collections.Generic.IList<T>.PIID;
+            public static readonly Guid PIID = ABI.System.Collections.Generic.IList<T>.PIID;
         }
 
         private static readonly ConditionalWeakTable<global::System.Collections.Generic.IList<T>, ToAbiHelper> _adapterTable = new();
@@ -1415,7 +1415,7 @@ namespace ABI.System.Collections.Generic
             return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
 
-        public static Guid PIID = IListMethods<T>.PIID;
+        public static readonly Guid PIID = IListMethods<T>.PIID;
         
         unsafe T global::Windows.Foundation.Collections.IVector<T>.GetAt(uint index)
         {

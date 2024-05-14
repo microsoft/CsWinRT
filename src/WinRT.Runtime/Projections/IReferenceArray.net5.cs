@@ -117,7 +117,7 @@ namespace ABI.Windows.Foundation
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReferenceArray<T>));
 
-        public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReferenceArray<T>));
+        public static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReferenceArray<T>));
 
         private readonly ObjectReference<IUnknownVftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;

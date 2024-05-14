@@ -1820,7 +1820,7 @@ namespace ABI.System
             return 0;
         }
 
-        public static Guid PIID = Nullable<T>.PIID;
+        public static readonly Guid PIID = Nullable<T>.PIID;
 
         public static unsafe Nullable GetValue(IInspectable inspectable)
         {

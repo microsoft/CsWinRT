@@ -423,7 +423,7 @@ namespace ABI.System.Collections.Generic
 
             public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.KeyValuePair<K, V>.AbiToProjectionVftablePtr;
 
-            public static Guid PIID = ABI.System.Collections.Generic.KeyValuePair<K, V>.PIID;
+            public static readonly Guid PIID = ABI.System.Collections.Generic.KeyValuePair<K, V>.PIID;
         }
 
         private static readonly ConditionalWeakTable<object, ToIKeyValuePair> _adapterTable = new();
