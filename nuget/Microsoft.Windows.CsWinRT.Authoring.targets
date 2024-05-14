@@ -13,6 +13,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ProjectRuntimeConfigFileName Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">WinRT.Host.runtimeconfig.json</ProjectRuntimeConfigFileName>
     <CsWinRTDetectDependentAuthoringWinMDs Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'==''">true</CsWinRTDetectDependentAuthoringWinMDs>
     <GetCopyToOutputDirectoryItemsDependsOn>$(GetCopyToOutputDirectoryItemsDependsOn);CsWinRTAuthoring_AddManagedDependencies</GetCopyToOutputDirectoryItemsDependsOn>
+    <CsWinRTEnableLogging>$(CsWinRTEnableLogging)</CsWinRTEnableLogging>
   </PropertyGroup>
 
   <PropertyGroup>
