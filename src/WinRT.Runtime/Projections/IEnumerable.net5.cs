@@ -256,7 +256,7 @@ namespace ABI.System.Collections.Generic
             return new ToAbiEnumeratorAdapter<T>(__this.GetEnumerator());
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerable<T>));
+        internal static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerable<T>));
         public static Guid IID => PIID;
     }
 
@@ -605,7 +605,7 @@ namespace ABI.System.Collections.Generic
             return IEnumerator<T>.FindAdapter(thisPtr).HasCurrent;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerator<T>));
+        internal static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerator<T>));
         public static Guid IID => PIID;
     }
 

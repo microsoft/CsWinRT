@@ -438,7 +438,7 @@ namespace ABI.System.Collections.Generic
             return IList<T>.FindAdapter(thisPtr).Size;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IList<T>));
+        internal static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IList<T>));
         public static Guid IID => PIID;
 
         internal unsafe static bool EnsureEnumerableInitialized()
@@ -1398,7 +1398,7 @@ namespace ABI.System.Collections.Generic
             public static Guid PIID = ABI.System.Collections.Generic.IList<T>.PIID;
         }
 
-        private readonly static ConditionalWeakTable<global::System.Collections.Generic.IList<T>, ToAbiHelper> _adapterTable = new();
+        private static readonly ConditionalWeakTable<global::System.Collections.Generic.IList<T>, ToAbiHelper> _adapterTable = new();
 
         internal static global::Windows.Foundation.Collections.IVector<T> FindAdapter(IntPtr thisPtr)
         {

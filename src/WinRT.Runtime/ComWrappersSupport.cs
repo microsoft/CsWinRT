@@ -23,7 +23,7 @@ namespace WinRT
 {
     internal static class KeyValuePairHelper
     {
-        internal readonly static ConcurrentDictionary<Type, ComInterfaceEntry> KeyValuePairCCW = new();
+        internal static readonly ConcurrentDictionary<Type, ComInterfaceEntry> KeyValuePairCCW = new();
 
         internal static void TryAddKeyValuePairCCW(Type keyValuePairType, Guid iid, IntPtr abiToProjectionVftablePtr)
         {
@@ -38,8 +38,8 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new();
-        private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new();
+        private static readonly ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new();
+        private static readonly ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate

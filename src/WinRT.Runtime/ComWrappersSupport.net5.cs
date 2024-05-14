@@ -348,7 +348,7 @@ namespace WinRT
             return null;
         }
 
-        private readonly static ConcurrentDictionary<Type, ComInterfaceEntry[]> ComInterfaceEntriesForType = new();
+        private static readonly ConcurrentDictionary<Type, ComInterfaceEntry[]> ComInterfaceEntriesForType = new();
         public static void RegisterComInterfaceEntries(Type implementationType, ComInterfaceEntry[] comInterfaceEntries) => ComInterfaceEntriesForType.TryAdd(implementationType, comInterfaceEntries);
     }
 

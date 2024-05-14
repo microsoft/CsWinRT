@@ -178,7 +178,7 @@ namespace ABI.Windows.Foundation
     internal static class BoxedValueIReferenceImpl<T, TAbi> where TAbi : unmanaged
     {
         public static IntPtr AbiToProjectionVftablePtr;
-        private readonly static global::ABI.System.Nullable_Delegates.GetValueDelegateAbi GetValue;
+        private static readonly global::ABI.System.Nullable_Delegates.GetValueDelegateAbi GetValue;
 
         static unsafe BoxedValueIReferenceImpl()
         {
@@ -1729,7 +1729,7 @@ namespace ABI.System
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
 #if !NET
-        private readonly static Nullable_Delegates.GetValueDelegate _Get_Value_0;
+        private static readonly Nullable_Delegates.GetValueDelegate _Get_Value_0;
 #endif
 
         unsafe static Nullable_EventHandler()
@@ -1790,7 +1790,7 @@ namespace ABI.System
 
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
-        private readonly static Nullable_Delegates.GetValueDelegate _Get_Value_0;
+        private static readonly Nullable_Delegates.GetValueDelegate _Get_Value_0;
 
         unsafe static Nullable_Delegate()
         {
@@ -1973,7 +1973,7 @@ namespace ABI.System
 
     internal static class NullableBlittable<T> where T: unmanaged
     {
-        private readonly static Guid IID = NullableType.GetIID<T>();
+        private static readonly Guid IID = NullableType.GetIID<T>();
 
         public static unsafe object GetValue(IInspectable inspectable)
         {

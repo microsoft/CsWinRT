@@ -32,7 +32,7 @@ namespace ABI.System
     [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
     internal unsafe interface IDisposable : global::System.IDisposable
     {
-        public readonly static IntPtr AbiToProjectionVftablePtr;
+        public static readonly IntPtr AbiToProjectionVftablePtr;
 
         static unsafe IDisposable()
         {
