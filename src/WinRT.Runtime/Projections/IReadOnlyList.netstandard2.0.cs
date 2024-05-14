@@ -221,15 +221,15 @@ namespace ABI.System.Collections.Generic
             internal _get_PropertyAsUInt32 get_Size_1;
             public global::System.Delegate IndexOf_2;
             public IReadOnlyList_Delegates.GetMany_3 GetMany_3;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IReadOnlyList<T>));
+            public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReadOnlyList<T>));
             private static readonly Type GetAt_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type IndexOf_2_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
+                var vftblPtr = *(void***)thisPtr;
+                var vftbl = (IntPtr*)vftblPtr;
+                IInspectableVftbl = *(IInspectable.Vftbl*)vftblPtr;
                 GetAt_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], GetAt_0_Type);
                 get_Size_1 = Marshal.GetDelegateForFunctionPointer<_get_PropertyAsUInt32>(vftbl[7]);
                 IndexOf_2 = Marshal.GetDelegateForFunctionPointer(vftbl[8], IndexOf_2_Type);

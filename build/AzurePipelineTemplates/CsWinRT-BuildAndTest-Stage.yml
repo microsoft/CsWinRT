@@ -3,7 +3,7 @@ stages:
   displayName: Build/Test Stage
   jobs: 
   - job: BuildAndTest
-    timeoutInMinutes: 180
+    timeoutInMinutes: 270
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
       maxParallel: 10
@@ -102,6 +102,7 @@ stages:
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src
         script: |
+          set CIBuildReason=CI
           set cswinrt_label=functionaltest
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
     templateContext:

@@ -6,6 +6,9 @@ namespace Windows.UI
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Color))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Color, Color>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal

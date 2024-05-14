@@ -131,6 +131,11 @@ namespace TestComponentCSharp
         static Int32 NumObjects{ get; };
     }
 
+    interface IDerivedGenericInterface requires Microsoft.UI.Xaml.Input.ICommand, Microsoft.UI.Xaml.Interop.INotifyCollectionChanged, Windows.Foundation.Collections.IPropertySet
+    {
+        Int32 Number;
+    }
+
     interface ISingleton
     {
         Int32 IntProperty;
@@ -505,11 +510,13 @@ namespace TestComponentCSharp
         static void Method();
         static Int32 Property;
         static event Windows.Foundation.EventHandler<Int32> Event;
+        static Int32 ReadWriteProperty{ get; };
         [contract(Windows.Foundation.UniversalApiContract, 10)]
         {
             static void WarningMethod();
             static Int32 WarningProperty;
             static event Windows.Foundation.EventHandler<Int32> WarningEvent;
+            static Int32 ReadWriteProperty{ set; };
         }
     }
     

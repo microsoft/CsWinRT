@@ -16,12 +16,60 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
     <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess>
+    <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' == '' and $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">true</CsWinRTAotOptimizerEnabled>
+    <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' != 'true'">false</CsWinRTAotOptimizerEnabled>
+
+    <!--
+      If the AOT optimizer is enabled, and we're publishing with NativeAOT, automatically set CsWinRTAotExportsEnabled as well.
+      Only do this if the property is not already set by the user, so we respect any existing preference.
+    -->
+    <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' == '' and '$(CsWinRTAotOptimizerEnabled)' == 'true' and '$(PublishAot)' == 'true'">true</CsWinRTAotExportsEnabled>
+    <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">false</CsWinRTAotExportsEnabled>
+
+    <!-- Set the RCW factory fallback generator to not be opt-in by default -->
+    <CsWinRTRcwFactoryFallbackGeneratorForceOptIn Condition="'$(CsWinRTRcwFactoryFallbackGeneratorForceOptIn)' != 'true'">false</CsWinRTRcwFactoryFallbackGeneratorForceOptIn>
+    <CsWinRTRcwFactoryFallbackGeneratorForceOptOut Condition="'$(CsWinRTRcwFactoryFallbackGeneratorForceOptOut)' != 'true'">false</CsWinRTRcwFactoryFallbackGeneratorForceOptOut>
+
+    <!--
+      These properties are defined in this property group and not in the 'CsWinRTGenerateProjection'
+      target, because they are also needed in authoring scenarios (which will not run that target).
+    -->
+    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
+    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 6">net6.0</CsWinRTExeTFM>
+    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 7">net7.0</CsWinRTExeTFM>
+    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">net8.0</CsWinRTExeTFM>
+    <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
   </PropertyGroup>
+
+  <ItemGroup>
+    <CompilerVisibleProperty Include="CsWinRTAotOptimizerEnabled" />
+    <CompilerVisibleProperty Include="CsWinRTAotExportsEnabled" />
+    <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptIn" />
+    <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptOut" />
+    <CompilerVisibleProperty Include="CsWinRTCcwLookupTableGeneratorEnabled" />
+  </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
   
   <Target Name="CsWinRTNet5EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5" BeforeTargets="CsWinRTPrepareProjection">
     <Error Text="Support for .NET 5 ended with C#/WinRT 2.0. For .NET 5 support, use C#/WinRT version 1.6.5. See https://github.com/microsoft/CsWinRT/discussions/1232" />
+  </Target>
+
+  <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
+  <Target Name="CsWinRTSetGeneratorProperties" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore">
+    <PropertyGroup>
+      <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == '' and
+                                                        '$(CsWinRTComponent)' == 'true'">true</CsWinRTCcwLookupTableGeneratorEnabled>		
+      <!-- If the lookup generator is enabled, the AOT source generator generates vtable entries for generic types and boxing scenarios that it detects. -->
+	  <!-- This is not intended to be ran on projections, so we try to detect that and disable it if a projection is being generated. -->
+	  <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == '' and
+                                                        '$(CsWinRTGenerateProjection)' == 'true' and
+                                                        '$(OutputType)' == 'Library' and
+                                                        ('@(CsWinRTIncludes)' != ''or $(CsWinRTFilters.Contains('-include')))">false</CsWinRTCcwLookupTableGeneratorEnabled>
+	  <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == ''">true</CsWinRTCcwLookupTableGeneratorEnabled>
+	</PropertyGroup>
   </Target>
 
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
@@ -92,8 +140,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
       <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
       <CsWinRTCommandPrivateProjection>"$(CsWinRTExe)" %40"$(CsWinRTResponseFilePrivateProjection)"</CsWinRTCommandPrivateProjection>
-      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
-      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
     </PropertyGroup>
 
@@ -147,9 +193,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
       <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedProjection>
       <CsWinRTEmbeddedEnums Condition="'$(CsWinRTEmbeddedPublicEnums)' == 'true'">-public_enums</CsWinRTEmbeddedEnums>
-      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
-      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) > 5">net6.0</CsWinRTExeTFM>
-      <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
 
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
@@ -219,5 +262,52 @@ $(CsWinRTInternalProjection)
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
+
+  <!-- Default values for all custom CsWinRT runtime feature switches -->
+  <PropertyGroup>
+    <CsWinRTEnableDynamicObjectsSupport Condition="'$(CsWinRTEnableDynamicObjectsSupport)' == ''">true</CsWinRTEnableDynamicObjectsSupport>
+    <CsWinRTUseExceptionResourceKeys Condition="'$(CsWinRTUseExceptionResourceKeys)' == ''">false</CsWinRTUseExceptionResourceKeys>
+    <CsWinRTEnableDefaultCustomTypeMappings Condition="'$(CsWinRTEnableDefaultCustomTypeMappings)' == ''">true</CsWinRTEnableDefaultCustomTypeMappings>
+    <CsWinRTEnableICustomPropertyProviderSupport Condition="'$(CsWinRTEnableICustomPropertyProviderSupport)' == ''">true</CsWinRTEnableICustomPropertyProviderSupport>
+    <CsWinRTEnableIReferenceSupport Condition="'$(CsWinRTEnableIReferenceSupport)' == ''">true</CsWinRTEnableIReferenceSupport>
+    <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
+  </PropertyGroup>
+
+  <!--
+    Configuration for the feature switches (to support IL trimming).
+    See the 'ILLink.Substitutions.xml' file for more details on that.
+  -->
+  <ItemGroup>
+
+    <!-- CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT"
+                                    Value="$(CsWinRTEnableDynamicObjectsSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_USE_EXCEPTION_RESOURCE_KEYS switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS"
+                                    Value="$(CsWinRTUseExceptionResourceKeys)"
+                                    Trim="true" />
+                                  
+    <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS"
+                                    Value="$(CsWinRTEnableDefaultCustomTypeMappings)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT"
+                                    Value="$(CsWinRTEnableICustomPropertyProviderSupport)"
+                                    Trim="true" />
+    
+    <!-- CSWINRT_ENABLE_IREFERENCE_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IREFERENCE_SUPPORT"
+                                    Value="$(CsWinRTEnableIReferenceSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE"
+                                    Value="$(CsWinRTEnableIDynamicInterfaceCastableSupport)"
+                                    Trim="true" />
+  </ItemGroup>
 
 </Project>

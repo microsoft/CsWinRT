@@ -18,6 +18,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     /// Contains an implementation of the WinRT IBuffer interface that conforms to all requirements on classes that implement that interface,
     /// such as implementing additional interfaces.
     /// </summary>
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::ABI.System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferWinRTTypeDetails))]
+#endif
 #if EMBED
     internal
 #else
@@ -26,7 +29,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     sealed class WindowsRuntimeBuffer : IBuffer, IBufferByteAccess, IMarshal
     {
         [DllImport("api-ms-win-core-winrt-robuffer-l1-1-0.dll")]
-        private static extern int RoGetBufferMarshaler(out IntPtr bufferMarshalerPtr);
+        private static extern unsafe int RoGetBufferMarshaler(IntPtr* bufferMarshalerPtr);
         #region Constants
 
         private const string WinTypesDLL = "WinTypes.dll";
@@ -69,15 +72,16 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         [ThreadStatic]
         private static IMarshal t_winRtMarshalProxy = null;
 
-        private static void EnsureHasMarshalProxy()
+        private static unsafe void EnsureHasMarshalProxy()
         {
             if (t_winRtMarshalProxy != null)
                 return;
 
             try
             {
-                int hr = RoGetBufferMarshaler(out IntPtr proxyPtr);
-                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.Com.IMarshal.Vftbl>.Attach(ref proxyPtr));
+                IntPtr proxyPtr = default;
+                int hr = RoGetBufferMarshaler(&proxyPtr);
+                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.Com.IMarshal.Vftbl>.Attach(ref proxyPtr, global::WinRT.Interop.IID.IID_IMarshal));
                 t_winRtMarshalProxy = proxy;
 
                 if (hr != 0)
@@ -308,5 +312,35 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         #endregion Implementation of IMarshal
     }  // class WindowsRuntimeBuffer
 }  // namespace
+
+#if NET
+namespace ABI.System.Runtime.InteropServices.WindowsRuntime
+{
+    internal sealed class WindowsRuntimeBufferWinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+    {
+        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            return new ComWrappers.ComInterfaceEntry[]
+            {
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = global::WinRT.Interop.IID.IID_IBuffer,
+                    Vtable = global::ABI.Windows.Storage.Streams.IBuffer.AbiToProjectionVftablePtr
+                },
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = global::WinRT.Interop.IID.IID_IBufferByteAccess,
+                    Vtable = global::ABI.Windows.Storage.Streams.IBufferByteAccess.Vftbl.AbiToProjectionVftablePtr
+                },
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = global::WinRT.Interop.IID.IID_IMarshal,
+                    Vtable = global::ABI.Com.IMarshal.Vftbl.AbiToProjectionVftablePtr
+                }
+            };
+        }
+    }
+}
+#endif
 
 // WindowsRuntimeBuffer.cs

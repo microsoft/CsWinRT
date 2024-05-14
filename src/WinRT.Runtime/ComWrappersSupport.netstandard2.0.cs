@@ -32,6 +32,8 @@ namespace WinRT
             return CreateRcwForComObject<T>(ptr, true);
         }
 
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, CreateTypedRcwFactory);
+
         private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
         {
             if (ptr == IntPtr.Zero)
@@ -48,7 +50,7 @@ namespace WinRT
                 object runtimeWrapper = null;
                 if (typeof(T).IsDelegate())
                 {
-                    runtimeWrapper = CreateDelegateFactory(typeof(T))(ptr);
+                    runtimeWrapper = GetOrCreateDelegateFactory(typeof(T))(ptr);
                 }
                 else if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
                 {
@@ -56,12 +58,12 @@ namespace WinRT
 
                     if (typeof(T).IsSealed)
                     {
-                        runtimeWrapper = TypedObjectFactoryCacheForType.GetOrAdd(typeof(T), classType => CreateTypedRcwFactory(classType))(inspectable);
+                        runtimeWrapper = GetTypedRcwFactory(typeof(T))(inspectable);
                     }
                     else
                     {
                         Type runtimeClassType = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
-                        runtimeWrapper = runtimeClassType == null ? inspectable : TypedObjectFactoryCacheForType.GetOrAdd(runtimeClassType, classType => CreateTypedRcwFactory(classType))(inspectable);
+                        runtimeWrapper = runtimeClassType == null ? inspectable : TypedObjectFactoryCacheForType.GetOrAdd(runtimeClassType, CreateTypedRcwFactory)(inspectable);
                     }
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
@@ -130,7 +132,7 @@ namespace WinRT
                 return TryUnwrapObject(del.Target, out objRef);
             }
 
-            var objRefFunc = TypeObjectRefFuncCache.GetOrAdd(o.GetType(), (type) =>
+            var objRefFunc = TypeObjectRefFuncCache.GetOrAdd(o.GetType(), static (type) =>
             {
                 ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
                 if (objRefWrapper is object)

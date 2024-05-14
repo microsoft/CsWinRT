@@ -38,8 +38,8 @@ namespace ABI.System.Collections.Specialized
                 Invoke = (IntPtr)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_Invoke
 #endif
             };
-            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(NotifyCollectionChangedEventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
-            Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
+            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(NotifyCollectionChangedEventHandler), sizeof(global::WinRT.Interop.IDelegateVftbl));
+            *(global::WinRT.Interop.IDelegateVftbl*)nativeVftbl = AbiToProjectionVftable;
             AbiToProjectionVftablePtr = nativeVftbl;
         }
 
@@ -65,8 +65,8 @@ namespace ABI.System.Collections.Specialized
             return new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke);
         }
 
-        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
+        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
         private sealed class NativeDelegateWrapper
 #else
         private sealed class NativeDelegateWrapper : IWinRTObject
@@ -131,6 +131,14 @@ namespace ABI.System.Collections.Specialized
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.DisposeAbi(abi);
 
+        public static unsafe MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.MarshalerArray CreateMarshalerArray(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler[] array) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.GetAbiArray(box);
+        public static unsafe global::System.Collections.Specialized.NotifyCollectionChangedEventHandler[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler[] array, object box) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler[] array) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.MarshalerArray array) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
+
 #if NET
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
@@ -157,38 +165,36 @@ namespace ABI.System.Collections.Specialized
         }
     }
 
-    internal sealed unsafe class NotifyCollectionChangedEventSource : EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
+    internal sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : global::ABI.WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
     {
-        internal NotifyCollectionChangedEventSource(IObjectReference obj,
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
-            : base(obj, addHandler, removeHandler)
+        internal NotifyCollectionChangedEventHandlerEventSource(
+            IObjectReference objectReference,
+#if NET
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> addHandler,
+#else
+            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> addHandler,
+#endif
+            delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> removeHandler)
+            : base(objectReference, addHandler, removeHandler)
         {
         }
 
         protected override ObjectReferenceValue CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler del) =>
             NotifyCollectionChangedEventHandler.CreateMarshaler2(del);
 
-        protected override State CreateEventState() =>
-            new EventState(_obj.ThisPtr, _index);
+        protected override global::ABI.WinRT.Interop.EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> CreateEventSourceState() =>
+            new EventState(ObjectReference.ThisPtr, Index);
 
-        private sealed class EventState : State
+        private sealed class EventState : global::ABI.WinRT.Interop.EventSourceState<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
         {
             public EventState(IntPtr obj, int index)
                 : base(obj, index)
             {
             }
 
-            protected override Delegate GetEventInvoke()
+            protected override global::System.Collections.Specialized.NotifyCollectionChangedEventHandler GetEventInvoke()
             {
-                global::System.Collections.Specialized.NotifyCollectionChangedEventHandler handler =
-                    (global::System.Object obj, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
-                    {
-                        var localDel = (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler) del;
-                        if (localDel != null)
-                            localDel.Invoke(obj, e);
-                    };
-                return handler;
+                return (obj, e) => targetDelegate?.Invoke(obj, e);
             }
         }
     }

@@ -110,13 +110,13 @@ namespace ABI.System.Collections.Generic
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public IEnumerable_Delegates.First_0 First_0;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerable<T>));
+            public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerable<T>));
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
+                var vftblPtr = *(void***)thisPtr;
+                var vftbl = (IntPtr*)vftblPtr;
+                IInspectableVftbl = *(IInspectable.Vftbl*)vftblPtr;
                 First_0 = Marshal.GetDelegateForFunctionPointer<IEnumerable_Delegates.First_0>(vftbl[6]);
             }
 
@@ -453,14 +453,14 @@ namespace ABI.System.Collections.Generic
             internal _get_PropertyAsBoolean get_HasCurrent_1;
             public IEnumerator_Delegates.MoveNext_2 MoveNext_2;
             public IEnumerator_Delegates.GetMany_3 GetMany_3;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerator<T>));
+            public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerator<T>));
             private static readonly Type get_Current_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
+                var vftblPtr = *(void***)thisPtr;
+                var vftbl = (IntPtr*)vftblPtr;
+                IInspectableVftbl = *(IInspectable.Vftbl*)vftblPtr;
                 get_Current_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], get_Current_0_Type);
                 get_HasCurrent_1 = Marshal.GetDelegateForFunctionPointer<_get_PropertyAsBoolean>(vftbl[7]);
                 MoveNext_2 = Marshal.GetDelegateForFunctionPointer<IEnumerator_Delegates.MoveNext_2>(vftbl[8]);

@@ -14,7 +14,7 @@ namespace System.Threading.Tasks
 #if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-    internal sealed class TaskToAsyncActionAdapter
+    internal sealed partial class TaskToAsyncActionAdapter
                         : TaskToAsyncInfoAdapter<AsyncActionCompletedHandler, VoidReferenceTypeParameter, VoidValueTypeParameter, VoidValueTypeParameter>,
                           IAsyncAction
     {

@@ -36,8 +36,8 @@ namespace ABI.Windows.Foundation
                 _ToString_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_ToString_0
 #endif
             };
-            var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedIStringableVftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
-            Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+            var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedIStringableVftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
+            *(ManagedIStringableVftbl*)nativeVftbl = AbiToProjectionVftable;
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
 

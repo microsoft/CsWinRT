@@ -2,8 +2,20 @@
 
   <PropertyGroup>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+    
+  <!--
+    In Release x64, we publish with NativeAOT to test the self-contained WinRT component mode.
+    When we do this, we also skip bundling the activation manifest in the C++ consumer. That is
+    only needed when the implementation .dll is not the native .dll being loaded. So by dropping
+    it we can also further validate that the self-contained authoring scenario works correctly
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+  </PropertyGroup>
 
 </Project>

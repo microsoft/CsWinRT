@@ -53,13 +53,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="strings\WinRT.cs">
+    <None Include="strings\InitalizeProjection.cs">
       <Filter>strings</Filter>
     </None>
     <None Include="packages.config" />
-    <None Include="strings\WinRT_Interop.cs">
-      <Filter>strings</Filter>
-    </None>
     <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
@@ -173,6 +170,12 @@
     <None Include="Directory.Build.props" />
     <None Include="strings\ComInteropHelpers.cs">
       <Filter>strings</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\ITaskAwareAsyncInfo.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeMarshal.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

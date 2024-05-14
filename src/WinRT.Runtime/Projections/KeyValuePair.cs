@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -25,13 +24,265 @@ namespace Windows.Foundation.Collections
 namespace ABI.System.Collections.Generic
 {
     using global::System;
+    using global::System.ComponentModel;
+    using global::System.Diagnostics.CodeAnalysis;
+    using global::WinRT.Interop;
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class KeyValuePairMethods<K, V>
+    {
+        // These function pointers will be set by IKeyValuePairMethods<K, KAbi, V, VAbi>
+        // when it is called by the source generated type or by the fallback
+        // mechanism if the source generated type wasn't used.
+        internal volatile unsafe static delegate*<IObjectReference, K> _GetKey;
+        internal volatile unsafe static delegate*<IObjectReference, V> _GetValue;
+        internal volatile static bool _RcwHelperInitialized;
+
+        static KeyValuePairMethods()
+        {
+            ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.KeyValuePair<K, V>), typeof(global::ABI.System.Collections.Generic.KeyValuePair<K, V>));
+        }
+
+        internal static unsafe bool EnsureInitialized()
+        {
+#if NET
+            // Early return to ensure things are trimmed correctly on NAOT.
+            // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+            // Here we just always return true and rely on the AOT generator doing what's needed.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return true;
+            }
+#endif
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+            InitRcwHelperFallbackIfNeeded();
+#pragma warning restore IL3050
+
+#if NET8_0_OR_GREATER
+            [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+            [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void InitRcwHelperFallbackIfNeeded()
+            {
+                // Handle the compat scenario where the source generator wasn't used and IDIC hasn't been used yet
+                // and due to that the function pointers haven't been initialized.
+                if (!_RcwHelperInitialized)
+                {
+                    var initRcwHelperFallback = (Func<bool>)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                        GetMethod("InitRcwHelperFallback", BindingFlags.NonPublic | BindingFlags.Static).
+                        CreateDelegate(typeof(Func<bool>));
+                    initRcwHelperFallback();
+                }
+            }
+
+            return true;
+        }
+
+        internal static unsafe K GetKey(IObjectReference obj)
+        {
+            EnsureInitialized();
+            return _GetKey(obj);
+        }
+
+        internal static unsafe V GetValue(IObjectReference obj)
+        {
+            EnsureInitialized();
+            return _GetValue(obj);
+        }
+
+        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(KeyValuePair<K, V>));
+        public static Guid IID => PIID;
+
+        private static IntPtr abiToProjectionVftablePtr;
+        public static IntPtr AbiToProjectionVftablePtr => abiToProjectionVftablePtr;
+
+        internal static bool TryInitCCWVtable(IntPtr ptr)
+        {
+            return global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionVftablePtr, ptr, IntPtr.Zero) == IntPtr.Zero;
+        }
+
+        public static K Abi_get_Key_0(IntPtr thisPtr)
+        {
+            return KeyValuePair<K, V>.FindAdapter(thisPtr).Key;
+        }
+
+        public static V Abi_get_Value_1(IntPtr thisPtr)
+        {
+            return KeyValuePair<K, V>.FindAdapter(thisPtr).Value;
+        }
+    }
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class KeyValuePairMethods<K, KAbi, V, VAbi> where KAbi : unmanaged where VAbi : unmanaged
+    {
+        public unsafe static bool InitRcwHelper(
+            delegate*<IObjectReference, K> getKey,
+            delegate*<IObjectReference, V> getValue)
+        {
+            if (KeyValuePairMethods<K, V>._RcwHelperInitialized)
+            {
+                return true;
+            }
+
+            KeyValuePairMethods<K, V>._GetKey = getKey;
+            KeyValuePairMethods<K, V>._GetValue = getValue;
+
+#if NET
+            ComWrappersSupport.RegisterTypedRcwFactory(
+                typeof(global::System.Collections.Generic.KeyValuePair<K, V>),
+                KeyValuePair<K, V>.CreateRcw);
+#endif
+            KeyValuePairMethods<K, V>._RcwHelperInitialized = true;
+            return true;
+        }
+
+        private unsafe static bool InitRcwHelperFallback()
+        {
+            return InitRcwHelper(&get_Key, &get_Value);
+        }
+
+        private static unsafe K get_Key(IObjectReference obj)
+        {
+            var ThisPtr = obj.ThisPtr;
+            KAbi keyAbi = default;
+            try
+            {
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)ThisPtr)[6](ThisPtr, &keyAbi));
+                return Marshaler<K>.FromAbi(keyAbi);
+            }
+            finally
+            {
+                Marshaler<K>.DisposeAbi(keyAbi);
+            }
+        }
+
+        private static unsafe V get_Value(IObjectReference obj)
+        {
+            var ThisPtr = obj.ThisPtr;
+            VAbi valueAbi = default;
+            try
+            {
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)ThisPtr)[7](ThisPtr, &valueAbi));
+                return Marshaler<V>.FromAbi(valueAbi);
+            }
+            finally
+            {
+                Marshaler<V>.DisposeAbi(valueAbi);
+            }
+        }
+
+        public static unsafe bool InitCcw(
+            delegate* unmanaged[Stdcall]<IntPtr, KAbi*, int> getKey,
+            delegate* unmanaged[Stdcall]<IntPtr, VAbi*, int> getValue)
+        {
+            if (KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr != default)
+            {
+                return false;
+            }
+
+#if NET
+            var abiToProjectionVftablePtr = (IntPtr)NativeMemory.AllocZeroed((nuint)(sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 2));
+#else
+            var abiToProjectionVftablePtr = (IntPtr)Marshal.AllocCoTaskMem((sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 2));
+#endif
+            *(IInspectable.Vftbl*)abiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+            ((delegate* unmanaged[Stdcall]<IntPtr, KAbi*, int>*)abiToProjectionVftablePtr)[6] = getKey;
+            ((delegate* unmanaged[Stdcall]<IntPtr, VAbi*, int>*)abiToProjectionVftablePtr)[7] = getValue;
+
+            if (!KeyValuePairMethods<K, V>.TryInitCCWVtable(abiToProjectionVftablePtr))
+            {
+#if NET
+                NativeMemory.Free((void*)abiToProjectionVftablePtr);
+#else
+                Marshal.FreeCoTaskMem(abiToProjectionVftablePtr);
+#endif
+                return false;
+            }
+
+            KeyValuePairHelper.TryAddKeyValuePairCCW(
+                typeof(global::System.Collections.Generic.KeyValuePair<K, V>),
+                KeyValuePairMethods<K, V>.PIID,
+                KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr);
+
+            return true;
+        }
+
+        private static global::System.Delegate[] DelegateCache;
+
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+        internal static unsafe void InitFallbackCCWVtable()
+        {
+            InitRcwHelperFallback();
+
+            Type get_Key_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(KAbi*), typeof(int) });
+            Type get_Value_1_Type = Projections.GetAbiDelegateType(new Type[] { typeof(IntPtr), typeof(VAbi*), typeof(int) });
+
+            DelegateCache = new global::System.Delegate[]
+            {
+                global::System.Delegate.CreateDelegate(get_Key_0_Type, typeof(KeyValuePairMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_get_Key_0), BindingFlags.NonPublic | BindingFlags.Static)),
+                global::System.Delegate.CreateDelegate(get_Value_1_Type, typeof(KeyValuePairMethods<K, KAbi, V, VAbi>).GetMethod(nameof(Do_Abi_get_Value_1), BindingFlags.NonPublic | BindingFlags.Static)),
+            };
+
+            InitCcw(
+                (delegate* unmanaged[Stdcall]<IntPtr, KAbi*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[0]),
+                (delegate* unmanaged[Stdcall]<IntPtr, VAbi*, int>)Marshal.GetFunctionPointerForDelegate(DelegateCache[1])
+            );
+        }
+
+        private static unsafe int Do_Abi_get_Key_0(IntPtr thisPtr, KAbi* __return_value__)
+        {
+            K ____return_value__ = default;
+            *__return_value__ = default;
+            try
+            {
+                ____return_value__ = KeyValuePair<K, V>.FindAdapter(thisPtr).Key;
+                *__return_value__ = (KAbi)Marshaler<K>.FromManaged(____return_value__);
+            }
+            catch (Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        private static unsafe int Do_Abi_get_Value_1(IntPtr thisPtr, VAbi* __return_value__)
+        {
+            V ____return_value__ = default;
+            *__return_value__ = default;
+            try
+            {
+                ____return_value__ = KeyValuePair<K,V>.FindAdapter(thisPtr).Value;
+                *__return_value__ = (VAbi)Marshaler<V>.FromManaged(____return_value__);
+            }
+            catch (Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+    }
 
     [Guid("02B51929-C1C4-4A7E-8940-0312B5C18500")]
 #if EMBED
     internal
 #else
     public
-#endif 
+#endif
     class KeyValuePair<K, V> : global::Windows.Foundation.Collections.IKeyValuePair<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.KeyValuePair<K, V> obj) =>
@@ -45,7 +296,7 @@ namespace ABI.System.Collections.Generic
 
         public static object CreateRcw(IInspectable obj)
         {
-            var pair = new KeyValuePair<K, V>(obj.As<Vftbl>());
+            var pair = new KeyValuePair<K, V>(obj.ObjRef);
             return (object)new global::System.Collections.Generic.KeyValuePair<K, V>(pair.Key, pair.Value);
         }
 
@@ -55,7 +306,8 @@ namespace ABI.System.Collections.Generic
             {
                 return default;
             }
-            var pair = new KeyValuePair<K, V>(KeyValuePair<K, V>._FromAbi(thisPtr));
+
+            var pair = new KeyValuePair<K, V>(_FromAbi(thisPtr));
             return new global::System.Collections.Generic.KeyValuePair<K, V>(pair.Key, pair.Value);
         }
 
@@ -80,6 +332,8 @@ namespace ABI.System.Collections.Generic
 
         internal static unsafe void CopyManagedArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array, IntPtr data) =>
             MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.CopyManagedArray(array, data, (o, dest) => CopyManaged(o, dest));
+
+        public static void CopyAbiArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array, object box) => MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.CopyAbiArray(array, box, FromAbi);
 
         public static void DisposeMarshaler(IObjectReference value) =>
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.DisposeMarshaler(value);
@@ -124,107 +378,84 @@ namespace ABI.System.Collections.Generic
             public void Dispose() { }
         }
 
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+        static KeyValuePair()
+        {
+#if NET
+            if (RuntimeFeature.IsDynamicCodeCompiled)
+#endif
+            {
+                // Simple invocation guarded by a direct runtime feature check to help the linker.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+                InitFallbackCCWVTableIfNeeded();
+#pragma warning restore IL3050
+
+#if NET8_0_OR_GREATER
+                [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
+#endif
+#if NET
+                [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = AttributeMessages.AbiTypesNeverHaveConstructors)]
+#endif
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void InitFallbackCCWVTableIfNeeded()
+                {
+                    if (KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr == default)
+                    {
+                        // Handle the compat scenario where the source generator wasn't used or IDIC was used.
+                        var initFallbackCCWVtable = (Action)typeof(KeyValuePairMethods<,,,>).MakeGenericType(typeof(K), Marshaler<K>.AbiType, typeof(V), Marshaler<V>.AbiType).
+                            GetMethod("InitFallbackCCWVtable", BindingFlags.NonPublic | BindingFlags.Static).
+                            CreateDelegate(typeof(Action));
+                        initFallbackCCWVtable();
+                    }
+                }
+            }
+
+            AbiToProjectionVftablePtr = KeyValuePairMethods<K, V>.AbiToProjectionVftablePtr;
+        }
+
+        // This is left here for backwards compat purposes where older generated
+        // projections can be using FindVftblType and using this to cast.
         [Guid("02B51929-C1C4-4A7E-8940-0312B5C18500")]
-        public struct Vftbl
+        public unsafe struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public global::System.Delegate get_Key_0;
-            public global::System.Delegate get_Value_1;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(KeyValuePair<K, V>));
-            private static readonly Type get_Key_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType.MakeByRefType(), typeof(int) });
-            private static readonly Type get_Value_1_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
 
-            internal unsafe Vftbl(IntPtr thisPtr)
-            {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
-                get_Key_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], get_Key_0_Type);
-                get_Value_1 = Marshal.GetDelegateForFunctionPointer(vftbl[7], get_Value_1_Type);
-            }
+            public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.KeyValuePair<K, V>.AbiToProjectionVftablePtr;
 
-            private static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-            static unsafe Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    get_Key_0 = global::System.Delegate.CreateDelegate(get_Key_0_Type, typeof(Vftbl).GetMethod("Do_Abi_get_Key_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType)),
-                    get_Value_1 = global::System.Delegate.CreateDelegate(get_Value_1_Type, typeof(Vftbl).GetMethod("Do_Abi_get_Value_1", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<V>.AbiType))
-                };
-                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 2);
-                Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
-                nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Key_0);
-                nativeVftbl[7] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Value_1);
-
-                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
-            }
-
-            private static ConditionalWeakTable<object, ToIKeyValuePair> _adapterTable =
-                new ConditionalWeakTable<object, ToIKeyValuePair>();
-
-            private static ToIKeyValuePair FindAdapter(IntPtr thisPtr)
-            {
-                var __this = (global::System.Collections.Generic.KeyValuePair<K, V>)global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
-                return _adapterTable.GetValue(__this, (pair) => new ToIKeyValuePair(ref __this));
-            }
-
-            private static unsafe int Do_Abi_get_Key_0<KAbi>(void* thisPtr, out KAbi __return_value__)
-            {
-                K ____return_value__ = default;
-                __return_value__ = default;
-                try
-                {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).Key;
-                    __return_value__ = (KAbi)Marshaler<K>.FromManaged(____return_value__);
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-            private static unsafe int Do_Abi_get_Value_1<VAbi>(void* thisPtr, out VAbi __return_value__)
-            {
-                V ____return_value__ = default;
-                __return_value__ = default;
-                try
-                {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).Value;
-                    __return_value__ = (VAbi)Marshaler<V>.FromManaged(____return_value__);
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
+            public static Guid PIID = ABI.System.Collections.Generic.KeyValuePair<K, V>.PIID;
         }
-        public static ObjectReference<Vftbl> _FromAbi(IntPtr thisPtr)
+
+        private static readonly ConditionalWeakTable<object, ToIKeyValuePair> _adapterTable = new();
+
+        internal static ToIKeyValuePair FindAdapter(IntPtr thisPtr)
+        {
+            var __this = (global::System.Collections.Generic.KeyValuePair<K, V>)global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
+            return _adapterTable.GetValue(__this, (pair) => new ToIKeyValuePair(ref __this));
+        }
+
+        public static ObjectReference<IUnknownVftbl> _FromAbi(IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
             {
                 return null;
             }
-            var vftblT = new Vftbl(thisPtr);
-            return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
         }
 
-        public static Guid PIID = Vftbl.PIID;
+        public static readonly Guid PIID = KeyValuePairMethods<K, V>.IID;
 
+#if !NET
         public static implicit operator KeyValuePair<K, V>(IObjectReference obj) => (obj != null) ? new KeyValuePair<K, V>(obj) : null;
-        public static implicit operator KeyValuePair<K, V>(ObjectReference<Vftbl> obj) => (obj != null) ? new KeyValuePair<K, V>(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
+        public static implicit operator KeyValuePair<K, V>(ObjectReference<IUnknownVftbl> obj) => (obj != null) ? new KeyValuePair<K, V>(obj) : null;
+#endif
+        protected readonly ObjectReference<IUnknownVftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
 
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public KeyValuePair(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public KeyValuePair(ObjectReference<Vftbl> obj)
+
+        public KeyValuePair(IObjectReference obj) : this(obj.As<IUnknownVftbl>(PIID)) { }
+        public KeyValuePair(ObjectReference<IUnknownVftbl> obj)
         {
             _obj = obj;
         }
@@ -233,16 +464,7 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                var __params = new object[] { ThisPtr, null };
-                try
-                {
-                    _obj.Vftbl.get_Key_0.DynamicInvokeAbi(__params);
-                    return Marshaler<K>.FromAbi(__params[1]);
-                }
-                finally
-                {
-                    Marshaler<K>.DisposeAbi(__params[1]);
-                }
+                return KeyValuePairMethods<K, V>.GetKey(_obj);
             }
         }
 
@@ -250,16 +472,7 @@ namespace ABI.System.Collections.Generic
         {
             get
             {
-                var __params = new object[] { ThisPtr, null };
-                try
-                {
-                    _obj.Vftbl.get_Value_1.DynamicInvokeAbi(__params);
-                    return Marshaler<V>.FromAbi(__params[1]);
-                }
-                finally
-                {
-                    Marshaler<V>.DisposeAbi(__params[1]);
-                }
+                return KeyValuePairMethods<K, V>.GetValue(_obj);
             }
         }
     }

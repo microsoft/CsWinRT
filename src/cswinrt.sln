@@ -9,14 +9,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestComponentCSharp", "Test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTest", "Tests\UnitTest\UnitTest.csproj", "{9A9F52CA-F624-43A4-B5EF-C50861F584C2}"
 	ProjectSection(ProjectDependencies) = postProject
-		{AE3B0611-2FBB-42AB-A245-B4E79868A5F9} = {AE3B0611-2FBB-42AB-A245-B4E79868A5F9}
 		{25244CED-966E-45F2-9711-1F51E951FF89} = {25244CED-966E-45F2-9711-1F51E951FF89}
+		{AE3B0611-2FBB-42AB-A245-B4E79868A5F9} = {AE3B0611-2FBB-42AB-A245-B4E79868A5F9}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cswinrt", "cswinrt\cswinrt.vcxproj", "{6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637}"
-	ProjectSection(ProjectDependencies) = postProject
-		{25244CED-966E-45F2-9711-1F51E951FF89} = {25244CED-966E-45F2-9711-1F51E951FF89}
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{96495AB4-2D86-47D1-A174-27D0B436DC98}"
 	ProjectSection(SolutionItems) = preProject
@@ -130,6 +127,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonValueFunctionCalls", "Tests\FunctionalTests\JsonValueFunctionCalls\JsonValueFunctionCalls.csproj", "{EE5B4B23-5D4B-4DFB-8DC9-4DBB1B735CC8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FunctionalTests", "FunctionalTests", "{5ECC38F0-16FD-47E1-B8DC-8C474008AD55}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\FunctionalTests\Directory.Build.props = Tests\FunctionalTests\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PublishProfiles", "PublishProfiles", "{6FBE79A9-9D6D-4436-9F84-797ED1C9F676}"
 	ProjectSection(SolutionItems) = preProject
@@ -156,7 +156,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DerivedClassAsBaseClass", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CCW", "Tests\FunctionalTests\CCW\CCW.csproj", "{C44DB047-5DF0-4732-98F4-A181D3AD8A7F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinAppSDK", "Projections\WinAppSDK\WinAppSDK.csproj", "{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinAppSDK", "Projections\WinAppSDK\WinAppSDK.csproj", "{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestLibrary", "Tests\FunctionalTests\TestLibrary\TestLibrary.csproj", "{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -718,6 +720,18 @@ Global
 		{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}.Release|x64.Build.0 = Release|x64
 		{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}.Release|x86.ActiveCfg = Release|x86
 		{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}.Release|x86.Build.0 = Release|x86
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Debug|ARM.ActiveCfg = Debug|ARM
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Debug|x64.ActiveCfg = Debug|x64
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Debug|x64.Build.0 = Debug|x64
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Debug|x86.ActiveCfg = Debug|x86
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Debug|x86.Build.0 = Debug|x86
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Release|ARM.ActiveCfg = Release|ARM
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Release|ARM64.ActiveCfg = Release|ARM64
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Release|x64.ActiveCfg = Release|x64
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Release|x64.Build.0 = Release|x64
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Release|x86.ActiveCfg = Release|x86
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -762,6 +776,7 @@ Global
 		{E3AEC9A4-D1A3-448D-B980-F82894792AF1} = {5ECC38F0-16FD-47E1-B8DC-8C474008AD55}
 		{C44DB047-5DF0-4732-98F4-A181D3AD8A7F} = {5ECC38F0-16FD-47E1-B8DC-8C474008AD55}
 		{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA} = {6D41796B-9904-40B8-BBCB-40B2D1BAE44B}
+		{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4} = {5ECC38F0-16FD-47E1-B8DC-8C474008AD55}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5AE8C9D7-2613-4E1A-A4F2-579BAC28D0A2}

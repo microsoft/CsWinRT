@@ -8,23 +8,52 @@ using WinRT;
 
 namespace ABI.System.Collections.Specialized
 {
-    [DynamicInterfaceCastableImplementation]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
 #if EMBED
     internal
 #else
     public
 #endif
-    unsafe interface INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
+    static class INotifyCollectionChangedMethods
+    {
+        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventHandlerEventSource> _CollectionChanged;
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventHandlerEventSource> MakeCollectionChangedTable()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _CollectionChanged, new(), null);
+            return _CollectionChanged;
+        }
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, NotifyCollectionChangedEventHandlerEventSource> CollectionChanged => _CollectionChanged ?? MakeCollectionChangedTable();
+
+        public static unsafe global::ABI.WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> Get_CollectionChanged2(IObjectReference obj, object thisObj)
+        {
+            return CollectionChanged.GetValue(thisObj, (key) =>
+            {
+                var ThisPtr = obj.ThisPtr;
+
+                return new NotifyCollectionChangedEventHandlerEventSource(obj,
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
+            });
+        }
+
+        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xE1, 0x55, 0x01, 0x53, 0xA5, 0x28, 0x93, 0x56, 0x87, 0xCE, 0x30, 0x72, 0x4D, 0x95, 0xA0, 0x6D }));
+
+        public static IntPtr AbiToProjectionVftablePtr => INotifyCollectionChanged.Vftbl.AbiToProjectionVftablePtr;
+    }
+
+    [DynamicInterfaceCastableImplementation]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
+    internal unsafe interface INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
             private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_CollectionChanged_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CollectionChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CollectionChanged_0; set => _add_CollectionChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> add_CollectionChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_add_CollectionChanged_0; set => _add_CollectionChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)value; }
             private delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_CollectionChanged_1;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CollectionChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CollectionChanged_1; set => _remove_CollectionChanged_1 = (delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
 
@@ -41,8 +70,8 @@ namespace ABI.System.Collections.Specialized
                     _remove_CollectionChanged_1 = &Do_Abi_remove_CollectionChanged_1,
 
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 2);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 2);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -92,14 +121,12 @@ namespace ABI.System.Collections.Specialized
                 }
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_INotifyCollectionChanged);
 
-        private static NotifyCollectionChangedEventSource _CollectionChanged(IWinRTObject _this)
+        private static global::ABI.WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> _CollectionChanged(IWinRTObject _this)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)_this).GetObjectReferenceForType(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle));
-            
-            return (NotifyCollectionChangedEventSource)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle,
-                () => new NotifyCollectionChangedEventSource(_obj, _obj.Vftbl.add_CollectionChanged_0, _obj.Vftbl.remove_CollectionChanged_1));
+            var _obj = _this.GetObjectReferenceForType(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle);
+            return INotifyCollectionChangedMethods.Get_CollectionChanged2(_obj, _this);
         }
 
         event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged

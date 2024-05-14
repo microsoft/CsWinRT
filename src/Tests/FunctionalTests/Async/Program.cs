@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using TestComponentCSharp;
 
@@ -55,6 +56,35 @@ foreach (var port in ports)
     {
         return 106;
     }
+}
+
+var folderPath = Path.GetDirectoryName(AppContext.BaseDirectory);
+var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(folderPath + "\\Async.exe");
+var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(file, FileAccess.Read);
+if (handle is null)
+{
+    return 107;
+}
+handle.Close();
+
+handle = null;
+var getFolderFromPathAsync = Windows.Storage.StorageFolder.GetFolderFromPathAsync(folderPath);
+getFolderFromPathAsync.Completed += (s, e) => 
+{
+    handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(s.GetResults(), "Async.pdb", FileMode.Open, FileAccess.Read);
+};
+await Task.Delay(1000);
+if (handle is null)
+{
+    return 108;
+}
+handle.Close();
+
+using var stream = await file.OpenAsync(Windows.Storage.FileAccessMode.Read).AsTask().ConfigureAwait(continueOnCapturedContext: false);
+using var sw = new StreamReader(stream.AsStreamForRead());
+if (string.IsNullOrEmpty(sw.ReadToEnd()))
+{
+    return 109;
 }
 
 return 100;

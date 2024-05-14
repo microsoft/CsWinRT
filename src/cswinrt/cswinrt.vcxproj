@@ -77,6 +77,7 @@
     <None Include="strings\additions\Windows.Foundation\AsyncInfo.cs" />
     <None Include="strings\additions\Windows.Foundation\AsyncInfoIdGenerator.cs" />
     <None Include="strings\additions\Windows.Foundation\ExceptionDispatchHelper.cs" />
+    <None Include="strings\additions\Windows.Foundation\ITaskAwareAsyncInfo.cs" />
     <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionAdapter.cs" />
     <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionWithProgressAdapter.cs" />
     <None Include="strings\additions\Windows.Foundation\TaskToAsyncInfoAdapter.cs" />
@@ -92,6 +93,7 @@
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationsImplementation.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBuffer.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferExtensions.cs" />
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeMarshal.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeStreamExtensions.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WinRtIOHelper.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WinRtToNetFxStreamAdapter.cs" />
@@ -111,8 +113,7 @@
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.SR.cs" />
     <None Include="strings\additions\Windows.UI\Windows.UI.cs" />
     <None Include="strings\ComInteropHelpers.cs" />
-    <None Include="strings\WinRT.cs" />
-    <None Include="strings\WinRT_Interop.cs" />
+    <None Include="strings\InitalizeProjection.cs" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WinRT.Interop.idl" />

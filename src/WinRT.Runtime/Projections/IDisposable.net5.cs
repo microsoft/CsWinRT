@@ -3,68 +3,64 @@
 
 using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 
 namespace ABI.System
 {
-    [DynamicInterfaceCastableImplementation]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
 #if EMBED
     internal
 #else
     public
 #endif
-    unsafe interface IDisposable : global::System.IDisposable
+    static class IDisposableMethods
     {
-        [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
-        public struct Vftbl
+        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x29, 0xA8, 0xD5, 0x30, 0xA4, 0x7F, 0x26, 0x40, 0x83, 0xBB, 0xD7, 0x5B, 0xAE, 0x4E, 0xA9, 0x9E }));
+
+        public static IntPtr AbiToProjectionVftablePtr => IDisposable.AbiToProjectionVftablePtr;
+
+        public static unsafe void Dispose(IObjectReference obj)
         {
-            internal IInspectable.Vftbl IInspectableVftbl;
-            private void* _Close_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, int> Close_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_Close_0; set => _Close_0 = value; }
-
-            private static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-
-
-            static unsafe Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    _Close_0 = (delegate* unmanaged<IntPtr, int>)&Do_Abi_Close_0
-                };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
-                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
-            }
-
-
-            [UnmanagedCallersOnly]
-            private static unsafe int Do_Abi_Close_0(IntPtr thisPtr)
-            {
-                try
-                {
-                    global::WinRT.ComWrappersSupport.FindObject<global::System.IDisposable>(thisPtr).Dispose();
-
-                }
-                catch (global::System.Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
+            var ThisPtr = obj.ThisPtr;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[6](ThisPtr));
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+    }
+
+    [DynamicInterfaceCastableImplementation]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
+    internal unsafe interface IDisposable : global::System.IDisposable
+    {
+        public readonly static IntPtr AbiToProjectionVftablePtr;
+
+        static unsafe IDisposable()
+        {
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(IDisposable), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 1);
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+            ((delegate* unmanaged[Stdcall]<IntPtr, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_Close_0;
+        }
+
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+        private static unsafe int Do_Abi_Close_0(IntPtr thisPtr)
+        {
+            try
+            {
+                global::WinRT.ComWrappersSupport.FindObject<global::System.IDisposable>(thisPtr).Dispose();
+
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
 
         unsafe void global::System.IDisposable.Dispose()
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.IDisposable).TypeHandle));
-            var ThisPtr = _obj.ThisPtr;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Close_0(ThisPtr));
+            var obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.IDisposable).TypeHandle);
+            IDisposableMethods.Dispose(obj);
         }
     }
 }

@@ -24,7 +24,7 @@ namespace WinRT.Interop
         public static IUnknownVftbl AbiToProjectionVftbl => ComWrappersSupport.IUnknownVftbl;
         public static IntPtr AbiToProjectionVftblPtr => ComWrappersSupport.IUnknownVftblPtr;
 
-        internal static readonly Guid IID = InterfaceIIDs.IUnknown_IID;
+        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IUnknown;
 
         // Avoids boxing when using default Equals.
         internal bool Equals(IUnknownVftbl other)

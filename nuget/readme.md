@@ -45,6 +45,8 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTPrivateProjection | true \| *false | Indicates if a projection based on `CsWinRTIncludesPrivate` and related 'private' properties should be generated as `internal` |
 | CsWinRTGeneratedFilesDir | *"$(IntermediateOutputPath)\Generated Files" | Specifies the location for generated project source files |
 | CsWinRTIIDOptimizerOptOut | true \| *false | Determines whether to run the IIDOptimizer on the projection assembly |
+| CsWinRTRcwFactoryFallbackGeneratorForceOptIn | true \| *false | Forces the RCW factory fallback generator to be enabled (it only runs on .exe projects by default)  |
+| CsWinRTRcwFactoryFallbackGeneratorForceOptOut | true \| *false | Forces the RCW factory fallback generator to be disabled (overrides "ForceOptIn" as well)  |
 \*Default value
 
 **If CsWinRTFilters is not defined, the following effective value is used:
@@ -57,6 +59,20 @@ C#/WinRT behavior can be customized with these project properties:
 * -input @(CsWinRTInputs)
 * -output $(CsWinRTGeneratedFilesDir)
 * $(CsWinRTFilters)
+
+## Advanced size saving options
+
+C#/WinRT supports several feature switches to opt-out of some features available by default, like projection of built-in .NET types. These features are often required by applications, but might be unnecessary in scenarios such as minimal WinRT components authoring. In those cases, it's possible to use these properties to opt-out of any of these features, which can provide binary size savings and performance improvements.
+
+| Property | Value(s) | Description |
+|-|-|-|
+| CsWinRTEnableDynamicObjectsSupport | \*true \| false | Enables support for marshalling WinRT types to dynamic objects (ie. `ExpandoObject`). Setting this to **false** allows all of `System.Linq.Expressions` to be trimmed out. |
+| CsWinRTUseExceptionResourceKeys | true \| \*false | Uses minimal, non-localized exception messages to save binary size. Setting this to **true** allows stripping all of the localization .resw files that are bundled as embedded resources into C#/WinRT. |
+| CsWinRTEnableDefaultCustomTypeMappings | \*true \| false | Enables all available custom type mappings of built-in .NET types by default (eg. `INotifyPropertyChanged`). Setting this to **false** allows trimming all code requires to support those features. If you only want to opt-in into a specific subset of built-in type mappings, you can enable just the ones you need via the `WinRT.Projections.Register*Mapping()` methods. Note that some type mappings will also rely on other configurable features in order to work. For instance, the type mappings for nullable primitive types will not work correctly if the `CsWinRTEnableIReferenceSupport` feature switch is set to **false**. |
+| CsWinRTEnableICustomPropertyProviderSupport | \*true \| false | Enables marshalling of `ICustomPropertyProvider` objects. Setting this to **false** allows trimming all supporting code for this interface, and will make it not available on marshalled CCW types. |
+| CsWinRTEnableIReferenceSupport | \*true \| false | Enables support and marshalling of `IReference<T>`, `IReferenceArray<T>` and `IPropertyValue` objects. Setting this to **false** allows trimming all supporting code for all three interfaces, and will make all of them not available on marshalled CCW types. |
+| CsWinRTEnableIDynamicInterfaceCastableSupport | \*true \| false | Enables support for the [`IDynamicInterfaceCastable`](https://devblogs.microsoft.com/dotnet/improvements-in-native-code-interop-in-net-5-0/#idynamicinterfacecastable) infrastructure for RCW types. Setting this to **false** allows trimming of all related code, and will disallow casting RCW types to interface types they don't directly implement in metadata. |
+\*Default value
 
 ### Windows Metadata
 

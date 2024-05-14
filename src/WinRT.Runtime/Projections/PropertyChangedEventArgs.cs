@@ -18,8 +18,9 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_PropertyName_0;
     }
 
-
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("7C0C27A8-0B41-5070-B160-FC9AE960A36C")]
     internal sealed unsafe class WinRTPropertyChangedEventArgsRuntimeClassFactory
     {
@@ -31,15 +32,11 @@ namespace ABI.Microsoft.UI.Xaml.Data
             private void* _CreateInstance_0;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int> CreateInstance_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int>)_CreateInstance_0;
         }
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_PropertyChangedEventArgsRuntimeClassFactory);
 
-        public static implicit operator WinRTPropertyChangedEventArgsRuntimeClassFactory(IObjectReference obj) => (obj != null) ? new WinRTPropertyChangedEventArgsRuntimeClassFactory(obj) : null;
-        public static implicit operator WinRTPropertyChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTPropertyChangedEventArgsRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public WinRTPropertyChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public WinRTPropertyChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_PropertyChangedEventArgsRuntimeClassFactory)) { }
         public WinRTPropertyChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
@@ -57,8 +54,8 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 {
                     __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
-                    innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
-                    return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                    innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface, IID.IID_IUnknown);
+                    return ObjectReference<IUnknownVftbl>.Attach(ref __retval, IID.IID_IUnknown);
                 }
             }
             finally
@@ -102,7 +99,7 @@ namespace ABI.System.ComponentModel
 #endif
     unsafe struct PropertyChangedEventArgs
     {
-        private static ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory Instance = ActivationFactory.Get("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs");
+        private static readonly ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory Instance = new(ActivationFactory.Get("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs"));
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventArgs value)
         {
@@ -161,6 +158,14 @@ namespace ABI.System.ComponentModel
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
+
+        public static unsafe MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.MarshalerArray CreateMarshalerArray(global::System.ComponentModel.PropertyChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.GetAbiArray(box);
+        public static unsafe global::System.ComponentModel.PropertyChangedEventArgs[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.ComponentModel.PropertyChangedEventArgs[] array, object box) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.ComponentModel.PropertyChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.MarshalerArray array) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventArgs>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
 
         public static string GetGuidSignature()
         {

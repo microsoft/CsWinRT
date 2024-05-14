@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 
@@ -13,10 +15,10 @@ namespace WinRT
 #else 
     public
 #endif
-    class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
+    sealed class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
     {
-        private Type _type;
-        private IObjectReference _obj;
+        private readonly Type _type;
+        private readonly IObjectReference _obj;
 
         public SingleInterfaceOptimizedObject(Type type, IObjectReference objRef)
             : this(type, objRef, true)
@@ -29,15 +31,37 @@ namespace WinRT
             if (requireQI)
             {
                 Type helperType = type.FindHelperType();
-                var vftblType = helperType.FindVftblType();
-                if (vftblType is null)
+
+                if (RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    _obj = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
+                    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
+                    [MethodImpl(MethodImplOptions.NoInlining)]
+                    static IObjectReference TryGetObjectReferenceViaVftbl(IObjectReference objRef, Type helperType)
+                    {
+                        var vftblType = helperType.FindVftblType();
+
+                        if (vftblType is not null)
+                        {
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+                            return (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
+#pragma warning restore IL3050
+                        }
+
+                        return null;
+                    }
+
+                    IObjectReference objRefViaVftbl = TryGetObjectReferenceViaVftbl(objRef, helperType);
+
+                    if (objRefViaVftbl is not null)
+                    {
+                        _obj = objRefViaVftbl;
+
+                        return;
+                    }
                 }
-                else
-                {
-                    _obj = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
-                }
+
+                _obj = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
+
             }
             else 
             {
@@ -71,7 +95,13 @@ namespace WinRT
             {
                 return true;
             }
-            return (this as IWinRTObject).IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
+
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                return false;
+            }
+
+            return ((IWinRTObject)this).IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
         }
 
         IObjectReference IWinRTObject.GetObjectReferenceForType(RuntimeTypeHandle interfaceType)
@@ -80,7 +110,7 @@ namespace WinRT
             {
                 return _obj;
             }
-            return (this as IWinRTObject).GetObjectReferenceForTypeFallback(interfaceType);
+            return ((IWinRTObject)this).GetObjectReferenceForTypeFallback(interfaceType);
         }
 
     }

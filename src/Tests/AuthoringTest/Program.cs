@@ -9,12 +9,18 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
+using Windows.Graphics.Effects;
+using WinRT;
+using WinRT.Interop;
 
 #pragma warning disable CA1416
 
@@ -335,6 +341,20 @@ namespace AuthoringTest
             return task.AsAsyncOperation();
         }
 
+        public IAsyncOperationWithProgress<double, double> GetDoubleAsyncOperation()
+        {
+            return AsyncInfo.Run<double, double>(async (cancellationToken, progress) =>
+            {
+                await Task.Delay(100);
+                return 4.0;
+            });
+        }
+
+        public IAsyncOperation<BasicStruct> GetStructAsyncOperation()
+        {
+            return System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
+        }
+
         public int SetIntAsyncOperation(IAsyncOperation<Int32> op)
         {
             return op.GetResults();
@@ -478,7 +498,7 @@ namespace AuthoringTest
         }
     }
 
-    internal sealed class NonProjectedDisposableClass : IDisposable
+    internal sealed partial class NonProjectedDisposableClass : IDisposable
     {
         public bool IsDisposed { get; set; }
 
@@ -1469,6 +1489,10 @@ namespace AuthoringTest
         }
     }
 
+    public sealed class TestCollection : CollectionBase
+    {
+    }
+
     public partial interface IPartialInterface
     {
         public string GetNumberAsString();
@@ -1568,6 +1592,171 @@ namespace AuthoringTest
     public partial struct PartialStruct
     {
         public double Z;
+    }
+
+    // Nested type to validate (https://github.com/microsoft/CsWinRT/issues/1477)
+    // Doesn't need to be consumed, we just want to verify the generator does work.
+    internal partial class Nested1
+    {
+        internal partial record struct Nested2
+        {
+            internal partial struct Nested3
+            {
+                internal partial interface INested4
+                {
+                    internal partial record Nested5
+                    {
+                        internal partial class InnerMostType : IGraphicsEffectSource, IPublicInterface, IDisposable
+                        {
+                            public string HelloWorld()
+                            {
+                                return "Hello from mixed WinRT/COM";
+                            }
+
+                            public void Dispose()
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public sealed class TestMixedWinRTCOMWrapper : IGraphicsEffectSource, IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2
+    {
+        public string HelloWorld()
+        {
+            return "Hello from mixed WinRT/COM";
+        }
+
+        unsafe int IInternalInterface1.GetNumber(int* value)
+        {
+            *value = 42;
+
+            return 0;
+        }
+
+        unsafe int SomeInternalType.IInternalInterface2.GetNumber(int* value)
+        {
+            *value = 123;
+
+            return 0;
+        }
+    }
+
+    public interface IPublicInterface
+    {
+        string HelloWorld();
+    }
+
+    // Internal, classic COM interface
+    [global::System.Runtime.InteropServices.Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
+    [WindowsRuntimeType]
+    [WindowsRuntimeHelperType(typeof(IInternalInterface1))]
+    internal unsafe interface IInternalInterface1
+    {
+        int GetNumber(int* value);
+
+        [global::System.Runtime.InteropServices.Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
+        public struct Vftbl
+        {
+            public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
+
+            private static IntPtr InitVtbl()
+            {
+                Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
+
+                lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
+                lpVtbl->GetNumber = &GetNumberFromAbi;
+
+                return (IntPtr)lpVtbl;
+            }
+
+            private IUnknownVftbl IUnknownVftbl;
+            private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
+
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+            private static int GetNumberFromAbi(void* thisPtr, int* value)
+            {
+                try
+                {
+                    return ComWrappersSupport.FindObject<IInternalInterface1>((IntPtr)thisPtr).GetNumber(value);
+                }
+                catch (Exception e)
+                {
+                    ExceptionHelpers.SetErrorInfo(e);
+
+                    return Marshal.GetHRForException(e);
+                }
+            }
+        }
+    }
+
+    internal struct SomeInternalType
+    {
+        // Nested, classic COM interface
+        [global::System.Runtime.InteropServices.Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
+        [WindowsRuntimeType]
+        [WindowsRuntimeHelperType(typeof(IInternalInterface2))]
+        public unsafe interface IInternalInterface2
+        {
+            int GetNumber(int* value);
+
+            [global::System.Runtime.InteropServices.Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
+            public struct Vftbl
+            {
+                public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
+
+                private static IntPtr InitVtbl()
+                {
+                    Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
+
+                    lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
+                    lpVtbl->GetNumber = &GetNumberFromAbi;
+
+                    return (IntPtr)lpVtbl;
+                }
+
+                private IUnknownVftbl IUnknownVftbl;
+                private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
+
+                [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+                private static int GetNumberFromAbi(void* thisPtr, int* value)
+                {
+                    try
+                    {
+                        return ComWrappersSupport.FindObject<IInternalInterface2>((IntPtr)thisPtr).GetNumber(value);
+                    }
+                    catch (Exception e)
+                    {
+                        ExceptionHelpers.SetErrorInfo(e);
+
+                        return Marshal.GetHRForException(e);
+                    }
+                }
+            }
+        }
+    }
+}
+
+namespace ABI.AuthoringTest
+{
+    internal static class IInternalInterface1Methods
+    {
+        public static Guid IID => typeof(global::AuthoringTest.IInternalInterface1).GUID;
+
+        public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.IInternalInterface1.Vftbl.AbiToProjectionVftablePtr;
+    }
+
+    internal struct SomeInternalType
+    {
+        internal static class IInternalInterface2Methods
+        {
+            public static Guid IID => typeof(global::AuthoringTest.SomeInternalType.IInternalInterface2).GUID;
+
+            public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.SomeInternalType.IInternalInterface2.Vftbl.AbiToProjectionVftablePtr;
+        }
     }
 }
 

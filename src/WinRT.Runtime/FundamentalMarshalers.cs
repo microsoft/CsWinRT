@@ -2,9 +2,52 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ABI.System
 {
+    /// <summary>
+    /// Non-generic marshalling stubs used from <see cref="global::WinRT.MarshalGeneric{T}"/>.
+    /// This avoids the generic instantiations for all additional stubs for these ABI types.
+    /// </summary>
+    internal static class NonBlittableMarshallingStubs
+    {
+        // This can be shared for all DisposeMarshaler and DisposeAbi methods for these ABI types.
+        // None of these has any special logic that needs to run when those two APIs are invoked.
+        public static readonly Action<object> NoOpFunc = NoOp;
+
+        public static object Boolean_CreateMarshaler(bool value) => Boolean.CreateMarshaler(value);
+        public static object Boolean_GetAbi(object value) => Boolean.GetAbi((bool)value);
+        public static bool Boolean_FromAbi(object abi) => Boolean.FromAbi((byte)abi);
+        public static void Boolean_CopyAbi(object value, IntPtr dest) => Boolean.CopyAbi((bool)value, dest);
+        public static object Boolean_FromManaged(bool value) => Boolean.FromManaged(value);
+
+        public static object Char_CreateMarshaler(char value) => Char.CreateMarshaler(value);
+        public static object Char_GetAbi(object value) => Char.GetAbi((char)value);
+        public static char Char_FromAbi(object abi) => Char.FromAbi((ushort)abi);
+        public static void Char_CopyAbi(object value, IntPtr dest) => Char.CopyAbi((char)value, dest);
+        public static object Char_FromManaged(char value) => Char.FromManaged(value);
+
+        public static object TimeSpan_CreateMarshaler(global::System.TimeSpan value) => TimeSpan.CreateMarshaler(value);
+        public static object TimeSpan_GetAbi(object value) => TimeSpan.GetAbi((TimeSpan.Marshaler)value);
+        public static global::System.TimeSpan TimeSpan_FromAbi(object abi) => TimeSpan.FromAbi((TimeSpan)abi);
+        public static void TimeSpan_CopyAbi(object value, IntPtr dest) => TimeSpan.CopyAbi((TimeSpan.Marshaler)value, dest);
+        public static object TimeSpan_FromManaged(global::System.TimeSpan value) => TimeSpan.FromManaged(value);
+
+        public static object DateTimeOffset_CreateMarshaler(global::System.DateTimeOffset value) => DateTimeOffset.CreateMarshaler(value);
+        public static object DateTimeOffset_GetAbi(object value) => DateTimeOffset.GetAbi((DateTimeOffset.Marshaler)value);
+        public static global::System.DateTimeOffset DateTimeOffset_FromAbi(object abi) => DateTimeOffset.FromAbi((DateTimeOffset)abi);
+        public static unsafe void DateTimeOffset_CopyAbi(object value, IntPtr dest) => DateTimeOffset.CopyAbi((DateTimeOffset.Marshaler)value, dest);
+        public static object DateTimeOffset_FromManaged(global::System.DateTimeOffset value) => DateTimeOffset.FromManaged(value);
+
+        public static object Type_CreateMarshalerArray(global::System.Type[] value) => Type.CreateMarshalerArray(value);
+
+        private static void NoOp(object obj)
+        {
+        }
+    }
+
     internal struct Boolean
     {
         public static bool CreateMarshaler(bool value) => value;

@@ -17,7 +17,7 @@ namespace WinRT.Host
         private const int S_OK = 0;
         private const int E_NOINTERFACE = unchecked((int)0x80004002);
         private const int REGDB_E_READREGDB = unchecked((int)0x80040150);
-        private const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
+        private const int CLASS_E_CLASSNOTAVAILABLE = unchecked((int)(0x80040111));
 
         public unsafe delegate int GetActivationFactoryDelegate(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory);
 
@@ -34,9 +34,9 @@ namespace WinRT.Host
                 var type = assembly.GetType("WinRT.Module");
                 if (type == null)
                 {
-                    return REGDB_E_CLASSNOTREG;
+                    return REGDB_E_READREGDB;
                 }
-                var GetActivationFactory = type.GetMethod("GetActivationFactory");
+                var GetActivationFactory = type.GetMethod("GetActivationFactory", new Type[] { typeof(string) });
                 if (GetActivationFactory == null)
                 {
                     return REGDB_E_READREGDB;
@@ -44,7 +44,7 @@ namespace WinRT.Host
                 IntPtr factory = (IntPtr)GetActivationFactory.Invoke(null, new object[] { runtimeClassId });
                 if (factory == IntPtr.Zero)
                 {
-                    return E_NOINTERFACE;
+                    return CLASS_E_CLASSNOTAVAILABLE;
                 }
                 *activationFactory = factory;
                 return S_OK;

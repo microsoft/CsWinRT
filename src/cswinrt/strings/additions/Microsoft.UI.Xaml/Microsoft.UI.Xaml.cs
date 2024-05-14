@@ -5,6 +5,9 @@ namespace Microsoft.UI.Xaml
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.CornerRadius))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<CornerRadius, CornerRadius>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
@@ -166,6 +169,9 @@ namespace Microsoft.UI.Xaml
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.GridLength))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<GridLength, GridLength>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
@@ -284,6 +290,9 @@ namespace Microsoft.UI.Xaml
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Thickness))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Thickness, Thickness>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
@@ -411,6 +420,9 @@ namespace Microsoft.UI.Xaml
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Duration))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Duration, Duration>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal

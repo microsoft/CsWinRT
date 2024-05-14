@@ -1,26 +1,97 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using ABI.System.Collections.Specialized;
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ABI.WinRT.Interop;
 using WinRT;
+using WinRT.Interop;
 
 namespace ABI.System.ComponentModel
 {
-    [DynamicInterfaceCastableImplementation]
-    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
 #if EMBED
     internal
 #else
-    public 
-#endif 
-    unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
+    public
+#endif
+    static class INotifyDataErrorInfoMethods
+    {
+        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xCC, 0xC2, 0xE6, 0x0E, 0x3E, 0x27, 0x7D, 0x56, 0xBC, 0x0A, 0x1D, 0xD8, 0x7E, 0xE5, 0x1E, 0xBA }));
+
+        public static IntPtr AbiToProjectionVftablePtr => INotifyDataErrorInfo.Vftbl.AbiToProjectionVftablePtr;
+
+        public static unsafe bool get_HasErrors(IObjectReference obj)
+        {
+            var ThisPtr = obj.ThisPtr;
+            byte __retval = default;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)ThisPtr)[6](ThisPtr, &__retval));
+            return __retval != 0;
+        }
+
+        public static unsafe global::System.Collections.IEnumerable GetErrors(IObjectReference obj, string propertyName)
+        {
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                throw new NotSupportedException(
+                    "'INotifyDataErrorInfo.GetErrors' relies on 'IDynamicInterfaceCastable' support, which is not currently " +
+                    "available. Make sure the 'EnableIDynamicInterfaceCastableSupport' property is not set to 'false'.");
+            }
+
+            var ThisPtr = obj.ThisPtr;
+            IntPtr __retval = default;
+            try
+            {
+                MarshalString.Pinnable __propertyName = new(propertyName);
+                fixed (void* ___propertyName = __propertyName)
+                {
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)ThisPtr)[9](
+                        ThisPtr,
+                        MarshalString.GetAbi(ref __propertyName),
+                        &__retval));
+                    return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
+                }
+            }
+            finally
+            {
+                global::ABI.System.Collections.Generic.IEnumerable<object>.DisposeAbi(__retval);
+            }
+        }
+
+        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>> _ErrorsChanged;
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>> MakeErrorsChangedTable()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _ErrorsChanged, new(), null);
+            return _ErrorsChanged;
+        }
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>> ErrorsChanged => _ErrorsChanged ?? MakeErrorsChangedTable();
+
+
+        public static unsafe EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs> Get_ErrorsChanged2(IObjectReference obj, object thisObj)
+        {
+            return ErrorsChanged.GetValue(thisObj, (key) =>
+            {
+                var ThisPtr = obj.ThisPtr;
+
+                return new EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs>(obj,
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[7],
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[8],
+                    0);
+            });
+        }
+    }
+
+    [DynamicInterfaceCastableImplementation]
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
+    internal unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
     {
         [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2247
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public delegate* unmanaged<IntPtr, byte*, int> get_HasErrors_0;
@@ -33,7 +104,7 @@ namespace ABI.System.ComponentModel
 
             static unsafe Vftbl()
             {
-                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 4);
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
@@ -134,48 +205,26 @@ namespace ABI.System.ComponentModel
                 }
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_INotifyDataErrorInfo);
 
-        private static EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> _ErrorsChanged(IWinRTObject _this)
+        private static EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs> _ErrorsChanged(IWinRTObject _this)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)_this).GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle));
-            var ThisPtr = _obj.ThisPtr;
-            return (EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle,
-                () => new EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>(_obj,
-                    (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_obj.Vftbl.add_ErrorsChanged_1,
-                    _obj.Vftbl.remove_ErrorsChanged_2,
-                    0));
+            var _obj = _this.GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle);
+            return INotifyDataErrorInfoMethods.Get_ErrorsChanged2(_obj, _this);
         }
 
         unsafe global::System.Collections.IEnumerable global::System.ComponentModel.INotifyDataErrorInfo.GetErrors(string propertyName)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle));
-            var ThisPtr = _obj.ThisPtr;
-            IntPtr __retval = default;
-            try
-            {
-                MarshalString.Pinnable __propertyName = new(propertyName);
-                fixed (void* ___propertyName = __propertyName)
-                {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(ref __propertyName), &__retval));
-                    return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
-                }
-            }
-            finally
-            {
-                global::ABI.System.Collections.Generic.IEnumerable<object>.DisposeAbi(__retval);
-            }
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle);
+            return INotifyDataErrorInfoMethods.GetErrors(_obj, propertyName);
         }
 
         unsafe bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors
         {
             get
             {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle));
-                var ThisPtr = _obj.ThisPtr;
-                byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasErrors_0(ThisPtr, &__retval));
-                return __retval != 0;
+                var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle);
+                return INotifyDataErrorInfoMethods.get_HasErrors(_obj);
             }
         }
 

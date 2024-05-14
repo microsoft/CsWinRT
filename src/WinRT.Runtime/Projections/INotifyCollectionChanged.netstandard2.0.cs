@@ -112,7 +112,7 @@ namespace ABI.System.Collections.Specialized
             _obj = obj;
 
             _CollectionChanged =
-                new NotifyCollectionChangedEventSource(_obj,
+                new NotifyCollectionChangedEventHandlerEventSource(_obj,
                 _obj.Vftbl.add_CollectionChanged_0,
                 _obj.Vftbl.remove_CollectionChanged_1);
         }
@@ -123,6 +123,6 @@ namespace ABI.System.Collections.Specialized
             remove => _CollectionChanged.Unsubscribe(value);
         }
 
-        private NotifyCollectionChangedEventSource _CollectionChanged;
+        private NotifyCollectionChangedEventHandlerEventSource _CollectionChanged;
     }
 }

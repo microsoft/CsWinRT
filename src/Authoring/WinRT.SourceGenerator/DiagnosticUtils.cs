@@ -87,10 +87,12 @@ namespace Generator
             foreach (var declaration in syntaxReceiver.Declarations)
             {
                 var model = _context.Compilation.GetSemanticModel(declaration.SyntaxTree);
+                var symbol = model.GetDeclaredSymbol(declaration);
 
                 // Check symbol information for whether it is public to properly detect partial types
-                // which can leave out modifier.
-                if (model.GetDeclaredSymbol(declaration).DeclaredAccessibility != Accessibility.Public)
+                // which can leave out modifier. Also ignore nested types not effectively public
+                if (symbol.DeclaredAccessibility != Accessibility.Public ||
+                    (symbol is ITypeSymbol typeSymbol && !typeSymbol.IsPubliclyAccessible()))
                 {
                     continue;
                 }
@@ -196,7 +198,7 @@ namespace Generator
             }
 
             // the return type can be covariant with the interface method's return type (i.e. a sub-type)
-            if (SymEq(m.ReturnType, interfaceMethod.ReturnType) && !m.ReturnType.AllInterfaces.Contains(interfaceMethod.ReturnType))
+            if (SymEq(m.ReturnType, interfaceMethod.ReturnType) && !m.ReturnType.AllInterfaces.Contains(interfaceMethod.ReturnType, SymbolEqualityComparer.Default))
             {
                 return false;
             }
@@ -212,10 +214,10 @@ namespace Generator
                 return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName;
             }
 
-            HashSet<ISymbol> classMethods = new();
+            HashSet<ISymbol> classMethods = new(SymbolEqualityComparer.Default);
 
             foreach (var @interface in typeSymbol.AllInterfaces.
-                        Where(symbol => WinRTTypeWriter.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
+                        Where(symbol => GeneratorHelper.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
                                         WinRTTypeWriter.ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
                 foreach (var interfaceMember in @interface.GetMembers())

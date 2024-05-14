@@ -7,6 +7,9 @@ namespace System.IO
 {
     using System.ComponentModel;
     using System.Diagnostics;
+#if NET
+    using System.Diagnostics.CodeAnalysis;
+#endif
     using System.IO;
     using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
@@ -42,10 +45,13 @@ namespace System.IO
         #region Helpers
 
 #if DEBUG
-        private static void AssertMapContains<TKey, TValue>(ConditionalWeakTable<TKey, TValue> map, TKey key, TValue value,
-                                                            bool valueMayBeWrappedInBufferedStream)
-                                                                                                where TKey : class
-                                                                                                where TValue : class
+        private static void AssertMapContains<TKey, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] TValue>(
+            ConditionalWeakTable<TKey, TValue> map,
+            TKey key,
+            TValue value,
+            bool valueMayBeWrappedInBufferedStream)
+            where TKey : class
+            where TValue : class
         {
             TValue valueInMap;
 

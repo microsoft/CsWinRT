@@ -91,12 +91,12 @@ namespace WinRT
         {
             if (ComWrappersSupport.TryUnwrapObject(value, out var objRef))
             {
-                reference = objRef.As<IUnknownVftbl>();
+                reference = objRef.As<IUnknownVftbl>(IID.IID_IUnknown);
                 return true;
             }
             else if (allowComposed && TryGetComposedRefForQI(value, out objRef))
             {
-                reference = objRef.As<IUnknownVftbl>();
+                reference = objRef.As<IUnknownVftbl>(IID.IID_IUnknown);
                 return true;
             }
             reference = null;
