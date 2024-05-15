@@ -1304,7 +1304,19 @@ namespace WinRT
                 Marshal.QueryInterface(ptr, ref iid_iunknown, out iunknownPtr);
                 if (IUnknownVftbl.IsReferenceToManagedObject(iunknownPtr))
                 {
-                    return (T)ComWrappersSupport.FindObject<object>(iunknownPtr);
+                    // We use a global instance of ComWrappers, but it's possible to use different projections of the same type
+                    // when both server and client are managed and in the same process.
+                    // In this case, we need to check if the object is of the same type as the one we're trying to cast to.
+                    // If it's not, we need to create an RCW for the object.
+                    // We cannot use T directly here as it may lead to invalid cast due to the above reason.
+                    if (ComWrappersSupport.FindObject<object>(iunknownPtr) is T obj)
+                    {
+                        return obj;
+                    }
+                    else
+                    {
+                        return ComWrappersSupport.CreateRcwForComObject<T>(ptr);
+                    }
                 }
                 else
                 {
@@ -1414,7 +1426,19 @@ namespace WinRT
             }
             else if (IUnknownVftbl.IsReferenceToManagedObject(nativeDelegate))
             {
-                return ComWrappersSupport.FindObject<T>(nativeDelegate);
+                // We use a global instance of ComWrappers, but it's possible to use different projections of the same type
+                // when both server and client are managed and in the same process.
+                // In this case, we need to check if the object is of the same type as the one we're trying to cast to.
+                // If it's not, we need to create an RCW for the object.
+                // We cannot use T directly here as it may lead to invalid cast due to the above reason.
+                if (ComWrappersSupport.FindObject<object>(nativeDelegate) is T obj)
+                {
+                    return obj;
+                }
+                else
+                {
+                    return ComWrappersSupport.CreateRcwForComObject<T>(nativeDelegate);
+                }
             }
             else
             {
