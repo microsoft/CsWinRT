@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using WinRT;
 
 namespace ABI.System
 {
@@ -86,6 +87,15 @@ namespace ABI.System
         public static global::System.DateTimeOffset FromAbi(DateTimeOffset value)
         {
             var utcTime = new global::System.DateTimeOffset(value.UniversalTime + ManagedUtcTicksAtNativeZero, global::System.TimeSpan.Zero);
+
+            if (FeatureSwitches.UseUtcDateTimeOffsetMarshalling)
+            {
+                return utcTime;
+            }
+            
+            // Backwards-compat: validate the local time and return that instead of the UTC one.
+            // We can't make this the default behavior, as people might have taken a dependency
+            // on this, since it's been here for quite a while. So, we have a feature switch instead.
             var offset = TimeZoneInfo.Local.GetUtcOffset(utcTime);
             long localTicks = utcTime.Ticks + offset.Ticks;
             if (localTicks < DateTime.MinValue.Ticks || localTicks > DateTime.MaxValue.Ticks)

@@ -10,6 +10,10 @@
       <method signature="System.Boolean get_UseExceptionResourceKeys()" body="stub" value="false" feature="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS" featurevalue="false"/>
       <method signature="System.Boolean get_UseExceptionResourceKeys()" body="stub" value="true" feature="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS" featurevalue="true"/>
         
+      <!-- CSWINRT_USE_UTC_DATETIMEOFFSET_MARSHALLING switch -->
+      <method signature="System.Boolean get_UseUtcDateTimeOffsetMarshalling()" body="stub" value="false" feature="CSWINRT_USE_UTC_DATETIMEOFFSET_MARSHALLING" featurevalue="false"/>
+      <method signature="System.Boolean get_UseUtcDateTimeOffsetMarshalling()" body="stub" value="true" feature="CSWINRT_USE_UTC_DATETIMEOFFSET_MARSHALLING" featurevalue="true"/>
+        
       <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS switch -->
       <method signature="System.Boolean get_EnableDefaultCustomTypeMappings()" body="stub" value="false" feature="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS" featurevalue="false"/>
       <method signature="System.Boolean get_EnableDefaultCustomTypeMappings()" body="stub" value="true" feature="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS" featurevalue="true"/>
