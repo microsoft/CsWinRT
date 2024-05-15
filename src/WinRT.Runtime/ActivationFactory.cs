@@ -110,7 +110,7 @@ namespace WinRT
                     int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ObjectReference<IUnknownVftbl>.Attach(ref instancePtr, IID.IID_IUnknown);
+                        var objRef = ObjectReference<IUnknownVftbl>.Attach(ref instancePtr, IID.IID_IActivationFactory);
                         return (objRef, hr);
                     }
                     else

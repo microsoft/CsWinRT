@@ -62,6 +62,12 @@ foreach (var hierarchyDAsHierarchyC in hierarchyDAsHierarchyCList)
     }
 }
 
+var propertySet = Class.PropertySet;
+if (propertySet["beta"] is not string str || str != "second")
+{
+    return 101;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));

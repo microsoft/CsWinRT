@@ -2128,7 +2128,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                 }
                 else
                 {
-                    auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(class_type)), [&](auto&& iface) { return iface; });
+                    auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
+                    auto default_interface_typedef = for_typedef(w, default_type_semantics, [&](auto&& iface) { return iface; });
                     auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
                     bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(class_type.Extends()));
@@ -2139,7 +2140,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 IntPtr ptr = (_%.%(%%%)); 
 try 
 { 
-_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
+_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr, %.IID, false); 
 %
 } 
 finally 
@@ -2156,6 +2157,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                         cache_object,
                         signature.has_params() ? ", " : "",
                         bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
+                        bind<write_type_name>(default_type_semantics, typedef_name_type::StaticAbiClass, true),
                         bind([&](writer& w)
                         {
                             if (is_manually_gen_default_interface)
@@ -2178,17 +2180,46 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
             write_activation_factory_objref_definition(w, class_type);
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(class_type));
 
-            w.write(R"(
-public %() : this(%(global::ABI.WinRT.Interop.IActivationFactoryMethods.ActivateInstanceUnsafe(%)))
+            if (settings.netstandard_compat)
+            {
+                w.write(R"(
+public %() : this(new %(global::ABI.WinRT.Interop.IActivationFactoryMethods.ActivateInstanceUnsafe(%)))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+}
+)",
+                    class_type.TypeName(),
+                    default_interface_name,
+                    objrefname);
+            }
+            else
+            {
+                bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(class_type.Extends()));
+                auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
+                auto default_interface_typedef = for_typedef(w, default_type_semantics, [&](auto&& iface) { return iface; });
+                auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
+
+                w.write(R"(
+public %() %
+{
+_inner = global::ABI.WinRT.Interop.IActivationFactoryMethods.ActivateInstanceUnsafe(%, %.IID);
+ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+ComWrappersHelper.Init(_inner, false);
 %
 }
 )",
-                class_type.TypeName(),
-                settings.netstandard_compat ? "new " + default_interface_name : "",
-                objrefname,
-                settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
+                    class_type.TypeName(),
+                    has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
+                    objrefname,
+                    bind<write_type_name>(default_type_semantics, typedef_name_type::StaticAbiClass, true),
+                    bind([&](writer& w)
+                    {
+                        if (is_manually_gen_default_interface)
+                        {
+                            w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
+                        }
+                    }));
+            }
         }
     }
 
@@ -2299,7 +2330,8 @@ private IObjectReference % => __% ?? Make__%();
 
         auto default_interface_name = get_default_interface_name(w, class_type, false);
         auto default_interface_abi_name = get_default_interface_name(w, class_type);
-        auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(class_type)), [&](auto&& iface) { return iface; });
+        auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
+        auto default_interface_typedef = for_typedef(w, default_type_semantics, [&](auto&& iface) { return iface; });
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
         for (auto&& method : composable_type.MethodList())
@@ -2356,7 +2388,7 @@ object baseInspectable = isAggregation ? this : null;
 IntPtr composed = _%.%(%, %%baseInspectable, out IntPtr inner);
 try
 {
-ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner);
+ComWrappersHelper.Init(isAggregation, this, composed, inner, %.IID, out _inner);
 %
 }
 finally
@@ -2376,6 +2408,7 @@ Marshal.Release(inner);
                     cache_object,
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                    bind<write_type_name>(default_type_semantics, typedef_name_type::StaticAbiClass, true),
                     bind([&](writer& w)
                         {
                             if (is_manually_gen_default_interface)
@@ -3653,7 +3686,7 @@ public override ComWrappers.ComInterfaceEntry GetDelegateInterface()
 {
 return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
 {
-IID = global::WinRT.GuidGenerator.GetIID(typeof(%)),
+IID = %.IID,
 Vtable = %.AbiToProjectionVftablePtr
 };
 }
@@ -4371,9 +4404,13 @@ event % %;)",
                 {
                     m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
-                    if (settings.netstandard_compat || (type.TypeNamespace() == "Windows.Foundation" && type.TypeName() == "IReference`1"))
+                    if (settings.netstandard_compat)
                     {
                         m.interface_guid = w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+                    }
+                    else if (type.TypeNamespace() == "Windows.Foundation" && type.TypeName() == "IReference`1")
+                    {
+                        m.interface_guid = w.write_temp("%.PIID", bind<write_type_name>(semantics, typedef_name_type::ABI, false));
                     }
                     else
                     {
@@ -7700,7 +7737,15 @@ public static global::System.Guid IID => GuidGenerator.CreateIID(typeof(%));
                 else
                 {
                     w.write(R"(
-public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { % }));
+public static ref readonly global::System.Guid IID
+{
+[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+get
+{
+global::System.ReadOnlySpan<byte> data = new byte[] { % };
+return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
+}
+}
 )",
                         bind<write_guid_bytes>(iface));
                 }
@@ -8953,10 +8998,10 @@ static unsafe @()
 }
 %
 public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => 
-managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(@%)));
+managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);
 
 public static unsafe ObjectReferenceValue CreateMarshaler2(% managedDelegate) => 
-MarshalDelegate.CreateMarshaler2(managedDelegate, GuidGenerator.GetIID(typeof(@%)));
+MarshalDelegate.CreateMarshaler2(managedDelegate, IID);
 
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
@@ -8967,7 +9012,7 @@ return MarshalDelegate.FromAbi<%>(nativeDelegate);
 
 public static % CreateRcw(IntPtr ptr)
 {
-return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, GuidGenerator.GetIID(typeof(@%)))).Invoke);
+return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID)).Invoke);
 }
 
 #if !NET
@@ -9037,11 +9082,41 @@ private static unsafe int Do_Abi_Invoke%
             type.TypeName(),
             type_params,
             [&](writer& w) {
-                if (type_params.empty()) return;
-                w.write(R"(
-public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
-                    type_name
-                );
+                if (!type_params.empty())
+                {
+                    // Generating both PIID and IID for backcompat consistency and to have a common property to rely on
+                    // similar to what we do in the manual projections.
+                    w.write(R"(
+public static global::System.Guid PIID = GuidGenerator.CreateIID(typeof(%));
+public static global::System.Guid IID => PIID;
+)",
+                        type_name);
+                }
+                else
+                {
+                    if (settings.netstandard_compat)
+                    {
+                        w.write(R"(
+public static global::System.Guid IID{ get; } = new Guid(new byte[]{ % });
+)",
+                            bind<write_guid_bytes>(type));
+                    }
+                    else
+                    {
+                        w.write(R"(
+public static ref readonly global::System.Guid IID
+{
+[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+get
+{
+global::System.ReadOnlySpan<byte> data = new byte[] { % };
+return ref global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
+}
+}
+)",
+                            bind<write_guid_bytes>(type));
+                    }
+                }
             },
             [&](writer& w) {
                 if (!have_generic_params)
@@ -9213,11 +9288,7 @@ abiInvokeType = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(i
             settings.netstandard_compat || is_generic ? "\npublic static global::System.Delegate AbiInvokeDelegate { get; }\n" : "",
             // CreateMarshaler
             type_name,
-            type.TypeName(),
-            type_params,
             type_name,
-            type.TypeName(),
-            type_params,
             // GetAbi
             type_name,
             // FromAbi
@@ -9225,8 +9296,6 @@ abiInvokeType = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(i
             type_name,
             type_name,
             type_name,
-            type.TypeName(),
-            type_params,
             // NativeDelegateWrapper.Invoke
             bind<write_projection_return_type>(signature),
             bind_list<write_projection_parameter>(", ", signature.params()),
