@@ -69,7 +69,6 @@ namespace WinRT
         private static int _Vector2;
         private static int _Vector3;
         private static int _Vector4;
-        private static int _EventHandler;
         private static int _IMap___;
         private static int _IVector__;
         private static int _IMapView___;
@@ -1077,24 +1076,6 @@ namespace WinRT
                 typeof(ABI.System.Numerics.Vector4),
                 "Windows.Foundation.Numerics.Vector4",
                 isRuntimeClass: false);
-        }
-
-        /// <summary>Registers the custom ABI type mapping for the <see cref="EventHandler"/> type.</summary>
-        public static void RegisterEventHandlerMapping()
-        {
-            if (FeatureSwitches.EnableDefaultCustomTypeMappings)
-            {
-                return;
-            }
-
-            if (Interlocked.CompareExchange(ref _EventHandler, 1, 0) == 1)
-            {
-                return;
-            }
-
-            RegisterCustomAbiTypeMapping(
-                typeof(EventHandler),
-                typeof(ABI.System.EventHandler));
         }
 
         /// <summary>Registers the custom ABI type mapping for the <see cref="IMap{K, V}"/> type.</summary>
