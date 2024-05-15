@@ -44,7 +44,7 @@ namespace ABI.WinRT.Interop
                 ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);
             }
             finally
             {
@@ -62,7 +62,7 @@ namespace ABI.WinRT.Interop
                 ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid);
+                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid, requireQI: false);
             }
             finally
             {
@@ -168,7 +168,7 @@ namespace ABI.WinRT.Interop
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)(*(void***)thisPtr)[5])(thisPtr, cookie, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);
             }
             finally
             {

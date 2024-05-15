@@ -81,6 +81,7 @@
   <ItemGroup>
     <ClInclude Include="ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.h" />
     <ClInclude Include="AnotherAssembly.SetPropertyClass.h" />
+    <ClInclude Include="ClassWithExplicitIUnknown.h" />
     <ClInclude Include="CustomExperimentClass.h" />
     <ClInclude Include="CustomEquals.h" />
     <ClInclude Include="ManualProjectionTestClasses.h" />
@@ -100,6 +101,7 @@
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
     <ClCompile Include="ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.cpp" />
     <ClCompile Include="AnotherAssembly.SetPropertyClass.cpp" />
+    <ClCompile Include="ClassWithExplicitIUnknown.cpp" />
     <ClCompile Include="CustomExperimentClass.cpp" />
     <ClCompile Include="CustomEquals.cpp" />
     <ClCompile Include="pch.cpp">

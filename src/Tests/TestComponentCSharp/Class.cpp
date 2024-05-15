@@ -483,6 +483,10 @@ namespace winrt::TestComponentCSharp::implementation
         _bool = provideBool();
         _boolChanged(*this, _bool);
     }
+    void Class::InvokeBoolChanged(winrt::Windows::Foundation::EventHandler<bool> const& boolChanged)
+    {
+        boolChanged(*this, _bool);
+    }
 
     TestComponentCSharp::EnumValue Class::EnumProperty()
     {
@@ -1087,6 +1091,27 @@ namespace winrt::TestComponentCSharp::implementation
         });
     }
 
+    IVector<int32_t> Class::GetIntVector2()
+    {
+        return winrt::single_threaded_vector(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+    }
+
+    IVector<TestComponentCSharp::ComposedBlittableStruct> Class::GetBlittableStructVector2()
+    {
+        return winrt::single_threaded_vector(std::vector{ ComposedBlittableStruct{0}, ComposedBlittableStruct{1},
+            ComposedBlittableStruct{2}, ComposedBlittableStruct{3}, ComposedBlittableStruct{4} });
+    }
+
+    IVector<TestComponentCSharp::ComposedNonBlittableStruct> Class::GetNonBlittableStructVector2()
+    {
+        return winrt::single_threaded_vector(std::vector
+            {
+                ComposedNonBlittableStruct{ { 0 }, { L"String0" }, { true, false, true, false }, { 0 } },
+                ComposedNonBlittableStruct{ { 1 }, { L"String1" }, { false, true, false, true }, { 1 } },
+                ComposedNonBlittableStruct{ { 2 }, { L"String2" }, { true, false, true, false }, { 2 } },
+            });
+    }
+
     // Test IIDOptimizer
     IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> Class::GetEventArgsVector()
     {
@@ -1350,6 +1375,14 @@ namespace winrt::TestComponentCSharp::implementation
     void Class::Vector3Property(Numerics::float3 const& value)
     {
         _vector3 = value;
+    }
+    Windows::Foundation::IReference<Windows::Foundation::Numerics::float3> Class::Vector3NullableProperty()
+    {
+        return _vector3;
+    }
+    void Class::Vector3NullableProperty(Windows::Foundation::IReference<Windows::Foundation::Numerics::float3> const& value)
+    {
+        _vector3 = value.Value();
     }
     Numerics::float4 Class::Vector4Property()
     {
@@ -1637,6 +1670,12 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::box_value(val);
     }
 
+    WF::IInspectable Class::BoxedEventHandler()
+    {
+        Windows::Foundation::EventHandler<int> handler = [](auto&&...) { };
+        return winrt::box_value(handler);
+    }
+
     hstring Class::Catch(hstring const& /*params*/, hstring& /*lock*/)
     {
         // Compile-only test for keyword escaping
@@ -1711,6 +1750,15 @@ namespace winrt::TestComponentCSharp::implementation
         };
 
         return winrt::make<com_interop>();
+    }
+
+    WF::Collections::IPropertySet Class::PropertySet()
+    {
+        WF::Collections::PropertySet propertySet;
+        propertySet.Insert(L"alpha", winrt::box_value(L"first"));
+        propertySet.Insert(L"beta", winrt::box_value(L"second"));
+        propertySet.Insert(L"charlie", winrt::box_value(L"third"));
+        return propertySet;
     }
 
     // INotifyDataErrorInfo

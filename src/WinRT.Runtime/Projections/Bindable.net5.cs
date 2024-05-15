@@ -297,7 +297,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             return 0;
         }
 
-        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IUnknown);
+        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID);
 
         private static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, ABI.System.Collections.IEnumerable.FromAbiHelper> _helperTable = new();
 
