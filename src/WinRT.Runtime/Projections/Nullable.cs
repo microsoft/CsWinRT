@@ -64,7 +64,7 @@ namespace ABI.Windows.Foundation
             }
         }
 
-        private static unsafe int Do_Abi_get_Value_0_DateTimeOffset(void* thisPtr, DateTimeOffset* result)
+        private static unsafe int Do_Abi_get_Value_0_DateTimeOffset(void* thisPtr, global::ABI.System.DateTimeOffset* result)
         {
             if (result is null)
             {
@@ -75,7 +75,7 @@ namespace ABI.Windows.Foundation
             {
                 T unboxedValue = (T)global::WinRT.ComWrappersSupport.FindObject<object>(new IntPtr(thisPtr));
 
-                Unsafe.WriteUnaligned(result, DateTimeOffset.FromManaged(Unsafe.As<T, global::System.DateTimeOffset>(ref unboxedValue)));
+                Unsafe.WriteUnaligned(result, global::ABI.System.DateTimeOffset.FromManaged(Unsafe.As<T, global::System.DateTimeOffset>(ref unboxedValue)));
 
                 return 0;
             }
@@ -136,7 +136,7 @@ namespace ABI.Windows.Foundation
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
             {
-                Nullable_Delegates.GetValueDelegateAbi stub = new(Do_Abi_get_Value_0_Blittable);
+                global::ABI.System.Nullable_Delegates.GetValueDelegateAbi stub = new(Do_Abi_get_Value_0_Blittable);
 
                 nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
 
@@ -145,7 +145,7 @@ namespace ABI.Windows.Foundation
 
             if (typeof(T) == typeof(global::System.DateTimeOffset))
             {
-                Nullable_Delegates.GetValueDelegateAbiDateTimeOffset stub = new(Do_Abi_get_Value_0_DateTimeOffset);
+                global::ABI.System.Nullable_Delegates.GetValueDelegateAbiDateTimeOffset stub = new(Do_Abi_get_Value_0_DateTimeOffset);
 
                 nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
 
@@ -159,10 +159,10 @@ namespace ABI.Windows.Foundation
 #endif
             {
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                Nullable<T>.Vftbl.get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
+                global::ABI.System.Nullable<T>.Vftbl.get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
 
                 Delegate stub = Delegate.CreateDelegate(
-                    Nullable<T>.Vftbl.get_Value_0_Type,
+                    global::ABI.System.Nullable<T>.Vftbl.get_Value_0_Type,
                     typeof(BoxedValueIReferenceImpl<T>).GetMethod(nameof(Do_Abi_get_Value_0), BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(Marshaler<T>.AbiType));
 
                 nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
@@ -178,7 +178,7 @@ namespace ABI.Windows.Foundation
     internal static class BoxedValueIReferenceImpl<T, TAbi> where TAbi : unmanaged
     {
         public static IntPtr AbiToProjectionVftablePtr;
-        private readonly static Nullable_Delegates.GetValueDelegateAbi GetValue;
+        private readonly static global::ABI.System.Nullable_Delegates.GetValueDelegateAbi GetValue;
 
         static unsafe BoxedValueIReferenceImpl()
         {

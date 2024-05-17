@@ -162,3 +162,6 @@ namespace ABI.WinRT.Interop
         }
     }
 }
+
+// Restore in case this file is merged with others.
+#nullable restore

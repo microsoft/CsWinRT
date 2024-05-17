@@ -20,14 +20,14 @@ namespace WinRT
 #if NET
         private static volatile ABI.WinRT.Interop.IGlobalInterfaceTable _git;
 #else
-        private static volatile IGlobalInterfaceTable _git;
+        private static volatile global::WinRT.Interop.IGlobalInterfaceTable _git;
 #endif
 
         // Simple singleton lazy-initialization scheme (and saving the Lazy<T> size)
 #if NET
         internal static ABI.WinRT.Interop.IGlobalInterfaceTable Git
 #else
-        internal static IGlobalInterfaceTable Git
+        internal static global::WinRT.Interop.IGlobalInterfaceTable Git
 #endif
         {
             get
@@ -38,7 +38,7 @@ namespace WinRT
 #if NET
                 static ABI.WinRT.Interop.IGlobalInterfaceTable Git_Slow()
 #else
-                static IGlobalInterfaceTable Git_Slow()
+                static global::WinRT.Interop.IGlobalInterfaceTable Git_Slow()
 #endif
                 {
                     lock (_lock)
@@ -87,7 +87,7 @@ namespace WinRT
             }
             finally
             {
-                MarshalInterface<IAgileReference>.DisposeAbi(agileReference);
+                MarshalInterface<global::WinRT.Interop.IAgileReference>.DisposeAbi(agileReference);
             }
         }
 
@@ -122,7 +122,7 @@ namespace WinRT
 #if NET
         private static unsafe ABI.WinRT.Interop.IGlobalInterfaceTable GetGitTable()
 #else
-        private static unsafe IGlobalInterfaceTable GetGitTable()
+        private static unsafe global::WinRT.Interop.IGlobalInterfaceTable GetGitTable()
 #endif
         {
             Guid gitClsid = CLSID_StdGlobalInterfaceTable;
