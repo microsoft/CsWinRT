@@ -19,7 +19,7 @@ namespace ABI.System.ComponentModel
 #endif
     static class INotifyDataErrorInfoMethods
     {
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xCC, 0xC2, 0xE6, 0x0E, 0x3E, 0x27, 0x7D, 0x56, 0xBC, 0x0A, 0x1D, 0xD8, 0x7E, 0xE5, 0x1E, 0xBA }));
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_INotifyDataErrorInfo;
 
         public static IntPtr AbiToProjectionVftablePtr => INotifyDataErrorInfo.Vftbl.AbiToProjectionVftablePtr;
 
