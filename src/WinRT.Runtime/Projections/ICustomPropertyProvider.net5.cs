@@ -30,7 +30,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
     internal unsafe interface ICustomProperty
     {
         public static readonly IntPtr AbiToProjectionVftablePtr;
-        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_ICustomPropertyProvider;
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_ICustomProperty;
 
         static unsafe ICustomProperty()
         {
@@ -267,8 +267,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
         private static readonly ManagedCustomPropertyProviderVftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
-
-        internal static readonly Guid IID = new(0x7C925755, 0x3E48, 0x42B4, 0x86, 0x77, 0x76, 0x37, 0x22, 0x67, 0x03, 0x3F);
 
         static unsafe ManagedCustomPropertyProviderVftbl()
         {

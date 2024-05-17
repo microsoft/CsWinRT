@@ -367,7 +367,7 @@ namespace WinRT
             
             entries.Add(new ComInterfaceEntry
             {
-                IID = ManagedIStringableVftbl.IID,
+                IID = IID.IID_IStringable,
                 Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
             });
 
@@ -375,7 +375,7 @@ namespace WinRT
             {
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = ManagedCustomPropertyProviderVftbl.IID,
+                    IID = IID.IID_ICustomPropertyProvider,
                     Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
                 });
             }
@@ -645,7 +645,7 @@ namespace WinRT
 
                 return new ComInterfaceEntry
                 {
-                    IID = ManagedIPropertyValueImpl.IID,
+                    IID = IID.IID_IPropertyValue,
                     Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
                 };
             }

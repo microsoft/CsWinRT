@@ -840,8 +840,8 @@ namespace WinRT.Interop
             }
         }
 
-        /// <summary>The IID for <c>ICustomPropertyProvider</c> (30DA92C0-23E8-42A0-AE7C-734A0E5D2782).</summary>
-        internal static ref readonly Guid IID_ICustomPropertyProvider
+        /// <summary>The IID for <c>ICustomProperty</c> (30DA92C0-23E8-42A0-AE7C-734A0E5D2782).</summary>
+        internal static ref readonly Guid IID_ICustomProperty
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -859,6 +859,56 @@ namespace WinRT.Interop
                     0x5D,
                     0x27,
                     0x82
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>ICustomPropertyProvider</c> (7C925755-3E48-42B4-8677-76372267033F).</summary>
+        internal static ref readonly Guid IID_ICustomPropertyProvider
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x55, 0x57, 0x92, 0x7C,
+                    0x48, 0x3E,
+                    0xB4, 0x42,
+                    0x86,
+                    0x77,
+                    0x76,
+                    0x37,
+                    0x22,
+                    0x67,
+                    0x03,
+                    0x3F
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IPropertyValue</c> (4BD682DD-7554-40E9-9A9B-82654EDE7E62).</summary>
+        internal static ref readonly Guid IID_IPropertyValue
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xDD, 0x82, 0xD6, 0x4B,
+                    0x54, 0x75,
+                    0xE9, 0x40,
+                    0x9A,
+                    0x9B,
+                    0x82,
+                    0x65,
+                    0x4E,
+                    0xDE,
+                    0x7E,
+                    0x62
                 };
 
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
@@ -884,6 +934,31 @@ namespace WinRT.Interop
                     0x4E,
                     0xA9,
                     0x9E
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IStringable</c> (96369F54-8EB6-48F0-ABCE-C1B211E627C3).</summary>
+        internal static ref readonly Guid IID_IStringable
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x54, 0x9F, 0x36, 0x96,
+                    0xB6, 0x8E,
+                    0xF0, 0x48,
+                    0xAB,
+                    0xCE,
+                    0xC1,
+                    0xB2,
+                    0x11,
+                    0xE6,
+                    0x27,
+                    0xC3
                 };
 
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
