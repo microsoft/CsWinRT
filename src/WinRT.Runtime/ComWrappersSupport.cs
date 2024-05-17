@@ -851,7 +851,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.IReferenceIIDs.IReferenceMatrix3x2_IID,
+                    IID = IID.IID_IReferenceMatrix3x2,
                     Vtable = BoxedValueIReferenceImpl<System.Numerics.Matrix3x2, System.Numerics.Matrix3x2>.AbiToProjectionVftablePtr
                 };
             }
@@ -859,7 +859,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.IReferenceIIDs.IReferenceMatrix4x4_IID,
+                    IID = IID.IID_IReferenceMatrix4x4,
                     Vtable = BoxedValueIReferenceImpl<System.Numerics.Matrix4x4, System.Numerics.Matrix4x4>.AbiToProjectionVftablePtr
                 };
             }
@@ -867,7 +867,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.IReferenceIIDs.IReferencePlane_IID,
+                    IID = IID.IID_IReferencePlane,
                     Vtable = BoxedValueIReferenceImpl<System.Numerics.Plane, System.Numerics.Plane>.AbiToProjectionVftablePtr
                 };
             }
@@ -875,7 +875,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.IReferenceIIDs.IReferenceQuaternion_IID,
+                    IID = IID.IID_IReferenceQuaternion,
                     Vtable = BoxedValueIReferenceImpl<System.Numerics.Quaternion, System.Numerics.Quaternion>.AbiToProjectionVftablePtr
                 };
             }
@@ -883,7 +883,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.IReferenceIIDs.IReferenceVector2_IID,
+                    IID = IID.IID_IReferenceVector2,
                     Vtable = BoxedValueIReferenceImpl<System.Numerics.Vector2, System.Numerics.Vector2>.AbiToProjectionVftablePtr
                 };
             }
@@ -891,7 +891,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.IReferenceIIDs.IReferenceVector3_IID,
+                    IID = IID.IID_IReferenceVector3,
                     Vtable = BoxedValueIReferenceImpl<System.Numerics.Vector3, System.Numerics.Vector3>.AbiToProjectionVftablePtr
                 };
             }
@@ -899,7 +899,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.IReferenceIIDs.IReferenceVector4_IID,
+                    IID = IID.IID_IReferenceVector4,
                     Vtable = BoxedValueIReferenceImpl<System.Numerics.Vector4, System.Numerics.Vector4>.AbiToProjectionVftablePtr
                 };
             }
@@ -940,7 +940,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfInt32_IID,
+                    IID = IID.IID_IReferenceArrayOfInt32,
                     Vtable = BoxedArrayIReferenceArrayImpl<int>.AbiToProjectionVftablePtr
                 };
             }
@@ -948,7 +948,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfString_IID,
+                    IID = IID.IID_IReferenceArrayOfString,
                     Vtable = BoxedArrayIReferenceArrayImpl<string>.AbiToProjectionVftablePtr
                 };
             }
@@ -956,7 +956,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfByte_IID,
+                    IID = IID.IID_IReferenceArrayOfByte,
                     Vtable = BoxedArrayIReferenceArrayImpl<byte>.AbiToProjectionVftablePtr
                 };
             }
@@ -964,7 +964,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfInt16_IID,
+                    IID = IID.IID_IReferenceArrayOfInt16,
                     Vtable = BoxedArrayIReferenceArrayImpl<short>.AbiToProjectionVftablePtr
                 };
             }
@@ -972,7 +972,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfUInt16_IID,
+                    IID = IID.IID_IReferenceArrayOfUInt16,
                     Vtable = BoxedArrayIReferenceArrayImpl<ushort>.AbiToProjectionVftablePtr
                 };
             }
@@ -980,7 +980,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfUInt32_IID,
+                    IID = IID.IID_IReferenceArrayOfUInt32,
                     Vtable = BoxedArrayIReferenceArrayImpl<uint>.AbiToProjectionVftablePtr
                 };
             }
@@ -988,7 +988,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfInt64_IID,
+                    IID = IID.IID_IReferenceArrayOfInt64,
                     Vtable = BoxedArrayIReferenceArrayImpl<long>.AbiToProjectionVftablePtr
                 };
             }
@@ -996,7 +996,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfUInt64_IID,
+                    IID = IID.IID_IReferenceArrayOfUInt64,
                     Vtable = BoxedArrayIReferenceArrayImpl<ulong>.AbiToProjectionVftablePtr
                 };
             }
@@ -1004,7 +1004,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfSingle_IID,
+                    IID = IID.IID_IReferenceArrayOfSingle,
                     Vtable = BoxedArrayIReferenceArrayImpl<float>.AbiToProjectionVftablePtr
                 };
             }
@@ -1012,7 +1012,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfDouble_IID,
+                    IID = IID.IID_IReferenceArrayOfDouble,
                     Vtable = BoxedArrayIReferenceArrayImpl<double>.AbiToProjectionVftablePtr
                 };
             }
@@ -1020,7 +1020,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfChar_IID,
+                    IID = IID.IID_IReferenceArrayOfChar,
                     Vtable = BoxedArrayIReferenceArrayImpl<char>.AbiToProjectionVftablePtr
                 };
             }
@@ -1028,7 +1028,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfBoolean_IID,
+                    IID = IID.IID_IReferenceArrayOfBoolean,
                     Vtable = BoxedArrayIReferenceArrayImpl<bool>.AbiToProjectionVftablePtr
                 };
             }
@@ -1036,7 +1036,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfGuid_IID,
+                    IID = IID.IID_IReferenceArrayOfGuid,
                     Vtable = BoxedArrayIReferenceArrayImpl<Guid>.AbiToProjectionVftablePtr
                 };
             }
@@ -1044,7 +1044,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfDateTimeOffset_IID,
+                    IID = IID.IID_IReferenceArrayOfDateTimeOffset,
                     Vtable = BoxedArrayIReferenceArrayImpl<DateTimeOffset>.AbiToProjectionVftablePtr
                 };
             }
@@ -1052,7 +1052,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfTimeSpan_IID,
+                    IID = IID.IID_IReferenceArrayOfTimeSpan,
                     Vtable = BoxedArrayIReferenceArrayImpl<TimeSpan>.AbiToProjectionVftablePtr
                 };
             }
@@ -1060,7 +1060,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfObject_IID,
+                    IID = IID.IID_IReferenceArrayOfObject,
                     Vtable = BoxedArrayIReferenceArrayImpl<object>.AbiToProjectionVftablePtr
                 };
             }
@@ -1068,7 +1068,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfType_IID,
+                    IID = IID.IID_IReferenceArrayOfType,
                     Vtable = BoxedArrayIReferenceArrayImpl<Type>.AbiToProjectionVftablePtr
                 };
             }
@@ -1076,7 +1076,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfMatrix3x2_IID,
+                    IID = IID.IID_IReferenceArrayOfMatrix3x2,
                     Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Matrix3x2>.AbiToProjectionVftablePtr
                 };
             }
@@ -1084,7 +1084,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfMatrix4x4_IID,
+                    IID = IID.IID_IReferenceArrayOfMatrix4x4,
                     Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Matrix4x4>.AbiToProjectionVftablePtr
                 };
             }
@@ -1092,7 +1092,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfPlane_IID,
+                    IID = IID.IID_IReferenceArrayOfPlane,
                     Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Plane>.AbiToProjectionVftablePtr
                 };
             }
@@ -1100,7 +1100,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfQuaternion_IID,
+                    IID = IID.IID_IReferenceArrayOfQuaternion,
                     Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Quaternion>.AbiToProjectionVftablePtr
                 };
             }
@@ -1108,7 +1108,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfVector2_IID,
+                    IID = IID.IID_IReferenceArrayOfVector2,
                     Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Vector2>.AbiToProjectionVftablePtr
                 };
             }
@@ -1116,7 +1116,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfVector3_IID,
+                    IID = IID.IID_IReferenceArrayOfVector3,
                     Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Vector3>.AbiToProjectionVftablePtr
                 };
             }
@@ -1124,7 +1124,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfVector4_IID,
+                    IID = IID.IID_IReferenceArrayOfVector4,
                     Vtable = BoxedArrayIReferenceArrayImpl<System.Numerics.Vector4>.AbiToProjectionVftablePtr
                 };
             }
@@ -1132,7 +1132,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = IReferenceArrayIIDs.IReferenceArrayOfException_IID,
+                    IID = IID.IID_IReferenceArrayOfException,
                     Vtable = BoxedArrayIReferenceArrayImpl<System.Exception>.AbiToProjectionVftablePtr
                 };
             }

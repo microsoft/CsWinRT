@@ -30,7 +30,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
     internal unsafe interface ICustomProperty
     {
         public static readonly IntPtr AbiToProjectionVftablePtr;
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xC0, 0x92, 0xDA, 0x30, 0xE8, 0x23, 0xA0, 0x42, 0xAE, 0x7C, 0x73, 0x4A, 0x0E, 0x5D, 0x27, 0x82 }));
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_ICustomPropertyProvider;
 
         static unsafe ICustomProperty()
         {

@@ -15,7 +15,7 @@ namespace ABI.System
 #endif
     static class IServiceProviderMethods
     {
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xDF, 0xA2, 0xB3, 0x68, 0x73, 0x81, 0x9F, 0x53, 0xB5, 0x24, 0xC8, 0xA2, 0x34, 0x8F, 0x5A, 0xFB }));
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_IServiceProvider;
 
         public static IntPtr AbiToProjectionVftablePtr => IServiceProvider.AbiToProjectionVftablePtr;
 

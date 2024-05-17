@@ -2033,16 +2033,16 @@ namespace ABI.System
             if (typeof(T) == typeof(global::System.Type)) return Nullable_Type.IID;
             if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.IID;
             if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.IID;
-            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
-            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
-            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IReferenceIIDs.IReferenceMatrix3x2_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IReferenceIIDs.IReferenceMatrix4x4_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IReferenceIIDs.IReferencePlane_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IReferenceIIDs.IReferenceQuaternion_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IReferenceIIDs.IReferenceVector2_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceIIDs.IReferenceVector3_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceIIDs.IReferenceVector4_IID;
+            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IID.IID_IReferenceOfPoint;
+            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IID.IID_IReferenceOfSize;
+            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IID.IID_IReferenceOfRect;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IID.IID_IReferenceMatrix3x2;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IID.IID_IReferenceMatrix4x4;
+            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IID.IID_IReferencePlane;
+            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IID.IID_IReferenceQuaternion;
+            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IID.IID_IReferenceVector2;
+            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IID.IID_IReferenceVector3;
+            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IID.IID_IReferenceVector4;
 
             return GuidGenerator.CreateIIDUnsafe(typeof(Nullable<T>));
         }
@@ -2142,33 +2142,6 @@ namespace ABI.System
         public const string Vector2 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector2;f4;f4))";
         public const string Vector3 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4))";
         public const string Vector4 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector4;f4;f4;f4;f4))";
-    }
-
-    internal static class IReferenceIIDs
-    {
-#if NET
-        internal static readonly Guid IReferenceOfPoint_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x22, 0x4C, 0xF1, 0x84, 0x0A, 0xA0, 0x72, 0x52, 0x8D, 0x3D, 0x82, 0x11, 0x2E, 0x66, 0xDF, 0x00 }));
-        internal static readonly Guid IReferenceOfSize_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x86, 0x30, 0x72, 0x61, 0x53, 0x8E, 0x76, 0x52, 0x9F, 0x36, 0x2A, 0x4B, 0xB9, 0x3E, 0x2B, 0x75 }));
-        internal static readonly Guid IReferenceOfRect_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x11, 0x3F, 0x42, 0x80, 0x4F, 0x05, 0xAC, 0x5E, 0xAF, 0xD3, 0x63, 0xB6, 0xCE, 0x15, 0xE7, 0x7B }));
-        internal static readonly Guid IReferenceMatrix3x2_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xfd, 0x8c, 0x35, 0x76, 0xbd, 0x2c, 0x5b, 0x52, 0xa4, 0x9e, 0x90, 0xee, 0x18, 0x24, 0x7b, 0x71 }));
-        internal static readonly Guid IReferenceMatrix4x4_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xdc, 0xff, 0xcb, 0xda, 0xef, 0x68, 0xd0, 0x5f, 0xb6, 0x57, 0x78, 0x2d, 0x0a, 0xc9, 0x80, 0x7e }));
-        internal static readonly Guid IReferencePlane_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xa1, 0x42, 0xd5, 0x46, 0xf7, 0x52, 0xe7, 0x58, 0xac, 0xfc, 0x9a, 0x6d, 0x36, 0x4d, 0xa0, 0x22 }));
-        internal static readonly Guid IReferenceQuaternion_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xbb, 0x04, 0x70, 0xb2, 0x14, 0xc0, 0xce, 0x5d, 0x9a, 0x21, 0x79, 0x9c, 0x5a, 0x3c, 0x14, 0x61 }));
-        internal static readonly Guid IReferenceVector2_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x9e, 0xa6, 0xf6, 0x48, 0x65, 0x84, 0xae, 0x57, 0x94, 0x00, 0x97, 0x64, 0x08, 0x7f, 0x65, 0xad }));
-        internal static readonly Guid IReferenceVector3_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xff, 0x70, 0xe7, 0x1e, 0x54, 0xc9, 0xca, 0x59, 0xa7, 0x54, 0x61, 0x99, 0xa9, 0xbe, 0x28, 0x2c }));
-        internal static readonly Guid IReferenceVector4_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xc9, 0x43, 0xe8, 0xa5, 0x20, 0xed, 0x39, 0x53, 0x8f, 0x8d, 0x9f, 0xe4, 0x04, 0xcf, 0x36, 0x54 }));
-#else
-        internal static readonly Guid IReferenceOfPoint_IID = new(0x84F14C22, 0xA00A, 0x5272, 0x8D, 0x3D, 0x82, 0x11, 0x2E, 0x66, 0xDF, 0x00);
-        internal static readonly Guid IReferenceOfSize_IID = new(0x61723086, 0x8E53, 0x5276, 0x9F, 0x36, 0x2A, 0x4B, 0xB9, 0x3E, 0x2B, 0x75);
-        internal static readonly Guid IReferenceOfRect_IID = new(0x80423F11, 0x054F, 0x5EAC, 0xAF, 0xD3, 0x63, 0xB6, 0xCE, 0x15, 0xE7, 0x7B);
-        internal static readonly Guid IReferenceMatrix3x2_IID = new(0x76358cfd, 0x2cbd, 0x525b, 0xa4, 0x9e, 0x90, 0xee, 0x18, 0x24, 0x7b, 0x71);
-        internal static readonly Guid IReferenceMatrix4x4_IID = new(0xdacbffdc, 0x68ef, 0x5fd0, 0xb6, 0x57, 0x78, 0x2d, 0x0a, 0xc9, 0x80, 0x7e);
-        internal static readonly Guid IReferencePlane_IID = new(0x46d542a1, 0x52f7, 0x58e7, 0xac, 0xfc, 0x9a, 0x6d, 0x36, 0x4d, 0xa0, 0x22);
-        internal static readonly Guid IReferenceQuaternion_IID = new(0xb27004bb, 0xc014, 0x5dce, 0x9a, 0x21, 0x79, 0x9c, 0x5a, 0x3c, 0x14, 0x61);
-        internal static readonly Guid IReferenceVector2_IID = new(0x48f6a69e, 0x8465, 0x57ae, 0x94, 0x00, 0x97, 0x64, 0x08, 0x7f, 0x65, 0xad);
-        internal static readonly Guid IReferenceVector3_IID = new(0x1ee770ff, 0xc954, 0x59ca, 0xa7, 0x54, 0x61, 0x99, 0xa9, 0xbe, 0x28, 0x2c);
-        internal static readonly Guid IReferenceVector4_IID = new(0xa5e843c9, 0xed20, 0x5339, 0x8f, 0x8d, 0x9f, 0xe4, 0x04, 0xcf, 0x36, 0x54);
-#endif
     }
 }
 

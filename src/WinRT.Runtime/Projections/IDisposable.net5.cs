@@ -16,7 +16,7 @@ namespace ABI.System
 #endif
     static class IDisposableMethods
     {
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x29, 0xA8, 0xD5, 0x30, 0xA4, 0x7F, 0x26, 0x40, 0x83, 0xBB, 0xD7, 0x5B, 0xAE, 0x4E, 0xA9, 0x9E }));
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_IDisposable;
 
         public static IntPtr AbiToProjectionVftablePtr => IDisposable.AbiToProjectionVftablePtr;
 

@@ -384,7 +384,7 @@ namespace ABI.System.Collections
 #endif
     static class IEnumerableMethods
     {
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x08, 0x2C, 0x6D, 0x03, 0x29, 0xDF, 0xAF, 0x41, 0x8A, 0xA2, 0xD7, 0x74, 0xBE, 0x62, 0xBA, 0x6F }));
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_IEnumerable;
 
         public static IntPtr AbiToProjectionVftablePtr => IEnumerable.AbiToProjectionVftablePtr;
     }
@@ -622,7 +622,7 @@ namespace ABI.System.Collections
 #endif
     static class IListMethods
     {
-        public static Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xDE, 0xE7, 0x3D, 0x39, 0xD0, 0x6F, 0x0D, 0x4C, 0xBB, 0x71, 0x47, 0x24, 0x4A, 0x11, 0x3E, 0x93 }));
+        public static Guid IID => global::WinRT.Interop.IID.IID_IList;
 
         public static IntPtr AbiToProjectionVftablePtr => IList.AbiToProjectionVftablePtr;
     }

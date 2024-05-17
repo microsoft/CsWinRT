@@ -740,7 +740,7 @@ namespace WinRT.Interop
             }
         }
 
-        /// <summary>The IID for <c>EventHandler</c> (c50898f6-c536-5f47-8583-8b2c2438a13b).</summary>
+        /// <summary>The IID for <c>EventHandler</c> (C50898F6-C536-5F47-8583-8B2C2438A13B).</summary>
         internal static ref readonly Guid IID_EventHandler
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
@@ -759,6 +759,1031 @@ namespace WinRT.Interop
                     0x38,
                     0xA1,
                     0x3B
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IBindableVectorView</c> (346DD6E7-976E-4BC3-815D-ECE243BC0F33).</summary>
+        internal static ref readonly Guid IID_IBindableVectorView
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xE7, 0xD6, 0x6D, 0x34,
+                    0x6E, 0x97,
+                    0xC3, 0x4B,
+                    0x81,
+                    0x5D,
+                    0xEC,
+                    0xE2,
+                    0x43,
+                    0xBC,
+                    0x0F,
+                    0x33
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IEnumerable</c> (036D2C08-DF29-41AF-8AA2-D774BE62BA6F).</summary>
+        internal static ref readonly Guid IID_IEnumerable
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x08, 0x2C, 0x6D, 0x03,
+                    0x29, 0xDF,
+                    0xAF, 0x41,
+                    0x8A,
+                    0xA2,
+                    0xD7,
+                    0x74,
+                    0xBE,
+                    0x62,
+                    0xBA,
+                    0x6F
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IList</c> (393DE7DE-6FD0-4C0D-BB71-47244A113E93).</summary>
+        internal static ref readonly Guid IID_IList
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xDE, 0xE7, 0x3D, 0x39,
+                    0xD0, 0x6F,
+                    0x0D, 0x4C,
+                    0xBB,
+                    0x71,
+                    0x47,
+                    0x24,
+                    0x4A,
+                    0x11,
+                    0x3E,
+                    0x93
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>ICustomPropertyProvider</c> (30DA92C0-23E8-42A0-AE7C-734A0E5D2782).</summary>
+        internal static ref readonly Guid IID_ICustomPropertyProvider
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xC0, 0x92, 0xDA, 0x30,
+                    0xE8, 0x23,
+                    0xA0, 0x42,
+                    0xAE,
+                    0x7C,
+                    0x73,
+                    0x4A,
+                    0x0E,
+                    0x5D,
+                    0x27,
+                    0x82
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IDisposable</c> (30D5A829-7FA4-4026-83BB-D75BAE4EA99E).</summary>
+        internal static ref readonly Guid IID_IDisposable
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x29, 0xA8, 0xD5, 0x30,
+                    0xA4, 0x7F,
+                    0x26, 0x40,
+                    0x83,
+                    0xBB,
+                    0xD7,
+                    0x5B,
+                    0xAE,
+                    0x4E,
+                    0xA9,
+                    0x9E
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IServiceProvider</c> (68B3A2DF-8173-539F-B524-C8A2348F5AFB).</summary>
+        internal static ref readonly Guid IID_IServiceProvider
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xDF, 0xA2, 0xB3, 0x68,
+                    0x73, 0x81,
+                    0x9F, 0x53,
+                    0xB5,
+                    0x24,
+                    0xC8,
+                    0xA2,
+                    0x34,
+                    0x8F,
+                    0x5A,
+                    0xFB
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceOfPoint</c> (84F14C22-A00A-5272-8D3D-82112E66DF00).</summary>
+        internal static ref readonly Guid IID_IReferenceOfPoint
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x22, 0x4C, 0xF1, 0x84,
+                    0x0A, 0xA0,
+                    0x72, 0x52,
+                    0x8D,
+                    0x3D,
+                    0x82,
+                    0x11,
+                    0x2E,
+                    0x66,
+                    0xDF,
+                    0x00
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceOfSize</c> (61723086-8E53-5276-9F36-2A4BB93E2B75).</summary>
+        internal static ref readonly Guid IID_IReferenceOfSize
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x86, 0x30, 0x72, 0x61,
+                    0x53, 0x8E,
+                    0x76, 0x52,
+                    0x9F,
+                    0x36,
+                    0x2A,
+                    0x4B,
+                    0xB9,
+                    0x3E,
+                    0x2B,
+                    0x75
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceOfRect</c> (80423F11-054F-5EAC-AFD3-63B6CE15E77B).</summary>
+        internal static ref readonly Guid IID_IReferenceOfRect
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x11, 0x3F, 0x42, 0x80,
+                    0x4F, 0x05,
+                    0xAC, 0x5E,
+                    0xAF,
+                    0xD3,
+                    0x63,
+                    0xB6,
+                    0xCE,
+                    0x15,
+                    0xE7,
+                    0x7B
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceMatrix3x2</c> (76358CFD-2CBD-525B-A49E-90EE18247B71).</summary>
+        internal static ref readonly Guid IID_IReferenceMatrix3x2
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xFD, 0x8C, 0x35, 0x76,
+                    0xBD, 0x2C,
+                    0x5B, 0x52,
+                    0xA4,
+                    0x9E,
+                    0x90,
+                    0xEE,
+                    0x18,
+                    0x24,
+                    0x7B,
+                    0x71
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceMatrix4x4</c> (DACBFFDC-68EF-5FD0-B657-782D0AC9807E).</summary>
+        internal static ref readonly Guid IID_IReferenceMatrix4x4
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xDC, 0xFF, 0xCB, 0xDA,
+                    0xEF, 0x68,
+                    0xD0, 0x5F,
+                    0xB6,
+                    0x57,
+                    0x78,
+                    0x2D,
+                    0x0A,
+                    0xC9,
+                    0x80,
+                    0x7E
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferencePlane</c> (46D542A1-52F7-58E7-ACFC-9A6D364DA022).</summary>
+        internal static ref readonly Guid IID_IReferencePlane
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xA1, 0x42, 0xD5, 0x46,
+                    0xF7, 0x52,
+                    0xE7, 0x58,
+                    0xAC,
+                    0xFC,
+                    0x9A,
+                    0x6D,
+                    0x36,
+                    0x4D,
+                    0xA0,
+                    0x22
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceQuaternion</c> (B27004BB-C014-5DCE-9A21-799C5A3C1461).</summary>
+        internal static ref readonly Guid IID_IReferenceQuaternion
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xBB, 0x04, 0x70, 0xB2,
+                    0x14, 0xC0,
+                    0xCE, 0x5D,
+                    0x9A,
+                    0x21,
+                    0x79,
+                    0x9C,
+                    0x5A,
+                    0x3C,
+                    0x14,
+                    0x61
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceVector2</c> (48F6A69E-8465-57AE-9400-9764087F65AD).</summary>
+        internal static ref readonly Guid IID_IReferenceVector2
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x9E, 0xA6, 0xF6, 0x48,
+                    0x65, 0x84,
+                    0xAE, 0x57,
+                    0x94,
+                    0x00,
+                    0x97,
+                    0x64,
+                    0x08,
+                    0x7F,
+                    0x65,
+                    0xAD
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceVector3</c> (1EE770FF-C954-59CA-A754-6199A9BE282C).</summary>
+        internal static ref readonly Guid IID_IReferenceVector3
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xFF, 0x70, 0xE7, 0x1E,
+                    0x54, 0xC9,
+                    0xCA, 0x59,
+                    0xA7,
+                    0x54,
+                    0x61,
+                    0x99,
+                    0xA9,
+                    0xBE,
+                    0x28,
+                    0x2C
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceVector4</c> (A5E843C9-ED20-5339-8F8D-9FE404CF3654).</summary>
+        internal static ref readonly Guid IID_IReferenceVector4
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xC9, 0x43, 0xE8, 0xA5,
+                    0x20, 0xED,
+                    0x39, 0x53,
+                    0x8F,
+                    0x8D,
+                    0x9F,
+                    0xE4,
+                    0x04,
+                    0xCF,
+                    0x36,
+                    0x54
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfInt32</c> (A6D080A5-B087-5BC2-9A9F-5CD687B4D1F7).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfInt32
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xA5, 0x80, 0xD0, 0xA6,
+                    0x87, 0xB0,
+                    0xC2, 0x5B,
+                    0x9A,
+                    0x9F,
+                    0x5C,
+                    0xD6,
+                    0x87,
+                    0xB4,
+                    0xD1,
+                    0xF7
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfString</c> (0385688E-E3C7-5C5E-A389-5524EDE349F1).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfString
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x8E, 0x68, 0x85, 0x03,
+                    0xC7, 0xE3,
+                    0x5E, 0x5C,
+                    0xA3,
+                    0x89,
+                    0x55,
+                    0x24,
+                    0xED,
+                    0xE3,
+                    0x49,
+                    0xF1
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfByte</c> (2AF22683-3734-56D0-A60E-688CC85D1619).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfByte
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x83, 0x26, 0xF2, 0x2A,
+                    0x34, 0x37,
+                    0xD0, 0x56,
+                    0xA6,
+                    0x0E,
+                    0x68,
+                    0x8C,
+                    0xC8,
+                    0x5D,
+                    0x16,
+                    0x19
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfInt16</c> (912F8FD7-ADC0-5D60-A896-7ED76089CC5B).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfInt16
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xD7, 0x8F, 0x2F, 0x91,
+                    0xC0, 0xAD,
+                    0x60, 0x5D,
+                    0xA8,
+                    0x96,
+                    0x7E,
+                    0xD7,
+                    0x60,
+                    0x89,
+                    0xCC,
+                    0x5B
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfUInt16</c> (6624A2DD-83F7-519C-9D55-BB1F6560456B).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfUInt16
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xDD, 0xA2, 0x24, 0x66,
+                    0xF7, 0x83,
+                    0x9C, 0x51,
+                    0x9D,
+                    0x55,
+                    0xBB,
+                    0x1F,
+                    0x65,
+                    0x60,
+                    0x45,
+                    0x6B
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfUInt32</c> (97374B68-EB87-56CC-B18E-27EF0F9CFC0C).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfUInt32
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x68, 0x4B, 0x37, 0x97,
+                    0x87, 0xEB,
+                    0xCC, 0x56,
+                    0xB1,
+                    0x8E,
+                    0x27,
+                    0xEF,
+                    0x0F,
+                    0x9C,
+                    0xFC,
+                    0x0C
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfInt64</c> (6E333271-2E2A-5955-8790-836C76EE53B6).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfInt64
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x71, 0x32, 0x33, 0x6E,
+                    0x2A, 0x2E,
+                    0x55, 0x59,
+                    0x87,
+                    0x90,
+                    0x83,
+                    0x6C,
+                    0x76,
+                    0xEE,
+                    0x53,
+                    0xB6
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfUInt64</c> (38B60434-D67C-523E-9D0E-24D643411073).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfUInt64
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x34, 0x04, 0xB6, 0x38,
+                    0x7C, 0xD6,
+                    0x3E, 0x52,
+                    0x9D,
+                    0x0E,
+                    0x24,
+                    0xD6,
+                    0x43,
+                    0x41,
+                    0x10,
+                    0x73
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfSingle</c> (6AB1EA83-CB41-5F99-92CC-23BD4336A1FB).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfSingle
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x83, 0xEA, 0xB1, 0x6A,
+                    0x41, 0xCB,
+                    0x99, 0x5F,
+                    0x92,
+                    0xCC,
+                    0x23,
+                    0xBD,
+                    0x43,
+                    0x36,
+                    0xA1,
+                    0xFB
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfDouble</c> (D301F253-E0A3-5D2B-9A41-A4D62BEC4623).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfDouble
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x53, 0xF2, 0x01, 0xD3,
+                    0xA3, 0xE0,
+                    0x2B, 0x5D,
+                    0x9A,
+                    0x41,
+                    0xA4,
+                    0xD6,
+                    0x2B,
+                    0xEC,
+                    0x46,
+                    0x23
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfChar</c> (A4095AAB-EB7D-5782-8FAD-1609DEA249AD).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfChar
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xAB, 0x5A, 0x09, 0xA4,
+                    0x7D, 0xEB,
+                    0x82, 0x57,
+                    0x8F,
+                    0xAD,
+                    0x16,
+                    0x09,
+                    0xDE,
+                    0xA2,
+                    0x49,
+                    0xAD
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfBoolean</c> (E8E72666-48CC-593F-BA85-2663496956E3).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfBoolean
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x66, 0x26, 0xE7, 0xE8,
+                    0xCC, 0x48,
+                    0x3F, 0x59,
+                    0xBA,
+                    0x85,
+                    0x26,
+                    0x63,
+                    0x49,
+                    0x69,
+                    0x56,
+                    0xE3
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfGuid</c> (EECF9838-C1C2-5B4A-976F-CEC261AE1D55).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfGuid
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x38, 0x98, 0xCF, 0xEE,
+                    0xC2, 0xC1,
+                    0x4A, 0x5B,
+                    0x97,
+                    0x6F,
+                    0xCE,
+                    0xC2,
+                    0x61,
+                    0xAE,
+                    0x1D,
+                    0x55
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfDateTimeOffset</c> (1B8E9594-588E-5A07-9E65-0731A4C9A2DB).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfDateTimeOffset
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x94, 0x95, 0x8E, 0x1B,
+                    0x8E, 0x58,
+                    0x07, 0x5A,
+                    0x9E,
+                    0x65,
+                    0x07,
+                    0x31,
+                    0xA4,
+                    0xC9,
+                    0xA2,
+                    0xDB
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfTimeSpan</c> (AD73197D-2CFA-57A6-8993-9FAC40FEB791).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfTimeSpan
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x7D, 0x19, 0x73, 0xAD,
+                    0xFA, 0x2C,
+                    0xA6, 0x57,
+                    0x89,
+                    0x93,
+                    0x9F,
+                    0xAC,
+                    0x40,
+                    0xFE,
+                    0xB7,
+                    0x91
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfObject</c> (9CD7A84F-0C80-59C5-B44E-977841BB43D9).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfObject
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x4F, 0xA8, 0xD7, 0x9C,
+                    0x80, 0x0C,
+                    0xC5, 0x59,
+                    0xB4,
+                    0x4E,
+                    0x97,
+                    0x78,
+                    0x41,
+                    0xBB,
+                    0x43,
+                    0xD9
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfType</c> (DA8457A7-C2EB-5DA1-80BE-7132A2E1BFA4).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfType
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xA7, 0x57, 0x84, 0xDA,
+                    0xEB, 0xC2,
+                    0xA1, 0x5D,
+                    0x80,
+                    0xBE,
+                    0x71,
+                    0x32,
+                    0xA2,
+                    0xE1,
+                    0xBF,
+                    0xA4
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfMatrix3x2</c> (A525D9FF-C09B-501A-A785-4D1ED9E102B8).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfMatrix3x2
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xFF, 0xD9, 0x25, 0xA5,
+                    0x9B, 0xC0,
+                    0x1A, 0x50,
+                    0xA7,
+                    0x85,
+                    0x4D,
+                    0x1E,
+                    0xD9,
+                    0xE1,
+                    0x02,
+                    0xB8
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfMatrix4x4</c> (FC0D5A15-8F9D-5E8F-8828-AEF2C2E25BAD).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfMatrix4x4
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x15, 0x5A, 0x0D, 0xFC,
+                    0x9D, 0x8F,
+                    0x8F, 0x5E,
+                    0x88,
+                    0x28,
+                    0xAE,
+                    0xF2,
+                    0xC2,
+                    0xE2,
+                    0x5B,
+                    0xAD
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfPlane</c> (F9CF7F7D-5459-5F98-91B9-F2632A9EC298).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfPlane
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x7D, 0x7F, 0xCF, 0xF9,
+                    0x59, 0x54,
+                    0x98, 0x5F,
+                    0x91,
+                    0xB9,
+                    0xF2,
+                    0x63,
+                    0x2A,
+                    0x9E,
+                    0xC2,
+                    0x98
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfQuaternion</c> (E9BA76BE-2C31-5E1D-98A4-EBDB625AEE93).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfQuaternion
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xBE, 0x76, 0xBA, 0xE9,
+                    0x31, 0x2C,
+                    0x1D, 0x5E,
+                    0x98,
+                    0xA4,
+                    0xEB,
+                    0xDB,
+                    0x62,
+                    0x5A,
+                    0xEE,
+                    0x93
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfVector2</c> (29DF2178-FFDB-563E-88DB-3869A007305E).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfVector2
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x78, 0x21, 0xDF, 0x29,
+                    0xDB, 0xFF,
+                    0x3E, 0x56,
+                    0x88,
+                    0xDB,
+                    0x38,
+                    0x69,
+                    0xA0,
+                    0x07,
+                    0x30,
+                    0x5E
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfVector3</c> (AA1A35FA-0B4E-5248-BD79-FFD47CFE4027).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfVector3
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xFA, 0x35, 0x1A, 0xAA,
+                    0x4E, 0x0B,
+                    0x48, 0x52,
+                    0xBD,
+                    0x79,
+                    0xFF,
+                    0xD4,
+                    0x7C,
+                    0xFE,
+                    0x40,
+                    0x27
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfVector4</c> (68757250-5849-5772-90E3-AADB4C970BFF).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfVector4
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x50, 0x72, 0x75, 0x68,
+                    0x49, 0x58,
+                    0x72, 0x57,
+                    0x90,
+                    0xE3,
+                    0xAA,
+                    0xDB,
+                    0x4C,
+                    0x97,
+                    0x0B,
+                    0xFF
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>IReferenceArrayOfException</c> (401AE4CC-4AB9-5A8F-B993-E327900C364D).</summary>
+        internal static ref readonly Guid IID_IReferenceArrayOfException
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xCC, 0xE4, 0x1A, 0x40,
+                    0xB9, 0x4A,
+                    0x8F, 0x5A,
+                    0xB9,
+                    0x93,
+                    0xE3,
+                    0x27,
+                    0x90,
+                    0x0C,
+                    0x36,
+                    0x4D
                 };
 
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
