@@ -1864,5 +1864,505 @@ namespace WinRT.Interop
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
+
+        /// <summary>The IID for <c>NullableByte</c> (E5198CC8-2873-55F5-B0A1-84FF9E4AAD62).</summary>
+        internal static ref readonly Guid IID_NullableByte
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xC8, 0x8C, 0x19, 0xE5,
+                    0x73, 0x28,
+                    0xF5, 0x55,
+                    0xB0,
+                    0xA1,
+                    0x84,
+                    0xFF,
+                    0x9E,
+                    0x4A,
+                    0xAD,
+                    0x62
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableSByte</c> (95500129-FBF6-5AFC-89DF-70642D741990).</summary>
+        internal static ref readonly Guid IID_NullableSByte
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x29, 0x01, 0x50, 0x95,
+                    0xF6, 0xFB,
+                    0xFC, 0x5A,
+                    0x89,
+                    0xDF,
+                    0x70,
+                    0x64,
+                    0x2D,
+                    0x74,
+                    0x19,
+                    0x90
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableShort</c> (6EC9E41B-6709-5647-9918-A1270110FC4E).</summary>
+        internal static ref readonly Guid IID_NullableShort
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x1B, 0xE4, 0xC9, 0x6E,
+                    0x09, 0x67,
+                    0x47, 0x56,
+                    0x99,
+                    0x18,
+                    0xA1,
+                    0x27,
+                    0x01,
+                    0x10,
+                    0xFC,
+                    0x4E
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableUShort</c> (5AB7D2C3-6B62-5E71-A4B6-2D49C4F238FD).</summary>
+        internal static ref readonly Guid IID_NullableUShort
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xC3, 0xD2, 0xB7, 0x5A,
+                    0x62, 0x6B,
+                    0x71, 0x5E,
+                    0xA4,
+                    0xB6,
+                    0x2D,
+                    0x49,
+                    0xC4,
+                    0xF2,
+                    0x38,
+                    0xFD
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableInt</c> (548CEFBD-BC8A-5FA0-8DF2-957440FC8BF4).</summary>
+        internal static ref readonly Guid IID_NullableInt
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xBD, 0xEF, 0x8C, 0x54,
+                    0x8A, 0xBC,
+                    0xA0, 0x5F,
+                    0x8D,
+                    0xF2,
+                    0x95,
+                    0x74,
+                    0x40,
+                    0xFC,
+                    0x8B,
+                    0xF4
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableUInt</c> (513EF3AF-E784-5325-A91E-97C2B8111CF3).</summary>
+        internal static ref readonly Guid IID_NullableUInt
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xAF, 0xF3, 0x3E, 0x51,
+                    0x84, 0xE7,
+                    0x25, 0x53,
+                    0xA9,
+                    0x1E,
+                    0x97,
+                    0xC2,
+                    0xB8,
+                    0x11,
+                    0x1C,
+                    0xF3
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableLong</c> (4DDA9E24-E69F-5C6A-A0A6-93427365AF2A).</summary>
+        internal static ref readonly Guid IID_NullableLong
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x24, 0x9E, 0xDA, 0x4D,
+                    0x9F, 0xE6,
+                    0x6A, 0x5C,
+                    0xA0,
+                    0xA6,
+                    0x93,
+                    0x42,
+                    0x73,
+                    0x65,
+                    0xAF,
+                    0x2A
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableULong</c> (6755E376-53BB-568B-A11D-17239868309E).</summary>
+        internal static ref readonly Guid IID_NullableULong
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x76, 0xE3, 0x55, 0x67,
+                    0xBB, 0x53,
+                    0x8B, 0x56,
+                    0xA1,
+                    0x1D,
+                    0x17,
+                    0x23,
+                    0x98,
+                    0x68,
+                    0x30,
+                    0x9E
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableFloat</c> (719CC2BA-3E76-5DEF-9F1A-38D85A145EA8).</summary>
+        internal static ref readonly Guid IID_NullableFloat
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xBA, 0xC2, 0x9C, 0x71,
+                    0x76, 0x3E,
+                    0xEF, 0x5D,
+                    0x9F,
+                    0x1A,
+                    0x38,
+                    0xD8,
+                    0x5A,
+                    0x14,
+                    0x5E,
+                    0xA8
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableDouble</c> (2F2D6C29-5473-5F3E-92E7-96572BB990E2).</summary>
+        internal static ref readonly Guid IID_NullableDouble
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x29, 0x6C, 0x2D, 0x2F,
+                    0x73, 0x54,
+                    0x3E, 0x5F,
+                    0x92,
+                    0xE7,
+                    0x96,
+                    0x57,
+                    0x2B,
+                    0xB9,
+                    0x90,
+                    0xE2
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableChar</c> (FB393EF3-BBAC-5BD5-9144-84F23576F415).</summary>
+        internal static ref readonly Guid IID_NullableChar
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xF3, 0x3E, 0x39, 0xFB,
+                    0xAC, 0xBB,
+                    0xD5, 0x5B,
+                    0x91,
+                    0x44,
+                    0x84,
+                    0xF2,
+                    0x35,
+                    0x76,
+                    0xF4,
+                    0x15
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableBool</c> (3C00FD60-2950-5939-A21A-2D12C5A01B8A).</summary>
+        internal static ref readonly Guid IID_NullableBool
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x60, 0xFD, 0x00, 0x3C,
+                    0x50, 0x29,
+                    0x39, 0x59,
+                    0xA2,
+                    0x1A,
+                    0x2D,
+                    0x12,
+                    0xC5,
+                    0xA0,
+                    0x1B,
+                    0x8A
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableGuid</c> (7D50F649-632C-51F9-849A-EE49428933EA).</summary>
+        internal static ref readonly Guid IID_NullableGuid
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x49, 0xF6, 0x50, 0x7D,
+                    0x2C, 0x63,
+                    0xF9, 0x51,
+                    0x84,
+                    0x9A,
+                    0xEE,
+                    0x49,
+                    0x42,
+                    0x89,
+                    0x33,
+                    0xEA
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableDateTimeOffset</c> (5541D8A7-497C-5AA4-86FC-7713ADBF2A2C).</summary>
+        internal static ref readonly Guid IID_NullableDateTimeOffset
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xA7, 0xD8, 0x41, 0x55,
+                    0x7C, 0x49,
+                    0xA4, 0x5A,
+                    0x86,
+                    0xFC,
+                    0x77,
+                    0x13,
+                    0xAD,
+                    0xBF,
+                    0x2A,
+                    0x2C
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableTimeSpan</c> (604D0C4C-91DE-5C2A-935F-362F13EAF800).</summary>
+        internal static ref readonly Guid IID_NullableTimeSpan
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x4C, 0x0C, 0x4D, 0x60,
+                    0xDE, 0x91,
+                    0x2A, 0x5C,
+                    0x93,
+                    0x5F,
+                    0x36,
+                    0x2F,
+                    0x13,
+                    0xEA,
+                    0xF8,
+                    0x00
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableObject</c> (06DCCC90-A058-5C88-87B7-6F3360A2FC16).</summary>
+        internal static ref readonly Guid IID_NullableObject
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x90, 0xCC, 0xDC, 0x06,
+                    0x58, 0xA0,
+                    0x88, 0x5C,
+                    0x87,
+                    0xB7,
+                    0x6F,
+                    0x33,
+                    0x60,
+                    0xA2,
+                    0xFC,
+                    0x16
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableType</c> (3830AD99-D8DA-53F3-989B-FC92AD222778).</summary>
+        internal static ref readonly Guid IID_NullableType
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x99, 0xAD, 0x30, 0x38,
+                    0xDA, 0xD8,
+                    0xF3, 0x53,
+                    0x98,
+                    0x9B,
+                    0xFC,
+                    0x92,
+                    0xAD,
+                    0x22,
+                    0x27,
+                    0x78
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableException</c> (6FF27A1E-4B6A-59B7-B2C3-D1F2EE474593).</summary>
+        internal static ref readonly Guid IID_NullableException
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x1E, 0x7A, 0xF2, 0x6F,
+                    0x6A, 0x4B,
+                    0xB7, 0x59,
+                    0xB2,
+                    0xC3,
+                    0xD1,
+                    0xF2,
+                    0xEE,
+                    0x47,
+                    0x45,
+                    0x93
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableEventHandler</c> (25230F05-B49C-57EE-8961-5373D98E1AB1).</summary>
+        internal static ref readonly Guid IID_NullableEventHandler
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x05, 0x0F, 0x23, 0x25,
+                    0x9C, 0xB4,
+                    0xEE, 0x57,
+                    0x89,
+                    0x61,
+                    0x53,
+                    0x73,
+                    0xD9,
+                    0x8E,
+                    0x1A,
+                    0xB1
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>NullableString</c> (FD416DFB-2A07-52EB-AAE3-DFCE14116C05).</summary>
+        internal static ref readonly Guid IID_NullableString
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xFB, 0x6D, 0x41, 0xFD,
+                    0x07, 0x2A,
+                    0xEB, 0x52,
+                    0xAA,
+                    0xE3,
+                    0xDF,
+                    0xCE,
+                    0x14,
+                    0x11,
+                    0x6C,
+                    0x05
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
     }
 }

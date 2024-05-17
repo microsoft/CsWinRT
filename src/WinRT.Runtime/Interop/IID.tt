@@ -95,7 +95,27 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("IReferenceArrayOfVector2", "29DF2178-FFDB-563E-88DB-3869A007305E", false),
     ("IReferenceArrayOfVector3", "AA1A35FA-0B4E-5248-BD79-FFD47CFE4027", false),
     ("IReferenceArrayOfVector4", "68757250-5849-5772-90E3-AADB4C970BFF", false),
-    ("IReferenceArrayOfException", "401AE4CC-4AB9-5A8F-B993-E327900C364D", false)
+    ("IReferenceArrayOfException", "401AE4CC-4AB9-5A8F-B993-E327900C364D", false),
+    ("NullableByte", "E5198CC8-2873-55F5-B0A1-84FF9E4AAD62", false),
+    ("NullableSByte", "95500129-FBF6-5AFC-89DF-70642D741990", false),
+    ("NullableShort", "6EC9E41B-6709-5647-9918-A1270110FC4E", false),
+    ("NullableUShort", "5AB7D2C3-6B62-5E71-A4B6-2D49C4F238FD", false),
+    ("NullableInt", "548CEFBD-BC8A-5FA0-8DF2-957440FC8BF4", false),
+    ("NullableUInt", "513EF3AF-E784-5325-A91E-97C2B8111CF3", false),
+    ("NullableLong", "4DDA9E24-E69F-5C6A-A0A6-93427365AF2A", false),
+    ("NullableULong", "6755E376-53BB-568B-A11D-17239868309E", false),
+    ("NullableFloat", "719CC2BA-3E76-5DEF-9F1A-38D85A145EA8", false),
+    ("NullableDouble", "2F2D6C29-5473-5F3E-92E7-96572BB990E2", false),
+    ("NullableChar", "FB393EF3-BBAC-5BD5-9144-84F23576F415", false),
+    ("NullableBool", "3C00FD60-2950-5939-A21A-2D12C5A01B8A", false),
+    ("NullableGuid", "7D50F649-632C-51F9-849A-EE49428933EA", false),
+    ("NullableDateTimeOffset", "5541D8A7-497C-5AA4-86FC-7713ADBF2A2C", false),
+    ("NullableTimeSpan", "604D0C4C-91DE-5C2A-935F-362F13EAF800", false),
+    ("NullableObject", "06DCCC90-A058-5C88-87B7-6F3360A2FC16", false),
+    ("NullableType", "3830AD99-D8DA-53F3-989B-FC92AD222778", false),
+    ("NullableException", "6FF27A1E-4B6A-59B7-B2C3-D1F2EE474593", false),
+    ("NullableEventHandler", "25230F05-B49C-57EE-8961-5373D98E1AB1", false),
+    ("NullableString", "FD416DFB-2A07-52EB-AAE3-DFCE14116C05", false),
 };
 
 for (int i = 0; i < entries.Length; i++)

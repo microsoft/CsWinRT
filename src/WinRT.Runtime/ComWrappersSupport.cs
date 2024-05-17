@@ -662,7 +662,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_int.IID,
+                    IID = IID.IID_NullableInt,
                     Vtable = ABI.System.Nullable_int.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -670,7 +670,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_string.IID,
+                    IID = IID.IID_NullableString,
                     Vtable = ABI.System.Nullable_string.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -678,7 +678,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_byte.IID,
+                    IID = IID.IID_NullableByte,
                     Vtable = ABI.System.Nullable_byte.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -686,7 +686,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_short.IID,
+                    IID = IID.IID_NullableShort,
                     Vtable = ABI.System.Nullable_short.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -694,7 +694,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_ushort.IID,
+                    IID = IID.IID_NullableUShort,
                     Vtable = ABI.System.Nullable_ushort.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -702,7 +702,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_uint.IID,
+                    IID = IID.IID_NullableUInt,
                     Vtable = ABI.System.Nullable_uint.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -710,7 +710,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_long.IID,
+                    IID = IID.IID_NullableLong,
                     Vtable = ABI.System.Nullable_long.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -718,7 +718,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_ulong.IID,
+                    IID = IID.IID_NullableULong,
                     Vtable = ABI.System.Nullable_ulong.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -726,7 +726,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_float.IID,
+                    IID = IID.IID_NullableFloat,
                     Vtable = ABI.System.Nullable_float.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -734,7 +734,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_double.IID,
+                    IID = IID.IID_NullableDouble,
                     Vtable = ABI.System.Nullable_double.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -742,7 +742,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_char.IID,
+                    IID = IID.IID_NullableChar,
                     Vtable = ABI.System.Nullable_char.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -750,7 +750,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_bool.IID,
+                    IID = IID.IID_NullableBool,
                     Vtable = ABI.System.Nullable_bool.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -758,7 +758,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_guid.IID,
+                    IID = IID.IID_NullableGuid,
                     Vtable = ABI.System.Nullable_guid.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -766,7 +766,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_DateTimeOffset.IID,
+                    IID = IID.IID_NullableDateTimeOffset,
                     Vtable = ABI.System.Nullable_DateTimeOffset.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -774,7 +774,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_TimeSpan.IID,
+                    IID = IID.IID_NullableTimeSpan,
                     Vtable = ABI.System.Nullable_TimeSpan.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -782,7 +782,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_Object.IID,
+                    IID = IID.IID_NullableObject,
                     Vtable = ABI.System.Nullable_Object.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -790,7 +790,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_Type.IID,
+                    IID = IID.IID_NullableType,
                     Vtable = ABI.System.Nullable_Type.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -798,7 +798,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_sbyte.IID,
+                    IID = IID.IID_NullableSByte,
                     Vtable = ABI.System.Nullable_sbyte.Vftbl.AbiToProjectionVftablePtr
                 };
             }
@@ -825,7 +825,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_EventHandler.IID,
+                    IID = IID.IID_NullableEventHandler,
                     Vtable = ABI.System.Nullable_EventHandler.AbiToProjectionVftablePtr
                 };
             }
@@ -907,7 +907,7 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_Exception.IID,
+                    IID = IID.IID_NullableException,
                     Vtable = ABI.System.Nullable_Exception.Vftbl.AbiToProjectionVftablePtr
                 };
             }
