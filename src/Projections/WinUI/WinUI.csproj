@@ -37,7 +37,8 @@
 -include Windows.UI.Xaml.Markup.MarkupExtensionReturnTypeAttribute
 -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
 -include Windows.UI.Xaml.Media.Animation.IndependentlyAnimatableAttribute
--include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute      
+-include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
+-addition_exclude Windows.UI.Xaml.Media.Animation
     </CsWinRTFilters>
     <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>

@@ -21,8 +21,7 @@
 -exclude Windows
 -include Windows.UI.Xaml
 -exclude Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
--exclude Windows.UI.Xaml.Media.Animation.KeyTime
--exclude Windows.UI.Xaml.Media.Animation.RepeatBehavior
+-addition_exclude Windows.UI.Xaml.Media.Animation
     </CsWinRTFilters>
   </PropertyGroup>
  
