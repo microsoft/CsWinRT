@@ -113,9 +113,15 @@ namespace WinRT
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
         {
-            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject);
+            // Here the ptr itself might not point to IUnknown, but we are using IUnknown for the purposes of getting
+            // an agile reference if needed.  Due to that and to keep back compat, making sure to not trigger a QI
+            // In addition, the ptr is already pointing to the correct interface which the IObjectReference is expected for.
+            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject, IID.IID_IUnknown, requireQI: false);
         }
 
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+#endif
         public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject)
         {
             if (externalComObject == IntPtr.Zero)
@@ -128,7 +134,22 @@ namespace WinRT
 
         public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid)
         {
-            return GetObjectReferenceForInterface<T>(externalComObject, iid, true);
+            return GetObjectReferenceForInterface<T>(externalComObject, iid, requireQI: true);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="IObjectReference"/> object for a given <see cref="IntPtr"/> COM pointer.
+        /// As part of this, the <see cref="Guid"/> IID is set in the <see cref="IObjectReference"/> object
+        /// which is used in non agile scenarios.  In addition, if <paramref name="requireQI"/> is set to true, a QI to that <paramref name="iid"/> is done.
+        /// Otherwise it is assumed, the passed COM pointer already points to the interface represented by the <paramref name="iid"/>.
+        /// </summary>
+        /// <param name="externalComObject">The native <see cref="IntPtr"/> object for which to construct the <see cref="IObjectReference"/> object.</param>
+        /// <param name="iid">The <see cref="Guid"/> IID that represents the interface which the resulting <see cref="IObjectReference"/> object will be pointing to.</param>
+        /// <param name="requireQI">Whether to QI as part of returning the object.</param>
+        /// <returns>The <see cref="IObjectReference"/> holding onto the <paramref name="externalComObject"/> pointer passed or its QI.</returns>
+        public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject, Guid iid, bool requireQI)
+        {
+            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject, iid, requireQI);
         }
 
         internal static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid, bool requireQI)
@@ -178,7 +199,8 @@ namespace WinRT
             // which means the attribute lives on the authoring metadata type.
             if (winrtExposedClassAttribute == null)
             {
-                var authoringMetadaType = type.GetRuntimeClassCCWType();
+                // Using GetCCWType rather than GetRuntimeClassCCWType given we want to handle boxed value types.
+                var authoringMetadaType = type.GetCCWType();
                 if (authoringMetadaType != null)
                 {
                     winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
@@ -332,10 +354,15 @@ namespace WinRT
                     });
                 }
             }
-            else if (!hasWinrtExposedClassAttribute && type.ShouldProvideIReference())
+            else if (!hasWinrtExposedClassAttribute)
             {
-                entries.Add(IPropertyValueEntry);
-                entries.Add(ProvideIReference(type));
+                // Splitting this check to ensure the linker can recognize the pattern correctly.
+                // See: https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
+                if (type.ShouldProvideIReference())
+                {
+                    entries.Add(IPropertyValueEntry);
+                    entries.Add(ProvideIReference(type));
+                }
             }
             
             entries.Add(new ComInterfaceEntry
@@ -394,7 +421,7 @@ namespace WinRT
         }
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+        [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
             Justification = "The existence of the ABI type implies the non-ABI type exists, as in authoring scenarios the ABI type is constructed from the non-ABI type.")] 
 #endif
         internal static (InspectableInfo inspectableInfo, List<ComInterfaceEntry> interfaceTableEntries) PregenerateNativeTypeInformation(Type type)
@@ -429,7 +456,7 @@ namespace WinRT
         }
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2067",
+        [UnconditionalSuppressMessage("Trimming", "IL2067",
             Justification = "The type is a delegate type, so 'GuidGenerator.GetIID' doesn't need to access public fields from it (it uses the helper type).")]
 #endif
         private static Func<IntPtr, object> CreateDelegateFactory(Type type)
@@ -488,16 +515,11 @@ namespace WinRT
 
         // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
         // This is done to avoid pointer reuse until GC cleans up the boxed object
-        private static readonly ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
+        internal static readonly ConditionalWeakTable<object, IInspectable> BoxedValueReferenceCache = new();
 
         internal static Func<IInspectable, object> CreateReferenceCachingFactory(Func<IInspectable, object> internalFactory)
         {
-            return inspectable =>
-            {
-                object resultingObject = internalFactory(inspectable);
-                _boxedValueReferenceCache.Add(resultingObject, inspectable);
-                return resultingObject;
-            };
+            return internalFactory.InvokeWithBoxedValueReferenceCacheInsertion;
         }
 
         private static Func<IInspectable, object> CreateCustomTypeMappingFactory(
@@ -521,7 +543,12 @@ namespace WinRT
             };
         }
 
-        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType)
+        {
+            return CreateTypedRcwFactory(implementationType, null);
+        }
+
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName)
         {
             // If runtime class name is empty or "Object", then just use IInspectable.
             if (implementationType == null || implementationType == typeof(object))
@@ -607,15 +634,30 @@ namespace WinRT
             return implementationType;
         }
 
-        private static ComInterfaceEntry IPropertyValueEntry =>
-            new ComInterfaceEntry
+        private static ComInterfaceEntry IPropertyValueEntry
+        {
+            get
             {
-                IID = ManagedIPropertyValueImpl.IID,
-                Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
-            };
+                if (!FeatureSwitches.EnableIReferenceSupport)
+                {
+                    throw new NotSupportedException("Support for 'IPropertyValue' is not enabled (it depends on the support for 'IReference<T>').");
+                }
+
+                return new ComInterfaceEntry
+                {
+                    IID = ManagedIPropertyValueImpl.IID,
+                    Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
+                };
+            }
+        }
 
         private static ComInterfaceEntry ProvideIReference(Type type)
         {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReference<T>' is not enabled.");
+            }
+
             if (type == typeof(int))
             {
                 return new ComInterfaceEntry
@@ -888,6 +930,11 @@ namespace WinRT
 
         private static ComInterfaceEntry ProvideIReferenceArray(Type arrayType)
         {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReferenceArray<T>' is not enabled.");
+            }
+
             Type type = arrayType.GetElementType();
             if (type == typeof(int))
             {
@@ -1132,7 +1179,7 @@ namespace WinRT
         internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
         {
             IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
-            return ObjectReference<T>.Attach(ref ccw);
+            return ObjectReference<T>.Attach(ref ccw, iid);
         }
 
         internal static ObjectReferenceValue CreateCCWForObjectForMarshaling(object obj, Guid iid)

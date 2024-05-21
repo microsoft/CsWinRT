@@ -32,7 +32,7 @@ namespace WinRT
             return CreateRcwForComObject<T>(ptr, true);
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, CreateTypedRcwFactory);
 
         private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
         {
@@ -41,7 +41,7 @@ namespace WinRT
                 return default;
             }
 
-            IObjectReference identity = GetObjectReferenceForInterface(ptr).As<IUnknownVftbl>();
+            IObjectReference identity = GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID.IID_IUnknown);
 
             object keepAliveSentinel = null;
 
@@ -63,7 +63,7 @@ namespace WinRT
                     else
                     {
                         Type runtimeClassType = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
-                        runtimeWrapper = runtimeClassType == null ? inspectable : TypedObjectFactoryCacheForType.GetOrAdd(runtimeClassType, classType => CreateTypedRcwFactory(classType))(inspectable);
+                        runtimeWrapper = runtimeClassType == null ? inspectable : TypedObjectFactoryCacheForType.GetOrAdd(runtimeClassType, CreateTypedRcwFactory)(inspectable);
                     }
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
@@ -132,7 +132,7 @@ namespace WinRT
                 return TryUnwrapObject(del.Target, out objRef);
             }
 
-            var objRefFunc = TypeObjectRefFuncCache.GetOrAdd(o.GetType(), (type) =>
+            var objRefFunc = TypeObjectRefFuncCache.GetOrAdd(o.GetType(), static (type) =>
             {
                 ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
                 if (objRefWrapper is object)

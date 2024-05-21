@@ -347,6 +347,8 @@ TEST(AuthoringTest, CustomTypes)
         EXPECT_EQ(pv, nullptr);
     }
 
+    // Array marshaling on AOT needs dynamic code.
+#ifndef AOT
     auto erasedProjectedArrays = testClass.GetTypeErasedProjectedArrays();
     EXPECT_EQ(erasedProjectedArrays.Size(), 7);
     for (auto obj : erasedProjectedArrays)
@@ -355,6 +357,22 @@ TEST(AuthoringTest, CustomTypes)
         EXPECT_NE(ra, nullptr);
         auto type = ra.Type();
     }
+#endif
+}
+
+TEST(AuthoringTest, Async)
+{
+    TestClass testClass;
+    auto asyncOperation = testClass.GetDoubleAsyncOperation();
+    EXPECT_EQ(asyncOperation.wait_for(std::chrono::seconds(2)), AsyncStatus::Completed);
+    EXPECT_EQ(asyncOperation.GetResults(), 4.0);
+
+    auto asyncOperation2 = testClass.GetStructAsyncOperation();
+    EXPECT_EQ(asyncOperation2.wait_for(std::chrono::seconds(2)), AsyncStatus::Completed);
+    auto result = asyncOperation2.GetResults();
+    EXPECT_EQ(result.X, 2);
+    EXPECT_EQ(result.Y, 4);
+    EXPECT_EQ(result.Value, L"Test");
 }
 
 TEST(AuthoringTest, CustomDictionaryImplementations)
@@ -676,4 +694,23 @@ TEST(AuthoringTest, MixedWinRTClassicCOM)
     // Validate the second call on IInternalInterface2
     EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface2.get()))[3])(internalInterface2.get(), &number), S_OK);
     EXPECT_EQ(number, 123);
+}
+
+TEST(AuthoringTest, GetRuntimeClassName)
+{
+    CustomDictionary2 dictionary;
+    EXPECT_EQ(winrt::get_class_name(dictionary), L"AuthoringTest.CustomDictionary2");
+
+    DisposableClass disposed;
+    EXPECT_EQ(winrt::get_class_name(disposed), L"AuthoringTest.DisposableClass");
+
+    TestMixedWinRTCOMWrapper wrapper;
+    EXPECT_EQ(winrt::get_class_name(wrapper), L"AuthoringTest.TestMixedWinRTCOMWrapper");
+
+    TestClass testClass;
+    testClass.SetNonProjectedDisposableObject();
+    EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"Windows.Foundation.IClosable");
+
+    testClass.SetProjectedDisposableObject();
+    EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"AuthoringTest.DisposableClass");
 }

@@ -15,10 +15,10 @@ namespace WinRT
 #else 
     public
 #endif
-    class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
+    sealed class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
     {
-        private Type _type;
-        private IObjectReference _obj;
+        private readonly Type _type;
+        private readonly IObjectReference _obj;
 
         public SingleInterfaceOptimizedObject(Type type, IObjectReference objRef)
             : this(type, objRef, true)
@@ -34,7 +34,7 @@ namespace WinRT
 
                 if (RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
+                    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
                     [MethodImpl(MethodImplOptions.NoInlining)]
                     static IObjectReference TryGetObjectReferenceViaVftbl(IObjectReference objRef, Type helperType)
                     {
@@ -95,7 +95,13 @@ namespace WinRT
             {
                 return true;
             }
-            return (this as IWinRTObject).IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
+
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                return false;
+            }
+
+            return ((IWinRTObject)this).IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
         }
 
         IObjectReference IWinRTObject.GetObjectReferenceForType(RuntimeTypeHandle interfaceType)
@@ -104,7 +110,7 @@ namespace WinRT
             {
                 return _obj;
             }
-            return (this as IWinRTObject).GetObjectReferenceForTypeFallback(interfaceType);
+            return ((IWinRTObject)this).GetObjectReferenceForTypeFallback(interfaceType);
         }
 
     }

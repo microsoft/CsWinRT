@@ -33,6 +33,13 @@ namespace ABI.System.ComponentModel
 
         public static unsafe global::System.Collections.IEnumerable GetErrors(IObjectReference obj, string propertyName)
         {
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                throw new NotSupportedException(
+                    "'INotifyDataErrorInfo.GetErrors' relies on 'IDynamicInterfaceCastable' support, which is not currently " +
+                    "available. Make sure the 'EnableIDynamicInterfaceCastableSupport' property is not set to 'false'.");
+            }
+
             var ThisPtr = obj.ThisPtr;
             IntPtr __retval = default;
             try
@@ -198,7 +205,7 @@ namespace ABI.System.ComponentModel
                 }
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_INotifyDataErrorInfo);
 
         private static EventHandlerEventSource<global::System.ComponentModel.DataErrorsChangedEventArgs> _ErrorsChanged(IWinRTObject _this)
         {

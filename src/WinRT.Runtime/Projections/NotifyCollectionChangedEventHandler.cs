@@ -40,8 +40,9 @@ namespace ABI.System.Collections.Specialized
 #endif
             };
             var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(NotifyCollectionChangedEventHandler), sizeof(global::WinRT.Interop.IDelegateVftbl));
-            Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
+            *(global::WinRT.Interop.IDelegateVftbl*)nativeVftbl = AbiToProjectionVftable;
             AbiToProjectionVftablePtr = nativeVftbl;
+            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler), CreateRcw);
 
             IID = FeatureSwitches.IsWuxMode
                 ? Guid.Parse("CA10B37C-F382-4591-8557-5E24965279B0")
@@ -50,7 +51,7 @@ namespace ABI.System.Collections.Specialized
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        private static readonly Guid IID;
+        public static readonly Guid IID;
 
         public static unsafe IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);

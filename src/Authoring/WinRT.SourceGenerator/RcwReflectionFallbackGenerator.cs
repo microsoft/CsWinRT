@@ -52,8 +52,18 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
             return options.GetCsWinRTRcwFactoryFallbackGeneratorForceOptIn();
         });
 
+        // Get whether the generator is explicitly set as opt-out
+        IncrementalValueProvider<bool> isGeneratorForceOptOut = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
+        {
+            return options.GetCsWinRTRcwFactoryFallbackGeneratorForceOptOut();
+        });
+
         // Get whether the generator should actually run or not
-        IncrementalValueProvider<bool> isGeneratorEnabled = isOutputTypeExe.Combine(isGeneratorForceOptIn).Select(static (flags, token) => flags.Left || flags.Right);
+        IncrementalValueProvider<bool> isGeneratorEnabled =
+            isOutputTypeExe
+            .Combine(isGeneratorForceOptIn)
+            .Combine(isGeneratorForceOptOut)
+            .Select(static (flags, token) => (flags.Left.Left || flags.Left.Right) && !flags.Right);
 
         // Bypass all items if the flag is not set
         IncrementalValuesProvider<(EquatablePortableExecutableReference Value, bool)> enabledExecutableReferences =
@@ -203,7 +213,8 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
         {
             if (assemblyIdentity.Name == "WinRT.Runtime")
             {
-                return assemblyIdentity.Version < new Version(2, 0, 8);
+                return assemblyIdentity.Version < new Version(2, 0, 8) && 
+                    assemblyIdentity.Version != new Version(0, 0, 0, 0);
             }
         }
 

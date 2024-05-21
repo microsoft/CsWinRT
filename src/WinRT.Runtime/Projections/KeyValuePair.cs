@@ -440,30 +440,20 @@ namespace ABI.System.Collections.Generic
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
 
-        public static Guid PIID = KeyValuePairMethods<K, V>.IID;
+        public static readonly Guid PIID = KeyValuePairMethods<K, V>.IID;
 
+#if !NET
         public static implicit operator KeyValuePair<K, V>(IObjectReference obj) => (obj != null) ? new KeyValuePair<K, V>(obj) : null;
         public static implicit operator KeyValuePair<K, V>(ObjectReference<IUnknownVftbl> obj) => (obj != null) ? new KeyValuePair<K, V>(obj) : null;
+#endif
         protected readonly ObjectReference<IUnknownVftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
 
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
-#endif
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
-        public A As<A>() => _obj.AsType<A>();
         public KeyValuePair(IObjectReference obj) : this(obj.As<IUnknownVftbl>(PIID)) { }
         public KeyValuePair(ObjectReference<IUnknownVftbl> obj)
         {

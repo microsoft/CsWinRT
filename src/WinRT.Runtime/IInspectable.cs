@@ -72,7 +72,7 @@ namespace WinRT
 #endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(sizeof(Vftbl));
-                Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
+                *(Vftbl*)AbiToProjectionVftablePtr = AbiToProjectionVftable;
             }
 
 #if NET
@@ -122,22 +122,32 @@ namespace WinRT
         }
 
         public static IInspectable FromAbi(IntPtr thisPtr) =>
-            new IInspectable(ObjectReference<Vftbl>.FromAbi(thisPtr));
+            new IInspectable(ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IInspectable));
 
-        private readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<IUnknownVftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>();
+#if !NET
+        public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>(IID.IID_IInspectable);
         public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
+#endif
+
+#if NET
+        [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
+        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
+        public ObjectReference<I> As<I>() => _obj.As<I>();
+        public IObjectReference ObjRef { get => _obj; }
+        public IInspectable(IObjectReference obj) : this(obj.As<IUnknownVftbl>(IID.IID_IInspectable)) { }
 
 #if NET
         [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
 #endif
-        public ObjectReference<I> As<I>() => _obj.As<I>();
-        public IObjectReference ObjRef { get => _obj; }
-        public IInspectable(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public IInspectable(ObjectReference<Vftbl> obj)
+        public IInspectable(ObjectReference<Vftbl> obj) : this(obj.As<IUnknownVftbl>(IID.IID_IInspectable)) { }
+
+        // Note: callers have to ensure to perform QI for 'IInspectable' when using this constructor
+        internal IInspectable(ObjectReference<IUnknownVftbl> obj)
         {
             _obj = obj;
         }
@@ -147,7 +157,8 @@ namespace WinRT
             IntPtr __retval = default;
             try
             {
-                var hr = _obj.Vftbl.GetRuntimeClassName(ThisPtr, &__retval);
+                IntPtr thisPtr = ThisPtr;
+                var hr = ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[4])(thisPtr, &__retval);
                 if (hr != 0)
                 {
                     if (noThrow)

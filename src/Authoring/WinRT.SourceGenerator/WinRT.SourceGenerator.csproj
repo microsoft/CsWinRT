@@ -18,6 +18,7 @@
 	  <IsRoslynComponent>true</IsRoslynComponent>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionDir)WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
   </PropertyGroup>
 
   <ItemGroup>

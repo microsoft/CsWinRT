@@ -12,6 +12,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using System.Threading.Tasks;
     using global::Windows.Foundation;
     using global::Windows.Storage.Streams;
+    using WinRT;
     /// <summary>
     /// Contains extension methods that expose operations on WinRT <code>Windows.Foundation.IBuffer</code>.
     /// </summary>
@@ -336,13 +337,13 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (thisIsManaged)
                 return (thisDataArr == otherDataArr) && (thisDataOffs == otherDataOffs);
 
-            IBufferByteAccess thisBuff = buffer.As<IBufferByteAccess>();
-            IBufferByteAccess otherBuff = otherBuffer.As<IBufferByteAccess>();
-
-            unsafe
+            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(buffer, out IntPtr thisBuff) ||
+                !WindowsRuntimeMarshal.TryGetDataUnsafe(otherBuffer, out IntPtr otherBuff))
             {
-                return (thisBuff.Buffer == otherBuff.Buffer);
+                return false;
             }
+
+            return thisBuff == otherBuff;
         }
 
 #endregion Access to underlying array optimised for IBuffers backed by managed arrays (to avoid pinning)
@@ -437,11 +438,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 return new WindowsRuntimeBufferMemoryStream(source, dataArr, dataOffs);
             }
 
-            unsafe
+            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(source, out IntPtr sourceBuff))
             {
-                IBufferByteAccess bufferByteAccess = source.As<IBufferByteAccess>();
-                return new WindowsRuntimeBufferUnmanagedMemoryStream(source, (byte*)bufferByteAccess.Buffer);
+                throw new InvalidCastException();
             }
+
+            return new WindowsRuntimeBufferUnmanagedMemoryStream(source, sourceBuff);
         }
 
 #endregion Extensions for co-operation with memory streams (share mem stream data; expose data as managed/unmanaged mem stream)
@@ -499,7 +501,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             private readonly IBuffer _sourceBuffer;
 
             internal WindowsRuntimeBufferMemoryStream(IBuffer sourceBuffer, byte[] dataArr, int dataOffs)
-                : base(dataArr, dataOffs, (int)sourceBuffer.Capacity, true)
+                : base(dataArr, dataOffs, (int)sourceBuffer.Capacity, writable: true)
             {
                 _sourceBuffer = sourceBuffer;
 
@@ -575,9 +577,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             private readonly IBuffer _sourceBuffer;
 
-            internal unsafe WindowsRuntimeBufferUnmanagedMemoryStream(IBuffer sourceBuffer, byte* dataPtr)
+            internal unsafe WindowsRuntimeBufferUnmanagedMemoryStream(IBuffer sourceBuffer, IntPtr dataPtr)
 
-                : base(dataPtr, (long)sourceBuffer.Length, (long)sourceBuffer.Capacity, FileAccess.ReadWrite)
+                : base((byte*)dataPtr, (long)sourceBuffer.Length, (long)sourceBuffer.Capacity, FileAccess.ReadWrite)
             {
                 _sourceBuffer = sourceBuffer;
             }
@@ -640,16 +642,19 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }  // class WindowsRuntimeBufferUnmanagedMemoryStream
 
-        private static Span<byte> GetSpanForCapacityUnsafe(this IBuffer buffer, uint offset)
+        private static unsafe Span<byte> GetSpanForCapacityUnsafe(this IBuffer buffer, uint offset)
         {
             Debug.Assert(0 <= offset);
             Debug.Assert(offset < buffer.Capacity);
 
-            unsafe
+            if (!WindowsRuntimeMarshal.TryGetDataUnsafe(buffer, out IntPtr buffPtr))
             {
-                IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
-                return new Span<byte>((byte*)buffPtr + offset, (int)(buffer.Capacity - offset));
+                throw new InvalidCastException();
             }
+
+            var span = new Span<byte>((byte*)buffPtr + offset, (int)(buffer.Capacity - offset));
+            GC.KeepAlive(buffer);
+            return span;
         }
 #endregion Private plumbing
     }  // class WindowsRuntimeBufferExtensions

@@ -9,7 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using WinRT.Interop;
 using static System.Runtime.InteropServices.ComWrappers;
 
@@ -198,7 +197,7 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, CreateTypedRcwFactory);
 
         public static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => TypedObjectFactoryCacheForType.TryAdd(implementationType, rcwFactory);
 
@@ -301,40 +300,49 @@ namespace WinRT
             }
         }
 
-        private static readonly ReaderWriterLockSlim ComInterfaceEntriesLookupRwLock = new();
         private static readonly List<Func<Type, ComInterfaceEntry[]>> ComInterfaceEntriesLookup = new();
 
         public static void RegisterTypeComInterfaceEntriesLookup(Func<Type, ComInterfaceEntry[]> comInterfaceEntriesLookup)
         {
-            ComInterfaceEntriesLookupRwLock.EnterWriteLock();
-            try
-            {
-                ComInterfaceEntriesLookup.Add(comInterfaceEntriesLookup);
-            }
-            finally
-            {
-                ComInterfaceEntriesLookupRwLock.ExitWriteLock();
-            }
+            ComInterfaceEntriesLookup.Add(comInterfaceEntriesLookup);
         }
 
         internal static ComInterfaceEntry[] GetComInterfaceEntriesForTypeFromLookupTable(Type type)
         {
-            ComInterfaceEntriesLookupRwLock.EnterReadLock();
-
-            try
+            // Using for loop to avoid exception from list changing when using for each.
+            // List is only added to and if any are added while looping, we can ignore those.
+            int count = ComInterfaceEntriesLookup.Count;
+            for (int i = 0; i < count; i++)
             {
-                foreach (var func in ComInterfaceEntriesLookup)
+                var comInterfaceEntries = ComInterfaceEntriesLookup[i](type);
+                if (comInterfaceEntries != null)
                 {
-                    var comInterfaceEntries = func(type);
-                    if (comInterfaceEntries != null)
-                    {
-                        return comInterfaceEntries;
-                    }
+                    return comInterfaceEntries;
                 }
             }
-            finally
+
+            return null;
+        }
+
+        private static readonly List<Func<Type, string>> RuntimeClassNameForNonWinRTTypeLookup = new();
+
+        public static void RegisterTypeRuntimeClassNameLookup(Func<Type, string> runtimeClassNameLookup)
+        {
+            RuntimeClassNameForNonWinRTTypeLookup.Add(runtimeClassNameLookup);
+        }
+
+        internal static string GetRuntimeClassNameForNonWinRTTypeFromLookupTable(Type type)
+        {
+            // Using for loop to avoid exception from list changing when using for each.
+            // List is only added to and if any are added while looping, we can ignore those.
+            int count = RuntimeClassNameForNonWinRTTypeLookup.Count;
+            for (int i = 0; i < count; i++)
             {
-                ComInterfaceEntriesLookupRwLock.ExitReadLock();
+                var runtimeClasName = RuntimeClassNameForNonWinRTTypeLookup[i](type);
+                if (!string.IsNullOrEmpty(runtimeClasName))
+                {
+                    return runtimeClasName;
+                }
             }
 
             return null;
@@ -358,7 +366,23 @@ namespace WinRT
             IntPtr inner,
             out IObjectReference objRef)
         {
-            objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance);
+            // To keep pre-existing behavior when we don't know the IID, passing it as IUnknown
+            // as we would have done before.
+            Init(isAggregation, thisInstance, newInstance, inner, IID.IID_IUnknown, out objRef);
+        }
+
+        public unsafe static void Init(
+            bool isAggregation,
+            object thisInstance,
+            IntPtr newInstance,
+            IntPtr inner,
+            Guid iidForNewInstance,
+            out IObjectReference objRef)
+        {
+            objRef = ComWrappersSupport.GetObjectReferenceForInterface(
+                isAggregation ? inner : newInstance,
+                isAggregation ? IID.IID_IInspectable : iidForNewInstance,
+                requireQI: false);
 
             IntPtr referenceTracker;
             {
@@ -577,10 +601,10 @@ namespace WinRT
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {
-                    var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IInspectable.Vftbl>(ptr);
+                    var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID.IID_IInspectable, false);
                     ComWrappersHelper.Init(inspectableObjRef);
 
-                    IInspectable inspectable = new IInspectable(inspectableObjRef);
+                    IInspectable inspectable = new(inspectableObjRef);
 
                     if (ComWrappersSupport.CreateRCWType != null
                         && ComWrappersSupport.CreateRCWType.IsSealed)

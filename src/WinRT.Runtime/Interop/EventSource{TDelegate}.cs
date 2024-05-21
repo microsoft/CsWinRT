@@ -96,7 +96,7 @@ namespace ABI.WinRT.Interop
                 bool registerHandler =
                     !TryGetStateUnsafe(out state) ||
                     // We have a wrapper delegate, but no longer has any references from any event source.
-                    !state.HasComReferences();
+                    !state!.HasComReferences();
                 if (registerHandler)
                 {
                     state = CreateEventSourceState();
@@ -145,7 +145,7 @@ namespace ABI.WinRT.Interop
 
             lock (this)
             {
-                var oldEvent = state.targetDelegate;
+                var oldEvent = state!.targetDelegate;
                 state.targetDelegate = (TDelegate?)Delegate.Remove(state.targetDelegate, handler);
                 if (oldEvent is object && state.targetDelegate is null)
                 {
@@ -184,3 +184,6 @@ namespace ABI.WinRT.Interop
         }
     }
 }
+
+// Restore in case this file is merged with others.
+#nullable restore

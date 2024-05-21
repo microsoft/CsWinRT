@@ -105,7 +105,7 @@ namespace ABI.Windows.Foundation
                 return null;
             }
 
-            var wrapper = new IReferenceArray<T>(ObjectReference<IUnknownVftbl>.FromAbi(ptr));
+            var wrapper = new IReferenceArray<T>(ObjectReference<IUnknownVftbl>.FromAbi(ptr, PIID));
             return wrapper.Value;
         }
 

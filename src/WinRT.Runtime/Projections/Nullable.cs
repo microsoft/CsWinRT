@@ -20,7 +20,7 @@ namespace ABI.Windows.Foundation
         public static IntPtr AbiToProjectionVftablePtr;
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification = "ABI types used with MakeGenericType are not reflected on.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode", Justification = "ABI types used with MakeGenericType are not reflected on.")]
 #endif
         static unsafe BoxedValueIReferenceImpl()
         {
@@ -30,7 +30,7 @@ namespace ABI.Windows.Foundation
                 get_Value_0 = GetValueDelegateForAbi(out IntPtr nativePtr)
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedValueIReferenceImpl<T>), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-            Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
+            *(global::WinRT.IInspectable.Vftbl*)nativeVftbl = AbiToProjectionVftable.IInspectableVftbl;
             nativeVftbl[6] = nativePtr;
 
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
@@ -64,7 +64,7 @@ namespace ABI.Windows.Foundation
             }
         }
 
-        private static unsafe int Do_Abi_get_Value_0_DateTimeOffset(void* thisPtr, DateTimeOffset* result)
+        private static unsafe int Do_Abi_get_Value_0_DateTimeOffset(void* thisPtr, global::ABI.System.DateTimeOffset* result)
         {
             if (result is null)
             {
@@ -75,7 +75,7 @@ namespace ABI.Windows.Foundation
             {
                 T unboxedValue = (T)global::WinRT.ComWrappersSupport.FindObject<object>(new IntPtr(thisPtr));
 
-                Unsafe.WriteUnaligned(result, DateTimeOffset.FromManaged(Unsafe.As<T, global::System.DateTimeOffset>(ref unboxedValue)));
+                Unsafe.WriteUnaligned(result, global::ABI.System.DateTimeOffset.FromManaged(Unsafe.As<T, global::System.DateTimeOffset>(ref unboxedValue)));
 
                 return 0;
             }
@@ -136,7 +136,7 @@ namespace ABI.Windows.Foundation
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(int)) ||
                 (typeof(T).IsEnum && Enum.GetUnderlyingType(typeof(T)) == typeof(uint)))
             {
-                Nullable_Delegates.GetValueDelegateAbi stub = new(Do_Abi_get_Value_0_Blittable);
+                global::ABI.System.Nullable_Delegates.GetValueDelegateAbi stub = new(Do_Abi_get_Value_0_Blittable);
 
                 nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
 
@@ -145,7 +145,7 @@ namespace ABI.Windows.Foundation
 
             if (typeof(T) == typeof(global::System.DateTimeOffset))
             {
-                Nullable_Delegates.GetValueDelegateAbiDateTimeOffset stub = new(Do_Abi_get_Value_0_DateTimeOffset);
+                global::ABI.System.Nullable_Delegates.GetValueDelegateAbiDateTimeOffset stub = new(Do_Abi_get_Value_0_DateTimeOffset);
 
                 nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
 
@@ -159,10 +159,10 @@ namespace ABI.Windows.Foundation
 #endif
             {
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                Nullable<T>.Vftbl.get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
+                global::ABI.System.Nullable<T>.Vftbl.get_Value_0_Type ??= Projections.GetAbiDelegateType(typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int));
 
                 Delegate stub = Delegate.CreateDelegate(
-                    Nullable<T>.Vftbl.get_Value_0_Type,
+                    global::ABI.System.Nullable<T>.Vftbl.get_Value_0_Type,
                     typeof(BoxedValueIReferenceImpl<T>).GetMethod(nameof(Do_Abi_get_Value_0), BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(Marshaler<T>.AbiType));
 
                 nativePtr = Marshal.GetFunctionPointerForDelegate(stub);
@@ -178,7 +178,7 @@ namespace ABI.Windows.Foundation
     internal static class BoxedValueIReferenceImpl<T, TAbi> where TAbi : unmanaged
     {
         public static IntPtr AbiToProjectionVftablePtr;
-        private readonly static Nullable_Delegates.GetValueDelegateAbi GetValue;
+        private readonly static global::ABI.System.Nullable_Delegates.GetValueDelegateAbi GetValue;
 
         static unsafe BoxedValueIReferenceImpl()
         {
@@ -261,7 +261,7 @@ namespace ABI.System
                 return null;
             }
             var vftblT = new Vftbl(ptr);
-            var wrapper = new Nullable<T>(ObjectReference<Vftbl>.FromAbi(ptr, vftblT));
+            var wrapper = new Nullable<T>(ObjectReference<Vftbl>.FromAbi(ptr, vftblT, PIID));
             return wrapper.Value;
         }
 
@@ -388,23 +388,13 @@ namespace ABI.System
 
         public static readonly Guid PIID = NullableType.GetIID<T>();
 
+#if !NET
         public static implicit operator Nullable<T>(IObjectReference obj) => (obj != null) ? new Nullable<T>(obj) : null;
         public static implicit operator Nullable<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable<T>(obj) : null;
+#endif
         protected readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
-#endif
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
-        public A As<A>() => _obj.AsType<A>();
         public Nullable(IObjectReference obj) : this(obj.As<Vftbl>(Vftbl.PIID)) { }
         public Nullable(ObjectReference<Vftbl> obj)
         {
@@ -541,7 +531,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -602,7 +592,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -680,7 +670,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -741,7 +731,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -802,7 +792,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -863,7 +853,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -924,7 +914,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -985,7 +975,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1046,7 +1036,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1107,7 +1097,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1168,7 +1158,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1229,7 +1219,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1290,7 +1280,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1351,7 +1341,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1412,7 +1402,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1490,7 +1480,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1568,7 +1558,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1629,7 +1619,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1707,7 +1697,7 @@ namespace ABI.System
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -2059,6 +2049,11 @@ namespace ABI.System
 
         public static Func<IInspectable, object> GetValueFactory(global::System.Type type)
         {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReference<T>' is not enabled.");
+            }
+
             return ComWrappersSupport.CreateReferenceCachingFactory(GetValueFactoryInternal(type));
         }
 
@@ -2189,21 +2184,28 @@ namespace ABI.System
     {
         private static readonly Guid PIID = ABI.System.Nullable<T>.PIID;
 
+        [SkipLocalsInit]
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
-            return new ComWrappers.ComInterfaceEntry[]
+            Span<ComWrappers.ComInterfaceEntry> entries = stackalloc ComWrappers.ComInterfaceEntry[2];
+            int count = 0;
+
+            if (FeatureSwitches.EnableIReferenceSupport)
             {
-                new ComWrappers.ComInterfaceEntry
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
+                };
+
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = PIID,
                     Vtable = ABI.Windows.Foundation.BoxedValueIReferenceImpl<T, TAbi>.AbiToProjectionVftablePtr
-                }
-            };
+                };
+            }
+
+            return entries.Slice(0, count).ToArray();
         }
 
         unsafe object IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable)
@@ -2242,20 +2244,27 @@ namespace ABI.System
 
         public static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces(ComWrappers.ComInterfaceEntry delegateInterface)
         {
-            return new ComWrappers.ComInterfaceEntry[]
+            Span<ComWrappers.ComInterfaceEntry> entries = stackalloc ComWrappers.ComInterfaceEntry[3];
+            int count = 0;
+
+            entries[count++] = delegateInterface;
+
+            if (FeatureSwitches.EnableIReferenceSupport)
             {
-                delegateInterface,
-                new ComWrappers.ComInterfaceEntry
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
+                };
+
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = PIID,
                     Vtable = ABI.System.Nullable_Delegate<T>.AbiToProjectionVftablePtr
-                }
-            };
+                };
+            }
+
+            return entries.Slice(0, count).ToArray();
         }
 
         public abstract ComWrappers.ComInterfaceEntry GetDelegateInterface();

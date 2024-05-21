@@ -53,10 +53,20 @@ namespace WinRT
             if (rcwType is null)
             {
                 rcwType = baseRcwTypeCache.GetOrAdd(runtimeClassName,
-                    (runtimeClassName) =>
+                    static (runtimeClassName) =>
                     {
-                        var resolvedBaseType = projectionTypeNameToBaseTypeNameMappings.Find((dict) => dict.ContainsKey(runtimeClassName))?[runtimeClassName];
-                        return resolvedBaseType is not null ? FindRcwTypeByNameCached(resolvedBaseType) : null;
+                        // Using for loop to avoid exception from list changing when using for each.
+                        // List is only added to and if any are added while looping, we can ignore those.
+                        int count = projectionTypeNameToBaseTypeNameMappings.Count;
+                        for (int i = 0; i < count; i++)
+                        {
+                            if (projectionTypeNameToBaseTypeNameMappings[i].ContainsKey(runtimeClassName))
+                            {
+                                return FindRcwTypeByNameCached(projectionTypeNameToBaseTypeNameMappings[i][runtimeClassName]);
+                            }
+                        }
+
+                        return null;
                     });
             }
 
@@ -71,7 +81,7 @@ namespace WinRT
         public static Type FindTypeByNameCached(string runtimeClassName)
         {
             return typeNameCache.GetOrAdd(runtimeClassName,
-                (runtimeClassName) =>
+                static (runtimeClassName) =>
                 {
                     Type implementationType = null;
                     try
@@ -85,6 +95,16 @@ namespace WinRT
                 });
         }
 
+        // Helper to get an exception if the input type is 'IReference<T>' when support for it is disabled
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Exception GetExceptionForUnsupportedIReferenceType(ReadOnlySpan<char> runtimeClassName)
+        {
+            return new NotSupportedException(
+                $"The requested runtime class name is '{runtimeClassName.ToString()}', which maps to an 'IReference<T>' projected type. " +
+                "This can only be used when support for 'IReference<T>' types is enabled in the CsWinRT configuration. To enable it, " +
+                "make sure that the 'CsWinRTEnableIReferenceSupport' MSBuild property is not being set to 'false' anywhere.");
+        }
+
         /// <summary>
         /// Parse the first full type name within the provided span.
         /// </summary>
@@ -96,7 +116,7 @@ namespace WinRT
             // It may be necessary to detect otherwise and return System.Object.
             if (runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan(), StringComparison.Ordinal))
             {
-                if (FeatureSwitches.IsDynamicObjectsSupportEnabled)
+                if (FeatureSwitches.EnableDynamicObjectsSupport)
                 {
                     return (typeof(System.Dynamic.ExpandoObject), 0);
                 }
@@ -106,28 +126,44 @@ namespace WinRT
                     "This can only be used when support for dynamic objects is enabled in the CsWinRT configuration. To enable it, " +
                     "make sure that the 'CsWinRTEnableDynamicObjectsSupport' MSBuild property is not being set to 'false' anywhere.");
             }
+
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
-            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<String>".AsSpan(), StringComparison.Ordinal) == 0)
+            if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<String>".AsSpan(), StringComparison.Ordinal) == 0)
             {
-                return (typeof(ABI.System.Nullable_string), 0);
-            }
-            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>".AsSpan(), StringComparison.Ordinal) == 0)
-            {
-                return (typeof(ABI.System.Nullable_Type), 0);
-            }
-            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.Foundation.HResult>".AsSpan(), StringComparison.Ordinal) == 0)
-            {
-                return (typeof(ABI.System.Nullable_Exception), 0);
-            }
-            else
-            {
-                var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
-                if (genericTypeName == null)
+                if (FeatureSwitches.EnableIReferenceSupport)
                 {
-                    return (null, -1);
+                    return (typeof(ABI.System.Nullable_string), 0);
                 }
-                return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
+
+                throw GetExceptionForUnsupportedIReferenceType(runtimeClassName);
             }
+            
+            if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>".AsSpan(), StringComparison.Ordinal) == 0)
+            {
+                if (FeatureSwitches.EnableIReferenceSupport)
+                {
+                    return (typeof(ABI.System.Nullable_Type), 0);
+                }
+
+                throw GetExceptionForUnsupportedIReferenceType(runtimeClassName);
+            }
+            
+            if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.Foundation.HResult>".AsSpan(), StringComparison.Ordinal) == 0)
+            {
+                if (FeatureSwitches.EnableIReferenceSupport)
+                {
+                    return (typeof(ABI.System.Nullable_Exception), 0);
+                }
+
+                throw GetExceptionForUnsupportedIReferenceType(runtimeClassName);
+            }
+
+            var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
+            if (genericTypeName == null)
+            {
+                return (null, -1);
+            }
+            return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
         }
 
         /// <summary>
@@ -141,8 +177,7 @@ namespace WinRT
         /// the full type closure of the application.
         /// </remarks>
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
-            Justification = "Any types which are trimmed are not used by user code and there is fallback logic to handle that.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Any types which are trimmed are not used by user code and there is fallback logic to handle that.")]
 #endif
         private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
         {
@@ -159,9 +194,12 @@ namespace WinRT
                     }
                 }
 
-                foreach (var assembly in projectionAssemblies)
+                // Using for loop to avoid exception from list changing when using for each.
+                // List is only added to and if any are added while looping, we can ignore those.
+                int count = projectionAssemblies.Count;
+                for (int i = 0; i < count; i++)
                 {
-                    Type type = assembly.GetType(runtimeClassName);
+                    Type type = projectionAssemblies[i].GetType(runtimeClassName);
                     if (type is not null)
                     {
                         resolvedType = type;
@@ -196,13 +234,19 @@ namespace WinRT
             return null;
 
 #if NET
+            [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "The 'MakeGenericType' call is guarded by explicit checks in our code.")]
             [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Calls to MakeGenericType are done with reference types.")]
 #endif
             static Type ResolveGenericType(Type resolvedType, Type[] genericTypes, string runtimeClassName)
             {
                 if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
                 {
-                    return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+                    if (FeatureSwitches.EnableIReferenceSupport)
+                    {
+                        return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+                    }
+
+                    throw GetExceptionForUnsupportedIReferenceType(runtimeClassName.AsSpan());
                 }
 
 #if NET
@@ -403,6 +447,29 @@ namespace WinRT
             Debug.Assert((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0);
             Debug.Assert(!type.IsGenericTypeDefinition);
 
+#if NET
+            var runtimeClassNameAttribute = type.GetCustomAttribute<WinRTRuntimeClassNameAttribute>();
+            if (runtimeClassNameAttribute is not null)
+            {
+                builder.Append(runtimeClassNameAttribute.RuntimeClassName);
+                return true;
+            }
+
+            var runtimeClassNameFromLookupTable = ComWrappersSupport.GetRuntimeClassNameForNonWinRTTypeFromLookupTable(type);
+            if (!string.IsNullOrEmpty(runtimeClassNameFromLookupTable))
+            {
+                builder.Append(runtimeClassNameFromLookupTable);
+                return true;
+            }
+
+            // AOT source generator should have generated the attribute with the class name.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return false;
+            }
+#endif
+
+
             var visitedTypes = visitedTypesInstance ??= new Stack<VisitedType>();
 
             // Manual helper to save binary size (no LINQ, no lambdas) and get better performance
@@ -433,29 +500,40 @@ namespace WinRT
             }
             else
             {
-                visitedTypes.Push(new VisitedType { Type = type });
-                Type interfaceTypeToUse = null;
-                foreach (var iface in type.GetInterfaces())
+#if NET
+                [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Updated binaries will have WinRTRuntimeClassNameAttribute which will be used instead.")]
+#endif
+                static bool TryAppendWinRTInterfaceNameForTypeJit(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
                 {
-                    if (Projections.IsTypeWindowsRuntimeType(iface))
+                    var visitedTypes = visitedTypesInstance;
+
+                    visitedTypes.Push(new VisitedType { Type = type });
+
+                    Type interfaceTypeToUse = null;
+                    foreach (var iface in type.GetInterfaces())
                     {
-                        if (interfaceTypeToUse is null || interfaceTypeToUse.IsAssignableFrom(iface))
+                        if (Projections.IsTypeWindowsRuntimeType(iface))
                         {
-                            interfaceTypeToUse = iface;
+                            if (interfaceTypeToUse is null || interfaceTypeToUse.IsAssignableFrom(iface))
+                            {
+                                interfaceTypeToUse = iface;
+                            }
                         }
                     }
+
+                    bool success = false;
+
+                    if (interfaceTypeToUse is not null)
+                    {
+                        success = TryAppendTypeName(interfaceTypeToUse, builder, flags);
+                    }
+
+                    visitedTypes.Pop();
+
+                    return success;
                 }
 
-                bool success = false;
-
-                if (interfaceTypeToUse is object)
-                {
-                    success = TryAppendTypeName(interfaceTypeToUse, builder, flags); 
-                }
-
-                visitedTypes.Pop();
-
-                return success;
+                return TryAppendWinRTInterfaceNameForTypeJit(type, builder, flags);
             }
         }
 

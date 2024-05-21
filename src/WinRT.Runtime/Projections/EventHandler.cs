@@ -111,6 +111,8 @@ namespace ABI.System
     {
         public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(global::System.EventHandler<T>));
 
+        public static Guid IID => PIID;
+
         /// <summary>
         /// The ABI delegate type for the fallback, non-AOT scenario.
         /// This is lazily-initialized from the fallback paths below.
@@ -321,15 +323,17 @@ namespace ABI.System
 #endif
             };
             var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler), sizeof(global::WinRT.Interop.IDelegateVftbl));
-            Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
+            *(global::WinRT.Interop.IDelegateVftbl*)nativeVftbl = AbiToProjectionVftable;
             AbiToProjectionVftablePtr = nativeVftbl;
+            ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.EventHandler), CreateRcw);
         }
 
 #if !NET
         public static global::System.Delegate AbiInvokeDelegate { get; }
 #endif
 
-        private static readonly Guid IID = new(0xc50898f6, 0xc536, 0x5f47, 0x85, 0x83, 0x8b, 0x2c, 0x24, 0x38, 0xa1, 0x3b);
+        public static Guid IID => global::WinRT.Interop.IID.IID_EventHandler;
+
 
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);
@@ -347,7 +351,13 @@ namespace ABI.System
 
         public static global::System.EventHandler CreateRcw(IntPtr ptr)
         {
-            return new global::System.EventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke);
+            return new global::System.EventHandler(new NativeDelegateWrapper(
+#if NET
+                ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID)).Invoke
+#else
+                ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke
+#endif
+                );
         }
 
 #if !NET
@@ -357,9 +367,19 @@ namespace ABI.System
         private sealed class NativeDelegateWrapper : IWinRTObject
 #endif
         {
+#if NET
+            private readonly ObjectReference<global::WinRT.Interop.IUnknownVftbl> _nativeDelegate;
+#else
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
+#endif
 
-            public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
+            public NativeDelegateWrapper(
+#if NET
+                ObjectReference<global::WinRT.Interop.IUnknownVftbl> nativeDelegate
+#else
+                ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate
+#endif
+                )
             {
                 _nativeDelegate = nativeDelegate;
             }
@@ -390,7 +410,7 @@ namespace ABI.System
 #if !NET
                 var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
 #else
-                var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(_nativeDelegate.Vftbl.Invoke);
+                var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(*(void***)ThisPtr)[3];
 #endif
                 ObjectReferenceValue __sender = default;
                 ObjectReferenceValue __args = default;
@@ -456,26 +476,34 @@ namespace ABI.System
         }
 
 #if NET
+        [SkipLocalsInit]
         internal static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
-            return new ComWrappers.ComInterfaceEntry[]
+            Span<ComWrappers.ComInterfaceEntry> entries = stackalloc ComWrappers.ComInterfaceEntry[3];
+            int count = 0;
+
+            entries[count++] = new ComWrappers.ComInterfaceEntry
             {
-                new ComWrappers.ComInterfaceEntry
-                {
-                    IID = IID,
-                    Vtable = AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
+                IID = IID,
+                Vtable = AbiToProjectionVftablePtr
+            };
+
+            if (FeatureSwitches.EnableIReferenceSupport)
+            {
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
-                },
-                new ComWrappers.ComInterfaceEntry
+                };
+
+                entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = Nullable_EventHandler.IID,
                     Vtable = Nullable_EventHandler.AbiToProjectionVftablePtr
-                }
-            };
+                };
+            }
+
+            return entries.Slice(0, count).ToArray();
         }
 #endif
     }

@@ -10,6 +10,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+#nullable enable
+
 namespace WinRT.SourceGenerator
 {
 

@@ -79,7 +79,7 @@ namespace ABI.System.Collections.Specialized
 
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 2);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -129,7 +129,7 @@ namespace ABI.System.Collections.Specialized
                 }
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_INotifyCollectionChanged);
 
         private static global::ABI.WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> _CollectionChanged(IWinRTObject _this)
         {

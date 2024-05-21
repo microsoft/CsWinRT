@@ -111,7 +111,7 @@ namespace ABI.System.Windows.Input
 
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 4);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -201,7 +201,7 @@ namespace ABI.System.Windows.Input
                 }
             }
         }
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_ICommand);
 
         private static global::ABI.WinRT.Interop.EventHandlerEventSource _CanExecuteChanged(IWinRTObject _this)
         {

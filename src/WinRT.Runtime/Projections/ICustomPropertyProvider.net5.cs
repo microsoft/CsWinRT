@@ -285,7 +285,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedCustomPropertyProviderVftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 4);
-            Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+            *(ManagedCustomPropertyProviderVftbl*)nativeVftbl = AbiToProjectionVftable;
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
 

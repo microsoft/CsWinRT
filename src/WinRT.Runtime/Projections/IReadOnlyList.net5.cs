@@ -691,7 +691,7 @@ namespace ABI.System.Collections.Generic
             {
                 return null;
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr);
+            return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
 
         public static Guid PIID = IReadOnlyListMethods<T>.PIID;

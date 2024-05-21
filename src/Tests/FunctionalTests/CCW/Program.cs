@@ -5,6 +5,8 @@ using WinRT;
 using System.Collections.Generic;
 using System.Collections;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
+using System.Runtime.InteropServices;
 
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
@@ -33,6 +35,11 @@ if (uriHandlerCCW == null)
     return 103;
 }
 
+if (!CheckRuntimeClassName(ccw, "TestComponentCSharp.IProperties1"))
+{
+    return 119;
+}
+
 // Ensure that interfaces on the vtable / object don't get trimmed even if unused.
 Guid IID_IWarning1 = new("4DB3FA26-4BB1-50EA-8362-98F49651E516");
 Guid IID_IWarningClassOverrides = new("E5635CE4-D483-55AA-86D5-080DC07F0A09");
@@ -56,6 +63,12 @@ ccw.TryAs<IUnknownVftbl>(IID_IArtist, out var artistCCW);
 if (artistCCW == null)
 {
     return 106;
+}
+
+// Testing for overrided name using attribute specified by author on type.
+if (!CheckRuntimeClassName(ccw, "ManagedWarningClass"))
+{
+    return 120;
 }
 
 var managedWarningClass2 = new ManagedWarningClass2();
@@ -88,6 +101,11 @@ if (properties2CCW == null)
     return 110;
 }
 
+if (!CheckRuntimeClassName(ccw, "TestComponentCSharp.IProperties2"))
+{
+    return 121;
+}
+
 Guid IID_IlistInt = new("B939AF5B-B45D-5489-9149-61442C1905FE");
 Guid IID_IEnumerable = new("036D2C08-DF29-41AF-8AA2-D774BE62BA6F");
 var intList = new ManagedIntList();
@@ -102,6 +120,11 @@ ccw.TryAs<IUnknownVftbl>(IID_IEnumerable, out var enumerableCCW);
 if (enumerableCCW == null)
 {
     return 112;
+}
+
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<Int32>"))
+{
+    return 122;
 }
 
 Guid IID_IEnumerableDerived = new ("A70EC662-9975-51BB-9A28-82A876E01177");
@@ -127,6 +150,11 @@ if (enumerableRequiredTwo == null)
     return 115;
 }
 
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<TestComponent.Derived>"))
+{
+    return 123;
+}
+
 var nestedClass = TestClass2.GetInstance();
 ccw = MarshalInspectable<object>.CreateMarshaler(nestedClass);
 ccw.TryAs<IUnknownVftbl>(IID_IProperties2, out properties2CCW);
@@ -146,6 +174,19 @@ if (properties2CCW == null)
 var managedWarningClassList = new List<ManagedWarningClass>();
 instance.BindableIterableProperty = managedWarningClassList;
 
+var customCommand = new CustomCommand() as ICommand;
+ccw = MarshalInspectable<object>.CreateMarshaler(customCommand);
+ccw.TryAs<IUnknownVftbl>(ABI.System.Windows.Input.ICommandMethods.IID, out var commandCCW);
+if (commandCCW == null)
+{
+    return 118;
+}
+
+if (!CheckRuntimeClassName(ccw, "Microsoft.UI.Xaml.Input.ICommand"))
+{
+    return 124;
+}
+
 // These scenarios aren't supported today on AOT, but testing to ensure they
 // compile without issues.  They should still work fine outside of AOT.
 try
@@ -162,6 +203,40 @@ catch(Exception)
 }
 
 return 100;
+
+
+[DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
+static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
+
+[DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
+static extern int WindowsDeleteString(IntPtr hstring);
+
+unsafe bool CheckRuntimeClassName(IObjectReference objRef, string expected)
+{
+    objRef.TryAs<IInspectable.Vftbl>(IID.IID_IInspectable, out var inspectable);
+    if (inspectable == null)
+    {
+        return false;
+    }
+
+    IntPtr __retval = default;
+    try
+    {
+        var hr = inspectable.Vftbl.GetRuntimeClassName(inspectable.ThisPtr, &__retval);
+        if (hr != 0)
+        {
+            return false;
+        }
+
+        uint length;
+        char* buffer = WindowsGetStringRawBuffer(__retval, &length);
+        return expected == new string(buffer, 0, (int)length);
+    }
+    finally
+    {
+        WindowsDeleteString(__retval);
+    }
+}
 
 sealed partial class ManagedProperties : IProperties1, IUriHandler
 {
@@ -182,6 +257,7 @@ sealed partial class ManagedProperties : IProperties1, IUriHandler
     void IUriHandler.AddUriHandler(ProvideUri provideUri) => AddUriHandler(provideUri);
 }
 
+[WinRTRuntimeClassName("ManagedWarningClass")]
 sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
 {
     public int Test => 4;
@@ -392,5 +468,20 @@ partial class TestClass2
     internal static IProperties2 GetGenericInstance()
     {
         return new GenericNestedTestClass<int>();
+    }
+}
+
+sealed partial class CustomCommand : ICommand
+{
+    public event EventHandler CanExecuteChanged;
+
+    public bool CanExecute(object parameter)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Execute(object parameter)
+    {
+        throw new NotImplementedException();
     }
 }

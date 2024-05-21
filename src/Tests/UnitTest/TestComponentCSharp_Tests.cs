@@ -459,6 +459,52 @@ namespace UnitTest
             Assert.True(array.Length == 0);
         }
 
+#if NET
+        [Fact]
+        public void TestTryGetDataUnsafe()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(0, buf, 0, 3);
+
+            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(buf, out IntPtr dataPtr));
+            Assert.True(dataPtr != IntPtr.Zero);
+
+            unsafe
+            {
+                Span<byte> buffSpan = new Span<byte>((byte*)dataPtr, (int)buf.Length);
+
+                byte[] arr2 = buffSpan.ToArray();
+                Assert.True(arr.SequenceEqual(arr2));
+            }
+
+            // Ensure buf doesn't get collected while we use the data pointer
+            GC.KeepAlive(buf);
+        }
+
+        [Fact]
+        public void TestBufferTryGetArray()
+        {
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = arr.AsBuffer();
+
+            Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.Equal(arr, array.Array);
+        }
+
+        [Fact]
+        public void TestBufferTryGetArraySubset()
+        {
+            var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+            var buffer = arr.AsBuffer(1, 2);
+
+            Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.Equal(arr, array.Array);
+            Assert.Equal(1, array.Offset);
+            Assert.Equal(2, array.Count);
+        }
+#endif
+
         [Fact]
         public void TestTypePropertyWithSystemType()
         {
@@ -1009,6 +1055,20 @@ namespace UnitTest
             var cls3 = new Class(42, "foo");
             Assert.Equal(42, cls3.IntProperty);
             Assert.Equal("foo", cls3.StringProperty);
+        }
+
+        [Fact]
+        public void TestFactoriesWithExplicitlyImplementedIUnknown()
+        {
+            var cls1 = new ClassWithExplicitIUnknown();
+            Assert.Equal(0, cls1.Value);
+            cls1.Value = 42;
+            Assert.Equal(42, cls1.Value);
+
+            var cls2 = new ClassWithExplicitIUnknown(42);
+            Assert.Equal(42, cls2.Value);
+            cls2.Value = 22;
+            Assert.Equal(22, cls2.Value);
         }
 
         [Fact]
@@ -1816,6 +1876,27 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestAsyncActionWait()
+        {
+            var asyncAction = TestObject.DoitAsync();
+            TestObject.CompleteAsync();
+            asyncAction.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsync();
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsync();
+            asyncAction.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncAction.Status);
+        }
+
+        [Fact]
         public void TestAsyncActionRoundTrip()
         {
             var task = InvokeDoitAsync().AsAsyncAction().AsTask();
@@ -1882,6 +1963,27 @@ namespace UnitTest
             Assert.Equal(TaskStatus.Canceled, task.Status);
         }
 
+        [Fact]
+        public void TestAsyncActionWithProgressWait()
+        {
+            var asyncAction = TestObject.DoitAsyncWithProgress();
+            TestObject.CompleteAsync();
+            asyncAction.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsyncWithProgress();
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsyncWithProgress();
+            asyncAction.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncAction.Status);
+        }
+
         async Task<int> InvokeAddAsync(int lhs, int rhs)
         {
             return await TestObject.AddAsync(lhs, rhs);
@@ -1911,6 +2013,27 @@ namespace UnitTest
             e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestAsyncOperationWait()
+        {
+            var asyncOperation = TestObject.AddAsync(42, 8);
+            TestObject.CompleteAsync();
+            asyncOperation.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsync(42, 8);
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsync(42, 8);
+            asyncOperation.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncOperation.Status);
         }
 
 
@@ -1981,6 +2104,27 @@ namespace UnitTest
             e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestAsyncOperationWithProgressWait()
+        {
+            var asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
+            TestObject.CompleteAsync();
+            asyncOperation.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
+            asyncOperation.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncOperation.Status);
         }
 
         [Fact]
@@ -2284,6 +2428,12 @@ namespace UnitTest
             Assert.Equal(vector3.Y, TestObject.Vector3Property.Y);
             Assert.Equal(vector3.Z, TestObject.Vector3Property.Z);
             Assert.True(TestObject.Vector3Property == vector3);
+
+            TestObject.Vector3NullableProperty = Vector3.Zero;
+            Assert.Equal(0, TestObject.Vector3Property.X);
+            Assert.Equal(0, TestObject.Vector3Property.Y);
+            Assert.Equal(0, TestObject.Vector3Property.Z);
+            Assert.Equal(Vector3.Zero, TestObject.Vector3NullableProperty);
         }
 
         [Fact]
@@ -2474,7 +2624,6 @@ namespace UnitTest
         public void TypeInfoGenerics()
         {
             var typeName = Class.GetTypeNameForType(typeof(IList<int>));
-
             Assert.Equal("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
         }
 

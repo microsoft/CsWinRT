@@ -152,6 +152,7 @@ namespace winrt::TestComponentCSharp::implementation
         void BoolPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseBoolChanged();
         void CallForBool(TestComponentCSharp::ProvideBool const& provideBool);
+        void InvokeBoolChanged(winrt::Windows::Foundation::EventHandler<bool> const& boolChanged);
         TestComponentCSharp::EnumValue EnumProperty();
         void EnumProperty(TestComponentCSharp::EnumValue const& value);
         winrt::event_token EnumPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::EnumValue> const& handler);
@@ -273,6 +274,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector() noexcept;
+        Windows::Foundation::Collections::IVector<int32_t> GetIntVector2();
+        Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedBlittableStruct> GetBlittableStructVector2();
+        Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedNonBlittableStruct> GetNonBlittableStructVector2();
 
         Windows::Foundation::Collections::IMap<int32_t, int32_t> GetIntToIntDictionary();
         Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedBlittableStruct> GetStringToBlittableDictionary();
@@ -351,6 +355,8 @@ namespace winrt::TestComponentCSharp::implementation
         void Vector2Property(Windows::Foundation::Numerics::float2 const& value);
         Windows::Foundation::Numerics::float3 Vector3Property();
         void Vector3Property(Windows::Foundation::Numerics::float3 const& value);
+        Windows::Foundation::IReference<Windows::Foundation::Numerics::float3> Vector3NullableProperty();
+        void Vector3NullableProperty(Windows::Foundation::IReference<Windows::Foundation::Numerics::float3> const& value);
         Windows::Foundation::Numerics::float4 Vector4Property();
         void Vector4Property(Windows::Foundation::Numerics::float4 const& value);
         Windows::Foundation::IReference<Windows::Foundation::Point> GetPointReference();
@@ -386,12 +392,14 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::Foundation::IInspectable EmptyString();
         static Windows::Foundation::IInspectable BoxedDelegate();
         static Windows::Foundation::IInspectable BoxedEnum();
+        static Windows::Foundation::IInspectable BoxedEventHandler();
 
         hstring Catch(hstring const& params, hstring& locks);
 
         static IProperties1 NativeProperties1();
         static Windows::Foundation::IInspectable ServiceProvider();
         static winrt::Windows::Foundation::IInspectable ComInterop();
+        static winrt::Windows::Foundation::Collections::IPropertySet PropertySet();
 
         // IStringable
         hstring ToString();

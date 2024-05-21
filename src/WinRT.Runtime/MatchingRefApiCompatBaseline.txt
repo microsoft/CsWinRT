@@ -235,4 +235,37 @@ CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.Unconditional
 CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.ComponentModel.PropertyChangedEventHandler' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs' in the implementation but not the reference.
-Total Issues: 237
+TypesMustExist : Type 'WinRT.WinRTRuntimeClassNameAttribute' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterTypeRuntimeClassNameLookup(System.Func<System.Type, System.String>)' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.FindCustomHelperTypeMapping(System.Type, System.Boolean)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.Object>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.Object>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ObjectReference<T>.Attach(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ComWrappersSupport.GetObjectReferenceForInterface<T>(System.IntPtr)' in the implementation but not the reference.
+CannotChangeAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' on 'ABI.System.Type.FromAbi(ABI.System.Type)' changed from '[UnconditionalSuppressMessageAttribute("Trimming", "IL2057", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the implementation to '[UnconditionalSuppressMessageAttribute("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.FindCustomPublicTypeForAbiType(System.Type)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.IObjectReference.As<T>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IObjectReference.As<T>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IObjectReference.As<T>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.ObjectReference<T>.Attach(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReference<T>.Attach(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IObjectReference.TryAs<T>(WinRT.ObjectReference<T>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IObjectReference.TryAs<T>(WinRT.ObjectReference<T>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.IObjectReference.TryAs<T>(WinRT.ObjectReference<T>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
+MembersMustExist : Member 'protected WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.WinRT.Interop.IActivationFactory._obj' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IInspectable..ctor(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IInspectable..ctor(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
+MembersMustExist : Member 'public WinRT.IObjectReference WinRT.ComWrappersSupport.GetObjectReferenceForInterface(System.IntPtr, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersHelper.Init(System.Boolean, System.Object, System.IntPtr, System.IntPtr, System.Guid, WinRT.IObjectReference)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.EventHandler<T>.IID.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.IID.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.ComponentModel.PropertyChangedEventHandler.IID.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid System.Guid ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.IID' does not exist in the reference but it does exist in the implementation.
+Total Issues: 269

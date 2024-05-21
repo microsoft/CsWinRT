@@ -49,6 +49,7 @@ namespace ABI.WinRT.Interop
 
         public static IntPtr AbiToProjectionVftablePtr => IActivationFactory.Vftbl.AbiToProjectionVftablePtr;
 
+#if !NET
         /// <summary>
         /// Activates an instance from a given activation factory <see cref="IObjectReference"/> instance.
         /// </summary>
@@ -70,13 +71,45 @@ namespace ABI.WinRT.Interop
 
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr);
+                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, global::WinRT.Interop.IID.IID_IInspectable, requireQI: false);
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(instancePtr);
             }
         }
+#else
+        /// <summary>
+        /// Activates an instance from a given activation factory <see cref="IObjectReference"/> instance with the result
+        /// pointing to the interface for the given iid.
+        /// </summary>
+        /// <param name="objectReference">The input activation factory <see cref="IObjectReference"/> instance to use.</param>
+        /// <param name="iid">The iid for the interface which the resulting <see cref="IObjectReference"/> will be for.</param>
+        /// <returns>The resulting <see cref="IObjectReference"/> instance created from <paramref name="objectReference"/> and QI to the given <paramref name="iid"/>.</returns>
+        /// <remarks>
+        /// <para>This method assumes <paramref name="objectReference"/> is wrapping an <c>IActivationFactory</c> instance (with no validation).</para>
+        /// <para>This method is only meant to be used by the generated projections, and not by consumers of CsWinRT directly.</para>
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static unsafe IObjectReference ActivateInstanceUnsafe(IObjectReference objectReference, Guid iid)
+        {
+            IntPtr thisPtr = objectReference.ThisPtr;
+            IntPtr instancePtr;
+
+            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[6](thisPtr, &instancePtr));
+
+            GC.KeepAlive(objectReference);
+
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(instancePtr, iid, requireQI: true);
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
+            }
+        }
+#endif
     }
 
 #if !NET
@@ -142,29 +175,25 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
+#if !NET
         public static implicit operator IActivationFactory(IObjectReference obj) => (obj != null) ? new IActivationFactory(obj) : null;
+#endif
+#if NET
+        protected readonly ObjectReference<IUnknownVftbl> _obj;
+#else
         protected readonly ObjectReference<Vftbl> _obj;
+#endif
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
-#endif
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-
-#if NET
-        [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
-        public A As<A>() => _obj.AsType<A>();
-        public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        internal IActivationFactory(ObjectReference<Vftbl> obj)
+        public IActivationFactory(IObjectReference obj)
         {
-            _obj = obj;
+#if NET
+            _obj = obj.As<IUnknownVftbl>(IID.IID_IActivationFactory);
+#else
+            _obj = obj.As<Vftbl>(IID.IID_IActivationFactory);
+#endif
         }
 
         public unsafe IntPtr ActivateInstance()
@@ -172,7 +201,12 @@ namespace ABI.WinRT.Interop
             IntPtr __retval = default;
             try
             {
+#if NET
+                IntPtr thisPtr = ThisPtr;
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[6])(thisPtr, &__retval));
+#else
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ActivateInstance_0(ThisPtr, &__retval));
+#endif
                 return __retval;
             }
             finally

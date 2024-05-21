@@ -30,7 +30,9 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("IReferenceTrackerTarget", "64BD43F8-BFEE-4EC4-B7EB-2935158DAE21", false),
     ("IActivationFactory", "00000035-0000-0000-C000-000000000046", true),
     ("IAgileObject", "94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90", false),
-    ("IMarshal", "00000003-0000-0000-C000-000000000046", false),
+    ("IMarshal", "00000003-0000-0000-C000-000000000046", true),
+    ("IBuffer", "905A0FE0-BC53-11DF-8C49-001E4FC686DA", true),
+    ("IBufferByteAccess", "905A0FEF-BC53-11DF-8C49-001E4FC686DA", true),
     ("IContextCallback", "000001DA-0000-0000-C000-000000000046", false),
     ("ICallbackWithNoReentrancyToApplicationSTA", "0A299774-3E4E-FC42-1D9D-72CEE105CA57", false),
     ("IErrorInfo", "1CF2B120-547D-101B-8E65-08002B2BD119", false),
@@ -41,6 +43,18 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("WUX_INotifyCollectionChangedEventArgsFactory", "b30c3e3a-df8d-44a5-9a38-7ac0d08ce63d", false),
     ("MUX_INotifyCollectionChangedEventArgs", "DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F", false),
     ("WUX_INotifyCollectionChangedEventArgs", "4CF68D33-E3F2-4964-B85E-945B4F7E2F21", false),
+    ("MUX_PropertyChangedEventArgsRuntimeClassFactory", "7C0C27A8-0B41-5070-B160-FC9AE960A36C", false),
+    ("WUX_PropertyChangedEventArgsRuntimeClassFactory", "6DCC9C03-E0C7-4EEE-8EA9-37E3406EEB1C", false),
+    ("DataErrorsChangedEventArgsRuntimeClassFactory", "62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5", false),
+    ("UriRuntimeClassFactory", "44A9796F-723E-4FDF-A218-033E75B0C084", false),
+    ("INotifyDataErrorInfo", "0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA", false),
+    ("INotifyPropertyChanged", "90B17601-B065-586E-83D9-9ADC3A695284", false),
+    ("INotifyCollectionChanged", "530155E1-28A5-5693-87CE-30724D95A06D", false),
+    ("ICommand", "E5AF3542-CA67-4081-995B-709DD13792DF", false),
+    ("IGlobalInterfaceTable", "00000146-0000-0000-C000-000000000046", false),
+    ("PropertyChangedEventHandler", "E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D", false),
+    ("NotifyCollectionChangedEventHandler", "8B0909DC-2005-5D93-BF8A-725F017BAA8D", false),
+    ("EventHandler", "c50898f6-c536-5f47-8583-8b2c2438a13b", false)
 };
 
 for (int i = 0; i < entries.Length; i++)

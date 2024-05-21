@@ -44,6 +44,13 @@ namespace System.Threading.Tasks
         {
         }
 
+        internal TaskToAsyncOperationWithProgressAdapter(bool isCanceled)
+            : base(default(TResult))
+        {
+            if (isCanceled)
+                DangerousSetCanceled();
+        }
+
         public TResult GetResults()
         {
             return GetResultsInternal();

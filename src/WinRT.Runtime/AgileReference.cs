@@ -17,17 +17,29 @@ namespace WinRT
     {
         private readonly static Guid CLSID_StdGlobalInterfaceTable = new(0x00000323, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
         private static readonly object _lock = new();
-        private static volatile IGlobalInterfaceTable _git;
+#if NET
+        private static volatile ABI.WinRT.Interop.IGlobalInterfaceTable _git;
+#else
+        private static volatile global::WinRT.Interop.IGlobalInterfaceTable _git;
+#endif
 
         // Simple singleton lazy-initialization scheme (and saving the Lazy<T> size)
-        internal static IGlobalInterfaceTable Git
+#if NET
+        internal static ABI.WinRT.Interop.IGlobalInterfaceTable Git
+#else
+        internal static global::WinRT.Interop.IGlobalInterfaceTable Git
+#endif
         {
             get
             {
                 return _git ?? Git_Slow();
 
                 [MethodImpl(MethodImplOptions.NoInlining)]
-                static IGlobalInterfaceTable Git_Slow()
+#if NET
+                static ABI.WinRT.Interop.IGlobalInterfaceTable Git_Slow()
+#else
+                static global::WinRT.Interop.IGlobalInterfaceTable Git_Slow()
+#endif
                 {
                     lock (_lock)
                     {
@@ -67,7 +79,7 @@ namespace WinRT
                     &iid,
                     thisPtr,
                     &agileReference));
-                _agileReference = ObjectReference<IUnknownVftbl>.Attach(ref agileReference);
+                _agileReference = ObjectReference<IUnknownVftbl>.Attach(ref agileReference, IID.IID_IUnknown);
             }
             catch (TypeLoadException)
             {
@@ -75,7 +87,7 @@ namespace WinRT
             }
             finally
             {
-                MarshalInterface<IAgileReference>.DisposeAbi(agileReference);
+                MarshalInterface<global::WinRT.Interop.IAgileReference>.DisposeAbi(agileReference);
             }
         }
 
@@ -90,23 +102,31 @@ namespace WinRT
             {
                 if (_cookie != IntPtr.Zero)
                 {
+#if NET
+                    Git.TryRevokeInterfaceFromGlobal(_cookie);
+#else
                     try
                     {
                         Git.RevokeInterfaceFromGlobal(_cookie);
                     }
-                    catch(ArgumentException)
+                    catch (ArgumentException)
                     {
                         // Revoking cookie from GIT table may fail if apartment is gone.
                     }
+#endif
                 }
                 disposed = true;
             }
         }
 
-        private static unsafe IGlobalInterfaceTable GetGitTable()
+#if NET
+        private static unsafe ABI.WinRT.Interop.IGlobalInterfaceTable GetGitTable()
+#else
+        private static unsafe global::WinRT.Interop.IGlobalInterfaceTable GetGitTable()
+#endif
         {
             Guid gitClsid = CLSID_StdGlobalInterfaceTable;
-            Guid gitIid = ABI.WinRT.Interop.IGlobalInterfaceTable.IID;
+            Guid gitIid = IID.IID_IGlobalInterfaceTable;
             IntPtr gitPtr = default;
 
             try
@@ -118,11 +138,15 @@ namespace WinRT
                     &gitIid,
                     &gitPtr));
 
+#if NET
+                return new ABI.WinRT.Interop.IGlobalInterfaceTable(gitPtr);
+#else
                 return new ABI.WinRT.Interop.IGlobalInterfaceTable(ABI.WinRT.Interop.IGlobalInterfaceTable.FromAbi(gitPtr));
+#endif
             }
             finally
             {
-                MarshalInterface<IGlobalInterfaceTable>.DisposeAbi(gitPtr);
+                Marshal.Release(gitPtr);
             }
         }
 

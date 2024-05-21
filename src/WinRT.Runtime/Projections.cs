@@ -16,7 +16,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Input;
 using Windows.Foundation.Collections;
-using WinRT.Interop;
 
 namespace WinRT
 {
@@ -77,7 +76,7 @@ namespace WinRT
                 RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventHandler), typeof(ABI.System.ComponentModel.PropertyChangedEventHandler), "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler");
                 RegisterCustomAbiTypeMappingNoLock(typeof(INotifyDataErrorInfo), typeof(ABI.System.ComponentModel.INotifyDataErrorInfo), "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo");    
                 RegisterCustomAbiTypeMappingNoLock(typeof(INotifyPropertyChanged), typeof(ABI.System.ComponentModel.INotifyPropertyChanged), "Microsoft.UI.Xaml.Data.INotifyPropertyChanged");
-                RegisterCustomAbiTypeMappingNoLock(typeof(ICommand), typeof(ABI.System.Windows.Input.ICommand), "Microsoft.UI.Xaml.Interop.ICommand");
+                RegisterCustomAbiTypeMappingNoLock(typeof(ICommand), typeof(ABI.System.Windows.Input.ICommand), "Microsoft.UI.Xaml.Input.ICommand");
                 RegisterCustomAbiTypeMappingNoLock(typeof(IServiceProvider), typeof(ABI.System.IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider");
                 RegisterCustomAbiTypeMappingNoLock(typeof(IEnumerable), typeof(ABI.System.Collections.IEnumerable), "Microsoft.UI.Xaml.Interop.IBindableIterable");
                 RegisterCustomAbiTypeMappingNoLock(typeof(IList), typeof(ABI.System.Collections.IList), "Microsoft.UI.Xaml.Interop.IBindableVector");
@@ -248,6 +247,8 @@ namespace WinRT
         }
 
 #if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "The type arguments are guaranteed to be valid for the generic ABI types.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2068", Justification = "All types added to 'CustomTypeToHelperTypeMappings' have metadata explicitly preserved.")]
         [return: DynamicallyAccessedMembers(
             DynamicallyAccessedMemberTypes.PublicMethods |
             DynamicallyAccessedMemberTypes.PublicFields)]
@@ -293,6 +294,9 @@ namespace WinRT
             }
         }
 
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "The type arguments are guaranteed to be valid for the generic ABI types.")]
+#endif
         public static Type FindCustomPublicTypeForAbiType(Type abiType)
         {
             rwlock.EnterReadLock();
@@ -402,7 +406,7 @@ namespace WinRT
 
         // Use TryGetCompatibleWindowsRuntimeTypesForVariantType instead.
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
 #endif
         public static bool TryGetCompatibleWindowsRuntimeTypeForVariantType(Type type, out Type compatibleType)
         {
@@ -513,8 +517,8 @@ namespace WinRT
             [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
 #if NET
-            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
-            [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
+            [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
+            [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "Calls to 'MakeGenericType' are always done with compatible types.")]
 #endif
             void GetAllPossibleTypeCombinationsCore(List<Type> accum, Stack<Type> stack, IEnumerable<Type>[] compatibleTypes, int index)
             {
@@ -606,7 +610,7 @@ namespace WinRT
         private readonly static ConcurrentDictionary<Type, Type> DefaultInterfaceTypeCache = new();
 
 #if NET
-        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070",
+        [UnconditionalSuppressMessage("Trimming", "IL2070",
             Justification =
             "The path using reflection to retrieve the default interface property is only used with legacy projections. " +
             "Applications which make use of trimming will make use of updated projections and won't hit that code path.")]
@@ -655,43 +659,6 @@ namespace WinRT
                 throw new ArgumentException($"The provided type '{runtimeClass.FullName}' is not a WinRT projected runtime class.", nameof(runtimeClass));
             }
             return defaultInterface;
-        }
-
-        internal static bool TryGetMarshalerTypeForProjectedRuntimeClass<T>(IObjectReference objectReference, out Type type)
-        {
-            Type projectedType = typeof(T);
-            if (projectedType == typeof(object))
-            {
-                if (objectReference.TryAs<IInspectable.Vftbl>(IID.IID_IInspectable, out var inspectablePtr) == 0)
-                {
-                    rwlock.EnterReadLock();
-                    try
-                    {
-                        IInspectable inspectable = inspectablePtr;
-                        string runtimeClassName = inspectable.GetRuntimeClassName(true);
-                        if (runtimeClassName is object)
-                        {
-                            if (ProjectedRuntimeClassNames.Contains(runtimeClassName))
-                            {
-                                type = CustomTypeToHelperTypeMappings[CustomAbiTypeNameToTypeMappings[runtimeClassName]];
-                                return true;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        inspectablePtr.Dispose();
-                        rwlock.ExitReadLock();
-                    }
-                }
-            }
-            else
-            {
-                type = FindCustomHelperTypeMapping(projectedType, true);
-                return type != null;
-            }
-            type = null;
-            return false;
         }
 
 #if NET

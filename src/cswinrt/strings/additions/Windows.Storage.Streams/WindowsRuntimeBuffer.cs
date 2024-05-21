@@ -81,7 +81,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             {
                 IntPtr proxyPtr = default;
                 int hr = RoGetBufferMarshaler(&proxyPtr);
-                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.Com.IMarshal.Vftbl>.Attach(ref proxyPtr));
+                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.Com.IMarshal.Vftbl>.Attach(ref proxyPtr, global::WinRT.Interop.IID.IID_IMarshal));
                 t_winRtMarshalProxy = proxy;
 
                 if (hr != 0)
@@ -324,17 +324,17 @@ namespace ABI.System.Runtime.InteropServices.WindowsRuntime
             {
                 new ComWrappers.ComInterfaceEntry
                 {
-                    IID = typeof(global::Windows.Storage.Streams.IBuffer).GUID,
+                    IID = global::WinRT.Interop.IID.IID_IBuffer,
                     Vtable = global::ABI.Windows.Storage.Streams.IBuffer.AbiToProjectionVftablePtr
                 },
                 new ComWrappers.ComInterfaceEntry
                 {
-                    IID = typeof(global::Windows.Storage.Streams.IBufferByteAccess).GUID,
+                    IID = global::WinRT.Interop.IID.IID_IBufferByteAccess,
                     Vtable = global::ABI.Windows.Storage.Streams.IBufferByteAccess.Vftbl.AbiToProjectionVftablePtr
                 },
                 new ComWrappers.ComInterfaceEntry
                 {
-                    IID = typeof(global::Com.IMarshal).GUID,
+                    IID = global::WinRT.Interop.IID.IID_IMarshal,
                     Vtable = global::ABI.Com.IMarshal.Vftbl.AbiToProjectionVftablePtr
                 }
             };

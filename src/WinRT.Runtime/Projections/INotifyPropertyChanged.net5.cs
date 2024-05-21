@@ -51,6 +51,7 @@ namespace ABI.System.ComponentModel
     [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "90B17601-B065-586E-83D9-9ADC3A695284")]
     internal unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
+#pragma warning disable CA2257
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
         [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "90B17601-B065-586E-83D9-9ADC3A695284")]
@@ -79,7 +80,7 @@ namespace ABI.System.ComponentModel
 
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 2);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
             private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>> _PropertyChanged_TokenTablesLazy = null;
@@ -129,7 +130,7 @@ namespace ABI.System.ComponentModel
                 }
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_INotifyPropertyChanged);
 
         private static global::ABI.WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> _PropertyChanged(IWinRTObject _this)
         {

@@ -200,7 +200,7 @@ namespace Generator
             }
 
             // the return type can be covariant with the interface method's return type (i.e. a sub-type)
-            if (SymEq(m.ReturnType, interfaceMethod.ReturnType) && !m.ReturnType.AllInterfaces.Contains(interfaceMethod.ReturnType))
+            if (SymEq(m.ReturnType, interfaceMethod.ReturnType) && !m.ReturnType.AllInterfaces.Contains(interfaceMethod.ReturnType, SymbolEqualityComparer.Default))
             {
                 return false;
             }
@@ -217,7 +217,7 @@ namespace Generator
                 return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName;
             }
 
-            HashSet<ISymbol> classMethods = new();
+            HashSet<ISymbol> classMethods = new(SymbolEqualityComparer.Default);
 
             foreach (var @interface in typeSymbol.AllInterfaces.
                         Where(symbol => typeMapper.HasMappingForType(QualifiedName(symbol)) ||

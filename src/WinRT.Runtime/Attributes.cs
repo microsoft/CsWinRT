@@ -175,6 +175,34 @@ namespace WinRT
         public abstract object CreateInstance(IInspectable inspectable);
     }
 
+    /// <summary>
+    /// An attributes used to explicitly indicate ther runtime class name to use for WinRT exposed types.
+    /// </summary>
+    /// <remarks>This attribute is emitted by the CsWinRT generator for non-authored types implementing WinRT interfaces.</remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class WinRTRuntimeClassNameAttribute : Attribute
+    {
+        /// <summary>
+        /// Creates a new <see cref="WinRTRuntimeClassNameAttribute"/> instance with the specified parameters.
+        /// </summary>
+        /// <param name="runtimeClassName">The runtime class name to use.</param>
+        public WinRTRuntimeClassNameAttribute(string runtimeClassName)
+        {
+            RuntimeClassName = runtimeClassName;
+        }
+
+        /// <summary>
+        /// Gets the runtime class name for the current instance.
+        /// </summary>
+        public string RuntimeClassName { get; }
+    }
+
 #endif
 }
 

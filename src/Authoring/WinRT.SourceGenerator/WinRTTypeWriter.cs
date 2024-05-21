@@ -132,17 +132,17 @@ namespace Generator
         public bool IsSynthesizedInterface;
         public bool IsComponentType;
 
-        public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions = new Dictionary<ISymbol, List<MethodDefinitionHandle>>();
-        public Dictionary<ISymbol, List<EntityHandle>> MethodReferences = new Dictionary<ISymbol, List<EntityHandle>>();
-        public Dictionary<ISymbol, FieldDefinitionHandle> FieldDefinitions = new Dictionary<ISymbol, FieldDefinitionHandle>();
-        public Dictionary<ISymbol, PropertyDefinitionHandle> PropertyDefinitions = new Dictionary<ISymbol, PropertyDefinitionHandle>();
-        public Dictionary<ISymbol, EventDefinitionHandle> EventDefinitions = new Dictionary<ISymbol, EventDefinitionHandle>();
-        public Dictionary<ISymbol, InterfaceImplementationHandle> InterfaceImplDefinitions = new Dictionary<ISymbol, InterfaceImplementationHandle>();
+        public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, List<EntityHandle>> MethodReferences = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, FieldDefinitionHandle> FieldDefinitions = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, PropertyDefinitionHandle> PropertyDefinitions = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, EventDefinitionHandle> EventDefinitions = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, InterfaceImplementationHandle> InterfaceImplDefinitions = new(SymbolEqualityComparer.Default);
         public Dictionary<string, List<ISymbol>> MethodsByName = new Dictionary<string, List<ISymbol>>(StringComparer.Ordinal);
-        public Dictionary<ISymbol, string> OverloadedMethods = new Dictionary<ISymbol, string>();
-        public List<ISymbol> CustomMappedSymbols = new List<ISymbol>();
-        public HashSet<ISymbol> SymbolsWithAttributes = new HashSet<ISymbol>();
-        public Dictionary<ISymbol, ISymbol> ClassInterfaceMemberMapping = new Dictionary<ISymbol, ISymbol>();
+        public Dictionary<ISymbol, string> OverloadedMethods = new(SymbolEqualityComparer.Default);
+        public List<ISymbol> CustomMappedSymbols = new();
+        public HashSet<ISymbol> SymbolsWithAttributes = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, ISymbol> ClassInterfaceMemberMapping = new(SymbolEqualityComparer.Default);
 
         public TypeDeclaration()
             : this(null)
@@ -801,7 +801,7 @@ namespace Generator
         private void ProcessCustomMappedInterfaces(INamedTypeSymbol classSymbol)
         {
             Logger.Log("writing custom mapped interfaces for " + QualifiedName(classSymbol));
-            Dictionary<INamedTypeSymbol, bool> isPublicImplementation = new Dictionary<INamedTypeSymbol, bool>();
+            Dictionary<INamedTypeSymbol, bool> isPublicImplementation = new(SymbolEqualityComparer.Default);
 
             // Mark custom mapped interface members for removal later.
             // Note we want to also mark members from interfaces without mappings.
@@ -1206,7 +1206,7 @@ namespace Generator
 
         private IEnumerable<INamedTypeSymbol> GetInterfaces(INamedTypeSymbol symbol, bool includeInterfacesWithoutMappings = false)
         {
-            HashSet<INamedTypeSymbol> interfaces = new();
+            HashSet<INamedTypeSymbol> interfaces = new(SymbolEqualityComparer.Default);
 
             // Gather all interfaces that are publicly accessible. We specifically need to exclude interfaces
             // that are not public, as eg. those might be used for additional cloaked WinRT/COM interfaces.
@@ -1640,7 +1640,7 @@ namespace Generator
                 constructor.Parameters.Length == primitiveValues.Count &&
                 constructor.Parameters.Select(param => (param.Type is IErrorTypeSymbol) ?
                     Model.Compilation.GetTypeByMetadataName(param.Type.ToDisplayString()) : param.Type)
-                .SequenceEqual(primitiveTypes));
+                .SequenceEqual(primitiveTypes, SymbolEqualityComparer.Default));
 
             Logger.Log("# matching constructor found: " + matchingConstructor.Count());
             Logger.Log("matching constructor found: " + matchingConstructor.First());
@@ -2259,7 +2259,7 @@ namespace Generator
 
         void AddSynthesizedInterfaces(TypeDeclaration classDeclaration)
         {
-            HashSet<ISymbol> classMembersFromInterfaces = new HashSet<ISymbol>();
+            HashSet<ISymbol> classMembersFromInterfaces = new(SymbolEqualityComparer.Default);
             INamedTypeSymbol classSymbol = classDeclaration.Node as INamedTypeSymbol;
             foreach (var @interface in classSymbol.AllInterfaces)
             {
@@ -2705,7 +2705,7 @@ namespace Generator
                     symbol.TypeKind == TypeKind.Class && 
                     !symbol.IsStatic)
                 {
-                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, mapper, context.Compilation.Assembly, true, typeDeclaration.DefaultInterface));
+                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, mapper, context.Compilation, true, typeDeclaration.DefaultInterface));
                     WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, IsWinRTType, mapper, vtableAttributesToAddOnLookupTable);
                 }
             }
@@ -2727,7 +2727,7 @@ namespace Generator
 
             if (vtableAttributesToAddOnLookupTable.Any())
             {
-                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), (true, true)), true);
+                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), (true, true, true)), true);
             }
         }
 

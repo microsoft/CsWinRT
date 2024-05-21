@@ -26,16 +26,6 @@ namespace WinRT.Interop
     {
         public static readonly Guid IID = global::WinRT.Interop.IID.IID_IAgileObject;
     }
-
-    [WindowsRuntimeType]
-    [Guid("00000146-0000-0000-C000-000000000046")]
-    [WindowsRuntimeHelperType(typeof(global::ABI.WinRT.Interop.IGlobalInterfaceTable))]
-    internal interface IGlobalInterfaceTable
-    {
-        IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid);
-        void RevokeInterfaceFromGlobal(IntPtr cookie);
-        IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid);
-    }
 }
 
 namespace ABI.WinRT.Interop
@@ -54,7 +44,7 @@ namespace ABI.WinRT.Interop
                 ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);
             }
             finally
             {
@@ -72,7 +62,7 @@ namespace ABI.WinRT.Interop
                 ThisPtr, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr);
+                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid, requireQI: false);
             }
             finally
             {
@@ -132,56 +122,53 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("00000146-0000-0000-C000-000000000046")]
-    internal sealed unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
+    internal sealed unsafe class IGlobalInterfaceTable
     {
-        internal static readonly Guid IID = new(0x00000146, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IGlobalInterfaceTable;
 
-        [Guid("00000146-0000-0000-C000-000000000046")]
-        [StructLayout(LayoutKind.Sequential)]
-        public struct Vftbl
-        {
-            public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            private void* _RegisterInterfaceInGlobal;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int> RegisterInterfaceInGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)_RegisterInterfaceInGlobal;
-            private void* _RevokeInterfaceFromGlobal;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int> RevokeInterfaceFromGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)_RevokeInterfaceFromGlobal;
-            private void* _GetInterfaceFromGlobal;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int> GetInterfaceFromGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)_GetInterfaceFromGlobal;
-        }
+        public static ObjectReference<global::WinRT.Interop.IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<global::WinRT.Interop.IUnknownVftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IGlobalInterfaceTable);
 
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        public static implicit operator IGlobalInterfaceTable(IObjectReference obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
-        public static implicit operator IGlobalInterfaceTable(ObjectReference<Vftbl> obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
-        private readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<global::WinRT.Interop.IUnknownVftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-        public IGlobalInterfaceTable(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public IGlobalInterfaceTable(ObjectReference<Vftbl> obj)
+        public IGlobalInterfaceTable(IntPtr thisPtr)
         {
-            _obj = obj;
+            _obj = ObjectReference<global::WinRT.Interop.IUnknownVftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IGlobalInterfaceTable);
         }
 
         public IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid)
         {
+            IntPtr thisPtr = ThisPtr;
             IntPtr cookie;
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RegisterInterfaceInGlobal(ThisPtr, ptr, &riid, &cookie));
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)(*(void***)thisPtr)[3])(thisPtr, ptr, &riid, &cookie));
             return cookie;
 
         }
 
-        public void RevokeInterfaceFromGlobal(IntPtr cookie)
+        public void TryRevokeInterfaceFromGlobal(IntPtr cookie)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RevokeInterfaceFromGlobal(ThisPtr, cookie));
+            IntPtr thisPtr = ThisPtr;
+            int hresult = ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)(*(void***)thisPtr)[4])(thisPtr, cookie);
+
+            if (hresult == ExceptionHelpers.E_INVALIDARG)
+            {
+                // Revoking cookie from GIT table may fail if apartment is gone.
+            }
+            else
+            {
+                // Only throw for other errors (this should technically never happen)
+                Marshal.ThrowExceptionForHR(hresult);
+            }
         }
 
         public IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid)
         {
+            IntPtr thisPtr = ThisPtr;
             IntPtr ptr;
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInterfaceFromGlobal(ThisPtr, cookie, &riid, &ptr));
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)(*(void***)thisPtr)[5])(thisPtr, cookie, &riid, &ptr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);
             }
             finally
             {

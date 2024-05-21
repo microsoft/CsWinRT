@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -26,11 +27,21 @@ namespace WinRT
     {
         bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                return false;
+            }
+
             return IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
         }
 
-        bool IsInterfaceImplementedFallback(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
+        internal sealed bool IsInterfaceImplementedFallback(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {
+            if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+            {
+                throw new NotSupportedException($"Support for 'IDynamicInterfaceCastable' is disabled (make sure that the 'CsWinRTEnableIDynamicInterfaceCastableSupport' property is not set to 'false').");
+            }
+
             if (QueryInterfaceCache.ContainsKey(interfaceType))
             {
                 return true;
@@ -193,7 +204,7 @@ namespace WinRT
 #if NET8_0_OR_GREATER
                 [RequiresDynamicCode(AttributeMessages.MarshallingOrGenericInstantiationsRequiresDynamicCode)]
 #endif
-                [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
+                [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "If the 'Vftbl' type is kept, we can assume all its metadata will also have been rooted.")]
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 static IObjectReference GetObjectReferenceViaVftbl(IObjectReference objRef, Type vftblType)
                 {
@@ -214,7 +225,7 @@ namespace WinRT
         }
         
 #if NET8_0_OR_GREATER
-        unsafe bool LookupGeneratedVTableInfo(RuntimeTypeHandle interfaceType, [NotNullWhen(true)] out IIUnknownCacheStrategy.TableInfo? result, out int qiResult)
+        internal sealed unsafe bool LookupGeneratedVTableInfo(RuntimeTypeHandle interfaceType, [NotNullWhen(true)] out IIUnknownCacheStrategy.TableInfo? result, out int qiResult)
         {
             result = null;
             qiResult = 0;
@@ -296,20 +307,16 @@ namespace WinRT
             return GetObjectReferenceForTypeFallback(type);
         }
 
-        IObjectReference GetObjectReferenceForTypeFallback(RuntimeTypeHandle type)
+        internal sealed IObjectReference GetObjectReferenceForTypeFallback(RuntimeTypeHandle type)
         {
             if (IsInterfaceImplemented(type, true))
             {
                 return QueryInterfaceCache[type];
             }
-            throw new Exception("Interface " + Type.GetTypeFromHandle(type) +" is not implemented.");
+
+            throw new Exception("Interface '" + Type.GetTypeFromHandle(type) + "' is not implemented.");
         }
 
         ConcurrentDictionary<RuntimeTypeHandle, object> AdditionalTypeData { get; }
-
-        object GetOrCreateTypeHelperData(RuntimeTypeHandle type, Func<object> helperDataFactory)
-        {
-            return AdditionalTypeData.GetOrAdd(type, (type) => helperDataFactory());
-        }
     }
 }

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -30,6 +31,7 @@ namespace Generator
             // TODO-WuxMux: output a module initializer that validates the MUX/WUX projection mode to ensure that things don't get out of sync.
         }
 
+        [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035", Justification = "We need to do file IO to invoke the 'cswinrt' tool.")]
         private string GetTempFolder(bool clearSourceFilesFromFolder = false)
         {
             if (string.IsNullOrEmpty(tempFolder) || !File.Exists(tempFolder))
@@ -52,6 +54,7 @@ namespace Generator
             return tempFolder;
         }
 
+        [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035", Justification = "We need to do file IO to invoke the 'cswinrt' tool.")]
         private void GenerateSources()
         {
             string cswinrtExe = context.GetCsWinRTExe();
@@ -137,6 +140,7 @@ namespace Generator
             return winrtScanner.Found();
         }
 
+        [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035", Justification = "This method is only setting the exit code, not doing actual file IO.")]
         public void Generate()
         {
             if (CatchWinRTDiagnostics())

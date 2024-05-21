@@ -196,3 +196,6 @@ namespace WinRT
         }
     }
 }
+
+// Restore in case this file is merged with others.
+#nullable restore

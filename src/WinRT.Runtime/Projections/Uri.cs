@@ -51,13 +51,11 @@ namespace ABI.System
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int> CreateUri_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>)_CreateUri_0;
             public IntPtr _CreateWithRelativeUri;
         }
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_UriRuntimeClassFactory);
 
-        public static implicit operator WinRTUriRuntimeClassFactory(IObjectReference obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
-        public static implicit operator WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public WinRTUriRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public WinRTUriRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_UriRuntimeClassFactory)) { }
         public WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
@@ -70,7 +68,7 @@ namespace ABI.System
             fixed (void* ___uri = __uri)
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, MarshalString.GetAbi(ref __uri), &__retval));
-                return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                return ObjectReference<IUnknownVftbl>.Attach(ref __retval, IID.IID_IUnknown);
             }
         }
 
@@ -95,7 +93,7 @@ namespace ABI.System
 #endif
     unsafe struct Uri
     {
-        private static WinRTUriRuntimeClassFactory Instance = ActivationFactory.Get("Windows.Foundation.Uri");
+        private static readonly WinRTUriRuntimeClassFactory Instance = new(ActivationFactory.Get("Windows.Foundation.Uri"));
 
         public static IObjectReference CreateMarshaler(global::System.Uri value)
         {
