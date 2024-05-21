@@ -341,14 +341,14 @@ namespace Generator
         // and is used by a WinRT interface. For instance, List<T> where T is a generic.
         // If the generic isn't used by any WinRT interface, this returns false as for
         // instance, we can still generate the vtable attribute for it.
-        public static bool HasNonInstantiatedWinRTGeneric(ITypeSymbol symbol)
+        public static bool HasNonInstantiatedWinRTGeneric(ITypeSymbol symbol, TypeMapper mapper)
         {
             return symbol is INamedTypeSymbol namedType && 
                 (IsArgumentTypeParameter(namedType) || 
                  (namedType.TypeArguments.Any(IsArgumentTypeParameter) && 
                   namedType.AllInterfaces.Any(iface => iface.TypeArguments.Any(IsArgumentTypeParameter) && 
                   // Checks if without the non-instantiated generic, whether it would be a WinRT type.
-                  IsWinRTType(iface.OriginalDefinition, null))));
+                  IsWinRTType(iface.OriginalDefinition, null, mapper))));
 
             static bool IsArgumentTypeParameter(ITypeSymbol argument)
             {

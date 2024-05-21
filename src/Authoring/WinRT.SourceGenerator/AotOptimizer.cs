@@ -326,7 +326,7 @@ namespace Generator
                 return default;
             }
 
-            if (GeneratorHelper.HasNonInstantiatedWinRTGeneric(symbol))
+            if (GeneratorHelper.HasNonInstantiatedWinRTGeneric(symbol, mapper))
             {
                 return default;
             }

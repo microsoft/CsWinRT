@@ -56,7 +56,7 @@ namespace WinRT.SourceGenerator
                         // and that it isn't already partial.
                         if (!GeneratorHelper.IsPartial(namedType) &&
                             !GeneratorHelper.IsWinRTType(namedType, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly) &&
-                            !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType) &&
+                            !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType, typeMapper) &&
                             !GeneratorHelper.HasAttributeWithType(namedType, winrtExposedTypeAttribute))
                         {
                             foreach (var iface in namedType.AllInterfaces)
