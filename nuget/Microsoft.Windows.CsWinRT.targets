@@ -61,15 +61,49 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="CsWinRTSetGeneratorProperties" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore">
     <PropertyGroup>
       <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == '' and
-                                                        '$(CsWinRTComponent)' == 'true'">true</CsWinRTCcwLookupTableGeneratorEnabled>		
-      <!-- If the lookup generator is enabled, the AOT source generator generates vtable entries for generic types and boxing scenarios that it detects. -->
-	  <!-- This is not intended to be ran on projections, so we try to detect that and disable it if a projection is being generated. -->
-	  <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == '' and
+                                                        '$(CsWinRTComponent)' == 'true'">true</CsWinRTCcwLookupTableGeneratorEnabled>
+
+      <!--
+        Back-compat: first check whether 'CsWinRTIncludes' is set to a list of items.
+        If so, this check will set 'CsWinRTHasAnyIncludes' to 'true', and we're done.
+        We also check 'CsWinRTFilters' from here: setting either one is sufficient.
+      -->
+      <PropertyGroup>
+        <CsWinRTHasAnyIncludes>false</CsWinRTHasAnyIncludes>
+        <CsWinRTHasAnyIncludes Condition="'@(CsWinRTIncludes)' != '' or $(CsWinRTFilters.Contains('-include'))">true</CsWinRTHasAnyIncludes>
+      </PropertyGroup>
+      
+      <!--
+        If 'CsWinRTHasAnyIncludes' is 'false', but 'CsWinRTIncludes' is not actually empty, treat it as
+        a 'string', and also account for people formatting it over multiple lines in the .csproj files.
+        That is, we trim it, normalize separators and remove all newline characters, and then check
+        whether the result is not empty. If not, then we do have some WinRT includes.
+        This handles eg. Win2D setting this property like so:
+        
+        '''
+        <CSWinRTIncludes>
+              Microsoft.Graphics.Canvas;
+            </CSWinRTIncludes>
+        '''
+      -->
+      <PropertyGroup Condition="'$(CsWinRTHasAnyIncludes)' == 'false' and '$(CSWinRTIncludes)' != ''">
+        <CsWinRTIncludesWithFixup>$(CSWinRTIncludes)</CsWinRTIncludesWithFixup>
+        <CsWinRTIncludesWithFixup>$(CsWinRTIncludesWithFixup.Trim())</CsWinRTIncludesWithFixup>
+        <CsWinRTIncludesWithFixup>$(CsWinRTIncludesWithFixup.Replace(';', ','))</CsWinRTIncludesWithFixup>
+        <CsWinRTIncludesWithFixup>$([System.Text.RegularExpressions.Regex]::Replace($(CsWinRTIncludesWithFixup), '[\r\n]', ''))</CsWinRTIncludesWithFixup>
+        <CsWinRTHasAnyIncludes Condition="'$(CsWinRTIncludesWithFixup)' != ''">true</CsWinRTHasAnyIncludes>
+      </PropertyGroup>
+
+      <!--
+        If the lookup generator is enabled, the AOT source generator generates vtable entries for generic types and boxing scenarios that it detects.
+        This is not intended to be ran on projections, so we try to detect that and disable it if a projection is being generated.
+      -->
+      <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == '' and
                                                         '$(CsWinRTGenerateProjection)' == 'true' and
                                                         '$(OutputType)' == 'Library' and
-                                                        ('@(CsWinRTIncludes)' != ''or $(CsWinRTFilters.Contains('-include')))">false</CsWinRTCcwLookupTableGeneratorEnabled>
-	  <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == ''">true</CsWinRTCcwLookupTableGeneratorEnabled>
-	</PropertyGroup>
+                                                        '$(CsWinRTHasAnyIncludes)' == 'true'">false</CsWinRTCcwLookupTableGeneratorEnabled>
+      <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == ''">true</CsWinRTCcwLookupTableGeneratorEnabled>
+    </PropertyGroup>
   </Target>
 
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
