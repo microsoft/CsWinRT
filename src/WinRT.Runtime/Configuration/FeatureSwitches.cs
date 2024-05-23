@@ -24,7 +24,7 @@ namespace WinRT
         /// <summary>
         /// The configuration property name for <see cref="EnableDynamicObjectsSupport"/>.
         /// </summary>
-        private const string EnablesDynamicObjectsSupportPropertyName = "CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT";
+        private const string EnableDynamicObjectsSupportPropertyName = "CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT";
 
         /// <summary>
         /// The configuration property name for <see cref="UseExceptionResourceKeys"/>.
@@ -59,7 +59,7 @@ namespace WinRT
         /// <summary>
         /// The backing field for <see cref="EnableDynamicObjectsSupport"/>.
         /// </summary>
-        private static int _enableDynamicObjectsSupportEnabled;
+        private static int _enableDynamicObjectsSupport;
 
         /// <summary>
         /// The backing field for <see cref="UseExceptionResourceKeys"/>.
@@ -97,7 +97,7 @@ namespace WinRT
         public static bool EnableDynamicObjectsSupport
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => GetConfigurationValue(EnablesDynamicObjectsSupportPropertyName, ref _enableDynamicObjectsSupportEnabled, true);
+            get => GetConfigurationValue(EnableDynamicObjectsSupportPropertyName, ref _enableDynamicObjectsSupport, true);
         }
 
         /// <summary>
