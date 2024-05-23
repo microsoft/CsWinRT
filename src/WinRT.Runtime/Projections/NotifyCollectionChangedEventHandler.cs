@@ -44,7 +44,7 @@ namespace ABI.System.Collections.Specialized
             AbiToProjectionVftablePtr = nativeVftbl;
             ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler), CreateRcw);
 
-            IID = FeatureSwitches.IsWuxMode
+            IID = FeatureSwitches.UseWindowsUIXamlProjections
                 ? Guid.Parse("CA10B37C-F382-4591-8557-5E24965279B0")
                 : Guid.Parse("8B0909DC-2005-5D93-BF8A-725F017BAA8D");
         }

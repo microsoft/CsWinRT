@@ -5,10 +5,6 @@
       <!-- CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT switch -->
       <method signature="System.Boolean get_EnableDynamicObjectsSupport()" body="stub" value="false" feature="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT" featurevalue="false"/>
       <method signature="System.Boolean get_EnableDynamicObjectsSupport()" body="stub" value="true" feature="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT" featurevalue="true"/>
-
-      <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS feature flag -->
-      <method signature="System.Boolean get_IsWuxMode()" body="stub" value="false" feature="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" featurevalue="false" />
-      <method signature="System.Boolean get_IsWuxMode()" body="stub" value="true" feature="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" featurevalue="true" />
         
       <!-- CSWINRT_USE_EXCEPTION_RESOURCE_KEYS switch -->
       <method signature="System.Boolean get_UseExceptionResourceKeys()" body="stub" value="false" feature="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS" featurevalue="false"/>
@@ -29,6 +25,10 @@
       <!-- CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE switch -->
       <method signature="System.Boolean get_EnableIDynamicInterfaceCastableSupport()" body="stub" value="false" feature="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE" featurevalue="false"/>
       <method signature="System.Boolean get_EnableIDynamicInterfaceCastableSupport()" body="stub" value="true" feature="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE" featurevalue="true"/>
+
+      <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS switch -->
+      <method signature="System.Boolean get_UseWindowsUIXamlProjections()" body="stub" value="false" feature="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" featurevalue="false" />
+      <method signature="System.Boolean get_UseWindowsUIXamlProjections()" body="stub" value="true" feature="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" featurevalue="true" />
     </type>
   </assembly>
 

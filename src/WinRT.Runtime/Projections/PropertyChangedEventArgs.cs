@@ -175,7 +175,7 @@ namespace ABI.System.ComponentModel
     unsafe struct PropertyChangedEventArgs
     {
         private static readonly ABI.Microsoft.UI.Xaml.Data.IWinRTPropertyChangedEventArgsRuntimeClassFactory Instance =
-            FeatureSwitches.IsWuxMode
+            FeatureSwitches.UseWindowsUIXamlProjections
             ? new ABI.Microsoft.UI.Xaml.Data.WUXPropertyChangedEventArgsRuntimeClassFactory(ActivationFactory.Get("Windows.UI.Xaml.Data.PropertyChangedEventArgs"))
             : new ABI.Microsoft.UI.Xaml.Data.MUXPropertyChangedEventArgsRuntimeClassFactory(ActivationFactory.Get("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs"));
 
@@ -249,7 +249,7 @@ namespace ABI.System.ComponentModel
 
         public static string GetGuidSignature()
         {
-            if (FeatureSwitches.IsWuxMode)
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
             {
                 return "rc(Windows.UI.Xaml.Data.NotifyPropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})";
             }

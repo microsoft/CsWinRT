@@ -51,7 +51,7 @@ namespace WinRT
 
         internal static Guid GetWuxMuxIID(WuxMuxProjectedTypeAttribute wuxMuxAttribute)
         {
-            return FeatureSwitches.IsWuxMode
+            return FeatureSwitches.UseWindowsUIXamlProjections
                 ? wuxMuxAttribute.WuxIID
                 : wuxMuxAttribute.MuxIID;
         }

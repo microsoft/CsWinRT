@@ -52,9 +52,9 @@ namespace WinRT
         private const string EnableIDynamicInterfaceCastableSupportPropertyName = "CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE";
 
         /// <summary>
-        /// The configuration property name for <see cref="IsWuxMode"/>.
+        /// The configuration property name for <see cref="UseWindowsUIXamlProjections"/>.
         /// </summary>
-        private const string IsWuxModePropertyName = "CSWINRT_ENABLE_WUX_MODE";
+        private const string UseWindowsUIXamlProjectionsPropertyName = "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS";
 
         /// <summary>
         /// The backing field for <see cref="EnableDynamicObjectsSupport"/>.
@@ -87,9 +87,9 @@ namespace WinRT
         private static int _enableIDynamicInterfaceCastableSupport;
 
         /// <summary>
-        /// The backing field for <see cref="IsWuxMode"/>.
+        /// The backing field for <see cref="UseWindowsUIXamlProjections"/>.
         /// </summary>
-        private static int _isWuxMode;
+        private static int _useWindowsUIXamlProjections;
 
         /// <summary>
         /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -146,6 +146,15 @@ namespace WinRT
         }
 
         /// <summary>
+        /// Gets a value indicating whether to project .NET types to their <c>Windows.UI.Xaml</c> equivalents instead of their <c>Microsoft.UI.Xaml</c> equivalents.
+        /// </summary>
+        public static bool UseWindowsUIXamlProjections
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(UseWindowsUIXamlProjectionsPropertyName, ref _useWindowsUIXamlProjections, false);
+        }
+
+        /// <summary>
         /// Gets a configuration value for a specified property.
         /// </summary>
         /// <param name="propertyName">The property name to retrieve the value for.</param>
@@ -180,16 +189,7 @@ namespace WinRT
             // Update the cached result
             cachedResult = isEnabled ? 1 : -1;
 
-         return isEnabled;
-        }
-
-        /// <summary>
-        /// <c>true</c> if types from .NET are projected to their Windows.UI.Xaml equivalents instead of their Microsoft.UI.Xaml equivalents.
-        /// </summary>
-        public static bool IsWuxMode
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => GetConfigurationValue(IsWuxModePropertyName, ref _isWuxMode, false);
+            return isEnabled;
         }
     }
 }

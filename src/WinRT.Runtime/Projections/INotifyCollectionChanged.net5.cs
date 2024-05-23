@@ -40,7 +40,7 @@ namespace ABI.System.Collections.Specialized
         public static global::System.Guid IID { get; } = new(GetIID());
 
         private static ReadOnlySpan<byte> GetIID()
-            => FeatureSwitches.IsWuxMode
+            => FeatureSwitches.UseWindowsUIXamlProjections
                 ? new(new byte[] { 0xd5, 0x67, 0xb1, 0x28, 0x31, 0x1a, 0x5b, 0x46, 0x9b, 0x25, 0xd5, 0xc3, 0xae, 0x68, 0x6c, 0x40 })
                 : new(new byte[] { 0xe1, 0x55, 0x1, 0x53, 0xa5, 0x28, 0x93, 0x56, 0x87, 0xce, 0x30, 0x72, 0x4d, 0x95, 0xa0, 0x6d });
         public static IntPtr AbiToProjectionVftablePtr => INotifyCollectionChanged.Vftbl.AbiToProjectionVftablePtr;

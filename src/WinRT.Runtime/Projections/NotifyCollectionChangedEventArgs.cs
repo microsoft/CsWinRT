@@ -21,7 +21,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         public IntPtr ThisPtr => _obj.ThisPtr;
 
         private static readonly Guid Factory_IID = 
-            FeatureSwitches.IsWuxMode
+            FeatureSwitches.UseWindowsUIXamlProjections
                 ? IID.IID_WUX_INotifyCollectionChangedEventArgsFactory
                 : IID.IID_MUX_INotifyCollectionChangedEventArgsFactory;
 
@@ -30,11 +30,11 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         private WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory()
         {
 #if NET
-            _obj = FeatureSwitches.IsWuxMode
+            _obj = FeatureSwitches.UseWindowsUIXamlProjections
                 ? ActivationFactory.Get("Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
                 : ActivationFactory.Get("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs");
 #else
-            _obj = FeatureSwitches.IsWuxMode
+            _obj = FeatureSwitches.UseWindowsUIXamlProjections
                 ? ActivationFactory.Get<IUnknownVftbl>("Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", Factory_IID)
                 : ActivationFactory.Get<IUnknownVftbl>("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", Factory_IID);
 #endif
@@ -90,7 +90,7 @@ namespace ABI.System.Collections.Specialized
     struct NotifyCollectionChangedEventArgs
     {
         private static readonly Guid Interface_IID = 
-            FeatureSwitches.IsWuxMode
+            FeatureSwitches.UseWindowsUIXamlProjections
                 ? IID.IID_WUX_INotifyCollectionChangedEventArgs
                 : IID.IID_MUX_INotifyCollectionChangedEventArgs;
 
@@ -212,7 +212,7 @@ namespace ABI.System.Collections.Specialized
 
         public static string GetGuidSignature()
         {
-            if (FeatureSwitches.IsWuxMode)
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
             {
                 return "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})";
             }

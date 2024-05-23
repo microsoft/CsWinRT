@@ -295,16 +295,6 @@ $(CsWinRTInternalProjection)
     <RuntimeHostConfigurationOption Include="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS"
                                     Value="$(CsWinRTUseExceptionResourceKeys)"
                                     Trim="true" />
-
-    <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS switch-->
-    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUIXamlProjections)' == 'WindowsUIXaml'">
-      <Value>true</Value>
-      <Trim>true</Trim>
-    </RuntimeHostConfigurationOption>
-    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUIXamlProjections)' != 'WindowsUIXaml'">
-      <Value>false</Value>
-      <Trim>true</Trim>
-    </RuntimeHostConfigurationOption>
                                   
     <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS"
@@ -325,6 +315,16 @@ $(CsWinRTInternalProjection)
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE"
                                     Value="$(CsWinRTEnableIDynamicInterfaceCastableSupport)"
                                     Trim="true" />
+
+    <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS switch-->
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUIXamlProjections)' == 'WindowsUIXaml'">
+      <Value>true</Value>
+      <Trim>true</Trim>
+    </RuntimeHostConfigurationOption>
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUIXamlProjections)' != 'WindowsUIXaml'">
+      <Value>false</Value>
+      <Trim>true</Trim>
+    </RuntimeHostConfigurationOption>
   </ItemGroup>
 
 </Project>
