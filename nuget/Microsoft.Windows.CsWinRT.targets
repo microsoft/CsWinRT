@@ -74,20 +74,20 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <!--
         If 'CsWinRTHasAnyIncludes' is 'false', but 'CsWinRTIncludes' is not actually empty, treat it as
         a 'string', and also account for people formatting it over multiple lines in the .csproj files.
-        That is, we trim it, normalize separators and remove all newline characters, and then check
-        whether the result is not empty. If not, then we do have some WinRT includes.
+        That is, we trim it and remove all newline characters, and then check whether the result is not
+        empty. If not, then we do have some WinRT includes.
+        
         This handles eg. Win2D setting this property like so:
         
         '''
         <CSWinRTIncludes>
-              Microsoft.Graphics.Canvas;
-            </CSWinRTIncludes>
+          Microsoft.Graphics.Canvas;
+        </CSWinRTIncludes>
         '''
       -->
-      <CsWinRTIncludesWithFixup>$(CSWinRTIncludes)</CsWinRTIncludesWithFixup>
-      <CsWinRTIncludesWithFixup>$(CsWinRTIncludesWithFixup.Trim())</CsWinRTIncludesWithFixup>
-      <CsWinRTIncludesWithFixup>$(CsWinRTIncludesWithFixup.Replace(';', ','))</CsWinRTIncludesWithFixup>
-      <CsWinRTIncludesWithFixup>$([System.Text.RegularExpressions.Regex]::Replace($(CsWinRTIncludesWithFixup), '[\r\n]', ''))</CsWinRTIncludesWithFixup>
+      <CsWinRTIncludesWithFixup Condition="'$(CsWinRTHasAnyIncludes)' == 'false'">$(CSWinRTIncludes)</CsWinRTIncludesWithFixup>
+      <CsWinRTIncludesWithFixup Condition="'$(CsWinRTHasAnyIncludes)' == 'false'">$(CsWinRTIncludesWithFixup.Trim())</CsWinRTIncludesWithFixup>
+      <CsWinRTIncludesWithFixup Condition="'$(CsWinRTHasAnyIncludes)' == 'false'">$([System.Text.RegularExpressions.Regex]::Replace($(CsWinRTIncludesWithFixup), '[\r\n]', ''))</CsWinRTIncludesWithFixup>
       <CsWinRTHasAnyIncludes Condition="'$(CsWinRTIncludesWithFixup)' != ''">true</CsWinRTHasAnyIncludes>
 
       <!--
