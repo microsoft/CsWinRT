@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -99,7 +98,6 @@ namespace ABI.System.ComponentModel
                 *token = default;
                 try
                 {
-                    global::System.Diagnostics.Debugger.Launch();
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.ComponentModel.INotifyPropertyChanged>(thisPtr);
                     var __handler = global::ABI.System.ComponentModel.PropertyChangedEventHandler.FromAbi(handler);
                     *token = _PropertyChanged_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
