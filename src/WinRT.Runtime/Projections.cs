@@ -26,11 +26,9 @@ namespace WinRT
 #endif
     static partial class Projections
     {
-
         private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
 
         private static readonly Dictionary<Type, Type> CustomTypeToHelperTypeMappings = new Dictionary<Type, Type>();
-        private static readonly Dictionary<Type, Guid> CustomTypeToIIDMappings = new Dictionary<Type, Guid>();
         private static readonly Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
         private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>(StringComparer.Ordinal);
         private static readonly Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
@@ -357,11 +355,6 @@ namespace WinRT
             {
                 rwlock.ExitReadLock();
             }
-        }
-
-        internal static Guid? FindCustomIIDForAbiType(Type type)
-        {
-            return CustomTypeToIIDMappings.TryGetValue(type, out Guid iid) ? iid : null;
         }
 
         private readonly static ConcurrentDictionary<Type, bool> IsTypeWindowsRuntimeTypeCache = new();
