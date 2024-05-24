@@ -9,15 +9,6 @@ using WinRT.Interop;
 
 namespace ABI.Microsoft.UI.Xaml.Data
 {
-    [Guid("63D0C952-396B-54F4-AF8C-BA8724A427BF")]
-    [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct IPropertyChangedEventArgsVftbl
-    {
-        internal IInspectable.Vftbl IInspectableVftbl;
-        private void* _get_PropertyName_0;
-        public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_PropertyName_0;
-    }
-
     internal interface IWinRTPropertyChangedEventArgsRuntimeClassFactory
     {
         IObjectReference CreateInstance(string name, object baseInterface, out IObjectReference innerInterface);
@@ -213,7 +204,7 @@ namespace ABI.System.ComponentModel
             {
                 // We can use the Microsoft.UI.Xaml.Data.IPropertyChangedEventArgsVftbl here in both WUX and MUX because the vtables are laid out the same and we know
                 // that we have either a MUX or WUX IPropertyChangedEventArgs pointer in ptr.
-                ExceptionHelpers.ThrowExceptionForHR((**(ABI.Microsoft.UI.Xaml.Data.IPropertyChangedEventArgsVftbl**)ptr).get_PropertyName_0(ptr, &propertyName));
+                ExceptionHelpers.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)ptr)[6])(ptr, &propertyName));
                 return new global::System.ComponentModel.PropertyChangedEventArgs(MarshalString.FromAbi(propertyName));
             }
             finally
