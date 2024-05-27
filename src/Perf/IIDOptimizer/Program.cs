@@ -129,9 +129,15 @@ namespace GuidPatch
 
                 int numPatches = guidPatcher.ProcessAssembly(); 
 
-                guidPatcher.SaveAssembly(outputDirectory);
+                // Only write assembly if we actually patched anything.
+                // Otherwise we would just write a type we use as part of our implementation
+                // when it is actually not needed.
+                if (numPatches > 0)
+                {
+                    guidPatcher.SaveAssembly(outputDirectory);
+                    Console.WriteLine($"Saved patched .dll to {outputDirectory}");
+                }
 
-                Console.WriteLine($"Saved patched .dll to {outputDirectory}");
                 Console.WriteLine($"{numPatches} IID calculations/fetches patched"); 
                 return 0; 
             }
