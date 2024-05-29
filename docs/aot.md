@@ -23,3 +23,7 @@ There are a couple issues related to our AOT support that are known with the cur
 3. In WinUI apps, you might run into a race condition which triggers a hang during .NET GC needing to restart the app.  This is the result of an exception being thrown unexpectedly during GC due to an invalid handle.
 
 4. If you have an app or library that just consumes WinRT types and doesn't generate a projection, it still needs a CsWinRT package reference in order for the source generator to run on it and make it AOT compatible.  We will be looking at addressing this to avoid this requirement for the official version.
+
+## Known issues when publishing for JIT
+
+1. When publishing for ARM64 with ReadyToRun (R2R) enabled while targeting .NET 6, you may see a failed to optimize error.  You can workaround this by moving your project to target .NET 8 or by using [PublishReadyToRunExclude](https://learn.microsoft.com/dotnet/core/deploying/ready-to-run#how-is-the-set-of-precompiled-assemblies-chosen) to exclude `WinRT.Runtime.dll` from R2R when building for ARM64.
