@@ -329,6 +329,16 @@ namespace AuthoringTest
             };
         }
 
+        public static IList<bool> GetBools()
+        {
+            return new List<bool>()
+            {
+                true,
+                false,
+                true
+            };
+        }
+
         public IAsyncOperation<Int32> GetIntAsyncOperation()
         {
             int val = IntAsyncOperation.GetResults();
@@ -353,6 +363,11 @@ namespace AuthoringTest
         public IAsyncOperation<BasicStruct> GetStructAsyncOperation()
         {
             return System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
+        }
+
+        public IAsyncOperation<bool> GetBoolAsyncOperation()
+        {
+            return Task.FromResult(false).AsAsyncOperation();
         }
 
         public int SetIntAsyncOperation(IAsyncOperation<Int32> op)

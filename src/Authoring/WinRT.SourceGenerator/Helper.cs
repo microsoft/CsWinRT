@@ -603,7 +603,14 @@ namespace Generator
                 }
                 else
                 {
-                    return "global::ABI." + type;
+                    if (isArray)
+                    {
+                        return $$"""MarshalNonBlittable<{{type}}>""";
+                    }
+                    else
+                    {
+                        return "global::ABI." + type;
+                    }
                 }
             }
             else if (kind == TypeKind.Interface)
@@ -618,61 +625,63 @@ namespace Generator
             throw new ArgumentException();
         }
 
-        public static string GetFromAbiMarshaler(GenericParameter genericParameter)
+        public static string GetFromAbiMarshaler(GenericParameter genericParameter, string arg)
         {
             return GetFromAbiMarshaler(
                 genericParameter.ProjectedType, 
                 genericParameter.AbiType, 
-                genericParameter.TypeKind);
+                genericParameter.TypeKind,
+                arg);
         }
 
-        public static string GetFromAbiMarshaler(string type, string abiType, TypeKind kind)
+        public static string GetFromAbiMarshaler(string type, string abiType, TypeKind kind, string arg)
         {
             string marshalerType = GetMarshalerClass(type, abiType, kind, false);
             if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType))
             {
-                return "";
+                return arg;
             }
             else if (type == "bool")
             {
-                return "(bool)";
+                return $$"""({{arg}} != 0)""";
             }
             else if (type == "char")
             {
-                return "(char)";
+                return $$"""(char){{arg}}""";
             }
             else
             {
-                return marshalerType + ".FromAbi";
+                return $$"""{{marshalerType}}.FromAbi({{arg}})""";
             }
         }
 
-        public static string GetFromManagedMarshaler(GenericParameter genericParameter)
+        public static string GetFromManagedMarshaler(GenericParameter genericParameter, string arg)
         {
             return GetFromManagedMarshaler(
                 genericParameter.ProjectedType,
                 genericParameter.AbiType,
-                genericParameter.TypeKind);
+                genericParameter.TypeKind,
+                arg);
         }
 
-        public static string GetFromManagedMarshaler(string type, string abiType, TypeKind kind)
+        public static string GetFromManagedMarshaler(string type, string abiType, TypeKind kind, string arg)
         {
             string marshalerType = GetMarshalerClass(type, abiType, kind, false);
             if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType))
             {
-                return "";
+                return arg;
             }
             else if (type == "bool")
             {
-                return "(byte)";
+                return $$"""(byte)({{arg}} ? 1 : 0)""";
             }
             else if (type == "char")
             {
-                return "(ushort)";
+                return $$"""(ushort){{arg}}""";
             }
             else
             {
-                return marshalerType + ".FromManaged";
+                return $$"""{{marshalerType}}.FromManaged({{arg}})""";
             }
         }
 
