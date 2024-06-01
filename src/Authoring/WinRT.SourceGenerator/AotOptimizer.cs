@@ -1130,7 +1130,7 @@ namespace Generator
                                             [System.Runtime.CompilerServices.ModuleInitializer]
                                             internal static void InitializeGlobalVtableLookup()
                                             {
-                                                ComWrappersSupport.RegisterTypeComInterfaceEntriesLookup(LookupVtableEntries);
+                                                ComWrappersSupport.RegisterTypeComInterfaceEntriesLookup(new Func<Type, ComWrappers.ComInterfaceEntry[]>(LookupVtableEntries));
                                                 {{(hasRuntimeClasNameEntries ? "ComWrappersSupport.RegisterTypeRuntimeClassNameLookup(new Func<Type, string>(LookupRuntimeClassName));" : "")}}
                                             }
 
