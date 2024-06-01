@@ -222,8 +222,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
     {
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
-        internal static readonly Guid IID = new(new ReadOnlySpan<byte>(new byte[] { 0xE7, 0xD6, 0x6D, 0x34, 0x6E, 0x97, 0xC3, 0x4B, 0x81, 0x5D, 0xEC, 0xE2, 0x43, 0xBC, 0x0F, 0x33 }));
-
         static IBindableVectorView()
         {
             AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(IBindableVectorView), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 3);
@@ -297,7 +295,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             return 0;
         }
 
-        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID);
+        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IBindableVectorView);
 
         private static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, ABI.System.Collections.IEnumerable.FromAbiHelper> _helperTable = new();
 
@@ -1007,7 +1005,7 @@ namespace ABI.System.Collections
                     {
                         new ComWrappers.ComInterfaceEntry
                         {
-                            IID = ABI.Microsoft.UI.Xaml.Interop.IBindableVectorView.IID,
+                            IID = IID.IID_IBindableVectorView,
                             Vtable = ABI.Microsoft.UI.Xaml.Interop.IBindableVectorView.AbiToProjectionVftablePtr
                         },
                         new ComWrappers.ComInterfaceEntry
