@@ -218,7 +218,7 @@ namespace WinRT
                     {
                         foreach (ref readonly ComInterfaceEntry entry in CollectionsMarshal.AsSpan(entries))
                         {
-                            if (entry.IID == ABI.WinRT.Interop.IMarshal.IID)
+                            if (entry.IID == IID.IID_IMarshal)
                             {
                                 return true;
                             }
