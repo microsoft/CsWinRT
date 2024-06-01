@@ -943,7 +943,9 @@ namespace Generator
                 // type need to be put on the CCW.
                 if (instantiatedType.Type is IArrayTypeSymbol arrayType)
                 {
-                    if (convertedToTypeSymbol is not IArrayTypeSymbol)
+                    if (convertedToTypeSymbol is not IArrayTypeSymbol &&
+                        // Make sure we aren't just assigning it to a value type such as ReadOnlySpan
+                        !convertedToTypeSymbol.IsValueType)
                     {
                         if (visitedTypes.Contains(arrayType))
                         {
