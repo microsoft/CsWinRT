@@ -839,9 +839,9 @@ namespace Generator
 
         private static (EquatableArray<VtableAttribute>, EquatableArray<VtableAttribute>) GetVtableAttributesToAddOnLookupTable(GeneratorSyntaxContext context)
         {
-            // Get the lookup table assuming we are running in an authoring scenario and not in an authoring scenario
-            // and then use the properties later to choose the right one.  Otherwise we will end up generating lookup tables
-            // which don't have vtable entries for authoring scenarios.
+            // Get the lookup table as if we are running in an authoring component scenario and as if we are not
+            // and then use the properties later on when we have access to it to check if we are to choose the right one.
+            // Otherwise we will end up generating lookup tables which don't have vtable entries for authoring types.
             return (GetVtableAttributesToAddOnLookupTable(context, GeneratorHelper.IsWinRTType), 
                     GetVtableAttributesToAddOnLookupTable(context, GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation)));
         }
