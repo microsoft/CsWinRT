@@ -339,6 +339,26 @@ namespace AuthoringTest
             };
         }
 
+        public static IList<BasicStruct> GetBasicStructs()
+        {
+            return new List<BasicStruct>()
+            {
+                new BasicStruct() { X = 1, Y = 2, Value = "Basic" },
+                new BasicStruct() { X = 2, Y = 4, Value = "Struct" },
+            };
+        }
+
+        public static IList<ComplexStruct> GetComplexStructs()
+        {
+            return new List<ComplexStruct>()
+            {
+                new ComplexStruct() { 
+                    X = 12,
+                    Val = true, 
+                    BasicStruct = new BasicStruct() { X = 1, Y = 2, Value = "Basic" } },
+            };
+        }
+
         public IAsyncOperation<Int32> GetIntAsyncOperation()
         {
             int val = IntAsyncOperation.GetResults();

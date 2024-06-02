@@ -411,6 +411,17 @@ namespace Generator
             return false;
         }
 
+        public static Func<ISymbol, bool> IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(Compilation compilation)
+        {
+            var winrtTypeAttribute = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
+            return IsWinRTTypeHelper;
+
+            bool IsWinRTTypeHelper(ISymbol type)
+            {
+                return IsWinRTType(type, winrtTypeAttribute, true, compilation.Assembly);
+            }
+        }
+
         private static string GetAbiTypeForFundamentalType(ISymbol type)
         {
             if (type is INamedTypeSymbol namedTypeSymbol)
