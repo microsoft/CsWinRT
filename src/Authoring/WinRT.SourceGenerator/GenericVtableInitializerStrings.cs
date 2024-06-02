@@ -293,7 +293,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = global::ABI.System.Collections.Generic.IEnumeratorMethods<{{genericType}}>.Abi_get_Current_0(thisPtr);
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericType, abiType, typeKind)}}(____return_value__);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericType, abiType, typeKind, "____return_value__")}};
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -361,7 +361,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_GetAt_0(thisPtr, index);
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericType, abiType, typeKind)}}(____return_value__);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericType, abiType, typeKind, "____return_value__")}};
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -401,7 +401,7 @@ namespace Generator
 
                      try
                      {
-                         ____return_value__ = global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_IndexOf_3(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind)}}(value), out __index);
+                         ____return_value__ = global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_IndexOf_3(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "value")}}, out __index);
                          *index = __index;
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
@@ -418,7 +418,7 @@ namespace Generator
                  {
                      try
                      {
-                         global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_SetAt_4(thisPtr, index, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind)}}(value));
+                         global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_SetAt_4(thisPtr, index, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "value")}});
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -433,7 +433,7 @@ namespace Generator
                  {
                      try
                      {
-                         global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_InsertAt_5(thisPtr, index, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind)}}(value));
+                         global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_InsertAt_5(thisPtr, index, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "value")}});
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -463,7 +463,7 @@ namespace Generator
                  {
                      try
                      {
-                         global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_Append_7(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind)}}(value));
+                         global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_Append_7(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "value")}});
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -590,7 +590,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyListMethods<{{genericType}}>.Abi_GetAt_0(thisPtr, index);
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericType, abiType, typeKind)}}(____return_value__);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericType, abiType, typeKind, "____return_value__")}};
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -611,7 +611,7 @@ namespace Generator
 
                      try
                      {
-                         ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyListMethods<{{genericType}}>.Abi_IndexOf_2(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind)}}(value), out __index);
+                         ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyListMethods<{{genericType}}>.Abi_IndexOf_2(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "value")}}, out __index);
                          *index = __index;
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
@@ -699,8 +699,8 @@ namespace Generator
 
                      try
                      {
-                         ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Lookup_0(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind)}}(key));
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericValueType, abiValueType, valueTypeKind)}}(____return_value__);
+                         ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Lookup_0(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericValueType, abiValueType, valueTypeKind, "____return_value__")}};
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -719,7 +719,7 @@ namespace Generator
 
                      try
                      {
-                         ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_HasKey_2(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind)}}(key));
+                         ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_HasKey_2(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
                      catch (global::System.Exception __exception__)
@@ -759,7 +759,7 @@ namespace Generator
 
                      try
                      {
-                         ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Insert_4(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind)}}(key), {{GeneratorHelper.GetFromAbiMarshaler(genericValueType, abiValueType, valueTypeKind)}}(value));
+                         ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Insert_4(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}}, {{GeneratorHelper.GetFromAbiMarshaler(genericValueType, abiValueType, valueTypeKind, "value")}});
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
                      catch (global::System.Exception __exception__)
@@ -775,7 +775,7 @@ namespace Generator
                  {
                      try
                      {
-                         global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Remove_5(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind)}}(key));
+                         global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Remove_5(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -851,8 +851,8 @@ namespace Generator
 
                      try
                      {
-                         ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Lookup_0(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind)}}(key));
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericValueType, abiValueType, valueTypeKind)}}(____return_value__);
+                         ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Lookup_0(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericValueType, abiValueType, valueTypeKind, "____return_value__")}};
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -871,7 +871,7 @@ namespace Generator
 
                      try
                      {
-                         ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_HasKey_2(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind)}}(key));
+                         ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_HasKey_2(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
                      catch (global::System.Exception __exception__)
@@ -952,7 +952,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = global::ABI.System.Collections.Generic.KeyValuePairMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_get_Key_0(thisPtr);
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericKeyType, abiKeyType, keyTypeKind)}}(____return_value__);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericKeyType, abiKeyType, keyTypeKind, "____return_value__")}};
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -970,7 +970,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = global::ABI.System.Collections.Generic.KeyValuePairMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_get_Value_1(thisPtr);
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericValueType, abiValueType, valueTypeKind)}}(____return_value__);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericValueType, abiValueType, valueTypeKind, "____return_value__")}};
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -1009,7 +1009,7 @@ namespace Generator
                  {
                      try
                      {
-                         global::ABI.System.EventHandlerMethods<{{genericType}}, {{abiType}}>.Abi_Invoke(thisPtr, MarshalInspectable<object>.FromAbi(sender), {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind)}}(args));
+                         global::ABI.System.EventHandlerMethods<{{genericType}}, {{abiType}}>.Abi_Invoke(thisPtr, MarshalInspectable<object>.FromAbi(sender), {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "args")}});
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -1067,7 +1067,7 @@ namespace Generator
                  {
                      try
                      {
-                         {{staticMethodsClass}}.Abi_Invoke(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericParameters[0])}}(sender), {{GeneratorHelper.GetFromAbiMarshaler(genericParameters[1])}}(args));
+                         {{staticMethodsClass}}.Abi_Invoke(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericParameters[0], "sender")}}, {{GeneratorHelper.GetFromAbiMarshaler(genericParameters[1], "args")}});
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -1198,7 +1198,7 @@ namespace Generator
                  {
                      try
                      {
-                         {{staticMethodsClass}}.Abi_Invoke(thisPtr, MarshalInterface<{{asyncInfoInterfaceWithGeneric}}>.FromAbi(asyncInfo), {{GeneratorHelper.GetFromAbiMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind)}}(progressInfo));
+                         {{staticMethodsClass}}.Abi_Invoke(thisPtr, MarshalInterface<{{asyncInfoInterfaceWithGeneric}}>.FromAbi(asyncInfo), {{GeneratorHelper.GetFromAbiMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}});
                      }
                      catch (global::System.Exception __exception__)
                      {
@@ -1377,7 +1377,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = {{staticMethodsClass}}.Do_Abi_GetResults_4(thisPtr);
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0])}}(____return_value__);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0], "____return_value__")}};
                      }
                      catch (Exception __exception__)
                      {
@@ -1495,7 +1495,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = {{staticMethodsClass}}.Do_Abi_GetResults_2(thisPtr);
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0])}}(____return_value__);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0], "____return_value__")}};
                      }
                      catch (Exception __exception__)
                      {
@@ -1591,7 +1591,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Key_1(thisPtr);
-                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0])}}(____return_value__);
+                         *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0], "____return_value__")}};
                      }
                      catch (Exception __exception__)
                      {
