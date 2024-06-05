@@ -3597,21 +3597,21 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
     // generate the attribute on the Impl namespace metadata classes using the
     // source generator rather than here as it allows us to better handle 
     // covariant interfaces.  But for factory classes, we generate them here.
-    bool should_write_winrt_exposed_type_attribute(TypeDef const& type)
+    bool should_write_winrt_exposed_type_attribute(TypeDef const& type, bool isFactory)
     {
         if (settings.netstandard_compat)
         {
             return false;
         }
 
-        // TODO: how to handle generic delegates
-        return get_category(type) == category::struct_type ||
+        return isFactory || 
+            get_category(type) == category::struct_type ||
             (get_category(type) == category::delegate_type && distance(type.GenericParam()) == 0);
     }
 
     void write_winrt_exposed_type_attribute(writer& w, TypeDef const& type, bool isFactory)
     {
-        if (should_write_winrt_exposed_type_attribute(type) || isFactory)
+        if (should_write_winrt_exposed_type_attribute(type, isFactory))
         {
             if (get_category(type) == category::struct_type)
             {
@@ -3630,7 +3630,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
     void write_winrt_exposed_type_class(writer& w, TypeDef const& type, bool isFactory)
     {
-        if (should_write_winrt_exposed_type_attribute(type) || isFactory)
+        if (should_write_winrt_exposed_type_attribute(type, isFactory))
         {
             if (get_category(type) == category::class_type && isFactory)
             {
@@ -10057,7 +10057,7 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
 
         w.write(R"(
 %
-internal sealed class % : IActivationFactory%
+internal sealed class % : global::WinRT.Interop.IActivationFactory%
 {
 
 static %()
