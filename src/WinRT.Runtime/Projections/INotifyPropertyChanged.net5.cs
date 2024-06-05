@@ -50,7 +50,6 @@ namespace ABI.System.ComponentModel
 #pragma warning disable CA2257
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
-        [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "90B17601-B065-586E-83D9-9ADC3A695284")]
         public struct Vftbl
 #pragma warning restore CA2257
         {
