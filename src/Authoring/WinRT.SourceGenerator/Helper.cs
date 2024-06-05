@@ -411,14 +411,14 @@ namespace Generator
             return false;
         }
 
-        public static Func<ISymbol, bool> IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(Compilation compilation)
+        public static Func<ISymbol, TypeMapper, bool> IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(Compilation compilation)
         {
             var winrtTypeAttribute = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
             return IsWinRTTypeHelper;
 
-            bool IsWinRTTypeHelper(ISymbol type)
+            bool IsWinRTTypeHelper(ISymbol type, TypeMapper typeMapper)
             {
-                return IsWinRTType(type, winrtTypeAttribute, true, compilation.Assembly);
+                return IsWinRTType(type, winrtTypeAttribute, typeMapper, true, compilation.Assembly);
             }
         }
 
