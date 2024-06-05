@@ -82,10 +82,9 @@ namespace ABI.System.Collections.Specialized
 #endif
     struct NotifyCollectionChangedEventArgs
     {
-        private static readonly Guid Interface_IID = 
-            FeatureSwitches.UseWindowsUIXamlProjections
-                ? IID.IID_WUX_INotifyCollectionChangedEventArgs
-                : IID.IID_MUX_INotifyCollectionChangedEventArgs;
+        private static ref readonly Guid Interface_IID => ref FeatureSwitches.UseWindowsUIXamlProjections
+            ? ref IID.IID_WUX_INotifyCollectionChangedEventArgs
+            : ref IID.IID_MUX_INotifyCollectionChangedEventArgs;
 
         public static IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
         {
