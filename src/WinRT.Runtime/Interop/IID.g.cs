@@ -465,7 +465,7 @@ namespace WinRT.Interop
             }
         }
 
-        /// <summary>The IID for <c>WUX_INotifyCollectionChangedEventArgsFactory</c> (b30c3e3a-df8d-44a5-9a38-7ac0d08ce63d).</summary>
+        /// <summary>The IID for <c>WUX_INotifyCollectionChangedEventArgsFactory</c> (B30C3E3A-DF8D-44A5-9A38-7AC0D08CE63D).</summary>
         internal static ref readonly Guid IID_WUX_INotifyCollectionChangedEventArgsFactory
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
