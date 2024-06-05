@@ -15,12 +15,9 @@ namespace ABI.System.ComponentModel
 #endif
     static class INotifyPropertyChangedMethods
     {
-        public static global::System.Guid IID { get; } = new(GetIID());
-
-        private static ReadOnlySpan<byte> GetIID()
-            => FeatureSwitches.UseWindowsUIXamlProjections
-                ? new(new byte[] { 0x9c, 0xd6, 0x75, 0xcf, 0xf4, 0xf2, 0x6b, 0x48, 0xb3, 0x2, 0xbb, 0x4c, 0x9, 0xba, 0xeb, 0xfa })
-                : new(new byte[] { 0x1, 0x76, 0xb1, 0x90, 0x65, 0xb0, 0x6e, 0x58, 0x83, 0xd9, 0x9a, 0xdc, 0x3a, 0x69, 0x52, 0x84 });
+        public static global::System.Guid IID => FeatureSwitches.UseWindowsUIXamlProjections
+            ? global::WinRT.Interop.IID.IID_WUX_INotifyPropertyChanged
+            : global::WinRT.Interop.IID.IID_MUX_INotifyPropertyChanged;
 
         public static IntPtr AbiToProjectionVftablePtr => INotifyPropertyChanged.Vftbl.AbiToProjectionVftablePtr;
 
@@ -128,7 +125,6 @@ namespace ABI.System.ComponentModel
                 }
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_INotifyPropertyChanged);
 
         private static global::ABI.WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> _PropertyChanged(IWinRTObject _this)
         {
