@@ -97,7 +97,7 @@ namespace ABI.System.Collections.Generic
             return _GetValue(obj);
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(KeyValuePair<K, V>));
+        internal static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(KeyValuePair<K, V>));
         public static Guid IID => PIID;
 
         private static IntPtr abiToProjectionVftablePtr;
@@ -423,7 +423,7 @@ namespace ABI.System.Collections.Generic
 
             public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.KeyValuePair<K, V>.AbiToProjectionVftablePtr;
 
-            public static Guid PIID = ABI.System.Collections.Generic.KeyValuePair<K, V>.PIID;
+            public static readonly Guid PIID = ABI.System.Collections.Generic.KeyValuePair<K, V>.PIID;
         }
 
         private static readonly ConditionalWeakTable<object, ToIKeyValuePair> _adapterTable = new();

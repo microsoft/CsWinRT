@@ -329,6 +329,36 @@ namespace AuthoringTest
             };
         }
 
+        public static IList<bool> GetBools()
+        {
+            return new List<bool>()
+            {
+                true,
+                false,
+                true
+            };
+        }
+
+        public static IList<BasicStruct> GetBasicStructs()
+        {
+            return new List<BasicStruct>()
+            {
+                new BasicStruct() { X = 1, Y = 2, Value = "Basic" },
+                new BasicStruct() { X = 2, Y = 4, Value = "Struct" },
+            };
+        }
+
+        public static IList<ComplexStruct> GetComplexStructs()
+        {
+            return new List<ComplexStruct>()
+            {
+                new ComplexStruct() { 
+                    X = 12,
+                    Val = true, 
+                    BasicStruct = new BasicStruct() { X = 1, Y = 2, Value = "Basic" } },
+            };
+        }
+
         public IAsyncOperation<Int32> GetIntAsyncOperation()
         {
             int val = IntAsyncOperation.GetResults();
@@ -353,6 +383,11 @@ namespace AuthoringTest
         public IAsyncOperation<BasicStruct> GetStructAsyncOperation()
         {
             return System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
+        }
+
+        public IAsyncOperation<bool> GetBoolAsyncOperation()
+        {
+            return Task.FromResult(false).AsAsyncOperation();
         }
 
         public int SetIntAsyncOperation(IAsyncOperation<Int32> op)

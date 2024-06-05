@@ -72,7 +72,7 @@ namespace WinRT.Interop
             {
                 new ComWrappers.ComInterfaceEntry
                 {
-                    IID = ABI.WinRT.Interop.IWeakReference.IID,
+                    IID = IID.IID_IWeakReference,
                     Vtable = ABI.WinRT.Interop.IWeakReference.AbiToProjectionVftablePtr
                 }
             };
@@ -110,8 +110,6 @@ namespace ABI.WinRT.Interop
     [Guid("00000038-0000-0000-C000-000000000046")]
     internal unsafe interface IWeakReferenceSource : global::WinRT.Interop.IWeakReferenceSource
     {
-        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IWeakReferenceSource;
-
         public static IntPtr AbiToProjectionVftablePtr;
         static unsafe IWeakReferenceSource()
         {
@@ -127,7 +125,7 @@ namespace ABI.WinRT.Interop
 
             try
             {
-                *weakReference = ComWrappersSupport.CreateCCWForObjectForABI(new global::WinRT.Interop.ManagedWeakReference(ComWrappersSupport.FindObject<object>(thisPtr)), IWeakReference.IID);
+                *weakReference = ComWrappersSupport.CreateCCWForObjectForABI(new global::WinRT.Interop.ManagedWeakReference(ComWrappersSupport.FindObject<object>(thisPtr)), global::WinRT.Interop.IID.IID_IWeakReference);
             }
             catch (Exception __exception__)
             {
@@ -147,8 +145,6 @@ namespace ABI.WinRT.Interop
     [Guid("00000037-0000-0000-C000-000000000046")]
     internal unsafe interface IWeakReference : global::WinRT.Interop.IWeakReference
     {
-        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IWeakReference;
-
         public static IntPtr AbiToProjectionVftablePtr;
         static unsafe IWeakReference()
         {

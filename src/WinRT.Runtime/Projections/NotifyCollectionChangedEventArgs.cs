@@ -25,7 +25,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 ? IID.IID_WUX_INotifyCollectionChangedEventArgsFactory
                 : IID.IID_MUX_INotifyCollectionChangedEventArgsFactory;
 
-        public readonly static WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = new();
+        public static readonly WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = new();
 
         private WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory()
         {

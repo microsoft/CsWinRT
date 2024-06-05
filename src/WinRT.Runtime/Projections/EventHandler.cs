@@ -109,7 +109,7 @@ namespace ABI.System
 #endif
     static class EventHandler<T>
     {
-        public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(global::System.EventHandler<T>));
+        public static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(global::System.EventHandler<T>));
 
         public static Guid IID => PIID;
 
@@ -492,13 +492,13 @@ namespace ABI.System
             {
                 entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
-                    IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
+                    IID = global::WinRT.Interop.IID.IID_IPropertyValue,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
                 };
 
                 entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
-                    IID = Nullable_EventHandler.IID,
+                    IID = global::WinRT.Interop.IID.IID_NullableEventHandler,
                     Vtable = Nullable_EventHandler.AbiToProjectionVftablePtr
                 };
             }

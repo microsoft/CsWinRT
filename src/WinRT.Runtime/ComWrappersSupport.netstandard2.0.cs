@@ -23,7 +23,7 @@ namespace WinRT
         private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
 
         private static ConcurrentDictionary<IntPtr, System.WeakReference<object>> RuntimeWrapperCache = new ConcurrentDictionary<IntPtr, System.WeakReference<object>>();
-        private readonly static ConcurrentDictionary<Type, Func<object, IObjectReference>> TypeObjectRefFuncCache = new ConcurrentDictionary<Type, Func<object, IObjectReference>>();
+        private static readonly ConcurrentDictionary<Type, Func<object, IObjectReference>> TypeObjectRefFuncCache = new ConcurrentDictionary<Type, Func<object, IObjectReference>>();
 
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
 
@@ -361,7 +361,7 @@ namespace WinRT
 
             InitializeManagedQITable(interfaceTableEntries);
 
-            IdentityPtr = _managedQITable[IUnknownVftbl.IID];
+            IdentityPtr = _managedQITable[IID.IID_IUnknown];
         }
 
         ~ComCallableWrapper()

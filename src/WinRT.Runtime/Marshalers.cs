@@ -1807,7 +1807,7 @@ namespace WinRT
             IntPtr iunknownPtr = IntPtr.Zero;
             try
             {
-                Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in IUnknownVftbl.IID), out iunknownPtr);
+                Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in IID.IID_IUnknown), out iunknownPtr);
                 if (IUnknownVftbl.IsReferenceToManagedObject(iunknownPtr))
                 {
                     // We use a global instance of ComWrappers, but it's possible to use different projections of the same type

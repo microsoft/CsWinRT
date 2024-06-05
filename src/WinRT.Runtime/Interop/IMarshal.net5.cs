@@ -19,8 +19,6 @@ namespace ABI.WinRT.Interop
     [Guid("00000003-0000-0000-c000-000000000046")]
     internal sealed class IMarshal
     {
-        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IMarshal;
-
         private const string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
 
         private static readonly object _IID_InProcFreeThreadedMarshalerLock = new();
@@ -106,7 +104,7 @@ namespace ABI.WinRT.Interop
             {
                 EnsureHasFreeThreadedMarshaler();
 
-                Guid iid_IUnknown = IUnknownVftbl.IID;
+                Guid iid_IUnknown = IID.IID_IUnknown;
                 Guid iid_unmarshalClass;
                 t_freeThreadedMarshaler.GetUnmarshalClass(&iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass);
                 return iid_unmarshalClass;
@@ -211,7 +209,7 @@ namespace ABI.WinRT.Interop
         public IntPtr ThisPtr => _obj.ThisPtr;
         public IMarshal(IObjectReference obj)
         {
-            _obj = obj.As<IUnknownVftbl>(IID);
+            _obj = obj.As<IUnknownVftbl>(IID.IID_IMarshal);
         }
 
         public unsafe void GetUnmarshalClass(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, Guid* pCid)

@@ -178,7 +178,7 @@ namespace ABI.Windows.Foundation
     internal static class BoxedValueIReferenceImpl<T, TAbi> where TAbi : unmanaged
     {
         public static IntPtr AbiToProjectionVftablePtr;
-        private readonly static global::ABI.System.Nullable_Delegates.GetValueDelegateAbi GetValue;
+        private static readonly global::ABI.System.Nullable_Delegates.GetValueDelegateAbi GetValue;
 
         static unsafe BoxedValueIReferenceImpl()
         {
@@ -502,7 +502,6 @@ namespace ABI.System
     internal static class Nullable_int
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i4)";
-        internal static readonly Guid IID = new(0x548cefbd, 0xbc8a, 0x5fa0, 0x8d, 0xf2, 0x95, 0x74, 0x40, 0xfc, 0x8b, 0xf4);
 
         [Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4")]
         public unsafe struct Vftbl
@@ -563,7 +562,6 @@ namespace ABI.System
     internal static class Nullable_string
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};string)";
-        internal static readonly Guid IID = new(0xfd416dfb, 0x2a07, 0x52eb, 0xaa, 0xe3, 0xdf, 0xce, 0x14, 0x11, 0x6c, 0x05);
 
         [Guid("fd416dfb-2a07-52eb-aae3-dfce14116c05")]
         public unsafe struct Vftbl
@@ -625,7 +623,7 @@ namespace ABI.System
             IntPtr __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableString), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(MarshalString.FromAbi(__retval));
             }
@@ -641,7 +639,6 @@ namespace ABI.System
     internal static class Nullable_byte
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u1)";
-        internal static readonly Guid IID = new(0xe5198cc8, 0x2873, 0x55f5, 0xb0, 0xa1, 0x84, 0xff, 0x9e, 0x4a, 0xad, 0x62);
 
         [Guid("e5198cc8-2873-55f5-b0a1-84ff9e4aad62")]
         public unsafe struct Vftbl
@@ -702,7 +699,6 @@ namespace ABI.System
     internal static class Nullable_sbyte
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i1)";
-        internal static readonly Guid IID = new(0x95500129, 0xfbf6, 0x5afc, 0x89, 0xdf, 0x70, 0x64, 0x2d, 0x74, 0x19, 0x90);
 
         [Guid("95500129-fbf6-5afc-89df-70642d741990")]
         public unsafe struct Vftbl
@@ -763,7 +759,6 @@ namespace ABI.System
     internal static class Nullable_short
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i2)";
-        internal static readonly Guid IID = new(0x6ec9e41b, 0x6709, 0x5647, 0x99, 0x18, 0xa1, 0x27, 0x01, 0x10, 0xfc, 0x4e);
 
         [Guid("6ec9e41b-6709-5647-9918-a1270110fc4e")]
         public unsafe struct Vftbl
@@ -824,7 +819,6 @@ namespace ABI.System
     internal static class Nullable_ushort
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u2)";
-        internal static readonly Guid IID = new(0x5ab7d2c3, 0x6b62, 0x5e71, 0xa4, 0xb6, 0x2d, 0x49, 0xc4, 0xf2, 0x38, 0xfd);
 
         [Guid("5ab7d2c3-6b62-5e71-a4b6-2d49c4f238fd")]
         public unsafe struct Vftbl
@@ -885,7 +879,6 @@ namespace ABI.System
     internal static class Nullable_uint
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u4)";
-        internal static readonly Guid IID = new(0x513ef3af, 0xe784, 0x5325, 0xa9, 0x1e, 0x97, 0xc2, 0xb8, 0x11, 0x1c, 0xf3);
 
         [Guid("513ef3af-e784-5325-a91e-97c2b8111cf3")]
         public unsafe struct Vftbl
@@ -946,7 +939,6 @@ namespace ABI.System
     internal static class Nullable_long
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i8)";
-        internal static readonly Guid IID = new(0x4dda9e24, 0xe69f, 0x5c6a, 0xa0, 0xa6, 0x93, 0x42, 0x73, 0x65, 0xaf, 0x2a);
 
         [Guid("4dda9e24-e69f-5c6a-a0a6-93427365af2a")]
         public unsafe struct Vftbl
@@ -1007,7 +999,6 @@ namespace ABI.System
     internal static class Nullable_ulong
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};u8)";
-        internal static readonly Guid IID = new(0x6755e376, 0x53bb, 0x568b, 0xa1, 0x1d, 0x17, 0x23, 0x98, 0x68, 0x30, 0x9e);
 
         [Guid("6755e376-53bb-568b-a11d-17239868309e")]
         public unsafe struct Vftbl
@@ -1068,7 +1059,6 @@ namespace ABI.System
     internal static class Nullable_float
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};f4)";
-        internal static readonly Guid IID = new(0x719cc2ba, 0x3e76, 0x5def, 0x9f, 0x1a, 0x38, 0xd8, 0x5a, 0x14, 0x5e, 0xa8);
 
         [Guid("719cc2ba-3e76-5def-9f1a-38d85a145ea8")]
         public unsafe struct Vftbl
@@ -1129,7 +1119,6 @@ namespace ABI.System
     internal static class Nullable_double
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};f8)";
-        internal static readonly Guid IID = new(0x2f2d6c29, 0x5473, 0x5f3e, 0x92, 0xe7, 0x96, 0x57, 0x2b, 0xb9, 0x90, 0xe2);
 
         [Guid("2f2d6c29-5473-5f3e-92e7-96572bb990e2")]
         public unsafe struct Vftbl
@@ -1190,7 +1179,6 @@ namespace ABI.System
     internal static class Nullable_char
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};c2)";
-        internal static readonly Guid IID = new(0xfb393ef3, 0xbbac, 0x5bd5, 0x91, 0x44, 0x84, 0xf2, 0x35, 0x76, 0xf4, 0x15);
 
         [Guid("fb393ef3-bbac-5bd5-9144-84f23576f415")]
         public unsafe struct Vftbl
@@ -1251,7 +1239,6 @@ namespace ABI.System
     internal static class Nullable_bool
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};b1)";
-        internal static readonly Guid IID = new(0x3c00fd60, 0x2950, 0x5939, 0xa2, 0x1a, 0x2d, 0x12, 0xc5, 0xa0, 0x1b, 0x8a);
 
         [Guid("3c00fd60-2950-5939-a21a-2d12c5a01b8a")]
         public unsafe struct Vftbl
@@ -1312,7 +1299,6 @@ namespace ABI.System
     internal static class Nullable_guid
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};g16)";
-        internal static readonly Guid IID = new(0x7d50f649, 0x632c, 0x51f9, 0x84, 0x9a, 0xee, 0x49, 0x42, 0x89, 0x33, 0xea);
 
         [Guid("7d50f649-632c-51f9-849a-ee49428933ea")]
         public unsafe struct Vftbl
@@ -1373,7 +1359,6 @@ namespace ABI.System
     internal static class Nullable_DateTimeOffset
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.DateTime;i8))";
-        internal static readonly Guid IID = new(0x5541d8a7, 0x497c, 0x5aa4, 0x86, 0xfc, 0x77, 0x13, 0xad, 0xbf, 0x2a, 0x2c);
 
         [Guid("5541d8a7-497c-5aa4-86fc-7713adbf2a2c")]
         public unsafe struct Vftbl
@@ -1435,7 +1420,7 @@ namespace ABI.System
             DateTimeOffset __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableDateTimeOffset), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, DateTimeOffset*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return DateTimeOffset.FromAbi(__retval);
             }
@@ -1451,7 +1436,6 @@ namespace ABI.System
     internal static class Nullable_TimeSpan
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.TimeSpan;i8))";
-        internal static readonly Guid IID = new(0x604d0c4c, 0x91de, 0x5c2a, 0x93, 0x5f, 0x36, 0x2f, 0x13, 0xea, 0xf8, 0x00);
 
         [Guid("604d0c4c-91de-5c2a-935f-362f13eaf800")]
         public unsafe struct Vftbl
@@ -1513,7 +1497,7 @@ namespace ABI.System
             TimeSpan __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableTimeSpan), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, TimeSpan*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return TimeSpan.FromAbi(__retval);
             }
@@ -1529,7 +1513,6 @@ namespace ABI.System
     internal static class Nullable_Object
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};cinterface(IInspectable))";
-        internal static readonly Guid IID = new(0x06dccc90, 0xa058, 0x5c88, 0x87, 0xb7, 0x6f, 0x33, 0x60, 0xa2, 0xfc, 0x16);
 
         [Guid("06dccc90-a058-5c88-87b7-6f3360a2fc16")]
         public unsafe struct Vftbl
@@ -1590,7 +1573,6 @@ namespace ABI.System
     internal static class Nullable_Type
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4)))";
-        internal static readonly Guid IID = new(0x3830ad99, 0xd8da, 0x53f3, 0x98, 0x9b, 0xfc, 0x92, 0xad, 0x22, 0x27, 0x78);
 
         [Guid("3830ad99-d8da-53f3-989b-fc92ad222778")]
         public unsafe struct Vftbl
@@ -1652,7 +1634,7 @@ namespace ABI.System
             Type __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableType), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Type*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(Type.FromAbi(__retval));
             }
@@ -1668,7 +1650,6 @@ namespace ABI.System
     internal static class Nullable_Exception
     {
         public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.HResult;i4))";
-        internal static Guid IID = new(0x6ff27a1e, 0x4b6a, 0x59b7, 0xb2, 0xc3, 0xd1, 0xf2, 0xee, 0x47, 0x45, 0x93);
 
         [Guid("6ff27a1e-4b6a-59b7-b2c3-d1f2ee474593")]
         public unsafe struct Vftbl
@@ -1730,7 +1711,13 @@ namespace ABI.System
             Exception __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IID.IID_NullableException, out nullablePtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableException), out nullablePtr)
+#endif
+                    );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Exception*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(Exception.FromAbi(__retval));
             }
@@ -1745,12 +1732,10 @@ namespace ABI.System
     [Guid("25230F05-B49C-57EE-8961-5373D98E1AB1")]
     internal static class Nullable_EventHandler
     {
-        internal static readonly Guid IID = new(0x25230F05, 0xB49C, 0x57EE, 0x89, 0x61, 0x53, 0x73, 0xD9, 0x8E, 0x1A, 0xB1);
-
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
 #if !NET
-        private readonly static Nullable_Delegates.GetValueDelegate _Get_Value_0;
+        private static readonly Nullable_Delegates.GetValueDelegate _Get_Value_0;
 #endif
 
         unsafe static Nullable_EventHandler()
@@ -1792,7 +1777,7 @@ namespace ABI.System
             IntPtr __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableEventHandler), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(EventHandler.FromAbi(__retval));
             }
@@ -1811,7 +1796,7 @@ namespace ABI.System
 
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
-        private readonly static Nullable_Delegates.GetValueDelegate _Get_Value_0;
+        private static readonly Nullable_Delegates.GetValueDelegate _Get_Value_0;
 
         unsafe static Nullable_Delegate()
         {
@@ -1841,7 +1826,7 @@ namespace ABI.System
             return 0;
         }
 
-        public static Guid PIID = Nullable<T>.PIID;
+        public static readonly Guid PIID = Nullable<T>.PIID;
 
         public static unsafe Nullable GetValue(IInspectable inspectable)
         {
@@ -1849,7 +1834,13 @@ namespace ABI.System
             IntPtr __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in PIID, out nullablePtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr)
+#endif
+                    );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(Marshaler<T>.FromAbi(__retval));
             }
@@ -1994,7 +1985,7 @@ namespace ABI.System
 
     internal static class NullableBlittable<T> where T: unmanaged
     {
-        private readonly static Guid IID = NullableType.GetIID<T>();
+        private static readonly Guid IID = NullableType.GetIID<T>();
 
         public static unsafe object GetValue(IInspectable inspectable)
         {
@@ -2017,32 +2008,32 @@ namespace ABI.System
     {
         internal static Guid GetIID<T>()
         {
-            if (typeof(T) == typeof(int)) return Nullable_int.IID;
-            if (typeof(T) == typeof(byte)) return Nullable_byte.IID;
-            if (typeof(T) == typeof(bool)) return Nullable_bool.IID;
-            if (typeof(T) == typeof(sbyte)) return Nullable_sbyte.IID;
-            if (typeof(T) == typeof(short)) return Nullable_short.IID;
-            if (typeof(T) == typeof(ushort)) return Nullable_ushort.IID;
-            if (typeof(T) == typeof(char)) return Nullable_char.IID;
-            if (typeof(T) == typeof(uint)) return Nullable_uint.IID;
-            if (typeof(T) == typeof(long)) return Nullable_long.IID;
-            if (typeof(T) == typeof(ulong)) return Nullable_ulong.IID;
-            if (typeof(T) == typeof(float)) return Nullable_float.IID;
-            if (typeof(T) == typeof(double)) return Nullable_double.IID;
-            if (typeof(T) == typeof(Guid)) return Nullable_guid.IID;
-            if (typeof(T) == typeof(global::System.Type)) return Nullable_Type.IID;
-            if (typeof(T) == typeof(global::System.TimeSpan)) return Nullable_TimeSpan.IID;
-            if (typeof(T) == typeof(global::System.DateTimeOffset)) return Nullable_DateTimeOffset.IID;
-            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IReferenceIIDs.IReferenceOfPoint_IID;
-            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IReferenceIIDs.IReferenceOfSize_IID;
-            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IReferenceIIDs.IReferenceOfRect_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IReferenceIIDs.IReferenceMatrix3x2_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IReferenceIIDs.IReferenceMatrix4x4_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IReferenceIIDs.IReferencePlane_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IReferenceIIDs.IReferenceQuaternion_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IReferenceIIDs.IReferenceVector2_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceIIDs.IReferenceVector3_IID;
-            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceIIDs.IReferenceVector4_IID;
+            if (typeof(T) == typeof(int)) return IID.IID_NullableInt;
+            if (typeof(T) == typeof(byte)) return IID.IID_NullableByte;
+            if (typeof(T) == typeof(bool)) return IID.IID_NullableBool;
+            if (typeof(T) == typeof(sbyte)) return IID.IID_NullableSByte;
+            if (typeof(T) == typeof(short)) return IID.IID_NullableShort;
+            if (typeof(T) == typeof(ushort)) return IID.IID_NullableUShort;
+            if (typeof(T) == typeof(char)) return IID.IID_NullableChar;
+            if (typeof(T) == typeof(uint)) return IID.IID_NullableUInt;
+            if (typeof(T) == typeof(long)) return IID.IID_NullableLong;
+            if (typeof(T) == typeof(ulong)) return IID.IID_NullableULong;
+            if (typeof(T) == typeof(float)) return IID.IID_NullableFloat;
+            if (typeof(T) == typeof(double)) return IID.IID_NullableDouble;
+            if (typeof(T) == typeof(Guid)) return IID.IID_NullableGuid;
+            if (typeof(T) == typeof(global::System.Type)) return IID.IID_NullableType;
+            if (typeof(T) == typeof(global::System.TimeSpan)) return IID.IID_NullableTimeSpan;
+            if (typeof(T) == typeof(global::System.DateTimeOffset)) return IID.IID_NullableDateTimeOffset;
+            if (typeof(T) == typeof(global::Windows.Foundation.Point)) return IID.IID_IReferenceOfPoint;
+            if (typeof(T) == typeof(global::Windows.Foundation.Size)) return IID.IID_IReferenceOfSize;
+            if (typeof(T) == typeof(global::Windows.Foundation.Rect)) return IID.IID_IReferenceOfRect;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix3x2)) return IID.IID_IReferenceMatrix3x2;
+            if (typeof(T) == typeof(global::System.Numerics.Matrix4x4)) return IID.IID_IReferenceMatrix4x4;
+            if (typeof(T) == typeof(global::System.Numerics.Plane)) return IID.IID_IReferencePlane;
+            if (typeof(T) == typeof(global::System.Numerics.Quaternion)) return IID.IID_IReferenceQuaternion;
+            if (typeof(T) == typeof(global::System.Numerics.Vector2)) return IID.IID_IReferenceVector2;
+            if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IID.IID_IReferenceVector3;
+            if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IID.IID_IReferenceVector4;
 
             return GuidGenerator.CreateIIDUnsafe(typeof(Nullable<T>));
         }
@@ -2143,33 +2134,6 @@ namespace ABI.System
         public const string Vector3 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector3;f4;f4;f4))";
         public const string Vector4 = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};struct(Windows.Foundation.Numerics.Vector4;f4;f4;f4;f4))";
     }
-
-    internal static class IReferenceIIDs
-    {
-#if NET
-        internal static readonly Guid IReferenceOfPoint_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x22, 0x4C, 0xF1, 0x84, 0x0A, 0xA0, 0x72, 0x52, 0x8D, 0x3D, 0x82, 0x11, 0x2E, 0x66, 0xDF, 0x00 }));
-        internal static readonly Guid IReferenceOfSize_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x86, 0x30, 0x72, 0x61, 0x53, 0x8E, 0x76, 0x52, 0x9F, 0x36, 0x2A, 0x4B, 0xB9, 0x3E, 0x2B, 0x75 }));
-        internal static readonly Guid IReferenceOfRect_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x11, 0x3F, 0x42, 0x80, 0x4F, 0x05, 0xAC, 0x5E, 0xAF, 0xD3, 0x63, 0xB6, 0xCE, 0x15, 0xE7, 0x7B }));
-        internal static readonly Guid IReferenceMatrix3x2_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xfd, 0x8c, 0x35, 0x76, 0xbd, 0x2c, 0x5b, 0x52, 0xa4, 0x9e, 0x90, 0xee, 0x18, 0x24, 0x7b, 0x71 }));
-        internal static readonly Guid IReferenceMatrix4x4_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xdc, 0xff, 0xcb, 0xda, 0xef, 0x68, 0xd0, 0x5f, 0xb6, 0x57, 0x78, 0x2d, 0x0a, 0xc9, 0x80, 0x7e }));
-        internal static readonly Guid IReferencePlane_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xa1, 0x42, 0xd5, 0x46, 0xf7, 0x52, 0xe7, 0x58, 0xac, 0xfc, 0x9a, 0x6d, 0x36, 0x4d, 0xa0, 0x22 }));
-        internal static readonly Guid IReferenceQuaternion_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xbb, 0x04, 0x70, 0xb2, 0x14, 0xc0, 0xce, 0x5d, 0x9a, 0x21, 0x79, 0x9c, 0x5a, 0x3c, 0x14, 0x61 }));
-        internal static readonly Guid IReferenceVector2_IID = new(new ReadOnlySpan<byte>(new byte[] { 0x9e, 0xa6, 0xf6, 0x48, 0x65, 0x84, 0xae, 0x57, 0x94, 0x00, 0x97, 0x64, 0x08, 0x7f, 0x65, 0xad }));
-        internal static readonly Guid IReferenceVector3_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xff, 0x70, 0xe7, 0x1e, 0x54, 0xc9, 0xca, 0x59, 0xa7, 0x54, 0x61, 0x99, 0xa9, 0xbe, 0x28, 0x2c }));
-        internal static readonly Guid IReferenceVector4_IID = new(new ReadOnlySpan<byte>(new byte[] { 0xc9, 0x43, 0xe8, 0xa5, 0x20, 0xed, 0x39, 0x53, 0x8f, 0x8d, 0x9f, 0xe4, 0x04, 0xcf, 0x36, 0x54 }));
-#else
-        internal static readonly Guid IReferenceOfPoint_IID = new(0x84F14C22, 0xA00A, 0x5272, 0x8D, 0x3D, 0x82, 0x11, 0x2E, 0x66, 0xDF, 0x00);
-        internal static readonly Guid IReferenceOfSize_IID = new(0x61723086, 0x8E53, 0x5276, 0x9F, 0x36, 0x2A, 0x4B, 0xB9, 0x3E, 0x2B, 0x75);
-        internal static readonly Guid IReferenceOfRect_IID = new(0x80423F11, 0x054F, 0x5EAC, 0xAF, 0xD3, 0x63, 0xB6, 0xCE, 0x15, 0xE7, 0x7B);
-        internal static readonly Guid IReferenceMatrix3x2_IID = new(0x76358cfd, 0x2cbd, 0x525b, 0xa4, 0x9e, 0x90, 0xee, 0x18, 0x24, 0x7b, 0x71);
-        internal static readonly Guid IReferenceMatrix4x4_IID = new(0xdacbffdc, 0x68ef, 0x5fd0, 0xb6, 0x57, 0x78, 0x2d, 0x0a, 0xc9, 0x80, 0x7e);
-        internal static readonly Guid IReferencePlane_IID = new(0x46d542a1, 0x52f7, 0x58e7, 0xac, 0xfc, 0x9a, 0x6d, 0x36, 0x4d, 0xa0, 0x22);
-        internal static readonly Guid IReferenceQuaternion_IID = new(0xb27004bb, 0xc014, 0x5dce, 0x9a, 0x21, 0x79, 0x9c, 0x5a, 0x3c, 0x14, 0x61);
-        internal static readonly Guid IReferenceVector2_IID = new(0x48f6a69e, 0x8465, 0x57ae, 0x94, 0x00, 0x97, 0x64, 0x08, 0x7f, 0x65, 0xad);
-        internal static readonly Guid IReferenceVector3_IID = new(0x1ee770ff, 0xc954, 0x59ca, 0xa7, 0x54, 0x61, 0x99, 0xa9, 0xbe, 0x28, 0x2c);
-        internal static readonly Guid IReferenceVector4_IID = new(0xa5e843c9, 0xed20, 0x5339, 0x8f, 0x8d, 0x9f, 0xe4, 0x04, 0xcf, 0x36, 0x54);
-#endif
-    }
 }
 
 #if NET
@@ -2194,7 +2158,7 @@ namespace ABI.System
             {
                 entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
-                    IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
+                    IID = global::WinRT.Interop.IID.IID_IPropertyValue,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
                 };
 
@@ -2253,7 +2217,7 @@ namespace ABI.System
             {
                 entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
-                    IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
+                    IID = global::WinRT.Interop.IID.IID_IPropertyValue,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
                 };
 

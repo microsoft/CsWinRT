@@ -384,7 +384,7 @@ Where <spec> is one or more of:
 {
 internal static class ProjectionTypesInitializer
 {
-internal readonly static System.Collections.Generic.Dictionary<string, string> TypeNameToBaseTypeNameMapping = new System.Collections.Generic.Dictionary<string, string>(%, System.StringComparer.Ordinal)
+internal static readonly System.Collections.Generic.Dictionary<string, string> TypeNameToBaseTypeNameMapping = new System.Collections.Generic.Dictionary<string, string>(%, System.StringComparer.Ordinal)
 {
 %
 };

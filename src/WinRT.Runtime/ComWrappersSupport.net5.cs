@@ -348,7 +348,7 @@ namespace WinRT
             return null;
         }
 
-        private readonly static ConcurrentDictionary<Type, ComInterfaceEntry[]> ComInterfaceEntriesForType = new();
+        private static readonly ConcurrentDictionary<Type, ComInterfaceEntry[]> ComInterfaceEntriesForType = new();
         public static void RegisterComInterfaceEntries(Type implementationType, ComInterfaceEntry[] comInterfaceEntries) => ComInterfaceEntriesForType.TryAdd(implementationType, comInterfaceEntries);
     }
 
@@ -590,7 +590,7 @@ namespace WinRT
         private static object CreateObject(IntPtr externalComObject)
         {
             Guid inspectableIID = IID.IID_IInspectable;
-            Guid weakReferenceIID = ABI.WinRT.Interop.IWeakReference.IID;
+            Guid weakReferenceIID = IID.IID_IWeakReference;
             IntPtr ptr = IntPtr.Zero;
 
             try

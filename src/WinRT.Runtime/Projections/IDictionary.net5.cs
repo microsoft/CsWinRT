@@ -658,7 +658,7 @@ namespace ABI.System.Collections.Generic
             return global::System.Threading.Interlocked.CompareExchange(ref abiToProjectionVftablePtr, ptr, IntPtr.Zero) == IntPtr.Zero;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IDictionary<K, V>));
+        internal static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IDictionary<K, V>));
         public static Guid IID => PIID;
 
         public static V Abi_Lookup_0(IntPtr thisPtr, K key)
@@ -1290,7 +1290,7 @@ namespace ABI.System.Collections.Generic
 
             public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.IDictionary<K, V>.AbiToProjectionVftablePtr;
 
-            public static Guid PIID = ABI.System.Collections.Generic.IDictionary<K, V>.PIID;
+            public static readonly Guid PIID = ABI.System.Collections.Generic.IDictionary<K, V>.PIID;
         }
 
         private static readonly ConditionalWeakTable<global::System.Collections.Generic.IDictionary<K, V>, ToAbiHelper> _adapterTable = new();
@@ -1310,7 +1310,7 @@ namespace ABI.System.Collections.Generic
             return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
 
-        public static Guid PIID = IDictionaryMethods<K,V>.PIID;
+        public static readonly Guid PIID = IDictionaryMethods<K,V>.PIID;
 
         global::System.Collections.Generic.ICollection<K> global::System.Collections.Generic.IDictionary<K, V>.Keys
         {

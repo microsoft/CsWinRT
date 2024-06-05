@@ -17,7 +17,7 @@ namespace ABI.System.Windows.Input
 #endif
     static class ICommandMethods
     {
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x42, 0x35, 0xAF, 0xE5, 0x67, 0xCA, 0x81, 0x40, 0x99, 0x5B, 0x70, 0x9D, 0xD1, 0x37, 0x92, 0xDF }));
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_ICommand;
 
         public static IntPtr AbiToProjectionVftablePtr => ICommand.Vftbl.AbiToProjectionVftablePtr;
 

@@ -357,7 +357,7 @@ namespace WinRT
             }
         }
 
-        private readonly static ConcurrentDictionary<Type, bool> IsTypeWindowsRuntimeTypeCache = new();
+        private static readonly ConcurrentDictionary<Type, bool> IsTypeWindowsRuntimeTypeCache = new();
         public static bool IsTypeWindowsRuntimeType(Type type)
         {
             return IsTypeWindowsRuntimeTypeCache.GetOrAdd(type, (type) =>
@@ -600,7 +600,7 @@ namespace WinRT
             return true;
         }
 
-        private readonly static ConcurrentDictionary<Type, Type> DefaultInterfaceTypeCache = new();
+        private static readonly ConcurrentDictionary<Type, Type> DefaultInterfaceTypeCache = new();
 
 #if NET
         [UnconditionalSuppressMessage("Trimming", "IL2070",
