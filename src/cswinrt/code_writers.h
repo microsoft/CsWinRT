@@ -7114,7 +7114,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
             [&](writer& w)
             {
                 if (!is_generic) return;
-                w.write("public static Guid PIID = GuidGenerator.CreateIID(typeof(%));\n", type_name);
+                w.write("public static readonly Guid PIID = GuidGenerator.CreateIID(typeof(%));\n", type_name);
                 w.write(R"(%
 internal unsafe Vftbl(IntPtr thisPtr) : this()
 {
@@ -7385,7 +7385,7 @@ return null;
 var vftblT = new Vftbl(thisPtr);
 return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT);
 }
-public static Guid PIID = Vftbl.PIID;
+public static readonly Guid PIID = Vftbl.PIID;
 )");
             },
             type_name,
@@ -8090,7 +8090,7 @@ internal unsafe interface % : %
                 if (is_generic)
                 {
                     w.write(R"(
-public static Guid PIID = %.IID;
+public static readonly Guid PIID = %.IID;
 public static readonly IntPtr AbiToProjectionVftablePtr;
 static unsafe @()
 {
@@ -8125,7 +8125,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
 
 public static readonly IntPtr AbiToProjectionVftablePtr = %.AbiToProjectionVftablePtr;
 
-public static Guid PIID = %.IID;
+public static readonly Guid PIID = %.IID;
 }
 )",
                         bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
@@ -9087,7 +9087,7 @@ private static unsafe int Do_Abi_Invoke%
                     // Generating both PIID and IID for backcompat consistency and to have a common property to rely on
                     // similar to what we do in the manual projections.
                     w.write(R"(
-public static global::System.Guid PIID = GuidGenerator.CreateIID(typeof(%));
+public static readonly global::System.Guid PIID = GuidGenerator.CreateIID(typeof(%));
 public static global::System.Guid IID => PIID;
 )",
                         type_name);

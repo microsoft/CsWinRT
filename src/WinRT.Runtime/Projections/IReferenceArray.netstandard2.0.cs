@@ -119,7 +119,7 @@ namespace ABI.Windows.Foundation
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public IReferenceArray_Delegates.get_Value_0 get_Value_0;
-            public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReferenceArray<T>));
+            public static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReferenceArray<T>));
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
@@ -130,7 +130,7 @@ namespace ABI.Windows.Foundation
             }
         }
 
-        public static Guid PIID = Vftbl.PIID;
+        public static readonly Guid PIID = Vftbl.PIID;
 
         public static implicit operator IReferenceArray<T>(IObjectReference obj) => (obj != null) ? new IReferenceArray<T>(obj) : null;
         public static implicit operator IReferenceArray<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new IReferenceArray<T>(obj) : null;

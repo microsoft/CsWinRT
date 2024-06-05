@@ -256,7 +256,7 @@ namespace ABI.System.Collections.Generic
             return new ToAbiEnumeratorAdapter<T>(__this.GetEnumerator());
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerable<T>));
+        internal static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerable<T>));
         public static Guid IID => PIID;
     }
 
@@ -413,7 +413,7 @@ namespace ABI.System.Collections.Generic
 
             public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.IEnumerable<T>.AbiToProjectionVftablePtr;
 
-            public static Guid PIID = ABI.System.Collections.Generic.IEnumerable<T>.PIID;
+            public static readonly Guid PIID = ABI.System.Collections.Generic.IEnumerable<T>.PIID;
         }
 
         public static ObjectReference<IUnknownVftbl> ObjRefFromAbi(IntPtr thisPtr)
@@ -425,7 +425,7 @@ namespace ABI.System.Collections.Generic
             return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
 
-        public static Guid PIID = ABI.System.Collections.Generic.IEnumerableMethods<T>.PIID;
+        public static readonly Guid PIID = ABI.System.Collections.Generic.IEnumerableMethods<T>.PIID;
 
         global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
         {
@@ -605,7 +605,7 @@ namespace ABI.System.Collections.Generic
             return IEnumerator<T>.FindAdapter(thisPtr).HasCurrent;
         }
 
-        internal readonly static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerator<T>));
+        internal static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IEnumerator<T>));
         public static Guid IID => PIID;
     }
 
@@ -1118,7 +1118,7 @@ namespace ABI.System.Collections.Generic
 
             public static readonly IntPtr AbiToProjectionVftablePtr = ABI.System.Collections.Generic.IEnumerator<T>.AbiToProjectionVftablePtr;
 
-            public static Guid PIID = ABI.System.Collections.Generic.IEnumerator<T>.PIID;
+            public static readonly Guid PIID = ABI.System.Collections.Generic.IEnumerator<T>.PIID;
         }
 
         private static readonly ConditionalWeakTable<global::System.Collections.Generic.IEnumerator<T>, ToAbiHelper> _adapterTable = new();
@@ -1137,7 +1137,7 @@ namespace ABI.System.Collections.Generic
             }
             return ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, PIID);
         }
-        public static Guid PIID = IEnumeratorMethods<T>.PIID;
+        public static readonly Guid PIID = IEnumeratorMethods<T>.PIID;
 
         T global::System.Collections.Generic.IEnumerator<T>.Current
         {

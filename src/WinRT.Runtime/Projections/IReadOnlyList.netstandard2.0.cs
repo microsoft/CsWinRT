@@ -221,7 +221,7 @@ namespace ABI.System.Collections.Generic
             internal _get_PropertyAsUInt32 get_Size_1;
             public global::System.Delegate IndexOf_2;
             public IReadOnlyList_Delegates.GetMany_3 GetMany_3;
-            public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReadOnlyList<T>));
+            public static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReadOnlyList<T>));
             private static readonly Type GetAt_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type IndexOf_2_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
 
@@ -356,7 +356,7 @@ namespace ABI.System.Collections.Generic
             var vftblT = new Vftbl(thisPtr);
             return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT);
         }
-        public static Guid PIID = Vftbl.PIID;
+        public static readonly Guid PIID = Vftbl.PIID;
 
         public static implicit operator IReadOnlyList<T>(IObjectReference obj) => (obj != null) ? new IReadOnlyList<T>(obj) : null;
         public static implicit operator IReadOnlyList<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new IReadOnlyList<T>(obj) : null;
