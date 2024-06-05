@@ -233,7 +233,7 @@ namespace WinRT
             else if (type == typeof(global::System.EventHandler))
             {
                 hasWinrtExposedClassAttribute = true;
-                entries.AddRange(ABI.System.EventHandler.GetExposedInterfaces());
+                entries.AddRange(Projections.GetAbiEventHandlerExposedInterfaces());
             }
             else if (ComInterfaceEntriesForType.TryGetValue(type, out var registeredEntries))
             {

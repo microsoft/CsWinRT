@@ -111,7 +111,6 @@ var registerCustomAbiTypeMappings = new (string Public, string Abi, string Name,
     ("Vector2", "ABI.System.Numerics.Vector2", "Windows.Foundation.Numerics.Vector2", null, false),
     ("Vector3", "ABI.System.Numerics.Vector3", "Windows.Foundation.Numerics.Vector3", null, false),
     ("Vector4", "ABI.System.Numerics.Vector4", "Windows.Foundation.Numerics.Vector4", null, false),
-    ("EventHandler", "ABI.System.EventHandler", null, null, false)
 };
 
 // Types for 'RegisterCustomTypeToHelperTypeMapping'
