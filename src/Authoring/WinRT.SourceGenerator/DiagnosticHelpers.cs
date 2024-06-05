@@ -382,7 +382,7 @@ namespace Generator
             "IAsyncOperationWithProgress`2",
         };
 
-        private readonly static HashSet<string> NotValidTypes = new HashSet<string>()
+        private static readonly HashSet<string> NotValidTypes = new HashSet<string>()
         {
             "System.Array",
             "System.Collections.Generic.Dictionary`2",
@@ -390,7 +390,7 @@ namespace Generator
             "System.Collections.Generic.KeyValuePair"
         };
 
-        private readonly static HashSet<string> WIPNotValidTypes = new HashSet<string>()
+        private static readonly HashSet<string> WIPNotValidTypes = new HashSet<string>()
         {
             "System.Linq.Enumerable",
             "Enumerable",

@@ -19,8 +19,6 @@ namespace ABI.Windows.Foundation
         private static readonly ManagedIStringableVftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
-        internal static readonly Guid IID = new(0x96369F54, 0x8EB6, 0x48F0, 0xAB, 0xCE, 0xC1, 0xB2, 0x11, 0xE6, 0x27, 0xC3);
-
 #if !NET
         private unsafe delegate int ToStringDelegate(IntPtr thisPtr, IntPtr* value);
         private static readonly ToStringDelegate delegateCache;
