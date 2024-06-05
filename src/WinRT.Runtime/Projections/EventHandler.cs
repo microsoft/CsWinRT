@@ -109,7 +109,7 @@ namespace ABI.System
 #endif
     static class EventHandler<T>
     {
-        public static Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(global::System.EventHandler<T>));
+        public static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(global::System.EventHandler<T>));
 
         public static Guid IID => PIID;
 

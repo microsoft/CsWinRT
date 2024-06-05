@@ -20,7 +20,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         private readonly IObjectReference _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-        public readonly static WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = new();
+        public static readonly WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = new();
 
         private WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory()
         {

@@ -178,7 +178,7 @@ namespace ABI.Windows.Foundation
     internal static class BoxedValueIReferenceImpl<T, TAbi> where TAbi : unmanaged
     {
         public static IntPtr AbiToProjectionVftablePtr;
-        private readonly static global::ABI.System.Nullable_Delegates.GetValueDelegateAbi GetValue;
+        private static readonly global::ABI.System.Nullable_Delegates.GetValueDelegateAbi GetValue;
 
         static unsafe BoxedValueIReferenceImpl()
         {
@@ -1711,7 +1711,13 @@ namespace ABI.System
             Exception __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableException), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IID.IID_NullableException, out nullablePtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IID.IID_NullableException), out nullablePtr)
+#endif
+                    );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Exception*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(Exception.FromAbi(__retval));
             }
@@ -1729,7 +1735,7 @@ namespace ABI.System
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
 #if !NET
-        private readonly static Nullable_Delegates.GetValueDelegate _Get_Value_0;
+        private static readonly Nullable_Delegates.GetValueDelegate _Get_Value_0;
 #endif
 
         unsafe static Nullable_EventHandler()
@@ -1790,7 +1796,7 @@ namespace ABI.System
 
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
-        private readonly static Nullable_Delegates.GetValueDelegate _Get_Value_0;
+        private static readonly Nullable_Delegates.GetValueDelegate _Get_Value_0;
 
         unsafe static Nullable_Delegate()
         {
@@ -1820,7 +1826,7 @@ namespace ABI.System
             return 0;
         }
 
-        public static Guid PIID = Nullable<T>.PIID;
+        public static readonly Guid PIID = Nullable<T>.PIID;
 
         public static unsafe Nullable GetValue(IInspectable inspectable)
         {
@@ -1828,7 +1834,13 @@ namespace ABI.System
             IntPtr __retval = default;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in PIID, out nullablePtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr)
+#endif
+                    );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
                 return new Nullable(Marshaler<T>.FromAbi(__retval));
             }
@@ -1973,7 +1985,7 @@ namespace ABI.System
 
     internal static class NullableBlittable<T> where T: unmanaged
     {
-        private readonly static Guid IID = NullableType.GetIID<T>();
+        private static readonly Guid IID = NullableType.GetIID<T>();
 
         public static unsafe object GetValue(IInspectable inspectable)
         {

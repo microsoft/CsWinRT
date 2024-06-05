@@ -17,7 +17,7 @@ namespace WinRT
 #endif
     static class TypeExtensions
     {
-        internal readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
+        internal static readonly ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
 
 #if NET
         [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
@@ -294,8 +294,8 @@ namespace WinRT
             return !type.IsArray ? type.GetAuthoringMetadataType() : null;
         }
 
-        private readonly static ConcurrentDictionary<Type, Type> AuthoringMetadataTypeCache = new();
-        private readonly static List<Func<Type, Type>> AuthoringMetadaTypeLookup = new();
+        private static readonly ConcurrentDictionary<Type, Type> AuthoringMetadataTypeCache = new();
+        private static readonly List<Func<Type, Type>> AuthoringMetadaTypeLookup = new();
 
         internal static void RegisterAuthoringMetadataTypeLookup(Func<Type, Type> authoringMetadataTypeLookup)
         {

@@ -15,7 +15,7 @@ namespace WinRT
 #endif 
     class AgileReference : IDisposable
     {
-        private readonly static Guid CLSID_StdGlobalInterfaceTable = new(0x00000323, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
+        private static readonly Guid CLSID_StdGlobalInterfaceTable = new(0x00000323, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
         private static readonly object _lock = new();
 #if NET
         private static volatile ABI.WinRT.Interop.IGlobalInterfaceTable _git;
