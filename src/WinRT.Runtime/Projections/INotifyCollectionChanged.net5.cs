@@ -47,11 +47,11 @@ namespace ABI.System.Collections.Specialized
     [DynamicInterfaceCastableImplementation]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
-    [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
+    [WuxMuxProjectedType(wuxIID: "28B167D5-1A31-465B-9B25-D5C3AE686C40", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
     internal unsafe interface INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
-        [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
+        [WuxMuxProjectedType(wuxIID: "28B167D5-1A31-465B-9B25-D5C3AE686C40", muxIID: "530155E1-28A5-5693-87CE-30724D95A06D")]
 #pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
 #pragma warning restore CA2257
