@@ -300,14 +300,10 @@ namespace System
 
         internal AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
         {
-#if NET
-            ArgumentNullException.ThrowIfNull(asyncInfo);
-#else
             if (asyncInfo == null)
             {
                 throw new ArgumentNullException(nameof(asyncInfo));
             }
-#endif
 
             this._ct = cancellationToken;
             if (this._ct.CanBeCanceled)
