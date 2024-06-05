@@ -20,23 +20,16 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         private readonly IObjectReference _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
 
-        private static readonly Guid Factory_IID = 
-            FeatureSwitches.UseWindowsUIXamlProjections
-                ? IID.IID_WUX_INotifyCollectionChangedEventArgsFactory
-                : IID.IID_MUX_INotifyCollectionChangedEventArgsFactory;
-
         public static readonly WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = new();
 
         private WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory()
         {
 #if NET
             _obj = FeatureSwitches.UseWindowsUIXamlProjections
-                ? ActivationFactory.Get("Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
-                : ActivationFactory.Get("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs");
+                ? ActivationFactory.Get("Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_WUX_INotifyCollectionChangedEventArgsFactory)
+                : ActivationFactory.Get("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_MUX_INotifyCollectionChangedEventArgsFactory);
 #else
-            _obj = FeatureSwitches.UseWindowsUIXamlProjections
-                ? ActivationFactory.Get<IUnknownVftbl>("Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", Factory_IID)
-                : ActivationFactory.Get<IUnknownVftbl>("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", Factory_IID);
+            _obj = ActivationFactory.Get<IUnknownVftbl>("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_MUX_INotifyCollectionChangedEventArgsFactory);
 #endif
         }
 
