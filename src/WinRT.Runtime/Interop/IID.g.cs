@@ -640,6 +640,56 @@ namespace WinRT.Interop
             }
         }
 
+        /// <summary>The IID for <c>MUX_NotifyCollectionChangedEventHandler</c> (CA10B37C-F382-4591-8557-5E24965279B0).</summary>
+        internal static ref readonly Guid IID_MUX_NotifyCollectionChangedEventHandler
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x7C, 0xB3, 0x10, 0xCA,
+                    0x82, 0xF3,
+                    0x91, 0x45,
+                    0x85,
+                    0x57,
+                    0x5E,
+                    0x24,
+                    0x96,
+                    0x52,
+                    0x79,
+                    0xB0
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>WUX_NotifyCollectionChangedEventHandler</c> (8B0909DC-2005-5D93-BF8A-725F017BAA8D).</summary>
+        internal static ref readonly Guid IID_WUX_NotifyCollectionChangedEventHandler
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xDC, 0x09, 0x09, 0x8B,
+                    0x05, 0x20,
+                    0x93, 0x5D,
+                    0xBF,
+                    0x8A,
+                    0x72,
+                    0x5F,
+                    0x01,
+                    0x7B,
+                    0xAA,
+                    0x8D
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
         /// <summary>The IID for <c>MUX_PropertyChangedEventArgsRuntimeClassFactory</c> (7C0C27A8-0B41-5070-B160-FC9AE960A36C).</summary>
         internal static ref readonly Guid IID_MUX_PropertyChangedEventArgsRuntimeClassFactory
         {
@@ -684,6 +734,56 @@ namespace WinRT.Interop
                     0x6E,
                     0xEB,
                     0x1C
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>MUX_PropertyChangedEventHandler</c> (E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D).</summary>
+        internal static ref readonly Guid IID_MUX_PropertyChangedEventHandler
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xF6, 0x52, 0xDE, 0xE3,
+                    0x32, 0x1E,
+                    0xA6, 0x5D,
+                    0xBB,
+                    0x2D,
+                    0xB5,
+                    0xB6,
+                    0x09,
+                    0x6C,
+                    0x96,
+                    0x2D
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>WUX_PropertyChangedEventHandler</c> (50F19C16-0A22-4D8E-A089-1EA9951657D2).</summary>
+        internal static ref readonly Guid IID_WUX_PropertyChangedEventHandler
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x16, 0x9C, 0xF1, 0x50,
+                    0x22, 0x0A,
+                    0x8E, 0x4D,
+                    0xA0,
+                    0x89,
+                    0x1E,
+                    0xA9,
+                    0x95,
+                    0x16,
+                    0x57,
+                    0xD2
                 };
 
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
@@ -809,56 +909,6 @@ namespace WinRT.Interop
                     0x00,
                     0x00,
                     0x46
-                };
-
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
-        }
-
-        /// <summary>The IID for <c>PropertyChangedEventHandler</c> (E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D).</summary>
-        internal static ref readonly Guid IID_PropertyChangedEventHandler
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-            get
-            {
-                ReadOnlySpan<byte> data = new byte[]
-                {
-                    0xF6, 0x52, 0xDE, 0xE3,
-                    0x32, 0x1E,
-                    0xA6, 0x5D,
-                    0xBB,
-                    0x2D,
-                    0xB5,
-                    0xB6,
-                    0x09,
-                    0x6C,
-                    0x96,
-                    0x2D
-                };
-
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
-        }
-
-        /// <summary>The IID for <c>NotifyCollectionChangedEventHandler</c> (8B0909DC-2005-5D93-BF8A-725F017BAA8D).</summary>
-        internal static ref readonly Guid IID_NotifyCollectionChangedEventHandler
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-            get
-            {
-                ReadOnlySpan<byte> data = new byte[]
-                {
-                    0xDC, 0x09, 0x09, 0x8B,
-                    0x05, 0x20,
-                    0x93, 0x5D,
-                    0xBF,
-                    0x8A,
-                    0x72,
-                    0x5F,
-                    0x01,
-                    0x7B,
-                    0xAA,
-                    0x8D
                 };
 
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));

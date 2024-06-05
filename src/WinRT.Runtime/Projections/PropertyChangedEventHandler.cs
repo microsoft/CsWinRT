@@ -42,14 +42,13 @@ namespace ABI.System.ComponentModel
             *(IDelegateVftbl*)nativeVftbl = AbiToProjectionVftable;
             AbiToProjectionVftablePtr = nativeVftbl;
             ComWrappersSupport.RegisterDelegateFactory(typeof(global::System.ComponentModel.PropertyChangedEventHandler), CreateRcw);
-            IID = FeatureSwitches.UseWindowsUIXamlProjections
-                ? Guid.Parse("50F19C16-0A22-4D8E-A089-1EA9951657D2")
-                : Guid.Parse("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D");
         }
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        private static readonly Guid IID;
+        private static Guid IID => FeatureSwitches.UseWindowsUIXamlProjections
+            ? global::WinRT.Interop.IID.IID_WUX_PropertyChangedEventHandler
+            : global::WinRT.Interop.IID.IID_MUX_PropertyChangedEventHandler;
 
         public static unsafe IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);
