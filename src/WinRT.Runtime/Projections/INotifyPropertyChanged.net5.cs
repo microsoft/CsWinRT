@@ -14,7 +14,7 @@ namespace ABI.System.ComponentModel
 #endif
     static class INotifyPropertyChangedMethods
     {
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x01, 0x76, 0xB1, 0x90, 0x65, 0xB0, 0x6E, 0x58, 0x83, 0xD9, 0x9A, 0xDC, 0x3A, 0x69, 0x52, 0x84 }));
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_INotifyPropertyChanged;
 
         public static IntPtr AbiToProjectionVftablePtr => INotifyPropertyChanged.Vftbl.AbiToProjectionVftablePtr;
 

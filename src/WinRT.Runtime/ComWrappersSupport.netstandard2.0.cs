@@ -361,7 +361,7 @@ namespace WinRT
 
             InitializeManagedQITable(interfaceTableEntries);
 
-            IdentityPtr = _managedQITable[IUnknownVftbl.IID];
+            IdentityPtr = _managedQITable[IID.IID_IUnknown];
         }
 
         ~ComCallableWrapper()

@@ -157,7 +157,7 @@ namespace ABI.WinRT.Interop
             {
                 EnsureHasFreeThreadedMarshaler();
 
-                Guid iid_IUnknown = IUnknownVftbl.IID;
+                Guid iid_IUnknown = global::WinRT.Interop.IID.IID_IUnknown;
                 Guid iid_unmarshalClass;
                 t_freeThreadedMarshaler.GetUnmarshalClass(&iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass);
                 return iid_unmarshalClass;

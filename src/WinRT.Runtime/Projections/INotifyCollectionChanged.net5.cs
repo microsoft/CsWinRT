@@ -35,7 +35,7 @@ namespace ABI.System.Collections.Specialized
             });
         }
 
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xE1, 0x55, 0x01, 0x53, 0xA5, 0x28, 0x93, 0x56, 0x87, 0xCE, 0x30, 0x72, 0x4D, 0x95, 0xA0, 0x6D }));
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_INotifyCollectionChanged;
 
         public static IntPtr AbiToProjectionVftablePtr => INotifyCollectionChanged.Vftbl.AbiToProjectionVftablePtr;
     }

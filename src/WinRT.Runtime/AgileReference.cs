@@ -71,7 +71,7 @@ namespace WinRT
             }
 
             IntPtr agileReference = default;
-            Guid iid = IUnknownVftbl.IID;
+            Guid iid = IID.IID_IUnknown;
             try
             {
                 Marshal.ThrowExceptionForHR(Platform.RoGetAgileReference(
@@ -92,9 +92,9 @@ namespace WinRT
         }
 
 
-        public IObjectReference Get() => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve(_agileReference, IUnknownVftbl.IID) : Git.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID);
+        public IObjectReference Get() => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve(_agileReference, IID.IID_IUnknown) : Git.GetInterfaceFromGlobal(_cookie, IID.IID_IUnknown);
 
-        internal ObjectReference<T> Get<T>(Guid iid) => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve<T>(_agileReference, iid) : Git.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID)?.As<T>(iid);
+        internal ObjectReference<T> Get<T>(Guid iid) => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve<T>(_agileReference, iid) : Git.GetInterfaceFromGlobal(_cookie, IID.IID_IUnknown)?.As<T>(iid);
 
         protected virtual void Dispose(bool disposing)
         {

@@ -124,8 +124,6 @@ namespace ABI.WinRT.Interop
     [Guid("00000146-0000-0000-C000-000000000046")]
     internal sealed unsafe class IGlobalInterfaceTable
     {
-        internal static readonly Guid IID = global::WinRT.Interop.IID.IID_IGlobalInterfaceTable;
-
         public static ObjectReference<global::WinRT.Interop.IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<global::WinRT.Interop.IUnknownVftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IGlobalInterfaceTable);
 
         private readonly ObjectReference<global::WinRT.Interop.IUnknownVftbl> _obj;

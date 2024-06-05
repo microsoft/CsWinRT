@@ -222,8 +222,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
     {
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
-        internal static readonly Guid IID = new(new ReadOnlySpan<byte>(new byte[] { 0xE7, 0xD6, 0x6D, 0x34, 0x6E, 0x97, 0xC3, 0x4B, 0x81, 0x5D, 0xEC, 0xE2, 0x43, 0xBC, 0x0F, 0x33 }));
-
         static IBindableVectorView()
         {
             AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(IBindableVectorView), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 3);
@@ -297,7 +295,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             return 0;
         }
 
-        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID);
+        internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IBindableVectorView);
 
         private static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, ABI.System.Collections.IEnumerable.FromAbiHelper> _helperTable = new();
 
@@ -384,7 +382,7 @@ namespace ABI.System.Collections
 #endif
     static class IEnumerableMethods
     {
-        public static global::System.Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0x08, 0x2C, 0x6D, 0x03, 0x29, 0xDF, 0xAF, 0x41, 0x8A, 0xA2, 0xD7, 0x74, 0xBE, 0x62, 0xBA, 0x6F }));
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_IEnumerable;
 
         public static IntPtr AbiToProjectionVftablePtr => IEnumerable.AbiToProjectionVftablePtr;
     }
@@ -622,7 +620,7 @@ namespace ABI.System.Collections
 #endif
     static class IListMethods
     {
-        public static Guid IID { get; } = new Guid(new global::System.ReadOnlySpan<byte>(new byte[] { 0xDE, 0xE7, 0x3D, 0x39, 0xD0, 0x6F, 0x0D, 0x4C, 0xBB, 0x71, 0x47, 0x24, 0x4A, 0x11, 0x3E, 0x93 }));
+        public static Guid IID => global::WinRT.Interop.IID.IID_IList;
 
         public static IntPtr AbiToProjectionVftablePtr => IList.AbiToProjectionVftablePtr;
     }
@@ -1007,7 +1005,7 @@ namespace ABI.System.Collections
                     {
                         new ComWrappers.ComInterfaceEntry
                         {
-                            IID = ABI.Microsoft.UI.Xaml.Interop.IBindableVectorView.IID,
+                            IID = IID.IID_IBindableVectorView,
                             Vtable = ABI.Microsoft.UI.Xaml.Interop.IBindableVectorView.AbiToProjectionVftablePtr
                         },
                         new ComWrappers.ComInterfaceEntry

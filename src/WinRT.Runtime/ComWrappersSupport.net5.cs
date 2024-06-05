@@ -590,7 +590,7 @@ namespace WinRT
         private static object CreateObject(IntPtr externalComObject)
         {
             Guid inspectableIID = IID.IID_IInspectable;
-            Guid weakReferenceIID = ABI.WinRT.Interop.IWeakReference.IID;
+            Guid weakReferenceIID = IID.IID_IWeakReference;
             IntPtr ptr = IntPtr.Zero;
 
             try

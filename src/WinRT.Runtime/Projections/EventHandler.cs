@@ -492,13 +492,13 @@ namespace ABI.System
             {
                 entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
-                    IID = ABI.Windows.Foundation.ManagedIPropertyValueImpl.IID,
+                    IID = global::WinRT.Interop.IID.IID_IPropertyValue,
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
                 };
 
                 entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
-                    IID = Nullable_EventHandler.IID,
+                    IID = global::WinRT.Interop.IID.IID_NullableEventHandler,
                     Vtable = Nullable_EventHandler.AbiToProjectionVftablePtr
                 };
             }
