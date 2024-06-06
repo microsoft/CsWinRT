@@ -44,7 +44,7 @@ namespace ABI.System.ComponentModel
 
     [DynamicInterfaceCastableImplementation]
     [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
-    [WuxMuxProjectedType(wuxIID: "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", muxIID: "90B17601-B065-586E-83D9-9ADC3A695284")]
+    [WuxMuxProjectedType]
     internal unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
 #pragma warning disable CA2257

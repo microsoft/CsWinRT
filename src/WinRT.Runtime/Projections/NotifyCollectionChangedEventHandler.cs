@@ -13,7 +13,7 @@ namespace ABI.System.Collections.Specialized
 
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("8B0909DC-2005-5D93-BF8A-725F017BAA8D")]
-    [WuxMuxProjectedType(wuxIID: "CA10B37C-F382-4591-8557-5E24965279B0", muxIID: "8B0909DC-2005-5D93-BF8A-725F017BAA8D")]
+    [WuxMuxProjectedType]
 #if EMBED
     internal
 #else

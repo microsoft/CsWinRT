@@ -74,7 +74,7 @@ namespace ABI.System.Collections.Specialized
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
-    [WuxMuxProjectedType(wuxIID: "4cf68d33-e3f2-4964-b85e-945b4f7e2f21", muxIID: "DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
+    [WuxMuxProjectedType]
 #if EMBED
     internal
 #else

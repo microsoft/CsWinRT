@@ -24,10 +24,17 @@ namespace WinRT
         public static Guid GetGUID(Type type)
         {
             type = type.GetGuidType();
-            if (type.GetCustomAttribute<WuxMuxProjectedTypeAttribute>() is {} wuxMuxAttribute)
+
+            // Only check the WUX/MUX types if the feature switch is set, to avoid introducing
+            // performance regressions in the standard case where MUX is targeted (default).
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
             {
-                return GetWuxMuxIID(wuxMuxAttribute);
+                if (TryGetWindowsUIXamlIID(type, out Guid iid))
+                {
+                    return iid;
+                }
             }
+
             return type.GUID;
         }
 
@@ -38,10 +45,16 @@ namespace WinRT
             Type type)
         {
             type = type.GetGuidType();
-            if (type.GetCustomAttribute<WuxMuxProjectedTypeAttribute>() is {} wuxMuxAttribute)
+
+            // Same optional check as above
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
             {
-                return GetWuxMuxIID(wuxMuxAttribute);
+                if (TryGetWindowsUIXamlIID(type, out Guid iid))
+                {
+                    return iid;
+                }
             }
+
             if (!type.IsGenericType)
             {
                 return type.GUID;
@@ -49,11 +62,46 @@ namespace WinRT
             return (Guid)type.GetField("PIID").GetValue(null);
         }
 
-        internal static Guid GetWuxMuxIID(WuxMuxProjectedTypeAttribute wuxMuxAttribute)
+        internal static bool TryGetWindowsUIXamlIID(Type type, out Guid iid)
         {
-            return FeatureSwitches.UseWindowsUIXamlProjections
-                ? wuxMuxAttribute.WuxIID
-                : wuxMuxAttribute.MuxIID;
+            if (type == typeof(global::ABI.System.Collections.Specialized.INotifyCollectionChanged))
+            {
+                iid = IID.IID_WUX_INotifyCollectionChanged;
+
+                return true;
+            }
+
+            if (type == typeof(global::ABI.System.ComponentModel.INotifyPropertyChanged))
+            {
+                iid = IID.IID_WUX_INotifyPropertyChanged;
+
+                return true;
+            }
+
+            if (type == typeof(global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs))
+            {
+                iid = IID.IID_WUX_INotifyCollectionChangedEventArgs;
+
+                return true;
+            }
+
+            if (type == typeof(global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler))
+            {
+                iid = IID.IID_WUX_NotifyCollectionChangedEventHandler;
+
+                return true;
+            }
+
+            if (type == typeof(global::ABI.System.ComponentModel.PropertyChangedEventHandler))
+            {
+                iid = IID.IID_WUX_PropertyChangedEventHandler;
+
+                return true;
+            }
+
+            iid = default;
+
+            return false;
         }
 
         public static string GetSignature(
