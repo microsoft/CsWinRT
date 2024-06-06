@@ -46,7 +46,7 @@ namespace ABI.System.ComponentModel
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        private static Guid IID => FeatureSwitches.UseWindowsUIXamlProjections
+        public static Guid IID => FeatureSwitches.UseWindowsUIXamlProjections
             ? global::WinRT.Interop.IID.IID_WUX_PropertyChangedEventHandler
             : global::WinRT.Interop.IID.IID_MUX_PropertyChangedEventHandler;
 
