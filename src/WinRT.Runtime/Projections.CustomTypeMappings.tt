@@ -145,8 +145,6 @@ foreach (var type in registerCustomAbiTypeMappings)
 {
     WriteLine("");
 
-    if (type.Name != null)
-    {
 #>
         /// <summary>Registers the custom ABI type mapping for the <c>"<#=type.Name#>"</c> WinRT type.</summary>
         public static void <#=GetMethodName(type.Public, type.Hint)#>()
@@ -162,23 +160,6 @@ foreach (var type in registerCustomAbiTypeMappings)
                 isRuntimeClass: <#=type.IsRuntimeClass.ToString().ToLowerInvariant()#>);
         }
 <#
-    }
-    else
-    {
-#>
-        /// <summary>Registers the custom ABI type mapping for the <see cref="<#=type.Public#>"/> type.</summary>
-        public static void <#=GetMethodName(type.Public, type.Hint)#>()
-        {
-<#
-            WriteGuardStatements(type.Public);
-#>
-
-            RegisterCustomAbiTypeMapping(
-                typeof(<#=type.Public#>),
-                typeof(<#=type.Abi#>));
-        }
-<#
-    }
 }
 
 // 'RegisterCustomTypeToHelperTypeMapping' methods
