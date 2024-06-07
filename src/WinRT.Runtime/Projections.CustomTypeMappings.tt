@@ -125,7 +125,7 @@ var registerCustomAbiTypeMappings = new (string Public, string Abi, string Name,
     ("Quaternion", "ABI.System.Numerics.Quaternion", "Windows.Foundation.Numerics.Quaternion", null, false),
     ("Vector2", "ABI.System.Numerics.Vector2", "Windows.Foundation.Numerics.Vector2", null, false),
     ("Vector3", "ABI.System.Numerics.Vector3", "Windows.Foundation.Numerics.Vector3", null, false),
-    ("Vector4", "ABI.System.Numerics.Vector4", "Windows.Foundation.Numerics.Vector4", null, false),
+    ("Vector4", "ABI.System.Numerics.Vector4", "Windows.Foundation.Numerics.Vector4", null, false)
 };
 
 // Types for 'RegisterCustomTypeToHelperTypeMapping'
@@ -139,6 +139,21 @@ var registerCustomTypeToHelperTypeMapping = new (string Public, string Helper)[]
     ("ICollection<>", "ABI.System.Collections.Generic.ICollection<>"),
     ("IReadOnlyCollection<>", "ABI.System.Collections.Generic.IReadOnlyCollection<>"),
     ("ICollection", "ABI.System.Collections.ICollection")
+};
+
+// Types that have different projections for System XAML
+var systemXamlProjectionTypeMapping = new(string Public, string Name)[]
+{
+    ("PropertyChangedEventArgs", "Windows.UI.Xaml.Data.PropertyChangedEventArgs"),
+    ("PropertyChangedEventHandler", "Windows.UI.Xaml.Data.PropertyChangedEventHandler"),
+    ("INotifyPropertyChanged", "Windows.UI.Xaml.Data.INotifyPropertyChanged"),
+    ("ICommand", "Windows.UI.Xaml.Interop.ICommand"),
+    ("IEnumerable", "Windows.UI.Xaml.Interop.IBindableIterable"),
+    ("IList", "Windows.UI.Xaml.Interop.IBindableVector"),
+    ("INotifyCollectionChanged", "Windows.UI.Xaml.Interop.INotifyCollectionChanged"),
+    ("NotifyCollectionChangedAction", "Windows.UI.Xaml.Interop.NotifyCollectionChangedAction"),
+    ("NotifyCollectionChangedEventArgs", "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"),
+    ("NotifyCollectionChangedEventHandler", "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler")
 };
 
 // Declare all fields
@@ -166,13 +181,42 @@ foreach (var type in registerCustomAbiTypeMappings)
         {
 <#
             WriteGuardStatements(type.Public);
-#>
+            WriteLine("");
 
+            int indexOfSystemXamlTypeMapping = Array.FindIndex(systemXamlProjectionTypeMapping, t => t.Public == type.Public);
+
+            if (indexOfSystemXamlTypeMapping != -1)
+            {
+#>
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(<#=type.Public#>),
+                    typeof(<#=type.Abi#>),
+                    "<#=systemXamlProjectionTypeMapping[indexOfSystemXamlTypeMapping].Name#>",
+                    isRuntimeClass: <#=type.IsRuntimeClass.ToString().ToLowerInvariant()#>);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(<#=type.Public#>),
+                    typeof(<#=type.Abi#>),
+                    "<#=type.Name#>",
+                    isRuntimeClass: <#=type.IsRuntimeClass.ToString().ToLowerInvariant()#>);
+            }
+<#
+            }
+            else
+            {
+#>
             RegisterCustomAbiTypeMapping(
                 typeof(<#=type.Public#>),
                 typeof(<#=type.Abi#>),
                 "<#=type.Name#>",
                 isRuntimeClass: <#=type.IsRuntimeClass.ToString().ToLowerInvariant()#>);
+<#
+            }
+#>
         }
 <#
 }
