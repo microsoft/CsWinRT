@@ -50,6 +50,21 @@ void WriteGuardStatements(string name)
             {
                 return;
             }
+<#
+
+    if (name == "DataErrorsChangedEventArgs" ||
+        name == "INotifyDataErrorInfo" ||
+        name == "IServiceProvider")
+    {
+        WriteLine("");
+#>
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                throw new NotSupportedException("The '<#=name#>' type is only supported for WinUI, and not when using System XAML projections (make sure the 'CsWinRTUseWindowsUIXamlProjections' property is not set to 'true').");
+            }
+<#
+    }
+#>
 
             if (Interlocked.CompareExchange(ref _<#=Regex.Replace(name, "[?<>,]", "_")#>, 1, 0) == 1)
             {

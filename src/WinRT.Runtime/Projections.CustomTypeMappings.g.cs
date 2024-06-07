@@ -506,6 +506,11 @@ namespace WinRT
                 return;
             }
 
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                throw new NotSupportedException("The 'DataErrorsChangedEventArgs' type is only supported for WinUI, and not when using System XAML projections (make sure the 'CsWinRTUseWindowsUIXamlProjections' property is not set to 'true').");
+            }
+
             if (Interlocked.CompareExchange(ref _DataErrorsChangedEventArgs, 1, 0) == 1)
             {
                 return;
@@ -566,6 +571,11 @@ namespace WinRT
                 return;
             }
 
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                throw new NotSupportedException("The 'INotifyDataErrorInfo' type is only supported for WinUI, and not when using System XAML projections (make sure the 'CsWinRTUseWindowsUIXamlProjections' property is not set to 'true').");
+            }
+
             if (Interlocked.CompareExchange(ref _INotifyDataErrorInfo, 1, 0) == 1)
             {
                 return;
@@ -624,6 +634,11 @@ namespace WinRT
             if (FeatureSwitches.EnableDefaultCustomTypeMappings)
             {
                 return;
+            }
+
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                throw new NotSupportedException("The 'IServiceProvider' type is only supported for WinUI, and not when using System XAML projections (make sure the 'CsWinRTUseWindowsUIXamlProjections' property is not set to 'true').");
             }
 
             if (Interlocked.CompareExchange(ref _IServiceProvider, 1, 0) == 1)
