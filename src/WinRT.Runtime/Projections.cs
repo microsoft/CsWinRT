@@ -57,6 +57,15 @@ namespace WinRT
             }
 #endif
 
+#if !NET
+            // Sanity check: always throw downlevel if System XAML projections are used, as this scenario is not supported.
+            // This also allows other code in WinRT.Runtime to simplify downlevel paths by just assuming this configuration.
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                throw new NotSupportedException("Using System XAML projections is only supported on modern .NET (make sure the 'CsWinRTUseWindowsUIXamlProjections' property is not set to 'true').");
+            }
+#endif
+
             // This should be in sync with cswinrt/helpers.h and the reverse mapping from WinRT.SourceGenerator/WinRTTypeWriter.cs.            
             RegisterCustomAbiTypeMappingNoLock(typeof(EventRegistrationToken), typeof(ABI.WinRT.EventRegistrationToken), "Windows.Foundation.EventRegistrationToken");
             
