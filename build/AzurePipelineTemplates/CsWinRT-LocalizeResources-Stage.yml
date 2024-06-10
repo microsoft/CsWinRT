@@ -31,13 +31,12 @@ stages:
         targetPath: $(Build.SourcesDirectory)\ResX
 
     # Run TouchdownBuild
-    - task: TouchdownBuildTask@1
+    - task: TouchdownBuildTask@4
       inputs:
         environment: 'PRODEXT'
-        teamId: $(CsWinRTTDBuildTeamID)
-        authType: 'OAuth'
-        authId: $(CsWinRTTDBuildAuthID)
-        authKey: $(CsWinRTTDBuildAuthKey)
+        teamId: 31600
+        authType: 'FederatedIdentity'
+        FederatedIdentityServiceConnection: 'CsWinrtTdbuild'
         localizationTarget: true
         isPreview: false
         resourceFilePath: |
@@ -47,7 +46,6 @@ stages:
         outputDirectoryRoot: $(LocOutputDir) 
         appendRelativeDir: true
         cultureMappingType: 'None'
-        gitAction: NONE 
 
     # Sign TDBuild Output
     - task: EsrpCodeSigning@1
