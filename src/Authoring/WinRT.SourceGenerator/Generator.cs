@@ -242,6 +242,11 @@ namespace Generator
 
                                 if ((void*)obj is null)
                                 {
+                                    obj = TryGetDependentActivationFactory(fullyQualifiedTypeName);
+                                }
+
+                                if ((void*)obj is null)
+                                {
                                     *factory = null;
 
                                     return CLASS_E_CLASSNOTAVAILABLE;
