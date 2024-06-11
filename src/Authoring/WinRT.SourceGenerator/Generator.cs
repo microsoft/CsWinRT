@@ -236,7 +236,9 @@ namespace Generator
 
                             try
                             {
-                                IntPtr obj = GetActivationFactory(MarshalString.FromAbiUnsafe((IntPtr)activatableClassId));
+                                scoped ReadOnlySpan<char> fullyQualifiedTypeName = MarshalString.FromAbiUnsafe((IntPtr)activatableClassId);
+
+                                IntPtr obj = GetActivationFactory(fullyQualifiedTypeName);
 
                                 if ((void*)obj is null)
                                 {
