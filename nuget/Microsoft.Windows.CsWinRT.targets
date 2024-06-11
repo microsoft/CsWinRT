@@ -310,6 +310,11 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
   </PropertyGroup>
 
+  <!-- Default values for all other CsWinRT properties (without feature switches) -->
+  <PropertyGroup>
+    <CsWinRTMergeReferencedActivationFactories Condition="'$(CsWinRTMergeReferencedActivationFactories)' == ''">false</CsWinRTMergeReferencedActivationFactories>
+  </PropertyGroup>
+
   <!--
     Configuration for the feature switches (to support IL trimming).
     See the 'ILLink.Substitutions.xml' file for more details on that.
