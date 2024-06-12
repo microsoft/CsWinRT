@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
+using WinRT.SourceGenerator;
 
 #nullable enable
 
@@ -17,83 +19,52 @@ public sealed class MergeReferencedActivationFactoriesGenerator : IIncrementalGe
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Gather all valid metadata references from the current compilation
-        IncrementalValuesProvider<EquatableMetadataReference> metadataReferences =
-            context.CompilationProvider
-            .SelectMany(static (compilation, token) =>
-        {
-            var metadataReferences = ImmutableArray.CreateBuilder<EquatableMetadataReference>();
-
-            foreach (MetadataReference metadataReference in compilation.References)
-            {
-                // We are only interested in PE references or project references
-                if (metadataReference is not (PortableExecutableReference or CompilationReference))
-                {
-                    continue;
-                }
-
-                metadataReferences.Add(new EquatableMetadataReference(metadataReference, compilation));
-            }
-
-            return metadataReferences.ToImmutable();
-        });
-
         // Get whether the generator is enabled
         IncrementalValueProvider<bool> isGeneratorEnabled = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
         {
             return options.GetCsWinRTMergeReferencedActivationFactories();
         });
 
-        // Bypass all items if the flag is not set
-        IncrementalValuesProvider<(EquatableMetadataReference Value, bool)> enabledMetadataReferences =
-            metadataReferences
-            .Combine(isGeneratorEnabled)
-            .Where(static item => item.Right);
-
         // Get the fully qualified type names of all assembly exports types to merge
-        IncrementalValueProvider<ImmutableArray<string>> assemblyExportsTypeNames =
-            enabledMetadataReferences
-            .Select(static (executableReference, token) =>
+        IncrementalValueProvider<EquatableArray<string>> assemblyExportsTypeNames =
+            context.CompilationProvider
+            .Combine(isGeneratorEnabled)
+            .Select(static (item, token) =>
             {
-                Compilation compilation = executableReference.Value.GetCompilationUnsafe();
-
-                // We only care about resolved assembly symbols (this should always be the case anyway)
-                if (compilation.GetAssemblyOrModuleSymbol(executableReference.Value.Reference) is not IAssemblySymbol assemblySymbol)
+                // Immediately bail if the generator is disabled
+                if (!item.Right)
                 {
-                    return null;
+                    return new EquatableArray<string>(ImmutableArray<string>.Empty);
+                }
+
+                ImmutableArray<string>.Builder builder = ImmutableArray.CreateBuilder<string>();
+
+                foreach (MetadataReference metadataReference in item.Left.References)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    if (item.Left.GetAssemblyOrModuleSymbol(metadataReference) is not IAssemblySymbol assemblySymbol)
+                    {
+                        continue;
+                    }
+
+                    token.ThrowIfCancellationRequested();
+
+                    // Add the type name if the assembly is a WinRT component
+                    if (TryGetDependentAssemblyExportsTypeName(
+                        assemblySymbol,
+                        item.Left,
+                        token,
+                        out string? name))
+                    {
+                        builder.Add(name);
+                    }
                 }
 
                 token.ThrowIfCancellationRequested();
 
-                // Get the attribute to lookup to find the target type to use
-                INamedTypeSymbol winRTAssemblyExportsTypeAttributeSymbol = compilation.GetTypeByMetadataName("WinRT.WinRTAssemblyExportsTypeAttribute")!;
-
-                // Make sure the assembly does have the attribute on it
-                if (!assemblySymbol.TryGetAttributeWithType(winRTAssemblyExportsTypeAttributeSymbol, out AttributeData? attributeData))
-                {
-                    return null;
-                }
-
-                token.ThrowIfCancellationRequested();
-
-                // Sanity check: we should have a valid type in the annotation
-                if (attributeData.ConstructorArguments is not [{ Kind: TypedConstantKind.Type, Type: INamedTypeSymbol assemblyExportsTypeSymbol }])
-                {
-                    return null;
-                }
-
-                // Other sanity check: this type should be accessible from this compilation
-                if (!assemblyExportsTypeSymbol.IsAccessibleFromCompilationAssembly(compilation))
-                {
-                    return null;
-                }
-
-                token.ThrowIfCancellationRequested();
-
-                return assemblyExportsTypeSymbol.ToDisplayString();
-            })
-            .Where(static name => name is not null)
-            .Collect()!;
+                return new EquatableArray<string>(builder.ToImmutable());
+            });
 
         // Generate the chaining helper
         context.RegisterImplementationSourceOutput(assemblyExportsTypeNames, static (context, assemblyExportsTypeNames) =>
@@ -175,64 +146,54 @@ public sealed class MergeReferencedActivationFactoriesGenerator : IIncrementalGe
     }
 
     /// <summary>
-    /// An equatable <see cref="MetadataReference"/> type that weakly references a <see cref="Microsoft.CodeAnalysis.Compilation"/> object.
+    /// Tries to get the name of a dependent WinRT component from a given assembly.
     /// </summary>
-    /// <param name="reference">The <see cref="MetadataReference"/> object to wrap.</param>
-    /// <param name="compilation">The <see cref="Microsoft.CodeAnalysis.Compilation"/> instance where <paramref name="reference"/> comes from.</param>
-    public sealed class EquatableMetadataReference(MetadataReference reference, Compilation compilation) : IEquatable<EquatableMetadataReference>
+    /// <param name="assemblySymbol">The assembly symbol to analyze.</param>
+    /// <param name="compilation">The <see cref="Compilation"/> instance to use.</param>
+    /// <param name="token">The <see cref="CancellationToken"/> instance to use.</param>
+    /// <param name="name">The resulting type name, if found.</param>
+    /// <returns>Whether a type name was found.</returns>
+    private static bool TryGetDependentAssemblyExportsTypeName(
+        IAssemblySymbol assemblySymbol,
+        Compilation compilation,
+        CancellationToken token,
+        [NotNullWhen(true)] out string? name)
     {
-        /// <summary>
-        /// A weak reference to the <see cref="Microsoft.CodeAnalysis.Compilation"/> object owning <see cref="Reference"/>.
-        /// </summary>
-        private readonly WeakReference<Compilation> Compilation = new(compilation);
+        // Get the attribute to lookup to find the target type to use
+        INamedTypeSymbol winRTAssemblyExportsTypeAttributeSymbol = compilation.GetTypeByMetadataName("WinRT.WinRTAssemblyExportsTypeAttribute")!;
 
-        /// <summary>
-        /// Gets the <see cref="MetadataReference"/> object for this instance.
-        /// </summary>
-        public MetadataReference Reference { get; } = reference;
-
-        /// <summary>
-        /// Gets the <see cref="Microsoft.CodeAnalysis.Compilation"/> object for <see cref="Reference"/>.
-        /// </summary>
-        /// <returns>The <see cref="Microsoft.CodeAnalysis.Compilation"/> object for <see cref="Reference"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the <see cref="Microsoft.CodeAnalysis.Compilation"/> object has been collected.</exception>
-        /// <remarks>
-        /// This method should only be used from incremental steps immediately following a change in the metadata reference
-        /// being used, as that would guarantee that that <see cref="Microsoft.CodeAnalysis.Compilation"/> object would be alive.
-        /// </remarks>
-        public Compilation GetCompilationUnsafe()
+        // Make sure the assembly does have the attribute on it
+        if (!assemblySymbol.TryGetAttributeWithType(winRTAssemblyExportsTypeAttributeSymbol, out AttributeData? attributeData))
         {
-            if (Compilation.TryGetTarget(out Compilation? compilation))
-            {
-                return compilation;
-            }
+            name = null;
 
-            throw new InvalidOperationException("No compilation object is available.");
+            return false;
         }
 
-        /// <inheritdoc/>
-        public bool Equals(EquatableMetadataReference other)
+        token.ThrowIfCancellationRequested();
+
+        // Sanity check: we should have a valid type in the annotation
+        if (attributeData.ConstructorArguments is not [{ Kind: TypedConstantKind.Type, Type: INamedTypeSymbol assemblyExportsTypeSymbol }])
         {
-            if (other is null)
-            {
-                return false;
-            }
+            name = null;
 
-            if (Reference is PortableExecutableReference thisExecutionReference)
-            {
-                return
-                    other.Reference is PortableExecutableReference otherExecutionReference &&
-                    thisExecutionReference.GetMetadataId() == otherExecutionReference.GetMetadataId();
-            }
-
-            if (Reference is CompilationReference thisCompilationReference)
-            {
-                return
-                    other.Reference is CompilationReference otherCompilationReference &&
-                    ReferenceEquals(thisCompilationReference, otherCompilationReference);
-            }
-
-            throw new InvalidOperationException("Invalid metadata reference type in the current instance.");
+            return false;
         }
+
+        token.ThrowIfCancellationRequested();
+
+        // Other sanity check: this type should be accessible from this compilation
+        if (!assemblyExportsTypeSymbol.IsAccessibleFromCompilationAssembly(compilation))
+        {
+            name = null;
+
+            return false;
+        }
+
+        token.ThrowIfCancellationRequested();
+
+        name = assemblyExportsTypeSymbol.ToDisplayString();
+
+        return true;
     }
 }
