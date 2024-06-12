@@ -115,7 +115,7 @@ public sealed class MergeReferencedActivationFactoriesGenerator : IIncrementalGe
                             /// </summary>
                             /// <param name="fullyQualifiedTypeName">The marshalled fully qualified type name of the activation factory to retrieve.</param>
                             /// <returns>The pointer to the activation factory that corresponds with the class specified by <paramref name="fullyQualifiedTypeName"/>.</returns>
-                            internal static IntPtr TryGetDependentActivationFactory(ReadOnlySpan<char> fullyQualifiedTypeName)
+                            internal static unsafe IntPtr TryGetDependentActivationFactory(ReadOnlySpan<char> fullyQualifiedTypeName)
                             {                  
                     """);
 
