@@ -173,7 +173,7 @@ public sealed class MergeReferencedActivationFactoriesGenerator : IIncrementalGe
         token.ThrowIfCancellationRequested();
 
         // Sanity check: we should have a valid type in the annotation
-        if (attributeData.ConstructorArguments is not [{ Kind: TypedConstantKind.Type, Type: INamedTypeSymbol assemblyExportsTypeSymbol }])
+        if (attributeData.ConstructorArguments is not [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol assemblyExportsTypeSymbol }])
         {
             name = null;
 
