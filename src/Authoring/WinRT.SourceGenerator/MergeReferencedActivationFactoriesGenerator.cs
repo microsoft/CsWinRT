@@ -27,7 +27,7 @@ public sealed class MergeReferencedActivationFactoriesGenerator : IIncrementalGe
             foreach (MetadataReference metadataReference in compilation.References)
             {
                 // We are only interested in PE references or project references
-                if (metadataReference is PortableExecutableReference or CompilationReference)
+                if (metadataReference is not (PortableExecutableReference or CompilationReference))
                 {
                     continue;
                 }
