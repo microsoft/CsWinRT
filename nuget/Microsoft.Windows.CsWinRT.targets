@@ -15,7 +15,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
     <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
-    <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess> 
+    <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
@@ -81,7 +81,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="CsWinRTGenerateProjection"
           DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences"
           Condition="'$(CsWinRTGenerateProjection)' == 'true'"
-          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExe);$(CsWinRTExcludes);$(CsWinRTIncludes);$(CsWinRTExcludesPrivate);$(CsWinRTIncludesPrivate);$(CsWinRTFilters);$(CsWinRTWindowsMetadata)"
+          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExe)"
           Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
 
     <PropertyGroup>
