@@ -200,6 +200,20 @@ namespace WinRT
             return "{" + type.GUID.ToString() + "}";
         }
 
+        /// <summary>
+        /// Gets the signature of a given type, just like <see cref="GetSignature(Type)"/>, but without rooting reflection metadata
+        /// for all public fields of that type. It can be used internally where we know that extra info is not actually needed.
+        /// </summary>
+        /// <param name="type">The type to get the signature for.</param>
+        /// <returns>The signature for <paramref name="type"/>.</returns>
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "'GetSignatureUnsafe' is only used internally on AOT, which requires new projections.")]
+#endif
+        internal static string GetSignatureUnsafe(Type type)
+        {
+            return GetSignature(type);
+        }
+
         private static Guid encode_guid(Span<byte> data)
         {
             if (BitConverter.IsLittleEndian)

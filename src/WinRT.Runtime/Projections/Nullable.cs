@@ -313,6 +313,13 @@ namespace ABI.System
             if (typeof(T) == typeof(global::System.Numerics.Vector3)) return IReferenceSignatures.Vector3;
             if (typeof(T) == typeof(global::System.Numerics.Vector4)) return IReferenceSignatures.Vector4;
 
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return GuidGenerator.GetSignatureUnsafe(typeof(Nullable<T>));
+            }
+#endif
+
             return GuidGenerator.GetSignature(typeof(Nullable<T>));
         }
 
@@ -1792,7 +1799,17 @@ namespace ABI.System
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
     internal static class Nullable_Delegate<T> where T : global::System.Delegate
     {
-        public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(Nullable<T>));
+        public static string GetGuidSignature()
+        {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return GuidGenerator.GetSignatureUnsafe(typeof(Nullable<T>));
+            }
+#endif
+
+            return GuidGenerator.GetSignature(typeof(Nullable<T>));
+        }
 
         public static readonly IntPtr AbiToProjectionVftablePtr;
 

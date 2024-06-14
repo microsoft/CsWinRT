@@ -122,7 +122,15 @@ namespace ABI.Windows.Foundation
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 
-        public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReferenceArray<T>));
+        public static string GetGuidSignature()
+        {
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return GuidGenerator.GetSignatureUnsafe(typeof(IReferenceArray<T>));
+            }
+
+            return GuidGenerator.GetSignature(typeof(IReferenceArray<T>));
+        }
 
         public static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReferenceArray<T>));
 

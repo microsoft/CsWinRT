@@ -341,7 +341,17 @@ namespace ABI.System.Collections.Generic
         public static void DisposeAbi(IntPtr abi) =>
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.DisposeAbi(abi);
 
-        public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(KeyValuePair<K, V>));
+        public static string GetGuidSignature()
+        {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return GuidGenerator.GetSignatureUnsafe(typeof(KeyValuePair<K, V>));
+            }
+#endif
+
+            return GuidGenerator.GetSignature(typeof(KeyValuePair<K, V>));
+        }
 
         internal sealed class ToIKeyValuePair : global::Windows.Foundation.Collections.IKeyValuePair<K, V>
         {
