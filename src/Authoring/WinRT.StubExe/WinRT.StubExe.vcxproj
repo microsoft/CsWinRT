@@ -131,13 +131,6 @@
     <ClCompile Include="WinRT.StubExe.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="libs\CustomNativeMain.def" />
-    <None Include="libs\CustomNativeMain-arm.lib" />
-    <None Include="libs\CustomNativeMain-arm64.lib" />
-    <None Include="libs\CustomNativeMain-x64.lib" />
-    <None Include="libs\CustomNativeMain-x86.lib" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
