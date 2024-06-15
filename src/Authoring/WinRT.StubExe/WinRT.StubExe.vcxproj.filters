@@ -8,9 +8,15 @@
     <Filter Include="libs">
       <UniqueIdentifier>{3573fed1-a59d-4810-b272-adcce7946a3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{2ca660b5-26af-43dd-9654-4782175ecf94}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WinRT.StubExe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -18,19 +24,22 @@
     <None Include="libs\CustomNativeMain.def">
       <Filter>libs</Filter>
     </None>
+    <None Include="libs\CustomNativeMain-arm.lib">
+      <Filter>libs</Filter>
+    </None>
+    <None Include="libs\CustomNativeMain-arm64.lib">
+      <Filter>libs</Filter>
+    </None>
+    <None Include="libs\CustomNativeMain-x64.lib">
+      <Filter>libs</Filter>
+    </None>
+    <None Include="libs\CustomNativeMain-x86.lib">
+      <Filter>libs</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="libs\CustomNativeMain-arm.lib">
-      <Filter>libs</Filter>
-    </Library>
-    <Library Include="libs\CustomNativeMain-arm64.lib">
-      <Filter>libs</Filter>
-    </Library>
-    <Library Include="libs\CustomNativeMain-x64.lib">
-      <Filter>libs</Filter>
-    </Library>
-    <Library Include="libs\CustomNativeMain-x86.lib">
-      <Filter>libs</Filter>
-    </Library>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

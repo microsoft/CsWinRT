@@ -127,16 +127,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="pch.cpp" PrecompiledHeader="Create" />
     <ClCompile Include="WinRT.StubExe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="libs\CustomNativeMain.def" />
+    <None Include="libs\CustomNativeMain-arm.lib" />
+    <None Include="libs\CustomNativeMain-arm64.lib" />
+    <None Include="libs\CustomNativeMain-x64.lib" />
+    <None Include="libs\CustomNativeMain-x86.lib" />
   </ItemGroup>
   <ItemGroup>
-    <Library Condition="'$(Platform)' == 'arm'" Include="libs\CustomNativeMain-arm.lib" />
-    <Library Condition="'$(Platform)' == 'arm64'" Include="libs\CustomNativeMain-arm64.lib" />
-    <Library Condition="'$(Platform)' == 'x64'" Include="libs\CustomNativeMain-x64.lib" />
-    <Library Condition="'$(Platform)' == 'x86'" Include="libs\CustomNativeMain-x86.lib" />
+    <ClInclude Include="pch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
