@@ -1,9 +1,15 @@
 #include "pch.h"
 #include <windows.h>
 
+#pragma comment(lib, "shell32.lib")
+
 typedef int (*__managed__Main)(int, wchar_t*[]);
 
-int __cdecl wmain(int argc, wchar_t* argv[])
+int APIENTRY wWinMain(
+    _In_ HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
 {
     wchar_t fileName[MAX_PATH];
 
@@ -36,6 +42,10 @@ int __cdecl wmain(int argc, wchar_t* argv[])
     {
         return GetLastError();
     }
+
+    // We need to parse the arguments to get back 'argc', 'argv' for the managed entry point
+    int argc;
+    LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);
 
     // Jump to the custom entry point in the implementation .dll
     return ((__managed__Main)pEntryPoint)(argc, argv);
