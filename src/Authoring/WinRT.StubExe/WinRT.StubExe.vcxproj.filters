@@ -5,10 +5,32 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="libs">
+      <UniqueIdentifier>{3573fed1-a59d-4810-b272-adcce7946a3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WinRT.StubExe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libs\CustomNativeMain.def">
+      <Filter>libs</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libs\CustomNativeMain-arm.lib">
+      <Filter>libs</Filter>
+    </Library>
+    <Library Include="libs\CustomNativeMain-arm64.lib">
+      <Filter>libs</Filter>
+    </Library>
+    <Library Include="libs\CustomNativeMain-x64.lib">
+      <Filter>libs</Filter>
+    </Library>
+    <Library Include="libs\CustomNativeMain-x86.lib">
+      <Filter>libs</Filter>
+    </Library>
   </ItemGroup>
 </Project>

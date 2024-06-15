@@ -129,6 +129,15 @@
   <ItemGroup>
     <ClCompile Include="WinRT.StubExe.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="libs\CustomNativeMain.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Condition="'$(Platform)' == 'arm'" Include="libs\CustomNativeMain-arm.lib" />
+    <Library Condition="'$(Platform)' == 'arm64'" Include="libs\CustomNativeMain-arm64.lib" />
+    <Library Condition="'$(Platform)' == 'x64'" Include="libs\CustomNativeMain-x64.lib" />
+    <Library Condition="'$(Platform)' == 'x86'" Include="libs\CustomNativeMain-x86.lib" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
