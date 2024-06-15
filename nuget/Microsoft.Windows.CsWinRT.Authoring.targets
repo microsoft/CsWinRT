@@ -144,13 +144,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Update the project to only output the assembly's .winmd -->
   <Target Name="GetTargetPath" DependsOnTargets="CsWinRTAuthoring_OutputManagedDll" Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
-      <CsWinRTComponent_ManagedImplementation Include="@(TargetPathWithTargetPlatformMoniker)">
-        <TargetPath>%(FullPath)</TargetPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
-      </CsWinRTComponent_ManagedImplementation>
-    </ItemGroup>
-
-    <ItemGroup>
       <!-- Clear the .dll -->
       <TargetPathWithTargetPlatformMoniker Remove="@(TargetPathWithTargetPlatformMoniker)" />
       <!-- Add the .winmd -->
@@ -161,13 +154,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <!-- show to c++ compiler (native case) and dotnet sdk (managed case) -->
         <ResolveableAssembly>true</ResolveableAssembly>
         <!-- Used by the dotnet sdk -->
-        <ManagedImplementation>%(CsWinRTComponent_ManagedImplementation.TargetPath)</ManagedImplementation>
+        <ManagedImplementation>$(TargetDir)$(AssemblyName).dll</ManagedImplementation>
         <FileType>winmd</FileType>
         <WinMDFile>true</WinMDFile>
         <BuildReference>true</BuildReference>
         <Primary>true</Primary>
       </TargetPathWithTargetPlatformMoniker>
-    
     </ItemGroup>
     
   </Target>
