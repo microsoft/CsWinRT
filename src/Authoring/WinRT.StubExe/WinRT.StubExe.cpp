@@ -1,8 +1,6 @@
 #include "pch.h"
 #include <windows.h>
 
-#pragma comment(lib, "shell32.lib")
-
 typedef int (*__managed__Main)(int, wchar_t*[]);
 
 int wmain(int argc, wchar_t* argv[])
