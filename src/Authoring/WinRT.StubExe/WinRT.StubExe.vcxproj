@@ -63,6 +63,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>wmainCRTStartup</EntryPointSymbol>
       <AdditionalOptions>/DEFAULTLIB:WindowsApp.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>WindowsApp.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release'">
@@ -81,6 +82,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>wmainCRTStartup</EntryPointSymbol>
       <AdditionalOptions>/DEFAULTLIB:WindowsApp.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>WindowsApp.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
