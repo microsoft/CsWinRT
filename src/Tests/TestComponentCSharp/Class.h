@@ -374,6 +374,7 @@ namespace winrt::TestComponentCSharp::implementation
         static hstring UnboxString(IInspectable const& obj);
         static EnumValue UnboxEnum(IInspectable const& obj);
         static TestComponentCSharp::ProvideInt UnboxDelegate(IInspectable const& obj);
+        static Windows::UI::Xaml::Interop::TypeName UnboxType(IInspectable const& obj);
         static com_array<int32_t> UnboxInt32Array(IInspectable const& obj);
         static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
         static com_array<hstring> UnboxStringArray(IInspectable const& obj);
@@ -384,6 +385,7 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::UI::Xaml::Interop::TypeName Int32Type();
         static Windows::UI::Xaml::Interop::TypeName ReferenceInt32Type();
         static Windows::UI::Xaml::Interop::TypeName ThisClassType();
+        static Windows::Foundation::IInspectable BoxedType();
         static bool VerifyTypeIsInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static bool VerifyTypeIsReferenceInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static bool VerifyTypeIsThisClassType(Windows::UI::Xaml::Interop::TypeName const& type_name);

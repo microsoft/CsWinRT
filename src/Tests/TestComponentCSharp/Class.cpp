@@ -1589,6 +1589,11 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::unbox_value<TestComponentCSharp::ProvideInt>(obj);
     }
 
+    Windows::UI::Xaml::Interop::TypeName Class::UnboxType(WF::IInspectable const& obj)
+    {
+        return winrt::unbox_value<Windows::UI::Xaml::Interop::TypeName>(obj);
+    }
+
     com_array<int32_t> Class::UnboxInt32Array(WF::IInspectable const& obj)
     {
         return obj.as<IReferenceArray<int32_t>>().Value();
@@ -1631,6 +1636,11 @@ namespace winrt::TestComponentCSharp::implementation
     TypeName Class::ThisClassType()
     {
         return winrt::xaml_typename<winrt::TestComponentCSharp::Class>();
+    }
+
+    WF::IInspectable Class::BoxedType()
+    {
+        return winrt::box_value(winrt::xaml_typename<winrt::TestComponentCSharp::Class>());
     }
 
     bool Class::VerifyTypeIsInt32Type(TypeName const& type_name)

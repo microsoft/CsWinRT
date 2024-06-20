@@ -2574,6 +2574,11 @@ namespace UnitTest
 
             EnumValue enumValue = EnumValue.Two;
             Assert.Equal(enumValue, Class.UnboxEnum(enumValue));
+
+            var type = typeof(EnumValue);
+            Assert.Equal(type, Class.UnboxType(type));
+
+            Assert.Equal(typeof(Class), Class.BoxedType);
         }
 
         [Fact]
