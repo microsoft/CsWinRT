@@ -2605,6 +2605,15 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestListOfTypes()
+        {
+            var types = Class.ListOfTypes;
+            Assert.Equal(2, types.Count);
+            Assert.Equal(typeof(Class), types[0]);
+            Assert.Equal(typeof(int?), types[1]);
+        }
+
+        [Fact]
         public void PrimitiveTypeInfo()
         {
             Assert.Equal(typeof(int), Class.Int32Type);

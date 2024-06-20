@@ -422,6 +422,7 @@ namespace TestComponentCSharp
         static Windows.UI.Xaml.Interop.TypeName ThisClassType { get; };
         static Windows.UI.Xaml.Interop.TypeName ReferenceInt32Type { get; };
         static Object BoxedType{ get; };
+        static Windows.Foundation.Collections.IVector<Windows.UI.Xaml.Interop.TypeName> ListOfTypes{ get; };
 
         static Boolean VerifyTypeIsInt32Type(Windows.UI.Xaml.Interop.TypeName type);
         static Boolean VerifyTypeIsThisClassType(Windows.UI.Xaml.Interop.TypeName type);

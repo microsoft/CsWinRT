@@ -386,6 +386,8 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::UI::Xaml::Interop::TypeName ReferenceInt32Type();
         static Windows::UI::Xaml::Interop::TypeName ThisClassType();
         static Windows::Foundation::IInspectable BoxedType();
+        static Windows::Foundation::Collections::IVector<Windows::UI::Xaml::Interop::TypeName> ListOfTypes();
+
         static bool VerifyTypeIsInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static bool VerifyTypeIsReferenceInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static bool VerifyTypeIsThisClassType(Windows::UI::Xaml::Interop::TypeName const& type_name);

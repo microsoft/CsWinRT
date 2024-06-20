@@ -1643,6 +1643,11 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::box_value(winrt::xaml_typename<winrt::TestComponentCSharp::Class>());
     }
 
+    IVector<Windows::UI::Xaml::Interop::TypeName> Class::ListOfTypes()
+    {
+        return single_threaded_vector<Windows::UI::Xaml::Interop::TypeName>({ winrt::xaml_typename<winrt::TestComponentCSharp::Class>(), winrt::xaml_typename<IReference<int32_t>>() });
+    }
+
     bool Class::VerifyTypeIsInt32Type(TypeName const& type_name)
     {
         return winrt::xaml_typename<int32_t>() == type_name;
