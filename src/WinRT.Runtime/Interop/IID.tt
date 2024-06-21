@@ -29,7 +29,7 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("IReferenceTracker", "11D3B13A-180E-4789-A8BE-7712882893E6", false),
     ("IReferenceTrackerTarget", "64BD43F8-BFEE-4EC4-B7EB-2935158DAE21", false),
     ("IActivationFactory", "00000035-0000-0000-C000-000000000046", true),
-    ("IAgileObject", "94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90", false),
+    ("IAgileObject", "94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90", true),
     ("IMarshal", "00000003-0000-0000-C000-000000000046", true),
     ("IBuffer", "905A0FE0-BC53-11DF-8C49-001E4FC686DA", true),
     ("IBufferByteAccess", "905A0FEF-BC53-11DF-8C49-001E4FC686DA", true),
