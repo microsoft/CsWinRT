@@ -4,7 +4,7 @@ using WinRT;
 
 #nullable enable
 
-namespace Microsoft.Windows.System;
+namespace Windows.System;
 
 /// <summary>
 /// The <see cref="DispatcherQueueSynchronizationContext"/> type allows developers to await calls and get back onto
