@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using test_component_derived.Nested;
 using TestComponentCSharp;
 
@@ -64,6 +65,13 @@ foreach (var hierarchyDAsHierarchyC in hierarchyDAsHierarchyCList)
 
 var propertySet = Class.PropertySet;
 if (propertySet["beta"] is not string str || str != "second")
+{
+    return 101;
+}
+
+var cancellationDictionary = new Dictionary<string, CancellationTokenSource>();
+instance.BindableIterableProperty = cancellationDictionary;
+if (cancellationDictionary != instance.BindableIterableProperty)
 {
     return 101;
 }

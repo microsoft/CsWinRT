@@ -367,7 +367,7 @@ namespace Generator
             }
 
             // KeyValueType is a value type in C#, but it is projected as a reference type in WinRT. 
-            if (symbol.TypeKind == TypeKind.Struct && symbol.MetadataName == "KeyValuePair`2")
+            if (symbol.TypeKind == TypeKind.Struct && symbol.MetadataName == "KeyValuePair`2" && isWinRTType(symbol))
             {
                 interfacesToAddToVtable.Add(ToFullyQualifiedString(symbol));
                 AddGenericInterfaceInstantiation(symbol as INamedTypeSymbol);
