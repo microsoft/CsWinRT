@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using TestComponentCSharp;
 
 int events_expected = 0;
@@ -66,7 +67,26 @@ instance.InvokeEvent0();
 // fired twice.
 events_expected += 3;
 
-return events_received == events_expected && uriMatches ? 100 : 101;
+ProvideInt s = () => 4;
+instance.ObjectProperty = s;
+bool boxedDelegateMatches = ((ProvideInt)instance.ObjectProperty) == s;
+
+TestDelegate t = () => true;
+instance.ObjectProperty = t;
+boxedDelegateMatches &= ((TestDelegate)instance.ObjectProperty) == t;
+
+System.EventHandler<int> u = (object sender, int args) => { };
+instance.ObjectProperty = u;
+boxedDelegateMatches &= ((System.EventHandler<int>)instance.ObjectProperty) == u;
+
+System.EventHandler<CancellationToken> v = (object sender, CancellationToken args) => { };
+instance.ObjectProperty = v;
+boxedDelegateMatches &= ((System.EventHandler<CancellationToken>)instance.ObjectProperty) == v;
+
+TestDelegate[] arr = new TestDelegate[] { t, t };
+instance.ObjectProperty = arr;
+
+return events_received == events_expected && uriMatches && boxedDelegateMatches ? 100 : 101;
 
 void Instance_Event0()
 {
@@ -92,3 +112,5 @@ partial class ManagedUriHandler : IUriHandler
         Uri = provideUri();
     }
 }
+
+delegate bool TestDelegate();
