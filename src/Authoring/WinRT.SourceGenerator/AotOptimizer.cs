@@ -1082,6 +1082,26 @@ namespace Generator
                 }
             }
 
+            if (classType is INamedTypeSymbol namedType && namedType.MetadataName == "ObservableCollection`1")
+            {
+                // ObservableCollection make use of an internal built-in type as part of its
+                // implementation for INotifyPropertyChanged.  Handling that manually here.
+                var genericInterfaces = new List<string>() { "System.Collections.IList", "System.Collections.IEnumerable" };
+                vtableAttributes.Add(
+                    new VtableAttribute(
+                        "System.Collections.Specialized",
+                        false,
+                        "SingleItemReadOnlyList",
+                        ImmutableArray<TypeInfo>.Empty,
+                        "System.Collections.Specialized.SingleItemReadOnlyList",
+                        genericInterfaces.ToImmutableArray(),
+                        ImmutableArray<GenericInterface>.Empty,
+                        false,
+                        false,
+                        false,
+                        "Microsoft.UI.Xaml.Interop.IBindableVector"));
+            }
+
             void LookupAndAddVtableAttributeForGenericType(string type, ImmutableArray<ITypeSymbol> genericArgs)
             {
                 var genericType = compilation.GetTypeByMetadataName(type);

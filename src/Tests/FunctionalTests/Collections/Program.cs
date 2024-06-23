@@ -76,6 +76,13 @@ if (cancellationDictionary != instance.BindableIterableProperty)
     return 101;
 }
 
+var observableCollection = new System.Collections.ObjectModel.ObservableCollection<string>();
+instance.BindableIterableProperty = observableCollection;
+if (observableCollection != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
