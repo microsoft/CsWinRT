@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using TestComponentCSharp;
+using Windows.Foundation.Collections;
 
 int events_expected = 0;
 int events_received = 0;
@@ -111,6 +112,18 @@ partial class ManagedUriHandler : IUriHandler
     {
         Uri = provideUri();
     }
+}
+
+partial class ObservableDictionaryChangedEventArgs : IMapChangedEventArgs<string>
+{
+    public ObservableDictionaryChangedEventArgs(CollectionChange change, string key)
+    {
+        CollectionChange = change;
+        Key = key;
+    }
+
+    public CollectionChange CollectionChange { get; private set; }
+    public string Key { get; private set; }
 }
 
 delegate bool TestDelegate();
