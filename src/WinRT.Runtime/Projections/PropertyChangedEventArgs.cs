@@ -11,18 +11,17 @@ namespace ABI.Microsoft.UI.Xaml.Data
 {
     internal sealed unsafe class PropertyChangedEventArgsRuntimeClassFactory
     {
-        private readonly ObjectReference<IUnknownVftbl> _obj;
+        private readonly IObjectReference _obj;
 
         public PropertyChangedEventArgsRuntimeClassFactory()
         {
-            if (FeatureSwitches.UseWindowsUIXamlProjections)
-            {
-                _obj = ActivationFactory.Get("Windows.UI.Xaml.Data.PropertyChangedEventArgs").As<IUnknownVftbl>(IID.IID_WUX_PropertyChangedEventArgsRuntimeClassFactory);
-            }
-            else
-            {
-                _obj = ActivationFactory.Get("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs").As<IUnknownVftbl>(IID.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory);
-            }
+#if NET
+            _obj = FeatureSwitches.UseWindowsUIXamlProjections
+                ? ActivationFactory.Get("Windows.UI.Xaml.Data.PropertyChangedEventArgs", IID.IID_WUX_PropertyChangedEventArgsRuntimeClassFactory)
+                : ActivationFactory.Get("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", IID.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory);
+#else
+            _obj = ActivationFactory.Get<IUnknownVftbl>("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", IID.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory);
+#endif
         }
 
         public IObjectReference CreateInstance(string name, object baseInterface, out IObjectReference innerInterface)
