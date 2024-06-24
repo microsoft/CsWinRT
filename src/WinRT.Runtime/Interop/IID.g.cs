@@ -640,33 +640,8 @@ namespace WinRT.Interop
             }
         }
 
-        /// <summary>The IID for <c>MUX_NotifyCollectionChangedEventHandler</c> (CA10B37C-F382-4591-8557-5E24965279B0).</summary>
+        /// <summary>The IID for <c>WUX_MotifyCollectionChangedEventHandler</c> (8B0909DC-2005-5D93-BF8A-725F017BAA8D).</summary>
         internal static ref readonly Guid IID_MUX_NotifyCollectionChangedEventHandler
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-            get
-            {
-                ReadOnlySpan<byte> data = new byte[]
-                {
-                    0x7C, 0xB3, 0x10, 0xCA,
-                    0x82, 0xF3,
-                    0x91, 0x45,
-                    0x85,
-                    0x57,
-                    0x5E,
-                    0x24,
-                    0x96,
-                    0x52,
-                    0x79,
-                    0xB0
-                };
-
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
-        }
-
-        /// <summary>The IID for <c>WUX_NotifyCollectionChangedEventHandler</c> (8B0909DC-2005-5D93-BF8A-725F017BAA8D).</summary>
-        internal static ref readonly Guid IID_WUX_NotifyCollectionChangedEventHandler
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
@@ -684,6 +659,31 @@ namespace WinRT.Interop
                     0x7B,
                     0xAA,
                     0x8D
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
+        /// <summary>The IID for <c>WUX_NotifyCollectionChangedEventHandler</c> (CA10B37C-F382-4591-8557-5E24965279B0).</summary>
+        internal static ref readonly Guid IID_WUX_NotifyCollectionChangedEventHandler
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x7C, 0xB3, 0x10, 0xCA,
+                    0x82, 0xF3,
+                    0x91, 0x45,
+                    0x85,
+                    0x57,
+                    0x5E,
+                    0x24,
+                    0x96,
+                    0x52,
+                    0x79,
+                    0xB0
                 };
 
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
