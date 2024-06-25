@@ -24,7 +24,7 @@ namespace WinRT
         /// <summary>
         /// The configuration property name for <see cref="EnableDynamicObjectsSupport"/>.
         /// </summary>
-        private const string EnablesDynamicObjectsSupportPropertyName = "CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT";
+        private const string EnableDynamicObjectsSupportPropertyName = "CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT";
 
         /// <summary>
         /// The configuration property name for <see cref="UseExceptionResourceKeys"/>.
@@ -52,9 +52,14 @@ namespace WinRT
         private const string EnableIDynamicInterfaceCastableSupportPropertyName = "CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE";
 
         /// <summary>
+        /// The configuration property name for <see cref="UseWindowsUIXamlProjections"/>.
+        /// </summary>
+        private const string UseWindowsUIXamlProjectionsPropertyName = "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS";
+
+        /// <summary>
         /// The backing field for <see cref="EnableDynamicObjectsSupport"/>.
         /// </summary>
-        private static int _enableDynamicObjectsSupportEnabled;
+        private static int _enableDynamicObjectsSupport;
 
         /// <summary>
         /// The backing field for <see cref="UseExceptionResourceKeys"/>.
@@ -82,12 +87,17 @@ namespace WinRT
         private static int _enableIDynamicInterfaceCastableSupport;
 
         /// <summary>
+        /// The backing field for <see cref="UseWindowsUIXamlProjections"/>.
+        /// </summary>
+        private static int _useWindowsUIXamlProjections;
+
+        /// <summary>
         /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
         /// </summary>
         public static bool EnableDynamicObjectsSupport
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => GetConfigurationValue(EnablesDynamicObjectsSupportPropertyName, ref _enableDynamicObjectsSupportEnabled, true);
+            get => GetConfigurationValue(EnableDynamicObjectsSupportPropertyName, ref _enableDynamicObjectsSupport, true);
         }
 
         /// <summary>
@@ -133,6 +143,15 @@ namespace WinRT
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => GetConfigurationValue(EnableIDynamicInterfaceCastableSupportPropertyName, ref _enableIDynamicInterfaceCastableSupport, true);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether to project .NET types to their <c>Windows.UI.Xaml</c> equivalents instead of their <c>Microsoft.UI.Xaml</c> equivalents.
+        /// </summary>
+        public static bool UseWindowsUIXamlProjections
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(UseWindowsUIXamlProjectionsPropertyName, ref _useWindowsUIXamlProjections, false);
         }
 
         /// <summary>

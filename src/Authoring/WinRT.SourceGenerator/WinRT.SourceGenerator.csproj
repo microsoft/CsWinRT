@@ -17,6 +17,7 @@
     <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionDir)WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
+    <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
   </PropertyGroup>
 

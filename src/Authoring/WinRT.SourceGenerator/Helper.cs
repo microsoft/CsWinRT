@@ -231,12 +231,12 @@ namespace Generator
             return type.ToDisplayString() == "System.Guid";
         }
 
-        public static bool IsWinRTType(ISymbol type)
+        public static bool IsWinRTType(ISymbol type, TypeMapper mapper)
         {
-            return IsWinRTType(type, null);
+            return IsWinRTType(type, null, mapper);
         }
 
-        public static bool IsWinRTType(ISymbol type, Func<ISymbol, bool> isAuthoringWinRTType)
+        public static bool IsWinRTType(ISymbol type, Func<ISymbol, TypeMapper, bool> isAuthoringWinRTType, TypeMapper mapper)
         {
             bool isProjectedType = type.GetAttributes().
                 Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0) ||
@@ -244,21 +244,21 @@ namespace Generator
 
             if (!isProjectedType & type.ContainingNamespace != null)
             {
-                isProjectedType = MappedCSharpTypes.ContainsKey(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+                isProjectedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
             }
 
             // Ensure all generic parameters are WinRT types.
             if (isProjectedType && type is INamedTypeSymbol namedType && namedType.IsGenericType && !namedType.IsDefinition)
             {
                 isProjectedType = namedType.TypeArguments.All(t => 
-                    IsWinRTType(t, isAuthoringWinRTType) || 
-                    (isAuthoringWinRTType != null && isAuthoringWinRTType(t)));
+                    IsWinRTType(t, isAuthoringWinRTType, mapper) || 
+                    (isAuthoringWinRTType != null && isAuthoringWinRTType(t, mapper)));
             }
 
             return isProjectedType;
         }
 
-        public static bool IsWinRTType(ISymbol type, ITypeSymbol winrtRuntimeTypeAttribute, bool isComponentProject, IAssemblySymbol currentAssembly)
+        public static bool IsWinRTType(ISymbol type, ITypeSymbol winrtRuntimeTypeAttribute, TypeMapper mapper, bool isComponentProject, IAssemblySymbol currentAssembly)
         {
             if (IsFundamentalType(type))
             {
@@ -277,7 +277,7 @@ namespace Generator
             bool isProjectedType = HasAttributeWithType(type, winrtRuntimeTypeAttribute);
             if (!isProjectedType & type.ContainingNamespace != null)
             {
-                isProjectedType = MappedCSharpTypes.ContainsKey(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+                isProjectedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
             }
 
             // Ensure all generic parameters are WinRT types.
@@ -286,7 +286,7 @@ namespace Generator
                 namedType.IsGenericType && 
                 !namedType.IsDefinition)
             {
-                isProjectedType = namedType.TypeArguments.All(t => IsWinRTType(t, winrtRuntimeTypeAttribute, isComponentProject, currentAssembly));
+                isProjectedType = namedType.TypeArguments.All(t => IsWinRTType(t, winrtRuntimeTypeAttribute, mapper, isComponentProject, currentAssembly));
             }
 
             return isProjectedType;
@@ -341,14 +341,14 @@ namespace Generator
         // and is used by a WinRT interface. For instance, List<T> where T is a generic.
         // If the generic isn't used by any WinRT interface, this returns false as for
         // instance, we can still generate the vtable attribute for it.
-        public static bool HasNonInstantiatedWinRTGeneric(ITypeSymbol symbol)
+        public static bool HasNonInstantiatedWinRTGeneric(ITypeSymbol symbol, TypeMapper mapper)
         {
             return symbol is INamedTypeSymbol namedType && 
                 (IsArgumentTypeParameter(namedType) || 
                  (namedType.TypeArguments.Any(IsArgumentTypeParameter) && 
                   namedType.AllInterfaces.Any(iface => iface.TypeArguments.Any(IsArgumentTypeParameter) && 
                   // Checks if without the non-instantiated generic, whether it would be a WinRT type.
-                  IsWinRTType(iface.OriginalDefinition, null))));
+                  IsWinRTType(iface.OriginalDefinition, null, mapper))));
 
             static bool IsArgumentTypeParameter(ITypeSymbol argument)
             {
@@ -411,14 +411,14 @@ namespace Generator
             return false;
         }
 
-        public static Func<ISymbol, bool> IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(Compilation compilation)
+        public static Func<ISymbol, TypeMapper, bool> IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(Compilation compilation)
         {
             var winrtTypeAttribute = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
             return IsWinRTTypeHelper;
 
-            bool IsWinRTTypeHelper(ISymbol type)
+            bool IsWinRTTypeHelper(ISymbol type, TypeMapper typeMapper)
             {
-                return IsWinRTType(type, winrtTypeAttribute, true, compilation.Assembly);
+                return IsWinRTType(type, winrtTypeAttribute, typeMapper, true, compilation.Assembly);
             }
         }
 
@@ -452,7 +452,7 @@ namespace Generator
             return type.ToDisplayString();
         }
 
-        public static bool IsBlittableValueType(ITypeSymbol type)
+        public static bool IsBlittableValueType(ITypeSymbol type, TypeMapper typeMapper)
         {
             if (!type.IsValueType)
             {
@@ -484,9 +484,9 @@ namespace Generator
             if (type.ContainingNamespace != null)
             {
                 string customTypeMapKey = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
-                if (MappedCSharpTypes.ContainsKey(customTypeMapKey))
+                if (typeMapper.HasMappingForType(customTypeMapKey))
                 {
-                    return MappedCSharpTypes[customTypeMapKey].IsBlittable();
+                    return typeMapper.GetMappedType(customTypeMapKey).IsBlittable();
                 }
             }
 
@@ -501,7 +501,7 @@ namespace Generator
                 {
                     if (typeMember is IFieldSymbol field &&
                         !field.IsStatic &&
-                        !IsBlittableValueType(field.Type))
+                        !IsBlittableValueType(field.Type, typeMapper))
                     {
                         return false;
                     }
@@ -510,7 +510,7 @@ namespace Generator
             return true;
         }
 
-        public static string GetAbiType(ITypeSymbol type)
+        public static string GetAbiType(ITypeSymbol type, TypeMapper mapper)
         {
             if (IsFundamentalType(type))
             {
@@ -530,13 +530,13 @@ namespace Generator
             if (type.IsValueType)
             {
                 string customTypeMapKey = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
-                if (MappedCSharpTypes.ContainsKey(customTypeMapKey))
+                if (mapper.HasMappingForType(customTypeMapKey))
                 {
-                    string prefix = MappedCSharpTypes[customTypeMapKey].IsBlittable() ? "" : "ABI.";
+                    string prefix = mapper.GetMappedType(customTypeMapKey).IsBlittable() ? "" : "ABI.";
                     return prefix + typeStr;
                 }
 
-                if (!IsBlittableValueType(type))
+                if (!IsBlittableValueType(type, mapper))
                 {
                     var winrtHelperAttribute = type.GetAttributes().
                         Where(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeHelperTypeAttribute") == 0).

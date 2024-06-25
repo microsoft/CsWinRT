@@ -506,6 +506,11 @@ namespace WinRT
                 return;
             }
 
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                throw new NotSupportedException("The 'DataErrorsChangedEventArgs' type is only supported for WinUI, and not when using System XAML projections (make sure the 'CsWinRTUseWindowsUIXamlProjections' property is not set to 'true').");
+            }
+
             if (Interlocked.CompareExchange(ref _DataErrorsChangedEventArgs, 1, 0) == 1)
             {
                 return;
@@ -531,11 +536,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(PropertyChangedEventArgs),
-                typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
-                "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs",
-                isRuntimeClass: true);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(PropertyChangedEventArgs),
+                    typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
+                    "Windows.UI.Xaml.Data.PropertyChangedEventArgs",
+                    isRuntimeClass: true);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(PropertyChangedEventArgs),
+                    typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
+                    "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs",
+                    isRuntimeClass: true);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Data.PropertyChangedEventHandler"</c> WinRT type.</summary>
@@ -551,11 +567,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(PropertyChangedEventHandler),
-                typeof(ABI.System.ComponentModel.PropertyChangedEventHandler),
-                "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler",
-                isRuntimeClass: false);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(PropertyChangedEventHandler),
+                    typeof(ABI.System.ComponentModel.PropertyChangedEventHandler),
+                    "Windows.UI.Xaml.Data.PropertyChangedEventHandler",
+                    isRuntimeClass: false);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(PropertyChangedEventHandler),
+                    typeof(ABI.System.ComponentModel.PropertyChangedEventHandler),
+                    "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler",
+                    isRuntimeClass: false);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Data.INotifyDataErrorInfo"</c> WinRT type.</summary>
@@ -564,6 +591,11 @@ namespace WinRT
             if (FeatureSwitches.EnableDefaultCustomTypeMappings)
             {
                 return;
+            }
+
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                throw new NotSupportedException("The 'INotifyDataErrorInfo' type is only supported for WinUI, and not when using System XAML projections (make sure the 'CsWinRTUseWindowsUIXamlProjections' property is not set to 'true').");
             }
 
             if (Interlocked.CompareExchange(ref _INotifyDataErrorInfo, 1, 0) == 1)
@@ -591,11 +623,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(INotifyPropertyChanged),
-                typeof(ABI.System.ComponentModel.INotifyPropertyChanged),
-                "Microsoft.UI.Xaml.Data.INotifyPropertyChanged",
-                isRuntimeClass: false);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(INotifyPropertyChanged),
+                    typeof(ABI.System.ComponentModel.INotifyPropertyChanged),
+                    "Windows.UI.Xaml.Data.INotifyPropertyChanged",
+                    isRuntimeClass: false);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(INotifyPropertyChanged),
+                    typeof(ABI.System.ComponentModel.INotifyPropertyChanged),
+                    "Microsoft.UI.Xaml.Data.INotifyPropertyChanged",
+                    isRuntimeClass: false);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.ICommand"</c> WinRT type.</summary>
@@ -611,11 +654,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(ICommand),
-                typeof(ABI.System.Windows.Input.ICommand),
-                "Microsoft.UI.Xaml.Interop.ICommand",
-                isRuntimeClass: false);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(ICommand),
+                    typeof(ABI.System.Windows.Input.ICommand),
+                    "Windows.UI.Xaml.Interop.ICommand",
+                    isRuntimeClass: false);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(ICommand),
+                    typeof(ABI.System.Windows.Input.ICommand),
+                    "Microsoft.UI.Xaml.Interop.ICommand",
+                    isRuntimeClass: false);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.IXamlServiceProvider"</c> WinRT type.</summary>
@@ -624,6 +678,11 @@ namespace WinRT
             if (FeatureSwitches.EnableDefaultCustomTypeMappings)
             {
                 return;
+            }
+
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                throw new NotSupportedException("The 'IServiceProvider' type is only supported for WinUI, and not when using System XAML projections (make sure the 'CsWinRTUseWindowsUIXamlProjections' property is not set to 'true').");
             }
 
             if (Interlocked.CompareExchange(ref _IServiceProvider, 1, 0) == 1)
@@ -831,11 +890,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(IEnumerable),
-                typeof(ABI.System.Collections.IEnumerable),
-                "Microsoft.UI.Xaml.Interop.IBindableIterable",
-                isRuntimeClass: false);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(IEnumerable),
+                    typeof(ABI.System.Collections.IEnumerable),
+                    "Windows.UI.Xaml.Interop.IBindableIterable",
+                    isRuntimeClass: false);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(IEnumerable),
+                    typeof(ABI.System.Collections.IEnumerable),
+                    "Microsoft.UI.Xaml.Interop.IBindableIterable",
+                    isRuntimeClass: false);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.IBindableVector"</c> WinRT type.</summary>
@@ -851,11 +921,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(IList),
-                typeof(ABI.System.Collections.IList),
-                "Microsoft.UI.Xaml.Interop.IBindableVector",
-                isRuntimeClass: false);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(IList),
+                    typeof(ABI.System.Collections.IList),
+                    "Windows.UI.Xaml.Interop.IBindableVector",
+                    isRuntimeClass: false);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(IList),
+                    typeof(ABI.System.Collections.IList),
+                    "Microsoft.UI.Xaml.Interop.IBindableVector",
+                    isRuntimeClass: false);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.INotifyCollectionChanged"</c> WinRT type.</summary>
@@ -871,11 +952,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(INotifyCollectionChanged),
-                typeof(ABI.System.Collections.Specialized.INotifyCollectionChanged),
-                "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged",
-                isRuntimeClass: false);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(INotifyCollectionChanged),
+                    typeof(ABI.System.Collections.Specialized.INotifyCollectionChanged),
+                    "Windows.UI.Xaml.Interop.INotifyCollectionChanged",
+                    isRuntimeClass: false);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(INotifyCollectionChanged),
+                    typeof(ABI.System.Collections.Specialized.INotifyCollectionChanged),
+                    "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged",
+                    isRuntimeClass: false);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction"</c> WinRT type.</summary>
@@ -891,11 +983,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(NotifyCollectionChangedAction),
-                typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedAction),
-                "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction",
-                isRuntimeClass: false);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(NotifyCollectionChangedAction),
+                    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedAction),
+                    "Windows.UI.Xaml.Interop.NotifyCollectionChangedAction",
+                    isRuntimeClass: false);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(NotifyCollectionChangedAction),
+                    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedAction),
+                    "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction",
+                    isRuntimeClass: false);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs"</c> WinRT type.</summary>
@@ -911,11 +1014,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(NotifyCollectionChangedEventArgs),
-                typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
-                "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
-                isRuntimeClass: true);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(NotifyCollectionChangedEventArgs),
+                    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
+                    "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
+                    isRuntimeClass: true);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(NotifyCollectionChangedEventArgs),
+                    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
+                    "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
+                    isRuntimeClass: true);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler"</c> WinRT type.</summary>
@@ -931,11 +1045,22 @@ namespace WinRT
                 return;
             }
 
-            RegisterCustomAbiTypeMapping(
-                typeof(NotifyCollectionChangedEventHandler),
-                typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler),
-                "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler",
-                isRuntimeClass: false);
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(NotifyCollectionChangedEventHandler),
+                    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler),
+                    "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler",
+                    isRuntimeClass: false);
+            }
+            else
+            {
+                RegisterCustomAbiTypeMapping(
+                    typeof(NotifyCollectionChangedEventHandler),
+                    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler),
+                    "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler",
+                    isRuntimeClass: false);
+            }
         }
 
         /// <summary>Registers the custom ABI type mapping for the <c>"Windows.Foundation.Numerics.Matrix3x2"</c> WinRT type.</summary>

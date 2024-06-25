@@ -25,9 +25,11 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         private WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory()
         {
 #if NET
-            _obj = ActivationFactory.Get("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_INotifyCollectionChangedEventArgsFactory);
+            _obj = FeatureSwitches.UseWindowsUIXamlProjections
+                ? ActivationFactory.Get("Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_WUX_INotifyCollectionChangedEventArgsFactory)
+                : ActivationFactory.Get("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_MUX_INotifyCollectionChangedEventArgsFactory);
 #else
-            _obj = ActivationFactory.Get<IUnknownVftbl>("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_INotifyCollectionChangedEventArgsFactory);
+            _obj = ActivationFactory.Get<IUnknownVftbl>("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_MUX_INotifyCollectionChangedEventArgsFactory);
 #endif
         }
 
@@ -72,6 +74,7 @@ namespace ABI.System.Collections.Specialized
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
+    [WuxMuxProjectedType]
 #if EMBED
     internal
 #else
@@ -79,6 +82,10 @@ namespace ABI.System.Collections.Specialized
 #endif
     struct NotifyCollectionChangedEventArgs
     {
+        private static ref readonly Guid Interface_IID => ref FeatureSwitches.UseWindowsUIXamlProjections
+            ? ref IID.IID_WUX_INotifyCollectionChangedEventArgs
+            : ref IID.IID_MUX_INotifyCollectionChangedEventArgs;
+
         public static IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
         {
             if (value is null)
@@ -132,7 +139,7 @@ namespace ABI.System.Collections.Specialized
             try
             {
                 // Call can come from CreateObject which means it might not be on the right interface.
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in IID.IID_INotifyCollectionChangedEventArgs), out thisPtr));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in Interface_IID), out thisPtr));
 
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int>**)thisPtr)[6](thisPtr, &action));
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[7](thisPtr, &newItems));
@@ -197,6 +204,10 @@ namespace ABI.System.Collections.Specialized
 
         public static string GetGuidSignature()
         {
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                return "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})";
+            }
             return "rc(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})";
         }
     }

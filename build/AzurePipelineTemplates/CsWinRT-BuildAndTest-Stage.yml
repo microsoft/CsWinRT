@@ -93,6 +93,18 @@ stages:
         script: |
           dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
+          exit /b 0
+
+# Run WUX Tests
+    - task: CmdLine@2
+      displayName: Run WUX Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      continueOnError: True
+      inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src
+        script: |
+          dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin
+          _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
           exit /b 0 
 
 # Run Functional Tests  

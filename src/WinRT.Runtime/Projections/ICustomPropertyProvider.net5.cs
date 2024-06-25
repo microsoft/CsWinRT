@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 
+// These types have the same GUIDs in both Microsoft.UI.Xaml and Windows.UI.Xaml,
+// so we don't need to duplicate them for the internal usage here as they can be transparently used by both WUX and MUX.
 namespace Microsoft.UI.Xaml.Data
 {
     [global::WinRT.WindowsRuntimeType]
