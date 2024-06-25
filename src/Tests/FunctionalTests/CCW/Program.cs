@@ -187,11 +187,12 @@ if (!CheckRuntimeClassName(ccw, "Microsoft.UI.Xaml.Input.ICommand"))
     return 124;
 }
 
+TestClass.TestNestedClass();
+
 // These scenarios aren't supported today on AOT, but testing to ensure they
 // compile without issues.  They should still work fine outside of AOT.
 try
 {
-    TestClass.TestNestedClass();
     TestClass.TestGenericList<bool>();
 }
 catch(Exception)
@@ -416,11 +417,27 @@ sealed partial class ManagedDerivedList : IList<TestComponent.Derived>
 
 sealed class TestClass
 {
+    // Testing various nested and generic classes on vtable lookup table.
     public static void TestNestedClass()
     {
         var instance = new Class();
         var nestedClassList = new List<NestedClass>();
         instance.BindableIterableProperty = nestedClassList;
+
+        var nestedClassList2 = new List<NestedClass.NestedClass2>();
+        instance.BindableIterableProperty = nestedClassList2;
+
+        var nestedClassList3 = new List<NestedGenericClass<int>>();
+        instance.BindableIterableProperty = nestedClassList3;
+
+        var nestedClassList4 = new List<NestedGenericClass<int>.NestedClass2>();
+        instance.BindableIterableProperty = nestedClassList4;
+
+        var nestedClassList5 = new List<NestedGenericClass<NestedGenericClass<int>.NestedClass2>.NestedClass2>();
+        instance.BindableIterableProperty = nestedClassList5;
+
+        var nestedClassList6 = new List<NestedGenericClass<int>.NestedClass3<double>>();
+        instance.BindableIterableProperty = nestedClassList6;
     }
 
     public static void TestGenericList<T>()
@@ -434,6 +451,30 @@ sealed class TestClass
     {
         private int _value;
         public int ReadWriteProperty { get => _value; set => _value = value; }
+
+        internal sealed class NestedClass2 : IProperties2
+        {
+            private int _value;
+            public int ReadWriteProperty { get => _value; set => _value = value; }
+        }
+    }
+
+    sealed class NestedGenericClass<T> : IProperties2
+    {
+        private int _value;
+        public int ReadWriteProperty { get => _value; set => _value = value; }
+
+        internal sealed class NestedClass2 : IProperties2
+        {
+            private int _value;
+            public int ReadWriteProperty { get => _value; set => _value = value; }
+        }
+
+        internal sealed class NestedClass3<S> : IProperties2
+        {
+            private int _value;
+            public int ReadWriteProperty { get => _value; set => _value = value; }
+        }
     }
 }
 

@@ -226,17 +226,51 @@ namespace Generator
 
         private static string ToVtableLookupString(ISymbol symbol)
         {
-            if (symbol is INamedTypeSymbol namedTypeSymbol && 
+            List<string> genericArguments = [];
+            var fullName = ToVtableLookupString(symbol, genericArguments);
+            if (genericArguments.Count == 0)
+            {
+                return fullName;
+            }
+
+            return $$"""{{fullName}}[{{string.Join(",", genericArguments)}}]""";
+        }
+
+        private static string ToVtableLookupString(ISymbol symbol, List<string> genericArguments, bool ignoreTypeArguments = false)
+        {
+            if (symbol is INamedTypeSymbol namedTypeSymbol &&
+                !ignoreTypeArguments &&
                 namedTypeSymbol.TypeArguments.Length != 0)
             {
-                return $$"""{{symbol.ContainingNamespace?.ToDisplayString()}}.{{symbol.MetadataName}}[{{string.Join(",", namedTypeSymbol.TypeArguments.Select(ToVtableLookupString))}}]""";
+                // Ignore type arguments and get the string representation for the rest of
+                // the type to properly handle nested types.
+                var fullName = ToVtableLookupString(symbol, genericArguments, true);
+                // Type arguments are collected but not added to the type name until the end
+                // per the format of Type.ToString().  ToVtableLookupString on the symbol is
+                // also called first to ensure any type arguments from any nested parent types
+                // are added first.
+                foreach (var typeArgument in namedTypeSymbol.TypeArguments)
+                {
+                    genericArguments.Add(ToVtableLookupString(typeArgument));
+                }
+                return fullName;
             }
             else
             {
-                var symbolDisplayString = new SymbolDisplayFormat(
-                    globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
-                    typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
-                return symbol.ToDisplayString(symbolDisplayString);
+                // If it is a generic type argument or the type is directly under a namspace, we just use the ToDisplayString API.
+                if (symbol is not INamedTypeSymbol || symbol.ContainingSymbol is INamespaceSymbol || symbol.ContainingSymbol is null)
+                {
+                    var arity = symbol is INamedTypeSymbol namedType && namedType.Arity > 0 ? "`" + namedType.Arity : "";
+                    var symbolDisplayString = new SymbolDisplayFormat(
+                        globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
+                        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
+                    return symbol.ToDisplayString(symbolDisplayString) + arity;
+                }
+                else
+                {
+                    // Nested types use + in the fully qualified name rather than .
+                    return ToVtableLookupString(symbol.ContainingSymbol, genericArguments) + "+" + symbol.MetadataName;
+                }
             }
         }
 
