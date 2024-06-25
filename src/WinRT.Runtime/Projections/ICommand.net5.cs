@@ -74,6 +74,7 @@ namespace ABI.System.Windows.Input
         }
     }
 
+    // ICommand has the same IID for both Windows.UI.Xaml.Input.ICommand and Microsoft.UI.Xaml.Input.ICommand, so we can use one interface definition for both without marking it as a WUX/MUX type.
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
     [DynamicInterfaceCastableImplementation]

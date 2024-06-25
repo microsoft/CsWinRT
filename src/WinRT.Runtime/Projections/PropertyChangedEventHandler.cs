@@ -12,6 +12,7 @@ namespace ABI.System.ComponentModel
 {
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D")]
+    [WuxMuxProjectedType]
 #if EMBED
     internal
 #else
@@ -45,7 +46,9 @@ namespace ABI.System.ComponentModel
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        public static Guid IID => global::WinRT.Interop.IID.IID_PropertyChangedEventHandler;
+        public static Guid IID => FeatureSwitches.UseWindowsUIXamlProjections
+            ? global::WinRT.Interop.IID.IID_WUX_PropertyChangedEventHandler
+            : global::WinRT.Interop.IID.IID_MUX_PropertyChangedEventHandler;
 
         public static unsafe IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);

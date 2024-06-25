@@ -111,6 +111,12 @@
     <None Include="strings\additions\Microsoft.UI.Xaml.Media\Microsoft.UI.Xaml.Media.cs" />
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.cs" />
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.SR.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml.Controls.Primitives\Windows.UI.Xaml.Controls.Primitives.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Animation\Windows.UI.Xaml.Media.Animation.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Media3D\Windows.UI.Xaml.Media.Media3D.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs" />
     <None Include="strings\additions\Windows.UI\Windows.UI.cs" />
     <None Include="strings\ComInteropHelpers.cs" />
     <None Include="strings\InitalizeProjection.cs" />

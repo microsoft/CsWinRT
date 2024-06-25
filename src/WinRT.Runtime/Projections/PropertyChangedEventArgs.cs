@@ -9,40 +9,22 @@ using WinRT.Interop;
 
 namespace ABI.Microsoft.UI.Xaml.Data
 {
-    [Guid("63D0C952-396B-54F4-AF8C-BA8724A427BF")]
-    [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct IPropertyChangedEventArgsVftbl
+    internal sealed unsafe class PropertyChangedEventArgsRuntimeClassFactory
     {
-        internal IInspectable.Vftbl IInspectableVftbl;
-        private void* _get_PropertyName_0;
-        public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_PropertyName_0;
-    }
+        private readonly IObjectReference _obj;
 
-#if !NET
-    [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+        public PropertyChangedEventArgsRuntimeClassFactory()
+        {
+#if NET
+            _obj = FeatureSwitches.UseWindowsUIXamlProjections
+                ? ActivationFactory.Get("Windows.UI.Xaml.Data.PropertyChangedEventArgs", IID.IID_WUX_PropertyChangedEventArgsRuntimeClassFactory)
+                : ActivationFactory.Get("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", IID.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory);
+#else
+            _obj = ActivationFactory.Get<IUnknownVftbl>("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", IID.IID_MUX_PropertyChangedEventArgsRuntimeClassFactory);
 #endif
-    [Guid("7C0C27A8-0B41-5070-B160-FC9AE960A36C")]
-    internal sealed unsafe class WinRTPropertyChangedEventArgsRuntimeClassFactory
-    {
-        [Guid("7C0C27A8-0B41-5070-B160-FC9AE960A36C")]
-        [StructLayout(LayoutKind.Sequential)]
-        public struct Vftbl
-        {
-            internal IInspectable.Vftbl IInspectableVftbl;
-            private void* _CreateInstance_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int> CreateInstance_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int>)_CreateInstance_0;
-        }
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_PropertyChangedEventArgsRuntimeClassFactory);
-
-        private readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public WinRTPropertyChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_PropertyChangedEventArgsRuntimeClassFactory)) { }
-        public WinRTPropertyChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
         }
 
-        public unsafe IObjectReference CreateInstance(string name, object baseInterface, out IObjectReference innerInterface)
+        public IObjectReference CreateInstance(string name, object baseInterface, out IObjectReference innerInterface)
         {
             IObjectReference __baseInterface = default;
             IntPtr __innerInterface = default;
@@ -53,7 +35,14 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 fixed (void* ___name = __name)
                 {
                     __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
+                    IntPtr thisPtr = _obj.ThisPtr;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(
+                        ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int>)(*(void***)thisPtr)[6])(
+                            thisPtr,
+                            MarshalString.GetAbi(ref __name),
+                            MarshalInspectable<object>.GetAbi(__baseInterface),
+                            &__innerInterface,
+                            &__retval));
                     innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface, IID.IID_IUnknown);
                     return ObjectReference<IUnknownVftbl>.Attach(ref __retval, IID.IID_IUnknown);
                 }
@@ -66,7 +55,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
             }
         }
 
-        public unsafe ObjectReferenceValue CreateInstance(string name)
+        public ObjectReferenceValue CreateInstance(string name)
         {
             IntPtr __innerInterface = default;
             IntPtr __retval = default;
@@ -75,7 +64,14 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 MarshalString.Pinnable __name = new(name);
                 fixed (void* ___name = __name)
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), IntPtr.Zero, &__innerInterface, &__retval));
+                    IntPtr thisPtr = _obj.ThisPtr;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(
+                        ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int>)(*(void***)thisPtr)[6])(
+                            thisPtr,
+                            MarshalString.GetAbi(ref __name),
+                            IntPtr.Zero,
+                            &__innerInterface,
+                            &__retval));
                     return new ObjectReferenceValue(__retval);
                 }
             }
@@ -84,7 +80,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 MarshalInspectable<object>.DisposeAbi(__innerInterface);
             }
         }
-
     }
 }
 
@@ -99,7 +94,7 @@ namespace ABI.System.ComponentModel
 #endif
     unsafe struct PropertyChangedEventArgs
     {
-        private static readonly ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory Instance = new(ActivationFactory.Get("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs"));
+        private static readonly ABI.Microsoft.UI.Xaml.Data.PropertyChangedEventArgsRuntimeClassFactory Instance = new();
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventArgs value)
         {
@@ -133,7 +128,9 @@ namespace ABI.System.ComponentModel
             IntPtr propertyName = IntPtr.Zero;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR((**(ABI.Microsoft.UI.Xaml.Data.IPropertyChangedEventArgsVftbl**)ptr).get_PropertyName_0(ptr, &propertyName));
+                // We can use the Microsoft.UI.Xaml.Data.IPropertyChangedEventArgsVftbl here in both WUX and MUX because the vtables are laid out the same and we know
+                // that we have either a MUX or WUX IPropertyChangedEventArgs pointer in ptr.
+                ExceptionHelpers.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)ptr)[6])(ptr, &propertyName));
                 return new global::System.ComponentModel.PropertyChangedEventArgs(MarshalString.FromAbi(propertyName));
             }
             finally
@@ -169,6 +166,11 @@ namespace ABI.System.ComponentModel
 
         public static string GetGuidSignature()
         {
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                return "rc(Windows.UI.Xaml.Data.NotifyPropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})";
+            }
+
             return "rc(Microsoft.UI.Xaml.Data.NotifyPropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})";
         }
     }

@@ -1,0 +1,5 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Workaround: not every project that references the WinUI nuget wants to build a PRI file -->
+
+</Project>
