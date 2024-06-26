@@ -114,17 +114,29 @@ namespace WinRT
             }
         }
 
-        public static bool TryHandleWinRTServerException(object sender, Exception ex)
+        public static int HandleWinRTServerException(object sender, Exception ex, bool dispatchExceptionToUnmanagedCode)
         {
             EventHandler<UnhandledWinRTServerExceptionEventArgs> handler = UnhandledWinRTServerException;
+
             if (handler != null)
             {
-                UnhandledWinRTServerExceptionEventArgs args = new UnhandledWinRTServerExceptionEventArgs(ex);
+                UnhandledWinRTServerExceptionEventArgs args = new(ex);
                 handler.Invoke(sender, args);
-                return args.Handled;
+                if (args.Handled)
+                {
+                    return 0;
+                }
             }
 
-            return false;
+            if (dispatchExceptionToUnmanagedCode)
+            {
+                SetErrorInfo(ex);
+                return GetHRForException(ex);
+            }
+            else
+            {
+                return ex.HResult;
+            }
         }
 
         public static void ThrowExceptionForHR(int hr)

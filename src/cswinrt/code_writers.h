@@ -5263,12 +5263,7 @@ try
 }
 catch (Exception __exception__)
 {
-if (global::WinRT.ExceptionHelpers.TryHandleWinRTServerException(__this__, __exception__))
-{
-return 0;
-}
-global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+return global::WinRT.ExceptionHelpers.HandleWinRTServerException(__this__, __exception__, true);
 }
 return 0;)",
             [&](writer& w) {
@@ -5478,11 +5473,7 @@ return 0;
 }
 catch (Exception __ex)
 {
-if (global::WinRT.ExceptionHelpers.TryHandleWinRTServerException(__this, __ex))
-{
-return 0;
-}
-return __ex.HResult;
+return global::WinRT.ExceptionHelpers.TryHandleWinRTServerException(__this, __ex, false);
 }
 })",
             !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
@@ -5515,11 +5506,7 @@ return 0;
 }
 catch (Exception __ex)
 {
-if (global::WinRT.ExceptionHelpers.TryHandleWinRTServerException(__this, __ex))
-{
-return 0;
-}
-return __ex.HResult;
+return global::WinRT.ExceptionHelpers.TryHandleWinRTServerException(__this, __ex, false);
 }
 })",
             !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
