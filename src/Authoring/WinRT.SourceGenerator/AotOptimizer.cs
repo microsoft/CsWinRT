@@ -416,7 +416,7 @@ namespace Generator
             }
 
             // KeyValueType is a value type in C#, but it is projected as a reference type in WinRT. 
-            if (symbol.TypeKind == TypeKind.Struct && symbol.MetadataName == "KeyValuePair`2" && isWinRTType(symbol))
+            if (symbol.TypeKind == TypeKind.Struct && symbol.MetadataName == "KeyValuePair`2" && isWinRTType(symbol, mapper))
             {
                 interfacesToAddToVtable.Add(ToFullyQualifiedString(symbol));
                 AddGenericInterfaceInstantiation(symbol as INamedTypeSymbol);
@@ -1139,6 +1139,7 @@ namespace Generator
                 // ObservableCollection make use of an internal built-in type as part of its
                 // implementation for INotifyPropertyChanged.  Handling that manually here.
                 var genericInterfaces = new List<string>() { "System.Collections.IList", "System.Collections.IEnumerable" };
+                var mapping = mapper.GetMappedType("System.Collections.IList").GetMapping();
                 vtableAttributes.Add(
                     new VtableAttribute(
                         "System.Collections.Specialized",
@@ -1151,7 +1152,7 @@ namespace Generator
                         false,
                         false,
                         false,
-                        "Microsoft.UI.Xaml.Interop.IBindableVector"));
+                        mapping.Item1 + "." + mapping.Item2));
             }
 
             void LookupAndAddVtableAttributeForGenericType(string type, ImmutableArray<ITypeSymbol> genericArgs)
