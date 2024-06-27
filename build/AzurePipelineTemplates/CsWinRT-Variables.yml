@@ -1,18 +1,32 @@
 variables:
-  MajorVersion: 2
-  MinorVersion: 1
-  PatchVersion: 0
-  WinRT.Runtime.AssemblyVersion: '2.1.0.0'
-  Net5.SDK.Feed: 'https://dotnetcli.blob.core.windows.net/dotnet'
-  Net6.SDK.Version: '6.0.420'
-  Net8.SDK.Version: '8.0.103'
-  NoSamples: 'false'
+- group: XlangSigning
+- name: MajorVersion
+  value: 2
+- name: MinorVersion
+  value: 1
+- name: PatchVersion
+  value: 0
+- name: WinRT.Runtime.AssemblyVersion
+  value: '2.1.0.0'
+- name: Net5.SDK.Feed
+  value: 'https://dotnetcli.blob.core.windows.net/dotnet'
+- name: Net6.SDK.Version
+  value: '6.0.420'
+- name: Net8.SDK.Version
+  value: '8.0.103'
+- name: NoSamples
+  value: 'false'
   
   # This 'coalesce' pattern allows the yml to define a default value for a variable but allows the value to be overridden at queue time.
   # E.g. '_IsRelease' defaults to empty string, but if 'IsRelease' is set at queue time that value will be used.
 
-  _IsRelease: $[coalesce(variables.IsRelease, '')]
-  _RunBenchmarks: $[coalesce(variables.RunBenchmarks, 'false')]
-  _DotNetRuntimeVersion: $[coalesce(variables.DotNetRuntimeVersion, '6.0.23')]  
-  _WindowsSdkVersionSuffix: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  
-  _PublishCsWinMD: $[coalesce(variables.PublishCsWinMD, 'false')]
+- name: _IsRelease
+  value: $[coalesce(variables.IsRelease, '')]
+- name: _RunBenchmarks
+  value: $[coalesce(variables.RunBenchmarks, 'false')]
+- name: _DotNetRuntimeVersion
+  value: $[coalesce(variables.DotNetRuntimeVersion, '6.0.23')]  
+- name: _WindowsSdkVersionSuffix
+  value: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  
+- name: _PublishCsWinMD
+  value: $[coalesce(variables.PublishCsWinMD, 'false')]

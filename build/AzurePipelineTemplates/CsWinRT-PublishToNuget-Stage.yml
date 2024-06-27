@@ -75,10 +75,15 @@ stages:
           copy release_x86\WinRT.Interop.winmd WinRT.Interop.winmd
 
 # ESRP Codesigning
-    - task: EsrpCodeSigning@1
+    - task: EsrpCodeSigning@5
       displayName: ESRP CodeSigning
       inputs:
-        ConnectedServiceName: 81cc6790-027c-4ef3-928d-65e8b96a691a
+        ConnectedServiceName: $(SigningServiceName)
+        AppRegistrationClientId: $(SigningAppId)
+        AppRegistrationTenantId: $(SigningTenantId)
+        AuthAKVName: $(SigningAKVName)
+        AuthCertName: $(SigningAuthCertName)
+        AuthSignCertName: $(SigningSignCertName)
         FolderPath: $(Build.SourcesDirectory)
         Pattern: |
           cswinrt.exe
@@ -133,11 +138,16 @@ stages:
           ]
 
 # ESRP CodeSigning 3rd Party
-    - task: EsrpCodeSigning@1
+    - task: EsrpCodeSigning@5
       displayName: ESRP CodeSigning 3rd party
       continueOnError: True
       inputs:
-        ConnectedServiceName: 81cc6790-027c-4ef3-928d-65e8b96a691a
+        ConnectedServiceName: $(SigningServiceName)
+        AppRegistrationClientId: $(SigningAppId)
+        AppRegistrationTenantId: $(SigningTenantId)
+        AuthAKVName: $(SigningAKVName)
+        AuthCertName: $(SigningAuthCertName)
+        AuthSignCertName: $(SigningSignCertName)
         FolderPath: $(Build.SourcesDirectory)
         Pattern: |
           net6.0\IIDOptimizer\Mono.Cecil.dll
@@ -223,10 +233,15 @@ stages:
         buildProperties: cswinmd_nuget_version=$(NugetVersion);cswinmd_outpath=$(Build.SourcesDirectory)\net6.0\CsWinMD;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll
 
 # ESRP CodeSigning 
-    - task: EsrpCodeSigning@1
+    - task: EsrpCodeSigning@5
       displayName: ESRP CodeSigning
       inputs:
-        ConnectedServiceName: 81cc6790-027c-4ef3-928d-65e8b96a691a
+        ConnectedServiceName: $(SigningServiceName)
+        AppRegistrationClientId: $(SigningAppId)
+        AppRegistrationTenantId: $(SigningTenantId)
+        AuthAKVName: $(SigningAKVName)
+        AuthCertName: $(SigningAuthCertName)
+        AuthSignCertName: $(SigningSignCertName)
         FolderPath: $(Build.ArtifactStagingDirectory)
         Pattern: '*.nupkg'
         signConfigType: inlineSignParams
