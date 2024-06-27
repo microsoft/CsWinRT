@@ -322,7 +322,7 @@ namespace Generator
                     public static partial class Module
                     {
                         /// <inheritdoc cref="global::WinRT.Module.GetActivationFactory(ReadOnlySpan{char})"/>
-                        public static unsafe IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
+                        public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
                         {
                             return global::WinRT.Module.GetActivationFactory(runtimeClassId);
                         }
