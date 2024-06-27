@@ -2,7 +2,6 @@ name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date
 
 variables:
 - template: CsWinRT-Variables.yml@self
-- group: CsWinRT-TouchdownBuild-Secrets
 - name: LocOutputDir
   value: '$(Agent.TempDirectory)\Temp\LocOutput'
 

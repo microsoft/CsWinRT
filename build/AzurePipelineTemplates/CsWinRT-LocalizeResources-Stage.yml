@@ -31,13 +31,12 @@ stages:
         targetPath: $(Build.SourcesDirectory)\ResX
 
     # Run TouchdownBuild
-    - task: TouchdownBuildTask@1
+    - task: TouchdownBuildTask@4
       inputs:
         environment: 'PRODEXT'
-        teamId: $(CsWinRTTDBuildTeamID)
-        authType: 'OAuth'
-        authId: $(CsWinRTTDBuildAuthID)
-        authKey: $(CsWinRTTDBuildAuthKey)
+        teamId: 31600
+        authType: 'FederatedIdentity'
+        FederatedIdentityServiceConnection: 'CsWinrtTdbuild'
         localizationTarget: true
         isPreview: false
         resourceFilePath: |
@@ -47,13 +46,17 @@ stages:
         outputDirectoryRoot: $(LocOutputDir) 
         appendRelativeDir: true
         cultureMappingType: 'None'
-        gitAction: NONE 
 
     # Sign TDBuild Output
-    - task: EsrpCodeSigning@1
+    - task: EsrpCodeSigning@5
       displayName: ESRP CodeSigning
       inputs:
-        ConnectedServiceName: 81cc6790-027c-4ef3-928d-65e8b96a691a
+        ConnectedServiceName: $(SigningServiceName)
+        AppRegistrationClientId: $(SigningAppId)
+        AppRegistrationTenantId: $(SigningTenantId)
+        AuthAKVName: $(SigningAKVName)
+        AuthCertName: $(SigningAuthCertName)
+        AuthSignCertName: $(SigningSignCertName)
         FolderPath: $(LocOutputDir)
         Pattern: |
           release_x64\de-DE\WinRT.Host.dll.mui
