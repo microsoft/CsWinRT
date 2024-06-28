@@ -628,7 +628,7 @@ namespace cswinrt
             w.write(", out int, out IntPtr");
             break;
         }
-    } 
+    }
 
     void write_abi_parameter_type_pointer(writer& w, method_signature::param_t const& param)
     {
@@ -3201,19 +3201,23 @@ db_path.stem().string());
     auto get_invoke_info(writer& w, MethodDef const& method, uint32_t const& abi_methods_start_index = INSPECTABLE_METHOD_COUNT)
     {
         TypeDef const& type = method.Parent();
-        if (!settings.netstandard_compat && distance(type.GenericParam()) == 0)
+        bool signature_has_generic_parameters = abi_signature_has_generic_parameters(w, method_signature{ method });
+        if (!settings.netstandard_compat)
         {
-            return std::pair{
-                w.write_temp("(*(delegate* unmanaged[Stdcall]<%, int>**)ThisPtr)[%]",
-                    bind<write_abi_parameter_types>(method_signature { method }),
-                    get_vmethod_index(type, method) + abi_methods_start_index /* number of methods in IInspectable + previous methods if fastabi*/),
-                false
-            };
+            if (!signature_has_generic_parameters)
+            {
+                return std::pair{
+                    w.write_temp("(*(delegate* unmanaged[Stdcall]<%, int>**)ThisPtr)[%]",
+                        bind<write_abi_parameter_types_pointer>(method_signature { method }),
+                        get_vmethod_index(type, method) + abi_methods_start_index /* number of methods in IInspectable + previous methods if fastabi*/),
+                    false
+                };
+            }
         }
         auto vmethod_name = get_vmethod_name(w, type, method);
         return std::pair{
             "_obj.Vftbl." + vmethod_name,
-            abi_signature_has_generic_parameters(w, method_signature { method })};
+            signature_has_generic_parameters };
     };
 
     void write_static_class(writer& w, TypeDef const& type)
@@ -3385,6 +3389,15 @@ event % %;)",
                 marshaler_type.empty() && local_type == "IntPtr";
         }
 
+        // We pass using in for .NET Standard.  Outside of .NET Standard,
+        // we want our function pointers to be blittable and be able to disable
+        // runtime marshaling, so we use ptrs with the managed function calling the
+        // function pointer marking the parameter as in.
+        bool is_const_ref() const
+        {
+            return !settings.netstandard_compat && category == param_category::ref;
+        }
+
         bool is_marshal_by_object_reference_value() const
         {
             return marshal_by_object_reference_value;
@@ -3467,9 +3480,10 @@ event % %;)",
                 is_marshal_by_object_reference_value() ? "2" : "",
                 bind<write_escaped_identifier>(param_name));
 
-            if (is_generic() || is_array())
+            if (is_generic() || is_array() || (is_const_ref() && !marshaler_type.empty()))
             {
-                w.write("% = %.GetAbi%(%);\n",
+                w.write("%% = %.GetAbi%(%);\n",
+                    is_const_ref() && !marshaler_type.empty() ? "var __" : "",
                     get_param_local(w),
                     is_marshal_by_object_reference_value() ? "MarshalInspectable<object>" : marshaler_type,
                     is_array() ? "Array" : "",
@@ -3505,14 +3519,14 @@ event % %;)",
                 if (is_array())
                 {
                     w.write("%__%_length, %__%_data",
-                        is_out() ? "out " : "", param_name,
-                        is_out() ? "out " : "", param_name);
+                        is_out() ? (settings.netstandard_compat ? "out " : "&") : "", param_name,
+                        is_out() ? (settings.netstandard_compat ? "out " : "&") : "", param_name);
                     return;
                 }
 
                 if (is_out())
                 {
-                    w.write("%__%", "out ", param_name);
+                    w.write("%__%", settings.netstandard_compat ? "out " :"&", param_name);
                     return;
                 }
 
@@ -3536,7 +3550,8 @@ event % %;)",
                             source, bind<write_escaped_identifier>(param_name));
                         return;
                     }
-                    w.write("%%",
+                    w.write("%%%",
+                        !settings.netstandard_compat&& category == param_category::ref ? "_" : "",
                         source, bind<write_escaped_identifier>(param_name));
                     return;
                 }
@@ -3553,6 +3568,12 @@ event % %;)",
             if (marshaler_type.empty())
             {
                 write_escaped_identifier(w, param_name);
+                return;
+            }
+
+            if (is_const_ref())
+            {
+                w.write("&____%", param_name);
                 return;
             }
 
@@ -3888,6 +3909,21 @@ event % %;)",
                 {
                     have_pinnables |= m.write_pinnable(w);
                 }, marshalers));
+
+            if (!settings.netstandard_compat)
+            {
+                w.write("%",
+                    bind_each([&](writer& w, abi_marshaler const& m)
+                        {
+                            if (m.is_const_ref() && m.marshaler_type.empty())
+                            {
+                                w.write("fixed(%* _% = &%)\n",
+                                    m.param_type,
+                                    m.param_name,
+                                    m.param_name);
+                            }
+                        }, marshalers));
+            }
             if (have_pinnables)
             {
                 bool write_delimiter{};
@@ -5024,9 +5060,9 @@ return eventSource.EventActions;
 
         void write_marshal_to_managed(writer& w) const
         {
-            if(is_out() || is_ref())
+            if (is_out() || is_ref())
             {
-                w.write("% __%", is_out() ? "out" : "", param_name);
+                w.write("%__%", is_out() ? "out " : "", param_name);
             }
             else if (marshaler_type.empty())
             {
@@ -7034,7 +7070,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 else
                 {
                     w.write("var abiInvoke = (delegate* unmanaged[Stdcall]<%, int>)(_nativeDelegate.Vftbl.Invoke);",
-                        bind<write_abi_parameter_types>(signature));
+                        bind<write_abi_parameter_types_pointer>(signature));
                 }
             }),
             bind<write_abi_method_call>(signature, "abiInvoke", have_generic_params, false, is_noexcept(method)),
@@ -7713,13 +7749,14 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 {
                     return;
                 }
+
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
                 auto invokeMethodSig = get_event_invoke_method(eventType);
                 w.write(R"(
 internal sealed unsafe class %% : EventSource<%>
 {
 internal %(IObjectReference obj,
-delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, %WinRT.EventRegistrationToken%, int> addHandler,
 delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
 {
 }
@@ -7753,20 +7790,22 @@ return invoke;
 }
 }
 )",
-bind<write_event_source_type_name>(eventTypeSemantics),
-bind<write_event_source_generic_args>(eventTypeSemantics),
-eventTypeCode, 
-bind<write_event_source_type_name>(eventTypeSemantics), 
-eventTypeCode,
-abiTypeName,
-eventTypeCode,
-bind<write_event_invoke_params>(invokeMethodSig),
-eventTypeCode,
-bind<write_event_out_defaults>(invokeMethodSig),
-bind<write_event_invoke_return_default>(invokeMethodSig),
-bind<write_event_invoke_return>(invokeMethodSig),
-bind<write_event_invoke_args>(invokeMethodSig));
-});
+                    bind<write_event_source_type_name>(eventTypeSemantics),
+                    bind<write_event_source_generic_args>(eventTypeSemantics),
+                    eventTypeCode,
+                    bind<write_event_source_type_name>(eventTypeSemantics),
+                    settings.netstandard_compat ? "out " : "",
+                    settings.netstandard_compat ? "" : "*",
+                    eventTypeCode,
+                    abiTypeName,
+                    eventTypeCode,
+                    bind<write_event_invoke_params>(invokeMethodSig),
+                    eventTypeCode,
+                    bind<write_event_out_defaults>(invokeMethodSig),
+                    bind<write_event_invoke_return_default>(invokeMethodSig),
+                    bind<write_event_invoke_return>(invokeMethodSig),
+                    bind<write_event_invoke_args>(invokeMethodSig));
+            });
     }
 
     void write_temp_class_event_source_subclass(writer& w, TypeDef const& classType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)

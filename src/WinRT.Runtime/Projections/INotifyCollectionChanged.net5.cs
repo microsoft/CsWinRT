@@ -99,7 +99,7 @@ namespace ABI.System.Collections.Specialized
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)_this).GetObjectReferenceForType(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle));
             
             return (NotifyCollectionChangedEventSource)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle,
-                () => new NotifyCollectionChangedEventSource(_obj, _obj.Vftbl.add_CollectionChanged_0, _obj.Vftbl.remove_CollectionChanged_1));
+                () => new NotifyCollectionChangedEventSource(_obj, (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_obj.Vftbl.add_CollectionChanged_0, _obj.Vftbl.remove_CollectionChanged_1));
         }
 
         event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged
