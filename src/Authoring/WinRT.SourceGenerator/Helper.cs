@@ -123,6 +123,16 @@ namespace Generator
             return false;
         }
 
+        public static bool GetCsWinRTMergeReferencedActivationFactories(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTMergeReferencedActivationFactories", out var csWinRTMergeReferencedActivationFactories))
+            {
+                return bool.TryParse(csWinRTMergeReferencedActivationFactories, out var isCsWinRTMergeReferencedActivationFactories) && isCsWinRTMergeReferencedActivationFactories;
+            }
+
+            return false;
+        }
+
         public static bool GetCsWinRTRcwFactoryFallbackGeneratorForceOptOut(this AnalyzerConfigOptionsProvider provider)
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTRcwFactoryFallbackGeneratorForceOptOut", out var csWinRTRcwFactoryFallbackGeneratorForceOptOut))

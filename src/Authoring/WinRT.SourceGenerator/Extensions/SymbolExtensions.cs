@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -50,5 +51,40 @@ internal static class SymbolExtensions
             IEventSymbol { ExplicitInterfaceImplementations: { Length: > 0 } events } => !IsAnyContainingTypePublic(events),
             _ => false
         };
+    }
+
+    /// <summary>
+    /// Tries to get an attribute with the specified type.
+    /// </summary>
+    /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
+    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> instance for the attribute type to look for.</param>
+    /// <param name="attributeData">The resulting attribute, if it was found.</param>
+    /// <returns>Whether or not <paramref name="symbol"/> has an attribute with the specified name.</returns>
+    public static bool TryGetAttributeWithType(this ISymbol symbol, ITypeSymbol typeSymbol, [NotNullWhen(true)] out AttributeData? attributeData)
+    {
+        foreach (AttributeData attribute in symbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, typeSymbol))
+            {
+                attributeData = attribute;
+
+                return true;
+            }
+        }
+
+        attributeData = null;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Checks whether a given symbol is accessible from the assembly of a given compilation (including eg. through nested types).
+    /// </summary>
+    /// <param name="symbol">The input <see cref="ISymbol"/> instance.</param>
+    /// <param name="compilation">The <see cref="Compilation"/> instance currently in use.</param>
+    /// <returns>Whether <paramref name="symbol"/> is accessible from the assembly for <paramref name="compilation"/>.</returns>
+    public static bool IsAccessibleFromCompilationAssembly(this ISymbol symbol, Compilation compilation)
+    {
+        return compilation.IsSymbolAccessibleWithin(symbol, compilation.Assembly);
     }
 }

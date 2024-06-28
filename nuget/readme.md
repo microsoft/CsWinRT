@@ -47,6 +47,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTIIDOptimizerOptOut | true \| *false | Determines whether to run the IIDOptimizer on the projection assembly |
 | CsWinRTRcwFactoryFallbackGeneratorForceOptIn | true \| *false | Forces the RCW factory fallback generator to be enabled (it only runs on .exe projects by default)  |
 | CsWinRTRcwFactoryFallbackGeneratorForceOptOut | true \| *false | Forces the RCW factory fallback generator to be disabled (overrides "ForceOptIn" as well)  |
+| CsWinRTMergeReferencedActivationFactories | true \| *false | Makes the native `DllGetActivationFactory` exported function for AOT scenarios also forward the activation call to all referenced WinRT components, allowing them to all be merged into a single executable or shared library |
 \*Default value
 
 **If CsWinRTFilters is not defined, the following effective value is used:
