@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -103,6 +104,7 @@ namespace WinRT
                 Throw(hr);
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining)]
             static void Throw(int hr)
             {
                 Exception ex = GetExceptionForHR(hr, useGlobalErrorState: true, out bool restoredExceptionFromGlobalState);

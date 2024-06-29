@@ -191,7 +191,7 @@ namespace WinRT.Interop
         }
 
         /// <summary>The IID for <c>IAgileObject</c> (94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90).</summary>
-        internal static ref readonly Guid IID_IAgileObject
+        public static ref readonly Guid IID_IAgileObject
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   
             get
