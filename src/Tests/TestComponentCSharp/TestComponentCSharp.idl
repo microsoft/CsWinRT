@@ -406,6 +406,7 @@ namespace TestComponentCSharp
         static String UnboxString(Object obj);
         static ProvideInt UnboxDelegate(Object obj);
         static EnumValue UnboxEnum(Object obj);
+        static Windows.UI.Xaml.Interop.TypeName UnboxType(Object obj);
         static Int32[] UnboxInt32Array(Object obj);
         static Boolean[] UnboxBooleanArray(Object obj);
         static String[] UnboxStringArray(Object obj);
@@ -420,6 +421,8 @@ namespace TestComponentCSharp
         static Windows.UI.Xaml.Interop.TypeName Int32Type { get; };
         static Windows.UI.Xaml.Interop.TypeName ThisClassType { get; };
         static Windows.UI.Xaml.Interop.TypeName ReferenceInt32Type { get; };
+        static Object BoxedType{ get; };
+        static Windows.Foundation.Collections.IVector<Windows.UI.Xaml.Interop.TypeName> ListOfTypes{ get; };
 
         static Boolean VerifyTypeIsInt32Type(Windows.UI.Xaml.Interop.TypeName type);
         static Boolean VerifyTypeIsThisClassType(Windows.UI.Xaml.Interop.TypeName type);

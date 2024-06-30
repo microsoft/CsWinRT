@@ -44,7 +44,9 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(char), typeof(ABI.System.Char), "Char");
 
             // Also always register Type, since it's "free" (no associated ABI type to root)
+            // given Type is special-cased in all relevant areas including Marshaler<T>.
             CustomTypeToAbiTypeNameMappings.Add(typeof(Type), "Windows.UI.Xaml.Interop.TypeName");
+            CustomAbiTypeNameToTypeMappings.Add("Windows.UI.Xaml.Interop.TypeName", typeof(Type));
 
 #if NET
             // If default mappings are disabled, we avoid rooting everything by default.

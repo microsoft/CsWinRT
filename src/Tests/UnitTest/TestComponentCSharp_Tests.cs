@@ -2574,6 +2574,11 @@ namespace UnitTest
 
             EnumValue enumValue = EnumValue.Two;
             Assert.Equal(enumValue, Class.UnboxEnum(enumValue));
+
+            var type = typeof(EnumValue);
+            Assert.Equal(type, Class.UnboxType(type));
+
+            Assert.Equal(typeof(Class), Class.BoxedType);
         }
 
         [Fact]
@@ -2597,6 +2602,15 @@ namespace UnitTest
             var obj = PropertyValue.CreateInt32Array(i);
             Assert.IsType<int[]>(obj);
             Assert.Equal(i, (IEnumerable<int>)obj);
+        }
+
+        [Fact]
+        public void TestListOfTypes()
+        {
+            var types = Class.ListOfTypes;
+            Assert.Equal(2, types.Count);
+            Assert.Equal(typeof(Class), types[0]);
+            Assert.Equal(typeof(int?), types[1]);
         }
 
         [Fact]
