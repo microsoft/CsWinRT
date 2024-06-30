@@ -267,4 +267,5 @@ MembersMustExist : Member 'public void WinRT.ComWrappersHelper.Init(System.Boole
 MembersMustExist : Member 'public System.Guid ABI.System.EventHandler<T>.IID.get()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Guid ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.IID.get()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Guid ABI.System.ComponentModel.PropertyChangedEventHandler.IID.get()' does not exist in the reference but it does exist in the implementation.
-Total Issues: 268
+TypesMustExist : Type 'WinRT.WinRTAssemblyExportsTypeAttribute' does not exist in the reference but it does exist in the implementation.
+Total Issues: 269

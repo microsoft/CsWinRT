@@ -203,6 +203,33 @@ namespace WinRT
         public string RuntimeClassName { get; }
     }
 
+    /// <summary>
+    /// An attribute used to indicate which generated type contains the exported functions for a given WinRT component assembly.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class WinRTAssemblyExportsTypeAttribute : Attribute
+    {
+        /// <summary>
+        /// Creates a new <see cref="WinRTAssemblyExportsTypeAttribute"/> instance with the specified parameters.
+        /// </summary>
+        /// <param name="type">The type containing the exported functions for the current WinRT component assembly.</param>
+        public WinRTAssemblyExportsTypeAttribute(Type type)
+        {
+            Type = type;
+        }
+
+        /// <summary>
+        /// Gets the type containing the exported functions for the current WinRT component assembly
+        /// </summary>
+        public Type Type { get; }
+    }
+
 #endif
 }
 
