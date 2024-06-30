@@ -60,6 +60,11 @@ namespace WinRT
                 return "string";
             }
 
+            if (type == typeof(Type))
+            {
+                return ABI.System.Type.GetGuidSignature();
+            }
+
             if (type.IsGenericType)
             {
 #if NET
