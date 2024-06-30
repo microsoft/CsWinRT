@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace ABI.System.ComponentModel
 {
@@ -14,7 +15,9 @@ namespace ABI.System.ComponentModel
 #endif
     static class INotifyPropertyChangedMethods
     {
-        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_INotifyPropertyChanged;
+        public static global::System.Guid IID => FeatureSwitches.UseWindowsUIXamlProjections
+            ? global::WinRT.Interop.IID.IID_WUX_INotifyPropertyChanged
+            : global::WinRT.Interop.IID.IID_MUX_INotifyPropertyChanged;
 
         public static IntPtr AbiToProjectionVftablePtr => INotifyPropertyChanged.Vftbl.AbiToProjectionVftablePtr;
 
@@ -41,14 +44,16 @@ namespace ABI.System.ComponentModel
 
     [DynamicInterfaceCastableImplementation]
     [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
+    [WuxMuxProjectedType]
     internal unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
+#pragma warning disable CA2257
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
-#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
 #pragma warning restore CA2257
         {
+
             internal IInspectable.Vftbl IInspectableVftbl;
 
             private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_PropertyChanged_0;
@@ -119,7 +124,6 @@ namespace ABI.System.ComponentModel
                 }
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_INotifyPropertyChanged);
 
         private static global::ABI.WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> _PropertyChanged(IWinRTObject _this)
         {

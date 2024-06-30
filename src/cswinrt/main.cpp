@@ -33,6 +33,7 @@ namespace cswinrt
         { "output", 0, 1, "<path>", "Location of generated projection" },
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
+        { "addition_exclude", 0, option::no_max, "<prefix>", "One or more namespace prefixes to exclude from the projection additions" },
         { "target", 0, 1, "<net8.0|net7.0|net6.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with .NET 6." },
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
@@ -113,6 +114,11 @@ Where <spec> is one or more of:
             settings.exclude.insert(exclude);
         }
 
+        for (auto&& addition_exclude : args.values("addition_exclude"))
+        {
+            settings.addition_exclude.insert(addition_exclude);
+        }
+
         settings.output_folder = std::filesystem::absolute(args.value("output", "output"));
         create_directories(settings.output_folder);
     }
@@ -136,6 +142,9 @@ Where <spec> is one or more of:
             process_args(argc, argv);
             cache c{ get_files_to_cache() };
             settings.filter = { settings.include, settings.exclude };
+
+            // Include all additions for included namespaces by default
+            settings.addition_filter = { settings.include, settings.addition_exclude };
 
             std::set<TypeDef> componentActivatableClasses;
             if (settings.component)
@@ -322,7 +331,7 @@ Where <spec> is one or more of:
                             // Custom additions to namespaces
                             for (auto addition : strings::additions)
                             {
-                                if (ns == addition.name)
+                                if (ns == addition.name && settings.addition_filter.includes(ns))
                                 {
                                     w.write(addition.value);
                                 }

@@ -3,8 +3,10 @@
 
 using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace ABI.System.Collections.Specialized
 {
@@ -35,7 +37,9 @@ namespace ABI.System.Collections.Specialized
             });
         }
 
-        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_INotifyCollectionChanged;
+        public static global::System.Guid IID => FeatureSwitches.UseWindowsUIXamlProjections
+            ? global::WinRT.Interop.IID.IID_WUX_INotifyCollectionChanged
+            : global::WinRT.Interop.IID.IID_MUX_INotifyCollectionChanged;
 
         public static IntPtr AbiToProjectionVftablePtr => INotifyCollectionChanged.Vftbl.AbiToProjectionVftablePtr;
     }
@@ -43,6 +47,7 @@ namespace ABI.System.Collections.Specialized
     [DynamicInterfaceCastableImplementation]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
+    [WuxMuxProjectedType]
     internal unsafe interface INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
@@ -121,7 +126,6 @@ namespace ABI.System.Collections.Specialized
                 }
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_INotifyCollectionChanged);
 
         private static global::ABI.WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> _CollectionChanged(IWinRTObject _this)
         {

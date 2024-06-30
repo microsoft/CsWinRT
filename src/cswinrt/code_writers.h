@@ -1480,7 +1480,7 @@ private % Make_%()
         if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
         {
             auto parent_type = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::NonProjected, true));
-            if (parent_type == "Microsoft.UI.Xaml.Input.ICommand")
+            if (parent_type == "Microsoft.UI.Xaml.Input.ICommand" || parent_type == "Windows.UI.Xaml.Input.ICommand")
             {
                 event_type = "global::System.EventHandler";
             }

@@ -49,6 +49,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptIn" />
     <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptOut" />
     <CompilerVisibleProperty Include="CsWinRTCcwLookupTableGeneratorEnabled" />
+    <CompilerVisibleProperty Include="CsWinRTMergeReferencedActivationFactories" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
@@ -289,6 +290,13 @@ $(CsWinRTInternalProjection)
     </ItemGroup>
   </Target>
 
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="CsWinRT.UiXamlMode" Condition="'$(CsWinRTUiXamlMode)' != ''">
+      <Value>$(CsWinRTUiXamlMode)</Value>
+      <Trim>true</Trim>
+    </RuntimeHostConfigurationOption>
+  </ItemGroup>
+
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
@@ -301,6 +309,11 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableICustomPropertyProviderSupport Condition="'$(CsWinRTEnableICustomPropertyProviderSupport)' == ''">true</CsWinRTEnableICustomPropertyProviderSupport>
     <CsWinRTEnableIReferenceSupport Condition="'$(CsWinRTEnableIReferenceSupport)' == ''">true</CsWinRTEnableIReferenceSupport>
     <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
+  </PropertyGroup>
+
+  <!-- Default values for all other CsWinRT properties (without feature switches) -->
+  <PropertyGroup>
+    <CsWinRTMergeReferencedActivationFactories Condition="'$(CsWinRTMergeReferencedActivationFactories)' == ''">false</CsWinRTMergeReferencedActivationFactories>
   </PropertyGroup>
 
   <!--
@@ -338,6 +351,16 @@ $(CsWinRTInternalProjection)
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE"
                                     Value="$(CsWinRTEnableIDynamicInterfaceCastableSupport)"
                                     Trim="true" />
+
+    <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS switch-->
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUIXamlProjections)' == 'WindowsUIXaml'">
+      <Value>true</Value>
+      <Trim>true</Trim>
+    </RuntimeHostConfigurationOption>
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUIXamlProjections)' != 'WindowsUIXaml'">
+      <Value>false</Value>
+      <Trim>true</Trim>
+    </RuntimeHostConfigurationOption>
   </ItemGroup>
 
 </Project>

@@ -42,6 +42,8 @@ namespace WinRT.SourceGenerator
                     return;
                 }
 
+                var typeMapper = new TypeMapper(context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.GetUIXamlProjectionsMode());
+
                 context.RegisterSymbolAction(context =>
                 {
                     // Filter to classes that can be passed as objects.
@@ -53,13 +55,13 @@ namespace WinRT.SourceGenerator
                         // Make sure this is a class that we would generate the WinRTExposedType attribute on
                         // and that it isn't already partial.
                         if (!GeneratorHelper.IsPartial(namedType) &&
-                            !GeneratorHelper.IsWinRTType(namedType, winrtTypeAttribute, isComponentProject, context.Compilation.Assembly) &&
-                            !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType) &&
+                            !GeneratorHelper.IsWinRTType(namedType, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly) &&
+                            !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType, typeMapper) &&
                             !GeneratorHelper.HasAttributeWithType(namedType, winrtExposedTypeAttribute))
                         {
                             foreach (var iface in namedType.AllInterfaces)
                             {
-                                if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, isComponentProject, context.Compilation.Assembly))
+                                if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
                                 {
                                     context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassNotAotCompatible, namedType.Locations[0], namedType.Name));
                                     return;

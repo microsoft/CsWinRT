@@ -265,7 +265,7 @@ namespace Generator
         private readonly Dictionary<string, TypeReferenceHandle> typeReferenceMapping;
         private readonly Dictionary<string, EntityHandle> assemblyReferenceMapping;
         private readonly MetadataBuilder metadataBuilder;
-
+        private readonly TypeMapper mapper;
         private readonly Dictionary<string, TypeDeclaration> typeDefinitionMapping;
         private TypeDeclaration currentTypeDeclaration;
 
@@ -275,12 +275,14 @@ namespace Generator
             string assembly,
             string version,
             MetadataBuilder metadataBuilder,
-            Logger logger)
+            Logger logger,
+            TypeMapper mapper)
         {
             this.assembly = assembly;
             this.version = version;
             this.metadataBuilder = metadataBuilder;
             Logger = logger;
+            this.mapper = mapper;
             typeReferenceMapping = new Dictionary<string, TypeReferenceHandle>(StringComparer.Ordinal);
             assemblyReferenceMapping = new Dictionary<string, EntityHandle>(StringComparer.Ordinal);
             typeDefinitionMapping = new Dictionary<string, TypeDeclaration>(StringComparer.Ordinal);
@@ -435,9 +437,9 @@ namespace Generator
             var assembly = GetAssemblyForWinRTType(symbol);
             if (assembly == null)
             {
-                if (GeneratorHelper.MappedCSharpTypes.ContainsKey(fullType))
+                if (mapper.HasMappingForType(fullType))
                 {
-                    (@namespace, name, assembly, _, _) = GeneratorHelper.MappedCSharpTypes[fullType].GetMapping(currentTypeDeclaration.Node);
+                    (@namespace, name, assembly, _, _) = mapper.GetMappedType(fullType).GetMapping(currentTypeDeclaration.Node);
                     Logger.Log("custom mapping " + fullType + " to " + QualifiedName(@namespace, name) + " from " + assembly);
                 }
                 else
@@ -520,9 +522,9 @@ namespace Generator
             else
             {
                 bool isValueType = symbol.Type.TypeKind == TypeKind.Enum || symbol.Type.TypeKind == TypeKind.Struct;
-                if (GeneratorHelper.MappedCSharpTypes.ContainsKey(QualifiedName(symbol.Type)))
+                if (mapper.HasMappingForType(QualifiedName(symbol.Type)))
                 {
-                    (_, _, _, _, isValueType) = GeneratorHelper.MappedCSharpTypes[QualifiedName(symbol.Type)].GetMapping(currentTypeDeclaration.Node);
+                    (_, _, _, _, isValueType) = mapper.GetMappedType(QualifiedName(symbol.Type)).GetMapping(currentTypeDeclaration.Node);
                 }
                 typeEncoder.Type(GetTypeReference(symbol.Type), isValueType);
             }
@@ -804,7 +806,7 @@ namespace Generator
             // Mark custom mapped interface members for removal later.
             // Note we want to also mark members from interfaces without mappings.
             foreach (var implementedInterface in GetInterfaces(classSymbol, true).
-                Where(symbol => GeneratorHelper.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
+                Where(symbol => mapper.HasMappingForType(QualifiedName(symbol)) ||
                                 ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
                 bool isPubliclyImplemented = false;
@@ -825,7 +827,7 @@ namespace Generator
             }
 
             foreach (var implementedInterface in GetInterfaces(classSymbol)
-                        .Where(symbol => GeneratorHelper.MappedCSharpTypes.ContainsKey(QualifiedName(symbol))))
+                        .Where(symbol => mapper.HasMappingForType(QualifiedName(symbol))))
             {
                 WriteCustomMappedTypeMembers(implementedInterface, true, isPublicImplementation[implementedInterface]);
             }
@@ -853,9 +855,9 @@ namespace Generator
         private string GetMappedQualifiedTypeName(ITypeSymbol symbol)
         {
             string qualifiedName = QualifiedName(symbol);
-            if (GeneratorHelper.MappedCSharpTypes.ContainsKey(qualifiedName))
+            if (mapper.HasMappingForType(qualifiedName))
             {
-                var (@namespace, mappedTypeName, _, _, _) = GeneratorHelper.MappedCSharpTypes[qualifiedName].GetMapping(currentTypeDeclaration.Node);
+                var (@namespace, mappedTypeName, _, _, _) = mapper.GetMappedType(qualifiedName).GetMapping(currentTypeDeclaration.Node);
                 qualifiedName = QualifiedName(@namespace, mappedTypeName);
                 if (symbol is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
                 {
@@ -874,7 +876,7 @@ namespace Generator
 
         private void WriteCustomMappedTypeMembers(INamedTypeSymbol symbol, bool isDefinition, bool isPublic = true)
         {
-            var (_, mappedTypeName, _, _, _) = GeneratorHelper.MappedCSharpTypes[QualifiedName(symbol)].GetMapping(currentTypeDeclaration.Node);
+            var (_, mappedTypeName, _, _, _) = mapper.GetMappedType(QualifiedName(symbol)).GetMapping(currentTypeDeclaration.Node);
             string qualifiedName = GetMappedQualifiedTypeName(symbol);
 
             Logger.Log("writing custom mapped type members for " + mappedTypeName + " public: " + isPublic + " qualified name: " + qualifiedName);
@@ -1233,7 +1235,7 @@ namespace Generator
             GatherPubliclyAccessibleInterfaces(symbol);
 
             var baseType = symbol.BaseType;
-            while (baseType != null && !GeneratorHelper.IsWinRTType(baseType))
+            while (baseType != null && !GeneratorHelper.IsWinRTType(baseType, mapper))
             {
                 GatherPubliclyAccessibleInterfaces(baseType);
 
@@ -2440,9 +2442,9 @@ namespace Generator
             {
                 AddProjectedType(type);
             }
-            else if (GeneratorHelper.MappedCSharpTypes.ContainsKey(qualifiedName))
+            else if (mapper.HasMappingForType(qualifiedName))
             {
-                var (@namespace, name, assembly, isSystemType, _) = GeneratorHelper.MappedCSharpTypes[qualifiedName].GetMapping();
+                var (@namespace, name, assembly, isSystemType, _) = mapper.GetMappedType(qualifiedName).GetMapping();
                 if (isSystemType)
                 {
                     var projectedType = Model.Compilation.GetTypeByMetadataName(QualifiedName(@namespace, name));
@@ -2534,7 +2536,7 @@ namespace Generator
 
                     Logger.Log("finalizing interface " + implementedInterfaceQualifiedNameWithGenerics);
                     var interfaceTypeDeclaration = typeDefinitionMapping[implementedInterfaceQualifiedNameWithGenerics];
-                    if (GeneratorHelper.MappedCSharpTypes.ContainsKey(QualifiedName(implementedInterface)))
+                    if (mapper.HasMappingForType(QualifiedName(implementedInterface)))
                     {
                         Logger.Log("adding MethodImpls for custom mapped interface");
                         foreach (var interfaceMember in interfaceTypeDeclaration.MethodReferences)
@@ -2665,11 +2667,11 @@ namespace Generator
 
         public void GenerateWinRTExposedClassAttributes(GeneratorExecutionContext context)
         {
-            bool IsWinRTType(ISymbol symbol)
+            bool IsWinRTType(ISymbol symbol, TypeMapper mapper)
             {
                 if (!SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, context.Compilation.Assembly))
                 {
-                    return GeneratorHelper.IsWinRTType(symbol, IsWinRTType);
+                    return GeneratorHelper.IsWinRTType(symbol, (symbol, mapper) => IsWinRTType(symbol, mapper), mapper);
                 }
 
                 if (symbol is INamedTypeSymbol namedType)
@@ -2703,8 +2705,8 @@ namespace Generator
                     symbol.TypeKind == TypeKind.Class && 
                     !symbol.IsStatic)
                 {
-                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, context.Compilation, true, typeDeclaration.DefaultInterface));
-                    WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, IsWinRTType, vtableAttributesToAddOnLookupTable);
+                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, mapper, context.Compilation, true, typeDeclaration.DefaultInterface));
+                    WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, IsWinRTType, mapper, vtableAttributesToAddOnLookupTable);
                 }
             }
 
