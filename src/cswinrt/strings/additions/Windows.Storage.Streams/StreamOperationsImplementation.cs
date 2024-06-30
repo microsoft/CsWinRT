@@ -26,6 +26,13 @@ namespace Windows.Storage.Streams
 #endif
     internal static class StreamOperationsImplementation
     {
+#if NET
+        static StreamOperationsImplementation()
+        {
+            _ = StreamTaskAdaptersImplementation.Initialized;
+        }
+#endif
+
         #region ReadAsync implementations
 
         internal static IAsyncOperationWithProgress<IBuffer, uint> ReadAsync_MemoryStream(Stream stream, IBuffer buffer, uint count)

@@ -192,6 +192,9 @@
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeMarshal.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
+    <None Include="strings\additions\Windows.Storage.Streams\StreamTaskAdaptersImplementation.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WinRT.Interop.idl" />

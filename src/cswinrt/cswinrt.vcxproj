@@ -91,6 +91,7 @@
     <None Include="strings\additions\Windows.Storage.Streams\Windows.Storage.Streams.SR.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationAsyncResult.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationsImplementation.cs" />
+    <None Include="strings\additions\Windows.Storage.Streams\StreamTaskAdaptersImplementation.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBuffer.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferExtensions.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeMarshal.cs" />
