@@ -111,9 +111,9 @@ namespace Generator
             {
                 return GetIAsyncOperationInstantiation(genericParameters);
             }
-            else if (genericInterface == "Windows.Foundation.Collections.IMapedChangedEventArgs`1")
+            else if (genericInterface == "Windows.Foundation.Collections.IMapChangedEventArgs`1")
             {
-                return GetIMapedChangedEventArgsInstantiation(genericParameters);
+                return GetIMapChangedEventArgsInstantiation(genericParameters);
             }
             else if (genericInterface == "Windows.Foundation.Collections.IObservableMap`2")
             {
@@ -1546,12 +1546,12 @@ namespace Generator
             return instantiation;
         }
 
-        private static string GetIMapedChangedEventArgsInstantiation(EquatableArray<GenericParameter> genericParameters)
+        private static string GetIMapChangedEventArgsInstantiation(EquatableArray<GenericParameter> genericParameters)
         {
-            string staticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IMapedChangedEventArgsMethods<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
-            string abiStaticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IMapedChangedEventArgsMethods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
+            string staticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IMapChangedEventArgsMethods<{GetGenericParametersAsString(genericParameters, ", ", false, false)}>";
+            string abiStaticMethodsClass = $"global::ABI.Windows.Foundation.Collections.IMapChangedEventArgsMethods<{GetGenericParametersAsString(genericParameters, ", ", true, false)}>";
             string instantiation = $$"""
-             internal static class IMapedChangedEventArgs_{{GetGenericParametersAsString(genericParameters, "_", false)}}
+             internal static class IMapChangedEventArgs_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
                  private static bool _initialized = Init();
                  internal static bool Initialized => _initialized;

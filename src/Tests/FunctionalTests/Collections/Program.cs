@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using test_component_derived.Nested;
 using TestComponentCSharp;
 
@@ -71,6 +72,20 @@ if (propertySet["beta"] is not string str || str != "second")
 
 var types = Class.ListOfTypes;
 if (types.Count != 2 || types[0] != typeof(Class))
+{
+    return 101;
+}
+
+var cancellationDictionary = new Dictionary<string, CancellationTokenSource>();
+instance.BindableIterableProperty = cancellationDictionary;
+if (cancellationDictionary != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var observableCollection = new System.Collections.ObjectModel.ObservableCollection<string>();
+instance.BindableIterableProperty = observableCollection;
+if (observableCollection != instance.BindableIterableProperty)
 {
     return 101;
 }
