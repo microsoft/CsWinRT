@@ -9,14 +9,14 @@ namespace WinRT.SourceGenerator
         /// <param name="title">string, a few words generally describing the diagnostic</param>
         /// <param name="messageFormat">string, describes the diagnostic -- formatted with {0}, ... -- 
         /// such that data can be passed in for the code the diagnostic is reported for</param>
-        private static DiagnosticDescriptor MakeRule(string id, string title, string messageFormat, bool isError = true)
+        private static DiagnosticDescriptor MakeRule(string id, string title, string messageFormat, bool isError = true, bool isWarning = false)
         {
             return new DiagnosticDescriptor(
                 id: id,
                 title: title,
                 messageFormat: messageFormat,
                 category: "Usage",
-                defaultSeverity: isError ? DiagnosticSeverity.Error : DiagnosticSeverity.Info,
+                defaultSeverity: isError ? DiagnosticSeverity.Error : isWarning? DiagnosticSeverity.Warning : DiagnosticSeverity.Info,
                 isEnabledByDefault: true,
                 helpLinkUri: "https://github.com/microsoft/CsWinRT/tree/master/src/Authoring/WinRT.SourceGenerator/AnalyzerReleases.Unshipped.md");
         }
@@ -180,7 +180,14 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.UnimplementedInterface_Brief,
             CsWinRTDiagnosticStrings.UnimplementedInterface_Text);
 
-        public static DiagnosticDescriptor ClassNotAotCompatible = MakeRule(
+        public static DiagnosticDescriptor ClassNotAotCompatibleWarning = MakeRule(
+            "CsWinRT1028",
+            CsWinRTDiagnosticStrings.ClassNotMarkedPartial_Brief,
+            CsWinRTDiagnosticStrings.ClassNotMarkedPartial_Text,
+            false,
+            true);
+
+        public static DiagnosticDescriptor ClassNotAotCompatibleInfo = MakeRule(
             "CsWinRT1028",
             CsWinRTDiagnosticStrings.ClassNotMarkedPartial_Brief,
             CsWinRTDiagnosticStrings.ClassNotMarkedPartial_Text,
