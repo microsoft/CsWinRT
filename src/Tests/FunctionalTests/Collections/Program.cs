@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using test_component_derived.Nested;
@@ -65,6 +66,12 @@ foreach (var hierarchyDAsHierarchyC in hierarchyDAsHierarchyCList)
 
 var propertySet = Class.PropertySet;
 if (propertySet["beta"] is not string str || str != "second")
+{
+    return 101;
+}
+
+var types = Class.ListOfTypes;
+if (types.Count != 2 || types[0] != typeof(Class))
 {
     return 101;
 }
