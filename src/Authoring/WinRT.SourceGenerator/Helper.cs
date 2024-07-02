@@ -164,6 +164,26 @@ namespace Generator
             return 0;
         }
 
+        public static bool GetUseUwp(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.UseUwp", out var useUwp))
+            {
+                return bool.TryParse(useUwp, out var useUwpValue) && useUwpValue;
+            }
+
+            return false;
+        }
+
+        public static bool GetUseWinUI(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.UseWinUI", out var useWinUI))
+            {
+                return bool.TryParse(useWinUI, out var useWinUIValue) && useWinUIValue;
+            }
+
+            return false;
+        }
+
         public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
         {
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateWinMDOnly", out var CsWinRTGenerateWinMDOnlyStr))

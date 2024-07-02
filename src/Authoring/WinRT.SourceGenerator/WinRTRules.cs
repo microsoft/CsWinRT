@@ -192,5 +192,25 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.ClassNotMarkedPartial_Brief,
             CsWinRTDiagnosticStrings.ClassNotMarkedPartial_Text,
             false);
+
+        public static DiagnosticDescriptor MissingUseUwpWhenUsingWindowsUIXamlProjections = MakeRule(
+            "CsWinRT1029",
+            CsWinRTDiagnosticStrings.MissingUseUwpWhenUsingWindowsUIXamlProjections_Brief,
+            CsWinRTDiagnosticStrings.MissingUseUwpWhenUsingWindowsUIXamlProjections_Text);
+
+        public static DiagnosticDescriptor UsingUseUwpWhenUsingWinAppSDK = MakeRule(
+            "CsWinRT1030",
+            CsWinRTDiagnosticStrings.UsingUseUwpWhenUsingWinAppSDK_Brief,
+            CsWinRTDiagnosticStrings.UsingUseUwpWhenUsingWinAppSDK_Text);
+
+        public static DiagnosticDescriptor UsingUseWinUIWhenUsingWindowsUIXamlProjections = MakeRule(
+            "CsWinRT1031",
+            CsWinRTDiagnosticStrings.UsingUseWinUIWhenUsingWindowsUIXamlProjections_Brief,
+            CsWinRTDiagnosticStrings.UsingUseWinUIWhenUsingWindowsUIXamlProjections_Text);
+
+        public static DiagnosticDescriptor UsingUseUwpAndUseWinUITogether = MakeRule(
+            "CsWinRT1032",
+            CsWinRTDiagnosticStrings.UsingUseUwpAndUseWinUITogether_Brief,
+            CsWinRTDiagnosticStrings.UsingUseUwpAndUseWinUITogether_Text);
     }
 } 

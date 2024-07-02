@@ -277,6 +277,24 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing &apos;UseUwp&apos; property.
+        /// </summary>
+        internal static string MissingUseUwpWhenUsingWindowsUIXamlProjections_Brief {
+            get {
+                return ResourceManager.GetString("MissingUseUwpWhenUsingWindowsUIXamlProjections_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project is referencing the Windows.UI.Xaml projections, but it is not setting the required &apos;UseUwp&apos; property (set &apos;UseUwp&apos; to &apos;true&apos; to fix the error).
+        /// </summary>
+        internal static string MissingUseUwpWhenUsingWindowsUIXamlProjections_Text {
+            get {
+                return ResourceManager.GetString("MissingUseUwpWhenUsingWindowsUIXamlProjections_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Array signature found with multi-dimensional array, which is not a valid Windows Runtime type.
         /// </summary>
         internal static string MultiDimensionalArrayRule_Brief {
@@ -678,6 +696,60 @@ namespace WinRT.SourceGenerator {
         internal static string UnsupportedTypeRule_Text4 {
             get {
                 return ResourceManager.GetString("UnsupportedTypeRule_Text4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;UseUwp&apos; and &apos;UseWinUI&apos; set in the same project.
+        /// </summary>
+        internal static string UsingUseUwpAndUseWinUITogether_Brief {
+            get {
+                return ResourceManager.GetString("UsingUseUwpAndUseWinUITogether_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project is setting both the &apos;UseUwp&apos; and &apos;UseWinUI&apos; properties, but those cannot be used at the same time (set either of them to &apos;false&apos; to fix the error).
+        /// </summary>
+        internal static string UsingUseUwpAndUseWinUITogether_Text {
+            get {
+                return ResourceManager.GetString("UsingUseUwpAndUseWinUITogether_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;UseUwp&apos; property set when using WinAppSDK.
+        /// </summary>
+        internal static string UsingUseUwpWhenUsingWinAppSDK_Brief {
+            get {
+                return ResourceManager.GetString("UsingUseUwpWhenUsingWinAppSDK_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project is referencing WindowsAppSDK while also setting the &apos;UseUwp&apos; property, which can only be used with Windows.UI.Xaml projections (either remove the WindowsAppSDK dependency, or set &apos;UseUwp&apos; to &apos;false&apos; to fix the error).
+        /// </summary>
+        internal static string UsingUseUwpWhenUsingWinAppSDK_Text {
+            get {
+                return ResourceManager.GetString("UsingUseUwpWhenUsingWinAppSDK_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;UseWinUI&apos; property set when using Windows.UI.Xaml projections.
+        /// </summary>
+        internal static string UsingUseWinUIWhenUsingWindowsUIXamlProjections_Brief {
+            get {
+                return ResourceManager.GetString("UsingUseWinUIWhenUsingWindowsUIXamlProjections_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project is referencing the Windows.UI.Xaml projections while also setting the &apos;UseWinUI&apos; property, which can only be used with WindowsAppSDK and Microsoft.UI.Xaml projections (either remove the Windows.UI.Xaml projections dependency, or set &apos;UseWinUI&apos; to &apos;false&apos; to fix the error).
+        /// </summary>
+        internal static string UsingUseWinUIWhenUsingWindowsUIXamlProjections_Text {
+            get {
+                return ResourceManager.GetString("UsingUseWinUIWhenUsingWindowsUIXamlProjections_Text", resourceCulture);
             }
         }
     }

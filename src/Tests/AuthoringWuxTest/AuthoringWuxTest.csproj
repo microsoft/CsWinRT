@@ -5,11 +5,17 @@
     <Platforms>x64;x86</Platforms>
     <CsWinRTComponent>true</CsWinRTComponent>
     <IsTrimmable>true</IsTrimmable>
+    <UseUwp>true</UseUwp>
     <CsWinRTUIXamlProjections>WindowsUIXaml</CsWinRTUIXamlProjections>
     <!-- CsWinRTEnableLogging helps to diagnose generation issues -->
     <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
     <!--<CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>--> 
   </PropertyGroup>
+
+  <!-- Workaround: this should eventually be moved in the .targets in the .NET SDK -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="UseUwp" />
+  </ItemGroup>
   
   <ItemGroup>    
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />    
