@@ -5,6 +5,7 @@
     <Platforms>x64;x86</Platforms>
     <CsWinRTComponent>true</CsWinRTComponent>
     <IsTrimmable>true</IsTrimmable>
+    <UseUwp>true</UseUwp>
     <CsWinRTUIXamlProjections>WindowsUIXaml</CsWinRTUIXamlProjections>
     <!-- CsWinRTEnableLogging helps to diagnose generation issues -->
     <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
