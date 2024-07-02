@@ -38,10 +38,26 @@ if (iEnumerableCCW == null)
 IList<List<Point>> list2 = new List<List<Point>>();
 instance2.IterableOfPointIterablesProperty = list2;
 
+// Ensure that these don't crash but return null
+if ((IWinRTObject)instance as IList<Point> != null)
+{
+    return 105;
+}
+
+if ((IWinRTObject)instance as IList<ManagedClass> != null)
+{
+    return 106;
+}
+
 return 100;
 
 object SetAndGetBoxedValue(TestComponentCSharp.Class instance, object val)
 {
     instance.ObjectProperty = val;
     return instance.ObjectProperty;
+}
+
+class ManagedClass
+{
+    public int Number { get; set; }
 }
