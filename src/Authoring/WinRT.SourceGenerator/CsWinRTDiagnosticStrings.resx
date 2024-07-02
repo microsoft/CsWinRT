@@ -133,6 +133,12 @@
   <data name="JaggedArrayRule_Text" xml:space="preserve">
     <value>Method {0} has a nested array of type {1} in its signature; arrays in Windows Runtime method signature cannot be nested</value>
   </data>
+  <data name="MissingUseUwpWhenUsingWindowsUIXamlProjections_Brief" xml:space="preserve">
+    <value>Missing 'UseUwp' property</value>
+  </data>
+  <data name="MissingUseUwpWhenUsingWindowsUIXamlProjections_Text" xml:space="preserve">
+    <value>The project is referencing the Windows.UI.Xaml projections, but it is not setting the required 'UseUwp' property (set 'UseUwp' to 'true' to fix the error)</value>
+  </data>
   <data name="MultiDimensionalArrayRule_Brief" xml:space="preserve">
     <value>Array signature found with multi-dimensional array, which is not a valid Windows Runtime type</value>
   </data>
@@ -273,5 +279,23 @@
   <data name="UnsupportedTypeRule_Text4" xml:space="preserve">
     <value>Consider changing the type '{1} in the member signature to one of the following types from System.Collections.Generic: {2}.</value>
     <comment>{1} and {2} will be keywords (types) from DotNet</comment>
+  </data>
+  <data name="UsingUseUwpAndUseWinUITogether_Brief" xml:space="preserve">
+    <value>'UseUwp' and 'UseWinUI' set in the same project</value>
+  </data>
+  <data name="UsingUseUwpAndUseWinUITogether_Text" xml:space="preserve">
+    <value>The project is setting both the 'UseUwp' and 'UseWinUI' properties, but those cannot be used at the same time (set either of them to 'false' to fix the error)</value>
+  </data>
+  <data name="UsingUseUwpWhenUsingWinAppSDK_Brief" xml:space="preserve">
+    <value>'UseUwp' property set when using WinAppSDK</value>
+  </data>
+  <data name="UsingUseUwpWhenUsingWinAppSDK_Text" xml:space="preserve">
+    <value>The project is referencing WindowsAppSDK while also setting the 'UseUwp' property, which can only be used with Windows.UI.Xaml projections (either remove the WindowsAppSDK dependency, or set 'UseUwp' to 'false' to fix the error)</value>
+  </data>
+  <data name="UsingUseWinUIWhenUsingWindowsUIXamlProjections_Brief" xml:space="preserve">
+    <value>'UseWinUI' property set when using Windows.UI.Xaml projections</value>
+  </data>
+  <data name="UsingUseWinUIWhenUsingWindowsUIXamlProjections_Text" xml:space="preserve">
+    <value>The project is referencing the Windows.UI.Xaml projections while also setting the 'UseWinUI' property, which can only be used with WindowsAppSDK and Microsoft.UI.Xaml projections (either remove the Windows.UI.Xaml projections dependency, or set 'UseWinUI' to 'false' to fix the error)</value>
   </data>
 </root>
