@@ -447,6 +447,7 @@ sealed class TestClass
         instance.BindableIterableProperty = nestedClassList;
     }
 
+#pragma warning disable CsWinRT1028 // Class is not marked partial
     sealed class NestedClass : IProperties2
     {
         private int _value;
@@ -476,6 +477,7 @@ sealed class TestClass
             public int ReadWriteProperty { get => _value; set => _value = value; }
         }
     }
+#pragma warning restore CsWinRT1028 // Class is not marked partial
 }
 
 partial class TestClass2
