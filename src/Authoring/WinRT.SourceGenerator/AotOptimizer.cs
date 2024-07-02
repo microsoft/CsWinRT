@@ -22,7 +22,7 @@ namespace Generator
             var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => 
                 (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent(), provider.IsCsWinRTCcwLookupTableGeneratorEnabled()));
 
-            var typeMapper = context.AnalyzerConfigOptionsProvider.Select((options, ct) => options.GlobalOptions.GetUIXamlProjectionsMode()).Select((mode, ct) => new TypeMapper(mode));
+            var typeMapper = context.AnalyzerConfigOptionsProvider.Select((options, ct) => options.GetCsWinRTUseWindowsUIXamlProjections()).Select((mode, ct) => new TypeMapper(mode));
 
             var vtablesToAddFromClassTypes = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => NeedVtableAttribute(n),

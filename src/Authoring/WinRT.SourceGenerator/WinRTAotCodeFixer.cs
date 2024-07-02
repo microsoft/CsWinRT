@@ -42,7 +42,7 @@ namespace WinRT.SourceGenerator
                     return;
                 }
 
-                var typeMapper = new TypeMapper(context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.GetUIXamlProjectionsMode());
+                var typeMapper = new TypeMapper(context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTUseWindowsUIXamlProjections());
                 var csWinRTAotWarningLevel = context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningLevel();
 
                 context.RegisterSymbolAction(context =>
