@@ -11,6 +11,11 @@
     <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
     <!--<CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>--> 
   </PropertyGroup>
+
+  <!-- Workaround: this should eventually be moved in the .targets in the .NET SDK -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="UseUwp" />
+  </ItemGroup>
   
   <ItemGroup>    
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />    
