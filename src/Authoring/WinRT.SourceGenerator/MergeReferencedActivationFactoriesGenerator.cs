@@ -69,6 +69,11 @@ public sealed class MergeReferencedActivationFactoriesGenerator : IIncrementalGe
         // Generate the chaining helper
         context.RegisterImplementationSourceOutput(assemblyExportsTypeNames, static (context, assemblyExportsTypeNames) =>
         {
+            if (assemblyExportsTypeNames.IsEmpty)
+            {
+                return;
+            }
+
             StringBuilder builder = new();
 
             builder.AppendLine("""
@@ -88,14 +93,10 @@ public sealed class MergeReferencedActivationFactoriesGenerator : IIncrementalGe
                         /// <param name="fullyQualifiedTypeName">The marshalled fully qualified type name of the activation factory to retrieve.</param>
                         /// <returns>The pointer to the activation factory that corresponds with the class specified by <paramref name="fullyQualifiedTypeName"/>.</returns>
                         internal static unsafe IntPtr TryGetDependentActivationFactory(ReadOnlySpan<char> fullyQualifiedTypeName)
-                        {                  
-                """);
+                        {
+                            IntPtr obj;
 
-            if (!assemblyExportsTypeNames.IsEmpty)
-            {
-                builder.AppendLine("            IntPtr obj;");
-                builder.AppendLine();
-            }
+                """);
 
             foreach (string assemblyExportsTypeName in assemblyExportsTypeNames)
             {
@@ -129,7 +130,7 @@ public sealed class MergeReferencedActivationFactoriesGenerator : IIncrementalGe
     /// <param name="token">The <see cref="CancellationToken"/> instance to use.</param>
     /// <param name="name">The resulting type name, if found.</param>
     /// <returns>Whether a type name was found.</returns>
-    private static bool TryGetDependentAssemblyExportsTypeName(
+    internal static bool TryGetDependentAssemblyExportsTypeName(
         IAssemblySymbol assemblySymbol,
         Compilation compilation,
         CancellationToken token,
