@@ -159,6 +159,13 @@ namespace WinRT
                 }
             }
 
+            // Make sure we are going to do a QI on a WinRT interface,
+            // otherwise we can get a helper type for a non WinRT type.
+            if (!Projections.IsTypeWindowsRuntimeType(type))
+            {
+                return false;
+            }
+
             Type helperType = type.FindHelperType();
             if (helperType is null || !helperType.IsInterface)
             {
