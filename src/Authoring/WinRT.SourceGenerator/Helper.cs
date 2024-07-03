@@ -153,6 +153,17 @@ namespace Generator
             return false;
         }
 
+        public static int GetCsWinRTAotWarningLevel(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotWarningLevel", out var csWinRTAotWarningLevelStr) &&
+                int.TryParse(csWinRTAotWarningLevelStr, out var csWinRTAotWarningLevel))
+            {
+                return csWinRTAotWarningLevel;
+            }
+
+            return 0;
+        }
+
         public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
         {
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateWinMDOnly", out var CsWinRTGenerateWinMDOnlyStr))
@@ -300,6 +311,33 @@ namespace Generator
             }
 
             return isProjectedType;
+        }
+
+        // Assuming a type is a WinRT type, this determines whether it is a WinRT type from custom type mappings.
+        // i.e Whether it is a built-in type that is also a WinRT type.
+        public static bool IsCustomMappedType(ISymbol type, TypeMapper mapper)
+        {
+            if (IsFundamentalType(type))
+            {
+                return true;
+            }
+
+            bool isCustomMappedType = false;
+            if (type.ContainingNamespace != null)
+            {
+                isCustomMappedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+            }
+
+            // Ensure all generic parameters are WinRT types.
+            if (isCustomMappedType &&
+                type is INamedTypeSymbol namedType &&
+                namedType.IsGenericType &&
+                !namedType.IsDefinition)
+            {
+                isCustomMappedType = namedType.TypeArguments.All(t => IsCustomMappedType(t, mapper));
+            }
+
+            return isCustomMappedType;
         }
 
         // Checks if the interface references any internal types (either the interface itself or within its generic types).

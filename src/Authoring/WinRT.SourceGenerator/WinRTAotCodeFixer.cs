@@ -18,13 +18,13 @@ namespace WinRT.SourceGenerator
     [DiagnosticAnalyzer(LanguageNames.CSharp), Shared]
     public sealed class WinRTAotDiagnosticAnalyzer : DiagnosticAnalyzer
     {
-        private static ImmutableArray<DiagnosticDescriptor> _supportedDiagnostics = ImmutableArray.Create(WinRTRules.ClassNotAotCompatible);
+        private static ImmutableArray<DiagnosticDescriptor> _supportedDiagnostics = ImmutableArray.Create(WinRTRules.ClassNotAotCompatibleWarning, WinRTRules.ClassNotAotCompatibleInfo);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => _supportedDiagnostics;
 
         public override void Initialize(AnalysisContext context)
         {
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
             context.EnableConcurrentExecution();
 
             context.RegisterCompilationStartAction(static context =>
@@ -43,6 +43,7 @@ namespace WinRT.SourceGenerator
                 }
 
                 var typeMapper = new TypeMapper(context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.GetUIXamlProjectionsMode());
+                var csWinRTAotWarningLevel = context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningLevel();
 
                 context.RegisterSymbolAction(context =>
                 {
@@ -63,7 +64,11 @@ namespace WinRT.SourceGenerator
                             {
                                 if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
                                 {
-                                    context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassNotAotCompatible, namedType.Locations[0], namedType.Name));
+                                    // Based on the warning level, emit as a warning or as an info.
+                                    var diagnosticDescriptor = (csWinRTAotWarningLevel == 2 || 
+                                                                (csWinRTAotWarningLevel == 1 && !GeneratorHelper.IsCustomMappedType(iface, typeMapper))) ? 
+                                        WinRTRules.ClassNotAotCompatibleWarning : WinRTRules.ClassNotAotCompatibleInfo;
+                                    context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, namedType.Locations[0], namedType.Name));
                                     return;
                                 }
                             }
@@ -79,7 +84,7 @@ namespace WinRT.SourceGenerator
     {
         private const string title = "Make type partial";
 
-        private static ImmutableArray<string> _fixableDiagnosticIds = ImmutableArray.Create(WinRTRules.ClassNotAotCompatible.Id);
+        private static ImmutableArray<string> _fixableDiagnosticIds = ImmutableArray.Create(WinRTRules.ClassNotAotCompatibleWarning.Id);
 
         public override ImmutableArray<string> FixableDiagnosticIds => _fixableDiagnosticIds;
 
