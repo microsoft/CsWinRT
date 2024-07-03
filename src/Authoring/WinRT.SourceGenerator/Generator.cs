@@ -321,6 +321,8 @@ namespace Generator
                     }
                 }
                 """);
+
+            context.AddSource("NativeExports.g.cs", builder.ToString());
         }
 
         /// <summary>
