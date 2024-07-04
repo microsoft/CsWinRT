@@ -572,6 +572,13 @@ namespace WinRT
 
         private static unsafe bool IsRuntimeImplementedRCW(Type objType)
         {
+            // Built-in COM interop isn't supported in AOT environments,
+            // so this method can only ever return false. Just inline it.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return false;
+            }
+
             bool isRcw = objType.IsCOMObject;
             if (objType.IsGenericType)
             {
