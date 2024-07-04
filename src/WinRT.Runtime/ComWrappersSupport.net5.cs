@@ -692,10 +692,9 @@ namespace WinRT
             public VtableEntries(List<ComInterfaceEntry> entries, Type type)
             {
                 Data = (ComInterfaceEntry*)RuntimeHelpers.AllocateTypeAssociatedMemory(type, sizeof(ComInterfaceEntry) * entries.Count);
-                for (int i = 0; i < entries.Count; i++)
-                {
-                    Data[i] = entries[i];
-                }
+
+                CollectionsMarshal.AsSpan(entries).CopyTo(new Span<ComInterfaceEntry>(Data, entries.Count));
+
                 Count = entries.Count;
             }
         }
