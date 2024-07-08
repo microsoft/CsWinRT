@@ -465,7 +465,7 @@ namespace ABI.System
             }
 
 #if NET
-            if (RuntimeFeature.IsDynamicCodeSupported)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
             {
                 var __params = new object[] { thisPtr, null };
