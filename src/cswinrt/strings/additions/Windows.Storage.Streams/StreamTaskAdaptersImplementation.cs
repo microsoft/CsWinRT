@@ -5,7 +5,7 @@ namespace Windows.Storage.Streams
     // one for the scenarios which are used by StreamOperationsImplementations for its task adapters.
     internal static class StreamTaskAdaptersImplementation
     {
-        private static bool _initialized = Init();
+        private static readonly bool _initialized = Init();
         internal static bool Initialized => _initialized;
 
         private static unsafe bool Init()
@@ -97,7 +97,7 @@ namespace Windows.Storage.Streams
 
         private static class IAsyncOperationWithProgress_uint_uint
         {
-            private static bool _initialized = Init();
+            private static readonly bool _initialized = Init();
             internal static bool Initialized => _initialized;
 
             private static unsafe bool Init()
@@ -213,7 +213,7 @@ namespace Windows.Storage.Streams
 
         private static class AsyncOperationProgressHandler_uint_uint
         {
-            private static bool _initialized = Init();
+            private static readonly bool _initialized = Init();
             internal static bool Initialized => _initialized;
 
             private static unsafe bool Init()
@@ -268,7 +268,7 @@ namespace Windows.Storage.Streams
 
         private static class AsyncOperationWithProgressCompletedHandler_uint_uint
         {
-            private static bool _initialized = Init();
+            private static readonly bool _initialized = Init();
             internal static bool Initialized => _initialized;
 
             private static unsafe bool Init()
@@ -298,7 +298,7 @@ namespace Windows.Storage.Streams
 
         private static class IAsyncOperationWithProgress_IBuffer_uint
         {
-            private static bool _initialized = Init();
+            private static readonly bool _initialized = Init();
             internal static bool Initialized => _initialized;
 
             private static unsafe bool Init()
@@ -415,7 +415,7 @@ namespace Windows.Storage.Streams
 
         private static class AsyncOperationProgressHandler_IBuffer_uint
         {
-            private static bool _initialized = Init();
+            private static readonly bool _initialized = Init();
             internal static bool Initialized => _initialized;
 
             private static unsafe bool Init()
@@ -473,7 +473,7 @@ namespace Windows.Storage.Streams
 
         private static class AsyncOperationWithProgressCompletedHandler_IBuffer_uint
         {
-            private static bool _initialized = Init();
+            private static readonly bool _initialized = Init();
             internal static bool Initialized => _initialized;
 
             private static unsafe bool Init()
@@ -503,7 +503,7 @@ namespace Windows.Storage.Streams
 
         private static class IAsyncOperation_bool
         {
-            private static bool _initialized = Init();
+            private static readonly bool _initialized = Init();
             internal static bool Initialized => _initialized;
 
             private static unsafe bool Init()
@@ -575,7 +575,7 @@ namespace Windows.Storage.Streams
 
         private static class AsyncOperationCompletedHandler_bool
         {
-            private static bool _initialized = Init();
+            private static readonly bool _initialized = Init();
             internal static bool Initialized => _initialized;
 
             private static unsafe bool Init()

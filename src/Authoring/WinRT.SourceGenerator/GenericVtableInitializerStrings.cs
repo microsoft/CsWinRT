@@ -192,7 +192,7 @@ namespace Generator
             string iEnumerableInstantiation = $$"""
              internal static class IEnumerable_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericType)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -228,7 +228,7 @@ namespace Generator
             string iEnumeratorInstantiation = $$"""
              internal static class IEnumerator_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericType)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -332,7 +332,7 @@ namespace Generator
             string iListInstantiation = $$"""
              internal static class IList_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericType)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -569,7 +569,7 @@ namespace Generator
             string iReadOnlylistInstantiation = $$"""
              internal static class IReadOnlyList_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericType)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -674,7 +674,7 @@ namespace Generator
             string iDictionaryInstantiation = $$"""
              internal static class IDictionary_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericKeyType)}}_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericValueType)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -829,7 +829,7 @@ namespace Generator
             string iReadOnlyDictionaryInstantiation = $$"""
              internal static class IReadOnlyDictionary_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericKeyType)}}_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericValueType)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -933,7 +933,7 @@ namespace Generator
             string keyValuePairInstantiation = $$"""
              internal static class KeyValuePair_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericKeyType)}}_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericValueType)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -990,7 +990,7 @@ namespace Generator
             string eventHandlerInstantiation = $$"""
              internal static class EventHandler_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericType)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1048,7 +1048,7 @@ namespace Generator
             string typedEventHandlerInstantiation = $$"""
              internal static class TypedEventHandler_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1106,7 +1106,7 @@ namespace Generator
             string completedHandlerInstantiation = $$"""
              internal static class {{completedHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1141,7 +1141,7 @@ namespace Generator
             string changedHandlerInstantiation = $$"""
              internal static class {{changedHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1179,7 +1179,7 @@ namespace Generator
             string progressHandlerInstantiation = $$"""
              internal static class {{progressHandler.Split('.')[^1]}}_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1238,7 +1238,7 @@ namespace Generator
             string instantiation = $$"""
              internal static class IAsyncActionWithProgress_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1353,7 +1353,7 @@ namespace Generator
             string instantiation = $$"""
              internal static class IAsyncOperationWithProgress_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1473,7 +1473,7 @@ namespace Generator
             string instantiation = $$"""
              internal static class IAsyncOperation_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1553,7 +1553,7 @@ namespace Generator
             string instantiation = $$"""
              internal static class IMapChangedEventArgs_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1612,7 +1612,7 @@ namespace Generator
             string instantiation = $$"""
              internal static class IObservableMap_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
@@ -1666,7 +1666,7 @@ namespace Generator
             string instantiation = $$"""
              internal static class IObservableVector_{{GetGenericParametersAsString(genericParameters, "_", false)}}
              {
-                 private static bool _initialized = Init();
+                 private static readonly bool _initialized = Init();
                  internal static bool Initialized => _initialized;
 
                  private static unsafe bool Init()
