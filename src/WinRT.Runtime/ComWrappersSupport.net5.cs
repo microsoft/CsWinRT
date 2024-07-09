@@ -572,6 +572,13 @@ namespace WinRT
 
         private static unsafe bool IsRuntimeImplementedRCW(Type objType)
         {
+            // Built-in COM interop isn't supported in AOT environments,
+            // so this method can only ever return false. Just inline it.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return false;
+            }
+
             bool isRcw = objType.IsCOMObject;
             if (objType.IsGenericType)
             {
@@ -692,10 +699,9 @@ namespace WinRT
             public VtableEntries(List<ComInterfaceEntry> entries, Type type)
             {
                 Data = (ComInterfaceEntry*)RuntimeHelpers.AllocateTypeAssociatedMemory(type, sizeof(ComInterfaceEntry) * entries.Count);
-                for (int i = 0; i < entries.Count; i++)
-                {
-                    Data[i] = entries[i];
-                }
+
+                CollectionsMarshal.AsSpan(entries).CopyTo(new Span<ComInterfaceEntry>(Data, entries.Count));
+
                 Count = entries.Count;
             }
         }
