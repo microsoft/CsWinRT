@@ -18,6 +18,7 @@ namespace cswinrt
         bool internal{};
         bool embedded{};
         bool public_enums{};
+        bool public_exclusiveto{};
     };
 
     extern settings_type settings;

@@ -7325,7 +7325,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_guid_attribute>(type),
             bind<write_winrt_helper_type_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
-            is_exclusive_to(type) || (is_projection_internal(type) || (settings.internal || settings.embedded)) ? "internal" : "public",
+            (is_exclusive_to(type) && !settings.public_exclusiveto) || (is_projection_internal(type) || (settings.internal || settings.embedded)) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
@@ -7590,7 +7590,7 @@ internal static global::System.Guid IID { get; } = new Guid(new byte[] { % });
         else
         {
             // Derived classes need access to the vftbl ptr if they are extending unsealed types.
-            auto write_vftable_ptr = !is_exclusive_to(iface);
+            auto write_vftable_ptr = !is_exclusive_to(iface) || settings.public_exclusiveto;
             if (!write_vftable_ptr)
             {
                 // Also write for both overridable interfaces and for default interfaces of authored types.
@@ -8029,7 +8029,7 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
         // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
         // But we are still keeping the interface itself for any helper type lookup that may happen for like GUID lookup.
         if (!is_generic &&
-            is_exclusive_to(type) &&
+            (is_exclusive_to(type) && !settings.public_exclusiveto) &&
             // check for !authored type
             !(settings.component && settings.filter.includes(type)))
         {
