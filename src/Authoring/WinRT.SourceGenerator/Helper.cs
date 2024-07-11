@@ -153,6 +153,16 @@ namespace Generator
             return false;
         }
 
+        public static bool GetCsWinRTUseWindowsUIXamlProjections(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTUseWindowsUIXamlProjections", out var csWinRTUseWindowsUIXamlProjections))
+            {
+                return bool.TryParse(csWinRTUseWindowsUIXamlProjections, out var isCsWinRTUseWindowsUIXamlProjectionsEnabled) && isCsWinRTUseWindowsUIXamlProjectionsEnabled;
+            }
+
+            return false;
+        }
+
         public static int GetCsWinRTAotWarningLevel(this AnalyzerConfigOptionsProvider provider)
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotWarningLevel", out var csWinRTAotWarningLevelStr) &&
