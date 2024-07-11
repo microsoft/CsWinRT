@@ -90,6 +90,7 @@
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="NonAgileClass.h" />
+    <ClInclude Include="NonUniqueClass.h" />
     <ClInclude Include="ComImports.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="WarningClass.h" />
@@ -111,6 +112,7 @@
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="NonAgileClass.cpp" />
+    <ClCompile Include="NonUniqueClass.cpp" />
     <ClCompile Include="ComImports.cpp" />
     <ClCompile Include="ManualProjectionTestClasses.cpp" />
     <ClCompile Include="Singleton.cpp" />

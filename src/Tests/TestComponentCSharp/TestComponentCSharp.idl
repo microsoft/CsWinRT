@@ -701,4 +701,19 @@ And this is another one"
             Int32 ReadWriteProperty{ set; };
         }
     }
+
+    namespace TestPublicExclusiveTo
+    {
+        interface IRegularInterface
+        {
+            Int32 Type { get; };
+        }
+    
+        // This is a test for runtimeclass which can be have its interfaces implemented by other consumers
+        unsealed runtimeclass NonUniqueClass : IRegularInterface
+        {
+            String Path{ get; };
+            static Int32 StaticProperty { get; };
+        }
+    }
 }
