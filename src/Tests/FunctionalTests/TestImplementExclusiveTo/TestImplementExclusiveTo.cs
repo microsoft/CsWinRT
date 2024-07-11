@@ -1,11 +1,12 @@
-﻿using TestComponentCSharp.TestPublicExclusiveTo;
+﻿using System;
+using TestComponentCSharp.TestPublicExclusiveTo;
 
-namespace TestLibrary
+namespace TestImplementExclusiveTo
 {
     public sealed class TestClass : INonUniqueClass, IRegularInterface, INonUniqueClassFactory
     {
-        int Type { get; } => throw new NotImplementedException();
-        string Path { get; } => throw new NotImplementedException();
-        int StaticProperty { get; } => throw new NotImplementedException();
+        public int Type => throw new NotImplementedException();
+        public string Path => throw new NotImplementedException();
+        public int StaticProperty => throw new NotImplementedException();
     }
 }
