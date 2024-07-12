@@ -28,7 +28,7 @@ namespace Generator
         {
             this.context = context;
             Logger = new Logger(context);
-            mapper = new(context.AnalyzerConfigOptions.GlobalOptions.GetUIXamlProjectionsMode());
+            mapper = new(context.AnalyzerConfigOptions.GetCsWinRTUseWindowsUIXamlProjections());
             // TODO-WuxMux: output a module initializer that validates the MUX/WUX projection mode to ensure that things don't get out of sync.
         }
 

@@ -328,6 +328,7 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableICustomPropertyProviderSupport Condition="'$(CsWinRTEnableICustomPropertyProviderSupport)' == ''">true</CsWinRTEnableICustomPropertyProviderSupport>
     <CsWinRTEnableIReferenceSupport Condition="'$(CsWinRTEnableIReferenceSupport)' == ''">true</CsWinRTEnableIReferenceSupport>
     <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
+    <CsWinRTUseWindowsUIXamlProjections Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == ''">false</CsWinRTUseWindowsUIXamlProjections>
   </PropertyGroup>
 
   <!-- Default values for all other CsWinRT properties (without feature switches) -->
@@ -371,15 +372,10 @@ $(CsWinRTInternalProjection)
                                     Value="$(CsWinRTEnableIDynamicInterfaceCastableSupport)"
                                     Trim="true" />
 
-    <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS switch-->
-    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUIXamlProjections)' == 'WindowsUIXaml'">
-      <Value>true</Value>
-      <Trim>true</Trim>
-    </RuntimeHostConfigurationOption>
-    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Condition="'$(CsWinRTUIXamlProjections)' != 'WindowsUIXaml'">
-      <Value>false</Value>
-      <Trim>true</Trim>
-    </RuntimeHostConfigurationOption>
+    <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS"
+                                    Value="$(CsWinRTUseWindowsUIXamlProjections)"
+                                    Trim="true" />
   </ItemGroup>
 
 </Project>
