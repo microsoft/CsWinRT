@@ -27,6 +27,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// </summary>
         /// <param name="buffer">The buffer to get the data pointer for.</param>
         /// <param name="dataPtr">The pointer to the underlying data representation of the buffer.</param>
+        /// <returns>Whether the data was successfully retrieved.</returns>
+        /// <exception cref="Exception">Thrown if invoking <c>IBufferByteAccess::Buffer</c> on the input buffer fails.</exception>
         public static unsafe bool TryGetDataUnsafe(
 #if NET
             [NotNullWhen(true)]
@@ -62,6 +64,51 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
 
             dataPtr = IntPtr.Zero;
+            return false;
+        }
+
+        /// <summary>
+        /// Returns a pointer to the underlying data representation of the <see cref="IMemoryBufferReference"/>.
+        /// Callers are responsible for ensuring that the buffer is kept alive while the pointer is in use.
+        /// </summary>
+        /// <param name="buffer">The buffer to get the data pointer for.</param>
+        /// <param name="dataPtr">The pointer to the underlying data representation of the buffer.</param>
+        /// <param name="capacity">The capacity of the buffer.</param>
+        /// <returns>Whether the data was successfully retrieved.</returns>
+        /// <exception cref="Exception">Thrown if invoking <c>IMemoryBufferByteAccess::Buffer</c> on the input buffer fails.</exception>
+        public static unsafe bool TryGetDataUnsafe(
+#if NET
+            [NotNullWhen(true)]
+#endif
+            IMemoryBufferReference? buffer, out IntPtr dataPtr, out uint capacity)
+        {
+            if (buffer == null)
+            {
+                dataPtr = IntPtr.Zero;
+                capacity = 0;
+                return false;
+            }
+
+            if (ComWrappersSupport.TryUnwrapObject(buffer, out var unwrapped) &&
+                unwrapped.TryAs(global::WinRT.Interop.IID.IID_IMemoryBufferByteAccess, out IntPtr ThisPtr) >= 0)
+            {
+                try
+                {
+                    IntPtr __retval = default;
+                    uint __capacity = 0;
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, uint*, int>**)ThisPtr)[3](ThisPtr, &__retval, &__capacity));
+                    dataPtr = __retval;
+                    capacity = __capacity;
+                    return true;
+                }
+                finally
+                {
+                    Marshal.Release(ThisPtr);
+                }
+            }
+
+            dataPtr = IntPtr.Zero;
+            capacity = 0;
             return false;
         }
 
