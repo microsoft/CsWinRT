@@ -290,6 +290,31 @@ namespace WinRT.Interop
             }
         }
 
+        /// <summary>The IID for <c>IMemoryBufferByteAccess</c> (5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D).</summary>
+        public static ref readonly Guid IID_IMemoryBufferByteAccess
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0x35, 0x32, 0x0D, 0x5B,
+                    0xBA, 0x4D,
+                    0x44, 0x4D,
+                    0x86,
+                    0x5E,
+                    0x8F,
+                    0x1D,
+                    0x0E,
+                    0x4F,
+                    0xD0,
+                    0x4D
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
         /// <summary>The IID for <c>IContextCallback</c> (000001DA-0000-0000-C000-000000000046).</summary>
         internal static ref readonly Guid IID_IContextCallback
         {
@@ -640,7 +665,7 @@ namespace WinRT.Interop
             }
         }
 
-        /// <summary>The IID for <c>WUX_MotifyCollectionChangedEventHandler</c> (8B0909DC-2005-5D93-BF8A-725F017BAA8D).</summary>
+        /// <summary>The IID for <c>MUX_NotifyCollectionChangedEventHandler</c> (8B0909DC-2005-5D93-BF8A-725F017BAA8D).</summary>
         internal static ref readonly Guid IID_MUX_NotifyCollectionChangedEventHandler
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]   

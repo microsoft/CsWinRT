@@ -483,6 +483,26 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestTryGetDataUnsafe_MemoryBufferReference()
+        {
+            var buffer = new Windows.Foundation.MemoryBuffer(256);
+            var reference = buffer.CreateReference();
+
+            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(reference, out IntPtr dataPtr1, out uint capacity1));
+            Assert.True(dataPtr1 != IntPtr.Zero);
+            Assert.True(capacity1 == 256);
+
+            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(reference, out IntPtr dataPtr2, out uint capacity2));
+            Assert.True(dataPtr2 != IntPtr.Zero);
+            Assert.True(capacity2 == 256);
+
+            Assert.True(dataPtr1 == dataPtr2);
+
+            // Ensure the reference doesn't get collected while we use the data pointer
+            GC.KeepAlive(reference);
+        }
+
+        [Fact]
         public void TestBufferTryGetArray()
         {
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
