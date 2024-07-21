@@ -450,6 +450,14 @@ namespace Generator
             return isProjectedType;
         }
 
+        public static bool HasBindableCustomPropertyAttribute(MemberDeclarationSyntax node)
+        {
+            bool hasAttribute = node.AttributeLists.SelectMany(list => list.Attributes).
+                Any(attribute => attribute.Name is IdentifierNameSyntax name &&
+                                 name.Identifier.ValueText.EndsWith("BindableCustomProperty"));
+            return hasAttribute;
+        }
+
         /// <summary>
         /// Checks whether or not a given symbol has an attribute with the specified type.
         /// </summary>

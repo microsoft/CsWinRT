@@ -234,7 +234,6 @@ namespace WinRT
     /// An attribute used to indicate the properties which are bindable via the <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation provided for use in WinUI scenarios.
     /// The type which this attribute is placed on also needs to be marked partial and needs to be non-generic.
     /// </summary>
-    [EditorBrowsable(EditorBrowsableState.Never)]
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 #if EMBED
     internal
