@@ -203,6 +203,61 @@ catch(Exception)
     }
 }
 
+
+// Test ICustomProperty
+Language language = new Language();
+language.Value = 42;
+language[1] = "Bindable";
+
+// Used for non-indexer types to avoid passing null.
+// Note this isn't checked in non-indexer scenarios.
+var ignoredType = typeof(Language);
+if (!instance.ValidateBindableProperty(language, "Name", ignoredType, false, true, false, false, typeof(string), null, null, out var retrievedValue) ||
+    !instance.ValidateBindableProperty(language, "Value", ignoredType, false, true, true, false, typeof(int), null, 22, out var retrievedValue2) ||
+    !instance.ValidateBindableProperty(language, "Item", typeof(int), false, true, true, true, typeof(string), 1, "Language", out var retrievedValue3))
+{
+    return 125;
+}
+
+// Validate previous values
+if ((string)retrievedValue != "Language" || (int)retrievedValue2 != 42 || (string)retrievedValue3 != "Bindable")
+{
+    return 126;
+}
+
+// Validate if values got set during ValidateBindableProperty via ICustomProperty
+if (language.Value != 22 || language[1] != "Language")
+{
+    return 127;
+}
+
+Language2 language2 = new Language2();
+// Test private property not found
+if (instance.ValidateBindableProperty(language2, "Number", ignoredType, true, true, true, false, typeof(int), null, null, out _))
+{
+    return 128;
+}
+
+// Test private accessors not found
+if (!instance.ValidateBindableProperty(language2, "SetOnly", ignoredType, false, false, true, false, typeof(string), null, "One", out _) ||
+    !instance.ValidateBindableProperty(language2, "PrivateSet", ignoredType, false, true, false, false, typeof(string), null, "Two", out var retrievedValue4))
+{
+    return 129;
+}
+
+// Set during SetOnly call.
+if ((string)retrievedValue4 != "One")
+{
+    return 130;
+}
+
+Language4 language4 = new Language4();
+// Test internal property not found
+if (instance.ValidateBindableProperty(language4, "Name", ignoredType, true, true, false, false, typeof(string), null, null, out _))
+{
+    return 131;
+}
+
 return 100;
 
 
@@ -526,5 +581,76 @@ sealed partial class CustomCommand : ICommand
     public void Execute(object parameter)
     {
         throw new NotImplementedException();
+    }
+}
+
+[BindableCustomProperty([nameof(Name), nameof(Value)], [typeof(int)])]
+sealed partial class Language
+{
+    private readonly string[] _values = new string[4];
+
+    public string Name { get; } = "Language";
+    public int Value { get; set; }
+    public string this[int i]
+    {
+        get => _values[i];
+        set => _values[i] = value;
+    }
+}
+
+[BindableCustomProperty]
+sealed partial class Language2
+{
+    public string Name { get; } = "Language2";
+    public string[] Value { get; set; }
+    private int Number { get; set; }
+    public string SetOnly
+    {
+        set 
+        { 
+            PrivateSet = value; 
+        }
+    }
+    public string PrivateSet { get; private set; } = "PrivateSet";
+}
+
+[BindableCustomProperty]
+sealed partial class Language4
+{
+    internal string Name { get; }
+    private int Number { get; set; }
+}
+
+// Even though we don't support this, validate we don't
+// generate code that doesn't compile.
+[BindableCustomProperty]
+sealed partial class Language5<T>
+{
+    public T Name { get; }
+    public int Number { get; set; }
+}
+
+namespace Test
+{
+    namespace Test2
+    {
+        sealed partial class Nested
+        {
+            [BindableCustomProperty([nameof(Value)], [])]
+            sealed partial class Language3 : IProperties2
+            {
+                private readonly string[] _values = new string[4];
+
+                public string Name { get; }
+                public int Value { get; set; }
+                public string this[int i]
+                {
+                    get => _values[i];
+                    set => _values[i] = value;
+                }
+                private int Number { get; set; }
+                public int ReadWriteProperty { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            }
+        }
     }
 }

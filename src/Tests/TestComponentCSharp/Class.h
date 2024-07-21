@@ -62,6 +62,7 @@ namespace winrt::TestComponentCSharp::implementation
         ComposedNonBlittableStruct _nonBlittableStruct{};
         std::vector<int32_t> _ints{ 1, 2, 3 };
         Windows::Foundation::Collections::IIterable<int32_t> _intColl;
+        Windows::Foundation::Collections::IIterable<char16_t> _charColl;
         Microsoft::UI::Xaml::Interop::IBindableIterable _bindableIterable;
         Microsoft::UI::Xaml::Interop::IBindableVector _bindableVector;
         Microsoft::UI::Xaml::Interop::IBindableObservableVector _bindableObservable;
@@ -289,6 +290,7 @@ namespace winrt::TestComponentCSharp::implementation
 
         Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
         void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
+        void SetCharIterable(Windows::Foundation::Collections::IIterable<char16_t> const& value);
 
         Microsoft::UI::Xaml::Interop::IBindableIterable BindableIterableProperty();
         void BindableIterableProperty(Microsoft::UI::Xaml::Interop::IBindableIterable const& value);
@@ -305,6 +307,19 @@ namespace winrt::TestComponentCSharp::implementation
         Microsoft::UI::Xaml::Interop::IBindableObservableVector BindableObservableVectorProperty();
         void BindableObservableVectorProperty(Microsoft::UI::Xaml::Interop::IBindableObservableVector const& value);
         Microsoft::UI::Xaml::Interop::IBindableObservableVector GetBindableObservableVector(Microsoft::UI::Xaml::Interop::IBindableObservableVector vector);
+
+        bool ValidateBindableProperty(
+            IInspectable const& bindableObject,
+            hstring property,
+            Windows::UI::Xaml::Interop::TypeName const& indexerType,
+            bool validateOnlyExists,
+            bool canRead,
+            bool canWrite,
+            bool isIndexer,
+            Windows::UI::Xaml::Interop::TypeName const& type,
+            IInspectable const& indexerValue,
+            IInspectable const& setValue,
+            IInspectable& retrievedValue);
 
         void CopyProperties(TestComponentCSharp::IProperties1 const& src);
         void CopyPropertiesViaWeakReference(TestComponentCSharp::IProperties1 const& src);

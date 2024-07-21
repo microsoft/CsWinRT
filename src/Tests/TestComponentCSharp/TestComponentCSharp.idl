@@ -340,6 +340,7 @@ namespace TestComponentCSharp
         
         Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
+        void SetCharIterable(Windows.Foundation.Collections.IIterable<Char> value);
 
         // Bindable
         Microsoft.UI.Xaml.Interop.IBindableIterable BindableIterableProperty;
@@ -354,6 +355,19 @@ namespace TestComponentCSharp
         
         Microsoft.UI.Xaml.Interop.IBindableObservableVector BindableObservableVectorProperty;
         Microsoft.UI.Xaml.Interop.IBindableObservableVector GetBindableObservableVector(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);
+
+        Boolean ValidateBindableProperty(
+            Object bindableObject,
+            String property,
+            Windows.UI.Xaml.Interop.TypeName indexerType,
+            Boolean validateOnlyExists,
+            Boolean canRead,
+            Boolean canWrite,
+            Boolean isIndexer,
+            Windows.UI.Xaml.Interop.TypeName type,
+            Object indexerValue,
+            Object setValue,
+            out Object retrievedValue);
 
         void CopyProperties(IProperties1 src);
         void CopyPropertiesViaWeakReference(IProperties1 src);
