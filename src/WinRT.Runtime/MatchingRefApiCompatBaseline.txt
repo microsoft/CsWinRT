@@ -270,5 +270,5 @@ MembersMustExist : Member 'public System.Guid ABI.System.ComponentModel.Property
 TypesMustExist : Type 'WinRT.WinRTAssemblyExportsTypeAttribute' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'Microsoft.UI.Xaml.Data.BindableCustomProperty' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.BindableCustomPropertyAttribute' does not exist in the reference but it does exist in the implementation.
-TypesMustExist : Type 'WinRT.BindableCustomPropertyImplementationAttribute' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation' does not exist in the reference but it does exist in the implementation.
 Total Issues: 272

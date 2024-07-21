@@ -263,33 +263,6 @@ namespace WinRT
         internal string[] PropertyNames { get; }
         internal Type[] IndexerPropertyTypes { get; }
     }
-
-    /// <summary>
-    /// An attribute complementing <see cref="BindableCustomPropertyAttribute"/> providing the implementation to expose the specified properties.
-    /// </summary>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-#if EMBED
-    internal
-#else
-    public
-#endif
-    abstract class BindableCustomPropertyImplementationAttribute : Attribute
-    {
-        /// <summary>
-        /// Get the generated <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation representing the specified property name.
-        /// </summary>
-        /// <param name="name">The name of the property to get.</param>
-        /// <returns>The <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for the property specified by <paramref name="name"/>.</returns>
-        public abstract Microsoft.UI.Xaml.Data.BindableCustomProperty GetProperty(string name);
-
-        /// <summary>
-        /// Get the generated <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation representing the specified index property type.
-        /// </summary>
-        /// <param name="indexParameterType">The index property to get.</param>
-        /// <returns>The <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for the property specified by <paramref name="indexParameterType"/>.</returns>
-        public abstract Microsoft.UI.Xaml.Data.BindableCustomProperty GetProperty(Type indexParameterType);
-    }
 #endif
 }
 

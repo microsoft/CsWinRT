@@ -26,6 +26,31 @@ namespace Microsoft.UI.Xaml.Data
         global::System.Type Type { get; }
     }
 
+    /// <summary>
+    /// An interface complementing <see cref="BindableCustomPropertyAttribute"/> providing the implementation to expose the specified properties.
+    /// </summary>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    interface IBindableCustomPropertyImplementation
+    {
+        /// <summary>
+        /// Get the generated <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation representing the specified property name.
+        /// </summary>
+        /// <param name="name">The name of the property to get.</param>
+        /// <returns>The <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for the property specified by <paramref name="name"/>.</returns>
+        public Microsoft.UI.Xaml.Data.BindableCustomProperty GetProperty(string name);
+
+        /// <summary>
+        /// Get the generated <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation representing the specified index property type.
+        /// </summary>
+        /// <param name="indexParameterType">The index property to get.</param>
+        /// <returns>The <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for the property specified by <paramref name="indexParameterType"/>.</returns>
+        public Microsoft.UI.Xaml.Data.BindableCustomProperty GetProperty(Type indexParameterType);
+    }
+
     [global::WinRT.WinRTExposedType(typeof(global::ABI.Microsoft.UI.Xaml.Data.ManagedCustomPropertyWinRTTypeDetails))]
 #if EMBED
     internal
@@ -367,19 +392,17 @@ namespace ABI.Microsoft.UI.Xaml.Data
             {
                 string _name = MarshalString.FromAbi(name);
                 object target = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
-                var targetType = target.GetType();
 
-                var bindableCustomPropertyImplementationAttribute = targetType.GetCustomAttribute<BindableCustomPropertyImplementationAttribute>();
-                if (bindableCustomPropertyImplementationAttribute is not null)
+                if (target is global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation bindableCustomPropertyImplementation)
                 {
-                    __result = bindableCustomPropertyImplementationAttribute.GetProperty(_name);
+                    __result = bindableCustomPropertyImplementation.GetProperty(_name);
                     *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
                     return 0;
                 }
 
                 if (RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    PropertyInfo propertyInfo = targetType.GetProperty(
+                    PropertyInfo propertyInfo = target.GetType().GetProperty(
                          _name,
                          BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
 
@@ -409,19 +432,17 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 Type _type = global::ABI.System.Type.FromAbi(type);
 
                 object target = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
-                var targetType = target.GetType();
 
-                var bindableCustomPropertyImplementationAttribute = targetType.GetCustomAttribute<BindableCustomPropertyImplementationAttribute>();
-                if (bindableCustomPropertyImplementationAttribute is not null)
+                if (target is global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation bindableCustomPropertyImplementation)
                 {
-                    __result = bindableCustomPropertyImplementationAttribute.GetProperty(_type);
+                    __result = bindableCustomPropertyImplementation.GetProperty(_type);
                     *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
                     return 0;
                 }
 
                 if (RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    PropertyInfo propertyInfo = targetType.GetProperty(
+                    PropertyInfo propertyInfo = target.GetType().GetProperty(
                         _name,
                         BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public,
                         null,                                                                   // default binder

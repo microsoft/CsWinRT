@@ -240,13 +240,15 @@ if (instance.ValidateBindableProperty(language2, "Number", ignoredType, true, tr
 
 // Test private accessors not found
 if (!instance.ValidateBindableProperty(language2, "SetOnly", ignoredType, false, false, true, false, typeof(string), null, "One", out _) ||
-    !instance.ValidateBindableProperty(language2, "PrivateSet", ignoredType, false, true, false, false, typeof(string), null, "Two", out var retrievedValue4))
+    !instance.ValidateBindableProperty(language2, "PrivateSet", ignoredType, false, true, false, false, typeof(string), null, "Two", out var retrievedValue4) ||
+    !instance.ValidateBindableProperty(language2, "StaticDouble", ignoredType, false, true, true, false, typeof(double), null, 5.0, out var retrievedValue11))
 {
     return 129;
 }
 
 // Set during SetOnly call.
-if ((string)retrievedValue4 != "One")
+if ((string)retrievedValue4 != "One" ||
+    (double)retrievedValue11 != 4.0 || Language2.StaticDouble != 5.0)
 {
     return 130;
 }
@@ -256,6 +258,57 @@ Language4 language4 = new Language4();
 if (instance.ValidateBindableProperty(language4, "Name", ignoredType, true, true, false, false, typeof(string), null, null, out _))
 {
     return 131;
+}
+
+// Validate generic scenarios
+Language5<int> language5 = new Language5<int>();
+language5.Value = 5;
+if (!instance.ValidateBindableProperty(language5, "Value", ignoredType, false, true, true, false, typeof(int), null, 2, out var retrievedValue5))
+{
+    return 132;
+}
+
+if ((int)retrievedValue5 != 5 || language5.Value != 2)
+{
+    return 133;
+}
+
+Language5<object> language6 = new Language5<object>();
+language6.Value = language2;
+language6.Number = 4;
+if (!instance.ValidateBindableProperty(language6, "Value", ignoredType, false, true, true, false, typeof(object), null, language, out var retrievedValue6) ||
+    !instance.ValidateBindableProperty(language6, "Number", ignoredType, false, true, true, false, typeof(int), null, 2, out var retrievedValue7))
+{
+    return 133;
+}
+
+if (retrievedValue6 != language2 || language6.Value != language ||
+    (int)retrievedValue7 != 4 || language6.Number != 2)
+{
+    return 134;
+}
+
+// Validate dervied scenarios
+LanguageDervied languageDervied = new LanguageDervied();
+languageDervied.Value = 22;
+LanguageDervied2 languageDervied2 = new LanguageDervied2();
+languageDervied2.Value = 11;
+languageDervied2.Derived = 22;
+
+if (!instance.ValidateBindableProperty(languageDervied, "Derived", ignoredType, false, true, false, false, typeof(int), null, null, out var retrievedValue8) ||
+    // Not projected as custom property
+    instance.ValidateBindableProperty(languageDervied, "Value", ignoredType, true, true, true, false, typeof(int), null, 33, out var _) ||
+    !instance.ValidateBindableProperty(languageDervied2, "Derived", ignoredType, false, true, true, false, typeof(int), null, 2, out var retrievedValue9) ||
+    !instance.ValidateBindableProperty(languageDervied2, "Name", ignoredType, false, true, false, false, typeof(string), null, null, out var retrievedValue10))
+{
+    return 135;
+}
+
+if ((int)retrievedValue8 != 4 ||
+    (int)retrievedValue9 != 22 || languageDervied2.Derived != 2 ||
+    (string)retrievedValue10 != "Language")
+{
+    return 136;
 }
 
 return 100;
@@ -585,7 +638,7 @@ sealed partial class CustomCommand : ICommand
 }
 
 [BindableCustomProperty([nameof(Name), nameof(Value)], [typeof(int)])]
-sealed partial class Language
+partial class Language
 {
     private readonly string[] _values = new string[4];
 
@@ -596,6 +649,18 @@ sealed partial class Language
         get => _values[i];
         set => _values[i] = value;
     }
+}
+
+[BindableCustomProperty([nameof(Name), nameof(Derived)], [typeof(int)])]
+partial class LanguageDervied : Language
+{
+    public int Derived { get; } = 4;
+}
+
+[BindableCustomProperty]
+partial class LanguageDervied2 : Language
+{
+    public int Derived { get; set; }
 }
 
 [BindableCustomProperty]
@@ -612,6 +677,7 @@ sealed partial class Language2
         }
     }
     public string PrivateSet { get; private set; } = "PrivateSet";
+    public static double StaticDouble { get; set; } = 4.0;
 }
 
 [BindableCustomProperty]
@@ -626,8 +692,15 @@ sealed partial class Language4
 [BindableCustomProperty]
 sealed partial class Language5<T>
 {
-    public T Name { get; }
+    private readonly Dictionary<T, T> _values = new();
+
+    public T Value { get; set; }
     public int Number { get; set; }
+    public T this[T i]
+    {
+        get => _values[i];
+        set => _values[i] = value;
+    }
 }
 
 namespace Test

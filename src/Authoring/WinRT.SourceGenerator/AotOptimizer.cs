@@ -253,23 +253,19 @@ namespace Generator
                 return default;
             }
 
-            // With attributes, we can't generate a implementation that will be aware of the generic instantiation.
-            // So skip those.
-            if (symbol.IsGenericType)
-            {
-                return default;
-            }
-
             List<BindableCustomProperty> bindableCustomProperties = new();
 
             // Make all public properties in the class bindable.
             if (attributeData.ConstructorArguments.Length == 0)
             {
-                foreach (var propertySymbol in symbol.GetMembers().
-                    Where(m => m.Kind == SymbolKind.Property &&
-                                m.DeclaredAccessibility == Accessibility.Public))
+                for (var curSymbol = symbol; curSymbol != null; curSymbol = curSymbol.BaseType)
                 {
-                    AddProperty(propertySymbol);
+                    foreach (var propertySymbol in curSymbol.GetMembers().
+                        Where(m => m.Kind == SymbolKind.Property &&
+                                    m.DeclaredAccessibility == Accessibility.Public))
+                    {
+                        AddProperty(propertySymbol);
+                    }
                 }
             }
             else if (attributeData.ConstructorArguments is
@@ -278,22 +274,25 @@ namespace Generator
                     { Kind: TypedConstantKind.Array, Values: [..] propertyIndexerTypes }
                 ])
             {
-                foreach (var member in symbol.GetMembers())
+                for (var curSymbol = symbol; curSymbol != null; curSymbol = curSymbol.BaseType)
                 {
-                    if (member is IPropertySymbol propertySymbol &&
-                        member.DeclaredAccessibility == Accessibility.Public)
+                    foreach (var member in curSymbol.GetMembers())
                     {
-                        if (!propertySymbol.IsIndexer &&
-                            propertyNames.Any(p => p.Value is string value && value == propertySymbol.Name))
+                        if (member is IPropertySymbol propertySymbol &&
+                            member.DeclaredAccessibility == Accessibility.Public)
                         {
-                            AddProperty(propertySymbol);
-                        }
-                        else if (propertySymbol.IsIndexer &&
-                                    // ICustomProperty only supports single indexer parameter.
-                                    propertySymbol.Parameters.Length == 1 &&
-                                    propertyIndexerTypes.Any(p => p.Value is ISymbol typeSymbol && typeSymbol.Equals(propertySymbol.Parameters[0].Type, SymbolEqualityComparer.Default)))
-                        {
-                            AddProperty(propertySymbol);
+                            if (!propertySymbol.IsIndexer &&
+                                propertyNames.Any(p => p.Value is string value && value == propertySymbol.Name))
+                            {
+                                AddProperty(propertySymbol);
+                            }
+                            else if (propertySymbol.IsIndexer &&
+                                     // ICustomProperty only supports single indexer parameter.
+                                     propertySymbol.Parameters.Length == 1 &&
+                                     propertyIndexerTypes.Any(p => p.Value is ISymbol typeSymbol && typeSymbol.Equals(propertySymbol.Parameters[0].Type, SymbolEqualityComparer.Default)))
+                            {
+                                AddProperty(propertySymbol);
+                            }
                         }
                     }
                 }
@@ -344,7 +343,8 @@ namespace Generator
                         propertySymbol.GetMethod != null && propertySymbol.GetMethod.DeclaredAccessibility == Accessibility.Public,
                         propertySymbol.SetMethod != null && propertySymbol.SetMethod.DeclaredAccessibility == Accessibility.Public,
                         propertySymbol.IsIndexer,
-                        propertySymbol.IsIndexer ? ToFullyQualifiedString(propertySymbol.Parameters[0].Type) : ""
+                        propertySymbol.IsIndexer ? ToFullyQualifiedString(propertySymbol.Parameters[0].Type) : "",
+                        propertySymbol.IsStatic
                         ));
                 }
             }
@@ -1437,22 +1437,16 @@ namespace Generator
                 }
 
                 source.AppendLine($$"""
-                            [{{escapedClassName}}BindableCustomPropertyImplementation]
-                            partial class {{(classHierarchy.IsEmpty ? bindableCustomProperties.ClassName : classHierarchy[0].QualifiedName)}}
+                            partial class {{(classHierarchy.IsEmpty ? bindableCustomProperties.ClassName : classHierarchy[0].QualifiedName)}} : global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation
                             {
-                            }
+                                global::Microsoft.UI.Xaml.Data.BindableCustomProperty global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation.GetProperty(string name)
+                                {
                             """);
-
-                source.AppendLine();
-                source.AppendLine($$"""
-                    internal sealed class {{escapedClassName}}BindableCustomPropertyImplementation : global::WinRT.BindableCustomPropertyImplementationAttribute
-                    {
-                        public override global::Microsoft.UI.Xaml.Data.BindableCustomProperty GetProperty(string name)
-                        {
-                    """);
 
                 foreach (var property in bindableCustomProperties.Properties.Where(p => !p.IsIndexer))
                 {
+                    var instanceAccessor = property.IsStatic ? bindableCustomProperties.QualifiedClassName : $$"""(({{bindableCustomProperties.QualifiedClassName}})instance)""";
+
                     source.AppendLine($$"""
                                 if (name == "{{property.Name}}")
                                 {
@@ -1461,8 +1455,8 @@ namespace Generator
                                         {{GetBoolAsString(property.CanWrite)}},
                                         "{{property.Name}}",
                                         typeof({{property.Type}}),
-                                        {{ (property.CanRead ? $$"""static (instance) => (({{bindableCustomProperties.QualifiedClassName}})instance).{{property.Name}}""" : "null") }},
-                                        {{ (property.CanWrite ? $$"""static (instance, value) => (({{bindableCustomProperties.QualifiedClassName}})instance).{{property.Name}} = ({{property.Type}})value""" : "null") }},
+                                        {{ (property.CanRead ? $$"""static (instance) => {{instanceAccessor}}.{{property.Name}}""" : "null") }},
+                                        {{ (property.CanWrite ? $$"""static (instance, value) => {{instanceAccessor}}.{{property.Name}} = ({{property.Type}})value""" : "null") }},
                                         null,
                                         null);
                                 }
@@ -1473,12 +1467,14 @@ namespace Generator
                         return default;
                     }
 
-                    public override global::Microsoft.UI.Xaml.Data.BindableCustomProperty GetProperty(global::System.Type indexParameterType)
+                    global::Microsoft.UI.Xaml.Data.BindableCustomProperty global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation.GetProperty(global::System.Type indexParameterType)
                     {
                 """);
 
                 foreach (var property in bindableCustomProperties.Properties.Where(p => p.IsIndexer))
                 {
+                    var instanceAccessor = property.IsStatic ? bindableCustomProperties.QualifiedClassName : $$"""(({{bindableCustomProperties.QualifiedClassName}})instance)""";
+
                     source.AppendLine($$"""
                                 if (indexParameterType == typeof({{property.IndexerType}}))
                                 {
@@ -1489,8 +1485,8 @@ namespace Generator
                                         typeof({{property.Type}}),
                                         null,
                                         null,
-                                        {{ (property.CanRead ? $$"""static (instance, index) => (({{bindableCustomProperties.QualifiedClassName}})instance)[({{property.IndexerType}})index]""" : "null") }},
-                                        {{ (property.CanWrite ? $$"""static (instance, value, index) => (({{bindableCustomProperties.QualifiedClassName}})instance)[({{property.IndexerType}})index] = ({{property.Type}})value""" : "null") }});
+                                        {{ (property.CanRead ? $$"""static (instance, index) => {{instanceAccessor}}[({{property.IndexerType}})index]""" : "null") }},
+                                        {{ (property.CanWrite ? $$"""static (instance, value, index) => {{instanceAccessor}}[({{property.IndexerType}})index] = ({{property.Type}})value""" : "null") }});
                                 }
                         """);
                 }
@@ -1550,7 +1546,8 @@ namespace Generator
         bool CanRead,
         bool CanWrite,
         bool IsIndexer,
-        string IndexerType);
+        string IndexerType,
+        bool IsStatic);
 
     internal readonly record struct BindableCustomProperties(
         string Namespace,
