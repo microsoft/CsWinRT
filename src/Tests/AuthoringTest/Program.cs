@@ -199,6 +199,13 @@ namespace AuthoringTest
         public string Value => "CsWinRT";
     }
 
+    [BindableCustomProperty]
+    public sealed partial class CustomProperty
+    {
+        public int Number { get; } = 4;
+        public string Value => "CsWinRT";
+    }
+
     [Version(3u)]
     public interface IDouble
     {
