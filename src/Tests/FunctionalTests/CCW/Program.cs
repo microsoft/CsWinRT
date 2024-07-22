@@ -651,13 +651,13 @@ partial class Language
     }
 }
 
-[BindableCustomProperty([nameof(Name), nameof(Derived)], [typeof(int)])]
+[global::WinRT.BindableCustomProperty([nameof(Name), nameof(Derived)], [typeof(int)])]
 partial class LanguageDervied : Language
 {
     public int Derived { get; } = 4;
 }
 
-[BindableCustomProperty]
+[WinRT.BindableCustomProperty]
 partial class LanguageDervied2 : Language
 {
     public int Derived { get; set; }

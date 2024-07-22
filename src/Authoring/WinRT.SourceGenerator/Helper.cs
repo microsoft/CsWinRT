@@ -452,10 +452,23 @@ namespace Generator
 
         public static bool HasBindableCustomPropertyAttribute(MemberDeclarationSyntax node)
         {
-            bool hasAttribute = node.AttributeLists.SelectMany(list => list.Attributes).
-                Any(attribute => attribute.Name is IdentifierNameSyntax name &&
-                                 name.Identifier.ValueText.EndsWith("BindableCustomProperty"));
-            return hasAttribute;
+            return node.AttributeLists.SelectMany(list => list.Attributes).Any(IsBindableCustomPropertyAttribute);
+
+            // Check based on identifier name if this is the BindableCustomProperty attribute.
+            // Technically this can be a different namespace, but we will confirm later once
+            // we have access to the semantic model.
+            static bool IsBindableCustomPropertyAttribute(AttributeSyntax attribute)
+            {
+                var nameSyntax = attribute.Name;
+                if (nameSyntax is QualifiedNameSyntax qualifiedName)
+                {
+                    // Right would have the attribute while left is the namespace.
+                    nameSyntax = qualifiedName.Right;
+                }
+
+                return nameSyntax is IdentifierNameSyntax name &&
+                       name.Identifier.ValueText == "BindableCustomProperty";
+            }
         }
 
         /// <summary>
