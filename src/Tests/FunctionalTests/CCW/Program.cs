@@ -687,8 +687,6 @@ sealed partial class Language4
     private int Number { get; set; }
 }
 
-// Even though we don't support this, validate we don't
-// generate code that doesn't compile.
 [BindableCustomProperty]
 sealed partial class Language5<T>
 {

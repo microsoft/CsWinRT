@@ -255,7 +255,7 @@ namespace Generator
 
             List<BindableCustomProperty> bindableCustomProperties = new();
 
-            // Make all public properties in the class bindable.
+            // Make all public properties in the class bindable including ones in base type.
             if (attributeData.ConstructorArguments.Length == 0)
             {
                 for (var curSymbol = symbol; curSymbol != null; curSymbol = curSymbol.BaseType)
@@ -268,6 +268,7 @@ namespace Generator
                     }
                 }
             }
+            // Make specified public properties in the class bindable including ones in base type.
             else if (attributeData.ConstructorArguments is
                 [
                     { Kind: TypedConstantKind.Array, Values: [..] propertyNames },
