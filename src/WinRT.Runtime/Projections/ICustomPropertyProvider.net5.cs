@@ -51,6 +51,10 @@ namespace Microsoft.UI.Xaml.Data
         public Microsoft.UI.Xaml.Data.BindableCustomProperty GetProperty(Type indexParameterType);
     }
 
+    /// <summary>
+    /// An <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation that relies on a source generation approach for its implememtation
+    /// rather than reflection.  This is used by the source generator generating the implementation for <see cref="Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation"/>.
+    /// </summary>
     [global::WinRT.WinRTExposedType(typeof(global::ABI.Microsoft.UI.Xaml.Data.ManagedCustomPropertyWinRTTypeDetails))]
 #if EMBED
     internal
@@ -400,19 +404,23 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     return 0;
                 }
 
-                if (RuntimeFeature.IsDynamicCodeCompiled)
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    PropertyInfo propertyInfo = target.GetType().GetProperty(
-                         _name,
-                         BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
-
-                    if (propertyInfo is not null)
-                    {
-                        __result = new ManagedCustomProperty(propertyInfo);
-                    }
-
-                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                    throw new NotSupportedException(
+                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.BindableCustomPropertyAttribute'. " +
+                        $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
                 }
+
+                PropertyInfo propertyInfo = target.GetType().GetProperty(
+                        _name,
+                        BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
+
+                if (propertyInfo is not null)
+                {
+                    __result = new ManagedCustomProperty(propertyInfo);
+                }
+
+                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
             }
             catch (Exception __exception__)
             {
@@ -440,24 +448,28 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     return 0;
                 }
 
-                if (RuntimeFeature.IsDynamicCodeCompiled)
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    PropertyInfo propertyInfo = target.GetType().GetProperty(
-                        _name,
-                        BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public,
-                        null,                                                                   // default binder
-                        null,                                                                   // ignore return type
-                        new Type[] { _type },                                                   // indexed parameter type
-                        null                                                                    // ignore type modifier
-                    );
-
-                    if (propertyInfo is not null)
-                    {
-                        __result = new ManagedCustomProperty(propertyInfo);
-                    }
-
-                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                    throw new NotSupportedException(
+                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.BindableCustomPropertyAttribute'. " +
+                        $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
                 }
+
+                PropertyInfo propertyInfo = target.GetType().GetProperty(
+                    _name,
+                    BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public,
+                    null,                                                                   // default binder
+                    null,                                                                   // ignore return type
+                    new Type[] { _type },                                                   // indexed parameter type
+                    null                                                                    // ignore type modifier
+                );
+
+                if (propertyInfo is not null)
+                {
+                    __result = new ManagedCustomProperty(propertyInfo);
+                }
+
+                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
             }
             catch (Exception __exception__)
             {
