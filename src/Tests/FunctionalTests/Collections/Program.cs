@@ -90,6 +90,15 @@ if (observableCollection != instance.BindableIterableProperty)
     return 101;
 }
 
+var profile = Windows.Networking.Connectivity.NetworkInformation.GetInternetConnectionProfile();
+var names = profile.GetNetworkNames();
+
+List<string> networkNames = new();
+if (names?.Count > 0)
+{
+    networkNames.AddRange(names);
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
