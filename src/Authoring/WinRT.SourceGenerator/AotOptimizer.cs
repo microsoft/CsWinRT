@@ -288,7 +288,10 @@ namespace Generator
             }
         }
 
-        private static string GetRuntimeClassName(INamedTypeSymbol type, Func<ISymbol, bool> isWinRTType)
+        private static string GetRuntimeClassName(
+            INamedTypeSymbol type,
+            Func<ISymbol, TypeMapper, bool> isWinRTType,
+            TypeMapper mapper)
         {
             if (type == null)
             {
@@ -300,7 +303,7 @@ namespace Generator
             {
                 StringBuilder builder = new();
 
-                builder.Append(GetRuntimeClassName(type.OriginalDefinition, isWinRTType));
+                builder.Append(GetRuntimeClassName(type.OriginalDefinition, isWinRTType, mapper));
                 builder.Append("<");
 
                 bool first = true;
@@ -311,7 +314,7 @@ namespace Generator
                         builder.Append(", ");
                     }
 
-                    builder.Append(GetRuntimeClassName(genericArg as INamedTypeSymbol, isWinRTType));
+                    builder.Append(GetRuntimeClassName(genericArg as INamedTypeSymbol, isWinRTType, mapper));
                     first = false;
                 }
 
@@ -331,16 +334,16 @@ namespace Generator
             {
                 return "Int8";
             }
-            else if (GeneratorHelper.MappedCSharpTypes.ContainsKey(metadataName))
+            else if (mapper.HasMappingForType(metadataName))
             {
-                var mapping = GeneratorHelper.MappedCSharpTypes[metadataName].GetMapping();
+                var mapping = mapper.GetMappedType(metadataName).GetMapping();
                 return mapping.Item1 + "." + mapping.Item2;
             }
             else if (type.SpecialType != SpecialType.None)
             {
                 return type.Name;
             }
-            else if (isWinRTType(type))
+            else if (isWinRTType(type, mapper))
             {
                 return metadataName;
             }
@@ -475,7 +478,7 @@ namespace Generator
                 symbol is IArrayTypeSymbol,
                 isDelegate,
                 symbol.DeclaredAccessibility == Accessibility.Public,
-                GetRuntimeClassName(interfaceToUseForRuntimeClassName, type => isWinRTType(type, mapper)));
+                GetRuntimeClassName(interfaceToUseForRuntimeClassName, isWinRTType, mapper));
 
             void AddGenericInterfaceInstantiation(INamedTypeSymbol iface)
             {
