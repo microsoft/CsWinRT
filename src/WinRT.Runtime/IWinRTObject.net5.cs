@@ -39,7 +39,8 @@ namespace WinRT
         {
             if (!FeatureSwitches.EnableIDynamicInterfaceCastableSupport)
             {
-                throw new NotSupportedException($"Support for 'IDynamicInterfaceCastable' is disabled (make sure that the 'CsWinRTEnableIDynamicInterfaceCastableSupport' property is not set to 'false').");
+                return throwIfNotImplemented ? 
+                    throw new NotSupportedException($"Support for 'IDynamicInterfaceCastable' is disabled (make sure that the 'CsWinRTEnableIDynamicInterfaceCastableSupport' property is not set to 'false').") : false;
             }
 
             if (QueryInterfaceCache.ContainsKey(interfaceType))
@@ -67,7 +68,7 @@ namespace WinRT
 #if NET
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type '{type}'.");
+                    return throwIfNotImplemented ? throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type '{type}'.") : false;
                 }
 #endif
 
@@ -103,7 +104,7 @@ namespace WinRT
 #if NET
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type '{type}'.");
+                    return throwIfNotImplemented ? throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type '{type}'.") : false;
                 }
 #endif
 
@@ -204,7 +205,7 @@ namespace WinRT
 #if NET
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    throw new NotSupportedException($"Cannot construct an object reference for vtable type '{vftblType}'.");
+                    return throwIfNotImplemented ? throw new NotSupportedException($"Cannot construct an object reference for vtable type '{vftblType}'.") : false;
                 }
 #endif
 
