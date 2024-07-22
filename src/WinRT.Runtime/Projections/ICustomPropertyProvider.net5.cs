@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -411,16 +412,25 @@ namespace ABI.Microsoft.UI.Xaml.Data
                         $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
                 }
 
-                PropertyInfo propertyInfo = target.GetType().GetProperty(
-                        _name,
-                        BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
+                GetCustomPropertyForJit(target, _name, result);
 
-                if (propertyInfo is not null)
+                [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void GetCustomPropertyForJit(object target, string name, IntPtr* result)
                 {
-                    __result = new ManagedCustomProperty(propertyInfo);
-                }
+                    global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
 
-                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                    PropertyInfo propertyInfo = target.GetType().GetProperty(
+                            name,
+                            BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
+
+                    if (propertyInfo is not null)
+                    {
+                        __result = new ManagedCustomProperty(propertyInfo);
+                    }
+
+                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                }
             }
             catch (Exception __exception__)
             {
@@ -455,21 +465,30 @@ namespace ABI.Microsoft.UI.Xaml.Data
                         $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
                 }
 
-                PropertyInfo propertyInfo = target.GetType().GetProperty(
-                    _name,
-                    BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public,
-                    null,                                                                   // default binder
-                    null,                                                                   // ignore return type
-                    new Type[] { _type },                                                   // indexed parameter type
-                    null                                                                    // ignore type modifier
-                );
+                GetCustomPropertyForJit(target, _name, _type, result);
 
-                if (propertyInfo is not null)
+                [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void GetCustomPropertyForJit(object target, string name, Type type, IntPtr* result)
                 {
-                    __result = new ManagedCustomProperty(propertyInfo);
-                }
+                    global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
 
-                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                    PropertyInfo propertyInfo = target.GetType().GetProperty(
+                        name,
+                        BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public,
+                        null,                                                                   // default binder
+                        null,                                                                   // ignore return type
+                        new Type[] { type },                                                    // indexed parameter type
+                        null                                                                    // ignore type modifier
+                    );
+
+                    if (propertyInfo is not null)
+                    {
+                        __result = new ManagedCustomProperty(propertyInfo);
+                    }
+
+                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                }
             }
             catch (Exception __exception__)
             {
