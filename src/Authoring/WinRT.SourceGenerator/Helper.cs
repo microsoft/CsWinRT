@@ -605,6 +605,10 @@ namespace Generator
             {
                 return "IntPtr";
             }
+            else if (typeStr == "System.Exception")
+            {
+                return "ABI.System.Exception";
+            }
 
             if (type.IsValueType)
             {
