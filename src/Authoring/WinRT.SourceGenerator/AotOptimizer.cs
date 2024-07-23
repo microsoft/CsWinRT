@@ -101,6 +101,15 @@ namespace Generator
                 GenerateCCWForGenericInstantiation);
 
             context.RegisterImplementationSourceOutput(vtablesToAddOnLookupTable.Collect().Combine(properties), GenerateVtableLookupTable);
+
+            var bindableCustomPropertyAttributes = context.SyntaxProvider.CreateSyntaxProvider(
+                    static (n, _) => NeedCustomPropertyImplementation(n),
+                    static (n, _) => n)
+                .Select((data, _) => GetBindableCustomProperties(data))
+                .Where(static bindableCustomProperties => bindableCustomProperties != default)
+                .Collect()
+                .Combine(properties);
+            context.RegisterImplementationSourceOutput(bindableCustomPropertyAttributes, GenerateBindableCustomProperties);
         }
 
         // Restrict to non-projected classes which can be instantiated
@@ -121,6 +130,14 @@ namespace Generator
                 !declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword)) &&
                 declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)) &&
                 !GeneratorHelper.IsWinRTType(declaration); // Making sure it isn't an RCW we are projecting.
+        }
+
+        private static bool NeedCustomPropertyImplementation(SyntaxNode node)
+        {
+            return node is ClassDeclarationSyntax declaration &&
+                !declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword)) &&
+                declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)) &&
+                GeneratorHelper.HasBindableCustomPropertyAttribute(declaration);
         }
 
         private static (VtableAttribute, EquatableArray<VtableAttribute>) GetVtableAttributeToAdd(
@@ -223,6 +240,117 @@ namespace Generator
 
             return default;
         }
+
+#nullable enable
+        private static BindableCustomProperties GetBindableCustomProperties(GeneratorSyntaxContext context)
+        {
+            var symbol = context.SemanticModel.GetDeclaredSymbol((ClassDeclarationSyntax)context.Node)!;
+            INamedTypeSymbol bindableCustomPropertyAttributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName("WinRT.BindableCustomPropertyAttribute")!;
+
+            if (bindableCustomPropertyAttributeSymbol is null ||
+                !symbol.TryGetAttributeWithType(bindableCustomPropertyAttributeSymbol, out AttributeData? attributeData))
+            {
+                return default;
+            }
+
+            List<BindableCustomProperty> bindableCustomProperties = new();
+
+            // Make all public properties in the class bindable including ones in base type.
+            if (attributeData.ConstructorArguments.Length == 0)
+            {
+                for (var curSymbol = symbol; curSymbol != null; curSymbol = curSymbol.BaseType)
+                {
+                    foreach (var propertySymbol in curSymbol.GetMembers().
+                        Where(m => m.Kind == SymbolKind.Property &&
+                                    m.DeclaredAccessibility == Accessibility.Public))
+                    {
+                        AddProperty(propertySymbol);
+                    }
+                }
+            }
+            // Make specified public properties in the class bindable including ones in base type.
+            else if (attributeData.ConstructorArguments is
+                [
+                    { Kind: TypedConstantKind.Array, Values: [..] propertyNames },
+                    { Kind: TypedConstantKind.Array, Values: [..] propertyIndexerTypes }
+                ])
+            {
+                for (var curSymbol = symbol; curSymbol != null; curSymbol = curSymbol.BaseType)
+                {
+                    foreach (var member in curSymbol.GetMembers())
+                    {
+                        if (member is IPropertySymbol propertySymbol &&
+                            member.DeclaredAccessibility == Accessibility.Public)
+                        {
+                            if (!propertySymbol.IsIndexer &&
+                                propertyNames.Any(p => p.Value is string value && value == propertySymbol.Name))
+                            {
+                                AddProperty(propertySymbol);
+                            }
+                            else if (propertySymbol.IsIndexer &&
+                                     // ICustomProperty only supports single indexer parameter.
+                                     propertySymbol.Parameters.Length == 1 &&
+                                     propertyIndexerTypes.Any(p => p.Value is ISymbol typeSymbol && typeSymbol.Equals(propertySymbol.Parameters[0].Type, SymbolEqualityComparer.Default)))
+                            {
+                                AddProperty(propertySymbol);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var typeName = ToFullyQualifiedString(symbol);
+            bool isGlobalNamespace = symbol.ContainingNamespace == null || symbol.ContainingNamespace.IsGlobalNamespace;
+            var @namespace = symbol.ContainingNamespace?.ToDisplayString();
+            if (!isGlobalNamespace)
+            {
+                typeName = typeName[(@namespace!.Length + 1)..];
+            }
+
+            EquatableArray<TypeInfo> classHierarchy = ImmutableArray<TypeInfo>.Empty;
+
+            // Gather the type hierarchy, only if the type is nested (as an optimization)
+            if (symbol.ContainingType is not null)
+            {
+                List<TypeInfo> hierarchyList = new();
+
+                for (ITypeSymbol parent = symbol; parent is not null; parent = parent.ContainingType)
+                {
+                    hierarchyList.Add(new TypeInfo(
+                        parent.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
+                        parent.TypeKind,
+                        parent.IsRecord));
+                }
+
+                classHierarchy = ImmutableArray.CreateRange(hierarchyList);
+            }
+
+            return new BindableCustomProperties(
+                @namespace,
+                isGlobalNamespace,
+                typeName,
+                classHierarchy,
+                ToFullyQualifiedString(symbol),
+                bindableCustomProperties.ToImmutableArray());
+
+            void AddProperty(ISymbol symbol)
+            {
+                if (symbol is IPropertySymbol propertySymbol)
+                {
+                    bindableCustomProperties.Add(new BindableCustomProperty(
+                        propertySymbol.MetadataName,
+                        ToFullyQualifiedString(propertySymbol.Type),
+                        // Make sure the property accessors are also public even if property itself is public.
+                        propertySymbol.GetMethod != null && propertySymbol.GetMethod.DeclaredAccessibility == Accessibility.Public,
+                        propertySymbol.SetMethod != null && propertySymbol.SetMethod.DeclaredAccessibility == Accessibility.Public,
+                        propertySymbol.IsIndexer,
+                        propertySymbol.IsIndexer ? ToFullyQualifiedString(propertySymbol.Parameters[0].Type) : "",
+                        propertySymbol.IsStatic
+                        ));
+                }
+            }
+        }
+#nullable disable
 
         private static string ToFullyQualifiedString(ISymbol symbol)
         {
@@ -1278,6 +1406,119 @@ namespace Generator
                 addSource($"WinRT{classPrefix}GlobalVtableLookup.g.cs", source.ToString());
             }
         }
+
+        private static void GenerateBindableCustomProperties(
+            SourceProductionContext sourceProductionContext,
+            (ImmutableArray<BindableCustomProperties> bindableCustomProperties, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties) value)
+        {
+            if (!value.properties.isCsWinRTAotOptimizerEnabled || value.bindableCustomProperties.Length == 0)
+            {
+                return;
+            }
+
+            StringBuilder source = new();
+
+            foreach (var bindableCustomProperties in value.bindableCustomProperties)
+            {
+                if (!bindableCustomProperties.IsGlobalNamespace)
+                {
+                    source.AppendLine($$"""
+                        namespace {{bindableCustomProperties.Namespace}}
+                        {
+                        """);
+                }
+
+                var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(bindableCustomProperties.ClassName);
+
+                ReadOnlySpan<TypeInfo> classHierarchy = bindableCustomProperties.ClassHierarchy.AsSpan();
+                // If the type is nested, correctly nest the type definition
+                for (int i = classHierarchy.Length - 1; i > 0; i--)
+                {
+                    source.AppendLine($$"""
+                                partial {{classHierarchy[i].GetTypeKeyword()}} {{classHierarchy[i].QualifiedName}}
+                                {
+                                """);
+                }
+
+                source.AppendLine($$"""
+                            partial class {{(classHierarchy.IsEmpty ? bindableCustomProperties.ClassName : classHierarchy[0].QualifiedName)}} : global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation
+                            {
+                                global::Microsoft.UI.Xaml.Data.BindableCustomProperty global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation.GetProperty(string name)
+                                {
+                            """);
+
+                foreach (var property in bindableCustomProperties.Properties.Where(p => !p.IsIndexer))
+                {
+                    var instanceAccessor = property.IsStatic ? bindableCustomProperties.QualifiedClassName : $$"""(({{bindableCustomProperties.QualifiedClassName}})instance)""";
+
+                    source.AppendLine($$"""
+                                if (name == "{{property.Name}}")
+                                {
+                                    return new global::Microsoft.UI.Xaml.Data.BindableCustomProperty(
+                                        {{GetBoolAsString(property.CanRead)}},
+                                        {{GetBoolAsString(property.CanWrite)}},
+                                        "{{property.Name}}",
+                                        typeof({{property.Type}}),
+                                        {{ (property.CanRead ? $$"""static (instance) => {{instanceAccessor}}.{{property.Name}}""" : "null") }},
+                                        {{ (property.CanWrite ? $$"""static (instance, value) => {{instanceAccessor}}.{{property.Name}} = ({{property.Type}})value""" : "null") }},
+                                        null,
+                                        null);
+                                }
+                        """);
+                }
+
+                source.AppendLine($$"""
+                        return default;
+                    }
+
+                    global::Microsoft.UI.Xaml.Data.BindableCustomProperty global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation.GetProperty(global::System.Type indexParameterType)
+                    {
+                """);
+
+                foreach (var property in bindableCustomProperties.Properties.Where(p => p.IsIndexer))
+                {
+                    var instanceAccessor = property.IsStatic ? bindableCustomProperties.QualifiedClassName : $$"""(({{bindableCustomProperties.QualifiedClassName}})instance)""";
+
+                    source.AppendLine($$"""
+                                if (indexParameterType == typeof({{property.IndexerType}}))
+                                {
+                                    return new global::Microsoft.UI.Xaml.Data.BindableCustomProperty(
+                                        {{GetBoolAsString(property.CanRead)}},
+                                        {{GetBoolAsString(property.CanWrite)}},
+                                        "{{property.Name}}",
+                                        typeof({{property.Type}}),
+                                        null,
+                                        null,
+                                        {{ (property.CanRead ? $$"""static (instance, index) => {{instanceAccessor}}[({{property.IndexerType}})index]""" : "null") }},
+                                        {{ (property.CanWrite ? $$"""static (instance, value, index) => {{instanceAccessor}}[({{property.IndexerType}})index] = ({{property.Type}})value""" : "null") }});
+                                }
+                        """);
+                }
+
+                source.AppendLine($$"""
+                        return default;
+                    }
+                }
+                """);
+
+                // Close all brackets
+                for (int i = classHierarchy.Length - 1; i > 0; i--)
+                {
+                    source.AppendLine("}");
+                }
+
+                if (!bindableCustomProperties.IsGlobalNamespace)
+                {
+                    source.AppendLine($@"}}");
+                }
+
+                source.AppendLine();
+            }
+
+            sourceProductionContext.AddSource("WinRTCustomBindableProperties.g.cs", source.ToString());
+
+            static string GetBoolAsString(bool value) => value ? "true" : "false";
+        }
     }
 
     internal readonly record struct GenericParameter(
@@ -1302,6 +1543,23 @@ namespace Generator
         bool IsDelegate,
         bool IsPublic,
         string RuntimeClassName = default);
+
+    internal readonly record struct BindableCustomProperty(
+        string Name,
+        string Type,
+        bool CanRead,
+        bool CanWrite,
+        bool IsIndexer,
+        string IndexerType,
+        bool IsStatic);
+
+    internal readonly record struct BindableCustomProperties(
+        string Namespace,
+        bool IsGlobalNamespace,
+        string ClassName,
+        EquatableArray<TypeInfo> ClassHierarchy,
+        string QualifiedClassName,
+        EquatableArray<BindableCustomProperty> Properties);
 
     /// <summary>
     /// A model describing a type info in a type hierarchy.

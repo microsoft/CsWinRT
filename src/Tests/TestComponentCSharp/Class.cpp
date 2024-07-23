@@ -1461,6 +1461,11 @@ namespace winrt::TestComponentCSharp::implementation
         _intColl = value;
     }
 
+    void Class::SetCharIterable(IIterable<char16_t> const& value)
+    {
+        _charColl = value;
+    }
+
     IBindableIterable Class::BindableIterableProperty()
     {
         return _bindableIterable;
@@ -1551,6 +1556,67 @@ namespace winrt::TestComponentCSharp::implementation
     IBindableObservableVector Class::GetBindableObservableVector(IBindableObservableVector vector)
     {
         return winrt::make<bindable_observable_vector>(vector);
+    }
+
+    bool Class::ValidateBindableProperty(
+        WF::IInspectable const& bindableObject,
+        hstring property,
+        Windows::UI::Xaml::Interop::TypeName const& indexerType,
+        bool validateOnlyExists,
+        bool canRead,
+        bool canWrite,
+        bool isIndexer,
+        Windows::UI::Xaml::Interop::TypeName const& type,
+        WF::IInspectable const& indexerValue,
+        WF::IInspectable const& setValue,
+        WF::IInspectable& retrievedValue)
+    {
+        auto customPropertyProvider = bindableObject.as<ICustomPropertyProvider>();
+        auto customProperty = !isIndexer ? customPropertyProvider.GetCustomProperty(property) : customPropertyProvider.GetIndexedProperty(property, indexerType);
+        if (customProperty == nullptr)
+		{
+            return false;
+		}
+
+        if (validateOnlyExists)
+        {
+            return true;
+        }
+
+        if (customProperty.Name() != property ||
+            customProperty.CanRead() != canRead ||
+            customProperty.CanWrite() != canWrite ||
+            customProperty.Type() != type)
+        {
+            return false;
+        }
+
+        if (!isIndexer)
+        {
+            if (customProperty.CanRead())
+            {
+                retrievedValue = customProperty.GetValue(bindableObject);
+            }
+
+            if (customProperty.CanWrite())
+            {
+                customProperty.SetValue(bindableObject, setValue);
+            }
+        }
+        else
+        {
+            if (customProperty.CanRead())
+            {
+                retrievedValue = customProperty.GetIndexedValue(bindableObject, indexerValue);
+            }
+
+            if (customProperty.CanWrite())
+            {
+                customProperty.SetIndexedValue(bindableObject, setValue, indexerValue);
+            }
+        }
+
+        return true;
     }
 
     void Class::CopyProperties(winrt::TestComponentCSharp::IProperties1 const& src)

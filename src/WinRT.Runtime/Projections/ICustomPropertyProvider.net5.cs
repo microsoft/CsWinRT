@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 
@@ -13,7 +15,7 @@ namespace Microsoft.UI.Xaml.Data
     [global::WinRT.WindowsRuntimeType]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Microsoft.UI.Xaml.Data.ICustomProperty))]
     [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
-    interface ICustomProperty
+    internal interface ICustomProperty
     {
         object GetValue(object target);
         void SetValue(object target, object value);
@@ -23,6 +25,105 @@ namespace Microsoft.UI.Xaml.Data
         bool CanWrite { get; }
         string Name { get; }
         global::System.Type Type { get; }
+    }
+
+    /// <summary>
+    /// An interface complementing <see cref="BindableCustomPropertyAttribute"/> providing the implementation to expose the specified properties.
+    /// </summary>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    interface IBindableCustomPropertyImplementation
+    {
+        /// <summary>
+        /// Get the generated <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation representing the specified property name.
+        /// </summary>
+        /// <param name="name">The name of the property to get.</param>
+        /// <returns>The <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for the property specified by <paramref name="name"/>.</returns>
+        public Microsoft.UI.Xaml.Data.BindableCustomProperty GetProperty(string name);
+
+        /// <summary>
+        /// Get the generated <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation representing the specified index property type.
+        /// </summary>
+        /// <param name="indexParameterType">The index property to get.</param>
+        /// <returns>The <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for the property specified by <paramref name="indexParameterType"/>.</returns>
+        public Microsoft.UI.Xaml.Data.BindableCustomProperty GetProperty(Type indexParameterType);
+    }
+
+    /// <summary>
+    /// An <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation that relies on a source generation approach for its implememtation
+    /// rather than reflection.  This is used by the source generator generating the implementation for <see cref="Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation"/>.
+    /// </summary>
+    [global::WinRT.WinRTExposedType(typeof(global::ABI.Microsoft.UI.Xaml.Data.ManagedCustomPropertyWinRTTypeDetails))]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class BindableCustomProperty : ICustomProperty
+    {
+        private readonly bool _canRead;
+        private readonly bool _canWrite;
+        private readonly string _name;
+        private readonly Type _type;
+        private readonly Func<object, object> _getValue;
+        private readonly Action<object, object> _setValue;
+        private readonly Func<object, object, object> _getIndexedValue;
+        private readonly Action<object, object, object> _setIndexedValue;
+
+        public BindableCustomProperty(
+            bool canRead,
+            bool canWrite,
+            string name,
+            Type type,
+            Func<object, object> getValue,
+            Action<object, object> setValue,
+            Func<object, object, object> getIndexedValue,
+            Action<object, object, object> setIndexedValue)
+        {
+            _canRead = canRead;
+            _canWrite = canWrite;
+            _name = name;
+            _type = type;
+            _getValue = getValue;
+            _setValue = setValue;
+            _getIndexedValue = getIndexedValue;
+            _setIndexedValue = setIndexedValue;
+        }
+
+        bool ICustomProperty.CanRead => _canRead;
+
+        bool ICustomProperty.CanWrite => _canWrite;
+
+        string ICustomProperty.Name => _name;
+
+        Type ICustomProperty.Type => _type;
+
+        object ICustomProperty.GetIndexedValue(object target, object index) => _getIndexedValue != null ? _getIndexedValue(target, index) : throw new NotImplementedException();
+
+        object ICustomProperty.GetValue(object target) => _getValue != null ? _getValue(target) : throw new NotImplementedException();
+
+        void ICustomProperty.SetIndexedValue(object target, object value, object index)
+        {
+            if (_setIndexedValue == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            _setIndexedValue(target, value, index);
+        }
+
+        void ICustomProperty.SetValue(object target, object value)
+        {
+            if (_setValue == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            _setValue(target, value);
+        }
     }
 }
 
@@ -289,7 +390,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
 
         [UnmanagedCallersOnly]
-
         private static unsafe int Do_Abi_GetCustomProperty_0(IntPtr thisPtr, IntPtr name, IntPtr* result)
         {
             global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
@@ -297,17 +397,40 @@ namespace ABI.Microsoft.UI.Xaml.Data
             {
                 string _name = MarshalString.FromAbi(name);
                 object target = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
-                PropertyInfo propertyInfo = target.GetType().GetProperty(
-                     _name,
-                     BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
 
-                if (propertyInfo is object)
+                if (target is global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation bindableCustomPropertyImplementation)
                 {
-                    __result = new ManagedCustomProperty(propertyInfo);
+                    __result = bindableCustomPropertyImplementation.GetProperty(_name);
+                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                    return 0;
                 }
-                
-                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
 
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException(
+                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.BindableCustomPropertyAttribute'. " +
+                        $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
+                }
+
+                GetCustomPropertyForJit(target, _name, result);
+
+                [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void GetCustomPropertyForJit(object target, string name, IntPtr* result)
+                {
+                    global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
+
+                    PropertyInfo propertyInfo = target.GetType().GetProperty(
+                            name,
+                            BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
+
+                    if (propertyInfo is not null)
+                    {
+                        __result = new ManagedCustomProperty(propertyInfo);
+                    }
+
+                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                }
             }
             catch (Exception __exception__)
             {
@@ -318,29 +441,54 @@ namespace ABI.Microsoft.UI.Xaml.Data
         }
 
         [UnmanagedCallersOnly]
-
         private static unsafe int Do_Abi_GetIndexedProperty_1(IntPtr thisPtr, IntPtr name, global::ABI.System.Type type, IntPtr* result)
         {
             global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
             try
             {
                 string _name = MarshalString.FromAbi(name);
-                object target = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
-                PropertyInfo propertyInfo = target.GetType().GetProperty(
-                    _name,
-                    BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public,
-                    null,                                                                   // default binder
-                    null,                                                                   // ignore return type
-                    new Type[] { global::ABI.System.Type.FromAbi(type) },                   // indexed parameter type
-                    null                                                                    // ignore type modifier
-                    );
+                Type _type = global::ABI.System.Type.FromAbi(type);
 
-                if (propertyInfo is object)
+                object target = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
+
+                if (target is global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation bindableCustomPropertyImplementation)
                 {
-                    __result = new ManagedCustomProperty(propertyInfo);
+                    __result = bindableCustomPropertyImplementation.GetProperty(_type);
+                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                    return 0;
                 }
 
-                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException(
+                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.BindableCustomPropertyAttribute'. " +
+                        $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
+                }
+
+                GetCustomPropertyForJit(target, _name, _type, result);
+
+                [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void GetCustomPropertyForJit(object target, string name, Type type, IntPtr* result)
+                {
+                    global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
+
+                    PropertyInfo propertyInfo = target.GetType().GetProperty(
+                        name,
+                        BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public,
+                        null,                                                                   // default binder
+                        null,                                                                   // ignore return type
+                        new Type[] { type },                                                    // indexed parameter type
+                        null                                                                    // ignore type modifier
+                    );
+
+                    if (propertyInfo is not null)
+                    {
+                        __result = new ManagedCustomProperty(propertyInfo);
+                    }
+
+                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                }
             }
             catch (Exception __exception__)
             {
@@ -351,7 +499,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
         }
 
         [UnmanagedCallersOnly]
-
         private static unsafe int Do_Abi_GetStringRepresentation_2(IntPtr thisPtr, IntPtr* result)
         {
             string __result = default;
@@ -369,7 +516,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
         }
 
         [UnmanagedCallersOnly]
-
         private static unsafe int Do_Abi_get_Type_3(IntPtr thisPtr, global::ABI.System.Type* value)
         {
             global::System.Type __value = default;
