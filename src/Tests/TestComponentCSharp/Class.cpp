@@ -1579,9 +1579,9 @@ namespace winrt::TestComponentCSharp::implementation
 		}
 
         if (validateOnlyExists)
-		{
-			return true;
-		}
+        {
+            return true;
+        }
 
         if (customProperty.Name() != property ||
             customProperty.CanRead() != canRead ||
