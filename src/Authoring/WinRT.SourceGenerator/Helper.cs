@@ -659,6 +659,17 @@ namespace Generator
                     return "global::ABI.System.Type";
                 }
             }
+            else if (type == "System.Exception" || type == "Exception")
+            {
+                if (isArray)
+                {
+                    return "MarshalNonBlittable<global::System.Exception>";
+                }
+                else
+                {
+                    return "global::ABI.System.Exception";
+                }
+            }
             else if (type == "System.Object" || type == "object")
             {
                 return "MarshalInspectable<object>";

@@ -159,6 +159,7 @@ namespace ABI.System
         public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.Uri>.MarshalerArray array) => MarshalInterfaceHelper<global::System.Uri>.DisposeMarshalerArray(array);
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
+        public static void DisposeAbiArray(object box) => MarshalInterfaceHelper<global::System.Uri>.DisposeAbiArray(box);
 
         public static string GetGuidSignature()
         {

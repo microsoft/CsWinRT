@@ -99,6 +99,16 @@ if (names?.Count > 0)
     networkNames.AddRange(names);
 }
 
+var exceptionList = new List<Exception>();
+instance.BindableIterableProperty = exceptionList;
+if (exceptionList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+// Test for collection expression
+// instance.SetCharIterable(['c']);
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));

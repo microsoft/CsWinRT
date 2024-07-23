@@ -1002,6 +1002,21 @@ namespace winrt::TestComponentCSharp::implementation
         std::copy(_ints.begin(), _ints.end(), ints.begin());
     }
 
+    com_array<winrt::hresult> Class::GetAndSetHResults(array_view<winrt::hresult const> hresults)
+    {
+        return com_array<winrt::hresult>(hresults.begin(), hresults.end());
+    }
+
+    com_array<winrt::Windows::Foundation::Uri> Class::GetAndSetUris(array_view<winrt::Windows::Foundation::Uri const> uris)
+    {
+        return com_array<winrt::Windows::Foundation::Uri>(uris.begin(), uris.end());
+    }
+
+    com_array<winrt::Windows::Foundation::DateTime> Class::GetAndSetDateTimes(array_view<winrt::Windows::Foundation::DateTime const> datetime)
+    {
+        return com_array<winrt::Windows::Foundation::DateTime>(datetime.begin(), datetime.end());
+    }
+
     IVectorView<int32_t> Class::GetIntVector()
     {
         return winrt::single_threaded_vector_view(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
