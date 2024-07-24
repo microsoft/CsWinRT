@@ -668,7 +668,8 @@ namespace WinRT
                 DisposeMarshaler = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
                 DisposeAbi = ABI.System.NonBlittableMarshallingStubs.NoOpFunc;
             }
-            else if (typeof(T).IsValueType)
+            else if (typeof(T).IsValueType ||
+                     typeof(T) == typeof(Exception))
             {
                 // Value types can have custom marshaller types and use value types in places where we can't construct
                 // delegates in the same efficient way as with reference types. Use the fallback path in this case
@@ -2026,7 +2027,8 @@ namespace WinRT
                 DisposeMarshalerArray = new Action<object>(ABI.System.Type.DisposeMarshalerArray);
                 DisposeAbiArray = new Action<object>(ABI.System.Type.DisposeAbiArray);
             }
-            else if (typeof(T).IsValueType)
+            else if (typeof(T).IsValueType || 
+                     typeof(T) == typeof(Exception))
             {
                 if (typeof(T) == typeof(bool))
                 {

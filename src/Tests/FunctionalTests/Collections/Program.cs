@@ -106,8 +106,19 @@ if (exceptionList != instance.BindableIterableProperty)
     return 101;
 }
 
-// Test for collection expression
-// instance.SetCharIterable(['c']);
+var uriList = new List<Uri>();
+instance.BindableIterableProperty = uriList;
+if (uriList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var dateTimeOffsetList = new List<System.DateTimeOffset>();
+instance.BindableIterableProperty = dateTimeOffsetList;
+if (dateTimeOffsetList != instance.BindableIterableProperty)
+{
+    return 101;
+}
 
 return 100;
 
