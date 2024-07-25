@@ -99,6 +99,11 @@ if (names?.Count > 0)
     networkNames.AddRange(names);
 }
 
+if (names is IList<double> networkNamesList)
+{
+    return 101;
+}
+
 var exceptionList = new List<Exception>();
 instance.BindableIterableProperty = exceptionList;
 if (exceptionList != instance.BindableIterableProperty)

@@ -167,7 +167,21 @@ namespace WinRT
                 return false;
             }
 
-            Type helperType = type.FindHelperType();
+            Type helperType;
+            try
+            {
+                helperType = type.FindHelperType();
+            }
+            catch (Exception)
+            {
+                if (throwIfNotImplemented)
+                {
+                    throw;
+                }
+
+                return false;
+            }
+
             if (helperType is null || !helperType.IsInterface)
             {
                 return false;
