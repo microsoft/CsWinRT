@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using TestComponentCSharp;
@@ -68,6 +70,10 @@ instance.InvokeEvent0();
 // fired twice.
 events_expected += 3;
 
+instance.PropertyChangedEventHandler += (object sender, PropertyChangedEventArgs args) =>
+{
+};
+
 ProvideInt s = () => 4;
 instance.ObjectProperty = s;
 bool boxedDelegateMatches = ((ProvideInt)instance.ObjectProperty) == s;
@@ -86,6 +92,9 @@ boxedDelegateMatches &= ((System.EventHandler<CancellationToken>)instance.Object
 
 TestDelegate[] arr = new TestDelegate[] { t, t };
 instance.ObjectProperty = arr;
+
+NotifyCollectionChangedEventHandler n = (object sender, NotifyCollectionChangedEventArgs args) => { };
+instance.ObjectProperty = n;
 
 return events_received == events_expected && uriMatches && boxedDelegateMatches ? 100 : 101;
 

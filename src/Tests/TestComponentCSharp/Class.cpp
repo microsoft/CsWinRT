@@ -422,6 +422,16 @@ namespace winrt::TestComponentCSharp::implementation
         _returnEvent(arg0);
         return arg0;
     }
+
+    winrt::event_token Class::PropertyChangedEventHandler(winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
+    {
+        return _propertyChangedEventHandler.add(handler);
+    }
+    void Class::PropertyChangedEventHandler(winrt::event_token const& token) noexcept
+    {
+        _propertyChangedEventHandler.remove(token);
+    }
+
     winrt::guid Class::TestReturnGuid(winrt::guid const& arg)
     {
         return arg;

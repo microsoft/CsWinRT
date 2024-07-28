@@ -206,6 +206,7 @@ namespace TestComponentCSharp
         event EventWithReturn ReturnEvent;
         Int32 InvokeReturnEvent(Int32 arg0);
         Guid TestReturnGuid(Guid arg);
+        event Microsoft.UI.Xaml.Data.PropertyChangedEventHandler PropertyChangedEventHandler;
 
         Int32 IntProperty;
         event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;

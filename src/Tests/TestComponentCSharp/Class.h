@@ -24,6 +24,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>>> _nestedEvent;
         winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>>> _nestedTypedEvent;
         winrt::event<TestComponentCSharp::EventWithReturn> _returnEvent;
+        winrt::event<winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventHandler> _propertyChangedEventHandler;
 
         Windows::Foundation::Collections::IVector<Windows::Foundation::IInspectable> GetUriVectorAsIInspectableVector();
 
@@ -139,6 +140,9 @@ namespace winrt::TestComponentCSharp::implementation
         void ReturnEvent(winrt::event_token const& token) noexcept;
         int32_t InvokeReturnEvent(int32_t const& arg0);
         winrt::guid TestReturnGuid(winrt::guid const& arg);
+
+        winrt::event_token PropertyChangedEventHandler(winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventHandler const& handler);
+        void PropertyChangedEventHandler(winrt::event_token const& token) noexcept;
 
         int32_t IntProperty();
         void IntProperty(int32_t value);
