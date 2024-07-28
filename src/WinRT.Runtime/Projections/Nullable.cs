@@ -2119,6 +2119,42 @@ namespace ABI.System
             }
 #pragma warning restore IL3050
         }
+
+        public static global::System.Type GetTypeAsNullableType(global::System.Type type)
+        {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReference<T>' is not enabled.");
+            }
+
+            if (type == typeof(int)) return typeof(global::System.Nullable<int>);
+            if (type == typeof(byte)) return typeof(global::System.Nullable<byte>);
+            if (type == typeof(bool)) return typeof(global::System.Nullable<bool>);
+            if (type == typeof(sbyte)) return typeof(global::System.Nullable<sbyte>);
+            if (type == typeof(short)) return typeof(global::System.Nullable<short>);
+            if (type == typeof(ushort)) return typeof(global::System.Nullable<ushort>);
+            if (type == typeof(char)) return typeof(global::System.Nullable<char>);
+            if (type == typeof(uint)) return typeof(global::System.Nullable<uint>);
+            if (type == typeof(long)) return typeof(global::System.Nullable<long>);
+            if (type == typeof(ulong)) return typeof(global::System.Nullable<ulong>);
+            if (type == typeof(float)) return typeof(global::System.Nullable<float>);
+            if (type == typeof(double)) return typeof(global::System.Nullable<double>);
+            if (type == typeof(Guid)) return typeof(global::System.Nullable<Guid>);
+            if (type == typeof(global::System.TimeSpan)) return typeof(global::System.Nullable<global::System.TimeSpan>);
+            if (type == typeof(global::System.DateTimeOffset)) return typeof(global::System.Nullable<global::System.DateTimeOffset>);
+            if (type == typeof(global::Windows.Foundation.Point)) return typeof(global::System.Nullable<global::Windows.Foundation.Point>);
+            if (type == typeof(global::Windows.Foundation.Size)) return typeof(global::System.Nullable<global::Windows.Foundation.Size>);
+            if (type == typeof(global::Windows.Foundation.Rect)) return typeof(global::System.Nullable<global::Windows.Foundation.Rect>);
+            if (type == typeof(global::System.Numerics.Matrix3x2)) return typeof(global::System.Nullable<global::System.Numerics.Matrix3x2>);
+            if (type == typeof(global::System.Numerics.Matrix4x4)) return typeof(global::System.Nullable<global::System.Numerics.Matrix4x4>);
+            if (type == typeof(global::System.Numerics.Plane)) return typeof(global::System.Nullable<global::System.Numerics.Plane>);
+            if (type == typeof(global::System.Numerics.Quaternion)) return typeof(global::System.Nullable<global::System.Numerics.Quaternion>);
+            if (type == typeof(global::System.Numerics.Vector2)) return typeof(global::System.Nullable<global::System.Numerics.Vector2>);
+            if (type == typeof(global::System.Numerics.Vector3)) return typeof(global::System.Nullable<global::System.Numerics.Vector3>);
+            if (type == typeof(global::System.Numerics.Vector4)) return typeof(global::System.Nullable<global::System.Numerics.Vector4>);
+ 
+            return null;
+        }
     }
 
     internal static class IReferenceSignatures
