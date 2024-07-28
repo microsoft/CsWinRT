@@ -2120,6 +2120,7 @@ namespace ABI.System
 #pragma warning restore IL3050
         }
 
+        // Gets the nullable type representation for some built-in known types.
         public static global::System.Type GetTypeAsNullableType(global::System.Type type)
         {
             if (!FeatureSwitches.EnableIReferenceSupport)
