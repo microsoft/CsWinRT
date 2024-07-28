@@ -167,6 +167,38 @@ namespace ABI.System.Collections.Specialized
             }
             return 0;
         }
+
+#if NET
+        [SkipLocalsInit]
+        internal static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            Span<ComWrappers.ComInterfaceEntry> entries = stackalloc ComWrappers.ComInterfaceEntry[3];
+            int count = 0;
+
+            entries[count++] = new ComWrappers.ComInterfaceEntry
+            {
+                IID = IID,
+                Vtable = AbiToProjectionVftablePtr
+            };
+
+            if (FeatureSwitches.EnableIReferenceSupport)
+            {
+                entries[count++] = new ComWrappers.ComInterfaceEntry
+                {
+                    IID = global::WinRT.Interop.IID.IID_IPropertyValue,
+                    Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
+                };
+
+                entries[count++] = new ComWrappers.ComInterfaceEntry
+                {
+                    IID = ABI.System.Nullable_Delegate<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.PIID,
+                    Vtable = ABI.System.Nullable_Delegate<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.AbiToProjectionVftablePtr
+                };
+            }
+
+            return entries.Slice(0, count).ToArray();
+        }
+#endif
     }
 
     internal sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : global::ABI.WinRT.Interop.EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>

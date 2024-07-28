@@ -2079,6 +2079,8 @@ namespace ABI.System
             if (type == typeof(global::System.Numerics.Vector3)) return NullableBlittable<global::System.Numerics.Vector3>.GetValue;
             if (type == typeof(global::System.Numerics.Vector4)) return NullableBlittable<global::System.Numerics.Vector4>.GetValue;
             if (type == typeof(global::System.EventHandler)) return Nullable_EventHandler.GetValue;
+            if (type == typeof(global::System.ComponentModel.PropertyChangedEventHandler)) return Nullable_Delegate<global::System.ComponentModel.PropertyChangedEventHandler>.GetValue;
+            if (type == typeof(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)) return Nullable_Delegate<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.GetValue;
             if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(int)) return (inspectable) => Nullable_IntEnum.GetValue(type, inspectable);
             if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint)) return (inspectable) => Nullable_FlagsEnum.GetValue(type, inspectable);
 
