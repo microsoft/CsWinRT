@@ -177,14 +177,14 @@ namespace Generator
             }
         }
 
-        public static string GetInstantiationInitFunction(string genericInterface, EquatableArray<GenericParameter> genericParameters)
+        public static string GetInstantiationInitFunction(string genericInterface, EquatableArray<GenericParameter> genericParameters, string escapedAssemblyName)
         {
             // Get the class name from a string like System.Collections.Generic.IEnumerator`1.
             // Splitting on the dots and the generic specifier (`) will get us the class name
             // in the 2nd last element.
             var interfaceName = genericInterface.Split('.', '`')[^2];
             var genericParametersStr = string.Join("_", genericParameters.Select(genericParameter => GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType)));
-            return $$"""        _ = global::WinRT.GenericHelpers.{{interfaceName}}_{{genericParametersStr}}.Initialized;""";
+            return $$"""        _ = global::{{escapedAssemblyName}}.WinRT.GenericHelpers.{{interfaceName}}_{{genericParametersStr}}.Initialized;""";
         }
 
         private static string GetIEnumerableInstantiation(string genericType, string abiType)
