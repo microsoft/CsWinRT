@@ -124,6 +124,10 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("NullableException", "6FF27A1E-4B6A-59B7-B2C3-D1F2EE474593", false),
     ("NullableEventHandler", "25230F05-B49C-57EE-8961-5373D98E1AB1", false),
     ("NullableString", "FD416DFB-2A07-52EB-AAE3-DFCE14116C05", false),
+    ("MUX_NullablePropertyChangedEventHandler", "1EEAE0CB-8F57-5C37-A087-A55d46E2FE3F", false),
+    ("WUX_NullablePropertyChangedEventHandler", "B1A920A9-C2F2-5453-A53E-66B1294A8BFE", false),
+    ("MUX_NullableNotifyCollectionChangedEventHandler", "779D5A21-0E7d-5476-BB90-27FA3B4B8DE5", false),
+    ("WUX_NullableNotifyCollectionChangedEventHandler", "A4FD5C6E-6549-59A9-86EF-5A490A1875D9", false),
 };
 
 for (int i = 0; i < entries.Length; i++)

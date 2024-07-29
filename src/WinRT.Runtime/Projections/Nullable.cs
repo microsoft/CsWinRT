@@ -1789,6 +1789,136 @@ namespace ABI.System
         }
     }
 
+    [Guid("1eeae0cb-8f57-5c37-a087-a55d46e2fe3f")]
+    internal static class Nullable_PropertyChangedEventHandler
+    {
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+
+        public static Guid IID => FeatureSwitches.UseWindowsUIXamlProjections 
+            ? global::WinRT.Interop.IID.IID_WUX_NullablePropertyChangedEventHandler 
+            : global::WinRT.Interop.IID.IID_MUX_NullablePropertyChangedEventHandler;
+
+#if !NET
+        private static readonly Nullable_Delegates.GetValueDelegate _Get_Value_0;
+#endif
+
+        unsafe static Nullable_PropertyChangedEventHandler()
+        {
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Nullable_PropertyChangedEventHandler), sizeof(IInspectable.Vftbl) + sizeof(IntPtr));
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+#if !NET
+            ((IntPtr*)AbiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(_Get_Value_0 = Do_Abi_get_Value_0);
+#else
+            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_get_Value_0;
+#endif
+        }
+
+#if NET
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+        private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, IntPtr* __return_value__)
+        {
+            global::System.ComponentModel.PropertyChangedEventHandler ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = global::WinRT.ComWrappersSupport.FindObject<global::System.ComponentModel.PropertyChangedEventHandler>(thisPtr);
+                *__return_value__ = global::ABI.System.ComponentModel.PropertyChangedEventHandler.FromManaged(____return_value__);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        public static unsafe Nullable GetValue(IInspectable inspectable)
+        {
+            Guid iid = IID;
+            IntPtr nullablePtr = IntPtr.Zero;
+            IntPtr __retval = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in iid), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return new Nullable(global::ABI.System.ComponentModel.PropertyChangedEventHandler.FromAbi(__retval));
+            }
+            finally
+            {
+                global::ABI.System.ComponentModel.PropertyChangedEventHandler.DisposeAbi(__retval);
+                Marshal.Release(nullablePtr);
+            }
+        }
+    }
+
+    [Guid("779d5a21-0e7d-5476-bb90-27fa3b4b8de5")]
+    internal static class Nullable_NotifyCollectionChangedEventHandler
+    {
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+
+        public static Guid IID => FeatureSwitches.UseWindowsUIXamlProjections
+            ? global::WinRT.Interop.IID.IID_WUX_NotifyCollectionChangedEventHandler
+            : global::WinRT.Interop.IID.IID_MUX_NotifyCollectionChangedEventHandler;
+
+#if !NET
+        private static readonly Nullable_Delegates.GetValueDelegate _Get_Value_0;
+#endif
+
+        unsafe static Nullable_NotifyCollectionChangedEventHandler()
+        {
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Nullable_NotifyCollectionChangedEventHandler), sizeof(IInspectable.Vftbl) + sizeof(IntPtr));
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+#if !NET
+            ((IntPtr*)AbiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(_Get_Value_0 = Do_Abi_get_Value_0);
+#else
+            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_get_Value_0;
+#endif
+        }
+
+#if NET
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+        private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, IntPtr* __return_value__)
+        {
+            global::System.Collections.Specialized.NotifyCollectionChangedEventHandler ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>(thisPtr);
+                *__return_value__ = global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.FromManaged(____return_value__);
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+
+        public static unsafe Nullable GetValue(IInspectable inspectable)
+        {
+            Guid iid = IID;
+            IntPtr nullablePtr = IntPtr.Zero;
+            IntPtr __retval = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in iid), out nullablePtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+                return new Nullable(global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.FromAbi(__retval));
+            }
+            finally
+            {
+                global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.DisposeAbi(__retval);
+                Marshal.Release(nullablePtr);
+            }
+        }
+    }
+
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
     internal static class Nullable_Delegate<T> where T : global::System.Delegate
     {
@@ -2079,8 +2209,8 @@ namespace ABI.System
             if (type == typeof(global::System.Numerics.Vector3)) return NullableBlittable<global::System.Numerics.Vector3>.GetValue;
             if (type == typeof(global::System.Numerics.Vector4)) return NullableBlittable<global::System.Numerics.Vector4>.GetValue;
             if (type == typeof(global::System.EventHandler)) return Nullable_EventHandler.GetValue;
-            if (type == typeof(global::System.ComponentModel.PropertyChangedEventHandler)) return Nullable_Delegate<global::System.ComponentModel.PropertyChangedEventHandler>.GetValue;
-            if (type == typeof(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)) return Nullable_Delegate<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.GetValue;
+            if (type == typeof(global::System.ComponentModel.PropertyChangedEventHandler)) return Nullable_PropertyChangedEventHandler.GetValue;
+            if (type == typeof(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)) return Nullable_NotifyCollectionChangedEventHandler.GetValue;
             if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(int)) return (inspectable) => Nullable_IntEnum.GetValue(type, inspectable);
             if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint)) return (inspectable) => Nullable_FlagsEnum.GetValue(type, inspectable);
 

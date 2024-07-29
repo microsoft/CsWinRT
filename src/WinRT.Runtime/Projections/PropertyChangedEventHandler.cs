@@ -189,8 +189,8 @@ namespace ABI.System.ComponentModel
 
                 entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_Delegate<global::System.ComponentModel.PropertyChangedEventHandler>.PIID,
-                    Vtable = ABI.System.Nullable_Delegate<global::System.ComponentModel.PropertyChangedEventHandler>.AbiToProjectionVftablePtr
+                    IID = global::ABI.System.Nullable_PropertyChangedEventHandler.IID,
+                    Vtable = global::ABI.System.Nullable_PropertyChangedEventHandler.AbiToProjectionVftablePtr
                 };
             }
 

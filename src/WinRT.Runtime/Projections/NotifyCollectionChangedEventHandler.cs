@@ -191,8 +191,8 @@ namespace ABI.System.Collections.Specialized
 
                 entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
-                    IID = ABI.System.Nullable_Delegate<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.PIID,
-                    Vtable = ABI.System.Nullable_Delegate<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.AbiToProjectionVftablePtr
+                    IID = global::ABI.System.Nullable_NotifyCollectionChangedEventHandler.IID,
+                    Vtable = global::ABI.System.Nullable_NotifyCollectionChangedEventHandler.AbiToProjectionVftablePtr
                 };
             }
 
