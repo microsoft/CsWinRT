@@ -111,6 +111,13 @@ if (exceptionList != instance.BindableIterableProperty)
     return 101;
 }
 
+var exceptionList2 = new List<ArgumentException>();
+instance.BindableIterableProperty = exceptionList2;
+if (exceptionList2 != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
 var uriList = new List<Uri>();
 instance.BindableIterableProperty = uriList;
 if (uriList != instance.BindableIterableProperty)

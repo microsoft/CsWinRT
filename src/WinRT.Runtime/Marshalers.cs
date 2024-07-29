@@ -594,7 +594,7 @@ namespace WinRT
                      typeof(T) == typeof(float) ||
                      typeof(T) == typeof(double) ||
                      typeof(T) == typeof(Guid) ||
-                     typeof(T) == typeof(Exception))
+                     typeof(Exception).IsAssignableFrom(typeof(T)))
             {
                 // Special case some well known primitive types that we know might be constructed
                 // for this type, but not actually used. For these, we just keep all default values.
@@ -2028,7 +2028,7 @@ namespace WinRT
                 DisposeMarshalerArray = new Action<object>(ABI.System.Type.DisposeMarshalerArray);
                 DisposeAbiArray = new Action<object>(ABI.System.Type.DisposeAbiArray);
             }
-            else if (typeof(T) == typeof(Exception))
+            else if (typeof(Exception).IsAssignableFrom(typeof(T)))
             {
                 AbiType = typeof(ABI.System.Exception);
                 CreateMarshaler = (T value) => ABI.System.Exception.CreateMarshaler((Exception)(object)value);
