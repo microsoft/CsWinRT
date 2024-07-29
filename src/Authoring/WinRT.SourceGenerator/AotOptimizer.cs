@@ -988,6 +988,7 @@ namespace Generator
                                     using System;
                                     using System.Runtime.InteropServices;
                                     using System.Runtime.CompilerServices;
+                                    using WinRT;
 
                                     namespace {{escapedAssemblyName}}.WinRT.GenericHelpers
                                     {
@@ -1340,6 +1341,7 @@ namespace Generator
                                     using System; 
                                     using System.Runtime.InteropServices;
                                     using System.Runtime.CompilerServices;
+                                    using WinRT;
 
                                     namespace {{value.properties.escapedAssemblyName}}.WinRT.GenericHelpers
                                     {
