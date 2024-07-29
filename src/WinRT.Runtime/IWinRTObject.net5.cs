@@ -172,13 +172,8 @@ namespace WinRT
             {
                 helperType = type.FindHelperType();
             }
-            catch (Exception)
+            catch (Exception) when(!throwIfNotImplemented)
             {
-                if (throwIfNotImplemented)
-                {
-                    throw;
-                }
-
                 return false;
             }
 
