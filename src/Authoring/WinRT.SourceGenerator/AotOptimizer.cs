@@ -1279,7 +1279,7 @@ namespace Generator
                 }
             }
 
-            if (classType is INamedTypeSymbol namedType && namedType.MetadataName == "ObservableCollection`1")
+            if (classType is INamedTypeSymbol namedType && IsDerivedFromOrIsObservableCollection(namedType))
             {
                 // ObservableCollection make use of an internal built-in type as part of its
                 // implementation for INotifyPropertyChanged.  Handling that manually here.
@@ -1312,6 +1312,12 @@ namespace Generator
                         vtableAttributes.Add(vtableAttribute);
                     }
                 }
+            }
+
+            bool IsDerivedFromOrIsObservableCollection(INamedTypeSymbol namedType)
+            {
+                return namedType.MetadataName == "ObservableCollection`1" || 
+                    (namedType.BaseType is not null && IsDerivedFromOrIsObservableCollection(namedType.BaseType));
             }
         }
 
