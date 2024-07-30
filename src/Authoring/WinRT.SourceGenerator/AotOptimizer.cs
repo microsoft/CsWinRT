@@ -1091,13 +1091,13 @@ namespace Generator
             else if (context.Node is VariableDeclarationSyntax variableDeclaration)
             {
                 var leftSymbol = context.SemanticModel.GetSymbolInfo(variableDeclaration.Type).Symbol;
-                foreach (var variable in variableDeclaration.Variables)
+                if (leftSymbol is INamedTypeSymbol namedType)
                 {
-                    if (variable.Initializer != null)
+                    foreach (var variable in variableDeclaration.Variables)
                     {
-                        var instantiatedType = context.SemanticModel.GetTypeInfo(variable.Initializer.Value);
-                        if (leftSymbol is INamedTypeSymbol namedType)
+                        if (variable.Initializer != null)
                         {
+                            var instantiatedType = context.SemanticModel.GetTypeInfo(variable.Initializer.Value);
                             AddVtableAttributesForType(instantiatedType, namedType);
                         }
                     }
@@ -1106,12 +1106,12 @@ namespace Generator
             // Detect scenarios where the property declaration has an initializer and is to a boxed or cast type during initialization.
             else if (context.Node is PropertyDeclarationSyntax propertyDeclaration)
             {
-                var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
                 if (propertyDeclaration.Initializer != null)
                 {
-                    var instantiatedType = context.SemanticModel.GetTypeInfo(propertyDeclaration.Initializer.Value);
+                    var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
                     if (leftSymbol is INamedTypeSymbol namedType)
                     {
+                        var instantiatedType = context.SemanticModel.GetTypeInfo(propertyDeclaration.Initializer.Value);
                         AddVtableAttributesForType(instantiatedType, namedType);
                     }
                 }
