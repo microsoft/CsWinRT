@@ -93,12 +93,6 @@ namespace Generator
             return false;
         }
 
-        public static string GetAssemblyName(this AnalyzerConfigOptionsProvider provider)
-        {
-            provider.GlobalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
-            return assemblyName;
-        }
-
         public static bool IsCsWinRTComponent(this AnalyzerConfigOptionsProvider provider)
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTComponent", out var isCsWinRTComponentStr))
