@@ -309,13 +309,6 @@ $(CsWinRTInternalProjection)
     </ItemGroup>
   </Target>
 
-  <ItemGroup>
-    <RuntimeHostConfigurationOption Include="CsWinRT.UiXamlMode" Condition="'$(CsWinRTUiXamlMode)' != ''">
-      <Value>$(CsWinRTUiXamlMode)</Value>
-      <Trim>true</Trim>
-    </RuntimeHostConfigurationOption>
-  </ItemGroup>
-
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
