@@ -33,7 +33,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
     <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
     <CompilerVisibleProperty Include="CsWinRTAuthoringInputs" />
-    <CompilerVisibleProperty Include="CsWinRTUseWindowsUIXamlProjections" />
   </ItemGroup>
 
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
