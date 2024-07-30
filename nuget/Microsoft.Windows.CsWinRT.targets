@@ -44,7 +44,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </PropertyGroup>
 
   <ItemGroup>
-    <CompilerVisibleProperty Include="AssemblyName" />
     <CompilerVisibleProperty Include="CsWinRTAotOptimizerEnabled" />
     <CompilerVisibleProperty Include="CsWinRTAotExportsEnabled" />
     <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptIn" />
