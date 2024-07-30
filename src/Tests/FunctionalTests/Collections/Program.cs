@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using test_component_derived.Nested;
@@ -118,6 +119,19 @@ if (exceptionList2 != instance.BindableIterableProperty)
     return 101;
 }
 
+instance.BindableIterableProperty = CustomClass.Instances;
+if (CustomClass.Instances != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var customObservableCollection = new CustomObservableCollection();
+instance.BindableIterableProperty = customObservableCollection;
+if (customObservableCollection != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
 var uriList = new List<Uri>();
 instance.BindableIterableProperty = uriList;
 if (uriList != instance.BindableIterableProperty)
@@ -137,3 +151,15 @@ return 100;
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
 
 static bool AllEqual<T>(T[] x, params T[][] list) => list.All((y) => x.SequenceEqual(y));
+
+sealed partial class CustomClass : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public static IReadOnlyList<CustomClass> Instances { get; } = new CustomClass[] { };
+}
+
+sealed partial class CustomObservableCollection : System.Collections.ObjectModel.ObservableCollection<CustomClass>
+{
+    public int CustomCount => Items.Count;
+}
