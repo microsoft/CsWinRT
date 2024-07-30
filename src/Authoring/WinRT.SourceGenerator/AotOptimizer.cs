@@ -1013,7 +1013,8 @@ namespace Generator
         {
             return (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Arguments.Count != 0) ||
                     node is AssignmentExpressionSyntax ||
-                    node is VariableDeclarationSyntax || 
+                    node is VariableDeclarationSyntax ||
+                    node is PropertyDeclarationSyntax ||
                     node is ReturnStatementSyntax;
         }
 
@@ -1099,6 +1100,19 @@ namespace Generator
                         {
                             AddVtableAttributesForType(instantiatedType, namedType);
                         }
+                    }
+                }
+            }
+            // Detect scenarios where the property declaration has an initializer and is to a boxed or cast type during initialization.
+            else if (context.Node is PropertyDeclarationSyntax propertyDeclaration)
+            {
+                var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
+                if (propertyDeclaration.Initializer != null)
+                {
+                    var instantiatedType = context.SemanticModel.GetTypeInfo(propertyDeclaration.Initializer.Value);
+                    if (leftSymbol is INamedTypeSymbol namedType)
+                    {
+                        AddVtableAttributesForType(instantiatedType, namedType);
                     }
                 }
             }
