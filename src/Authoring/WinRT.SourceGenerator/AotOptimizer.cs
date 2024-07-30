@@ -988,9 +988,8 @@ namespace Generator
                                     using System;
                                     using System.Runtime.InteropServices;
                                     using System.Runtime.CompilerServices;
-                                    using WinRT;
 
-                                    namespace {{escapedAssemblyName}}.WinRT.GenericHelpers
+                                    namespace WinRT.GenericHelpers.{{escapedAssemblyName}}
                                     {
                                     """);
             }
@@ -1341,9 +1340,8 @@ namespace Generator
                                     using System; 
                                     using System.Runtime.InteropServices;
                                     using System.Runtime.CompilerServices;
-                                    using WinRT;
 
-                                    namespace {{value.properties.escapedAssemblyName}}.WinRT.GenericHelpers
+                                    namespace WinRT.GenericHelpers.{{value.properties.escapedAssemblyName}}
                                     {
 
                                         internal static class {{classPrefix}}GlobalVtableLookup

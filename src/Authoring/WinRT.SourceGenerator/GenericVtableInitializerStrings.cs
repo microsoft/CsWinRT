@@ -184,7 +184,7 @@ namespace Generator
             // in the 2nd last element.
             var interfaceName = genericInterface.Split('.', '`')[^2];
             var genericParametersStr = string.Join("_", genericParameters.Select(genericParameter => GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType)));
-            return $$"""        _ = global::{{escapedAssemblyName}}.WinRT.GenericHelpers.{{interfaceName}}_{{genericParametersStr}}.Initialized;""";
+            return $$"""        _ = global::WinRT.GenericHelpers.{{escapedAssemblyName}}.{{interfaceName}}_{{genericParametersStr}}.Initialized;""";
         }
 
         private static string GetIEnumerableInstantiation(string genericType, string abiType)
