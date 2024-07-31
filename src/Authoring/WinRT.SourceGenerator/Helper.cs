@@ -232,6 +232,16 @@ namespace Generator
             }
             return Path.Combine(context.GetGeneratedFilesDir(), fileName + ".winmd");
         }
+
+        public static bool GetCsWinRTMergeReferencedActivationFactories(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTMergeReferencedActivationFactories", out var csWinRTMergeReferencedActivationFactories))
+            {
+                return bool.TryParse(csWinRTMergeReferencedActivationFactories, out var isCsWinRTMergeReferencedActivationFactories) && isCsWinRTMergeReferencedActivationFactories;
+            }
+
+            return false;
+        }
     }
 
     static class GeneratorHelper
