@@ -26,6 +26,16 @@ namespace WinRT
 #endif
         public static Type FindHelperType(this Type type)
         {
+            return type.FindHelperType(true);
+        }
+
+#if NET
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                            DynamicallyAccessedMemberTypes.PublicFields)]
+        [UnconditionalSuppressMessage("Trimming", "IL2073", Justification = "Matching trimming annotations are used at all callsites registering helper types present in the cache.")]
+#endif
+        internal static Type FindHelperType(this Type type, bool throwIfNotAotSupported)
+        {
 #if NET
             [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
                                                 DynamicallyAccessedMemberTypes.PublicFields)]
@@ -37,7 +47,7 @@ namespace WinRT
                     type = typeof(Exception);
                 }
 
-                Type customMapping = Projections.FindCustomHelperTypeMapping(type);
+                Type customMapping = Projections.FindCustomHelperTypeMapping(type, false, true);
                 if (customMapping is not null)
                 {
                     return customMapping;
@@ -69,7 +79,17 @@ namespace WinRT
                 return FindHelperTypeFallback(type);
             }
 
-            return HelperTypeCache.GetOrAdd(type, FindHelperTypeNoCache);
+            var helperType = HelperTypeCache.GetOrAdd(type, FindHelperTypeNoCache);
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                if (helperType == typeof(HelperTypeMetadataNotAvailableOnAot))
+                {
+                    return throwIfNotAotSupported ? throw new NotSupportedException($"Cannot retrieve a helper type for generic public type '{type}'.") : null;
+                }
+            }
+#endif
+            return helperType;
 
 #if NET
             [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "No members of the generic type are dynamically accessed other than for the attributes on it.")]
@@ -83,7 +103,7 @@ namespace WinRT
 #if NET
                     if (!RuntimeFeature.IsDynamicCodeCompiled)
                     {
-                        throw new NotSupportedException($"Cannot retrieve the helper type from generic type '{type}'.");
+                        return typeof(HelperTypeMetadataNotAvailableOnAot);
                     }
 #endif
 
