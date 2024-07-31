@@ -1019,7 +1019,8 @@ namespace Generator
         {
             return (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Arguments.Count != 0) ||
                     node is AssignmentExpressionSyntax ||
-                    node is VariableDeclarationSyntax || 
+                    node is VariableDeclarationSyntax ||
+                    node is PropertyDeclarationSyntax ||
                     node is ReturnStatementSyntax;
         }
 
@@ -1096,15 +1097,28 @@ namespace Generator
             else if (context.Node is VariableDeclarationSyntax variableDeclaration)
             {
                 var leftSymbol = context.SemanticModel.GetSymbolInfo(variableDeclaration.Type).Symbol;
-                foreach (var variable in variableDeclaration.Variables)
+                if (leftSymbol is INamedTypeSymbol namedType)
                 {
-                    if (variable.Initializer != null)
+                    foreach (var variable in variableDeclaration.Variables)
                     {
-                        var instantiatedType = context.SemanticModel.GetTypeInfo(variable.Initializer.Value);
-                        if (leftSymbol is INamedTypeSymbol namedType)
+                        if (variable.Initializer != null)
                         {
+                            var instantiatedType = context.SemanticModel.GetTypeInfo(variable.Initializer.Value);
                             AddVtableAttributesForType(instantiatedType, namedType);
                         }
+                    }
+                }
+            }
+            // Detect scenarios where the property declaration has an initializer and is to a boxed or cast type during initialization.
+            else if (context.Node is PropertyDeclarationSyntax propertyDeclaration)
+            {
+                if (propertyDeclaration.Initializer != null)
+                {
+                    var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
+                    if (leftSymbol is INamedTypeSymbol namedType)
+                    {
+                        var instantiatedType = context.SemanticModel.GetTypeInfo(propertyDeclaration.Initializer.Value);
+                        AddVtableAttributesForType(instantiatedType, namedType);
                     }
                 }
             }
@@ -1271,7 +1285,7 @@ namespace Generator
                 }
             }
 
-            if (classType is INamedTypeSymbol namedType && namedType.MetadataName == "ObservableCollection`1")
+            if (classType is INamedTypeSymbol namedType && IsDerivedFromOrIsObservableCollection(namedType))
             {
                 // ObservableCollection make use of an internal built-in type as part of its
                 // implementation for INotifyPropertyChanged.  Handling that manually here.
@@ -1304,6 +1318,12 @@ namespace Generator
                         vtableAttributes.Add(vtableAttribute);
                     }
                 }
+            }
+
+            bool IsDerivedFromOrIsObservableCollection(INamedTypeSymbol namedType)
+            {
+                return namedType.MetadataName == "ObservableCollection`1" || 
+                    (namedType.BaseType is not null && IsDerivedFromOrIsObservableCollection(namedType.BaseType));
             }
         }
 

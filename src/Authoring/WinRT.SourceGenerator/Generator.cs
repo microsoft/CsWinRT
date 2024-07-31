@@ -269,21 +269,34 @@ namespace Generator
                             {
                                 scoped ReadOnlySpan<char> fullyQualifiedTypeName = MarshalString.FromAbiUnsafe((IntPtr)activatableClassId);
 
-                                IntPtr obj = GetActivationFactory(fullyQualifiedTypeName);
-
                 """);
 
-            // Only emit this call if we have actually generated that. We want to avoid generating
-            // that default implementation in every single assembly the generator runs on.
-            if (ShouldEmitCallToTryGetDependentActivationFactory(context))
+            // There's three possible cases for this method:
+            //   1a) The project is a standalone WinRT component
+            //   1b) The project is a WinRT component, and we're chaining other WinRT components
+            //   2)  The project is an app/library, but we also want to chain other WinRT components
+            if (context.IsCsWinRTComponent())
             {
-                builder.AppendLine("""
-                                     if ((void*)obj is null)
-                                     {
-                                         obj = TryGetDependentActivationFactory(fullyQualifiedTypeName);
-                                     }
+                builder.AppendLine("IntPtr obj = GetActivationFactory(fullyQualifiedTypeName);");
+                builder.AppendLine();
+
+                // Only emit this call if we have actually generated that. We want to avoid generating
+                // that default implementation in every single assembly the generator runs on.
+                if (ShouldEmitCallToTryGetDependentActivationFactory(context))
+                {
+                    builder.AppendLine("""
+                                    if ((void*)obj is null)
+                                    {
+                                        obj = TryGetDependentActivationFactory(fullyQualifiedTypeName);
+                                    }
                     
                     """);
+                }
+            }
+            else if (ShouldEmitCallToTryGetDependentActivationFactory(context))
+            {
+                builder.AppendLine("IntPtr obj = TryGetDependentActivationFactory(fullyQualifiedTypeName);");
+                builder.AppendLine();
             }
 
             builder.Append("""
@@ -383,6 +396,15 @@ namespace Generator
         {
             if (!context.IsCsWinRTComponent() && !context.ShouldGenerateWinMDOnly())
             {
+                // Special case for app/library projects that also want to chain referenced WinRT components.
+                // This is the case for eg. a UWP app that also has some OOP background tasks.
+                if (context.ShouldGenerateWinRTNativeExports() && context.GetCsWinRTMergeReferencedActivationFactories())
+                {
+                    ComponentGenerator.GenerateWinRTNativeExports(context);
+
+                    return;
+                }
+
                 System.Diagnostics.Debug.WriteLine($"Skipping component {context.GetAssemblyName()}");
                 return;
             }

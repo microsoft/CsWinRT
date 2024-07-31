@@ -714,3 +714,10 @@ TEST(AuthoringTest, GetRuntimeClassName)
     testClass.SetProjectedDisposableObject();
     EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"AuthoringTest.DisposableClass");
 }
+
+TEST(AuthoringTest, XamlMetadataProvider)
+{
+    CustomXamlMetadataProvider provider;
+    EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<double>>()), nullptr);
+    EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<Windows::Foundation::TimeSpan>>()), nullptr);
+}

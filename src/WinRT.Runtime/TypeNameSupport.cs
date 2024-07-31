@@ -239,14 +239,25 @@ namespace WinRT
 #endif
             static Type ResolveGenericType(Type resolvedType, Type[] genericTypes, string runtimeClassName)
             {
-                if (resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
+                if (resolvedType == typeof(global::System.Nullable<>))
                 {
-                    if (FeatureSwitches.EnableIReferenceSupport)
+                    if (genericTypes[0].IsDelegate())
                     {
-                        return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
-                    }
+                        if (FeatureSwitches.EnableIReferenceSupport)
+                        {
+                            return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+                        }
 
-                    throw GetExceptionForUnsupportedIReferenceType(runtimeClassName.AsSpan());
+                        throw GetExceptionForUnsupportedIReferenceType(runtimeClassName.AsSpan());
+                    }
+                    else
+                    {
+                        var nullableType = ABI.System.NullableType.GetTypeAsNullableType(genericTypes[0]);
+                        if (nullableType is not null)
+                        {
+                            return nullableType;
+                        }
+                    }
                 }
 
 #if NET

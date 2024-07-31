@@ -235,6 +235,16 @@ namespace WinRT
                 hasWinrtExposedClassAttribute = true;
                 entries.AddRange(Projections.GetAbiEventHandlerExposedInterfaces());
             }
+            else if (type == typeof(global::System.ComponentModel.PropertyChangedEventHandler))
+            {
+                hasWinrtExposedClassAttribute = true;
+                entries.AddRange(Projections.GetAbiPropertyChangedEventHandlerExposedInterfaces());
+            }
+            else if (type == typeof(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler))
+            {
+                hasWinrtExposedClassAttribute = true;
+                entries.AddRange(Projections.GetAbiNotifyCollectionChangedEventHandlerExposedInterfaces());
+            }
             else if (ComInterfaceEntriesForType.TryGetValue(type, out var registeredEntries))
             {
                 hasWinrtExposedClassAttribute = true;
