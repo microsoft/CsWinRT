@@ -42,7 +42,6 @@ namespace WinRT
         private static int _Uri;
         private static int _DataErrorsChangedEventArgs;
         private static int _PropertyChangedEventArgs;
-        private static int _PropertyChangedEventHandler;
         private static int _INotifyDataErrorInfo;
         private static int _INotifyPropertyChanged;
         private static int _ICommand;
@@ -61,7 +60,6 @@ namespace WinRT
         private static int _INotifyCollectionChanged;
         private static int _NotifyCollectionChangedAction;
         private static int _NotifyCollectionChangedEventArgs;
-        private static int _NotifyCollectionChangedEventHandler;
         private static int _Matrix3x2;
         private static int _Matrix4x4;
         private static int _Plane;
@@ -554,37 +552,6 @@ namespace WinRT
             }
         }
 
-        /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Data.PropertyChangedEventHandler"</c> WinRT type.</summary>
-        public static void RegisterPropertyChangedEventHandlerMapping()
-        {
-            if (FeatureSwitches.EnableDefaultCustomTypeMappings)
-            {
-                return;
-            }
-
-            if (Interlocked.CompareExchange(ref _PropertyChangedEventHandler, 1, 0) == 1)
-            {
-                return;
-            }
-
-            if (FeatureSwitches.UseWindowsUIXamlProjections)
-            {
-                RegisterCustomAbiTypeMapping(
-                    typeof(PropertyChangedEventHandler),
-                    typeof(ABI.System.ComponentModel.PropertyChangedEventHandler),
-                    "Windows.UI.Xaml.Data.PropertyChangedEventHandler",
-                    isRuntimeClass: false);
-            }
-            else
-            {
-                RegisterCustomAbiTypeMapping(
-                    typeof(PropertyChangedEventHandler),
-                    typeof(ABI.System.ComponentModel.PropertyChangedEventHandler),
-                    "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler",
-                    isRuntimeClass: false);
-            }
-        }
-
         /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Data.INotifyDataErrorInfo"</c> WinRT type.</summary>
         public static void RegisterINotifyDataErrorInfoMapping()
         {
@@ -1029,37 +996,6 @@ namespace WinRT
                     typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
                     "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
                     isRuntimeClass: true);
-            }
-        }
-
-        /// <summary>Registers the custom ABI type mapping for the <c>"Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler"</c> WinRT type.</summary>
-        public static void RegisterNotifyCollectionChangedEventHandlerMapping()
-        {
-            if (FeatureSwitches.EnableDefaultCustomTypeMappings)
-            {
-                return;
-            }
-
-            if (Interlocked.CompareExchange(ref _NotifyCollectionChangedEventHandler, 1, 0) == 1)
-            {
-                return;
-            }
-
-            if (FeatureSwitches.UseWindowsUIXamlProjections)
-            {
-                RegisterCustomAbiTypeMapping(
-                    typeof(NotifyCollectionChangedEventHandler),
-                    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler),
-                    "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler",
-                    isRuntimeClass: false);
-            }
-            else
-            {
-                RegisterCustomAbiTypeMapping(
-                    typeof(NotifyCollectionChangedEventHandler),
-                    typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler),
-                    "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler",
-                    isRuntimeClass: false);
             }
         }
 

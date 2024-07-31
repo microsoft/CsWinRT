@@ -1111,6 +1111,12 @@ namespace AuthoringTest
         // Tests DefaultOverload attribute specified in projected interface.
         public IXamlType GetXamlType(Type type)
         {
+            if (type == typeof(Nullable<double>) ||
+                type == typeof(TimeSpan?))
+            {
+                return new XamlType(type);
+            }
+
             return null;
         }
 
@@ -1122,6 +1128,72 @@ namespace AuthoringTest
         public XmlnsDefinition[] GetXmlnsDefinitions()
         {
             return null;
+        }
+    }
+
+    internal sealed partial class XamlType : IXamlType
+    {
+        private readonly Type _type;
+
+        public XamlType(Type type)
+        {
+            _type = type;
+        }
+
+        public IXamlType BaseType => new XamlType(_type.BaseType);
+
+        public IXamlType BoxedType => throw new NotImplementedException();
+
+        public IXamlMember ContentProperty => throw new NotImplementedException();
+
+        public string FullName => _type.FullName;
+
+        public bool IsArray => _type.IsArray;
+
+        public bool IsBindable => throw new NotImplementedException();
+
+        public bool IsCollection => throw new NotImplementedException();
+
+        public bool IsConstructible => throw new NotImplementedException();
+
+        public bool IsDictionary => throw new NotImplementedException();
+
+        public bool IsMarkupExtension => throw new NotImplementedException();
+
+        public IXamlType ItemType => throw new NotImplementedException();
+
+        public IXamlType KeyType => throw new NotImplementedException();
+
+        public Type UnderlyingType => throw new NotImplementedException();
+
+        public object ActivateInstance()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddToMap(object instance, object key, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddToVector(object instance, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object CreateFromString(string value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IXamlMember GetMember(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RunInitializer()
+        {
+            throw new NotImplementedException();
         }
     }
 
