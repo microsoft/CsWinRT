@@ -593,7 +593,8 @@ namespace WinRT
                      typeof(T) == typeof(ulong) ||
                      typeof(T) == typeof(float) ||
                      typeof(T) == typeof(double) ||
-                     typeof(T) == typeof(Guid))
+                     typeof(T) == typeof(Guid) ||
+                     typeof(Exception).IsAssignableFrom(typeof(T)))
             {
                 // Special case some well known primitive types that we know might be constructed
                 // for this type, but not actually used. For these, we just keep all default values.
@@ -1009,11 +1010,12 @@ namespace WinRT
                 return Enum.GetUnderlyingType(typeof(T));
             }
 
-            // These 4 types are true non blittable types that are valid to use here
+            // These 5 types are true non blittable types that are valid to use here
             if (typeof(T) == typeof(bool)) return typeof(byte);
             if (typeof(T) == typeof(char)) return typeof(ushort);
             if (typeof(T) == typeof(global::System.TimeSpan)) return typeof(global::ABI.System.TimeSpan);
             if (typeof(T) == typeof(DateTimeOffset)) return typeof(global::ABI.System.DateTimeOffset);
+            if (typeof(T) == typeof(global::System.Exception)) return typeof(global::ABI.System.Exception);
 
             // These types are actually blittable, but this marshaller is still constructed elsewhere.
             // Just return null instead of using MarshalGeneric<T>, to avoid constructing that too.
@@ -2025,6 +2027,26 @@ namespace WinRT
                 CopyManagedArray = (Action<T[], IntPtr>)(object)new Action<Type[], IntPtr>(ABI.System.Type.CopyManagedArray);
                 DisposeMarshalerArray = new Action<object>(ABI.System.Type.DisposeMarshalerArray);
                 DisposeAbiArray = new Action<object>(ABI.System.Type.DisposeAbiArray);
+            }
+            else if (typeof(Exception).IsAssignableFrom(typeof(T)))
+            {
+                AbiType = typeof(ABI.System.Exception);
+                CreateMarshaler = (T value) => ABI.System.Exception.CreateMarshaler((Exception)(object)value);
+                CreateMarshaler2 = CreateMarshaler;
+                GetAbi = (object box) => ABI.System.Exception.GetAbi((ABI.System.Exception.Marshaler)box);
+                FromAbi = (object value) => (T)(object)ABI.System.Exception.FromAbi((ABI.System.Exception)value);
+                CopyAbi = (object box, IntPtr dest) => ABI.System.Exception.CopyAbi((ABI.System.Exception.Marshaler)box, dest);
+                CopyManaged = (Action<T, IntPtr>)(object)new Action<Exception, IntPtr>(ABI.System.Exception.CopyManaged);
+                FromManaged = (T value) => ABI.System.Exception.FromManaged((Exception)(object)value);
+                DisposeMarshaler = (object box) => ABI.System.Exception.DisposeMarshaler((ABI.System.Exception.Marshaler)box);
+                DisposeAbi = (object box) => ABI.System.Exception.DisposeAbi((ABI.System.Exception)box);
+                CreateMarshalerArray = (Func<T[], object>)(object)new Func<Exception[], object>(ABI.System.NonBlittableMarshallingStubs.Exception_CreateMarshalerArray);
+                GetAbiArray = new Func<object, (int, IntPtr)>(MarshalNonBlittable<Exception>.GetAbiArray);
+                FromAbiArray = (Func<object, T[]>)(object)new Func<object, Exception[]>(MarshalNonBlittable<Exception>.FromAbiArray);
+                FromManagedArray = (Func<T[], (int, IntPtr)>)(object)new Func<Exception[], (int, IntPtr)>(MarshalNonBlittable<Exception>.FromManagedArray);
+                CopyManagedArray = (Action<T[], IntPtr>)(object)new Action<Exception[], IntPtr>(MarshalNonBlittable<Exception>.CopyManagedArray);
+                DisposeMarshalerArray = new Action<object>(MarshalNonBlittable<Exception>.DisposeMarshalerArray);
+                DisposeAbiArray = new Action<object>(MarshalNonBlittable<Exception>.DisposeAbiArray);
             }
             else if (typeof(T).IsValueType)
             {

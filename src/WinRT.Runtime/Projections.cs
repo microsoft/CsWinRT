@@ -19,6 +19,11 @@ using Windows.Foundation.Collections;
 
 namespace WinRT
 {
+    // Marker type to indicate the helper type cannot be constructed on AOT.
+    internal sealed class HelperTypeMetadataNotAvailableOnAot
+    {
+    }
+
 #if EMBED
     internal
 #else 
@@ -263,6 +268,18 @@ namespace WinRT
 #endif
         public static Type FindCustomHelperTypeMapping(Type publicType, bool filterToRuntimeClass = false)
         {
+            return FindCustomHelperTypeMapping(publicType, filterToRuntimeClass, false);
+        }
+
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "The type arguments are guaranteed to be valid for the generic ABI types.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2068", Justification = "All types added to 'CustomTypeToHelperTypeMappings' have metadata explicitly preserved.")]
+        [return: DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicMethods |
+            DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+        internal static Type FindCustomHelperTypeMapping(Type publicType, bool filterToRuntimeClass, bool returnMarkerTypeIfNotAotCompatible)
+        {
             rwlock.EnterReadLock();
             try
             {
@@ -283,7 +300,7 @@ namespace WinRT
 #if NET
                         if (!RuntimeFeature.IsDynamicCodeCompiled)
                         {
-                            throw new NotSupportedException($"Cannot retrieve a helper type for public type '{publicType}'.");
+                            return returnMarkerTypeIfNotAotCompatible ? typeof(HelperTypeMetadataNotAvailableOnAot) : throw new NotSupportedException($"Cannot retrieve a helper type for public type '{publicType}'.");
                         }
 #endif
 

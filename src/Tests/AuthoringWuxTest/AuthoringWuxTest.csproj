@@ -11,6 +11,14 @@
     <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
     <!--<CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>--> 
   </PropertyGroup>
+
+  <!-- Temporary workaround, remove when https://github.com/dotnet/sdk/pull/41936 is available in the .NET SDK -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="CsWinRTUseWindowsUIXamlProjections" />
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS"
+                                    Value="$(CsWinRTUseWindowsUIXamlProjections)"
+                                    Trim="true" />
+  </ItemGroup>
   
   <ItemGroup>    
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />    

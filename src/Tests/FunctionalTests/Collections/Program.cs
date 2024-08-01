@@ -100,6 +100,25 @@ if (names?.Count > 0)
     networkNames.AddRange(names);
 }
 
+if (names is IList<double> networkNamesList)
+{
+    return 101;
+}
+
+var exceptionList = new List<Exception>();
+instance.BindableIterableProperty = exceptionList;
+if (exceptionList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var exceptionList2 = new List<ArgumentException>();
+instance.BindableIterableProperty = exceptionList2;
+if (exceptionList2 != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
 instance.BindableIterableProperty = CustomClass.Instances;
 if (CustomClass.Instances != instance.BindableIterableProperty)
 {
@@ -113,6 +132,19 @@ if (customObservableCollection != instance.BindableIterableProperty)
     return 101;
 }
 
+var uriList = new List<Uri>();
+instance.BindableIterableProperty = uriList;
+if (uriList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var dateTimeOffsetList = new List<System.DateTimeOffset>();
+instance.BindableIterableProperty = dateTimeOffsetList;
+if (dateTimeOffsetList != instance.BindableIterableProperty)
+{
+    return 101;
+}
 
 return 100;
 
