@@ -917,11 +917,20 @@ namespace ABI.System.Collections.Generic
         {
             return new ComWrappers.ComInterfaceEntry[]
             {
-                    new ComWrappers.ComInterfaceEntry
-                    {
-                        IID = typeof(ABI.Microsoft.UI.Xaml.Interop.IBindableIterator).GUID,
-                        Vtable = ABI.Microsoft.UI.Xaml.Interop.IBindableIterator.AbiToProjectionVftablePtr
-                    }
+                new ComWrappers.ComInterfaceEntry
+                {
+                    IID = typeof(ABI.Microsoft.UI.Xaml.Interop.IBindableIterator).GUID,
+                    Vtable = ABI.Microsoft.UI.Xaml.Interop.IBindableIterator.AbiToProjectionVftablePtr
+                },
+                new ComWrappers.ComInterfaceEntry
+                {
+                    // IBindableIterator is intentionally used here as the vtable because
+                    // we provide the same functions on the vtable as IIterator<object>
+                    // and this allows to avoid introducing another class to initialize the
+                    // IIterator<object> vtable.
+                    IID = ABI.System.Collections.Generic.IEnumeratorMethods<object>.IID,
+                    Vtable = ABI.Microsoft.UI.Xaml.Interop.IBindableIterator.AbiToProjectionVftablePtr
+                }
             };
         }
     }
@@ -970,9 +979,9 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerator<T>));
 
-        // Limiting projected surface to IBindableIterator as we only create a CCW for it during those scenarios.
-        // In IEnumerator<> scenarios, we use this as a helper for the implementation and don't actually use it to
-        // create a CCW.
+        // Limiting projected surface to IBindableIterator and IIterator<object> as we only create a CCW for it during the IEnumerator scenario.
+        // In IEnumerator<T> scenarios, we use this as a helper for the implementation and don't actually use it to create a CCW.
+        // We include IIterator<object> in IEnumerator scenarios due to compat reasons with how WinUI uses it where it treats both as the same.
         [global::WinRT.WinRTExposedType(typeof(IBindableIteratorTypeDetails))]
 #pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator
