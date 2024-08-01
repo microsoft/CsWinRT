@@ -2710,6 +2710,7 @@ namespace Generator
                 }
             }
 
+            string escapedAssemblyName = GeneratorHelper.EscapeTypeNameForIdentifier(context.Compilation.AssemblyName);
             if (vtableAttributesToAdd.Any() || vtableAttributesToAddOnLookupTable.Any())
             {
                 WinRTAotSourceGenerator.GenerateCCWForGenericInstantiation(
@@ -2717,17 +2718,18 @@ namespace Generator
                     vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).
                         Union(vtableAttributesToAddOnLookupTable.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces)).
                         Distinct().
-                        ToImmutableArray());
+                        ToImmutableArray(),
+                    escapedAssemblyName);
             }
 
             if (vtableAttributesToAdd.Any())
             {
-                WinRTAotSourceGenerator.GenerateVtableAttributes(context.AddSource, vtableAttributesToAdd.ToImmutableArray(), false);
+                WinRTAotSourceGenerator.GenerateVtableAttributes(context.AddSource, vtableAttributesToAdd.ToImmutableArray(), false, escapedAssemblyName);
             }
 
             if (vtableAttributesToAddOnLookupTable.Any())
             {
-                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), (true, true, true)), true);
+                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), ((true, true, true), escapedAssemblyName)), true);
             }
         }
 
