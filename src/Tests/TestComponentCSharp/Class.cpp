@@ -1491,6 +1491,18 @@ namespace winrt::TestComponentCSharp::implementation
         _charColl = value;
     }
 
+    IIterable<EnumValue> Class::GetEnumIterable()
+    {
+        return winrt::single_threaded_vector(std::vector{ EnumValue::One, EnumValue::Two });
+    }
+
+    IIterable<TestComponentCSharp::CustomDisposableTest> Class::GetClassIterable()
+    {
+        TestComponentCSharp::CustomDisposableTest first;
+        TestComponentCSharp::CustomDisposableTest second;
+        return winrt::single_threaded_vector(std::vector{ first, second });
+    }
+
     IBindableIterable Class::BindableIterableProperty()
     {
         return _bindableIterable;

@@ -299,6 +299,8 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
         void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
         void SetCharIterable(Windows::Foundation::Collections::IIterable<char16_t> const& value);
+        Windows::Foundation::Collections::IIterable<TestComponentCSharp::EnumValue> GetEnumIterable();
+        Windows::Foundation::Collections::IIterable<TestComponentCSharp::CustomDisposableTest> GetClassIterable();
 
         Microsoft::UI::Xaml::Interop::IBindableIterable BindableIterableProperty();
         void BindableIterableProperty(Microsoft::UI::Xaml::Interop::IBindableIterable const& value);

@@ -641,6 +641,24 @@ namespace WinRT
                 }
             }
 
+#if NET
+            // On AOT, RCW type factories for generic interfaces are registered by the projection before it asks to create
+            // an RCW for it.  But we can have scenarios where the actual implementation type is different than the statically
+            // known type and the implementation type's RCW factory hasn't been initialized.  i.e. IList<object> and IEnumerable<object>
+            // where the latter is the statically known type whose RCW factory is added already but IList<object> hasn't been added.
+            // In this case, since the caller just needs a IEnumerable<object>, we fallback to the statically known type if IList
+            // isn't already added.  On JIT, we can construct it at runtime.
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                if (implementationType.IsInterface && 
+                    implementationType.IsGenericType &&
+                    !TypedObjectFactoryCacheForType.ContainsKey(implementationType))
+                {
+                    return staticallyDeterminedType;
+                }
+            }
+#endif
+
             return implementationType;
         }
 
