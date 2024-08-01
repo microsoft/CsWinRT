@@ -637,7 +637,7 @@ sealed partial class CustomCommand : ICommand
     }
 }
 
-[BindableCustomProperty([nameof(Name), nameof(Value)], [typeof(int)])]
+[GeneratedBindableCustomProperty([nameof(Name), nameof(Value)], [typeof(int)])]
 partial class Language
 {
     private readonly string[] _values = new string[4];
@@ -651,19 +651,19 @@ partial class Language
     }
 }
 
-[global::WinRT.BindableCustomProperty([nameof(Name), nameof(Derived)], [typeof(int)])]
+[global::WinRT.GeneratedBindableCustomProperty([nameof(Name), nameof(Derived)], [typeof(int)])]
 partial class LanguageDervied : Language
 {
     public int Derived { get; } = 4;
 }
 
-[WinRT.BindableCustomProperty]
+[WinRT.GeneratedBindableCustomProperty]
 partial class LanguageDervied2 : Language
 {
     public int Derived { get; set; }
 }
 
-[BindableCustomProperty]
+[GeneratedBindableCustomPropertyAttribute]
 sealed partial class Language2
 {
     public string Name { get; } = "Language2";
@@ -680,14 +680,14 @@ sealed partial class Language2
     public static double StaticDouble { get; set; } = 4.0;
 }
 
-[BindableCustomProperty]
+[GeneratedBindableCustomProperty]
 sealed partial class Language4
 {
     internal string Name { get; }
     private int Number { get; set; }
 }
 
-[BindableCustomProperty]
+[GeneratedBindableCustomProperty]
 sealed partial class Language5<T>
 {
     private readonly Dictionary<T, T> _values = new();
@@ -707,7 +707,7 @@ namespace Test
     {
         sealed partial class Nested
         {
-            [BindableCustomProperty([nameof(Value)], [])]
+            [GeneratedBindableCustomProperty([nameof(Value)], [])]
             sealed partial class Language3 : IProperties2
             {
                 private readonly string[] _values = new string[4];

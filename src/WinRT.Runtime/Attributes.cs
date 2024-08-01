@@ -240,12 +240,12 @@ namespace WinRT
 #else
     public
 #endif
-    sealed class BindableCustomPropertyAttribute : Attribute
+    sealed class GeneratedBindableCustomPropertyAttribute : Attribute
     {
         /// <summary>
         /// Marks all public properties as bindable.
         /// </summary>
-        public BindableCustomPropertyAttribute()
+        public GeneratedBindableCustomPropertyAttribute()
         {
         }
 
@@ -254,7 +254,7 @@ namespace WinRT
         /// </summary>
         /// <param name="propertyNames">The name of the non-indexer public properties to mark as bindable.</param>
         /// <param name="indexerPropertyTypes">The parameter type of the indexer public properties to mark as bindable.</param>
-        public BindableCustomPropertyAttribute(string[] propertyNames, Type[] indexerPropertyTypes)
+        public GeneratedBindableCustomPropertyAttribute(string[] propertyNames, Type[] indexerPropertyTypes)
         {
             PropertyNames = propertyNames;
             IndexerPropertyTypes = indexerPropertyTypes;
