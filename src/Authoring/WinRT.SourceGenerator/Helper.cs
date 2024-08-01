@@ -615,6 +615,10 @@ namespace Generator
             {
                 return "IntPtr";
             }
+            else if (typeStr == "System.Exception")
+            {
+                return "ABI.System.Exception";
+            }
 
             if (type.IsValueType)
             {
@@ -667,6 +671,17 @@ namespace Generator
                 else
                 {
                     return "global::ABI.System.Type";
+                }
+            }
+            else if (type == "System.Exception" || type == "Exception")
+            {
+                if (isArray)
+                {
+                    return "MarshalNonBlittable<global::System.Exception>";
+                }
+                else
+                {
+                    return "global::ABI.System.Exception";
                 }
             }
             else if (type == "System.Object" || type == "object")

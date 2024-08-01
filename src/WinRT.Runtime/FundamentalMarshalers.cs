@@ -42,6 +42,7 @@ namespace ABI.System
         public static object DateTimeOffset_FromManaged(global::System.DateTimeOffset value) => DateTimeOffset.FromManaged(value);
 
         public static object Type_CreateMarshalerArray(global::System.Type[] value) => Type.CreateMarshalerArray(value);
+        public static object Exception_CreateMarshalerArray(global::System.Exception[] value) => global::WinRT.MarshalNonBlittable<global::System.Exception>.CreateMarshalerArray(value);
 
         private static void NoOp(object obj)
         {

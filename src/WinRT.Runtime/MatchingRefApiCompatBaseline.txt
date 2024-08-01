@@ -271,4 +271,5 @@ TypesMustExist : Type 'WinRT.WinRTAssemblyExportsTypeAttribute' does not exist i
 TypesMustExist : Type 'Microsoft.UI.Xaml.Data.BindableCustomProperty' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.BindableCustomPropertyAttribute' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation' does not exist in the reference but it does exist in the implementation.
-Total Issues: 272
+MembersMustExist : Member 'public void ABI.System.Uri.DisposeAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 273

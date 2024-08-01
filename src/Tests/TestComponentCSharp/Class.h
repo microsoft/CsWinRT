@@ -268,6 +268,10 @@ namespace winrt::TestComponentCSharp::implementation
         com_array<int32_t> GetInts();
         void FillInts(array_view<int32_t> ints);
 
+        com_array<winrt::hresult> GetAndSetHResults(array_view<winrt::hresult const> hresults);
+        com_array<winrt::Windows::Foundation::Uri> GetAndSetUris(array_view<winrt::Windows::Foundation::Uri const> uris);
+        com_array<winrt::Windows::Foundation::DateTime> GetAndSetDateTimes(array_view<winrt::Windows::Foundation::DateTime const> datetime);
+
         Windows::Foundation::IAsyncOperation<int32_t> GetIntAsync();
         Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();
 

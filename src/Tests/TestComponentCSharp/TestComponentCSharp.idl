@@ -315,6 +315,10 @@ namespace TestComponentCSharp
         Int32[] GetInts();
         void FillInts(ref Int32[] ints);
 
+        Windows.Foundation.HResult[] GetAndSetHResults(Windows.Foundation.HResult[] hresults);
+        Windows.Foundation.Uri[] GetAndSetUris(Windows.Foundation.Uri[] uris);
+        Windows.Foundation.DateTime[] GetAndSetDateTimes(Windows.Foundation.DateTime[] datetime);
+
         // Generics
         Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
         Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
