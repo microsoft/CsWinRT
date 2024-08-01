@@ -28,7 +28,7 @@ namespace Microsoft.UI.Xaml.Data
     }
 
     /// <summary>
-    /// An interface complementing <see cref="BindableCustomPropertyAttribute"/> providing the implementation to expose the specified properties.
+    /// An interface complementing <see cref="GeneratedBindableCustomPropertyAttribute"/> providing the implementation to expose the specified properties.
     /// </summary>
 #if EMBED
     internal
@@ -408,7 +408,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
                     throw new NotSupportedException(
-                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.BindableCustomPropertyAttribute'. " +
+                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
                         $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
                 }
 
@@ -461,7 +461,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
                     throw new NotSupportedException(
-                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.BindableCustomPropertyAttribute'. " +
+                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
                         $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
                 }
 

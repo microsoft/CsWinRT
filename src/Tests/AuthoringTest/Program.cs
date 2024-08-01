@@ -199,7 +199,7 @@ namespace AuthoringTest
         public string Value => "CsWinRT";
     }
 
-    [BindableCustomProperty]
+    [GeneratedBindableCustomProperty]
     public sealed partial class CustomProperty
     {
         public int Number { get; } = 4;
