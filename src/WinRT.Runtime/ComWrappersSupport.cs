@@ -650,7 +650,8 @@ namespace WinRT
             // isn't already added.  On JIT, we can construct it at runtime.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
-                if (implementationType.IsInterface && 
+                if (implementationType != null &&
+                    implementationType.IsInterface && 
                     implementationType.IsGenericType &&
                     !TypedObjectFactoryCacheForType.ContainsKey(implementationType))
                 {
