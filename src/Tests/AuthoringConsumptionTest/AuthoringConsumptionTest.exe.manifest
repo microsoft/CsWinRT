@@ -78,5 +78,9 @@
        name="AuthoringTest.TestMixedWinRTCOMWrapper"
        threadingModel="both"
        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.CustomXamlMetadataProvider"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
   </file>
 </assembly>
