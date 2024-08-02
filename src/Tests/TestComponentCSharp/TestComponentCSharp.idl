@@ -346,6 +346,8 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
         void SetCharIterable(Windows.Foundation.Collections.IIterable<Char> value);
+        Windows.Foundation.Collections.IIterable<EnumValue> GetEnumIterable();
+        Windows.Foundation.Collections.IIterable<CustomDisposableTest> GetClassIterable();
 
         // Bindable
         Microsoft.UI.Xaml.Interop.IBindableIterable BindableIterableProperty;

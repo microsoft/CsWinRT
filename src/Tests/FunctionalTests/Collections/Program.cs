@@ -146,6 +146,32 @@ if (dateTimeOffsetList != instance.BindableIterableProperty)
     return 101;
 }
 
+// Test sccenarios where the actual implementation type of the result or its RCW factory
+// hasn't been initialized and the statically declared type is a derived generic interface.
+var enums = instance.GetEnumIterable();
+int count = 0;
+foreach (var curEnum in enums)
+{
+    count++;
+}
+
+if (count != 2)
+{
+    return 101;
+}
+
+count = 0;
+var disposableClasses = instance.GetClassIterable();
+foreach (var curr in disposableClasses)
+{
+    count++;
+}
+
+if (count != 2)
+{
+    return 101;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
