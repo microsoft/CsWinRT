@@ -1501,6 +1501,24 @@ namespace cswinrt
         return get_fast_abi_class_for_class(fast_abi_class_type.value());
     }
 
+    int get_gc_pressure_amount(TypeDef const& classType)
+    {
+        auto gc_pressure_amount = 0;
+        if (auto gc_pressure_attr = get_attribute(classType, "Windows.Foundation.Metadata", "GCPressureAttribute"))
+        {
+            // Restricting to sealed scenarios because unsealed scenarios require more handling to prevent mismatches in
+            // adding and removing memory pressure and none of the Windows namespace types which use it today are unsealed.
+            if (classType.Flags().Sealed())
+            {
+                auto sig = gc_pressure_attr.Value();
+                auto const& args = sig.NamedArgs();
+                auto amount = std::get<int32_t>(std::get<ElemSig::EnumValue>(std::get<ElemSig>(args[0].value.value).value).value);
+                gc_pressure_amount = amount == 0 ? 12000 : amount == 1 ? 120000 : 1200000;
+            }
+        }
+        return gc_pressure_amount;
+    }
+
     struct generic_abi_delegate
     {
         std::string abi_delegate_name;

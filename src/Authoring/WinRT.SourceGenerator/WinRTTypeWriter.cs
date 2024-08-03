@@ -1937,6 +1937,13 @@ namespace Generator
                         continue;
                     }
 
+                    // Special case: skip members that are explicitly implementing internal interfaces.
+                    // This allows implementing classic COM internal interfaces with non-WinRT signatures.
+                    if (member.IsExplicitInterfaceImplementationOfInternalInterfaces())
+                    {
+                        continue;
+                    }
+
                     if (member is IMethodSymbol method &&
                         (method.MethodKind == MethodKind.Ordinary ||
                          method.MethodKind == MethodKind.ExplicitInterfaceImplementation ||
