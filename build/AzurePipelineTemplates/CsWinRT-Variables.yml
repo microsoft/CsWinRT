@@ -11,9 +11,9 @@ variables:
 - name: Net5.SDK.Feed
   value: 'https://dotnetcli.blob.core.windows.net/dotnet'
 - name: Net6.SDK.Version
-  value: '6.0.420'
+  value: '6.0.424'
 - name: Net8.SDK.Version
-  value: '8.0.103'
+  value: '8.0.303'
 - name: NoSamples
   value: 'false'
   
@@ -25,7 +25,7 @@ variables:
 - name: _RunBenchmarks
   value: $[coalesce(variables.RunBenchmarks, 'false')]
 - name: _DotNetRuntimeVersion
-  value: $[coalesce(variables.DotNetRuntimeVersion, '6.0.23')]  
+  value: $[coalesce(variables.DotNetRuntimeVersion, '6.0.32')]  
 - name: _WindowsSdkVersionSuffix
   value: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  
 - name: _PublishCsWinMD
