@@ -7270,11 +7270,12 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
     void write_contract(writer& w, TypeDef const& type)
     {
         auto type_name = write_type_name_temp(w, type);
-        w.write(R"(%public enum %
+        w.write(R"(%% enum %
 {
 }
 )",
             bind<write_type_custom_attributes>(type, false),
+            internal_accessibility(),
             type_name);
     }
 
