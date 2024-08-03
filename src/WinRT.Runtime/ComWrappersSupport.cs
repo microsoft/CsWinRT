@@ -38,6 +38,8 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
+        internal const int GC_PRESSURE_BASE = 1000;
+
         private static readonly ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new();
         private static readonly ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new();
 
