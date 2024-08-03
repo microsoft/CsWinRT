@@ -82,6 +82,9 @@ namespace Microsoft.UI.Xaml.Media.Animation
     }
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.EnumTypeDetails<RepeatBehaviorType>))]
+#endif
 #if EMBED
     internal
 #else

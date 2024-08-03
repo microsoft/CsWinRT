@@ -1112,7 +1112,9 @@ namespace AuthoringTest
         public IXamlType GetXamlType(Type type)
         {
             if (type == typeof(Nullable<double>) ||
-                type == typeof(TimeSpan?))
+                type == typeof(TimeSpan?) ||
+                type == typeof(BasicEnum?) ||
+                type == typeof(FlagsEnum?))
             {
                 return new XamlType(type);
             }

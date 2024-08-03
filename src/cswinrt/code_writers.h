@@ -3606,6 +3606,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
         return isFactory || 
             get_category(type) == category::struct_type ||
+            get_category(type) == category::enum_type ||
             (get_category(type) == category::delegate_type && distance(type.GenericParam()) == 0);
     }
 
@@ -3618,6 +3619,11 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 w.write(R"([global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<%, %>))])",
                     bind<write_type_name>(type, typedef_name_type::Projected, false),
                     bind<write_type_name>(type, is_type_blittable(type) ? typedef_name_type::Projected : typedef_name_type::ABI, false));
+            }
+            else if (get_category(type) == category::enum_type)
+            {
+                w.write(R"([global::WinRT.WinRTExposedType(typeof(global::WinRT.EnumTypeDetails<%>))])",
+                    bind<write_type_name>(type, typedef_name_type::Projected, false));
             }
             else
             {
@@ -9606,10 +9612,11 @@ return true;
 
         auto enum_underlying_type = is_flags_enum(type) ? "uint" : "int";
 
-        w.write(R"(%%% enum % : %
+        w.write(R"(%%%% enum % : %
 {
 )", 
         bind<write_winrt_attribute>(type),
+        bind<write_winrt_exposed_type_attribute>(type, false),
         bind<write_type_custom_attributes>(type, true),
         (settings.internal || settings.embedded) ? (settings.public_enums ? "public" : "internal") : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
