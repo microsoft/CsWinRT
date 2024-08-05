@@ -811,10 +811,6 @@ namespace cswinrt
             { "Windows.UI",
                 {
                     { "Color", "Windows.UI", "Color" },
-                    { "ColorHelper" },
-                    { "IColorHelper" },
-                    { "IColorHelperStatics" },
-                    { "IColorHelperStatics2" },
                 }
             },
             { "Windows.UI.Xaml",
