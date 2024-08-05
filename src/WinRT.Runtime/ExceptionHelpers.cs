@@ -225,41 +225,49 @@ namespace WinRT
                     ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException();
                     break;
                 case E_XAMLPARSEFAILED:
+#if NET
                     if (FeatureSwitches.UseWindowsUIXamlProjections)
                     {
                         ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.Markup.XamlParseException(errorMessage) : new Windows.UI.Xaml.Markup.XamlParseException();
                     }
                     else
+#endif
                     {
                         ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Markup.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.Markup.XamlParseException();
                     }
                     break;
                 case E_LAYOUTCYCLE:
+#if NET
                     if (FeatureSwitches.UseWindowsUIXamlProjections)
                     {
                         ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.LayoutCycleException(errorMessage) : new Windows.UI.Xaml.LayoutCycleException();
                     }
                     else
+#endif
                     {
                         ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException();
                     }
                     break;
                 case E_ELEMENTNOTAVAILABLE:
+#if NET
                     if (FeatureSwitches.UseWindowsUIXamlProjections)
                     {
                         ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.Automation.ElementNotAvailableException(errorMessage) : new Windows.UI.Xaml.Automation.ElementNotAvailableException();
                     }
                     else
+#endif
                     {
                         ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotAvailableException();
                     }
                     break;
                 case E_ELEMENTNOTENABLED:
+#if NET
                     if (FeatureSwitches.UseWindowsUIXamlProjections)
                     {
                         ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.Automation.ElementNotEnabledException(errorMessage) : new Windows.UI.Xaml.Automation.ElementNotEnabledException();
                     }
                     else
+#endif
                     {
                         ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotEnabledException();
                     }
