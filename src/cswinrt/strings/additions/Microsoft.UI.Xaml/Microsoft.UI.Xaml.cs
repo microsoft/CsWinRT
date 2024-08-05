@@ -155,6 +155,9 @@ namespace Microsoft.UI.Xaml
     }
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.EnumTypeDetails<GridUnitType>))]
+#endif
 #if EMBED
     internal
 #else
@@ -406,6 +409,9 @@ namespace Microsoft.UI.Xaml
     }
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.EnumTypeDetails<DurationType>))]
+#endif
 #if EMBED
     internal
 #else

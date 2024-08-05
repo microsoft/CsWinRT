@@ -720,4 +720,6 @@ TEST(AuthoringTest, XamlMetadataProvider)
     CustomXamlMetadataProvider provider;
     EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<double>>()), nullptr);
     EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<Windows::Foundation::TimeSpan>>()), nullptr);
+    EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<BasicEnum>>()), nullptr);
+    EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<FlagsEnum>>()), nullptr);
 }
