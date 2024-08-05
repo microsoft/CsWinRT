@@ -5,6 +5,9 @@ namespace Windows.UI.Xaml.Media
 
     [global::WinRT.WindowsRuntimeType("Windows.UI.Xaml")]
     [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.UI.Xaml.Media.Matrix))]
+#if NET
+    [global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<Matrix, Matrix>))]
+#endif
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal

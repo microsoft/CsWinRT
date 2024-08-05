@@ -267,7 +267,7 @@ namespace WinRT
                     {
                         if (type.IsValueType)
                         {
-                            throw new NotSupportedException($"Cannot provide generic type from '{runtimeClassName}'.");
+                            return null;
                         }
                     }
                 }

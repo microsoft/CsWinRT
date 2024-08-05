@@ -7,6 +7,14 @@ steps:
     script: get_testwinrt.cmd
     workingDirectory: $(Build.SourcesDirectory)
 
+# Setup remote for source link to pick up
+- task: PowerShell@2
+  condition: eq(variables['AdoMirrorBuild'], 'true')
+  inputs:
+    targetType: 'inline'
+    script: |
+      git remote add github "https://github.com/microsoft/cswinrt.git"
+
 # Download procdump
 - task: PowerShell@2
   displayName: Download procdump

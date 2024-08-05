@@ -2094,6 +2094,7 @@ private static class _%
             write_static_objref_definition(w, factory_type, class_type);
             auto cache_object = w.write_temp("%", bind<write_objref_type_name>(factory_type));
 
+            auto gc_pressure_amount = get_gc_pressure_amount(class_type);
             auto platform_attribute = write_platform_attribute_temp(w, factory_type);
             for (auto&& method : factory_type.MethodList())
             {
@@ -2170,9 +2171,14 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                 w.write(R"(
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 %
-}
+%}
 )",
-                    settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
+                    settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);",
+                    [&](writer& w)
+                    {
+                        if (!gc_pressure_amount || settings.netstandard_compat) return;
+                        w.write("GC.AddMemoryPressure(%);\n", gc_pressure_amount);
+                    });
             }
         }
         else
@@ -3606,6 +3612,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
         return isFactory || 
             get_category(type) == category::struct_type ||
+            get_category(type) == category::enum_type ||
             (get_category(type) == category::delegate_type && distance(type.GenericParam()) == 0);
     }
 
@@ -3618,6 +3625,11 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 w.write(R"([global::WinRT.WinRTExposedType(typeof(global::WinRT.StructTypeDetails<%, %>))])",
                     bind<write_type_name>(type, typedef_name_type::Projected, false),
                     bind<write_type_name>(type, is_type_blittable(type) ? typedef_name_type::Projected : typedef_name_type::ABI, false));
+            }
+            else if (get_category(type) == category::enum_type)
+            {
+                w.write(R"([global::WinRT.WinRTExposedType(typeof(global::WinRT.EnumTypeDetails<%>))])",
+                    bind<write_type_name>(type, typedef_name_type::Projected, false));
             }
             else
             {
@@ -7270,11 +7282,12 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
     void write_contract(writer& w, TypeDef const& type)
     {
         auto type_name = write_type_name_temp(w, type);
-        w.write(R"(%public enum %
+        w.write(R"(%% enum %
 {
 }
 )",
             bind<write_type_custom_attributes>(type, false),
+            internal_accessibility(),
             type_name);
     }
 
@@ -8412,14 +8425,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
-        auto gc_pressure_amount = 0;
-        if (auto gc_pressure_attr = get_attribute(type, "Windows.Foundation.Metadata", "GCPressureAttribute"))
-        {
-            auto sig = gc_pressure_attr.Value();
-            auto const& args = sig.NamedArgs();
-            auto amount = std::get<int32_t>(std::get<ElemSig::EnumValue>(std::get<ElemSig>(args[0].value.value).value).value);
-            gc_pressure_amount = amount == 0 ? 12000 : amount == 1 ? 120000 : 1200000;
-        }
+        auto gc_pressure_amount = get_gc_pressure_amount(type);
 
         w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 %% %class %%, IEquatable<%>
@@ -8476,7 +8482,6 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             default_interface_abi_name,
             bind<write_base_constructor_dispatch_netstandard>(base_semantics),
             default_interface_abi_name,
-            
             [&](writer& w)
             {
                 if (!gc_pressure_amount) return;
@@ -8586,6 +8591,8 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
+        auto gc_pressure_amount = get_gc_pressure_amount(type);
+
         auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(type)), [&](auto&& iface) { return iface; });
         auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
 
@@ -8614,7 +8621,8 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 {
 _inner = objRef.As(%.IID);
 %
-}
+%}
+%
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
@@ -8670,6 +8678,22 @@ private struct InterfaceTag<I>{};
                         w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
                     }
                 }),
+            [&](writer& w)
+            {
+                if (!gc_pressure_amount) return;
+                w.write("GC.AddMemoryPressure(%);\n", gc_pressure_amount);
+            },
+            [&](writer& w)
+            {
+                if (!gc_pressure_amount) return;
+                w.write(R"(~%()
+{
+GC.RemoveMemoryPressure(%);
+}
+)",
+                    type_name,
+                    gc_pressure_amount);
+            },
             // Equality operators
             type_name,
             type_name,
@@ -9605,10 +9629,11 @@ return true;
 
         auto enum_underlying_type = is_flags_enum(type) ? "uint" : "int";
 
-        w.write(R"(%%% enum % : %
+        w.write(R"(%%%% enum % : %
 {
 )", 
         bind<write_winrt_attribute>(type),
+        bind<write_winrt_exposed_type_attribute>(type, false),
         bind<write_type_custom_attributes>(type, true),
         (settings.internal || settings.embedded) ? (settings.public_enums ? "public" : "internal") : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);

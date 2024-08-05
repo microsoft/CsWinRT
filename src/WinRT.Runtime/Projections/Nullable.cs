@@ -2285,7 +2285,32 @@ namespace ABI.System
             if (type == typeof(global::System.Numerics.Vector2)) return typeof(global::System.Nullable<global::System.Numerics.Vector2>);
             if (type == typeof(global::System.Numerics.Vector3)) return typeof(global::System.Nullable<global::System.Numerics.Vector3>);
             if (type == typeof(global::System.Numerics.Vector4)) return typeof(global::System.Nullable<global::System.Numerics.Vector4>);
- 
+
+#if NET
+            var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+            if (winrtExposedClassAttribute == null)
+            {
+                var authoringMetadaType = type.GetAuthoringMetadataType();
+                if (authoringMetadaType != null)
+                {
+                    winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+                }
+            }
+
+            if (winrtExposedClassAttribute != null && winrtExposedClassAttribute.WinRTExposedTypeDetails != null)
+            {
+                if (Activator.CreateInstance(winrtExposedClassAttribute.WinRTExposedTypeDetails) is IWinRTNullableTypeDetails nullableTypeDetails)
+                {
+                    return nullableTypeDetails.GetNullableType();
+                }
+            }
+
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Failed to construct nullable with type '{type}'.");
+            }
+#endif
+
             return null;
         }
     }
@@ -2311,6 +2336,7 @@ namespace ABI.System
     internal interface IWinRTNullableTypeDetails
     {
         object GetNullableValue(IInspectable inspectable);
+        Type GetNullableType();
     }
 
     public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T: struct where TAbi : unmanaged
@@ -2364,6 +2390,8 @@ namespace ABI.System
                 Marshal.Release(nullablePtr);
             }
         }
+
+        Type IWinRTNullableTypeDetails.GetNullableType() => typeof(global::System.Nullable<T>);
     }
 
     public abstract class DelegateTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : global::System.Delegate
@@ -2418,6 +2446,52 @@ namespace ABI.System
                 Marshal.Release(nullablePtr);
             }
         }
+
+        // Delegates are handled separately.
+        Type IWinRTNullableTypeDetails.GetNullableType() => throw new NotImplementedException();
+    }
+
+    public sealed class EnumTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : unmanaged, Enum
+    {
+        [SkipLocalsInit]
+        public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+        {
+            Span<ComWrappers.ComInterfaceEntry> entries = stackalloc ComWrappers.ComInterfaceEntry[2];
+            int count = 0;
+
+            if (FeatureSwitches.EnableIReferenceSupport)
+            {
+                entries[count++] = new ComWrappers.ComInterfaceEntry
+                {
+                    IID = global::WinRT.Interop.IID.IID_IPropertyValue,
+                    Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
+                };
+
+                if (typeof(T).IsDefined(typeof(FlagsAttribute)))
+                {
+                    entries[count++] = new ComWrappers.ComInterfaceEntry
+                    {
+                        IID = ABI.System.Nullable_FlagsEnum.GetIID(typeof(T)),
+                        Vtable = ABI.System.Nullable_FlagsEnum.AbiToProjectionVftablePtr
+                    };
+                }
+                else
+                {
+                    entries[count++] = new ComWrappers.ComInterfaceEntry
+                    {
+                        IID = ABI.System.Nullable_IntEnum.GetIID(typeof(T)),
+                        Vtable = ABI.System.Nullable_IntEnum.AbiToProjectionVftablePtr
+                    };
+                }
+            }
+
+            return entries.Slice(0, count).ToArray();
+        }
+
+        Type IWinRTNullableTypeDetails.GetNullableType() => typeof(global::System.Nullable<T>);
+
+        // Unboxing enums are handled separately.
+        object IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable) => throw new NotImplementedException();
     }
 }
 #endif
