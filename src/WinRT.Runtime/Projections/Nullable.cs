@@ -2451,7 +2451,7 @@ namespace ABI.System
         Type IWinRTNullableTypeDetails.GetNullableType() => throw new NotImplementedException();
     }
 
-    public sealed class EnumTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : struct, Enum
+    public sealed class EnumTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : unmanaged, Enum
     {
         [SkipLocalsInit]
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
@@ -2467,12 +2467,11 @@ namespace ABI.System
                     Vtable = ABI.Windows.Foundation.ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
                 };
 
-                var type = typeof(T);
-                if (type.IsDefined(typeof(FlagsAttribute)))
+                if (typeof(T).IsDefined(typeof(FlagsAttribute)))
                 {
                     entries[count++] = new ComWrappers.ComInterfaceEntry
                     {
-                        IID = ABI.System.Nullable_FlagsEnum.GetIID(type),
+                        IID = ABI.System.Nullable_FlagsEnum.GetIID(typeof(T)),
                         Vtable = ABI.System.Nullable_FlagsEnum.AbiToProjectionVftablePtr
                     };
                 }
@@ -2480,7 +2479,7 @@ namespace ABI.System
                 {
                     entries[count++] = new ComWrappers.ComInterfaceEntry
                     {
-                        IID = ABI.System.Nullable_IntEnum.GetIID(type),
+                        IID = ABI.System.Nullable_IntEnum.GetIID(typeof(T)),
                         Vtable = ABI.System.Nullable_IntEnum.AbiToProjectionVftablePtr
                     };
                 }
