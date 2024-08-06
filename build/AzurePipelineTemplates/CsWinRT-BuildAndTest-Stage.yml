@@ -159,6 +159,11 @@ stages:
         condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
         targetPath: $(Build.ArtifactStagingDirectory)\release_net6.0
         artifactName: net6.0
+      - output: pipelineArtifact
+        displayName: 'Publish Net8.0'
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+        targetPath: $(Build.ArtifactStagingDirectory)\release_net8.0
+        artifactName: net8.0
 
   - job: Benchmarks
     displayName: Run Benchmarks

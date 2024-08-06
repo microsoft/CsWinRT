@@ -65,6 +65,14 @@ stages:
         itemPattern: ''
         targetPath: $(Build.SourcesDirectory)\net6.0
 
+# Download Net8.0
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Net8.0'
+      inputs:
+        artifactName: net8.0
+        itemPattern: ''
+        targetPath: $(Build.SourcesDirectory)\net8.0
+
 # Stage Binaries
     - task: CmdLine@2
       displayName: Stage Binaries
@@ -93,6 +101,7 @@ stages:
           netstandard2.0\WinRT.SourceGenerator.dll
           net6.0\WinRT.Host.Shim.dll
           net6.0\WinRT.Runtime.dll
+          net8.0\WinRT.Runtime.dll
           release_x64\WinRT.Host.dll
           release_x64\WinRT.Host.dll.mui
           release_x86\WinRT.Host.dll
@@ -221,7 +230,7 @@ stages:
         command: pack
         searchPatternPack: nuget/Microsoft.Windows.CsWinRT.nuspec
         configurationToPack: Release
-        buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\WinRT.Interop.winmd;netstandard2_runtime=$(Build.SourcesDirectory)\netstandard2.0\WinRT.Runtime.dll;net6_runtime=$(Build.SourcesDirectory)\net6.0\WinRT.Runtime.dll;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\net6.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll.mui;guid_patch=$(Build.SourcesDirectory)\net6.0\IIDOptimizer\*.*
+        buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\WinRT.Interop.winmd;netstandard2_runtime=$(Build.SourcesDirectory)\netstandard2.0\WinRT.Runtime.dll;net6_runtime=$(Build.SourcesDirectory)\net6.0\WinRT.Runtime.dll;net8_runtime=$(Build.SourcesDirectory)\net8.0\WinRT.Runtime.dll;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\net6.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll.mui;guid_patch=$(Build.SourcesDirectory)\net6.0\IIDOptimizer\*.*
 
     - task: NuGetCommand@2
       displayName: NuGet pack
