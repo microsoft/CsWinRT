@@ -21,9 +21,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <!--
       If the AOT optimizer is enabled, and we're publishing with NativeAOT, automatically set CsWinRTAotExportsEnabled as well.
-      Only do this if the property is not already set by the user, so we respect any existing preference.
+      Only do this if the property is not already set by the user, so we respect any existing preference. Note that this is only
+      set for publish builds, as 'PublishAot' might also be set when doing normal builds (which would still use CoreCLR).
     -->
-    <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' == '' and '$(CsWinRTAotOptimizerEnabled)' == 'true' and '$(PublishAot)' == 'true'">true</CsWinRTAotExportsEnabled>
+    <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' == '' and '$(CsWinRTAotOptimizerEnabled)' == 'true' and '$(PublishAot)' == 'true' and '$(_IsPublishing)' == 'true'">true</CsWinRTAotExportsEnabled>
     <CsWinRTAotExportsEnabled Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">false</CsWinRTAotExportsEnabled>
 
     <!-- Set the RCW factory fallback generator to not be opt-in by default -->
