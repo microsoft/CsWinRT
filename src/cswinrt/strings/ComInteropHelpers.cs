@@ -136,7 +136,7 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 #endif
     static class DragDropManagerInterop
     {
-        private static IDragDropManagerInterop dragDropManagerInterop = CoreDragDropManager.As<IDragDropManagerInterop>();
+        private static IDragDropManagerInterop dragDropManagerInterop = ActivationFactory.Get("Windows.ApplicationModel.DataTransfer.DragDrop.Core.CoreDragDropManager").AsInterface<IDragDropManagerInterop>();
         
         public static CoreDragDropManager GetForWindow(IntPtr appWindow)
         {
@@ -160,7 +160,7 @@ namespace Windows.Graphics.Printing
 #endif
     static class PrintManagerInterop
     {
-        private static IPrintManagerInterop printManagerInterop = PrintManager.As<IPrintManagerInterop>();
+        private static IPrintManagerInterop printManagerInterop = ActivationFactory.Get("Windows.Graphics.Printing.PrintManager").AsInterface<IPrintManagerInterop>();
 
         public static PrintManager GetForWindow(IntPtr appWindow)
         {
@@ -190,7 +190,7 @@ namespace Windows.Media
 #endif
     static class SystemMediaTransportControlsInterop
     {
-        private static ISystemMediaTransportControlsInterop systemMediaTransportControlsInterop = SystemMediaTransportControls.As<ISystemMediaTransportControlsInterop>();
+        private static ISystemMediaTransportControlsInterop systemMediaTransportControlsInterop = ActivationFactory.Get("Windows.Media.SystemMediaTransportControls").AsInterface<ISystemMediaTransportControlsInterop>();
 
         public static SystemMediaTransportControls GetForWindow(IntPtr appWindow)
         {
@@ -214,7 +214,7 @@ namespace Windows.Media.PlayTo
 #endif
     static class PlayToManagerInterop
     {
-        private static IPlayToManagerInterop playToManagerInterop = PlayToManager.As<IPlayToManagerInterop>();
+        private static IPlayToManagerInterop playToManagerInterop = ActivationFactory.Get("Windows.Media.PlayTo.PlayToManager").AsInterface<IPlayToManagerInterop>();
         
         public static PlayToManager GetForWindow(IntPtr appWindow)
         {
@@ -243,7 +243,7 @@ namespace Windows.Security.Credentials.UI
 #endif
     static class UserConsentVerifierInterop
     {
-        private static IUserConsentVerifierInterop userConsentVerifierInterop = UserConsentVerifier.As<IUserConsentVerifierInterop>();
+        private static IUserConsentVerifierInterop userConsentVerifierInterop = ActivationFactory.Get("Windows.Security.Credentials.UI.UserConsentVerifier").AsInterface<IUserConsentVerifierInterop>();
 
         public static IAsyncOperation<UserConsentVerificationResult> RequestVerificationForWindowAsync(IntPtr appWindow, string message)
         {
@@ -267,7 +267,7 @@ namespace Windows.Security.Authentication.Web.Core
 #endif
     static class WebAuthenticationCoreManagerInterop
     {
-        private static IWebAuthenticationCoreManagerInterop webAuthenticationCoreManagerInterop = WebAuthenticationCoreManager.As<IWebAuthenticationCoreManagerInterop>();
+        private static IWebAuthenticationCoreManagerInterop webAuthenticationCoreManagerInterop = ActivationFactory.Get("Windows.Security.Authentication.Web.Core.WebAuthenticationCoreManager").AsInterface<IWebAuthenticationCoreManagerInterop>();
 
         public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(IntPtr appWindow, WebTokenRequest request)
         {
@@ -297,7 +297,7 @@ namespace Windows.UI.ApplicationSettings
 #endif
     static class AccountsSettingsPaneInterop
     {
-        private static IAccountsSettingsPaneInterop accountsSettingsPaneInterop = AccountsSettingsPane.As<IAccountsSettingsPaneInterop>();
+        private static IAccountsSettingsPaneInterop accountsSettingsPaneInterop = ActivationFactory.Get("Windows.UI.ApplicationSettings.AccountsSettingsPane").AsInterface<IAccountsSettingsPaneInterop>();
 
         public static AccountsSettingsPane GetForWindow(IntPtr appWindow)
         {
@@ -334,7 +334,7 @@ namespace Windows.UI.Input
     static class RadialControllerConfigurationInterop
     {
         private static IRadialControllerConfigurationInterop radialControllerConfigurationInterop 
-            = RadialControllerConfiguration.As<IRadialControllerConfigurationInterop>();
+            = ActivationFactory.Get("Windows.UI.Input.RadialControllerConfiguration").AsInterface<IRadialControllerConfigurationInterop>();
         
         public static RadialControllerConfiguration GetForWindow(IntPtr hwnd)
         {
@@ -353,7 +353,7 @@ namespace Windows.UI.Input
 #endif
     static class RadialControllerInterop
     {
-        private static IRadialControllerInterop radialControllerInterop = RadialController.As<IRadialControllerInterop>();
+        private static IRadialControllerInterop radialControllerInterop = ActivationFactory.Get("Windows.UI.Input.RadialController").AsInterface<IRadialControllerInterop>();
 
         public static RadialController CreateForWindow(IntPtr hwnd)
         {
@@ -378,7 +378,7 @@ namespace Windows.UI.Input.Core
     static class RadialControllerIndependentInputSourceInterop
     {
         private static IRadialControllerIndependentInputSourceInterop radialControllerIndependentInputSourceInterop 
-            = RadialControllerIndependentInputSource.As<IRadialControllerIndependentInputSourceInterop>();
+            = ActivationFactory.Get("Windows.UI.Input.Core.RadialControllerIndependentInputSource").AsInterface<IRadialControllerIndependentInputSourceInterop>();
 
         public static RadialControllerIndependentInputSource CreateForWindow(IntPtr hwnd)
         {
@@ -402,7 +402,7 @@ namespace Windows.UI.Input.Spatial
 #endif
     static class SpatialInteractionManagerInterop
     {
-        private static ISpatialInteractionManagerInterop spatialInteractionManagerInterop = SpatialInteractionManager.As<ISpatialInteractionManagerInterop>();
+        private static ISpatialInteractionManagerInterop spatialInteractionManagerInterop = ActivationFactory.Get("Windows.UI.Input.Spatial.SpatialInteractionManager").AsInterface<ISpatialInteractionManagerInterop>();
         
         public static SpatialInteractionManager GetForWindow(IntPtr window)
         {
@@ -426,7 +426,7 @@ namespace Windows.UI.ViewManagement
 #endif
     static class InputPaneInterop
     {
-        private static IInputPaneInterop inputPaneInterop = InputPane.As<IInputPaneInterop>();
+        private static IInputPaneInterop inputPaneInterop = ActivationFactory.Get("Windows.UI.ViewManagement.InputPane").AsInterface<IInputPaneInterop>();
 
         public static InputPane GetForWindow(IntPtr appWindow)
         {
@@ -445,7 +445,7 @@ namespace Windows.UI.ViewManagement
 #endif
     static class UIViewSettingsInterop
     {
-        private static IUIViewSettingsInterop uIViewSettingsInterop = UIViewSettings.As<IUIViewSettingsInterop>();
+        private static IUIViewSettingsInterop uIViewSettingsInterop = ActivationFactory.Get("Windows.UI.ViewManagement.UIViewSettings").AsInterface<IUIViewSettingsInterop>();
 
         public static UIViewSettings GetForWindow(IntPtr hwnd)
         {
@@ -469,7 +469,7 @@ namespace Windows.Graphics.Display
 #endif
     static class DisplayInformationInterop
     {
-        private static IDisplayInformationStaticsInterop displayInformationInterop = DisplayInformation.As<IDisplayInformationStaticsInterop>();
+        private static IDisplayInformationStaticsInterop displayInformationInterop = ActivationFactory.Get("Windows.Graphics.Display.DisplayInformation").AsInterface<IDisplayInformationStaticsInterop>();
 
         public static DisplayInformation GetForWindow(IntPtr window)
         {
