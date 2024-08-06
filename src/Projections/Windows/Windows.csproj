@@ -24,6 +24,10 @@
 -exclude Windows.UI.IColors
 -exclude Windows.UI.ColorHelper
 -exclude Windows.UI.IColorHelper
+-exclude Windows.UI.ColorHelper
+-exclude Windows.UI.IColorHelper
+-exclude Windows.UI.IColorHelperStatics
+-exclude Windows.UI.IColorHelperStatics2
 #-exclude Windows.UI.Text (must include Windows.UI.Text to work around WinUI nuget issues)
 -exclude Windows.UI.Xaml
 -exclude Windows.ApplicationModel.Store.Preview
