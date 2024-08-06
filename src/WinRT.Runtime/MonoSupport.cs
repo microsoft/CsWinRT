@@ -13,7 +13,7 @@ namespace WinRT
 {
     internal static class Mono
     {
-        static unsafe Lazy<bool> _usingMono = new Lazy<bool>(() =>
+        static readonly unsafe Lazy<bool> _usingMono = new Lazy<bool>(() =>
         {
             IntPtr modulePtr = Platform.LoadLibraryExW("mono-2.0-bdwgc.dll", IntPtr.Zero, 0);
             if (modulePtr == IntPtr.Zero) return false;
@@ -75,7 +75,7 @@ namespace WinRT
 
         public sealed class ThreadContext : IDisposable
         {
-            static Lazy<HashSet<IntPtr>> _foreignThreads = new Lazy<HashSet<IntPtr>>();
+            static readonly Lazy<HashSet<IntPtr>> _foreignThreads = new Lazy<HashSet<IntPtr>>();
 
             readonly IntPtr _threadPtr = IntPtr.Zero;
 

@@ -873,7 +873,7 @@ namespace ABI.System.Collections
         public sealed class ToAbiHelper : IBindableVector
 #pragma warning restore CA2257
         {
-            private global::System.Collections.IList _list;
+            private readonly global::System.Collections.IList _list;
 
             public ToAbiHelper(global::System.Collections.IList list) => _list = list;
 

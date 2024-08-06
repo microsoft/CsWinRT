@@ -41,7 +41,7 @@ namespace WinRT
         internal static Type CreateRCWType;
 
         private static ComWrappers _comWrappers;
-        private static object _comWrappersLock = new object();
+        private static readonly object _comWrappersLock = new object();
         private static ComWrappers ComWrappers
         {
             get
