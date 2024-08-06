@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using ABI.System.ComponentModel;
+using ABI.WinRT.Interop;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -8,26 +10,88 @@ using WinRT;
 
 namespace ABI.System.Windows.Input
 {
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
-    [DynamicInterfaceCastableImplementation]
 #if EMBED
     internal
 #else
     public
 #endif
-    unsafe interface ICommand : global::System.Windows.Input.ICommand
+    static class ICommandMethods
+    {
+        public static global::System.Guid IID => global::WinRT.Interop.IID.IID_ICommand;
+
+        public static IntPtr AbiToProjectionVftablePtr => ICommand.Vftbl.AbiToProjectionVftablePtr;
+
+        public static unsafe bool CanExecute(IObjectReference obj, object parameter)
+        {
+            var ThisPtr = obj.ThisPtr;
+            ObjectReferenceValue __parameter = default;
+            byte __retval = default;
+            try
+            {
+                __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int>**)ThisPtr)[8](ThisPtr, MarshalInspectable<object>.GetAbi(__parameter), &__retval));
+                return __retval != 0;
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeMarshaler(__parameter);
+            }
+        }
+
+        public static unsafe void Execute(IObjectReference obj, object parameter)
+        {
+            var ThisPtr = obj.ThisPtr;
+            ObjectReferenceValue __parameter = default;
+            try
+            {
+                __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>**)ThisPtr)[9](ThisPtr, MarshalInspectable<object>.GetAbi(__parameter)));
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeMarshaler(__parameter);
+            }
+        }
+
+        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource> _CanExecuteChanged;
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource> MakeCanExecuteChangedTable()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _CanExecuteChanged, new(), null);
+            return _CanExecuteChanged;
+        }
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventHandlerEventSource> CanExecuteChanged => _CanExecuteChanged ?? MakeCanExecuteChangedTable();
+
+        public static unsafe EventHandlerEventSource Get_CanExecuteChanged2(IObjectReference obj, object thisObj)
+        {
+            return CanExecuteChanged.GetValue(thisObj, (key) =>
+            {
+                var ThisPtr = obj.ThisPtr;
+
+                return new EventHandlerEventSource(obj,
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
+            });
+        }
+    }
+
+    // ICommand has the same IID for both Windows.UI.Xaml.Input.ICommand and Microsoft.UI.Xaml.Input.ICommand, so we can use one interface definition for both without marking it as a WUX/MUX type.
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
+    [DynamicInterfaceCastableImplementation]
+    internal unsafe interface ICommand : global::System.Windows.Input.ICommand
     {
         [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
+#pragma warning disable CA2257 // This member is a type (so it cannot be invoked)
         public struct Vftbl
+#pragma warning restore CA2257
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _add_CanExecuteChanged_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CanExecuteChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CanExecuteChanged_0; set => _add_CanExecuteChanged_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> add_CanExecuteChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_add_CanExecuteChanged_0; set => _add_CanExecuteChanged_0 = value; }
             private void* _remove_CanExecuteChanged_1;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CanExecuteChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CanExecuteChanged_1; set => _remove_CanExecuteChanged_1 = value; }
             private void* _CanExecute_2;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out byte, int> CanExecute_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out byte, int>)_CanExecute_2; set => _CanExecute_2 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int> CanExecute_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int>)_CanExecute_2; set => _CanExecute_2 = value; }
             private void* _Execute_3;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int> Execute_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)_Execute_3; set => _Execute_3 = value; }
 
@@ -40,15 +104,14 @@ namespace ABI.System.Windows.Input
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
-                    _add_CanExecuteChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*,
-                    int>)&Do_Abi_add_CanExecuteChanged_0,
+                    _add_CanExecuteChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)&Do_Abi_add_CanExecuteChanged_0,
                     _remove_CanExecuteChanged_1 = (delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int>)&Do_Abi_remove_CanExecuteChanged_1,
                     _CanExecute_2 = (delegate* unmanaged<IntPtr, IntPtr, byte*, int>)&Do_Abi_CanExecute_2,
                     _Execute_3 = (delegate* unmanaged<IntPtr, IntPtr, int>)&Do_Abi_Execute_3,
 
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 4);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -138,48 +201,24 @@ namespace ABI.System.Windows.Input
                 }
             }
         }
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_ICommand);
 
-        private static EventHandlerEventSource _CanExecuteChanged(IWinRTObject _this)
+        private static global::ABI.WinRT.Interop.EventHandlerEventSource _CanExecuteChanged(IWinRTObject _this)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)_this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle));
-
-            return (EventHandlerEventSource)_this.GetOrCreateTypeHelperData(typeof(global::System.Windows.Input.ICommand).TypeHandle,
-                () => new EventHandlerEventSource(_obj, _obj.Vftbl.add_CanExecuteChanged_0, _obj.Vftbl.remove_CanExecuteChanged_1));
+            var _obj = _this.GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle);
+            return ICommandMethods.Get_CanExecuteChanged2(_obj, _this);
         }
 
         unsafe bool global::System.Windows.Input.ICommand.CanExecute(object parameter)
         {
-            ObjectReferenceValue __parameter = default;
-            byte __retval = default;
-            try
-            {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle));
-                var ThisPtr = _obj.ThisPtr;
-                __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CanExecute_2(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter), out __retval));
-                return __retval != 0;
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeMarshaler(__parameter);
-            }
+            var obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle);
+            return ICommandMethods.CanExecute(obj, parameter);
         }
 
         unsafe void global::System.Windows.Input.ICommand.Execute(object parameter)
         {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle));
-            var ThisPtr = _obj.ThisPtr;
-            ObjectReferenceValue __parameter = default;
-            try
-            {
-                __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Execute_3(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter)));
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeMarshaler(__parameter);
-            }
+            var obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle);
+            ICommandMethods.Execute(obj, parameter);
         }
 
         event global::System.EventHandler global::System.Windows.Input.ICommand.CanExecuteChanged

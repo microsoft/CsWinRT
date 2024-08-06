@@ -1,10 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace Generator
 {
     class Logger
     {
+        [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035", Justification = "We need to do file IO to save the 'cswinrt' log file.")]
         public Logger(GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTEnableLogging", out var enableLoggingStr);

@@ -38,4 +38,11 @@ namespace winrt::TestComponentCSharp::implementation
     void WarningStatic::WarningEvent(winrt::event_token const& token) noexcept
     {
     }
+    int32_t WarningStatic::ReadWriteProperty()
+    {
+        return 0;
+    }
+    void WarningStatic::ReadWriteProperty(int32_t value)
+    {
+    }
 }

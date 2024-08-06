@@ -3,8 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
   
   <ItemGroup>

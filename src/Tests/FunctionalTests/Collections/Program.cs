@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using test_component_derived.Nested;
 using TestComponentCSharp;
 
@@ -53,8 +56,120 @@ foreach (var hierarchyDAsHierarchyC in hierarchyDAsHierarchyCList)
     if (hierarchyDAsHierarchyC.HierarchyB_Method() != "HierarchyC.HierarchyB_Method" ||
            hierarchyDAsHierarchyC.HierarchyA_Method() != "HierarchyB.HierarchyA_Method")
     {
+        // This is set in a failure state as we are testing the TestLibrary module having
+        // an entry on the vtable lookup table without it actually being loaded or used yet.
+        // So our intention is to not actually set it.  This is just to ensure when in this
+        // scenario we don't run into other crashes from other lookup tables being registered.
+        instance.BindableIterableProperty = new List<TestLibrary.TestClass>();
         return 101;
     }
+}
+
+var propertySet = Class.PropertySet;
+if (propertySet["beta"] is not string str || str != "second")
+{
+    return 101;
+}
+
+var types = Class.ListOfTypes;
+if (types.Count != 2 || types[0] != typeof(Class))
+{
+    return 101;
+}
+
+var cancellationDictionary = new Dictionary<string, CancellationTokenSource>();
+instance.BindableIterableProperty = cancellationDictionary;
+if (cancellationDictionary != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var observableCollection = new System.Collections.ObjectModel.ObservableCollection<string>();
+instance.BindableIterableProperty = observableCollection;
+if (observableCollection != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var profile = Windows.Networking.Connectivity.NetworkInformation.GetInternetConnectionProfile();
+var names = profile.GetNetworkNames();
+
+List<string> networkNames = new();
+if (names?.Count > 0)
+{
+    networkNames.AddRange(names);
+}
+
+if (names is IList<double> networkNamesList)
+{
+    return 101;
+}
+
+var exceptionList = new List<Exception>();
+instance.BindableIterableProperty = exceptionList;
+if (exceptionList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var exceptionList2 = new List<ArgumentException>();
+instance.BindableIterableProperty = exceptionList2;
+if (exceptionList2 != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+instance.BindableIterableProperty = CustomClass.Instances;
+if (CustomClass.Instances != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var customObservableCollection = new CustomObservableCollection();
+instance.BindableIterableProperty = customObservableCollection;
+if (customObservableCollection != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var uriList = new List<Uri>();
+instance.BindableIterableProperty = uriList;
+if (uriList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var dateTimeOffsetList = new List<System.DateTimeOffset>();
+instance.BindableIterableProperty = dateTimeOffsetList;
+if (dateTimeOffsetList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+// Test sccenarios where the actual implementation type of the result or its RCW factory
+// hasn't been initialized and the statically declared type is a derived generic interface.
+var enums = instance.GetEnumIterable();
+int count = 0;
+foreach (var curEnum in enums)
+{
+    count++;
+}
+
+if (count != 2)
+{
+    return 101;
+}
+
+count = 0;
+var disposableClasses = instance.GetClassIterable();
+foreach (var curr in disposableClasses)
+{
+    count++;
+}
+
+if (count != 2)
+{
+    return 101;
 }
 
 return 100;
@@ -62,3 +177,15 @@ return 100;
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
 
 static bool AllEqual<T>(T[] x, params T[][] list) => list.All((y) => x.SequenceEqual(y));
+
+sealed partial class CustomClass : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public static IReadOnlyList<CustomClass> Instances { get; } = new CustomClass[] { };
+}
+
+sealed partial class CustomObservableCollection : System.Collections.ObjectModel.ObservableCollection<CustomClass>
+{
+    public int CustomCount => Items.Count;
+}

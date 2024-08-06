@@ -4,161 +4,33 @@
 using ABI.Microsoft.UI.Xaml.Interop;
 using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
 
 namespace ABI.Microsoft.UI.Xaml.Interop
 {
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
-    [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
-    internal sealed unsafe class INotifyCollectionChangedEventArgs
-    {
-        [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
-        [StructLayout(LayoutKind.Sequential)]
-        public struct Vftbl
-        {
-            internal IInspectable.Vftbl IInspectableVftbl;
-            private void* _get_Action_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int> get_Action_0 => (delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int>)_get_Action_0;
-            private void* _get_NewItems_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_NewItems_1 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_NewItems_1;
-            private void* _get_OldItems_2;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_OldItems_2 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_OldItems_2;
-            private void* _get_NewStartingIndex_3;
-            public delegate* unmanaged[Stdcall]<IntPtr, int*, int> get_NewStartingIndex_3 => (delegate* unmanaged[Stdcall]<IntPtr, int*, int>)_get_NewStartingIndex_3;
-            private void* _get_OldStartingIndex_4;
-            public delegate* unmanaged[Stdcall]<IntPtr, int*, int> get_OldStartingIndex_4 => (delegate* unmanaged[Stdcall]<IntPtr, int*, int>)_get_OldStartingIndex_4;
-        }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        public static implicit operator INotifyCollectionChangedEventArgs(IObjectReference obj) => (obj != null) ? new INotifyCollectionChangedEventArgs(obj) : null;
-        private readonly ObjectReference<Vftbl> _obj;
-        public IObjectReference ObjRef { get => _obj; }
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public INotifyCollectionChangedEventArgs(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        internal INotifyCollectionChangedEventArgs(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
-        }
-
-        public unsafe global::System.Collections.Specialized.NotifyCollectionChangedAction Action
-        {
-            get
-            {
-                global::System.Collections.Specialized.NotifyCollectionChangedAction __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Action_0(ThisPtr, &__retval));
-                return __retval;
-            }
-        }
-
-        public unsafe global::System.Collections.IList NewItems
-        {
-            get
-            {
-                IntPtr __retval = default;
-                try
-                {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_NewItems_1(ThisPtr, &__retval));
-                    return MarshalInterface<global::System.Collections.IList>.FromAbi(__retval);
-                }
-                finally
-                {
-                    MarshalInterface<global::System.Collections.IList>.DisposeAbi(__retval);
-                }
-            }
-        }
-
-        public unsafe int NewStartingIndex
-        {
-            get
-            {
-                int __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_NewStartingIndex_3(ThisPtr, &__retval));
-                return __retval;
-            }
-        }
-
-        public unsafe global::System.Collections.IList OldItems
-        {
-            get
-            {
-                IntPtr __retval = default;
-                try
-                {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_OldItems_2(ThisPtr, &__retval));
-                    return MarshalInterface<global::System.Collections.IList>.FromAbi(__retval);
-                }
-                finally
-                {
-                    MarshalInterface<global::System.Collections.IList>.DisposeAbi(__retval);
-                }
-            }
-        }
-
-        public unsafe int OldStartingIndex
-        {
-            get
-            {
-                int __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_OldStartingIndex_4(ThisPtr, &__retval));
-                return __retval;
-            }
-        }
-    }
-
-    [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("5108EBA4-4892-5A20-8374-A96815E0FD27")]
     internal sealed unsafe class WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory
     {
-        [Guid("5108EBA4-4892-5A20-8374-A96815E0FD27")]
-        [StructLayout(LayoutKind.Sequential)]
-        public struct Vftbl
-        {
-            internal IInspectable.Vftbl IInspectableVftbl;
-            private void* _CreateInstanceWithAllParameters_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, out IntPtr, out IntPtr, int> CreateInstanceWithAllParameters_0 => (delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, out IntPtr, out IntPtr, int>)_CreateInstanceWithAllParameters_0;
-        }
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        public static implicit operator WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(IObjectReference obj) => (obj != null) ? new WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(obj) : null;
-        public static implicit operator WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(obj) : null;
-        private readonly ObjectReference<Vftbl> _obj;
+        private readonly IObjectReference _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
-        }
 
-        public unsafe IObjectReference CreateInstanceWithAllParameters(global::System.Collections.Specialized.NotifyCollectionChangedAction action, global::System.Collections.IList newItems, global::System.Collections.IList oldItems, int newIndex, int oldIndex, object baseInterface, out IObjectReference innerInterface)
+        public static readonly WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = new();
+
+        private WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory()
         {
-            ObjectReferenceValue __newItems = default;
-            ObjectReferenceValue __oldItems = default;
-            ObjectReferenceValue __baseInterface = default;
-            IntPtr __innerInterface = default;
-            IntPtr __retval = default;
-            try
-            {
-                __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(newItems);
-                __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(oldItems);
-                __baseInterface = MarshalInspectable<object>.CreateMarshaler2(baseInterface);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable<object>.GetAbi(__baseInterface), out __innerInterface, out __retval));
-                innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
-                return ObjectReference<IUnknownVftbl>.FromAbi(__retval);
-            }
-            finally
-            {
-                MarshalInterface<global::System.Collections.IList>.DisposeMarshaler(__newItems);
-                MarshalInterface<global::System.Collections.IList>.DisposeMarshaler(__oldItems);
-                MarshalInspectable<object>.DisposeMarshaler(__baseInterface);
-                MarshalInspectable<object>.DisposeAbi(__innerInterface);
-                MarshalInspectable<object>.DisposeAbi(__retval);
-            }
+#if NET
+            _obj = FeatureSwitches.UseWindowsUIXamlProjections
+                ? ActivationFactory.Get("Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_WUX_INotifyCollectionChangedEventArgsFactory)
+                : ActivationFactory.Get("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_MUX_INotifyCollectionChangedEventArgsFactory);
+#else
+            _obj = ActivationFactory.Get<IUnknownVftbl>("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", IID.IID_MUX_INotifyCollectionChangedEventArgsFactory);
+#endif
         }
 
         public unsafe ObjectReferenceValue CreateInstanceWithAllParameters(global::System.Collections.Specialized.NotifyCollectionChangedAction action, global::System.Collections.IList newItems, global::System.Collections.IList oldItems, int newIndex, int oldIndex)
@@ -169,9 +41,23 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             IntPtr __retval = default;
             try
             {
+#if NET
+                __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(newItems, global::ABI.System.Collections.IListMethods.IID);
+                __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(oldItems, global::ABI.System.Collections.IListMethods.IID);
+#else
                 __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(newItems);
                 __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(oldItems);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, IntPtr.Zero, out __innerInterface, out __retval));
+#endif
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, IntPtr*, IntPtr*, int>**)ThisPtr)[6](
+                    ThisPtr,
+                    action,
+                    MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems),
+                    MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems),
+                    newIndex,
+                    oldIndex,
+                    IntPtr.Zero,
+                    &__innerInterface,
+                    &__retval));
                 return new ObjectReferenceValue(__retval);
             }
             finally
@@ -188,6 +74,7 @@ namespace ABI.System.Collections.Specialized
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
+    [WuxMuxProjectedType]
 #if EMBED
     internal
 #else
@@ -195,7 +82,9 @@ namespace ABI.System.Collections.Specialized
 #endif
     struct NotifyCollectionChangedEventArgs
     {
-        private static WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = ActivationFactory.Get("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs");
+        private static ref readonly Guid Interface_IID => ref FeatureSwitches.UseWindowsUIXamlProjections
+            ? ref IID.IID_WUX_INotifyCollectionChangedEventArgs
+            : ref IID.IID_MUX_INotifyCollectionChangedEventArgs;
 
         public static IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
         {
@@ -204,7 +93,16 @@ namespace ABI.System.Collections.Specialized
                 return null;
             }
 
-            return Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex, null, out _);
+            ObjectReferenceValue _value = default;
+            try
+            {
+                _value = CreateMarshaler2(value);
+                return ObjectReference<IUnknownVftbl>.FromAbi(_value.GetAbi(), IID.IID_IUnknown);
+            }
+            finally
+            {
+                _value.Dispose();
+            }
         }
 
         public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
@@ -214,7 +112,7 @@ namespace ABI.System.Collections.Specialized
                 return new ObjectReferenceValue();
             }
 
-            return Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex);
+            return WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory.Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
@@ -226,8 +124,41 @@ namespace ABI.System.Collections.Specialized
                 return null;
             }
 
-            INotifyCollectionChangedEventArgs args = INotifyCollectionChangedEventArgs.FromAbi(ptr);
-            return CreateNotifyCollectionChangedEventArgs(args.Action, args.NewItems, args.OldItems, args.NewStartingIndex, args.OldStartingIndex);
+            return CreateNotifyCollectionChangedEventArgs(ptr);
+        }
+
+        private static unsafe global::System.Collections.Specialized.NotifyCollectionChangedEventArgs CreateNotifyCollectionChangedEventArgs(IntPtr ptr)
+        {
+            IntPtr thisPtr = default;
+            global::System.Collections.Specialized.NotifyCollectionChangedAction action = default;
+            IntPtr newItems = default;
+            IntPtr oldItems = default;
+            int newStartingIndex = default;
+            int oldStartingIndex = default;
+
+            try
+            {
+                // Call can come from CreateObject which means it might not be on the right interface.
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(ptr, ref Unsafe.AsRef(in Interface_IID), out thisPtr));
+
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int>**)thisPtr)[6](thisPtr, &action));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[7](thisPtr, &newItems));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)thisPtr)[8](thisPtr, &oldItems));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, int>**)thisPtr)[9](thisPtr, &newStartingIndex));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, int>**)thisPtr)[10](thisPtr, &oldStartingIndex));
+                return CreateNotifyCollectionChangedEventArgs(
+                    action,
+                    MarshalInterface<global::System.Collections.IList>.FromAbi(newItems),
+                    MarshalInterface<global::System.Collections.IList>.FromAbi(oldItems),
+                    newStartingIndex,
+                    oldStartingIndex);
+            }
+            finally
+            {
+                MarshalInterface<global::System.Collections.IList>.DisposeAbi(newItems);
+                MarshalInterface<global::System.Collections.IList>.DisposeAbi(oldItems);
+                Marshal.Release(thisPtr);
+            }
         }
 
         private static global::System.Collections.Specialized.NotifyCollectionChangedEventArgs CreateNotifyCollectionChangedEventArgs(
@@ -263,9 +194,21 @@ namespace ABI.System.Collections.Specialized
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 
+        public static unsafe MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.MarshalerArray CreateMarshalerArray(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.GetAbiArray(box);
+        public static unsafe global::System.Collections.Specialized.NotifyCollectionChangedEventArgs[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs[] array, object box) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.MarshalerArray array) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventArgs>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
+
         public static string GetGuidSignature()
         {
-            return "rc(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})";
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                return "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})";
+            }
+            return "rc(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{da049ff2-d2e0-5fe8-8c7b-f87f26060b6f})";
         }
     }
 }

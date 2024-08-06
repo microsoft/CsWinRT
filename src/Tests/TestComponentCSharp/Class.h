@@ -24,6 +24,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>>> _nestedEvent;
         winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>>> _nestedTypedEvent;
         winrt::event<TestComponentCSharp::EventWithReturn> _returnEvent;
+        winrt::event<winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventHandler> _propertyChangedEventHandler;
 
         Windows::Foundation::Collections::IVector<Windows::Foundation::IInspectable> GetUriVectorAsIInspectableVector();
 
@@ -62,6 +63,7 @@ namespace winrt::TestComponentCSharp::implementation
         ComposedNonBlittableStruct _nonBlittableStruct{};
         std::vector<int32_t> _ints{ 1, 2, 3 };
         Windows::Foundation::Collections::IIterable<int32_t> _intColl;
+        Windows::Foundation::Collections::IIterable<char16_t> _charColl;
         Microsoft::UI::Xaml::Interop::IBindableIterable _bindableIterable;
         Microsoft::UI::Xaml::Interop::IBindableVector _bindableVector;
         Microsoft::UI::Xaml::Interop::IBindableObservableVector _bindableObservable;
@@ -139,6 +141,9 @@ namespace winrt::TestComponentCSharp::implementation
         int32_t InvokeReturnEvent(int32_t const& arg0);
         winrt::guid TestReturnGuid(winrt::guid const& arg);
 
+        winrt::event_token PropertyChangedEventHandler(winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventHandler const& handler);
+        void PropertyChangedEventHandler(winrt::event_token const& token) noexcept;
+
         int32_t IntProperty();
         void IntProperty(int32_t value);
         winrt::event_token IntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler);
@@ -152,6 +157,7 @@ namespace winrt::TestComponentCSharp::implementation
         void BoolPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseBoolChanged();
         void CallForBool(TestComponentCSharp::ProvideBool const& provideBool);
+        void InvokeBoolChanged(winrt::Windows::Foundation::EventHandler<bool> const& boolChanged);
         TestComponentCSharp::EnumValue EnumProperty();
         void EnumProperty(TestComponentCSharp::EnumValue const& value);
         winrt::event_token EnumPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::EnumValue> const& handler);
@@ -262,6 +268,10 @@ namespace winrt::TestComponentCSharp::implementation
         com_array<int32_t> GetInts();
         void FillInts(array_view<int32_t> ints);
 
+        com_array<winrt::hresult> GetAndSetHResults(array_view<winrt::hresult const> hresults);
+        com_array<winrt::Windows::Foundation::Uri> GetAndSetUris(array_view<winrt::Windows::Foundation::Uri const> uris);
+        com_array<winrt::Windows::Foundation::DateTime> GetAndSetDateTimes(array_view<winrt::Windows::Foundation::DateTime const> datetime);
+
         Windows::Foundation::IAsyncOperation<int32_t> GetIntAsync();
         Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();
 
@@ -273,6 +283,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector() noexcept;
+        Windows::Foundation::Collections::IVector<int32_t> GetIntVector2();
+        Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedBlittableStruct> GetBlittableStructVector2();
+        Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedNonBlittableStruct> GetNonBlittableStructVector2();
 
         Windows::Foundation::Collections::IMap<int32_t, int32_t> GetIntToIntDictionary();
         Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedBlittableStruct> GetStringToBlittableDictionary();
@@ -285,6 +298,9 @@ namespace winrt::TestComponentCSharp::implementation
 
         Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
         void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
+        void SetCharIterable(Windows::Foundation::Collections::IIterable<char16_t> const& value);
+        Windows::Foundation::Collections::IIterable<TestComponentCSharp::EnumValue> GetEnumIterable();
+        Windows::Foundation::Collections::IIterable<TestComponentCSharp::CustomDisposableTest> GetClassIterable();
 
         Microsoft::UI::Xaml::Interop::IBindableIterable BindableIterableProperty();
         void BindableIterableProperty(Microsoft::UI::Xaml::Interop::IBindableIterable const& value);
@@ -301,6 +317,19 @@ namespace winrt::TestComponentCSharp::implementation
         Microsoft::UI::Xaml::Interop::IBindableObservableVector BindableObservableVectorProperty();
         void BindableObservableVectorProperty(Microsoft::UI::Xaml::Interop::IBindableObservableVector const& value);
         Microsoft::UI::Xaml::Interop::IBindableObservableVector GetBindableObservableVector(Microsoft::UI::Xaml::Interop::IBindableObservableVector vector);
+
+        bool ValidateBindableProperty(
+            IInspectable const& bindableObject,
+            hstring property,
+            Windows::UI::Xaml::Interop::TypeName const& indexerType,
+            bool validateOnlyExists,
+            bool canRead,
+            bool canWrite,
+            bool isIndexer,
+            Windows::UI::Xaml::Interop::TypeName const& type,
+            IInspectable const& indexerValue,
+            IInspectable const& setValue,
+            IInspectable& retrievedValue);
 
         void CopyProperties(TestComponentCSharp::IProperties1 const& src);
         void CopyPropertiesViaWeakReference(TestComponentCSharp::IProperties1 const& src);
@@ -351,6 +380,8 @@ namespace winrt::TestComponentCSharp::implementation
         void Vector2Property(Windows::Foundation::Numerics::float2 const& value);
         Windows::Foundation::Numerics::float3 Vector3Property();
         void Vector3Property(Windows::Foundation::Numerics::float3 const& value);
+        Windows::Foundation::IReference<Windows::Foundation::Numerics::float3> Vector3NullableProperty();
+        void Vector3NullableProperty(Windows::Foundation::IReference<Windows::Foundation::Numerics::float3> const& value);
         Windows::Foundation::Numerics::float4 Vector4Property();
         void Vector4Property(Windows::Foundation::Numerics::float4 const& value);
         Windows::Foundation::IReference<Windows::Foundation::Point> GetPointReference();
@@ -368,6 +399,7 @@ namespace winrt::TestComponentCSharp::implementation
         static hstring UnboxString(IInspectable const& obj);
         static EnumValue UnboxEnum(IInspectable const& obj);
         static TestComponentCSharp::ProvideInt UnboxDelegate(IInspectable const& obj);
+        static Windows::UI::Xaml::Interop::TypeName UnboxType(IInspectable const& obj);
         static com_array<int32_t> UnboxInt32Array(IInspectable const& obj);
         static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
         static com_array<hstring> UnboxStringArray(IInspectable const& obj);
@@ -378,6 +410,9 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::UI::Xaml::Interop::TypeName Int32Type();
         static Windows::UI::Xaml::Interop::TypeName ReferenceInt32Type();
         static Windows::UI::Xaml::Interop::TypeName ThisClassType();
+        static Windows::Foundation::IInspectable BoxedType();
+        static Windows::Foundation::Collections::IVector<Windows::UI::Xaml::Interop::TypeName> ListOfTypes();
+
         static bool VerifyTypeIsInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static bool VerifyTypeIsReferenceInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static bool VerifyTypeIsThisClassType(Windows::UI::Xaml::Interop::TypeName const& type_name);
@@ -386,12 +421,14 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::Foundation::IInspectable EmptyString();
         static Windows::Foundation::IInspectable BoxedDelegate();
         static Windows::Foundation::IInspectable BoxedEnum();
+        static Windows::Foundation::IInspectable BoxedEventHandler();
 
         hstring Catch(hstring const& params, hstring& locks);
 
         static IProperties1 NativeProperties1();
         static Windows::Foundation::IInspectable ServiceProvider();
         static winrt::Windows::Foundation::IInspectable ComInterop();
+        static winrt::Windows::Foundation::Collections::IPropertySet PropertySet();
 
         // IStringable
         hstring ToString();

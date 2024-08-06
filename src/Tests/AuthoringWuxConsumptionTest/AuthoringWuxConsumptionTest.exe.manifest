@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="CppTestApp"/>
+  <file name="WinRT.Host.dll">
+    <activatableClass
+        name="AuthoringWuxTest.DisposableClass"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringWuxTest.CustomNotifyPropertyChanged"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringWuxTest.CustomNotifyCollectionChanged"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringWuxTest.MultipleInterfaceMappingClass"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringWuxTest.XamlExceptionTypes"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+  </file>
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+	  <maxversiontested Id="10.0.18226.0"/>
+	</application>
+  </compatibility>
+</assembly>

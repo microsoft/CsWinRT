@@ -36,8 +36,9 @@ namespace ABI.Windows.Foundation
 
 namespace ABI.System
 {
-
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("44A9796F-723E-4FDF-A218-033E75B0C084")]
     internal sealed class WinRTUriRuntimeClassFactory
     {
@@ -47,18 +48,14 @@ namespace ABI.System
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _CreateUri_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out IntPtr, int> CreateUri_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out IntPtr, int>)_CreateUri_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int> CreateUri_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>)_CreateUri_0;
             public IntPtr _CreateWithRelativeUri;
         }
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_UriRuntimeClassFactory);
 
-        public static implicit operator WinRTUriRuntimeClassFactory(IObjectReference obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
-        public static implicit operator WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public WinRTUriRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public WinRTUriRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_UriRuntimeClassFactory)) { }
         public WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
@@ -70,8 +67,8 @@ namespace ABI.System
             MarshalString.Pinnable __uri = new(uri);
             fixed (void* ___uri = __uri)
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateUri_0(ThisPtr, MarshalString.GetAbi(ref __uri), out __retval));
-                return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, MarshalString.GetAbi(ref __uri), &__retval));
+                return ObjectReference<IUnknownVftbl>.Attach(ref __retval, IID.IID_IUnknown);
             }
         }
 
@@ -81,7 +78,7 @@ namespace ABI.System
             MarshalString.Pinnable __uri = new(uri);
             fixed (void* ___uri = __uri)
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateUri_0(ThisPtr, MarshalString.GetAbi(ref __uri), out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, MarshalString.GetAbi(ref __uri), &__retval));
                 return new ObjectReferenceValue(__retval);
             }
         }
@@ -96,7 +93,7 @@ namespace ABI.System
 #endif
     unsafe struct Uri
     {
-        private static WinRTUriRuntimeClassFactory Instance = ActivationFactory.Get("Windows.Foundation.Uri");
+        private static readonly WinRTUriRuntimeClassFactory Instance = new(ActivationFactory.Get("Windows.Foundation.Uri"));
 
         public static IObjectReference CreateMarshaler(global::System.Uri value)
         {
@@ -139,6 +136,8 @@ namespace ABI.System
             }
         }
 
+        public static unsafe global::System.Uri[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.Uri>.FromAbiArray(box, FromAbi);
+
         public static unsafe void CopyManaged(global::System.Uri o, IntPtr dest)
         {
             *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
@@ -153,8 +152,14 @@ namespace ABI.System
             return CreateMarshaler2(value).Detach();
         }
 
+        public static unsafe MarshalInterfaceHelper<global::System.Uri>.MarshalerArray CreateMarshalerArray(global::System.Uri[] array) => MarshalInterfaceHelper<global::System.Uri>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.Uri>.GetAbiArray(box);
+        public static void CopyAbiArray(global::System.Uri[] array, object box) => MarshalInterfaceHelper<global::System.Uri>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.Uri[] array) => MarshalInterfaceHelper<global::System.Uri>.FromManagedArray(array, (o) => FromManaged(o));
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.Uri>.MarshalerArray array) => MarshalInterfaceHelper<global::System.Uri>.DisposeMarshalerArray(array);
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
+        public static void DisposeAbiArray(object box) => MarshalInterfaceHelper<global::System.Uri>.DisposeAbiArray(box);
 
         public static string GetGuidSignature()
         {

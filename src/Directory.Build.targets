@@ -18,7 +18,7 @@
     <None Include="$(GeneratedFilesRootDir)**/*.cs" />
     <Compile Condition="'$(GeneratedFilesDir)' != '$(GeneratedFilesRootDir)'" Include="$(GeneratedFilesDir)*.cs" />
   </ItemGroup>
-
+	
   <ItemGroup>
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
   </ItemGroup>

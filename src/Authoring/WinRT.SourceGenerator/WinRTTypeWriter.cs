@@ -130,18 +130,19 @@ namespace Generator
         public string DefaultInterface;
         public string StaticInterface;
         public bool IsSynthesizedInterface;
+        public bool IsComponentType;
 
-        public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions = new Dictionary<ISymbol, List<MethodDefinitionHandle>>();
-        public Dictionary<ISymbol, List<EntityHandle>> MethodReferences = new Dictionary<ISymbol, List<EntityHandle>>();
-        public Dictionary<ISymbol, FieldDefinitionHandle> FieldDefinitions = new Dictionary<ISymbol, FieldDefinitionHandle>();
-        public Dictionary<ISymbol, PropertyDefinitionHandle> PropertyDefinitions = new Dictionary<ISymbol, PropertyDefinitionHandle>();
-        public Dictionary<ISymbol, EventDefinitionHandle> EventDefinitions = new Dictionary<ISymbol, EventDefinitionHandle>();
-        public Dictionary<ISymbol, InterfaceImplementationHandle> InterfaceImplDefinitions = new Dictionary<ISymbol, InterfaceImplementationHandle>();
+        public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, List<EntityHandle>> MethodReferences = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, FieldDefinitionHandle> FieldDefinitions = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, PropertyDefinitionHandle> PropertyDefinitions = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, EventDefinitionHandle> EventDefinitions = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, InterfaceImplementationHandle> InterfaceImplDefinitions = new(SymbolEqualityComparer.Default);
         public Dictionary<string, List<ISymbol>> MethodsByName = new Dictionary<string, List<ISymbol>>(StringComparer.Ordinal);
-        public Dictionary<ISymbol, string> OverloadedMethods = new Dictionary<ISymbol, string>();
-        public List<ISymbol> CustomMappedSymbols = new List<ISymbol>();
-        public HashSet<ISymbol> SymbolsWithAttributes = new HashSet<ISymbol>();
-        public Dictionary<ISymbol, ISymbol> ClassInterfaceMemberMapping = new Dictionary<ISymbol, ISymbol>();
+        public Dictionary<ISymbol, string> OverloadedMethods = new(SymbolEqualityComparer.Default);
+        public List<ISymbol> CustomMappedSymbols = new();
+        public HashSet<ISymbol> SymbolsWithAttributes = new(SymbolEqualityComparer.Default);
+        public Dictionary<ISymbol, ISymbol> ClassInterfaceMemberMapping = new(SymbolEqualityComparer.Default);
 
         public TypeDeclaration()
             : this(null)
@@ -149,11 +150,12 @@ namespace Generator
             IsSynthesizedInterface = true;
         }
 
-        public TypeDeclaration(ISymbol node)
+        public TypeDeclaration(ISymbol node, bool isComponentType = false)
         {
             Node = node;
             Handle = default;
             IsSynthesizedInterface = false;
+            IsComponentType = isComponentType;
         }
 
         public override string ToString()
@@ -243,88 +245,6 @@ namespace Generator
 
     class WinRTTypeWriter : CSharpSyntaxWalker
     {
-        internal struct MappedType
-        {
-            private readonly string @namespace;
-            private readonly string name;
-            private readonly string assembly;
-            private readonly bool isSystemType;
-            private readonly bool isValueType;
-            private readonly Func<ISymbol, (string, string, string, bool, bool)> multipleMappingFunc;
-
-            public MappedType(string @namespace, string name, string assembly, bool isValueType = false)
-            {
-                this.@namespace = @namespace;
-                this.name = name;
-                this.assembly = assembly;
-                isSystemType = string.CompareOrdinal(this.assembly, "mscorlib") == 0;
-                this.isValueType = isValueType;
-                multipleMappingFunc = null;
-            }
-
-            public MappedType(Func<ISymbol, (string, string, string, bool, bool)> multipleMappingFunc)
-            {
-                @namespace = null;
-                name = null;
-                assembly = null;
-                isSystemType = false;
-                isValueType = false;
-                this.multipleMappingFunc = multipleMappingFunc;
-            }
-
-            public (string, string, string, bool, bool) GetMapping(ISymbol containingType = null)
-            {
-                return multipleMappingFunc != null ?
-                    multipleMappingFunc(containingType) : (@namespace, name, assembly, isSystemType, isValueType);
-            }
-        }
-
-        // This should be in sync with the reverse mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
-        internal static readonly Dictionary<string, MappedType> MappedCSharpTypes = new Dictionary<string, MappedType>(StringComparer.Ordinal)
-        {
-            { "System.DateTimeOffset", new MappedType("Windows.Foundation", "DateTime", "Windows.Foundation.FoundationContract", true) },
-            { "System.Exception", new MappedType("Windows.Foundation", "HResult", "Windows.Foundation.FoundationContract", true) },
-            { "System.EventHandler`1", new MappedType("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract", true) },
-            { "System.FlagsAttribute", new MappedType("System", "FlagsAttribute", "mscorlib" ) },
-            { "System.IDisposable", new MappedType("Windows.Foundation", "IClosable", "Windows.Foundation.FoundationContract") },
-            { "System.IServiceProvider", new MappedType("Microsoft.UI.Xaml", "IXamlServiceProvider", "Microsoft.UI") },
-            { "System.Nullable`1", new MappedType("Windows.Foundation", "IReference`1", "Windows.Foundation.FoundationContract" ) },
-            { "System.Object", new MappedType("System", "Object", "mscorlib" ) },
-            { "System.TimeSpan", new MappedType("Windows.Foundation", "TimeSpan", "Windows.Foundation.FoundationContract", true) },
-            { "System.Uri", new MappedType("Windows.Foundation", "Uri", "Windows.Foundation.FoundationContract") },
-            { "System.ComponentModel.DataErrorsChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "Microsoft.UI") },
-            { "System.ComponentModel.INotifyDataErrorInfo", new MappedType("Microsoft.UI.Xaml.Data", "INotifyDataErrorInfo", "Microsoft.UI") },
-            { "System.ComponentModel.INotifyPropertyChanged", new MappedType("Microsoft.UI.Xaml.Data", "INotifyPropertyChanged", "Microsoft.UI") },
-            { "System.ComponentModel.PropertyChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Data", "PropertyChangedEventArgs", "Microsoft.UI") },
-            { "System.ComponentModel.PropertyChangedEventHandler", new MappedType("Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler", "Microsoft.UI") },
-            { "System.Windows.Input.ICommand", new MappedType("Microsoft.UI.Xaml.Input", "ICommand", "Microsoft.UI") },
-            { "System.Collections.IEnumerable", new MappedType("Microsoft.UI.Xaml.Interop", "IBindableIterable", "Microsoft.UI") },
-            { "System.Collections.IList", new MappedType("Microsoft.UI.Xaml.Interop", "IBindableVector", "Microsoft.UI") },
-            { "System.Collections.Specialized.INotifyCollectionChanged", new MappedType("Microsoft.UI.Xaml.Interop", "INotifyCollectionChanged", "Microsoft.UI") },
-            { "System.Collections.Specialized.NotifyCollectionChangedAction", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedAction", "Microsoft.UI") },
-            { "System.Collections.Specialized.NotifyCollectionChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "Microsoft.UI") },
-            { "System.Collections.Specialized.NotifyCollectionChangedEventHandler", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler", "Microsoft.UI") },
-            { "WinRT.EventRegistrationToken", new MappedType("Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract", true) },
-            { "System.AttributeTargets", new MappedType("Windows.Foundation.Metadata", "AttributeTargets", "Windows.Foundation.FoundationContract", true) },
-            { "System.AttributeUsageAttribute", new MappedType("Windows.Foundation.Metadata", "AttributeUsageAttribute", "Windows.Foundation.FoundationContract") },
-            { "System.Numerics.Matrix3x2", new MappedType("Windows.Foundation.Numerics", "Matrix3x2", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Matrix4x4", new MappedType("Windows.Foundation.Numerics", "Matrix4x4", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Plane", new MappedType("Windows.Foundation.Numerics", "Plane", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Quaternion", new MappedType("Windows.Foundation.Numerics", "Quaternion", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Vector2", new MappedType("Windows.Foundation.Numerics", "Vector2", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Vector3", new MappedType("Windows.Foundation.Numerics", "Vector3", "Windows.Foundation.FoundationContract", true) },
-            { "System.Numerics.Vector4", new MappedType("Windows.Foundation.Numerics", "Vector4", "Windows.Foundation.FoundationContract", true) },
-            { "System.Type", new MappedType(GetSystemTypeCustomMapping) },
-            { "System.Collections.Generic.IEnumerable`1", new MappedType("Windows.Foundation.Collections", "IIterable`1", "Windows.Foundation.FoundationContract") },
-            { "System.Collections.Generic.IEnumerator`1", new MappedType("Windows.Foundation.Collections", "IIterator`1", "Windows.Foundation.FoundationContract") },
-            { "System.Collections.Generic.KeyValuePair`2", new MappedType("Windows.Foundation.Collections", "IKeyValuePair`2", "Windows.Foundation.FoundationContract") },
-            { "System.Collections.Generic.IReadOnlyDictionary`2", new MappedType("Windows.Foundation.Collections", "IMapView`2", "Windows.Foundation.FoundationContract") },
-            { "System.Collections.Generic.IDictionary`2", new MappedType("Windows.Foundation.Collections", "IMap`2", "Windows.Foundation.FoundationContract") },
-            { "System.Collections.Generic.IReadOnlyList`1", new MappedType("Windows.Foundation.Collections", "IVectorView`1", "Windows.Foundation.FoundationContract") },
-            { "System.Collections.Generic.IList`1", new MappedType("Windows.Foundation.Collections", "IVector`1", "Windows.Foundation.FoundationContract") },
-            { "Windows.UI.Color", new MappedType("Windows.UI", "Color", "Windows.Foundation.UniversalApiContract", true) },
-        };
-
         internal static readonly List<string> ImplementedInterfacesWithoutMapping = new List<string>()
         {
             "System.Collections.Generic.ICollection`1",
@@ -345,7 +265,7 @@ namespace Generator
         private readonly Dictionary<string, TypeReferenceHandle> typeReferenceMapping;
         private readonly Dictionary<string, EntityHandle> assemblyReferenceMapping;
         private readonly MetadataBuilder metadataBuilder;
-
+        private readonly TypeMapper mapper;
         private readonly Dictionary<string, TypeDeclaration> typeDefinitionMapping;
         private TypeDeclaration currentTypeDeclaration;
 
@@ -355,12 +275,14 @@ namespace Generator
             string assembly,
             string version,
             MetadataBuilder metadataBuilder,
-            Logger logger)
+            Logger logger,
+            TypeMapper mapper)
         {
             this.assembly = assembly;
             this.version = version;
             this.metadataBuilder = metadataBuilder;
             Logger = logger;
+            this.mapper = mapper;
             typeReferenceMapping = new Dictionary<string, TypeReferenceHandle>(StringComparer.Ordinal);
             assemblyReferenceMapping = new Dictionary<string, EntityHandle>(StringComparer.Ordinal);
             typeDefinitionMapping = new Dictionary<string, TypeDeclaration>(StringComparer.Ordinal);
@@ -494,13 +416,6 @@ namespace Generator
             return typeRef;
         }
 
-        public bool IsWinRTType(ISymbol type)
-        {
-            bool isProjectedType = type.GetAttributes().
-                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0);
-            return isProjectedType;
-        }
-
         public string GetAssemblyForWinRTType(ISymbol type)
         {
             var winrtTypeAttribute = type.GetAttributes().
@@ -522,9 +437,9 @@ namespace Generator
             var assembly = GetAssemblyForWinRTType(symbol);
             if (assembly == null)
             {
-                if (MappedCSharpTypes.ContainsKey(fullType))
+                if (mapper.HasMappingForType(fullType))
                 {
-                    (@namespace, name, assembly, _, _) = MappedCSharpTypes[fullType].GetMapping(currentTypeDeclaration.Node);
+                    (@namespace, name, assembly, _, _) = mapper.GetMappedType(fullType).GetMapping(currentTypeDeclaration.Node);
                     Logger.Log("custom mapping " + fullType + " to " + QualifiedName(@namespace, name) + " from " + assembly);
                 }
                 else
@@ -607,9 +522,9 @@ namespace Generator
             else
             {
                 bool isValueType = symbol.Type.TypeKind == TypeKind.Enum || symbol.Type.TypeKind == TypeKind.Struct;
-                if (MappedCSharpTypes.ContainsKey(QualifiedName(symbol.Type)))
+                if (mapper.HasMappingForType(QualifiedName(symbol.Type)))
                 {
-                    (_, _, _, _, isValueType) = MappedCSharpTypes[QualifiedName(symbol.Type)].GetMapping(currentTypeDeclaration.Node);
+                    (_, _, _, _, isValueType) = mapper.GetMappedType(QualifiedName(symbol.Type)).GetMapping(currentTypeDeclaration.Node);
                 }
                 typeEncoder.Type(GetTypeReference(symbol.Type), isValueType);
             }
@@ -883,27 +798,15 @@ namespace Generator
             return typeDefinitionHandle;
         }
 
-        // Based on whether System.Type is used in an attribute declaration or elsewhere, we need to choose the correct custom mapping
-        // as attributes don't use the TypeName mapping.
-        internal static (string, string, string, bool, bool) GetSystemTypeCustomMapping(ISymbol containingSymbol)
-        {
-            bool isDefinedInAttribute =
-                containingSymbol != null && 
-                    string.CompareOrdinal((containingSymbol as INamedTypeSymbol).BaseType?.ToString(), "System.Attribute") == 0;
-            return isDefinedInAttribute ?
-                ("System", "Type", "mscorlib", true, false) :
-                ("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", false, true);
-        }
-
         private void ProcessCustomMappedInterfaces(INamedTypeSymbol classSymbol)
         {
             Logger.Log("writing custom mapped interfaces for " + QualifiedName(classSymbol));
-            Dictionary<INamedTypeSymbol, bool> isPublicImplementation = new Dictionary<INamedTypeSymbol, bool>();
+            Dictionary<INamedTypeSymbol, bool> isPublicImplementation = new(SymbolEqualityComparer.Default);
 
             // Mark custom mapped interface members for removal later.
             // Note we want to also mark members from interfaces without mappings.
             foreach (var implementedInterface in GetInterfaces(classSymbol, true).
-                Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
+                Where(symbol => mapper.HasMappingForType(QualifiedName(symbol)) ||
                                 ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
                 bool isPubliclyImplemented = false;
@@ -924,7 +827,7 @@ namespace Generator
             }
 
             foreach (var implementedInterface in GetInterfaces(classSymbol)
-                        .Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol))))
+                        .Where(symbol => mapper.HasMappingForType(QualifiedName(symbol))))
             {
                 WriteCustomMappedTypeMembers(implementedInterface, true, isPublicImplementation[implementedInterface]);
             }
@@ -952,9 +855,9 @@ namespace Generator
         private string GetMappedQualifiedTypeName(ITypeSymbol symbol)
         {
             string qualifiedName = QualifiedName(symbol);
-            if (MappedCSharpTypes.ContainsKey(qualifiedName))
+            if (mapper.HasMappingForType(qualifiedName))
             {
-                var (@namespace, mappedTypeName, _, _, _) = MappedCSharpTypes[qualifiedName].GetMapping(currentTypeDeclaration.Node);
+                var (@namespace, mappedTypeName, _, _, _) = mapper.GetMappedType(qualifiedName).GetMapping(currentTypeDeclaration.Node);
                 qualifiedName = QualifiedName(@namespace, mappedTypeName);
                 if (symbol is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
                 {
@@ -973,7 +876,7 @@ namespace Generator
 
         private void WriteCustomMappedTypeMembers(INamedTypeSymbol symbol, bool isDefinition, bool isPublic = true)
         {
-            var (_, mappedTypeName, _, _, _) = MappedCSharpTypes[QualifiedName(symbol)].GetMapping(currentTypeDeclaration.Node);
+            var (_, mappedTypeName, _, _, _) = mapper.GetMappedType(QualifiedName(symbol)).GetMapping(currentTypeDeclaration.Node);
             string qualifiedName = GetMappedQualifiedTypeName(symbol);
 
             Logger.Log("writing custom mapped type members for " + mappedTypeName + " public: " + isPublic + " qualified name: " + qualifiedName);
@@ -1303,7 +1206,7 @@ namespace Generator
 
         private IEnumerable<INamedTypeSymbol> GetInterfaces(INamedTypeSymbol symbol, bool includeInterfacesWithoutMappings = false)
         {
-            HashSet<INamedTypeSymbol> interfaces = new();
+            HashSet<INamedTypeSymbol> interfaces = new(SymbolEqualityComparer.Default);
 
             // Gather all interfaces that are publicly accessible. We specifically need to exclude interfaces
             // that are not public, as eg. those might be used for additional cloaked WinRT/COM interfaces.
@@ -1332,7 +1235,7 @@ namespace Generator
             GatherPubliclyAccessibleInterfaces(symbol);
 
             var baseType = symbol.BaseType;
-            while (baseType != null && !IsWinRTType(baseType))
+            while (baseType != null && !GeneratorHelper.IsWinRTType(baseType, mapper))
             {
                 GatherPubliclyAccessibleInterfaces(baseType);
 
@@ -1737,7 +1640,7 @@ namespace Generator
                 constructor.Parameters.Length == primitiveValues.Count &&
                 constructor.Parameters.Select(param => (param.Type is IErrorTypeSymbol) ?
                     Model.Compilation.GetTypeByMetadataName(param.Type.ToDisplayString()) : param.Type)
-                .SequenceEqual(primitiveTypes));
+                .SequenceEqual(primitiveTypes, SymbolEqualityComparer.Default));
 
             Logger.Log("# matching constructor found: " + matchingConstructor.Count());
             Logger.Log("matching constructor found: " + matchingConstructor.First());
@@ -1835,7 +1738,7 @@ namespace Generator
             }
 
             Logger.Log("defining delegate " + symbol.Name);
-            currentTypeDeclaration = new TypeDeclaration(symbol);
+            currentTypeDeclaration = new TypeDeclaration(symbol, true);
 
             base.VisitDelegateDeclaration(node);
             CheckAndMarkSymbolForAttributes(symbol);
@@ -1996,7 +1899,7 @@ namespace Generator
 
             Logger.Log("defining type: " + type.TypeKind + " " + type.ToString());
 
-            var typeDeclaration = new TypeDeclaration(type);
+            var typeDeclaration = new TypeDeclaration(type, true);
             currentTypeDeclaration = typeDeclaration;
 
             if (type.TypeKind == TypeKind.Class)
@@ -2115,7 +2018,9 @@ namespace Generator
                     TypeAttributes.BeforeFieldInit;
 
                 // extends
-                if (type.BaseType != null)
+                // WinRT doesn't support projecting abstract classes.
+                // If the base class is one, ignore it.
+                if (type.BaseType != null && !type.BaseType.IsAbstract)
                 {
                     baseType = GetTypeReference(type.BaseType);
                 }
@@ -2354,7 +2259,7 @@ namespace Generator
 
         void AddSynthesizedInterfaces(TypeDeclaration classDeclaration)
         {
-            HashSet<ISymbol> classMembersFromInterfaces = new HashSet<ISymbol>();
+            HashSet<ISymbol> classMembersFromInterfaces = new(SymbolEqualityComparer.Default);
             INamedTypeSymbol classSymbol = classDeclaration.Node as INamedTypeSymbol;
             foreach (var @interface in classSymbol.AllInterfaces)
             {
@@ -2537,9 +2442,9 @@ namespace Generator
             {
                 AddProjectedType(type);
             }
-            else if (MappedCSharpTypes.ContainsKey(qualifiedName))
+            else if (mapper.HasMappingForType(qualifiedName))
             {
-                var (@namespace, name, assembly, isSystemType, _) = MappedCSharpTypes[qualifiedName].GetMapping();
+                var (@namespace, name, assembly, isSystemType, _) = mapper.GetMappedType(qualifiedName).GetMapping();
                 if (isSystemType)
                 {
                     var projectedType = Model.Compilation.GetTypeByMetadataName(QualifiedName(@namespace, name));
@@ -2631,7 +2536,7 @@ namespace Generator
 
                     Logger.Log("finalizing interface " + implementedInterfaceQualifiedNameWithGenerics);
                     var interfaceTypeDeclaration = typeDefinitionMapping[implementedInterfaceQualifiedNameWithGenerics];
-                    if (MappedCSharpTypes.ContainsKey(QualifiedName(implementedInterface)))
+                    if (mapper.HasMappingForType(QualifiedName(implementedInterface)))
                     {
                         Logger.Log("adding MethodImpls for custom mapped interface");
                         foreach (var interfaceMember in interfaceTypeDeclaration.MethodReferences)
@@ -2760,6 +2665,74 @@ namespace Generator
             }
         }
 
+        public void GenerateWinRTExposedClassAttributes(GeneratorExecutionContext context)
+        {
+            bool IsWinRTType(ISymbol symbol, TypeMapper mapper)
+            {
+                if (!SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, context.Compilation.Assembly))
+                {
+                    return GeneratorHelper.IsWinRTType(symbol, (symbol, mapper) => IsWinRTType(symbol, mapper), mapper);
+                }
+
+                if (symbol is INamedTypeSymbol namedType)
+                {
+                    if (namedType.TypeKind == TypeKind.Interface)
+                    {
+                        // Interfaces which are allowed to be implemented on authored types but
+                        // aren't WinRT interfaces.
+                        return !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(namedType));
+                    }
+
+                    return namedType.SpecialType != SpecialType.System_Object &&
+                           namedType.SpecialType != SpecialType.System_Enum &&
+                           namedType.SpecialType != SpecialType.System_ValueType &&
+                           namedType.SpecialType != SpecialType.System_Delegate &&
+                           namedType.SpecialType != SpecialType.System_MulticastDelegate;
+                }
+
+                // In an authoring component, diagnostics prevents you from using non-WinRT types
+                // by the time we get to here.
+                return true;
+            }
+
+            List<VtableAttribute> vtableAttributesToAdd = new();
+            HashSet<VtableAttribute> vtableAttributesToAddOnLookupTable = new();
+
+            foreach (var typeDeclaration in typeDefinitionMapping.Values)
+            {
+                if (typeDeclaration.IsComponentType && 
+                    typeDeclaration.Node is INamedTypeSymbol symbol && 
+                    symbol.TypeKind == TypeKind.Class && 
+                    !symbol.IsStatic)
+                {
+                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, mapper, context.Compilation, true, typeDeclaration.DefaultInterface));
+                    WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, IsWinRTType, mapper, vtableAttributesToAddOnLookupTable);
+                }
+            }
+
+            string escapedAssemblyName = GeneratorHelper.EscapeTypeNameForIdentifier(context.Compilation.AssemblyName);
+            if (vtableAttributesToAdd.Any() || vtableAttributesToAddOnLookupTable.Any())
+            {
+                WinRTAotSourceGenerator.GenerateCCWForGenericInstantiation(
+                    context.AddSource,
+                    vtableAttributesToAdd.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces).
+                        Union(vtableAttributesToAddOnLookupTable.SelectMany(static (vtableAttribute, _) => vtableAttribute.GenericInterfaces)).
+                        Distinct().
+                        ToImmutableArray(),
+                    escapedAssemblyName);
+            }
+
+            if (vtableAttributesToAdd.Any())
+            {
+                WinRTAotSourceGenerator.GenerateVtableAttributes(context.AddSource, vtableAttributesToAdd.ToImmutableArray(), false, escapedAssemblyName);
+            }
+
+            if (vtableAttributesToAddOnLookupTable.Any())
+            {
+                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), ((true, true, true), escapedAssemblyName)), true);
+            }
+        }
+
         public bool IsPublic(ISymbol symbol)
         {
             // Check that the type has either public accessibility, or is an explicit interface implementation
@@ -2790,7 +2763,7 @@ namespace Generator
             }
         }
 
-        public string QualifiedName(string @namespace, string identifier)
+        public static string QualifiedName(string @namespace, string identifier)
         {
             if (string.IsNullOrEmpty(@namespace))
             {
@@ -2813,7 +2786,7 @@ namespace Generator
             return name;
         }
 
-        public string QualifiedName(ISymbol symbol, bool includeGenerics = false)
+        public static string QualifiedName(ISymbol symbol, bool includeGenerics = false)
         {
             return QualifiedName(symbol.ContainingNamespace.ToString(), GetGenericName(symbol, includeGenerics));
         }

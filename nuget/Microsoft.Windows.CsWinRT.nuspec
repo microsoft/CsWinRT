@@ -31,6 +31,7 @@
     <file src="$interop_winmd$" target="metadata"/>
     <file src="readme.txt"/>
     <file src="$net6_runtime$" target="lib\net6.0\"/>
+    <file src="$net8_runtime$" target="lib\net8.0\"/>
     <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
     <file src="$winrt_host_x64$" target ="hosting\x64\native"/>
     <file src="$winrt_host_x86$" target ="hosting\x86\native"/>
@@ -64,6 +65,8 @@
     <file src="..\src\WinRT.Runtime\Projections\*.cs" exclude="..\src\WinRT.Runtime\Projections\*.net*.cs" target="embedded\any\" />
     <file src="..\src\WinRT.Runtime\Projections\*net5*.cs" target="embedded\net6.0\" />
     <file src="..\src\WinRT.Runtime\Projections\*netstandard2.0*.cs" target="embedded\netstandard2.0\" />
+
+    <file src="..\src\WinRT.Runtime\Configuration\*.cs" exclude="..\src\WinRT.Runtime\Configuration\*.net*.cs"  target="embedded\any\" />
 
     <file src="$guid_patch$" target ="build\tools\IIDOptimizer"/>
   </files>

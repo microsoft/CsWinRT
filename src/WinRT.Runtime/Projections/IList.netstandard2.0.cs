@@ -475,7 +475,7 @@ namespace ABI.System.Collections.Generic
             public IList_Delegates.Clear_9 Clear_9;
             public IList_Delegates.GetMany_10 GetMany_10;
             public IList_Delegates.ReplaceAll_11 ReplaceAll_11;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
+            public static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IList<T>));
             private static readonly Type GetAt_0_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type IndexOf_3_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
             private static readonly Type SetAt_4_Type = Projections.GetAbiDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
@@ -484,9 +484,9 @@ namespace ABI.System.Collections.Generic
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
+                var vftblPtr = *(void***)thisPtr;
+                var vftbl = (IntPtr*)vftblPtr;
+                IInspectableVftbl = *(IInspectable.Vftbl*)vftblPtr;
                 GetAt_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], GetAt_0_Type);
                 get_Size_1 = Marshal.GetDelegateForFunctionPointer<_get_PropertyAsUInt32>(vftbl[7]);
                 GetView_2 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.GetView_2>(vftbl[8]);
@@ -745,7 +745,7 @@ namespace ABI.System.Collections.Generic
             var vftblT = new Vftbl(thisPtr);
             return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT);
         }
-        public static Guid PIID = Vftbl.PIID;
+        public static readonly Guid PIID = Vftbl.PIID;
 
         public static implicit operator IList<T>(IObjectReference obj) => (obj != null) ? new IList<T>(obj) : null;
         public static implicit operator IList<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new IList<T>(obj) : null;

@@ -19,13 +19,13 @@ namespace WinRT
         where T : class
     {
         private System.WeakReference<T> _managedWeakReference;
-        private IWeakReference _nativeWeakReference;
+        private global::WinRT.Interop.IWeakReference _nativeWeakReference;
         public WeakReference(T target)
         {
             _managedWeakReference = new System.WeakReference<T>(target);
-            if (target is object && ComWrappersSupport.TryUnwrapObject(target, out var objRef))
+            if (target is object && ComWrappersSupport.TryUnwrapObject(target, out var _))
             {
-                _nativeWeakReference = target.As<IWeakReferenceSource>().GetWeakReference();
+                _nativeWeakReference = target.As<global::WinRT.Interop.IWeakReferenceSource>().GetWeakReference();
             }
         }
 
@@ -36,7 +36,7 @@ namespace WinRT
                 _managedWeakReference.SetTarget(target);
                 if (target is object && ComWrappersSupport.TryUnwrapObject(target, out _))
                 {
-                    _nativeWeakReference = target.As<IWeakReferenceSource>().GetWeakReference();
+                    _nativeWeakReference = target.As<global::WinRT.Interop.IWeakReferenceSource>().GetWeakReference();
                 }
             }
         }
@@ -58,13 +58,13 @@ namespace WinRT
             }
         }
 
-        private static object ResolveNativeWeakReference(IWeakReference reference)
+        private static object ResolveNativeWeakReference(global::WinRT.Interop.IWeakReference reference)
         {
             if (reference is null)
             {
                 return null;
             }
-            using var resolved = reference.Resolve(IUnknownVftbl.IID);
+            using var resolved = reference.Resolve(IID.IID_IUnknown);
             return ComWrappersSupport.CreateRcwForComObject<object>(resolved.ThisPtr);
         }
     }

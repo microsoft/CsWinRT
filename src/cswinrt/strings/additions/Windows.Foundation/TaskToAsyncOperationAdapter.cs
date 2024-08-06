@@ -15,7 +15,7 @@ namespace System.Threading.Tasks
 #if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-    internal sealed class TaskToAsyncOperationAdapter<TResult>
+    internal sealed partial class TaskToAsyncOperationAdapter<TResult>
                     : TaskToAsyncInfoAdapter<AsyncOperationCompletedHandler<TResult>, VoidReferenceTypeParameter, TResult, VoidValueTypeParameter>,
                       IAsyncOperation<TResult>
     {
@@ -37,6 +37,13 @@ namespace System.Threading.Tasks
 
             : base(synchronousResult)
         {
+        }
+
+        internal TaskToAsyncOperationAdapter(bool isCanceled)
+            : base(default(TResult))
+        {
+            if (isCanceled)
+                DangerousSetCanceled();
         }
 
         public TResult GetResults()

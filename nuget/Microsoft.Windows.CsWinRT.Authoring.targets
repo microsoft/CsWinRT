@@ -7,10 +7,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- Generate a RuntimeConfig -->
-    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <!-- Generate a RuntimeConfig (only for the managed, hosted scenario) -->
+    <EnableDynamicLoading Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">true</EnableDynamicLoading>
     <!-- Name the RuntimeConfig properly -->
-    <ProjectRuntimeConfigFileName>WinRT.Host.runtimeconfig.json</ProjectRuntimeConfigFileName>
+    <ProjectRuntimeConfigFileName Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">WinRT.Host.runtimeconfig.json</ProjectRuntimeConfigFileName>
     <CsWinRTDetectDependentAuthoringWinMDs Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'==''">true</CsWinRTDetectDependentAuthoringWinMDs>
     <GetCopyToOutputDirectoryItemsDependsOn>$(GetCopyToOutputDirectoryItemsDependsOn);CsWinRTAuthoring_AddManagedDependencies</GetCopyToOutputDirectoryItemsDependsOn>
     <CsWinRTEnableLogging>$(CsWinRTEnableLogging)</CsWinRTEnableLogging>
@@ -28,6 +28,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
     <CompilerVisibleProperty Include="CsWinRTGeneratedFilesDir" />
     <CompilerVisibleProperty Include="CsWinRTExe" />
+    <CompilerVisibleProperty Include="CsWinRTExeTFM" />
     <CompilerVisibleProperty Include="CsWinRTKeepGeneratedSources" />
     <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
     <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
@@ -52,12 +53,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     
     <PropertyGroup>
       <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTAuthoringDistinctWinMDs->'"%(FullPath)"', ' ') </CsWinRTAuthoringInputs>
-    </PropertyGroup>
-    
+    </PropertyGroup>    
   </Target>
 
-  <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
-  <ItemGroup> 
+  <!--
+    For Project Reference consumers, copy the necessary WinRT DLLs to output directory.
+    Only include these if we are not generating native exports for NativeAOT.
+  --> 
+  <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'"> 
 
     <None Condition="Exists('$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
       <TargetPath>WinRT.Host.Shim.dll</TargetPath>
@@ -78,17 +81,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
  </ItemGroup>
 
-  <!-- Any managed dependencies of the WinRT component won't automatically be brought 
-       in by a referencing C++ app, so we manually set them to be copied here.
-       We depend on ResolveAssemblyReferences to make sure any duplicate references of
-       different versions are resolved to the latest version.
-    -->
+  <!--
+    Any managed dependencies of the WinRT component won't automatically be brought 
+    in by a referencing C++ app, so we manually set them to be copied here. Only
+    needed when not using NativeAOT (as there's no additional managed .dll-s there).
+    We depend on ResolveAssemblyReferences to make sure any duplicate references of
+    different versions are resolved to the latest version.
+   -->
   <Target Name="CsWinRTAuthoring_AddManagedDependencies"
           BeforeTargets="GetCopyToOutputDirectoryItems"
           DependsOnTargets="ResolveAssemblyReferences"
           Returns="@(AllItemsFullPathWithTargetPath)">
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
       
       <!-- Make sure all managed binaries/projections are shared across project references made by native apps -->
       <AllItemsFullPathWithTargetPath Include="@(ReferenceCopyLocalPaths)" 
@@ -106,7 +111,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
           AfterTargets="GenerateBuildRuntimeConfigurationFiles" 
           BeforeTargets="GetCopyToOutputDirectoryItems;_GetCopyToOutputDirectoryItemsFromThisProject">
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
 
       <AllItemsFullPathWithTargetPath Include="$(ProjectRuntimeConfigFilePath)">
         <TargetPath>$([System.IO.Path]::GetFileName($(ProjectRuntimeConfigFilePath)))</TargetPath>
@@ -146,8 +151,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <TargetPathWithTargetPlatformMoniker Remove="@(TargetPathWithTargetPlatformMoniker)" />
       <!-- Add the .winmd -->
       <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)$(AssemblyName).winmd">
-        <!-- implementation is NOT $(AssemblyName).dll -->
-        <Implementation>WinRT.Host.dll</Implementation>
+        <!-- implementation is NOT $(AssemblyName).dll (unless NativeAOT publishing is used) -->
+        <Implementation Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">WinRT.Host.dll</Implementation>
+        <Implementation Condition="'$(CsWinRTAotExportsEnabled)' == 'true'">$(AssemblyName).dll</Implementation>
         <!-- show to c++ compiler (native case) and dotnet sdk (managed case) -->
         <ResolveableAssembly>true</ResolveableAssembly>
         <!-- Used by the dotnet sdk -->
@@ -247,10 +253,38 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
   <Target Name="CsWinRTIncludeHostDlls" DependsOnTargets="CsWinRTGenerateTransitiveTargets" BeforeTargets="AfterBuild" Outputs="@(Content)">
     
-    <!-- When packing, include all necessary DLLs and the targets file for DLL copying on the native side -->
+    <!--
+      Include all assets that are shared across all configurations.
+      For instance, the .winmd file is always needed.
+    -->
     <ItemGroup>
 
-      <Content Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
+      <!-- Pack any XAML resource PRI files next to the .winmd -->
+      <Content Include="$(ProjectPriFullPath)">
+        <Pack>true</Pack>
+        <PackagePath>lib\$(TargetFramework)\winmd</PackagePath>
+      </Content>    
+
+      <!-- Pack the WinMD we generated in its own folder, under the managed TFM folder -->
+      <Content Include="$(TargetDir)$(AssemblyName).winmd">
+        <Pack>true</Pack> 
+        <PackagePath>lib\$(TargetFramework)\winmd</PackagePath>
+      </Content> 
+
+      <!-- Use a targets file generated for the component -->
+      <Content Include="$(AuthoringTransitiveTargets)">
+        <Pack>true</Pack>
+        <PackagePath>buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets</PackagePath>
+      </Content>
+    </ItemGroup>
+
+    <!--
+      Include all necessary DLLs and the targets file for DLL copying on the native side.
+      These additional assets are only used when the WinRT component is a managed assembly.
+    -->
+    <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
+
+      <Content  Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
         <Pack>true</Pack>
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>
@@ -276,24 +310,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)' == 'Microsoft.Windows.NET.SDK'">
         <Pack>true</Pack> 
         <PackagePath>lib\$(TargetFramework)</PackagePath>
-      </Content>
-
-      <!-- Pack any XAML resource PRI files next to the .winmd -->
-      <Content Include="$(ProjectPriFullPath)">
-        <Pack>true</Pack>
-        <PackagePath>lib\$(TargetFramework)\winmd</PackagePath>
-      </Content>    
-
-      <!-- Pack the WinMD we generated in its own folder, under the managed TFM folder -->
-      <Content Include="$(TargetDir)$(AssemblyName).winmd">
-        <Pack>true</Pack> 
-        <PackagePath>lib\$(TargetFramework)\winmd</PackagePath>
-      </Content> 
-
-      <!-- Use a targets file generated for the component -->
-      <Content Include="$(AuthoringTransitiveTargets)">
-        <Pack>true</Pack>
-        <PackagePath>buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets</PackagePath>
       </Content>
 
       <!-- We package a version of WinRT.Host.dll for each possible architecture -->

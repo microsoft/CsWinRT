@@ -4,21 +4,60 @@
 using System;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
 
 namespace ABI.System.ComponentModel
 {
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class INotifyPropertyChangedMethods
+    {
+        public static global::System.Guid IID => FeatureSwitches.UseWindowsUIXamlProjections
+            ? global::WinRT.Interop.IID.IID_WUX_INotifyPropertyChanged
+            : global::WinRT.Interop.IID.IID_MUX_INotifyPropertyChanged;
+
+        public static IntPtr AbiToProjectionVftablePtr => INotifyPropertyChanged.Vftbl.AbiToProjectionVftablePtr;
+
+        private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, PropertyChangedEventSource> _PropertyChanged;
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, PropertyChangedEventSource> MakePropertyChangedTable()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _PropertyChanged, new(), null);
+            return _PropertyChanged;
+        }
+        private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, PropertyChangedEventSource> PropertyChanged => _PropertyChanged ?? MakePropertyChangedTable();
+
+        public static unsafe global::ABI.WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> Get_PropertyChanged2(IObjectReference obj, object thisObj)
+        {
+            return PropertyChanged.GetValue(thisObj, (key) =>
+            {
+                var ThisPtr = obj.ThisPtr;
+
+                return new PropertyChangedEventSource(obj,
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>**)ThisPtr)[6],
+                    (*(delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>**)ThisPtr)[7]);
+            });
+        }
+    }
+
     [DynamicInterfaceCastableImplementation]
     [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
-    unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
+    [WuxMuxProjectedType]
+    internal unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
+#pragma warning disable CA2257
         [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
         public struct Vftbl
+#pragma warning restore CA2257
         {
+
             internal IInspectable.Vftbl IInspectableVftbl;
 
             private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_PropertyChanged_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_PropertyChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_PropertyChanged_0; set => _add_PropertyChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> add_PropertyChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_add_PropertyChanged_0; set => _add_PropertyChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)value; }
             private delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_PropertyChanged_1;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_PropertyChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_PropertyChanged_1; set => _remove_PropertyChanged_1 = (delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
 
@@ -35,8 +74,8 @@ namespace ABI.System.ComponentModel
                     _remove_PropertyChanged_1 = &Do_Abi_remove_PropertyChanged_1,
 
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 2);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(global::WinRT.IInspectable.Vftbl) + sizeof(IntPtr) * 2);
+                *(Vftbl*)nativeVftbl = AbiToProjectionVftable;
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
             private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>> _PropertyChanged_TokenTablesLazy = null;
@@ -85,14 +124,11 @@ namespace ABI.System.ComponentModel
                 }
             }
         }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static PropertyChangedEventSource _PropertyChanged(IWinRTObject _this)
+        private static global::ABI.WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler> _PropertyChanged(IWinRTObject _this)
         {
-            var _obj = (ObjectReference<Vftbl>)_this.GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
-            
-            return (PropertyChangedEventSource)_this.GetOrCreateTypeHelperData(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle,
-                () => new PropertyChangedEventSource(_obj, _obj.Vftbl.add_PropertyChanged_0, _obj.Vftbl.remove_PropertyChanged_1));
+            var _obj = _this.GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
+            return INotifyPropertyChangedMethods.Get_PropertyChanged2(_obj, _this);
         }
 
         event global::System.ComponentModel.PropertyChangedEventHandler global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged
@@ -100,6 +136,5 @@ namespace ABI.System.ComponentModel
             add => _PropertyChanged((IWinRTObject)this).Subscribe(value);
             remove => _PropertyChanged((IWinRTObject)this).Unsubscribe(value);
         }
-
     }
 }

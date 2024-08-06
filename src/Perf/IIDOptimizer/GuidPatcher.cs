@@ -72,12 +72,14 @@ namespace GuidPatch
             guidGeneratorType = null;
 
             TypeDefinition? typeExtensionsType = null;
+            TypeDefinition? wuxMuxProjectedInterfaceAttributeType = null;
 
             // Use the type definition if we are patching WinRT.Runtime, otherwise lookup the types as references 
             if (string.CompareOrdinal(assembly.Name.Name, "WinRT.Runtime") == 0)
             {
-                guidGeneratorType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => string.CompareOrdinal(typeDef.Name, "GuidGenerator") == 0).First();
-                typeExtensionsType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => string.CompareOrdinal(typeDef.Name, "TypeExtensions") == 0).First();
+                guidGeneratorType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => string.Equals(typeDef.Name, "GuidGenerator", StringComparison.Ordinal)).First();
+                typeExtensionsType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => string.Equals(typeDef.Name, "TypeExtensions", StringComparison.Ordinal)).First();
+                wuxMuxProjectedInterfaceAttributeType = winRTRuntimeAssembly.MainModule.Types.Where(typedef => string.Equals(typedef.Name, "WuxMuxProjectedInterfaceAttribute", StringComparison.Ordinal)).First();
             }
 
             foreach (var asm in assembly.MainModule.AssemblyReferences)
@@ -87,6 +89,7 @@ namespace GuidPatch
                     guidGeneratorType =
                         new TypeReference("WinRT", "GuidGenerator", assembly.MainModule, asm).Resolve();
                     typeExtensionsType = new TypeReference("WinRT", "TypeExtensions", assembly.MainModule, asm).Resolve();
+                    wuxMuxProjectedInterfaceAttributeType = new TypeReference("WinRT", "WuxMuxProjectedInterfaceAttribute", assembly.MainModule, asm).Resolve();
                 }
                 else if (string.CompareOrdinal(asm.Name, "System.Runtime.InteropServices") == 0)
                 {
@@ -101,7 +104,7 @@ namespace GuidPatch
                 getHelperTypeMethod = typeExtensionsType.Methods.First(m => String.CompareOrdinal(m.Name, "GetHelperType") == 0);
             }
 
-            signatureGenerator = new SignatureGenerator(assembly, guidAttributeType!, winRTRuntimeAssembly);
+            signatureGenerator = new SignatureGenerator(assembly, guidAttributeType!, wuxMuxProjectedInterfaceAttributeType!, winRTRuntimeAssembly);
             methodCache = new Dictionary<string, MethodReference>();
         }
 
@@ -292,6 +295,7 @@ namespace GuidPatch
                             state = State.Ldtoken;
                             type = typeMaybe;
                             startIlIndex = i;
+                            numberOfInstructionsToOverwrite = 3;
                         }
                         break;
                     case State.Ldtoken:
@@ -362,12 +366,11 @@ namespace GuidPatch
                                     Debug.WriteLine($"Exception thrown during patching {body.Method.FullName}: {ex}");
                                 }
                             }
-                            else
-                            {
-                                state = State.Start;
-                                type = null;
-                                startIlIndex = -1;
-                            }
+
+                            // Reset after patching or if we realized this is not the signature to patch.
+                            state = State.Start;
+                            type = null;
+                            startIlIndex = -1;
                         }
                         break;
                     default:

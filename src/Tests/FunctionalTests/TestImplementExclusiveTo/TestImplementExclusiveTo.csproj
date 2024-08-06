@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <Platforms>x86;x64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64"/>
+    <ProjectReference Include="..\..\..\Projections\TestPublicExclusiveTo\TestPublicExclusiveTo.csproj" />
+    <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj" />
+  </ItemGroup>
+
+</Project>

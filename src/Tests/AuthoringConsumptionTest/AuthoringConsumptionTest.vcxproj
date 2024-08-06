@@ -60,21 +60,28 @@
     <None Include="Directory.Build.targets" />
     <None Include="DoNotImport_MsAppxPackageTargets.targets" />
     <None Include="packages.config" />
-    <None Include="WinRT.Host.runtimeconfig.json">
+
+    <!-- Only include the runtimeconfig.json file when not using NativeAOT -->
+    <None Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="WinRT.Host.runtimeconfig.json">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
     </None>
   </ItemGroup>
-  <ItemGroup>
+  
+  <!--
+    Skip referencing projections and other projects if in Release x64.
+    When that is true, we're using NativeAOT, so we're self-contained.
+  -->
+  <ItemGroup Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj">
       <Project>{ffa9a78b-f53f-43ee-af87-24a80f4c330a}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj">
       <Project>{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Authoring\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
@@ -85,21 +92,56 @@
     </ProjectReference>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj">
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
       <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
+
+  <!--
+    When in Release x64, we want to test NativeAOT publishing. The build.cmd script is
+    already publishing the project, so we just need to copy the .dll to the output.
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
+    <NativeLibraryProjectName>AuthoringTest</NativeLibraryProjectName>
+    <NativeLibraryProjectDirectory>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\$(NativeLibraryProjectName)'))\</NativeLibraryProjectDirectory>
+    <NativeLibraryProjectFilePath>$(NativeLibraryProjectDirectory)$(NativeLibraryProjectName).csproj</NativeLibraryProjectFilePath>
+    <NativeLibraryOutputFolder>$(NativeLibraryProjectDirectory)bin\$(Platform)\$(Configuration)\net8.0\</NativeLibraryOutputFolder>
+    <NativeLibraryDllPath>$(NativeLibraryOutputFolder)$(NativeLibraryProjectName).dll</NativeLibraryDllPath>
+    <NativeLibraryPublishFolder>$(NativeLibraryProjectDirectory)bin\$(Platform)\$(Configuration)\net8.0\win-$(Platform)\publish\</NativeLibraryPublishFolder>
+    <NativeLibraryPublishedDllPath>$(NativeLibraryPublishFolder)$(NativeLibraryProjectName).dll</NativeLibraryPublishedDllPath>
+  </PropertyGroup>
+
+  <Target Name="CsWinRTLink" DependsOnTargets="ComputeLinkSwitches" BeforeTargets="Link"
+    Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
+    Inputs="$(NativeLibraryDllPath)"
+    Outputs="@(ReferenceCopyLocalPaths)">
+    <!-- Publish the managed library with NativeAOT -->
+   <MSBuild Projects="$(NativeLibraryProjectFilePath)" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net8.0" />
+
+    <!-- Copy the .dll to our output folder -->
+   <ItemGroup>
+     <ReferenceCopyLocalPaths Remove="$(NativeLibraryDllPath)"/>
+     <ReferenceCopyLocalPaths Include="$(NativeLibraryPublishedDllPath)"/>
+   </ItemGroup>
+
+  </Target>
+
   <ItemGroup>
     <Reference Include="AuthoringTest">
-      <HintPath>..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net6.0\AuthoringTest.winmd</HintPath>
+      <HintPath>..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net8.0\AuthoringTest.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="AuthoringConsumptionTest.exe.manifest" />
+
+    <!--
+      Only include the manifest when not using NativeAOT for the authored WinRT component.
+      For more info, see notes in the Directory.Build.props file for AuthoringTest.
+    -->
+    <Manifest Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="AuthoringConsumptionTest.exe.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
@@ -174,7 +216,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>X64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>X64;NDEBUG;AOT;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>

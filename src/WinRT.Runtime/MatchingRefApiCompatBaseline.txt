@@ -1,0 +1,280 @@
+Compat issues with assembly WinRT.Runtime:
+MembersMustExist : Member 'public void ABI.System.EventHandler<T>.CopyAbiArray(System.EventHandler<T>[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<System.EventHandler<T>>.MarshalerArray ABI.System.EventHandler<T>.CreateMarshalerArray(System.EventHandler<T>[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.EventHandler<T>.DisposeAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.EventHandler<T>.DisposeMarshalerArray(WinRT.MarshalInterfaceHelper<System.EventHandler<T>>.MarshalerArray)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.EventHandler<T>[] ABI.System.EventHandler<T>.FromAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.EventHandler<T>.FromManagedArray(System.EventHandler<T>[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.EventHandler<T>.GetAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.EventHandlerMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.IDisposableMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.IServiceProviderMethods' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'ABI.System.Nullable<T>.As<A>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'ABI.System.Nullable<T>.As<A>()' in the implementation but not the reference.
+MembersMustExist : Member 'public T ABI.System.Nullable<T>.GetValue(WinRT.IInspectable)' does not exist in the reference but it does exist in the implementation.
+CannotChangeAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' on 'ABI.System.Type.FromAbi(ABI.System.Type)' changed from '[UnconditionalSuppressMessageAttribute("ReflectionAnalysis", "IL2057", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the implementation to '[UnconditionalSuppressMessageAttribute("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the reference.
+MembersMustExist : Member 'public void ABI.System.Uri.CopyAbiArray(System.Uri[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<System.Uri>.MarshalerArray ABI.System.Uri.CreateMarshalerArray(System.Uri[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Uri.DisposeMarshalerArray(WinRT.MarshalInterfaceHelper<System.Uri>.MarshalerArray)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Uri[] ABI.System.Uri.FromAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.Uri.FromManagedArray(System.Uri[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.Uri.GetAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.IEnumerableMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.IListMethods' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IDictionaryMethods<K, V>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_Clear_6(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Collections.Generic.IReadOnlyDictionary<K, V> ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_GetView_3(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_get_Size_1(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_HasKey_2(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_Insert_4(System.IntPtr, K, V)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public V ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_Lookup_0(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Abi_Remove_5(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.Collections.Generic.IDictionaryMethods<K, V>.IID.get()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.IDictionaryMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IEnumerableMethods<T>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Collections.Generic.IEnumerator<T> ABI.System.Collections.Generic.IEnumerableMethods<T>.Abi_First_0(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.Collections.Generic.IEnumerableMethods<T>.IID.get()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumerableMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumeratorMethods<T>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumeratorMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IListMethods<T>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_Append_7(System.IntPtr, T)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_Clear_9(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public T ABI.System.Collections.Generic.IListMethods<T>.Abi_GetAt_0(System.IntPtr, System.UInt32)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IListMethods<T>.Abi_GetMany_10(System.IntPtr, System.UInt32, T[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Collections.Generic.IReadOnlyList<T> ABI.System.Collections.Generic.IListMethods<T>.Abi_GetView_2(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IListMethods<T>.Abi_get_Size_1(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean ABI.System.Collections.Generic.IListMethods<T>.Abi_IndexOf_3(System.IntPtr, T, System.UInt32)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_InsertAt_5(System.IntPtr, System.UInt32, T)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_RemoveAtEnd_8(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_RemoveAt_6(System.IntPtr, System.UInt32)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_ReplaceAll_11(System.IntPtr, T[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IListMethods<T>.Abi_SetAt_4(System.IntPtr, System.UInt32, T)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.Collections.Generic.IListMethods<T>.IID.get()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.IListMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_get_Size_1(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_HasKey_2(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public V ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_Lookup_0(System.IntPtr, K)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Abi_Split_3(System.IntPtr, System.IntPtr, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.IID.get()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr ABI.System.Collections.Generic.IReadOnlyListMethods<T>.AbiToProjectionVftablePtr.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public T ABI.System.Collections.Generic.IReadOnlyListMethods<T>.Abi_GetAt_0(System.IntPtr, System.UInt32)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IReadOnlyListMethods<T>.Abi_GetMany_3(System.IntPtr, System.UInt32, T[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.UInt32 ABI.System.Collections.Generic.IReadOnlyListMethods<T>.Abi_get_Size_1(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean ABI.System.Collections.Generic.IReadOnlyListMethods<T>.Abi_IndexOf_2(System.IntPtr, T, System.UInt32)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.Collections.Generic.IReadOnlyListMethods<T>.IID.get()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.IReadOnlyListMethods<T, TAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr System.IntPtr ABI.System.Collections.Generic.KeyValuePair<K, V>.AbiToProjectionVftablePtr' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'protected WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.System.Collections.Generic.KeyValuePair<K, V>._obj' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.KeyValuePair<K, V>..ctor(WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl>)' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'ABI.System.Collections.Generic.KeyValuePair<K, V>.As<A>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'ABI.System.Collections.Generic.KeyValuePair<K, V>.As<A>()' in the implementation but not the reference.
+MembersMustExist : Member 'public void ABI.System.Collections.Generic.KeyValuePair<K, V>.CopyAbiArray(System.Collections.Generic.KeyValuePair<K, V>[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public ABI.System.Collections.Generic.KeyValuePair<K, V> ABI.System.Collections.Generic.KeyValuePair<K, V>.op_Implicit(WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.System.Collections.Generic.KeyValuePair<K, V>._FromAbi(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, V>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.KeyValuePairMethods<K, KAbi, V, VAbi>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.ToAbiEnumeratorAdapter<T>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Specialized.INotifyCollectionChangedMethods' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.CopyAbiArray(System.Collections.Specialized.NotifyCollectionChangedEventArgs[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<System.Collections.Specialized.NotifyCollectionChangedEventArgs>.MarshalerArray ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.CreateMarshalerArray(System.Collections.Specialized.NotifyCollectionChangedEventArgs[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.DisposeAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.DisposeMarshalerArray(WinRT.MarshalInterfaceHelper<System.Collections.Specialized.NotifyCollectionChangedEventArgs>.MarshalerArray)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Collections.Specialized.NotifyCollectionChangedEventArgs[] ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.FromAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.FromManagedArray(System.Collections.Specialized.NotifyCollectionChangedEventArgs[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.GetAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.CopyAbiArray(System.Collections.Specialized.NotifyCollectionChangedEventHandler[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<System.Collections.Specialized.NotifyCollectionChangedEventHandler>.MarshalerArray ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.CreateMarshalerArray(System.Collections.Specialized.NotifyCollectionChangedEventHandler[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.DisposeAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.DisposeMarshalerArray(WinRT.MarshalInterfaceHelper<System.Collections.Specialized.NotifyCollectionChangedEventHandler>.MarshalerArray)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Collections.Specialized.NotifyCollectionChangedEventHandler[] ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.FromAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.FromManagedArray(System.Collections.Specialized.NotifyCollectionChangedEventHandler[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.GetAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.ComponentModel.DataErrorsChangedEventArgs.CopyAbiArray(System.ComponentModel.DataErrorsChangedEventArgs[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<System.ComponentModel.DataErrorsChangedEventArgs>.MarshalerArray ABI.System.ComponentModel.DataErrorsChangedEventArgs.CreateMarshalerArray(System.ComponentModel.DataErrorsChangedEventArgs[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.ComponentModel.DataErrorsChangedEventArgs.DisposeAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.ComponentModel.DataErrorsChangedEventArgs.DisposeMarshalerArray(WinRT.MarshalInterfaceHelper<System.ComponentModel.DataErrorsChangedEventArgs>.MarshalerArray)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ComponentModel.DataErrorsChangedEventArgs[] ABI.System.ComponentModel.DataErrorsChangedEventArgs.FromAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.ComponentModel.DataErrorsChangedEventArgs.FromManagedArray(System.ComponentModel.DataErrorsChangedEventArgs[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.ComponentModel.DataErrorsChangedEventArgs.GetAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.ComponentModel.INotifyDataErrorInfoMethods' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.ComponentModel.INotifyPropertyChangedMethods' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.ComponentModel.PropertyChangedEventArgs.CopyAbiArray(System.ComponentModel.PropertyChangedEventArgs[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<System.ComponentModel.PropertyChangedEventArgs>.MarshalerArray ABI.System.ComponentModel.PropertyChangedEventArgs.CreateMarshalerArray(System.ComponentModel.PropertyChangedEventArgs[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.ComponentModel.PropertyChangedEventArgs.DisposeAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.ComponentModel.PropertyChangedEventArgs.DisposeMarshalerArray(WinRT.MarshalInterfaceHelper<System.ComponentModel.PropertyChangedEventArgs>.MarshalerArray)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ComponentModel.PropertyChangedEventArgs[] ABI.System.ComponentModel.PropertyChangedEventArgs.FromAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.ComponentModel.PropertyChangedEventArgs.FromManagedArray(System.ComponentModel.PropertyChangedEventArgs[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.ComponentModel.PropertyChangedEventArgs.GetAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.ComponentModel.PropertyChangedEventHandler.CopyAbiArray(System.ComponentModel.PropertyChangedEventHandler[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<System.ComponentModel.PropertyChangedEventHandler>.MarshalerArray ABI.System.ComponentModel.PropertyChangedEventHandler.CreateMarshalerArray(System.ComponentModel.PropertyChangedEventHandler[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.ComponentModel.PropertyChangedEventHandler.DisposeAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.ComponentModel.PropertyChangedEventHandler.DisposeMarshalerArray(WinRT.MarshalInterfaceHelper<System.ComponentModel.PropertyChangedEventHandler>.MarshalerArray)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ComponentModel.PropertyChangedEventHandler[] ABI.System.ComponentModel.PropertyChangedEventHandler.FromAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.ComponentModel.PropertyChangedEventHandler.FromManagedArray(System.ComponentModel.PropertyChangedEventHandler[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ValueTuple<System.Int32, System.IntPtr> ABI.System.ComponentModel.PropertyChangedEventHandler.GetAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Windows.Input.ICommandMethods' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.As<A>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.As<A>()' in the implementation but not the reference.
+TypesMustExist : Type 'ABI.WinRT.Interop.IActivationFactoryMethods' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'WinRT.WinRTExposedTypeAttribute' exists on 'Windows.Foundation.Point' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WinRTExposedTypeAttribute' exists on 'Windows.Foundation.Rect' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WinRTExposedTypeAttribute' exists on 'Windows.Foundation.Size' in the implementation but not the reference.
+TypesMustExist : Type 'WinRT.ActivationFactory' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(System.Func<System.Type, System.Type>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterComInterfaceEntries(System.Type, System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean WinRT.ComWrappersSupport.RegisterDelegateFactory(System.Type, System.Func<System.IntPtr, System.Object>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterHelperType(System.Type, System.Type)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterTypeComInterfaceEntriesLookup(System.Func<System.Type, System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean WinRT.ComWrappersSupport.RegisterTypedRcwFactory(System.Type, System.Func<WinRT.IInspectable, System.Object>)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.DelegateTypeDetails<T>' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'WinRT.WinRTExposedTypeAttribute' exists on 'WinRT.EventRegistrationToken' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeHelperTypeAttribute' exists on 'WinRT.EventRegistrationToken' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.WindowsRuntimeTypeAttribute' exists on 'WinRT.EventRegistrationToken' in the implementation but not the reference.
+TypesMustExist : Type 'WinRT.EventRegistrationTokenTable<T>' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IObjectReference.AsType<T>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IObjectReference.AsType<T>()' in the implementation but not the reference.
+MembersMustExist : Member 'public System.Boolean WinRT.IObjectReference.IsFreeThreaded.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean WinRT.IObjectReference.IsInCurrentContext.get()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.IWinRTExposedTypeDetails' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.MarshalInspectable<T>.CopyAbiArray(T[], System.Object)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ReadOnlySpan<System.Char> WinRT.MarshalString.FromAbiUnsafe(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference<T>.Attach(System.IntPtr, System.Guid)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference<T>.FromAbi(System.IntPtr, System.Guid)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T, System.Guid)' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReferenceWrapperAttribute' in the implementation but not the reference.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterDataErrorsChangedEventArgsMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterDateTimeOffsetMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterEventHandlerMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterEventHandlerOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterEventRegistrationTokenMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterExceptionMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIBindableVectorMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterICollectionMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterICollectionOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterICommandMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIDictionaryOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIDisposableMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIEnumerableMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIEnumerableOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIEnumeratorOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIListMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIListOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIMapOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIMapViewOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterINotifyCollectionChangedMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterINotifyDataErrorInfoMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterINotifyPropertyChangedMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIReadOnlyCollectionOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIReadOnlyDictionaryOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIReadOnlyListOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIServiceProviderMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIVectorOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterIVectorViewOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterKeyValuePairOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterMatrix3x2Mapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterMatrix4x4Mapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNotifyCollectionChangedActionMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNotifyCollectionChangedEventArgsMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNotifyCollectionChangedEventHandlerMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableBoolMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableByteMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableCharMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableDateTimeOffsetMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableDoubleMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableFloatMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableGuidMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableIntMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableLongMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableOpenGenericMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableSByteMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableShortMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableTimeSpanMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableUIntMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableULongMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterNullableUShortMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterPlaneMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterPropertyChangedEventArgsMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterPropertyChangedEventHandlerMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterQuaternionMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterTimeSpanMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterUriMapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterVector2Mapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterVector3Mapping()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.Projections.RegisterVector4Mapping()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.StructTypeDetails<T, TAbi>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.WindowsRuntimeTypeAttribute..ctor(System.String, System.String)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.String WinRT.WindowsRuntimeTypeAttribute.GuidSignature.get()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.WinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.WinRTImplementationTypeRcwFactoryAttribute' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'System.Type WinRT.Marshaler<T>.RefAbiType' in the implementation but not the reference.
+TypesMustExist : Type 'WinRT.Interop.IID' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.WinRT.Interop.EventSource<TDelegate>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.WinRT.Interop.EventSourceState<TDelegate>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.WinRT.Interop.EventHandlerEventSource' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.WinRT.Interop.EventHandlerEventSource<T>' does not exist in the reference but it does exist in the implementation.
+CannotChangeAttribute : Attribute 'System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute' on 'WinRT.WindowsRuntimeHelperTypeAttribute.HelperType' changed from '[DynamicallyAccessedMembersAttribute(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicMethods)]' in the implementation to '[DynamicallyAccessedMembersAttribute(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicNestedTypes)]' in the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.TypeExtensions.FindVftblType(System.Type)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'ABI.System.Nullable<T>.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'ABI.System.Nullable<T>.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'ABI.System.Collections.Generic.KeyValuePair<K, V>.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'ABI.System.Collections.Generic.KeyValuePair<K, V>.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.TryGetCompatibleWindowsRuntimeTypeForVariantType(System.Type, System.Type)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.GuidGenerator.GetGUID(System.Type)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'ABI.System.Nullable<T>.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'ABI.System.Collections.Generic.KeyValuePair<K, V>.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'ABI.WinRT.Interop.IActivationFactory.AsInterface<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.TypeExtensions.FindHelperType(System.Type)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.ComponentModel.PropertyChangedEventHandler' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'WinRT.Interop.WuxMuxProjectedTypeAttribute' exists on 'ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs' in the implementation but not the reference.
+TypesMustExist : Type 'WinRT.WinRTRuntimeClassNameAttribute' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterTypeRuntimeClassNameLookup(System.Func<System.Type, System.String>)' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.FindCustomHelperTypeMapping(System.Type, System.Boolean)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.Object>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IWinRTObject.GetOrCreateTypeHelperData(System.RuntimeTypeHandle, System.Func<System.Object>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ObjectReference<T>.Attach(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.ComWrappersSupport.GetObjectReferenceForInterface<T>(System.IntPtr)' in the implementation but not the reference.
+CannotChangeAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' on 'ABI.System.Type.FromAbi(ABI.System.Type)' changed from '[UnconditionalSuppressMessageAttribute("Trimming", "IL2057", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the implementation to '[UnconditionalSuppressMessageAttribute("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification="Any types which are trimmed are not used by managed user code and there is fallback logic to handle that.")]' in the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.Projections.FindCustomPublicTypeForAbiType(System.Type)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.IObjectReference.As<T>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IObjectReference.As<T>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IObjectReference.As<T>()' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.ObjectReference<T>.Attach(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReference<T>.Attach(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.ObjectReference<T>.FromAbi(System.IntPtr, T)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IObjectReference.TryAs<T>(WinRT.ObjectReference<T>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IObjectReference.TryAs<T>(WinRT.ObjectReference<T>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.IObjectReference.TryAs<T>(WinRT.ObjectReference<T>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'WinRT.IInspectable.As<I>()' in the implementation but not the reference.
+MembersMustExist : Member 'protected WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> ABI.WinRT.Interop.IActivationFactory._obj' does not exist in the reference but it does exist in the implementation.
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.IInspectable..ctor(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'WinRT.IInspectable..ctor(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' in the implementation but not the reference.
+MembersMustExist : Member 'public WinRT.IObjectReference WinRT.ComWrappersSupport.GetObjectReferenceForInterface(System.IntPtr, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.ComWrappersHelper.Init(System.Boolean, System.Object, System.IntPtr, System.IntPtr, System.Guid, WinRT.IObjectReference)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.EventHandler<T>.IID.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.IID.get()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Guid ABI.System.ComponentModel.PropertyChangedEventHandler.IID.get()' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.WinRTAssemblyExportsTypeAttribute' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'Microsoft.UI.Xaml.Data.BindableCustomProperty' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.GeneratedBindableCustomPropertyAttribute' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void ABI.System.Uri.DisposeAbiArray(System.Object)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.EnumTypeDetails<T>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'Windows.UI.Xaml.LayoutCycleException' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'Windows.UI.Xaml.Automation.ElementNotAvailableException' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'Windows.UI.Xaml.Automation.ElementNotEnabledException' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'Windows.UI.Xaml.Markup.XamlParseException' does not exist in the reference but it does exist in the implementation.
+Total Issues: 278

@@ -200,12 +200,8 @@ namespace System.IO
             HANDLE_SHARING_OPTIONS sharingOptions = FileShareToHandleSharingOptions(share);
             HANDLE_OPTIONS handleOptions = FileOptionsToHandleOptions(options);
 
-            IStorageItemHandleAccess handleAccess = windowsRuntimeFile.As<IStorageItemHandleAccess>();
-
-            if (handleAccess == null)
-                return null;
-
-            return handleAccess.Create(
+            return global::ABI.Windows.Storage.IStorageItemHandleAccessMethods.Create(
+                windowsRuntimeFile,
                 accessOptions,
                 sharingOptions,
                 handleOptions,
@@ -238,12 +234,8 @@ namespace System.IO
             HANDLE_SHARING_OPTIONS sharingOptions = FileShareToHandleSharingOptions(share);
             HANDLE_OPTIONS handleOptions = FileOptionsToHandleOptions(options);
 
-            IStorageFolderHandleAccess handleAccess = rootDirectory.As<IStorageFolderHandleAccess>();
-
-            if (handleAccess == null)
-                return null;
-
-            return handleAccess.Create(
+            return global::ABI.Windows.Storage.IStorageFolderHandleAccessMethods.Create(
+                rootDirectory,
                 relativePath,
                 creationOptions,
                 accessOptions,

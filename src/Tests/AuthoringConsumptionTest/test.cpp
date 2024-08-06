@@ -259,6 +259,8 @@ TEST(AuthoringTest, Arrays)
         EXPECT_EQ(arr2[idx], idx + 1);
     }
 
+    // Array marshaling on AOT needs dynamic code.
+#ifndef AOT
     std::array<BasicStruct, 2> basicStructArr;
     basicStructArr[0] = basicClass.GetBasicStruct();
     basicStructArr[1].X = 4;
@@ -272,6 +274,7 @@ TEST(AuthoringTest, Arrays)
     EXPECT_EQ(result[1].X, basicStructArr[1].X);
     EXPECT_EQ(result[1].Y, basicStructArr[1].Y);
     EXPECT_EQ(result[1].Value, basicStructArr[1].Value);
+#endif
 }
 
 TEST(AuthoringTest, CustomTypes)
@@ -344,6 +347,8 @@ TEST(AuthoringTest, CustomTypes)
         EXPECT_EQ(pv, nullptr);
     }
 
+    // Array marshaling on AOT needs dynamic code.
+#ifndef AOT
     auto erasedProjectedArrays = testClass.GetTypeErasedProjectedArrays();
     EXPECT_EQ(erasedProjectedArrays.Size(), 7);
     for (auto obj : erasedProjectedArrays)
@@ -352,6 +357,22 @@ TEST(AuthoringTest, CustomTypes)
         EXPECT_NE(ra, nullptr);
         auto type = ra.Type();
     }
+#endif
+}
+
+TEST(AuthoringTest, Async)
+{
+    TestClass testClass;
+    auto asyncOperation = testClass.GetDoubleAsyncOperation();
+    EXPECT_EQ(asyncOperation.wait_for(std::chrono::seconds(2)), AsyncStatus::Completed);
+    EXPECT_EQ(asyncOperation.GetResults(), 4.0);
+
+    auto asyncOperation2 = testClass.GetStructAsyncOperation();
+    EXPECT_EQ(asyncOperation2.wait_for(std::chrono::seconds(2)), AsyncStatus::Completed);
+    auto result = asyncOperation2.GetResults();
+    EXPECT_EQ(result.X, 2);
+    EXPECT_EQ(result.Y, 4);
+    EXPECT_EQ(result.Value, L"Test");
 }
 
 TEST(AuthoringTest, CustomDictionaryImplementations)
@@ -639,4 +660,66 @@ TEST(AuthoringTest, PartialClass)
     EXPECT_EQ(partialStruct.X, 3);
     EXPECT_EQ(partialStruct.Y, 4);
     EXPECT_EQ(partialStruct.Z, 5);
+}
+
+TEST(AuthoringTest, MixedWinRTClassicCOM)
+{
+    TestMixedWinRTCOMWrapper wrapper;
+
+    // Normal WinRT methods work as you'd expect
+    EXPECT_EQ(wrapper.HelloWorld(), L"Hello from mixed WinRT/COM");
+
+    // Verify we can grab the internal interface
+    IID internalInterface1Iid;
+    check_hresult(IIDFromString(L"{C7850559-8FF2-4E54-A237-6ED813F20CDC}", &internalInterface1Iid));
+    winrt::com_ptr<::IUnknown> unknown1 = wrapper.as<::IUnknown>();
+    winrt::com_ptr<::IUnknown> internalInterface1;
+    EXPECT_EQ(unknown1->QueryInterface(internalInterface1Iid, internalInterface1.put_void()), S_OK);
+
+    // Verify we can grab the nested public interface (in an internal type)
+    IID internalInterface2Iid;
+    check_hresult(IIDFromString(L"{8A08E18A-8D20-4E7C-9242-857BFE1E3159}", &internalInterface2Iid));
+    winrt::com_ptr<::IUnknown> unknown2 = wrapper.as<::IUnknown>();
+    winrt::com_ptr<::IUnknown> internalInterface2;
+    EXPECT_EQ(unknown2->QueryInterface(internalInterface2Iid, internalInterface2.put_void()), S_OK);
+
+    typedef int (__stdcall* GetNumber)(void*, int*);
+
+    int number;
+
+    // Validate the first call on IInternalInterface1
+    EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface1.get()))[3])(internalInterface1.get(), &number), S_OK);
+    EXPECT_EQ(number, 42);
+
+    // Validate the second call on IInternalInterface2
+    EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface2.get()))[3])(internalInterface2.get(), &number), S_OK);
+    EXPECT_EQ(number, 123);
+}
+
+TEST(AuthoringTest, GetRuntimeClassName)
+{
+    CustomDictionary2 dictionary;
+    EXPECT_EQ(winrt::get_class_name(dictionary), L"AuthoringTest.CustomDictionary2");
+
+    DisposableClass disposed;
+    EXPECT_EQ(winrt::get_class_name(disposed), L"AuthoringTest.DisposableClass");
+
+    TestMixedWinRTCOMWrapper wrapper;
+    EXPECT_EQ(winrt::get_class_name(wrapper), L"AuthoringTest.TestMixedWinRTCOMWrapper");
+
+    TestClass testClass;
+    testClass.SetNonProjectedDisposableObject();
+    EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"Windows.Foundation.IClosable");
+
+    testClass.SetProjectedDisposableObject();
+    EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"AuthoringTest.DisposableClass");
+}
+
+TEST(AuthoringTest, XamlMetadataProvider)
+{
+    CustomXamlMetadataProvider provider;
+    EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<double>>()), nullptr);
+    EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<Windows::Foundation::TimeSpan>>()), nullptr);
+    EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<BasicEnum>>()), nullptr);
+    EXPECT_NE(provider.GetXamlType(winrt::xaml_typename<Windows::Foundation::IReference<FlagsEnum>>()), nullptr);
 }

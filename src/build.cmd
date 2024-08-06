@@ -1,8 +1,8 @@
 @echo off
 if /i "%cswinrt_echo%" == "on" @echo on
 
-set CsWinRTBuildNetSDKVersion=6.0.415
-set CsWinRTBuildNet7SDKVersion=7.0.402
+set CsWinRTBuildNetSDKVersion=6.0.424
+set CsWinRTBuildNet8SDKVersion=8.0.303
 set this_dir=%~dp0
 
 :dotnet
@@ -23,17 +23,16 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
 -Version '%CsWinRTBuildNetSDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
-rem Install .NET 7 used to build projection
+rem Install .NET 8 used to build projection
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTBuildNet7SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
+-Version '%CsWinRTBuildNet8SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
-rem do we need a special, other link for x86 version of this net7 version? reason being we use a preview version?
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTBuildNet7SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
+-Version '%CsWinRTBuildNet8SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson
@@ -41,7 +40,7 @@ rem Create global.json for current .NET SDK, and with allowPrerelease=true
 set global_json=%this_dir%global.json
 echo { > %global_json%
 echo   "sdk": { >> %global_json%
-echo     "version": "%CsWinRTBuildNet7SDKVersion%", >> %global_json%
+echo     "version": "%CsWinRTBuildNet8SDKVersion%", >> %global_json%
 echo     "allowPrerelease": true >> %global_json%
 echo   } >> %global_json%
 echo } >> %global_json%
@@ -88,6 +87,14 @@ if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking
 if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
 
 set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
+set cswinrt_aot_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
+
+if "%cswinrt_platform%" EQU "x86" set run_functional_tests=true
+if "%cswinrt_platform%" EQU "x64" (
+  if "%CIBuildReason%" NEQ "CI" (
+    set run_functional_tests=true
+  )
+)
 
 rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
@@ -144,6 +151,13 @@ call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.sln
 rem: Calling nuget restore again on ObjectLifetimeTests.Lifted.csproj to prevent .props from \microsoft.testplatform.testhost\build\netcoreapp2.1 from being included. Nuget.exe erroneously imports props files. https://github.com/NuGet/Home/issues/9672
 call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
 
+if "%cswinrt_platform%" EQU "x64" (
+  if /I "%cswinrt_configuration%" EQU "release" (
+    rem We restore here as NAOT needs its own restore to pull in ILC
+    call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\AuthoringTest\AuthoringTest.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%
+  )
+)
+
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
 call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln 
@@ -155,10 +169,33 @@ if ErrorLevel 1 (
 
 if "%cswinrt_platform%" NEQ "arm" (
   if "%cswinrt_platform%" NEQ "arm64" (
-    echo Publishing functional tests for %cswinrt_platform% %cswinrt_configuration%
+    echo Restore functional tests for %cswinrt_platform% %cswinrt_configuration%
     for %%a in (%cswinrt_functional_tests%) do (
+      echo Restoring %%a
+
+      rem Do restore separately to workaround issue where specifying TargetFramework causes nuget restore to propagate it to project references causing issues.
+      call :exec %msbuild_path%msbuild.exe /t:restore %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+    )
+  )
+)
+
+if "%run_functional_tests%" EQU "true" (
+  echo Publishing functional tests for %cswinrt_platform% %cswinrt_configuration%
+  for %%a in (%cswinrt_functional_tests%) do (
+    echo Publishing %%a
+
+    call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net6.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj -bl:CCWBin%%a.binlog
+  )
+)
+
+if "%cswinrt_platform%" EQU "x64" (
+  if /I "%cswinrt_configuration%" EQU "release" (
+    echo Publishing AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
+    for %%a in (%cswinrt_aot_functional_tests%) do (
       echo Publishing %%a
-      call :exec %msbuild_path%msbuild.exe /t:restore /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
+
+      rem No restore needed here as the previous run for .NET 6 did a restore without target framework.
+      call :exec %msbuild_path%msbuild.exe /t:publish %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:TargetFramework=net8.0 /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
     )
   )
 )
@@ -208,7 +245,7 @@ if ErrorLevel 1 (
 rem Running Object Lifetime Unit Tests
 echo Running object lifetime tests for %cswinrt_platform% %cswinrt_configuration%
 if '%NUGET_PACKAGES%'=='' set NUGET_PACKAGES=%USERPROFILE%\.nuget\packages
-call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net7.0-windows10.0.19041.0\win10-%cswinrt_platform%\ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%NUGET_PACKAGES%\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
+call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net8.0-windows10.0.19041.0\win10-%cswinrt_platform%\ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%NUGET_PACKAGES%\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Lifetime test failed, skipping NuGet pack
@@ -250,18 +287,38 @@ if ErrorLevel 1 (
 
 :functionaltest
 rem Run functional tests
-echo Running cswinrt functional tests for %cswinrt_platform% %cswinrt_configuration%
+if "%run_functional_tests%" EQU "true" (
+  echo Running cswinrt functional tests for %cswinrt_platform% %cswinrt_configuration%
 
-for %%a in (%cswinrt_functional_tests%) do (
-  echo Running %%a
+  for %%a in (%cswinrt_functional_tests%) do (
+    echo Running %%a
 
-  call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net6.0\win10-%cswinrt_platform%\publish\%%a.exe
-  if !errorlevel! NEQ 100 (
-    echo.
-    echo ERROR: Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
-    exit /b !ErrorLevel!
+    call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net6.0\win-%cswinrt_platform%\publish\%%a.exe
+    if !errorlevel! NEQ 100 (
+      echo.
+      echo ERROR: Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
+      exit /b !ErrorLevel!
+    )
   )
 )
+
+if "%cswinrt_platform%" EQU "x64" (
+  if /I "%cswinrt_configuration%" EQU "release" (
+    echo Running cswinrt AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
+
+    for %%a in (%cswinrt_aot_functional_tests%) do (
+      echo Running %%a
+
+      call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net8.0\win-%cswinrt_platform%\publish\%%a.exe
+      if !errorlevel! NEQ 100 (
+        echo.
+        echo ERROR: AOT Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
+        exit /b !ErrorLevel!
+      )
+    )
+  )
+)
+
 
 if "%cswinrt_label%"=="functionaltest" exit /b 0
 
@@ -269,9 +326,10 @@ if "%cswinrt_label%"=="functionaltest" exit /b 0
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
-set interop_winmd=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\obj\merged\WinRT.Interop.winmd
+set interop_winmd=%cswinrt_bin_dir%WinRT.Interop.winmd
 set netstandard2_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
 set net6_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net6.0\WinRT.Runtime.dll
+set net8_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net8.0\WinRT.Runtime.dll
 set source_generator=%this_dir%Authoring\WinRT.SourceGenerator\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
@@ -280,7 +338,7 @@ set guid_patch=%this_dir%Perf\IIDOptimizer\bin\%cswinrt_configuration%\net6.0\*.
 set cswinmd_outpath=%this_dir%Authoring\cswinmd\bin\%cswinrt_configuration%\net6.0
 rem Now call pack
 echo Creating nuget package
-call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;netstandard2_runtime=%netstandard2_runtime%;net6_runtime=%net6_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;guid_patch=%guid_patch% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;netstandard2_runtime=%netstandard2_runtime%;net6_runtime=%net6_runtime%;net8_runtime=%net8_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;guid_patch=%guid_patch% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinMD.nuspec -Properties cswinmd_outpath=%cswinmd_outpath%;source_generator=%source_generator%;cswinmd_nuget_version=%cswinrt_version_string%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
 

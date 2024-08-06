@@ -121,19 +121,28 @@ namespace GuidPatch
                 var winRTRuntimeAssembly = ResolveWinRTRuntime(targetAssemblyDefinition, resolver);
                 if (winRTRuntimeAssembly is null)
                 {
-                    Console.WriteLine("Failed to resolve WinRT.Runtime.dll.");
                     return -1;
                 }
 
                 var guidPatcher = new GuidPatcher(winRTRuntimeAssembly, targetAssemblyDefinition);
 
-                int numPatches = guidPatcher.ProcessAssembly(); 
+                int numPatches = guidPatcher.ProcessAssembly();
+                Console.WriteLine($"{numPatches} IID calculations/fetches patched");
 
-                guidPatcher.SaveAssembly(outputDirectory);
-
-                Console.WriteLine($"Saved patched .dll to {outputDirectory}");
-                Console.WriteLine($"{numPatches} IID calculations/fetches patched"); 
-                return 0; 
+                // Only write assembly if we actually patched anything.
+                // Otherwise we would just write a type we use as part of our implementation
+                // when it is actually not needed.
+                if (numPatches > 0)
+                {
+                    guidPatcher.SaveAssembly(outputDirectory);
+                    Console.WriteLine($"Saved patched .dll to {outputDirectory}");
+                    return 0;
+                }
+                else
+                {
+                    // Exit code is checked by caller to copy patched file over.
+                    return -1;
+                }
             }
             catch (AssemblyResolutionException e)
             { 

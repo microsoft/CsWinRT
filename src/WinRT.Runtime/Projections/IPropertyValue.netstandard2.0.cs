@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
@@ -327,12 +328,46 @@ namespace ABI.Windows.Foundation
                 {
                     return (T)(object)guid.ToString("D", global::System.Globalization.CultureInfo.InvariantCulture);
                 }
+                else if (typeof(T) == typeof(byte))
+                {
+                    return (T)(object)Convert.ToByte(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(short))
+                {
+                    return (T)(object)Convert.ToInt16(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(ushort))
+                {
+                    return (T)(object)Convert.ToUInt16(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(int))
+                {
+                    return (T)(object)Convert.ToInt32(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(uint))
+                {
+                    return (T)(object)Convert.ToUInt32(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(long))
+                {
+                    return (T)(object)Convert.ToInt64(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(ulong))
+                {
+                    return (T)(object)Convert.ToUInt64(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(float))
+                {
+                    return (T)(object)Convert.ToSingle(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (typeof(T) == typeof(double))
+                {
+                    return (T)(object)Convert.ToDouble(value, global::System.Globalization.CultureInfo.InvariantCulture);
+                }
                 else
                 {
-                    if (NumericScalarTypes.TryGetValue(typeof(T), out _))
-                    {
-                        return (T)Convert.ChangeType(value, typeof(T), global::System.Globalization.CultureInfo.InvariantCulture);
-                    }
+                    Debug.Assert(!NumericScalarTypes.ContainsKey(typeof(T)));
+                    throw new InvalidCastException("", TYPE_E_TYPEMISMATCH);
                 }
             }
             catch (FormatException)

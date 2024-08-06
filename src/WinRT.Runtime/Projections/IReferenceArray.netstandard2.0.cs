@@ -89,7 +89,7 @@ namespace ABI.Windows.Foundation
             return wrapper.Value;
         }
 
-        internal static object GetValue(IInspectable inspectable)
+        public static object GetValue(IInspectable inspectable)
         {
             var array = new IReferenceArray<T>(inspectable.ObjRef);
             return array.Value;
@@ -119,18 +119,18 @@ namespace ABI.Windows.Foundation
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public IReferenceArray_Delegates.get_Value_0 get_Value_0;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IReferenceArray<T>));
+            public static readonly Guid PIID = GuidGenerator.CreateIIDUnsafe(typeof(IReferenceArray<T>));
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
+                var vftblPtr = *(void***)thisPtr;
+                var vftbl = (IntPtr*)vftblPtr;
+                IInspectableVftbl = *(IInspectable.Vftbl*)vftblPtr;
                 get_Value_0 = Marshal.GetDelegateForFunctionPointer<IReferenceArray_Delegates.get_Value_0>(vftbl[6]);
             }
         }
 
-        public static Guid PIID = Vftbl.PIID;
+        public static readonly Guid PIID = Vftbl.PIID;
 
         public static implicit operator IReferenceArray<T>(IObjectReference obj) => (obj != null) ? new IReferenceArray<T>(obj) : null;
         public static implicit operator IReferenceArray<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new IReferenceArray<T>(obj) : null;

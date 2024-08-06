@@ -33,12 +33,14 @@ namespace cswinrt
         { "output", 0, 1, "<path>", "Location of generated projection" },
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
-        { "target", 0, 1, "<net7.0|net6.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with newest TFM (net6.0)." },
+        { "addition_exclude", 0, option::no_max, "<prefix>", "One or more namespace prefixes to exclude from the projection additions" },
+        { "target", 0, 1, "<net8.0|net7.0|net6.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with .NET 6." },
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "internal", 0, 0, {}, "Generates a private projection."},
         { "embedded", 0, 0, {}, "Generates an embedded projection."},
         { "public_enums", 0, 0, {}, "Used with embedded option to generate enums as public"},
+        { "public_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces public in the projection (default is internal)"},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
@@ -91,15 +93,17 @@ Where <spec> is one or more of:
 
         settings.verbose = args.exists("verbose");
         auto target = args.value("target");
-        if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net5.0") && !starts_with(target, "net6.0") && !starts_with(target, "net7.0"))
+        if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net5.0") && !starts_with(target, "net6.0") && !starts_with(target, "net7.0") && !starts_with(target, "net8.0"))
         {
             throw usage_exception();
         }
         settings.netstandard_compat = target == "netstandard2.0";
+        settings.net7_0_or_greater = starts_with(target, "net7.0") || starts_with(target, "net8.0");
         settings.component = args.exists("component");
         settings.internal = args.exists("internal");
         settings.embedded = args.exists("embedded");
         settings.public_enums = args.exists("public_enums");
+        settings.public_exclusiveto = args.exists("public_exclusiveto");
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))
@@ -110,6 +114,11 @@ Where <spec> is one or more of:
         for (auto && exclude : args.values("exclude"))
         {
             settings.exclude.insert(exclude);
+        }
+
+        for (auto&& addition_exclude : args.values("addition_exclude"))
+        {
+            settings.addition_exclude.insert(addition_exclude);
         }
 
         settings.output_folder = std::filesystem::absolute(args.value("output", "output"));
@@ -135,6 +144,9 @@ Where <spec> is one or more of:
             process_args(argc, argv);
             cache c{ get_files_to_cache() };
             settings.filter = { settings.include, settings.exclude };
+
+            // Include all additions for included namespaces by default
+            settings.addition_filter = { settings.include, settings.addition_exclude };
 
             std::set<TypeDef> componentActivatableClasses;
             if (settings.component)
@@ -175,12 +187,12 @@ Where <spec> is one or more of:
 
             task_group group;
 
-            concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap;
+            concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap, authoredTypeNameToMetadataTypeNameMap;
             concurrency::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
@@ -222,6 +234,7 @@ Where <spec> is one or more of:
                                     {
                                         write_class(w, type);
                                         add_base_type_entry(type, typeNameToBaseTypeMap);
+                                        add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                     }
                                     if (settings.component && componentActivatableClasses.count(type) == 1)
                                     {
@@ -233,14 +246,17 @@ Where <spec> is one or more of:
                                 break;
                             case category::delegate_type:
                                 write_delegate(w, type);
+                                add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 break;
                             case category::enum_type:
                                 write_enum(w, type);
+                                add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 type_requires_abi = false;
                                 break;
                             case category::interface_type:
                                 write_interface(w, type);
                                 write_temp_interface_event_source_subclass(helperWriter, type, typeNameToEventDefinitionMap);
+                                add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                 break;
                             case category::struct_type:
                                 if (is_api_contract_type(type))
@@ -250,6 +266,7 @@ Where <spec> is one or more of:
                                 else
                                 {
                                     write_struct(w, type);
+                                    add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                     type_requires_abi = !is_type_blittable(type);
                                 }
                                 break;
@@ -279,9 +296,15 @@ Where <spec> is one or more of:
                                     {
                                     case category::class_type:
                                         write_abi_class(w, type);
+                                        if (settings.component && componentActivatableClasses.count(type) == 1)
+                                        {
+                                            write_winrt_exposed_type_class(w, type, true);
+                                        }
+                                        write_winrt_implementation_type_rcw_factory_attribute_type(w, type);
                                         break;
                                     case category::delegate_type:
                                         write_abi_delegate(w, type);
+                                        write_winrt_exposed_type_class(w, type, false);
                                         break;
                                     case category::interface_type:
                                         if (settings.netstandard_compat)
@@ -310,7 +333,7 @@ Where <spec> is one or more of:
                             // Custom additions to namespaces
                             for (auto addition : strings::additions)
                             {
-                                if (ns == addition.name)
+                                if (ns == addition.name && settings.addition_filter.includes(ns))
                                 {
                                     w.write(addition.value);
                                 }
@@ -363,7 +386,7 @@ Where <spec> is one or more of:
 {
 internal static class ProjectionTypesInitializer
 {
-internal readonly static System.Collections.Generic.Dictionary<string, string> TypeNameToBaseTypeNameMapping = new System.Collections.Generic.Dictionary<string, string>(%, System.StringComparer.Ordinal)
+internal static readonly System.Collections.Generic.Dictionary<string, string> TypeNameToBaseTypeNameMapping = new System.Collections.Generic.Dictionary<string, string>(%, System.StringComparer.Ordinal)
 {
 %
 };
@@ -431,6 +454,61 @@ internal static void InitalizeAbiDelegates()
                 }));
                 baseTypeWriter.flush_to_file(settings.output_folder / "WinRTAbiDelegateInitializer.cs");
             }
+
+            if (!settings.netstandard_compat && has_generic_type_instantiations())
+            {
+                writer genericTypeInstantiationWriter("WinRT.GenericTypeInstantiations");
+                write_file_header(genericTypeInstantiationWriter);
+                genericTypeInstantiationWriter.write(R"(
+using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+namespace WinRT.GenericTypeInstantiations
+{
+%
+})",
+                bind<write_generic_type_instantiations>());
+                genericTypeInstantiationWriter.flush_to_file(settings.output_folder / "WinRTGenericTypeInstantiations.cs");
+            }
+
+            if (!authoredTypeNameToMetadataTypeNameMap.empty() && settings.component)
+            {
+                writer metadataMappingTypeWriter("WinRT");
+                write_file_header(metadataMappingTypeWriter);
+                metadataMappingTypeWriter.write(R"(
+using System;
+
+namespace WinRT
+{
+internal static class AuthoringMetadataTypeInitializer
+{
+
+private static Type GetMetadataTypeMapping(Type type)
+{
+return type switch
+{
+%
+_ => null
+};
+}
+
+[System.Runtime.CompilerServices.ModuleInitializer]
+internal static void InitializeAuthoringTypeMapping()
+{
+ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetMetadataTypeMapping));
+}
+}
+})",
+                bind([&](writer& w) {
+                        for (auto&& [key, value] : authoredTypeNameToMetadataTypeNameMap)
+                        {
+                            w.write(R"(Type _ when type == typeof(%) => typeof(%),)", key, value);
+                            w.write("\n");
+                        }
+                }));
+            metadataMappingTypeWriter.flush_to_file(settings.output_folder / "AuthoringMetadataTypeMappingHelper.cs");
+        }
 
             if (projectionFileWritten)
             {

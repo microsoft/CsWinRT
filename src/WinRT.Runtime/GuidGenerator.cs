@@ -1,12 +1,13 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using WinRT.Interop;
 
 namespace WinRT
 {
@@ -17,9 +18,24 @@ namespace WinRT
 #endif
     static class GuidGenerator
     {
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "This method only accesses 'Type.GUID', no fields are ever needed.")]
+#endif
         public static Guid GetGUID(Type type)
         {
-            return type.GetGuidType().GUID;
+            type = type.GetGuidType();
+
+            // Only check the WUX/MUX types if the feature switch is set, to avoid introducing
+            // performance regressions in the standard case where MUX is targeted (default).
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                if (TryGetWindowsUIXamlIID(type, out Guid iid))
+                {
+                    return iid;
+                }
+            }
+
+            return type.GUID;
         }
 
         public static Guid GetIID(
@@ -29,6 +45,16 @@ namespace WinRT
             Type type)
         {
             type = type.GetGuidType();
+
+            // Same optional check as above
+            if (FeatureSwitches.UseWindowsUIXamlProjections)
+            {
+                if (TryGetWindowsUIXamlIID(type, out Guid iid))
+                {
+                    return iid;
+                }
+            }
+
             if (!type.IsGenericType)
             {
                 return type.GUID;
@@ -36,8 +62,55 @@ namespace WinRT
             return (Guid)type.GetField("PIID").GetValue(null);
         }
 
+        internal static bool TryGetWindowsUIXamlIID(Type type, out Guid iid)
+        {
+            if (type == typeof(global::ABI.System.Collections.Specialized.INotifyCollectionChanged))
+            {
+                iid = IID.IID_WUX_INotifyCollectionChanged;
+
+                return true;
+            }
+
+            if (type == typeof(global::ABI.System.ComponentModel.INotifyPropertyChanged))
+            {
+                iid = IID.IID_WUX_INotifyPropertyChanged;
+
+                return true;
+            }
+
+            if (type == typeof(global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs))
+            {
+                iid = IID.IID_WUX_INotifyCollectionChangedEventArgs;
+
+                return true;
+            }
+
+            if (type == typeof(global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler))
+            {
+                iid = IID.IID_WUX_NotifyCollectionChangedEventHandler;
+
+                return true;
+            }
+
+            if (type == typeof(global::ABI.System.ComponentModel.PropertyChangedEventHandler))
+            {
+                iid = IID.IID_WUX_PropertyChangedEventHandler;
+
+                return true;
+            }
+
+            iid = default;
+
+            return false;
+        }
+
         public static string GetSignature(
 #if NET
+            // This '[DynamicallyAccessedMembers]' annotation is here just for backwards-compatibility with old projections. Those are
+            // not trim-safe, but we didn't want to break existing consumers that had code that happened to still work in this case.
+            // The only case where 'GetSignature' actually uses reflection is in that scenario, but when using updated projections, the
+            // generated attributes are always used instead, which are trim-safe. Therefore, it's safe to call this method suppressing
+            // the trim warning for the 'type' parameter if legacy projections are not a concern, or for a "best effort" support there.
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
             Type type)
@@ -50,6 +123,33 @@ namespace WinRT
             if (type == typeof(string))
             {
                 return "string";
+            }
+
+            if (type == typeof(Type))
+            {
+                return ABI.System.Type.GetGuidSignature();
+            }
+
+            if (type.IsGenericType)
+            {
+#if NET
+                [UnconditionalSuppressMessage("Trimming", "IL2062", Justification = "Fallback path for old projections, not trim-safe by design.")]
+#endif
+                static string[] SelectSignaturesForTypes(Type[] types)
+                {
+                    string[] signatures = new string[types.Length];
+
+                    for (int i = 0; i < types.Length; i++)
+                    {
+                        signatures[i] = GetSignature(types[i]);
+                    }
+
+                    return signatures;
+                }
+
+                var args = SelectSignaturesForTypes(type.GetGenericArguments());
+                var genericHelperType = type.GetGenericTypeDefinition().FindHelperType() ?? type;
+                return "pinterface({" + genericHelperType.GUID + "};" + string.Join(";", args) + ")";
             }
 
             var helperType = type.FindHelperType();
@@ -86,36 +186,86 @@ namespace WinRT
                                 var isFlags = type.IsDefined(typeof(FlagsAttribute));
                                 return "enum(" + type.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
                             }
+
                             if (!type.IsPrimitive)
                             {
-                                var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignature(fi.FieldType));
-                                return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
+                                var winrtTypeAttribute = type.GetCustomAttribute<WindowsRuntimeTypeAttribute>();
+                                if (winrtTypeAttribute != null && !string.IsNullOrEmpty(winrtTypeAttribute.GuidSignature))
+                                {
+                                    return winrtTypeAttribute.GuidSignature;
+                                }
+                                
+                                if (winrtTypeAttribute == null && 
+                                    (winrtTypeAttribute = type.GetAuthoringMetadataType()?.GetCustomAttribute<WindowsRuntimeTypeAttribute>()) != null && 
+                                    !string.IsNullOrEmpty(winrtTypeAttribute.GuidSignature))
+                                {
+                                    return winrtTypeAttribute.GuidSignature;
+                                }
+
+#if NET
+                                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                                {
+                                    throw new InvalidOperationException(
+                                        $"Cannot compute signature for type '{type}', as doing so requires a fallback path that is not trim/AOT " +
+                                        $"compatible. Using AOT requires all referenced projections to be up to date. Make sure to only reference " +
+                                        $"WinRT projections that have been generated by a version of CsWinRT supported for AOT.");
+                                }
+
+                                [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Fallback path for old projections, not trim-safe by design.")]
+#endif
+                                static string[] SelectSignaturesForFields(FieldInfo[] fields)
+                                {
+                                    string[] signatures = new string[fields.Length];
+
+                                    for (int i = 0; i < fields.Length; i++)
+                                    {
+                                        signatures[i] = GetSignature(fields[i].FieldType);
+                                    }
+
+                                    return signatures;
+                                }
+
+                                var args = SelectSignaturesForFields(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
+                                return "struct(" + type.FullName + ";" + string.Join(";", args) + ")";
                             }
-                            throw new InvalidOperationException("unsupported value type");
+
+                            throw new InvalidOperationException("Unsupported value type.");
                         }
                 }
             }
 
-            // For authoring interfaces, we use the metadata type to get the guid.
+            // For authoring interfaces, we can use the metadata type or the helper type to get the guid.
             // For built-in system interfaces that are custom type mapped, we use the helper type to get the guid.
             // For others, either the type itself or the helper type has the same guid and can be used.
-            type = type.IsInterface ? (type.GetAuthoringMetadataType() ?? helperType ?? type) : type;
-
-            if (type.IsGenericType)
-            {
-                var args = type.GetGenericArguments().Select(t => GetSignature(t));
-                return "pinterface({" + GetGUID(type) + "};" + String.Join(";", args) + ")";
-            }
+            type = type.IsInterface ? (helperType ?? type) : type;
 
             if (type.IsDelegate())
             {
                 return "delegate({" + GetGUID(type) + "})";
             }
 
-            if (type.IsClass && Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
+#if NET
+            [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "'GetSignature' will only actually use reflection when using old projections.")]
+#endif
+            static bool TryGetSignatureFromDefaultInterfaceTypeForRuntimeClassType(Type type, out string signature)
             {
-                return "rc(" + type.FullName + ";" + GetSignature(iface) + ")";
+                if (type.IsClass && Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
+                {
+                    signature = "rc(" + type.FullName + ";" + GetSignature(iface) + ")";
+
+                    return true;
+                }
+
+                signature = null;
+
+                return false;
             }
+
+            if (TryGetSignatureFromDefaultInterfaceTypeForRuntimeClassType(type, out string signature))
+            {
+                return signature;
+            }
+            
 
             return "{" + type.GUID.ToString() + "}";
         }
@@ -149,29 +299,55 @@ namespace WinRT
 #endif
         }
 
-        private readonly static Guid wrt_pinterface_namespace = new(0xd57af411, 0x737b, 0xc042, 0xab, 0xae, 0x87, 0x8b, 0x1e, 0x16, 0xad, 0xee);
+        private static readonly Guid wrt_pinterface_namespace = new(0xd57af411, 0x737b, 0xc042, 0xab, 0xae, 0x87, 0x8b, 0x1e, 0x16, 0xad, 0xee);
 
-        public static Guid CreateIID(Type type)
+        public static Guid CreateIID(
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            Type type)
         {
             var sig = GetSignature(type);
             if (!type.IsGenericType)
             {
                 return new Guid(sig);
             }
+            else
+            {
+                return CreateIIDForGenericType(sig);
+            }
+        }
+
+        /// <summary>
+        /// Gets the IID of a given type, just like <see cref="CreateIID(Type)"/>, but without rooting reflection metadata
+        /// for all public fields of that type. It can be used internally where we know that extra info is not actually needed.
+        /// </summary>
+        /// <param name="type">The type to get the IID for.</param>
+        /// <returns>The IID for <paramref name="type"/>.</returns>
+#if NET
+        [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "This method is only used for types (eg. generics) where fields aren't needed.")]
+#endif
+        internal static Guid CreateIIDUnsafe(Type type)
+        {
+            return CreateIID(type);
+        }
+
+        internal static Guid CreateIIDForGenericType(string signature)
+        {
 #if !NET
-            var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sig)).ToArray();
+            var data = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(wrt_pinterface_namespace.ToByteArray(), Encoding.UTF8.GetBytes(signature)));
 
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {
                 return encode_guid(sha.ComputeHash(data));
             }
 #else
-            var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(sig.Length);
+            var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(signature.Length);
 
             var data = new byte[16 /* Number of bytes in a GUID */ + maxBytes];
             Span<byte> dataSpan = data;
             wrt_pinterface_namespace.TryWriteBytes(dataSpan);
-            var numBytes = UTF8Encoding.UTF8.GetBytes(sig, dataSpan[16..]);
+            var numBytes = UTF8Encoding.UTF8.GetBytes(signature, dataSpan[16..]);
             data = data[..(16 + numBytes)];
 
             return encode_guid(SHA1.HashData(data));

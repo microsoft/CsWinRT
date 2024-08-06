@@ -51,15 +51,27 @@
     <Filter Include="strings\additions\Microsoft.UI.Xaml.Controls.Primitives">
       <UniqueIdentifier>{369a6d8a-43e6-48af-82c1-bb2e555909a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Controls.Primitives">
+      <UniqueIdentifier>{22aeef74-f4df-40f4-a18f-8053ac54f966}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Media.Animation">
+      <UniqueIdentifier>{bb545b29-ba72-4949-b044-790f57ba17a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Media.Media3D">
+      <UniqueIdentifier>{8451fa83-9750-4aec-ae8c-a4149c4b98a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Media">
+      <UniqueIdentifier>{98453be9-888b-4032-b5cd-4034b17197c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml">
+      <UniqueIdentifier>{03980bb6-f657-4c07-a456-5b4774de5773}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="strings\WinRT.cs">
+    <None Include="strings\InitalizeProjection.cs">
       <Filter>strings</Filter>
     </None>
     <None Include="packages.config" />
-    <None Include="strings\WinRT_Interop.cs">
-      <Filter>strings</Filter>
-    </None>
     <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
@@ -173,6 +185,15 @@
     <None Include="Directory.Build.props" />
     <None Include="strings\ComInteropHelpers.cs">
       <Filter>strings</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\ITaskAwareAsyncInfo.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeMarshal.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\StreamTaskAdaptersImplementation.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

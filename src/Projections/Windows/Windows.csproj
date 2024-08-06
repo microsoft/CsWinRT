@@ -4,8 +4,7 @@
     <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <AssemblyName>Microsoft.Windows.SDK.NET</AssemblyName>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    <IsTrimmable>true</IsTrimmable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +12,7 @@
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <InternalsVisibleTo Include="UnitTest" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64"/>
   </ItemGroup>
 
   <PropertyGroup>
@@ -24,6 +24,10 @@
 -exclude Windows.UI.IColors
 -exclude Windows.UI.ColorHelper
 -exclude Windows.UI.IColorHelper
+-exclude Windows.UI.ColorHelper
+-exclude Windows.UI.IColorHelper
+-exclude Windows.UI.IColorHelperStatics
+-exclude Windows.UI.IColorHelperStatics2
 #-exclude Windows.UI.Text (must include Windows.UI.Text to work around WinUI nuget issues)
 -exclude Windows.UI.Xaml
 -exclude Windows.ApplicationModel.Store.Preview

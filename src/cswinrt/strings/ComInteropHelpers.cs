@@ -66,7 +66,7 @@ namespace WinRT.Interop
             try
             {
                 // We use 3 here because IWindowNative only implements IUnknown, whose only functions are AddRef, Release and QI
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>**)ThisPtr)[3](ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[3](ThisPtr, &__retval));
                 return __retval;
             }
             finally
@@ -484,4 +484,68 @@ namespace Windows.Graphics.Display
         }
     }
 #endif
+}
+
+namespace Windows.ApplicationModel.DataTransfer
+{
+#if UAC_VERSION_1
+#if NET
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
+#endif
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class DataTransferManagerInterop
+    {
+        private static readonly global::System.Guid riid = new global::System.Guid(0xA5CAEE9B, 0x8708, 0x49D1, 0x8D, 0x36, 0x67, 0xD2, 0x5A, 0x8D, 0xA0, 0x0C);
+
+#if NET
+        private static global::WinRT.IObjectReference objectReference = global::WinRT.ActivationFactory.Get("Windows.ApplicationModel.DataTransfer.DataTransferManager", new global::System.Guid(0x3A3DCD6C, 0x3EAB, 0x43DC, 0xBC, 0xDE, 0x45, 0x67, 0x1C, 0xE8, 0x00, 0xC8));
+#else
+        private static global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> objectReference = global::WinRT.ActivationFactory.Get<global::WinRT.Interop.IUnknownVftbl>("Windows.ApplicationModel.DataTransfer.DataTransferManager", new global::System.Guid(0x3A3DCD6C, 0x3EAB, 0x43DC, 0xBC, 0xDE, 0x45, 0x67, 0x1C, 0xE8, 0x00, 0xC8));
+#endif
+
+        public static global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::System.IntPtr appWindow)
+        {
+            return IDataTransferManagerInteropMethods.GetForWindow(objectReference, appWindow, riid);
+        }
+
+        public static void ShowShareUIForWindow(global::System.IntPtr appWindow)
+        {
+            IDataTransferManagerInteropMethods.ShowShareUIForWindow(objectReference, appWindow);
+        }
+    }
+#endif
+
+    internal static class IDataTransferManagerInteropMethods
+    {
+        internal static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::WinRT.IObjectReference _obj, global::System.IntPtr appWindow, in global::System.Guid riid)
+        {
+            global::System.IntPtr thisPtr = _obj.ThisPtr;
+            global::System.IntPtr ptr = default;
+
+
+            try
+            {
+                // IDataTransferManagerInterop inherits IUnknown (3 functions) and provides GetForWindow giving a total of 5 functions
+                fixed(Guid* _riid = &riid)
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::System.Guid*, global::System.IntPtr*, int>**)thisPtr)[3](thisPtr, appWindow, _riid, &ptr));
+                return global::WinRT.MarshalInspectable<global::Windows.ApplicationModel.DataTransfer.DataTransferManager>.FromAbi(ptr);
+            }
+            finally
+            {
+                global::WinRT.MarshalInspectable<DataTransferManager>.DisposeAbi(ptr);
+            }
+        }
+
+        internal static unsafe void ShowShareUIForWindow(global::WinRT.IObjectReference _obj, global::System.IntPtr appWindow)
+        {
+            global::System.IntPtr thisPtr = _obj.ThisPtr;
+
+            // IDataTransferManagerInterop inherits IUnknown (3 functions) and provides ShowShareUIForWindow giving a total of 5 functions
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, int>**)thisPtr)[4](thisPtr, appWindow));
+        }
+    }
 }

@@ -1,0 +1,33 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" >
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../../'))" />
+
+  <PropertyGroup>
+    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsTrimmable>true</IsTrimmable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+
+    <!--
+      Don't fail builds for well known warnings in functional tests that are expected:
+
+      "CS0067: The event 'CustomCommand.CanExecuteChanged' is never used."
+      "CA1416: This call site is reachable on all platforms."
+      "IL2087: <GuidPatcherImplementationDetails>.<SignatureCache>ABI.Windows.Foundation.AsyncActionProgressHandler<!0>..cctor():
+          'type' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicFields' in call to
+          'WinRT.GuidGenerator.GetSignature(Type)'. The generic parameter '!0' of
+          '<GuidPatcherImplementationDetails>.<SignatureCache>ABI.Windows.Foundation.AsyncActionProgressHandler<!0>' does not have
+          matching annotations. The source value must declare at least the same requirements as those declared on the target
+          location it is assigned to."
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0067;CA1416;IL2087</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
+    <IsAotCompatible>true</IsAotCompatible>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+ 
+</Project>

@@ -4,8 +4,6 @@
     <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <AssemblyName>Microsoft.WinUI</AssemblyName>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,6 +35,7 @@
       -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
       -include Windows.UI.Xaml.Media.Animation.IndependentlyAnimatableAttribute
       -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
+      -addition_exclude Windows.UI.Xaml.Media.Animation
     </CsWinRTFilters>
     <!--PkgMicrosoft_WindowsAppSDK is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WindowsAppSDK>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '$(MicrosoftWinAppSDKVersion)'))</PkgMicrosoft_WindowsAppSDK>

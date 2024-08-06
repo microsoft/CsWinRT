@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -270,12 +271,70 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestBufferAsStreamWithEmptyBuffer1()
+        public void TestBufferAsStreamUsingAsBufferWithOffset()
+        {
+            var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+            var buffer = arr.AsBuffer(1, 2);
+            Stream stream = buffer.AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 2);
+
+            stream.Write(new byte[] { 0x05, 0x06 });
+            Assert.True(stream.Length == 2);
+            Assert.True(buffer.Length == 2);
+
+            Assert.Equal((byte)0x05, arr[1]);
+            Assert.Equal((byte)0x06, arr[2]);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamUsingAsBufferWithOffsetAndCapacity()
+        {
+            var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+            var buffer = arr.AsBuffer(1, 2, 3);
+            Stream stream = buffer.AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 2);
+
+            stream.Write(new byte[] { 0x05, 0x06, 0x07 });
+            Assert.True(stream.Length == 3);
+            Assert.True(buffer.Length == 3);
+
+            Assert.Equal((byte)0x05, arr[1]);
+            Assert.Equal((byte)0x06, arr[2]);
+            Assert.Equal((byte)0x07, arr[3]);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamWithEmptyBuffer()
         {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             Stream stream = buffer.AsStream();
             Assert.True(stream != null);
             Assert.True(stream.Length == 0);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamRead()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            Stream stream = arr.AsBuffer().AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 2);
+            int byte1 = stream.ReadByte();
+            Assert.Equal(0x01, byte1);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamWrite()
+        {
+            var buffer = new Windows.Storage.Streams.Buffer(2);
+            Stream stream = buffer.AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 0);
+            stream.WriteByte(0x01);
+            Assert.True(stream.Length == 1);
+            Assert.True(buffer.Length == 1);
         }
 
         [Fact]
@@ -399,6 +458,72 @@ namespace UnitTest
             buffer.CopyTo(array);
             Assert.True(array.Length == 0);
         }
+
+#if NET
+        [Fact]
+        public void TestTryGetDataUnsafe()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(0, buf, 0, 3);
+
+            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(buf, out IntPtr dataPtr));
+            Assert.True(dataPtr != IntPtr.Zero);
+
+            unsafe
+            {
+                Span<byte> buffSpan = new Span<byte>((byte*)dataPtr, (int)buf.Length);
+
+                byte[] arr2 = buffSpan.ToArray();
+                Assert.True(arr.SequenceEqual(arr2));
+            }
+
+            // Ensure buf doesn't get collected while we use the data pointer
+            GC.KeepAlive(buf);
+        }
+
+        [Fact]
+        public void TestTryGetDataUnsafe_MemoryBufferReference()
+        {
+            var buffer = new Windows.Foundation.MemoryBuffer(256);
+            var reference = buffer.CreateReference();
+
+            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(reference, out IntPtr dataPtr1, out uint capacity1));
+            Assert.True(dataPtr1 != IntPtr.Zero);
+            Assert.True(capacity1 == 256);
+
+            Assert.True(WindowsRuntimeMarshal.TryGetDataUnsafe(reference, out IntPtr dataPtr2, out uint capacity2));
+            Assert.True(dataPtr2 != IntPtr.Zero);
+            Assert.True(capacity2 == 256);
+
+            Assert.True(dataPtr1 == dataPtr2);
+
+            // Ensure the reference doesn't get collected while we use the data pointer
+            GC.KeepAlive(reference);
+        }
+
+        [Fact]
+        public void TestBufferTryGetArray()
+        {
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = arr.AsBuffer();
+
+            Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.Equal(arr, array.Array);
+        }
+
+        [Fact]
+        public void TestBufferTryGetArraySubset()
+        {
+            var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+            var buffer = arr.AsBuffer(1, 2);
+
+            Assert.True(WindowsRuntimeMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.Equal(arr, array.Array);
+            Assert.Equal(1, array.Offset);
+            Assert.Equal(2, array.Count);
+        }
+#endif
 
         [Fact]
         public void TestTypePropertyWithSystemType()
@@ -704,6 +829,9 @@ namespace UnitTest
             Assert.Equal(events_received, events_expected);
         }
 
+#if NET
+        [WinRTExposedType(typeof(ManagedUriHandlerWinRTTypeDetails))]
+#endif
         class ManagedUriHandler : IUriHandler
         {
             public Class TestObject { get; private set; }
@@ -719,6 +847,23 @@ namespace UnitTest
                 Assert.Equal(new Uri("http://github.com"), TestObject.UriProperty);
             }
         }
+
+#if NET
+        internal sealed class ManagedUriHandlerWinRTTypeDetails : IWinRTExposedTypeDetails
+        {
+            public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
+            {
+                return new ComWrappers.ComInterfaceEntry[]
+                {
+                    new ComWrappers.ComInterfaceEntry
+                    {
+                        IID = typeof(IUriHandler).GUID,
+                        Vtable = ABI.TestComponentCSharp.IUriHandlerMethods.AbiToProjectionVftablePtr
+                    }
+                };
+            }
+        }
+#endif
 
         [Fact]
         public void TestDelegateUnwrapping()
@@ -930,6 +1075,20 @@ namespace UnitTest
             var cls3 = new Class(42, "foo");
             Assert.Equal(42, cls3.IntProperty);
             Assert.Equal("foo", cls3.StringProperty);
+        }
+
+        [Fact]
+        public void TestFactoriesWithExplicitlyImplementedIUnknown()
+        {
+            var cls1 = new ClassWithExplicitIUnknown();
+            Assert.Equal(0, cls1.Value);
+            cls1.Value = 42;
+            Assert.Equal(42, cls1.Value);
+
+            var cls2 = new ClassWithExplicitIUnknown(42);
+            Assert.Equal(42, cls2.Value);
+            cls2.Value = 22;
+            Assert.Equal(22, cls2.Value);
         }
 
         [Fact]
@@ -1259,6 +1418,38 @@ namespace UnitTest
             var staticFactory = ComImports.As<IStringableInterop>();
             staticFactory.ToString(out hstr);
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
+        }
+
+        [Fact]
+        public unsafe void TestMarshalString_FromAbiUnsafe()
+        {
+            // The span must be empty and point to a null-terminated buffer (HSTRING-s are null-terminated too)
+            var span = MarshalString.FromAbiUnsafe(IntPtr.Zero);
+            Assert.Equal(0, span.Length);
+            Assert.True(MemoryMarshal.GetReference(span) == '\0');
+
+            // Same thing but with round-tripping from a null string
+            var hstr = MarshalString.FromManaged(null);
+            span = MarshalString.FromAbiUnsafe(hstr);
+            Assert.Equal(0, span.Length);
+            Assert.True(MemoryMarshal.GetReference(span) == '\0');
+            MarshalString.DisposeAbi(hstr);
+
+            // Same thing but with an empty string (equivalent to null)
+            hstr = MarshalString.FromManaged("");
+            span = MarshalString.FromAbiUnsafe(hstr);
+            Assert.Equal(0, span.Length);
+            Assert.True(MemoryMarshal.GetReference(span) == '\0');
+            MarshalString.DisposeAbi(hstr);
+
+            // Marshal from some non-null, non-empty string. We want to check that both the span has the expected content,
+            // but also that it's correctly null-terminated (outside of its bounds). This is always safe to access, like
+            // before, because the memory should point to the HSTRING buffer, which is always null-terminated as well.
+            hstr = MarshalString.FromManaged(nameof(TestMarshalString_FromAbiUnsafe));
+            span = MarshalString.FromAbiUnsafe(hstr);
+            Assert.True(span.SequenceEqual(nameof(TestMarshalString_FromAbiUnsafe)));
+            Assert.True(Unsafe.Add(ref MemoryMarshal.GetReference(span), span.Length) == '\0');
+            MarshalString.DisposeAbi(hstr);
         }
 
         [Fact]
@@ -1685,13 +1876,13 @@ namespace UnitTest
             var task = InvokeDoitAsync();
             Assert.False(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(1000));
+            Assert.True(task.Wait(5000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
 
             task = InvokeDoitAsync();
             Assert.False(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.Equal(E_FAIL, e.InnerException.HResult);
             Assert.Equal(TaskStatus.Faulted, task.Status);
 
@@ -1699,7 +1890,53 @@ namespace UnitTest
             task = TestObject.DoitAsync().AsTask(src.Token);
             Assert.False(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestAsyncActionWait()
+        {
+            var asyncAction = TestObject.DoitAsync();
+            TestObject.CompleteAsync();
+            asyncAction.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsync();
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsync();
+            asyncAction.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncAction.Status);
+        }
+
+        [Fact]
+        public void TestAsyncActionRoundTrip()
+        {
+            var task = InvokeDoitAsync().AsAsyncAction().AsTask();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(5000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+
+            task = InvokeDoitAsync().AsAsyncAction().AsTask();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = InvokeDoitAsync().AsAsyncAction().AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
         }
@@ -1723,17 +1960,17 @@ namespace UnitTest
             for (int i = 1; i <= 10; ++i)
             {
                 TestObject.AdvanceAsync(10);
-                Assert.True(evt.WaitOne(1000));
+                Assert.True(evt.WaitOne(5000));
                 Assert.Equal(10 * i, progress);
             }
 
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(1000));
+            Assert.True(task.Wait(5000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
 
             task = InvokeDoitAsyncWithProgress();
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.Equal(E_FAIL, e.InnerException.HResult);
             Assert.Equal(TaskStatus.Faulted, task.Status);
 
@@ -1741,9 +1978,30 @@ namespace UnitTest
             task = TestObject.DoitAsyncWithProgress().AsTask(src.Token);
             Assert.False(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestAsyncActionWithProgressWait()
+        {
+            var asyncAction = TestObject.DoitAsyncWithProgress();
+            TestObject.CompleteAsync();
+            asyncAction.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsyncWithProgress();
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncAction.Status);
+
+            asyncAction = TestObject.DoitAsyncWithProgress();
+            asyncAction.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncAction.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncAction.Status);
         }
 
         async Task<int> InvokeAddAsync(int lhs, int rhs)
@@ -1757,14 +2015,14 @@ namespace UnitTest
             var task = InvokeAddAsync(42, 8);
             Assert.False(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(1000));
+            Assert.True(task.Wait(5000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
             Assert.Equal(50, task.Result);
 
             task = InvokeAddAsync(0, 0);
             Assert.False(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.Equal(E_FAIL, e.InnerException.HResult);
             Assert.Equal(TaskStatus.Faulted, task.Status);
 
@@ -1772,7 +2030,55 @@ namespace UnitTest
             task = TestObject.AddAsync(0, 0).AsTask(src.Token);
             Assert.False(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestAsyncOperationWait()
+        {
+            var asyncOperation = TestObject.AddAsync(42, 8);
+            TestObject.CompleteAsync();
+            asyncOperation.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsync(42, 8);
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsync(42, 8);
+            asyncOperation.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncOperation.Status);
+        }
+
+
+        [Fact]
+        public void TestAsyncOperationRoundTrip()
+        {
+            var task = InvokeAddAsync(42, 8).AsAsyncOperation().AsTask();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(5000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.Equal(50, task.Result);
+
+            task = InvokeAddAsync(0, 0).AsAsyncOperation().AsTask();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = InvokeAddAsync(0, 0).AsAsyncOperation().AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
         }
@@ -1796,18 +2102,18 @@ namespace UnitTest
             for (int i = 1; i <= 10; ++i)
             {
                 TestObject.AdvanceAsync(10);
-                Assert.True(evt.WaitOne(1000));
+                Assert.True(evt.WaitOne(5000));
                 Assert.Equal(10 * i, progress);
             }
 
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(1000));
+            Assert.True(task.Wait(5000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
             Assert.Equal(50, task.Result);
 
             task = InvokeAddAsyncWithProgress(0, 0);
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.Equal(E_FAIL, e.InnerException.HResult);
             Assert.Equal(TaskStatus.Faulted, task.Status);
 
@@ -1815,9 +2121,30 @@ namespace UnitTest
             task = TestObject.AddAsyncWithProgress(0, 0).AsTask(src.Token);
             Assert.False(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestAsyncOperationWithProgressWait()
+        {
+            var asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
+            TestObject.CompleteAsync();
+            asyncOperation.Wait();
+            Assert.Equal(AsyncStatus.Completed, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(AsyncStatus.Error, asyncOperation.Status);
+
+            asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
+            asyncOperation.Cancel();
+            e = Assert.Throws<AggregateException>(() => asyncOperation.Wait());
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(AsyncStatus.Canceled, asyncOperation.Status);
         }
 
         [Fact]
@@ -2121,6 +2448,12 @@ namespace UnitTest
             Assert.Equal(vector3.Y, TestObject.Vector3Property.Y);
             Assert.Equal(vector3.Z, TestObject.Vector3Property.Z);
             Assert.True(TestObject.Vector3Property == vector3);
+
+            TestObject.Vector3NullableProperty = Vector3.Zero;
+            Assert.Equal(0, TestObject.Vector3Property.X);
+            Assert.Equal(0, TestObject.Vector3Property.Y);
+            Assert.Equal(0, TestObject.Vector3Property.Z);
+            Assert.Equal(Vector3.Zero, TestObject.Vector3NullableProperty);
         }
 
         [Fact]
@@ -2261,6 +2594,11 @@ namespace UnitTest
 
             EnumValue enumValue = EnumValue.Two;
             Assert.Equal(enumValue, Class.UnboxEnum(enumValue));
+
+            var type = typeof(EnumValue);
+            Assert.Equal(type, Class.UnboxType(type));
+
+            Assert.Equal(typeof(Class), Class.BoxedType);
         }
 
         [Fact]
@@ -2284,6 +2622,15 @@ namespace UnitTest
             var obj = PropertyValue.CreateInt32Array(i);
             Assert.IsType<int[]>(obj);
             Assert.Equal(i, (IEnumerable<int>)obj);
+        }
+
+        [Fact]
+        public void TestListOfTypes()
+        {
+            var types = Class.ListOfTypes;
+            Assert.Equal(2, types.Count);
+            Assert.Equal(typeof(Class), types[0]);
+            Assert.Equal(typeof(int?), types[1]);
         }
 
         [Fact]
@@ -2311,7 +2658,6 @@ namespace UnitTest
         public void TypeInfoGenerics()
         {
             var typeName = Class.GetTypeNameForType(typeof(IList<int>));
-
             Assert.Equal("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
         }
 
@@ -2615,6 +2961,14 @@ namespace UnitTest
 
             IProperties1 property = setPropertyClass;
             Assert.Equal(4, property.ReadWriteProperty);
+        }
+
+        [Fact]
+        public void TestStaticPropertyImplementedAcrossInterfaces()
+        {
+            // Testing call doesn't fail.
+            WarningStatic.ReadWriteProperty = 4; // expected warning CA1416
+            _ = WarningStatic.ReadWriteProperty;
         }
 
         // Test scenario where type reported by runtimeclass name is not a valid type (i.e. internal type).
@@ -3139,6 +3493,126 @@ namespace UnitTest
             mtaThread.Join();
 
             Assert.Null(exception);
+        }
+
+        [Guid("59C7966B-AE52-5283-AD7F-A1B9E9678ADD")]
+        [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
+        [global::WinRT.WindowsRuntimeHelperType(typeof(ICustomGuidHelperStatics))]
+        interface ICustomGuidHelperStatics
+        {
+            public static readonly IntPtr AbiToProjectionVftablePtr;
+            static unsafe ICustomGuidHelperStatics()
+            {
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(ICustomGuidHelperStatics), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * 3);
+                *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+                ((delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_CreateNewGuid_0;
+                ((delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>*)AbiToProjectionVftablePtr)[7] = &Do_Abi_get_Empty_1;
+                ((delegate* unmanaged[Stdcall]<IntPtr, Guid*, Guid*, byte*, int>*)AbiToProjectionVftablePtr)[8] = &Do_Abi_Equals_2;
+            }
+
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+            private static unsafe int Do_Abi_CreateNewGuid_0(IntPtr thisPtr, Guid* result)
+            {
+
+                Guid __result = default;
+
+                *result = default;
+
+                try
+                {
+                    __result = global::WinRT.ComWrappersSupport.FindObject<ICustomGuidHelperStatics>(thisPtr).CreateNewGuid();
+                    *result = __result;
+
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+            private static unsafe int Do_Abi_Equals_2(IntPtr thisPtr, Guid* target, Guid* value, byte* result)
+            {
+
+                bool __result = default;
+
+                *result = default;
+
+                try
+                {
+                    __result = global::WinRT.ComWrappersSupport.FindObject<ICustomGuidHelperStatics>(thisPtr).Equals(*target, *value);
+                    *result = (byte)(__result ? 1 : 0);
+
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+            private static unsafe int Do_Abi_get_Empty_1(IntPtr thisPtr, Guid* value)
+            {
+
+                Guid __value = default;
+
+                *value = default;
+
+                try
+                {
+                    __value = global::WinRT.ComWrappersSupport.FindObject<ICustomGuidHelperStatics>(thisPtr).Empty;
+                    *value = __value;
+
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+
+            Guid CreateNewGuid();
+            bool Equals(in Guid target, in Guid value);
+            Guid Empty { get; }
+        }
+
+        class CustomGuidHelper : ICustomGuidHelperStatics
+        {
+            public static Guid Mock { get; set; }
+
+            public Guid Empty => Mock;
+
+            public Guid CreateNewGuid()
+            {
+                return Mock;
+            }
+
+            public bool Equals(in Guid target, in Guid value)
+            {
+                return false;
+            }
+        };
+
+        [Fact]
+        public void TestActivationHandler()
+        {
+            ActivationFactory.ActivationHandler = (string name, Guid iid) =>
+            {
+                Assert.Equal("Windows.Foundation.GuidHelper", name);
+                Assert.Equal(typeof(IGuidHelperStatics).GUID, iid);
+
+                return MarshalInterface<ICustomGuidHelperStatics>.FromManaged(new CustomGuidHelper());
+            };
+
+            CustomGuidHelper.Mock = new Guid("78872A91-C365-4DDB-9509-1CCA002B6FD9");
+
+            Guid guid = GuidHelper.CreateNewGuid();
+            Assert.Equal(CustomGuidHelper.Mock, guid);
+
+            ActivationFactory.ActivationHandler = null;
         }
 #endif
 

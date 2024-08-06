@@ -22,8 +22,9 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> put_PropertyName_1 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_put_PropertyName_1;
     }
 
-
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+#endif
     [Guid("62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5")]
     internal unsafe sealed class WinRTDataErrorsChangedEventArgsRuntimeClassFactory
     {
@@ -35,15 +36,11 @@ namespace ABI.Microsoft.UI.Xaml.Data
             private void* _CreateInstance_0;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int> CreateInstance_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>)_CreateInstance_0;
         }
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, IID.IID_DataErrorsChangedEventArgsRuntimeClassFactory);
 
-        public static implicit operator WinRTDataErrorsChangedEventArgsRuntimeClassFactory(IObjectReference obj) => (obj != null) ? new WinRTDataErrorsChangedEventArgsRuntimeClassFactory(obj) : null;
-        public static implicit operator WinRTDataErrorsChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTDataErrorsChangedEventArgsRuntimeClassFactory(obj) : null;
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public WinRTDataErrorsChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public WinRTDataErrorsChangedEventArgsRuntimeClassFactory(IObjectReference obj) : this(obj.As<Vftbl>(IID.IID_DataErrorsChangedEventArgsRuntimeClassFactory)) { }
         public WinRTDataErrorsChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
@@ -58,7 +55,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 fixed (void* ___name = __name)
                 {
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), &__retval));
-                    return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                    return ObjectReference<IUnknownVftbl>.Attach(ref __retval, IID.IID_IUnknown);
                 }
             }
             finally
@@ -91,7 +88,7 @@ namespace ABI.System.ComponentModel
 #endif
     unsafe struct DataErrorsChangedEventArgs
     {
-        private static ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance = ActivationFactory.Get("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs");
+        private static readonly ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance = new(ActivationFactory.Get("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs"));
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.DataErrorsChangedEventArgs value)
         {
@@ -150,6 +147,14 @@ namespace ABI.System.ComponentModel
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
+
+        public static unsafe MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.MarshalerArray CreateMarshalerArray(global::System.ComponentModel.DataErrorsChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.CreateMarshalerArray2(array, CreateMarshaler2);
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.GetAbiArray(box);
+        public static unsafe global::System.ComponentModel.DataErrorsChangedEventArgs[] FromAbiArray(object box) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.FromAbiArray(box, FromAbi);
+        public static void CopyAbiArray(global::System.ComponentModel.DataErrorsChangedEventArgs[] array, object box) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.CopyAbiArray(array, box, FromAbi);
+        public static (int length, IntPtr data) FromManagedArray(global::System.ComponentModel.DataErrorsChangedEventArgs[] array) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.FromManagedArray(array, FromManaged);
+        public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.MarshalerArray array) => MarshalInterfaceHelper<global::System.ComponentModel.DataErrorsChangedEventArgs>.DisposeMarshalerArray(array);
+        public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
 
         public static string GetGuidSignature()
         {

@@ -14,6 +14,10 @@ namespace WinRT.Interop
     public
 #endif
     delegate int _get_PropertyAsBoolean(IntPtr thisPtr, out byte value);
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal unsafe delegate int _get_PropertyAsBoolean_Abi(IntPtr thisPtr, byte* value);
+
     [EditorBrowsable(EditorBrowsableState.Never)]
 #if EMBED
     internal
@@ -112,6 +116,10 @@ namespace WinRT.Interop
     public
 #endif
     delegate int _get_PropertyAsUInt32(IntPtr thisPtr, out uint value);
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal unsafe delegate int _get_PropertyAsUInt32_Abi(IntPtr thisPtr, uint* value);
+
     [EditorBrowsable(EditorBrowsableState.Never)]
 #if EMBED
     internal

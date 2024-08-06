@@ -55,12 +55,14 @@ namespace GuidPatch
     {
         private readonly AssemblyDefinition assembly;
         private readonly TypeDefinition guidAttributeType;
+        private readonly TypeDefinition wuxMuxProjectedInterfaceAttributeType;
         private readonly AssemblyDefinition winRTRuntimeAssembly;
 
-        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, AssemblyDefinition runtimeAssembly)
+        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, TypeDefinition wuxMuxProjectedInterfaceAttributeType, AssemblyDefinition runtimeAssembly)
         {
             this.assembly = assembly;
             this.guidAttributeType = guidAttributeType;
+            this.wuxMuxProjectedInterfaceAttributeType = wuxMuxProjectedInterfaceAttributeType;
             this.winRTRuntimeAssembly = runtimeAssembly;
         }
 
@@ -74,8 +76,11 @@ namespace GuidPatch
             var typeDef = type.Resolve();
 
             var helperType = new TypeReference($"ABI.{typeDef.Namespace}", typeDef.Name, typeDef.Module, assembly.MainModule);
-
-            if (helperType.Resolve() is not null)
+            if (helperType.Resolve() is not null ||
+                // Handle custom mapped built-in structs such as System.Numerics.Vector3 which have their ABI type defined in WinRT.Runtime.
+                // This is handled separately due to the need for the is public check which isn't needed if in same module as in the initial case.
+                ((helperType = typeDef.GetCswinrtAbiTypeDefinition(winRTRuntimeAssembly)) is not null && 
+                  ((TypeDefinition)helperType).Attributes.HasFlag(TypeAttributes.Public)))
             {
                 if (type.IsGenericInstance)
                 {
@@ -165,6 +170,25 @@ namespace GuidPatch
             if (TryGetDefaultInterfaceTypeForRuntimeClassType(type, out TypeReference? iface))
             {
                 return new RuntimeClassSignature(type, GetSignatureParts(iface));
+            }
+
+            // For types projected from WUX or MUX into .NET, we'll need to do a runtime lookup for the IID.
+            // TODO-WuxMux: We can instead take an option in the IID optimizer to hard-code the lookup for WUX or MUX when specified, which would be more efficient for scenarios where this is possible.
+            if (helperType?.Resolve().CustomAttributes.Any(attr => attr.AttributeType.Resolve() == wuxMuxProjectedInterfaceAttributeType) == true)
+            {
+                var getGuidSignatureMethod = new MethodReference("GetGuidSignature", assembly.MainModule.TypeSystem.String, helperType)
+                {
+                    HasThis = false
+                };
+
+                if (getGuidSignatureMethod.Resolve() is not null)
+                {
+                    return new CustomSignatureMethod(assembly.MainModule.ImportReference(getGuidSignatureMethod));
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unable to resolve GetGuidSignature method for type projected into .NET from WUX/MUX: {type.FullName}.");
+                }
             }
 
             Guid? guidAttributeValue = type.ReadGuidFromAttribute(guidAttributeType, winRTRuntimeAssembly);

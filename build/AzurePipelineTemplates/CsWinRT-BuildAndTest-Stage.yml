@@ -3,7 +3,7 @@ stages:
   displayName: Build/Test Stage
   jobs: 
   - job: BuildAndTest
-    timeoutInMinutes: 180
+    timeoutInMinutes: 270
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
       maxParallel: 10
@@ -93,6 +93,18 @@ stages:
         script: |
           dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
+          exit /b 0
+
+# Run WUX Tests
+    - task: CmdLine@2
+      displayName: Run WUX Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      continueOnError: True
+      inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src
+        script: |
+          dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin
+          _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
           exit /b 0 
 
 # Run Functional Tests  
@@ -102,6 +114,7 @@ stages:
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src
         script: |
+          set CIBuildReason=CI
           set cswinrt_label=functionaltest
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
     templateContext:
@@ -146,6 +159,11 @@ stages:
         condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
         targetPath: $(Build.ArtifactStagingDirectory)\release_net6.0
         artifactName: net6.0
+      - output: pipelineArtifact
+        displayName: 'Publish Net8.0'
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+        targetPath: $(Build.ArtifactStagingDirectory)\release_net8.0
+        artifactName: net8.0
 
   - job: Benchmarks
     displayName: Run Benchmarks

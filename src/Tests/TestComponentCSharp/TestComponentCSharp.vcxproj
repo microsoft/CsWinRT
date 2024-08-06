@@ -81,6 +81,7 @@
   <ItemGroup>
     <ClInclude Include="ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.h" />
     <ClInclude Include="AnotherAssembly.SetPropertyClass.h" />
+    <ClInclude Include="ClassWithExplicitIUnknown.h" />
     <ClInclude Include="CustomExperimentClass.h" />
     <ClInclude Include="CustomEquals.h" />
     <ClInclude Include="ManualProjectionTestClasses.h" />
@@ -89,6 +90,7 @@
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="NonAgileClass.h" />
+    <ClInclude Include="NonUniqueClass.h" />
     <ClInclude Include="ComImports.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="WarningClass.h" />
@@ -100,6 +102,7 @@
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
     <ClCompile Include="ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.cpp" />
     <ClCompile Include="AnotherAssembly.SetPropertyClass.cpp" />
+    <ClCompile Include="ClassWithExplicitIUnknown.cpp" />
     <ClCompile Include="CustomExperimentClass.cpp" />
     <ClCompile Include="CustomEquals.cpp" />
     <ClCompile Include="pch.cpp">
@@ -109,6 +112,7 @@
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="NonAgileClass.cpp" />
+    <ClCompile Include="NonUniqueClass.cpp" />
     <ClCompile Include="ComImports.cpp" />
     <ClCompile Include="ManualProjectionTestClasses.cpp" />
     <ClCompile Include="Singleton.cpp" />
