@@ -225,16 +225,52 @@ namespace WinRT
                     ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException();
                     break;
                 case E_XAMLPARSEFAILED:
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Markup.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.Markup.XamlParseException();
+#if NET
+                    if (FeatureSwitches.UseWindowsUIXamlProjections)
+                    {
+                        ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.Markup.XamlParseException(errorMessage) : new Windows.UI.Xaml.Markup.XamlParseException();
+                    }
+                    else
+#endif
+                    {
+                        ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Markup.XamlParseException(errorMessage) : new Microsoft.UI.Xaml.Markup.XamlParseException();
+                    }
                     break;
                 case E_LAYOUTCYCLE:
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException();
+#if NET
+                    if (FeatureSwitches.UseWindowsUIXamlProjections)
+                    {
+                        ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.LayoutCycleException(errorMessage) : new Windows.UI.Xaml.LayoutCycleException();
+                    }
+                    else
+#endif
+                    {
+                        ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.LayoutCycleException(errorMessage) : new Microsoft.UI.Xaml.LayoutCycleException();
+                    }
                     break;
                 case E_ELEMENTNOTAVAILABLE:
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotAvailableException();
+#if NET
+                    if (FeatureSwitches.UseWindowsUIXamlProjections)
+                    {
+                        ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.Automation.ElementNotAvailableException(errorMessage) : new Windows.UI.Xaml.Automation.ElementNotAvailableException();
+                    }
+                    else
+#endif
+                    {
+                        ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotAvailableException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotAvailableException();
+                    }
                     break;
                 case E_ELEMENTNOTENABLED:
-                    ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotEnabledException();
+#if NET
+                    if (FeatureSwitches.UseWindowsUIXamlProjections)
+                    {
+                        ex = !string.IsNullOrEmpty(errorMessage) ? new Windows.UI.Xaml.Automation.ElementNotEnabledException(errorMessage) : new Windows.UI.Xaml.Automation.ElementNotEnabledException();
+                    }
+                    else
+#endif
+                    {
+                        ex = !string.IsNullOrEmpty(errorMessage) ? new Microsoft.UI.Xaml.Automation.ElementNotEnabledException(errorMessage) : new Microsoft.UI.Xaml.Automation.ElementNotEnabledException();
+                    }
                     break;
                 case ERROR_INVALID_WINDOW_HANDLE:
                     ex = new COMException(
@@ -524,119 +560,6 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             }
             e.SetHResult(hresult);
             return e;
-        }
-    }
-}
-
-namespace Microsoft.UI.Xaml
-{
-    namespace Automation
-    {
-#if EMBED
-        internal
-#else
-        public
-#endif
-        class ElementNotAvailableException : Exception
-        {
-            public ElementNotAvailableException()
-                : base("The element is not available.")
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTAVAILABLE;
-            }
-
-            public ElementNotAvailableException(string message)
-                : base(message)
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTAVAILABLE;
-            }
-
-            public ElementNotAvailableException(string message, Exception innerException)
-                : base(message, innerException)
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTAVAILABLE;
-            }
-        }
-
-#if EMBED
-        internal
-#else
-        public
-#endif
-        class ElementNotEnabledException : Exception
-        {
-            public ElementNotEnabledException()
-                : base("The element is not enabled.")
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTENABLED;
-            }
-
-            public ElementNotEnabledException(string message)
-                : base(message)
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTENABLED;
-            }
-
-            public ElementNotEnabledException(string message, Exception innerException)
-                : base(message, innerException)
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTENABLED;
-            }
-        }
-    }
-    namespace Markup
-    {
-
-#if EMBED
-        internal
-#else
-        public
-#endif
-        class XamlParseException : Exception
-        {
-            public XamlParseException()
-                : base("XAML parsing failed.")
-            {
-                HResult = WinRT.ExceptionHelpers.E_XAMLPARSEFAILED;
-            }
-
-            public XamlParseException(string message)
-                : base(message)
-            {
-                HResult = WinRT.ExceptionHelpers.E_XAMLPARSEFAILED;
-            }
-
-            public XamlParseException(string message, Exception innerException)
-                : base(message, innerException)
-            {
-                HResult = WinRT.ExceptionHelpers.E_XAMLPARSEFAILED;
-            }
-        }
-    }
-
-#if EMBED
-    internal
-#else
-    public
-#endif
-    class LayoutCycleException : Exception
-    {
-        public LayoutCycleException()
-            : base("A cycle occurred while laying out the GUI.")
-        {
-            HResult = WinRT.ExceptionHelpers.E_LAYOUTCYCLE;
-        }
-
-        public LayoutCycleException(string message)
-            : base(message)
-        {
-            HResult = WinRT.ExceptionHelpers.E_LAYOUTCYCLE;
-        }
-
-        public LayoutCycleException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-            HResult = WinRT.ExceptionHelpers.E_LAYOUTCYCLE;
         }
     }
 }

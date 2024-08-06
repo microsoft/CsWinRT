@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using WinRT;
 
 #pragma warning disable CA1416
 
@@ -166,6 +167,23 @@ namespace AuthoringWuxTest
         void IList.RemoveAt(int index)
         {
             _list.RemoveAt(index);
+        }
+    }
+
+    public static class XamlExceptionTypes
+    {
+        public static bool VerifyExceptionTypes()
+        {
+            const int E_XAMLPARSEFAILED = unchecked((int)0x802B000A);
+            const int E_LAYOUTCYCLE = unchecked((int)0x802B0014);
+            const int E_ELEMENTNOTENABLED = unchecked((int)0x802B001E);
+            const int E_ELEMENTNOTAVAILABLE = unchecked((int)0x802B001F);
+
+            return
+                ExceptionHelpers.GetExceptionForHR(E_XAMLPARSEFAILED)?.GetType() == typeof(Windows.UI.Xaml.Markup.XamlParseException) &&
+                ExceptionHelpers.GetExceptionForHR(E_LAYOUTCYCLE)?.GetType() == typeof(Windows.UI.Xaml.LayoutCycleException) &&
+                ExceptionHelpers.GetExceptionForHR(E_ELEMENTNOTENABLED)?.GetType() == typeof(Windows.UI.Xaml.Automation.ElementNotEnabledException) &&
+                ExceptionHelpers.GetExceptionForHR(E_ELEMENTNOTAVAILABLE)?.GetType() == typeof(Windows.UI.Xaml.Automation.ElementNotAvailableException);
         }
     }
 }

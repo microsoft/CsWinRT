@@ -64,6 +64,11 @@ TEST(AuthoringWuxTest, PropertyChanged)
     EXPECT_TRUE(eventTriggered);
 }
 
+TEST(AuthoringWuxTest, XamlExceptionTypes)
+{
+    EXPECT_TRUE(XamlExceptionTypes::VerifyExceptionTypes());
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
