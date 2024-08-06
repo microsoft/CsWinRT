@@ -79,8 +79,8 @@ namespace WinRT
 
         public ref struct Pinnable
         {
-            private HSTRING_HEADER _header;
-            private string _value;
+            private readonly HSTRING_HEADER _header;
+            private readonly string _value;
 #if DEBUG
             private bool _pinned;
 #endif
@@ -116,7 +116,7 @@ namespace WinRT
                 Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
                     (ushort*)Unsafe.AsPointer(ref Unsafe.AsRef(in GetPinnableReference())),
                     _value.Length,
-                    (IntPtr*)Unsafe.AsPointer(ref _header),
+                    (IntPtr*)Unsafe.AsPointer(ref Unsafe.AsRef(in _header)),
                     &hstring));
                 return hstring;
             }
