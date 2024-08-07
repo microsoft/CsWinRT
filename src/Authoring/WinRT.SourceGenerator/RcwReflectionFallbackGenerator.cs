@@ -83,7 +83,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
             }
 
             // If the assembly is not an old projections assembly, we have nothing to do
-            if (!IsOldProjectionAssembly(assemblySymbol))
+            if (!GeneratorHelper.IsOldProjectionAssembly(assemblySymbol))
             {
                 return EquatableArray<string>.FromImmutableArray(ImmutableArray<string>.Empty);
             }
@@ -130,7 +130,18 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                     continue;
                 }
 
-                executableTypeNames.Add(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                var typeName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+                // These types are in the existing WinUI projection, but have been moved to the Windows SDK projection.
+                // So if we see those, we want to ignore them.
+                if (typeName == "global::Windows.UI.Text.ContentLinkInfo" ||
+                    typeName == "global::Windows.UI.Text.RichEditTextDocument" ||
+                    typeName == "global::Windows.UI.Text.RichEditTextRange")
+                {
+                    continue;
+                }
+
+                executableTypeNames.Add(typeName);
             }
 
             token.ThrowIfCancellationRequested();
@@ -193,33 +204,6 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
 
             context.AddSource("RcwFallbackInitializer.g.cs", builder.ToString());
         });
-    }
-
-    /// <summary>
-    /// Checks whether an assembly contains old projections.
-    /// </summary>
-    /// <param name="assemblySymbol">The assembly to inspect.</param>
-    /// <returns>Whether <paramref name="assemblySymbol"/> contains old projections.</returns>
-    private static bool IsOldProjectionAssembly(IAssemblySymbol assemblySymbol)
-    {
-        // We only care about assemblies that have some dependent assemblies
-        if (assemblySymbol.Modules.First() is not { ReferencedAssemblies: { Length: > 0 } dependentAssemblies })
-        {
-            return false;
-        }
-
-        // Scan all dependent assemblies to look for CsWinRT with version < 2.0.8
-        foreach (AssemblyIdentity assemblyIdentity in dependentAssemblies)
-        {
-            if (assemblyIdentity.Name == "WinRT.Runtime")
-            {
-                return assemblyIdentity.Version < new Version(2, 0, 8) && 
-                    assemblyIdentity.Version != new Version(0, 0, 0, 0);
-            }
-        }
-
-        // This assembly is not a projection assembly
-        return false;
     }
 
     /// <summary>

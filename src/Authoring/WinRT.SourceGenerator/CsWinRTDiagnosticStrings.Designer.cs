@@ -196,6 +196,24 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Class not trimming / AOT compatible.
+        /// </summary>
+        internal static string ClassImplementsOldProjection_Brief {
+            get {
+                return ResourceManager.GetString("ClassImplementsOldProjection_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; implements WinRT interface(s) {1} generated using an older version of CsWinRT.  Update to a projection generated using CsWinRT 2.1.0 or later for trimming and AOT compatibility..
+        /// </summary>
+        internal static string ClassImplementsOldProjection_Text {
+            get {
+                return ResourceManager.GetString("ClassImplementsOldProjection_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Class is not marked partial.
         /// </summary>
         internal static string ClassNotMarkedPartial_Brief {
