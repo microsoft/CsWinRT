@@ -103,6 +103,12 @@
   <data name="ClassConstructorRule_Text" xml:space="preserve">
     <value>Classes cannot have multiple constructors of the same arity in the Windows Runtime, class {0} has multiple {1}-arity constructors</value>
   </data>
+  <data name="ClassImplementsOldProjection_Brief" xml:space="preserve">
+    <value>Class not trimming / AOT compatible</value>
+  </data>
+  <data name="ClassImplementsOldProjection_Text" xml:space="preserve">
+    <value>Class '{0}' implements WinRT interface(s) {1} generated using an older version of CsWinRT.  Update to a projection generated using CsWinRT 2.1.0 or later for trimming and AOT compatibility.</value>
+  </data>
   <data name="ClassNotMarkedPartial_Brief" xml:space="preserve">
     <value>Class is not marked partial</value>
   </data>

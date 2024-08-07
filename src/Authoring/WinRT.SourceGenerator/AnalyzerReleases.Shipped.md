@@ -33,3 +33,11 @@ CsWinRT1024 | Usage | Error | Array parameter marked `out` should not be declare
 CsWinRT1025 | Usage | Error | Array parameter should be marked either `ReadOnlyArrayAttribute` or `WriteOnlyArrayAttribute`
 CsWinRT1026 | Usage | Error | Non-array parameter should not be marked `ReadOnlyArrayAttribute` or `WriteOnlyArrayAttribute`
 CsWinRT1027 | Usage | Error | Class incorrectly implements an interface
+
+## Release 2.1.0
+
+### New Rules
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+CsWinRT1028 | Usage | Warning | Class should be marked partial
+CsWinRT1029 | Usage | Warning | Class implements WinRT interfaces generated using an older version of CsWinRT.

@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Threading;
@@ -18,7 +19,12 @@ namespace WinRT.SourceGenerator
     [DiagnosticAnalyzer(LanguageNames.CSharp), Shared]
     public sealed class WinRTAotDiagnosticAnalyzer : DiagnosticAnalyzer
     {
-        private static ImmutableArray<DiagnosticDescriptor> _supportedDiagnostics = ImmutableArray.Create(WinRTRules.ClassNotAotCompatibleWarning, WinRTRules.ClassNotAotCompatibleInfo);
+        private static ImmutableArray<DiagnosticDescriptor> _supportedDiagnostics = 
+            ImmutableArray.Create(
+                WinRTRules.ClassNotAotCompatibleWarning,
+                WinRTRules.ClassNotAotCompatibleInfo,
+                WinRTRules.ClassNotAotCompatibleOldProjectionWarning,
+                WinRTRules.ClassNotAotCompatibleOldProjectionInfo);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => _supportedDiagnostics;
 
@@ -55,22 +61,43 @@ namespace WinRT.SourceGenerator
                     {
                         // Make sure this is a class that we would generate the WinRTExposedType attribute on
                         // and that it isn't already partial.
-                        if (!GeneratorHelper.IsPartial(namedType) &&
-                            !GeneratorHelper.IsWinRTType(namedType, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly) &&
+                        if (!GeneratorHelper.IsWinRTType(namedType, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly) &&
                             !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType, typeMapper) &&
                             !GeneratorHelper.HasAttributeWithType(namedType, winrtExposedTypeAttribute))
                         {
+                            var interfacesFromOldProjections = new HashSet<string>();
+                            bool implementsWinRTInterfaces = false;
+                            bool implementsCustomMappedInterfaces = false;
                             foreach (var iface in namedType.AllInterfaces)
                             {
                                 if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
                                 {
-                                    // Based on the warning level, emit as a warning or as an info.
-                                    var diagnosticDescriptor = (csWinRTAotWarningLevel == 2 || 
-                                                                (csWinRTAotWarningLevel == 1 && !GeneratorHelper.IsCustomMappedType(iface, typeMapper))) ? 
-                                        WinRTRules.ClassNotAotCompatibleWarning : WinRTRules.ClassNotAotCompatibleInfo;
-                                    context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, namedType.Locations[0], namedType.Name));
-                                    return;
+                                    if (!iface.IsGenericType &&
+                                        GeneratorHelper.IsOldProjectionAssembly(iface.ContainingAssembly))
+                                    {
+                                        interfacesFromOldProjections.Add(iface.Name);
+                                    }
+
+                                    bool isCustomMappedType = GeneratorHelper.IsCustomMappedType(iface, typeMapper);
+                                    implementsCustomMappedInterfaces |= isCustomMappedType;
+                                    implementsWinRTInterfaces |= !isCustomMappedType;
                                 }
+                            }
+
+                            if (!GeneratorHelper.IsPartial(namedType) && 
+                                (implementsWinRTInterfaces || implementsCustomMappedInterfaces))
+                            {
+                                // Based on the warning level, emit as a warning or as an info.
+                                var diagnosticDescriptor = (csWinRTAotWarningLevel == 2 || (csWinRTAotWarningLevel == 1 && implementsWinRTInterfaces)) ?
+                                    WinRTRules.ClassNotAotCompatibleWarning : WinRTRules.ClassNotAotCompatibleInfo;
+                                context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, namedType.Locations[0], namedType.Name));
+                            }
+
+                            if (interfacesFromOldProjections.Count > 0)
+                            {
+                                var diagnosticDescriptor = csWinRTAotWarningLevel >= 1 ?
+                                    WinRTRules.ClassNotAotCompatibleOldProjectionWarning : WinRTRules.ClassNotAotCompatibleOldProjectionInfo;
+                                context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, namedType.Locations[0], namedType.Name, string.Join(", ", interfacesFromOldProjections)));
                             }
                         }
                     }

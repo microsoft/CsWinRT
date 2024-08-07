@@ -523,6 +523,17 @@ namespace Generator
             {
                 if (isWinRTType(iface, mapper))
                 {
+                    // If the interface projection was generated using an older CsWinRT version,
+                    // it won't have the necessary properties to generate the AOT compatible code
+                    // and we don't want to result in compiler errors.
+                    // We exclude generic types as they are either defined in WinRT.Runtime or the
+                    // Windows SDK projection, so we don't need to check them.
+                    if (!iface.IsGenericType && 
+                        GeneratorHelper.IsOldProjectionAssembly(iface.ContainingAssembly))
+                    {
+                        return default;
+                    }
+
                     interfacesToAddToVtable.Add(ToFullyQualifiedString(iface));
                     AddGenericInterfaceInstantiation(iface);
                     CheckForInterfaceToUseForRuntimeClassName(iface);

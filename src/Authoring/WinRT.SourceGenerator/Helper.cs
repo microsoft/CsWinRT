@@ -272,6 +272,33 @@ namespace Generator
             return type.ToDisplayString() == "System.Guid";
         }
 
+        /// <summary>
+        /// Checks whether an assembly contains old projections.
+        /// </summary>
+        /// <param name="assemblySymbol">The assembly to inspect.</param>
+        /// <returns>Whether <paramref name="assemblySymbol"/> contains old projections.</returns>
+        public static bool IsOldProjectionAssembly(IAssemblySymbol assemblySymbol)
+        {
+            // We only care about assemblies that have some dependent assemblies
+            if (assemblySymbol.Modules.First() is not { ReferencedAssemblies: { Length: > 0 } dependentAssemblies })
+            {
+                return false;
+            }
+
+            // Scan all dependent assemblies to look for CsWinRT with version < 2.0.8
+            foreach (AssemblyIdentity assemblyIdentity in dependentAssemblies)
+            {
+                if (assemblyIdentity.Name == "WinRT.Runtime")
+                {
+                    return assemblyIdentity.Version < new Version(2, 0, 8) &&
+                        assemblyIdentity.Version != new Version(0, 0, 0, 0);
+                }
+            }
+
+            // This assembly is not a projection assembly
+            return false;
+        }
+
         public static bool IsWinRTType(ISymbol type, TypeMapper mapper)
         {
             return IsWinRTType(type, null, mapper);

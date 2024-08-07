@@ -192,5 +192,17 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.ClassNotMarkedPartial_Brief,
             CsWinRTDiagnosticStrings.ClassNotMarkedPartial_Text,
             false);
+
+        public static DiagnosticDescriptor ClassNotAotCompatibleOldProjectionWarning = MakeRule(
+            "CsWinRT1029",
+            CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Brief,
+            CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Text,
+            true);
+
+        public static DiagnosticDescriptor ClassNotAotCompatibleOldProjectionInfo = MakeRule(
+            "CsWinRT1029",
+            CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Brief,
+            CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Text,
+            false);
     }
 } 

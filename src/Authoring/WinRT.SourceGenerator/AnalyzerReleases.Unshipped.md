@@ -4,4 +4,3 @@
 ### New Rules
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-CsWinRT1028 | Usage | Info | Class should be marked partial
