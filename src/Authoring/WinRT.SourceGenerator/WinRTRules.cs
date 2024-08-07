@@ -197,6 +197,7 @@ namespace WinRT.SourceGenerator
             "CsWinRT1029",
             CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Brief,
             CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Text,
+            false,
             true);
 
         public static DiagnosticDescriptor ClassNotAotCompatibleOldProjectionInfo = MakeRule(
