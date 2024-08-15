@@ -124,7 +124,18 @@ namespace WinRT
 
         }
 
-        public static bool TryUnwrapObject(object o, out IObjectReference objRef)
+#nullable enable
+        /// <summary>
+        /// Tries to retrieve the underlying <see cref="IObjectReference"/> value for a given object instance.
+        /// </summary>
+        /// <param name="o">The input object instance to unwrap.</param>
+        /// <param name="objRef">The underlying <see cref="IObjectReference"/> value for <paramref name="o"/>.</param>
+        /// <returns>Whether <paramref name="objRef"/> was retrieved successfully.</returns>
+        /// <remarks>
+        /// This method will only succeed for WinRT projected types. If <paramref name="o"/> is a <see cref="Delegate"/>
+        /// type, this method will try to unwrap its target instance, if present.
+        /// </remarks>
+        public static bool TryUnwrapObject([NotNullWhen(true)] object? o, [NotNullWhen(true)] out IObjectReference? objRef)
         {
             // The unwrapping here needs to be an exact type match in case the user
             // has implemented a WinRT interface or inherited from a WinRT class
@@ -144,6 +155,7 @@ namespace WinRT
             objRef = null;
             return false;
         }
+#nullable restore
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr, CreateObjectFlags createObjectFlags) =>
             ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, createObjectFlags, obj);
