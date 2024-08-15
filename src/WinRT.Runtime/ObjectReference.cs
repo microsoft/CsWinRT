@@ -165,13 +165,13 @@ namespace WinRT
 #endif
         public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
 
-        public unsafe ObjectReference<T> As<T>(Guid iid)
+        public ObjectReference<T> As<T>(Guid iid)
         {
             Marshal.ThrowExceptionForHR(TryAs<T>(iid, out var objRef));
             return objRef;
         }
 
-        public unsafe TInterface AsInterface<TInterface>()
+        public TInterface AsInterface<TInterface>()
         {
             if (typeof(TInterface).IsDefined(typeof(ComImportAttribute)))
             {
@@ -223,7 +223,7 @@ namespace WinRT
             return ObjectReference<T>.TryAs(this, iid, out objRef);
         }
 
-        public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
+        public virtual ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
             AddRef(true);
             var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr, IID.IID_IUnknown);
@@ -238,7 +238,7 @@ namespace WinRT
         // be tracked as an internal reference.  This is separate to handle
         // tear off aggregate scenario where releasing an reference can end up
         // deleting the tear off interface.
-        public virtual unsafe int TryAs(Guid iid, out IntPtr ppv)
+        public virtual int TryAs(Guid iid, out IntPtr ppv)
         {
             ppv = IntPtr.Zero;
             ThrowIfDisposed();
@@ -251,7 +251,7 @@ namespace WinRT
             return hr;
         }
 
-        public unsafe IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
+        public IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
 
 #if NET
         [Obsolete(AttributeMessages.GenericDeprecatedMessage)]
