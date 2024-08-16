@@ -21,6 +21,22 @@ namespace WinRT
         FullTrust = PartialTrust + 1
     }
 
+    /// <summary>
+    /// Values that are used in activation calls to indicate the execution contexts in which an object is to be run.
+    /// </summary>
+    public enum ClassContext : uint
+    {
+        /// <summary>
+        /// The code that creates and manages objects of this class is a DLL that runs in the same process as the caller of the function specifying the class context.
+        /// </summary>
+        InProcServer = 0x1,
+
+        /// <summary>
+        /// The EXE code that creates and manages objects of this class runs on same machine but is loaded in a separate process space.
+        /// </summary>
+        LocalServer = 0x4
+    }
+
     // IInspectable
 #if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
@@ -174,6 +190,45 @@ namespace WinRT
                 Platform.WindowsDeleteString(__retval);
             }
         }
-    }
 
+        /// <summary>
+        /// Activates and marshals a projected WinRT type that does not participate in WinRT activation, by using <c>CoCreateInstance</c>.
+        /// This method can be used to activate WinRT types from out-of-proc COM servers (eg. Windows Package Manager types).
+        /// </summary>
+        /// <typeparam name="T">The type of the projected WinRT object to activate and marshal.</typeparam>
+        /// <param name="classId">The CLSID associated with the data and code that will be used to create the object.</param>
+        /// <param name="interfaceId">The identifier of the interface to be used to communicate with the object.</param>
+        /// <param name="classContext">The context in which the code that manages the newly created object will run.</param>
+        /// <returns>The resulting marshalled instance.</returns>
+        public static unsafe T CoCreateInstance<T>(in Guid classId, in Guid interfaceId, ClassContext classContext)
+            where T : class
+        {
+            IntPtr thisPtr = IntPtr.Zero;
+
+            try
+            {
+                fixed (Guid* rclsid = &classId)
+                fixed (Guid* riid = &interfaceId)
+                {
+                    int hresult = Platform.CoCreateInstance(
+                        clsid: rclsid,
+                        outer: IntPtr.Zero,
+                        clsContext: (uint)classContext,
+                        iid: riid,
+                        instance: &thisPtr);
+
+                    Marshal.ThrowExceptionForHR(hresult);
+                }
+
+                return MarshalInspectable<T>.FromAbi(thisPtr);
+            }
+            finally
+            {
+                if (thisPtr != IntPtr.Zero)
+                {
+                    Marshal.Release(thisPtr);
+                }
+            }
+        }
+    }
 }
