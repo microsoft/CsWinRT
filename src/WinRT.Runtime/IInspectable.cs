@@ -9,19 +9,35 @@ using WinRT.Interop;
 
 namespace WinRT
 {
+    /// <summary>
+    /// Represents the trust level of an activatable class.
+    /// </summary>
 #if EMBED
     internal
-#else 
+#else
     public
 #endif
     enum TrustLevel
     {
+        /// <summary>
+        /// The component has access to resources that are not protected.
+        /// </summary>
         BaseTrust = 0,
+
+        /// <summary>
+        /// The component has access to resources requested in the app manifest and approved by the user.
+        /// </summary>
         PartialTrust = BaseTrust + 1,
+
+        /// <summary>
+        /// The component requires the full privileges of the user.
+        /// </summary>
         FullTrust = PartialTrust + 1
     }
 
-    // IInspectable
+    /// <summary>
+    /// Provides functionality required for all Windows Runtime classes.
+    /// </summary>
 #if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
 #endif
@@ -152,7 +168,13 @@ namespace WinRT
             _obj = obj;
         }
 
-        public unsafe string GetRuntimeClassName(bool noThrow = false)
+        /// <summary>
+        /// Gets the fully qualified name of the current Windows Runtime object.
+        /// </summary>
+        /// <param name="noThrow"></param>
+        /// <returns>The fully qualified name of the current Windows Runtime object.</returns>
+#nullable enable
+        public unsafe string? GetRuntimeClassName(bool noThrow = false)
         {
             IntPtr __retval = default;
             try
@@ -174,6 +196,7 @@ namespace WinRT
                 Platform.WindowsDeleteString(__retval);
             }
         }
+#nullable restore
     }
 
 }
