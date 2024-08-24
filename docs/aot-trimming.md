@@ -15,9 +15,11 @@ If your app or library has non-WinRT classes that implement C#/WinRT projected i
 To help with this, there is a `code fixer` that will produce diagnostics when such types are not marked `partial`. The severity and scope of the diagnostics are determined by `CsWinRTAotWarningLevel`.
 
 `CsWinRTAotWarningLevel`
-0 - Info diagnostics
-1 - Warnings for types not marked partial that implement C#/WinRT projected interfaces
-2 - Warnings from level 1 plus warnings for types not marked partial that implement WinRT mapped built-in .NET interfaces.
+`CsWinRTAotWarningLevel`
+| Level | Meaning |
+| 0 | Info diagnostics |
+| 1 | Warnings for types not marked partial that implement C#/WinRT projected interfaces. |
+| 2 | Warnings from level 1 plus warnings for types not marked partial that implement WinRT mapped built-in .NET interfaces. |
 
 It is recommended to set the `CsWinRTAotWarningLevel` to 2 and go through all the warnings and mark such types `partial` or suppress the warning if those types are not passed across the WinRT ABI. By default, if you reference the CsWinRT package, the `CsWinRTAotWarningLevel` is set to 1. If you don't have a CsWinRT package reference, then the .NET default is to set `CsWinRTAotWarningLevel` to 1 if you have marked your binary as AOT compatible either by using `IsAotCompatible` or `PublishAot`. Even though it is only by default enabled as warnings for AOT scenarios, you should manually set it to 1 or 2 if you support trimming and address them.
 
