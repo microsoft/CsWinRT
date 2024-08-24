@@ -17,6 +17,7 @@ To help with this, there is a `code fixer` that will produce diagnostics when su
 `CsWinRTAotWarningLevel`
 `CsWinRTAotWarningLevel`
 | Level | Meaning |
+| ----- | ------- |
 | 0 | Info diagnostics |
 | 1 | Warnings for types not marked partial that implement C#/WinRT projected interfaces. |
 | 2 | Warnings from level 1 plus warnings for types not marked partial that implement WinRT mapped built-in .NET interfaces. |
