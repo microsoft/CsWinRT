@@ -14,10 +14,8 @@ If your app or library has non-WinRT classes that implement C#/WinRT projected i
 
 To help with this, there is a `code fixer` that will produce diagnostics when such types are not marked `partial`. The severity and scope of the diagnostics are determined by `CsWinRTAotWarningLevel`.
 
-`CsWinRTAotWarningLevel`
-`CsWinRTAotWarningLevel`
-| Level | Meaning |
-| ----- | ------- |
+| CsWinRTAotWarningLevel | Meaning |
+| ----- | ----- |
 | 0 | Info diagnostics |
 | 1 | Warnings for types not marked partial that implement C#/WinRT projected interfaces. |
 | 2 | Warnings from level 1 plus warnings for types not marked partial that implement WinRT mapped built-in .NET interfaces. |
