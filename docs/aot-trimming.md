@@ -12,10 +12,10 @@ Projections can choose to mark their projects as [IsAotCompatible](https://learn
 
 If your app or library has non-WinRT classes that implement C#/WinRT projected interfaces or implement WinRT mapped built-in .NET interfaces and are passed across the ABI to other WinRT functions, the class needs to be marked `partial`.  Marking it `partial` allows the source generator distributed with C#/WinRT to add an attribute to the class which has the necessary logic to produce the WinRT vtable for it in a way that is both trimming and AOT compatible.
 
-To help with this, there is a `code fixer` that will produce diagnostics when such types are not marked `partial`. The severity and scope of the diagnostics are determined by `CsWinRTAotWarningLevel`.
+To help with this, there is a `code fixer` that will produce diagnostics when such types are not marked `partial`. The severity and scope of the diagnostics are determined by `CsWinRTAotWarningLevel`:
 
-| CsWinRTAotWarningLevel | Meaning |
-| ----- | ----- |
+| Level | Meaning |
+| ----- | ------- |
 | 0 | Info diagnostics |
 | 1 | Warnings for types not marked partial that implement C#/WinRT projected interfaces. |
 | 2 | Warnings from level 1 plus warnings for types not marked partial that implement WinRT mapped built-in .NET interfaces. |
