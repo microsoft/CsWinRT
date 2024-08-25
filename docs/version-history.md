@@ -18,7 +18,7 @@ Windows SDK package update version refers to the assembly file version for **Mic
 
 | CsWinRT version* | Windows SDK <br> package update version | .NET SDK version(s) | Windows App SDK version(s) | 
 |-|-|-|-|
-| 2.1.1* | 38 (.NET 6) <br> 41 (.NET 8) <br> 39 (.NET 9) | 8.0.402 <br> 8.0.305 <br> 8.0.109 <br> 6.0.426 <br> 6.0.134 | 1.6 |
+| 2.1.1* | 38 (.NET 6) <br> 41 (.NET 8) <br> 39 (.NET 9) | 8.0.402 <br> 8.0.305 <br> 8.0.109 <br> 6.0.426 <br> 6.0.134 | 1.6.0 |
 | 2.0.8 | 34 | 8.0.400 <br> 8.0.304 <br> 8.0.108 <br> 6.0.425 <br> 6.0.133 | |
 | 2.0.7 |  | | |
 | 2.0.6 | 33 | | |
