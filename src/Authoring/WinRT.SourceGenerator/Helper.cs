@@ -299,6 +299,20 @@ namespace Generator
             return false;
         }
 
+        // Whether the class itself is a WinRT projected class.
+        // This is similar to whether it is a WinRT type, but custom type mappings
+        // are excluded given those are C# implemented classes.
+        public static Func<ISymbol, bool> IsWinRTClass(Compilation compilation)
+        {
+            var winrtRuntimeTypeAttribute = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
+            return IsWinRTClassHelper;
+
+            bool IsWinRTClassHelper(ISymbol type)
+            {
+                return HasAttributeWithType(type, winrtRuntimeTypeAttribute);
+            }
+        }
+
         public static bool IsWinRTType(ISymbol type, TypeMapper mapper)
         {
             return IsWinRTType(type, null, mapper);

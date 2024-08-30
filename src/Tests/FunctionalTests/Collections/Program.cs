@@ -132,6 +132,13 @@ if (customObservableCollection != instance.BindableIterableProperty)
     return 101;
 }
 
+var customIntObservableCollection = new CustomGenericObservableCollection<int>();
+instance.BindableIterableProperty = customIntObservableCollection;
+if (customIntObservableCollection != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
 var uriList = new List<Uri>();
 instance.BindableIterableProperty = uriList;
 if (uriList != instance.BindableIterableProperty)
@@ -186,6 +193,11 @@ sealed partial class CustomClass : INotifyPropertyChanged
 }
 
 sealed partial class CustomObservableCollection : System.Collections.ObjectModel.ObservableCollection<CustomClass>
+{
+    public int CustomCount => Items.Count;
+}
+
+sealed partial class CustomGenericObservableCollection<T> : System.Collections.ObjectModel.ObservableCollection<T>
 {
     public int CustomCount => Items.Count;
 }
