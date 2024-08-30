@@ -60,7 +60,6 @@
     <None Include="Directory.Build.targets" />
     <None Include="DoNotImport_MsAppxPackageTargets.targets" />
     <None Include="packages.config" />
-
     <!-- Only include the runtimeconfig.json file when not using NativeAOT -->
     <None Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="WinRT.Host.runtimeconfig.json">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
@@ -69,7 +68,6 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
     </None>
   </ItemGroup>
-  
   <!--
     Skip referencing projections and other projects if in Release x64.
     When that is true, we're using NativeAOT, so we're self-contained.
@@ -99,7 +97,6 @@
       <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
-
   <!--
     When in Release x64, we want to test NativeAOT publishing. The build.cmd script is
     already publishing the project, so we just need to copy the .dll to the output.
@@ -113,22 +110,18 @@
     <NativeLibraryPublishFolder>$(NativeLibraryProjectDirectory)bin\$(Platform)\$(Configuration)\net8.0\win-$(Platform)\publish\</NativeLibraryPublishFolder>
     <NativeLibraryPublishedDllPath>$(NativeLibraryPublishFolder)$(NativeLibraryProjectName).dll</NativeLibraryPublishedDllPath>
   </PropertyGroup>
-
   <Target Name="CsWinRTLink" DependsOnTargets="ComputeLinkSwitches" BeforeTargets="Link"
     Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
     Inputs="$(NativeLibraryDllPath)"
     Outputs="@(ReferenceCopyLocalPaths)">
     <!-- Publish the managed library with NativeAOT -->
-   <MSBuild Projects="$(NativeLibraryProjectFilePath)" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net8.0" />
-
+    <MSBuild Projects="$(NativeLibraryProjectFilePath)" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net8.0" />
     <!-- Copy the .dll to our output folder -->
-   <ItemGroup>
-     <ReferenceCopyLocalPaths Remove="$(NativeLibraryDllPath)"/>
-     <ReferenceCopyLocalPaths Include="$(NativeLibraryPublishedDllPath)"/>
-   </ItemGroup>
-
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="$(NativeLibraryDllPath)" />
+      <ReferenceCopyLocalPaths Include="$(NativeLibraryPublishedDllPath)" />
+    </ItemGroup>
   </Target>
-
   <ItemGroup>
     <Reference Include="AuthoringTest">
       <HintPath>..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net8.0\AuthoringTest.winmd</HintPath>
@@ -136,7 +129,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-
     <!--
       Only include the manifest when not using NativeAOT for the authored WinRT component.
       For more info, see notes in the Directory.Build.props file for AuthoringTest.
@@ -146,10 +138,10 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.201113.7\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.201113.7\build\native\Microsoft.Windows.CppWinRT.targets')" />
-    <Import Project="..\..\packages\Microsoft.VCRTForwarders.140.1.0.7\build\native\Microsoft.VCRTForwarders.140.targets" Condition="Exists('..\..\packages\Microsoft.VCRTForwarders.140.1.0.7\build\native\Microsoft.VCRTForwarders.140.targets')" />
     <Import Project="..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
     <Import Project="..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.targets" Condition="Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.targets')" />
     <Import Project="..\..\packages\Microsoft.WindowsAppSDK.1.1.5\build\native\Microsoft.WindowsAppSDK.targets" Condition="Exists('..\..\packages\Microsoft.WindowsAppSDK.1.1.5\build\native\Microsoft.WindowsAppSDK.targets')" />
+    <Import Project="..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets" Condition="Exists('..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets')" />
   </ImportGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -250,11 +242,11 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.201113.7\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.201113.7\build\native\Microsoft.Windows.CppWinRT.props'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.201113.7\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.201113.7\build\native\Microsoft.Windows.CppWinRT.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.VCRTForwarders.140.1.0.7\build\native\Microsoft.VCRTForwarders.140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.VCRTForwarders.140.1.0.7\build\native\Microsoft.VCRTForwarders.140.targets'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.props'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.targets'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.1.1.5\build\native\Microsoft.WindowsAppSDK.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.1.1.5\build\native\Microsoft.WindowsAppSDK.props'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.1.1.5\build\native\Microsoft.WindowsAppSDK.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.1.1.5\build\native\Microsoft.WindowsAppSDK.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets'))" />
   </Target>
 </Project>

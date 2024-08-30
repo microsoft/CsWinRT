@@ -15,6 +15,7 @@
         <WindowsPackageType>MSIX</WindowsPackageType>
         <UseWinUI>true</UseWinUI>
         <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+        <UseRidGraph>true</UseRidGraph>
     </PropertyGroup>
     <ItemGroup>
         <None Remove="Images\LockScreenLogo.scale-200.png" />
@@ -35,6 +36,7 @@
     </ItemGroup>
     <ItemGroup>
         <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
+        <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="Images\LockScreenLogo.scale-200.png" />
