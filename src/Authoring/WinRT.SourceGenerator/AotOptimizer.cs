@@ -1223,22 +1223,42 @@ namespace Generator
                     // This also handles the case where the type being passed is from a different
                     // library which happened to not run the AOT optimizer.  So as a best effort,
                     // we handle it here.
-                    if (instantiatedTypeSymbol.TypeKind == TypeKind.Class &&
-                        (instantiatedTypeSymbol.MetadataName.Contains("`") || !isWinRTType(instantiatedTypeSymbol, typeMapper)) &&
-                        !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
-                        // If the type is defined in the same assembly as what the source generator is running on,
-                        // we let the WinRTExposedType attribute generator handle it.
-                        !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) &&
-                        // Make sure the type we are passing is being boxed or cast to another interface.
-                        !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol))
+                    if (instantiatedTypeSymbol.TypeKind == TypeKind.Class)
                     {
-                        var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
-                        if (vtableAtribute != default)
+                        bool addClassOnLookupTable = false;
+                        if (instantiatedTypeSymbol.MetadataName.Contains("`"))
                         {
-                            vtableAttributes.Add(vtableAtribute);
+                            addClassOnLookupTable =
+                                !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
+                                // If the type is defined in the same assembly as what the source generator is running on,
+                                // we let the WinRTExposedType attribute generator handle it. The only scenario the generator
+                                // doesn't handle which we handle here is if it is a generic type implementing generic WinRT interfaces.
+                                (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) || 
+                                  GeneratorHelper.HasNonInstantiatedWinRTGeneric(instantiatedTypeSymbol.OriginalDefinition, typeMapper)) &&
+                                // Make sure the type we are passing is being boxed or cast to another interface.
+                                !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol);
+                        }
+                        else if (!isWinRTType(instantiatedTypeSymbol, typeMapper))
+                        {
+                            addClassOnLookupTable =
+                                !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
+                                // If the type is defined in the same assembly as what the source generator is running on,
+                                // we let the WinRTExposedType attribute generator handle it.
+                                !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) &&
+                                // Make sure the type we are passing is being boxed or cast to another interface.
+                                !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol);
                         }
 
-                        AddVtableAdapterTypeForKnownInterface(instantiatedTypeSymbol, context.SemanticModel.Compilation, isWinRTType, typeMapper, vtableAttributes);
+                        if (addClassOnLookupTable)
+                        {
+                            var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
+                            if (vtableAtribute != default)
+                            {
+                                vtableAttributes.Add(vtableAtribute);
+                            }
+
+                            AddVtableAdapterTypeForKnownInterface(instantiatedTypeSymbol, context.SemanticModel.Compilation, isWinRTType, typeMapper, vtableAttributes);
+                        }
                     }
                 }
             }
