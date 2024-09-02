@@ -6,12 +6,21 @@
     <Platforms>x86;x64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
     <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win10-$(Platform).pubxml</PublishProfileFullPath>
-    <AllowUnsafeBlocks Condition="'$(Configuration)' == 'Debug'">false</AllowUnsafeBlocks>
+    <TestUnsafeDisabled Condition="'$(Configuration)' == 'Release'">true</TestUnsafeDisabled>
+    <DefineConstants Condition="'$(TestUnsafeDisabled)' == 'true'">TEST_UNSAFE_DISABLED</DefineConstants>
+    <AllowUnsafeBlocks Condition="'$(TestUnsafeDisabled)' == 'true'">false</AllowUnsafeBlocks>
+    <!-- We intentionally cause warning scenarios to test diagnostics. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <!-- Tests non WinRT APIs, so intentionally no reference on projections. -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64"/>
+    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TestUnsafeDisabled)' == 'true'">
+    <ProjectReference Include="..\..\..\Projections\Test\Test.csproj" />
+    <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj" />
   </ItemGroup>
 
 </Project>

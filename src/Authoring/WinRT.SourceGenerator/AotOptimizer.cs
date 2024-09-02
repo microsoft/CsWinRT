@@ -20,7 +20,7 @@ namespace Generator
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => 
-                (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent(), provider.IsCsWinRTCcwLookupTableGeneratorEnabled()));
+                    (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent(), provider.IsCsWinRTCcwLookupTableGeneratorEnabled()));
 
             var assemblyName = context.CompilationProvider.Select(static (compilation, _) => GeneratorHelper.EscapeTypeNameForIdentifier(compilation.AssemblyName));
 
@@ -166,24 +166,6 @@ namespace Generator
             return default;
         }
 
-        private static readonly Dictionary<string, string> AsyncMethodToTaskAdapter = new()
-        {
-            // AsAsyncOperation is an extension method, due to that using the format of ReducedFrom.
-            { "System.WindowsRuntimeSystemExtensions.AsAsyncOperation<TResult>(System.Threading.Tasks.Task<TResult>)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TResult>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>>)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1"},
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult<TResult>(TResult)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromException<TResult>(System.Exception)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledOperation<TResult>()", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TResult, TProgress>(System.Func<System.Threading.CancellationToken, System.IProgress<TProgress>, System.Threading.Tasks.Task<TResult>>)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResultWithProgress<TResult, TProgress>(TResult)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromExceptionWithProgress<TResult, TProgress>(System.Exception)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledOperationWithProgress<TResult, TProgress>()", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TProgress>(System.Func<System.Threading.CancellationToken, System.IProgress<TProgress>, System.Threading.Tasks.Task>)", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CompletedActionWithProgress<TProgress>()", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromExceptionWithProgress<TProgress>(System.Exception)", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledActionWithProgress<TProgress>()", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" }
-        };
-
         // There are several async operation related methods that can be called.
         // But they are all under the AsyncInfo static class or is the AsAsyncOperation
         // extension method.
@@ -224,20 +206,24 @@ namespace Generator
         // We will choose the right one later when we can combine with properties.
         private static (VtableAttribute, VtableAttribute) GetVtableAttributesForTaskAdapters(GeneratorSyntaxContext context, TypeMapper typeMapper)
         {
+            // Generic instantiation of task adapters make of use of unsafe.
+            // This will be caught by GetVtableAttributeToAdd, but catching it early here too.
+            if (!GeneratorHelper.AllowUnsafe(context.SemanticModel.Compilation))
+            {
+                return default;
+            }
+
             if (context.SemanticModel.GetSymbolInfo(context.Node as InvocationExpressionSyntax).Symbol is IMethodSymbol symbol)
             {
-                var symbolStr = symbol.IsExtensionMethod ? symbol.ReducedFrom?.ToDisplayString() : symbol.OriginalDefinition?.ToDisplayString();
-                if (!string.IsNullOrEmpty(symbolStr))
+                var adapterTypeStr = GeneratorHelper.GetTaskAdapterIfAsyncMethod(symbol);
+                if (!string.IsNullOrEmpty(adapterTypeStr))
                 {
-                    if (AsyncMethodToTaskAdapter.TryGetValue(symbolStr, out var adapterTypeStr))
+                    var adpaterType = context.SemanticModel.Compilation.GetTypeByMetadataName(adapterTypeStr);
+                    if (adpaterType is not null)
                     {
-                        var adpaterType = context.SemanticModel.Compilation.GetTypeByMetadataName(adapterTypeStr);
-                        if (adpaterType is not null)
-                        {
-                            var constructedAdapterType = adpaterType.Construct([.. symbol.TypeArguments]);
-                            return (GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTType, typeMapper, context.SemanticModel.Compilation, false), 
-                                    GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation), typeMapper, context.SemanticModel.Compilation, false));
-                        }
+                        var constructedAdapterType = adpaterType.Construct([.. symbol.TypeArguments]);
+                        return (GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTType, typeMapper, context.SemanticModel.Compilation, false), 
+                                GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation), typeMapper, context.SemanticModel.Compilation, false));
                     }
                 }
             }
@@ -580,6 +566,15 @@ namespace Generator
             }
 
             if (!interfacesToAddToVtable.Any())
+            {
+                return default;
+            }
+
+            // If there are generic interfaces, the generic interface instantiations make use of
+            // unsafe. But if it isn't enabled, we don't want to fail to compile in case it is
+            // not a WinRT scenario. So we instead, don't generate the code that needs the unsafe
+            // and there would be a diagnostic produced by the analyzer.
+            if (genericInterfacesToAddToVtable.Any() && !GeneratorHelper.AllowUnsafe(compilation))
             {
                 return default;
             }
@@ -1221,7 +1216,11 @@ namespace Generator
                         convertedToTypeSymbol.SpecialType == SpecialType.System_Object)
                     {
                         var argumentClassNamedTypeSymbol = instantiatedTypeSymbol as INamedTypeSymbol;
-                        vtableAttributes.Add(GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false));
+                        var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
+                        if (vtableAtribute != default)
+                        {
+                            vtableAttributes.Add(vtableAtribute);
+                        }
                     }
 
                     // This handles the case where the source generator wasn't able to run

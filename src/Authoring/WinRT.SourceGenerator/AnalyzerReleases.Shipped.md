@@ -41,3 +41,10 @@ Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 CsWinRT1028 | Usage | Warning | Class should be marked partial
 CsWinRT1029 | Usage | Warning | Class implements WinRT interfaces generated using an older version of CsWinRT.
+
+## Release 2.1.2
+
+### New Rules
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+CsWinRT1030 | Usage | Warning | Project needs to be updated with '<AllowUnsafeBlocks>true</AllowUnsafeBlocks>' to allow generic interface code generation.

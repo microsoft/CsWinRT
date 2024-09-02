@@ -205,5 +205,18 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Brief,
             CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Text,
             false);
+
+        public static DiagnosticDescriptor ClassEnableUnsafeWarning = MakeRule(
+            "CsWinRT1030",
+            CsWinRTDiagnosticStrings.EnableUnsafe_Brief,
+            CsWinRTDiagnosticStrings.EnableUnsafe_Text,
+            false,
+            true);
+
+        public static DiagnosticDescriptor ClassEnableUnsafeInfo = MakeRule(
+            "CsWinRT1030",
+            CsWinRTDiagnosticStrings.EnableUnsafe_Brief,
+            CsWinRTDiagnosticStrings.EnableUnsafe_Text,
+            false);
     }
 } 
