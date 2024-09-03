@@ -14,9 +14,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
-    <!-- Making sure ResolveAssemblyReferences runs before CoreCompile runs as we have seen it not run in WPF scenarios
-         causing for our targeting pack to not get included or conflicts to be resolved. -->
-    <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn);ResolveAssemblyReferences</CoreCompileDependsOn>
+    <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess>
     <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' == '' and $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">true</CsWinRTAotOptimizerEnabled>
     <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' != 'true'">false</CsWinRTAotOptimizerEnabled>
