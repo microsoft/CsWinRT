@@ -6,7 +6,7 @@
     <Platforms>x86;x64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
     <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win10-$(Platform).pubxml</PublishProfileFullPath>
-    <TestUnsafeDisabled Condition="'$(Configuration)' == 'Release'">true</TestUnsafeDisabled>
+    <TestUnsafeDisabled Condition="'$(Configuration)' == 'Debug'">true</TestUnsafeDisabled>
     <DefineConstants Condition="'$(TestUnsafeDisabled)' == 'true'">TEST_UNSAFE_DISABLED</DefineConstants>
     <AllowUnsafeBlocks Condition="'$(TestUnsafeDisabled)' == 'true'">false</AllowUnsafeBlocks>
     <!-- We intentionally cause warning scenarios to test diagnostics. -->
