@@ -332,7 +332,7 @@ namespace Generator
                         ToFullyQualifiedString(propertySymbol.Type),
                         // Make sure the property accessors are also public even if property itself is public.
                         propertySymbol.GetMethod != null && propertySymbol.GetMethod.DeclaredAccessibility == Accessibility.Public,
-                        propertySymbol.SetMethod != null && propertySymbol.SetMethod.DeclaredAccessibility == Accessibility.Public,
+                        propertySymbol.SetMethod != null && !propertySymbol.SetMethod.IsInitOnly && propertySymbol.SetMethod.DeclaredAccessibility == Accessibility.Public,
                         propertySymbol.IsIndexer,
                         propertySymbol.IsIndexer ? ToFullyQualifiedString(propertySymbol.Parameters[0].Type) : "",
                         propertySymbol.IsStatic
