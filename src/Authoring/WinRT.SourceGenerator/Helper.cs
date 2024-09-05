@@ -299,6 +299,25 @@ namespace Generator
             return false;
         }
 
+        public static bool AllowUnsafe(Compilation compilation)
+        {
+            return compilation is CSharpCompilation csharpCompilation && csharpCompilation.Options.AllowUnsafe;
+        }
+
+        // Whether the class itself is a WinRT projected class.
+        // This is similar to whether it is a WinRT type, but custom type mappings
+        // are excluded given those are C# implemented classes.
+        public static Func<ISymbol, bool> IsWinRTClass(Compilation compilation)
+        {
+            var winrtRuntimeTypeAttribute = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
+            return IsWinRTClassHelper;
+
+            bool IsWinRTClassHelper(ISymbol type)
+            {
+                return HasAttributeWithType(type, winrtRuntimeTypeAttribute);
+            }
+        }
+
         public static bool IsWinRTType(ISymbol type, TypeMapper mapper)
         {
             return IsWinRTType(type, null, mapper);
@@ -358,6 +377,22 @@ namespace Generator
             }
 
             return isProjectedType;
+        }
+
+        public static bool IsWinRTTypeOrImplementsWinRTType(ISymbol type, ITypeSymbol winrtRuntimeTypeAttribute, TypeMapper mapper, bool isComponentProject, IAssemblySymbol currentAssembly)
+        {
+            if (IsWinRTType(type, winrtRuntimeTypeAttribute, mapper, isComponentProject, currentAssembly))
+            {
+                return true;
+            }
+
+            if (type is INamedTypeSymbol namedType && 
+                namedType.AllInterfaces.Any(iface => IsWinRTType(iface, winrtRuntimeTypeAttribute, mapper, isComponentProject, currentAssembly)))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         // Assuming a type is a WinRT type, this determines whether it is a WinRT type from custom type mappings.
@@ -1037,6 +1072,38 @@ namespace Generator
             {
                 return isValueType && isBlittable;
             }
+        }
+
+        private static readonly Dictionary<string, string> AsyncMethodToTaskAdapter = new()
+        {
+            // AsAsyncOperation is an extension method, due to that using the format of ReducedFrom.
+            { "System.WindowsRuntimeSystemExtensions.AsAsyncOperation<TResult>(System.Threading.Tasks.Task<TResult>)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TResult>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>>)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1"},
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult<TResult>(TResult)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromException<TResult>(System.Exception)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledOperation<TResult>()", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TResult, TProgress>(System.Func<System.Threading.CancellationToken, System.IProgress<TProgress>, System.Threading.Tasks.Task<TResult>>)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResultWithProgress<TResult, TProgress>(TResult)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromExceptionWithProgress<TResult, TProgress>(System.Exception)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledOperationWithProgress<TResult, TProgress>()", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TProgress>(System.Func<System.Threading.CancellationToken, System.IProgress<TProgress>, System.Threading.Tasks.Task>)", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CompletedActionWithProgress<TProgress>()", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromExceptionWithProgress<TProgress>(System.Exception)", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
+            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledActionWithProgress<TProgress>()", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" }
+        };
+
+        public static string GetTaskAdapterIfAsyncMethod(IMethodSymbol symbol)
+        {
+            var symbolStr = symbol.IsExtensionMethod ? symbol.ReducedFrom?.ToDisplayString() : symbol.OriginalDefinition?.ToDisplayString();
+            if (!string.IsNullOrEmpty(symbolStr))
+            {
+                if (AsyncMethodToTaskAdapter.TryGetValue(symbolStr, out var adapterTypeStr))
+                {
+                    return adapterTypeStr;
+                }
+            }
+
+            return null;
         }
     }
 }

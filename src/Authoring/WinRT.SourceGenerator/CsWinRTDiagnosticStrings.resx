@@ -126,6 +126,12 @@
     <value>All types within a Windows Metadata file must exist in a sub namespace of the namespace that is implied by the file name.</value>
     <comment>"sub namespace" means a namespace defined within another namespace</comment>
   </data>
+  <data name="EnableUnsafe_Brief" xml:space="preserve">
+    <value>Project does not enable unsafe blocks</value>
+  </data>
+  <data name="EnableUnsafe_Text" xml:space="preserve">
+    <value>Type '{0}' implements generic WinRT interfaces which requires generated code using unsafe for trimming and AOT compatibility if passed across the ABI. Project needs to be updated with '&lt;AllowUnsafeBlocks&gt;true&lt;/AllowUnsafeBlocks&gt;'.</value>
+  </data>
   <data name="GenericTypeRule_Brief" xml:space="preserve">
     <value>Class (or interface) is generic</value>
   </data>

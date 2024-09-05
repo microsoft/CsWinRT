@@ -20,7 +20,7 @@ namespace Generator
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => 
-                (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent(), provider.IsCsWinRTCcwLookupTableGeneratorEnabled()));
+                    (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent(), provider.IsCsWinRTCcwLookupTableGeneratorEnabled()));
 
             var assemblyName = context.CompilationProvider.Select(static (compilation, _) => GeneratorHelper.EscapeTypeNameForIdentifier(compilation.AssemblyName));
 
@@ -166,24 +166,6 @@ namespace Generator
             return default;
         }
 
-        private static readonly Dictionary<string, string> AsyncMethodToTaskAdapter = new()
-        {
-            // AsAsyncOperation is an extension method, due to that using the format of ReducedFrom.
-            { "System.WindowsRuntimeSystemExtensions.AsAsyncOperation<TResult>(System.Threading.Tasks.Task<TResult>)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TResult>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>>)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1"},
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult<TResult>(TResult)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromException<TResult>(System.Exception)", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledOperation<TResult>()", "System.Threading.Tasks.TaskToAsyncOperationAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TResult, TProgress>(System.Func<System.Threading.CancellationToken, System.IProgress<TProgress>, System.Threading.Tasks.Task<TResult>>)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResultWithProgress<TResult, TProgress>(TResult)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromExceptionWithProgress<TResult, TProgress>(System.Exception)", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledOperationWithProgress<TResult, TProgress>()", "System.Threading.Tasks.TaskToAsyncOperationWithProgressAdapter`2" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.Run<TProgress>(System.Func<System.Threading.CancellationToken, System.IProgress<TProgress>, System.Threading.Tasks.Task>)", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CompletedActionWithProgress<TProgress>()", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromExceptionWithProgress<TProgress>(System.Exception)", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" },
-            { "System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.CanceledActionWithProgress<TProgress>()", "System.Threading.Tasks.TaskToAsyncActionWithProgressAdapter`1" }
-        };
-
         // There are several async operation related methods that can be called.
         // But they are all under the AsyncInfo static class or is the AsAsyncOperation
         // extension method.
@@ -224,20 +206,24 @@ namespace Generator
         // We will choose the right one later when we can combine with properties.
         private static (VtableAttribute, VtableAttribute) GetVtableAttributesForTaskAdapters(GeneratorSyntaxContext context, TypeMapper typeMapper)
         {
+            // Generic instantiation of task adapters make of use of unsafe.
+            // This will be caught by GetVtableAttributeToAdd, but catching it early here too.
+            if (!GeneratorHelper.AllowUnsafe(context.SemanticModel.Compilation))
+            {
+                return default;
+            }
+
             if (context.SemanticModel.GetSymbolInfo(context.Node as InvocationExpressionSyntax).Symbol is IMethodSymbol symbol)
             {
-                var symbolStr = symbol.IsExtensionMethod ? symbol.ReducedFrom?.ToDisplayString() : symbol.OriginalDefinition?.ToDisplayString();
-                if (!string.IsNullOrEmpty(symbolStr))
+                var adapterTypeStr = GeneratorHelper.GetTaskAdapterIfAsyncMethod(symbol);
+                if (!string.IsNullOrEmpty(adapterTypeStr))
                 {
-                    if (AsyncMethodToTaskAdapter.TryGetValue(symbolStr, out var adapterTypeStr))
+                    var adpaterType = context.SemanticModel.Compilation.GetTypeByMetadataName(adapterTypeStr);
+                    if (adpaterType is not null)
                     {
-                        var adpaterType = context.SemanticModel.Compilation.GetTypeByMetadataName(adapterTypeStr);
-                        if (adpaterType is not null)
-                        {
-                            var constructedAdapterType = adpaterType.Construct([.. symbol.TypeArguments]);
-                            return (GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTType, typeMapper, context.SemanticModel.Compilation, false), 
-                                    GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation), typeMapper, context.SemanticModel.Compilation, false));
-                        }
+                        var constructedAdapterType = adpaterType.Construct([.. symbol.TypeArguments]);
+                        return (GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTType, typeMapper, context.SemanticModel.Compilation, false), 
+                                GetVtableAttributeToAdd(constructedAdapterType, GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation), typeMapper, context.SemanticModel.Compilation, false));
                     }
                 }
             }
@@ -580,6 +566,15 @@ namespace Generator
             }
 
             if (!interfacesToAddToVtable.Any())
+            {
+                return default;
+            }
+
+            // If there are generic interfaces, the generic interface instantiations make use of
+            // unsafe. But if it isn't enabled, we don't want to fail to compile in case it is
+            // not a WinRT scenario. So we instead, don't generate the code that needs the unsafe
+            // and there would be a diagnostic produced by the analyzer.
+            if (genericInterfacesToAddToVtable.Any() && !GeneratorHelper.AllowUnsafe(compilation))
             {
                 return default;
             }
@@ -1042,14 +1037,23 @@ namespace Generator
             // Get the lookup table as if we are running in an authoring component scenario and as if we are not
             // and then use the properties later on when we have access to it to check if we are to choose the right one.
             // Otherwise we will end up generating lookup tables which don't have vtable entries for authoring types.
-            return (GetVtableAttributesToAddOnLookupTable(context, typeMapper, GeneratorHelper.IsWinRTType), 
-                    GetVtableAttributesToAddOnLookupTable(context, typeMapper, GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation)));
+            return (GetVtableAttributesToAddOnLookupTable(
+                        context,
+                        typeMapper,
+                        GeneratorHelper.IsWinRTType,
+                        GeneratorHelper.IsWinRTClass(context.SemanticModel.Compilation)), 
+                    GetVtableAttributesToAddOnLookupTable(
+                        context,
+                        typeMapper,
+                        GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation),
+                        GeneratorHelper.IsWinRTClass(context.SemanticModel.Compilation)));
         }
 
         private static EquatableArray<VtableAttribute> GetVtableAttributesToAddOnLookupTable(
             GeneratorSyntaxContext context,
             TypeMapper typeMapper,
-            Func<ISymbol, TypeMapper, bool> isWinRTType)
+            Func<ISymbol, TypeMapper, bool> isWinRTType,
+            Func<ISymbol, bool> isWinRTClass)
         {
             HashSet<ITypeSymbol> visitedTypes = new(SymbolEqualityComparer.Default);
             HashSet<VtableAttribute> vtableAttributes = new();
@@ -1063,7 +1067,7 @@ namespace Generator
                     // and end up calling a projection function (i.e. ones generated by XAML compiler)
                     // In theory, another library can also be called which can call a projected function
                     // but not handling those scenarios for now.
-                    (isWinRTType(methodSymbol.ContainingSymbol, typeMapper) ||
+                    (isWinRTClass(methodSymbol.ContainingSymbol) ||
                      SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
                     // Get the concrete types directly from the argument rather than
@@ -1092,13 +1096,13 @@ namespace Generator
             {
                 var leftSymbol = context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol;
                 if (leftSymbol is IPropertySymbol propertySymbol &&
-                    (isWinRTType(propertySymbol.ContainingSymbol, typeMapper) ||
+                    (isWinRTClass(propertySymbol.ContainingSymbol) ||
                      SymbolEqualityComparer.Default.Equals(propertySymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
                     AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), propertySymbol.Type);
                 }
                 else if (leftSymbol is IFieldSymbol fieldSymbol &&
-                    (isWinRTType(fieldSymbol.ContainingSymbol, typeMapper) || 
+                    (isWinRTClass(fieldSymbol.ContainingSymbol) || 
                      SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
                     AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), fieldSymbol.Type);
@@ -1212,7 +1216,11 @@ namespace Generator
                         convertedToTypeSymbol.SpecialType == SpecialType.System_Object)
                     {
                         var argumentClassNamedTypeSymbol = instantiatedTypeSymbol as INamedTypeSymbol;
-                        vtableAttributes.Add(GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false));
+                        var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
+                        if (vtableAtribute != default)
+                        {
+                            vtableAttributes.Add(vtableAtribute);
+                        }
                     }
 
                     // This handles the case where the source generator wasn't able to run
@@ -1223,22 +1231,42 @@ namespace Generator
                     // This also handles the case where the type being passed is from a different
                     // library which happened to not run the AOT optimizer.  So as a best effort,
                     // we handle it here.
-                    if (instantiatedTypeSymbol.TypeKind == TypeKind.Class &&
-                        (instantiatedTypeSymbol.MetadataName.Contains("`") || !isWinRTType(instantiatedTypeSymbol, typeMapper)) &&
-                        !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
-                        // If the type is defined in the same assembly as what the source generator is running on,
-                        // we let the WinRTExposedType attribute generator handle it.
-                        !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) &&
-                        // Make sure the type we are passing is being boxed or cast to another interface.
-                        !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol))
+                    if (instantiatedTypeSymbol.TypeKind == TypeKind.Class)
                     {
-                        var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
-                        if (vtableAtribute != default)
+                        bool addClassOnLookupTable = false;
+                        if (instantiatedTypeSymbol.MetadataName.Contains("`"))
                         {
-                            vtableAttributes.Add(vtableAtribute);
+                            addClassOnLookupTable =
+                                !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
+                                // If the type is defined in the same assembly as what the source generator is running on,
+                                // we let the WinRTExposedType attribute generator handle it. The only scenario the generator
+                                // doesn't handle which we handle here is if it is a generic type implementing generic WinRT interfaces.
+                                (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) || 
+                                  GeneratorHelper.HasNonInstantiatedWinRTGeneric(instantiatedTypeSymbol.OriginalDefinition, typeMapper)) &&
+                                // Make sure the type we are passing is being boxed or cast to another interface.
+                                !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol);
+                        }
+                        else if (!isWinRTType(instantiatedTypeSymbol, typeMapper))
+                        {
+                            addClassOnLookupTable =
+                                !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
+                                // If the type is defined in the same assembly as what the source generator is running on,
+                                // we let the WinRTExposedType attribute generator handle it.
+                                !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) &&
+                                // Make sure the type we are passing is being boxed or cast to another interface.
+                                !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol);
                         }
 
-                        AddVtableAdapterTypeForKnownInterface(instantiatedTypeSymbol, context.SemanticModel.Compilation, isWinRTType, typeMapper, vtableAttributes);
+                        if (addClassOnLookupTable)
+                        {
+                            var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
+                            if (vtableAtribute != default)
+                            {
+                                vtableAttributes.Add(vtableAtribute);
+                            }
+
+                            AddVtableAdapterTypeForKnownInterface(instantiatedTypeSymbol, context.SemanticModel.Compilation, isWinRTType, typeMapper, vtableAttributes);
+                        }
                     }
                 }
             }

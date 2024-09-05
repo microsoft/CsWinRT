@@ -259,6 +259,24 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project does not enable unsafe blocks.
+        /// </summary>
+        internal static string EnableUnsafe_Brief {
+            get {
+                return ResourceManager.GetString("EnableUnsafe_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; implements generic WinRT interfaces which requires generated code using unsafe for trimming and AOT compatibility if passed across the ABI. Project needs to be updated with &apos;&lt;AllowUnsafeBlocks&gt;true&lt;/AllowUnsafeBlocks&gt;&apos;..
+        /// </summary>
+        internal static string EnableUnsafe_Text {
+            get {
+                return ResourceManager.GetString("EnableUnsafe_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Class (or interface) is generic.
         /// </summary>
         internal static string GenericTypeRule_Brief {
