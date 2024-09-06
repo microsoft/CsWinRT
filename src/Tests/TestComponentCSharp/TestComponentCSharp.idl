@@ -523,7 +523,7 @@ namespace TestComponentCSharp
     [default_interface]
     runtimeclass CustomIterableTest : Windows.Foundation.Collections.IIterable<Int32>
     {
-		CustomIterableTest();
+        CustomIterableTest();
         CustomIterableTest(Windows.Foundation.Collections.IIterable<Int32> iterable);
     }
 

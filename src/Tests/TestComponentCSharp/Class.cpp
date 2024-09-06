@@ -1504,9 +1504,9 @@ namespace winrt::TestComponentCSharp::implementation
     }
 
     IIterator<int32_t> Class::GetIteratorForCollection(IIterable<int32_t> iterable)
-	{
-		return iterable.First();
-	}
+    {
+        return iterable.First();
+    }
 
     IBindableIterable Class::BindableIterableProperty()
     {

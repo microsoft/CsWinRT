@@ -11,7 +11,7 @@ namespace winrt::TestComponentCSharp::implementation
 
     CustomIterableTest::CustomIterableTest(winrt::Windows::Foundation::Collections::IIterable<int32_t> const& iterable)
     {
-		_iterable = iterable;
+        _iterable = iterable;
     }
 
     winrt::Windows::Foundation::Collections::IIterator<int32_t> CustomIterableTest::First()
