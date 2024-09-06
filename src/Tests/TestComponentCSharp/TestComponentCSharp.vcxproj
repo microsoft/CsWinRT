@@ -84,6 +84,7 @@
     <ClInclude Include="ClassWithExplicitIUnknown.h" />
     <ClInclude Include="CustomExperimentClass.h" />
     <ClInclude Include="CustomEquals.h" />
+    <ClInclude Include="CustomIterableTest.h" />
     <ClInclude Include="ManualProjectionTestClasses.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Class.h">
@@ -105,6 +106,7 @@
     <ClCompile Include="ClassWithExplicitIUnknown.cpp" />
     <ClCompile Include="CustomExperimentClass.cpp" />
     <ClCompile Include="CustomEquals.cpp" />
+    <ClCompile Include="CustomIterableTest.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

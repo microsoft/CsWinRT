@@ -349,6 +349,8 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IIterable<EnumValue> GetEnumIterable();
         Windows.Foundation.Collections.IIterable<CustomDisposableTest> GetClassIterable();
 
+        Windows.Foundation.Collections.IIterator<Int32> GetIteratorForCollection(Windows.Foundation.Collections.IIterable<Int32> iterable);
+
         // Bindable
         Microsoft.UI.Xaml.Interop.IBindableIterable BindableIterableProperty;
         void RaiseBindableIterableChanged();
@@ -516,6 +518,13 @@ namespace TestComponentCSharp
     runtimeclass CustomIteratorTest : Windows.Foundation.Collections.IIterator<Int32>
     {
         CustomIteratorTest();
+    }
+
+    [default_interface]
+    runtimeclass CustomIterableTest : Windows.Foundation.Collections.IIterable<Int32>
+    {
+		CustomIterableTest();
+        CustomIterableTest(Windows.Foundation.Collections.IIterable<Int32> iterable);
     }
 
     // SupportedOSPlatform warning tests

@@ -1503,6 +1503,11 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::single_threaded_vector(std::vector{ first, second });
     }
 
+    IIterator<int32_t> Class::GetIteratorForCollection(IIterable<int32_t> iterable)
+	{
+		return iterable.First();
+	}
+
     IBindableIterable Class::BindableIterableProperty()
     {
         return _bindableIterable;

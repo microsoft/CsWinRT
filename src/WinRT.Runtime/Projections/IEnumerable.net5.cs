@@ -238,6 +238,11 @@ namespace ABI.System.Collections.Generic
             {
                 return new global::ABI.System.Collections.Generic.FromAbiEnumerator<T>(ienumeratorImpl);
             }
+            else if (first is global::ABI.System.Collections.Generic.ToAbiEnumeratorAdapter<T> toAbiAdapter)
+            {
+                // Unwrap to get the C# enumerator if it was originally one.
+                return toAbiAdapter.m_enumerator;
+            }
 
             throw new InvalidOperationException("Unexpected type for enumerator");
         }
@@ -939,7 +944,7 @@ namespace ABI.System.Collections.Generic
     // we can't make them AOT friendly due to we can't reference them.
     public sealed class ToAbiEnumeratorAdapter<T> : global::System.Collections.Generic.IEnumerator<T>, global::System.Collections.IEnumerator
     {
-        private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
+        internal readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
 
         internal ToAbiEnumeratorAdapter(global::System.Collections.Generic.IEnumerator<T> enumerator) => m_enumerator = enumerator;
 

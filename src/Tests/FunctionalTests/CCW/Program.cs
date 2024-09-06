@@ -642,7 +642,7 @@ partial class Language
 {
     private readonly string[] _values = new string[4];
 
-    public string Name { get; } = "Language";
+    public string Name { get; init; } = "Language";
     public int Value { get; set; }
     public string this[int i]
     {
