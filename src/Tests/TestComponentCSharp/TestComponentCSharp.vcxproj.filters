@@ -23,6 +23,8 @@
     <ClCompile Include="CustomExperimentClass.cpp" />
     <ClCompile Include="WinRT.Class.cpp" />
     <ClCompile Include="ClassWithExplicitIUnknown.cpp" />
+    <ClCompile Include="NonUniqueClass.cpp" />
+    <ClCompile Include="CustomIterableTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -39,6 +41,8 @@
     <ClInclude Include="CustomExperimentClass.h" />
     <ClInclude Include="WinRT.Class.h" />
     <ClInclude Include="ClassWithExplicitIUnknown.h" />
+    <ClInclude Include="NonUniqueClass.h" />
+    <ClInclude Include="CustomIterableTest.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />

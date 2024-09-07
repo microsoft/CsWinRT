@@ -182,6 +182,65 @@ if (count != 2)
     return 101;
 }
 
+int sum = 0;
+var enumerator = instance.GetIteratorForCollection(expected);
+while (enumerator.MoveNext())
+{
+    sum += enumerator.Current;
+}
+
+if (sum != 3)
+{
+    return 101;
+}
+
+sum = 0;
+
+CustomIterableTest customIterableTest = new CustomIterableTest();
+foreach (var i in customIterableTest)
+{
+    sum += i;
+}
+
+if (sum != 7)
+{
+    return 101;
+}
+
+sum = 0;
+
+var arr = new int[] { 2, 4, 6 };
+CustomIterableTest customIterableTest2 = new CustomIterableTest(arr);
+foreach (var i in customIterableTest2)
+{
+    sum += i;
+}
+
+if (sum != 12)
+{
+    return 101;
+}
+
+CustomIteratorTest iterator = new CustomIteratorTest();
+iterator.MoveNext();
+if (iterator.Current != 2)
+{
+    return 101;
+}
+
+sum = 0;
+
+var customIterableTest3 = CustomIterableTest.CreateWithCustomIterator();
+foreach (var i in customIterableTest3)
+{
+    sum += i;
+}
+
+if (sum != 7)
+{
+    return 101;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));

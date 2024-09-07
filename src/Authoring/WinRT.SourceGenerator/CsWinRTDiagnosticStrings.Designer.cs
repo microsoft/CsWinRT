@@ -223,7 +223,7 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class &apos;{0}&apos; implements WinRT interfaces but isn&apos;t marked partial.  Type should be marked partial for trimming and AOT compatibility if passed across the ABI..
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; implements WinRT interfaces but isn&apos;t marked partial.  Type should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI..
         /// </summary>
         internal static string ClassNotMarkedPartial_Text {
             get {
@@ -268,7 +268,7 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; implements generic WinRT interfaces which requires generated code using unsafe for trimming and AOT compatibility if passed across the ABI. Project needs to be updated with &apos;&lt;AllowUnsafeBlocks&gt;true&lt;/AllowUnsafeBlocks&gt;&apos;..
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; implements generic WinRT interfaces which requires generated code using unsafe for trimming and AOT compatibility if passed across the WinRT ABI. Project needs to be updated with &apos;&lt;AllowUnsafeBlocks&gt;true&lt;/AllowUnsafeBlocks&gt;&apos;..
         /// </summary>
         internal static string EnableUnsafe_Text {
             get {
