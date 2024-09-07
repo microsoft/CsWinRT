@@ -1136,6 +1136,15 @@ namespace Generator
                         AddVtableAttributesForType(instantiatedType, namedType);
                     }
                 }
+                else if (propertyDeclaration.ExpressionBody != null)
+                {
+                    var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
+                    if (leftSymbol is INamedTypeSymbol namedType)
+                    {
+                        var instantiatedType = context.SemanticModel.GetTypeInfo(propertyDeclaration.ExpressionBody.Expression);
+                        AddVtableAttributesForType(instantiatedType, namedType);
+                    }
+                }
             }
             // Detect scenarios where the method or property being returned from is doing a box or cast of the type
             // in the return statement.

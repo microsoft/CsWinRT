@@ -125,6 +125,9 @@ if (CustomClass.Instances != instance.BindableIterableProperty)
     return 101;
 }
 
+instance.BindableIterableProperty = CustomClass.DictionaryInstance;
+instance.BindableIterableProperty = CustomClass.DictionaryInstance2;
+
 var customObservableCollection = new CustomObservableCollection();
 instance.BindableIterableProperty = customObservableCollection;
 if (customObservableCollection != instance.BindableIterableProperty)
@@ -249,6 +252,16 @@ sealed partial class CustomClass : INotifyPropertyChanged
     public event PropertyChangedEventHandler PropertyChanged;
 
     public static IReadOnlyList<CustomClass> Instances { get; } = new CustomClass[] { };
+
+    public static IReadOnlyDictionary<string, CustomClass> DictionaryInstance => new Dictionary<string, CustomClass>();
+
+    public static IReadOnlyDictionary<int, CustomClass> DictionaryInstance2
+    {
+        get
+        {
+            return new Dictionary<int, CustomClass>();
+        }
+    }
 }
 
 sealed partial class CustomObservableCollection : System.Collections.ObjectModel.ObservableCollection<CustomClass>
