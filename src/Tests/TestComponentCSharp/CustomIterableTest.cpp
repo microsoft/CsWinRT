@@ -14,8 +14,26 @@ namespace winrt::TestComponentCSharp::implementation
         _iterable = iterable;
     }
 
+    CustomIterableTest::CustomIterableTest(bool useCustomIterator)
+        :CustomIterableTest()
+    {
+        _useCustomIterator = useCustomIterator;
+    }
+
+    winrt::TestComponentCSharp::CustomIterableTest CustomIterableTest::CreateWithCustomIterator()
+    {
+        return winrt::make<CustomIterableTest>(true);
+    }
+
     winrt::Windows::Foundation::Collections::IIterator<int32_t> CustomIterableTest::First()
     {
-        return _iterable.First();
+        if (_useCustomIterator)
+        {
+            return winrt::TestComponentCSharp::CustomIteratorTest(_iterable.First());
+        }
+        else
+        {
+            return _iterable.First();
+        }
     }
 }

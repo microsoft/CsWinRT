@@ -59,11 +59,14 @@ namespace winrt::TestComponentCSharp::implementation
 	struct CustomIteratorTest : CustomIteratorTestT<CustomIteratorTest>
 	{
 		CustomIteratorTest() = default;
+		CustomIteratorTest(winrt::Windows::Foundation::Collections::IIterator<int> iterator);
 
 		int32_t Current();
 		bool HasCurrent();
 		bool MoveNext();
 		uint32_t GetMany(array_view<int32_t> items);
+
+		winrt::Windows::Foundation::Collections::IIterator<int> _iterator;
 	};
 }
 

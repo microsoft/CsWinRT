@@ -218,6 +218,25 @@ if (sum != 12)
     return 101;
 }
 
+CustomIteratorTest iterator = new CustomIteratorTest();
+iterator.MoveNext();
+if (iterator.Current != 2)
+{
+    return 101;
+}
+
+sum = 0;
+
+var customIterableTest3 = CustomIterableTest.CreateWithCustomIterator();
+foreach (var i in customIterableTest3)
+{
+    sum += i;
+}
+
+if (sum != 6)
+{
+    return 101;
+}
 
 return 100;
 

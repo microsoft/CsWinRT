@@ -244,7 +244,7 @@ namespace ABI.System.Collections.Generic
                 return toAbiAdapter.m_enumerator;
             }
 
-            throw new InvalidOperationException("Unexpected type for enumerator");
+            return first;
         }
 
         private static IntPtr abiToProjectionVftablePtr;
