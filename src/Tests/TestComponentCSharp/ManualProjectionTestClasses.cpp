@@ -124,20 +124,44 @@ namespace winrt::TestComponentCSharp::implementation
     {
     }
 
+    CustomIteratorTest::CustomIteratorTest(winrt::Windows::Foundation::Collections::IIterator<int> iterator)
+    {
+        _iterator = iterator;
+    }
     int32_t CustomIteratorTest::Current()
     {
+        if (_iterator)
+        {
+            return _iterator.Current();
+        }
+
         return 2;
     }
     bool CustomIteratorTest::HasCurrent()
     {
+        if (_iterator)
+        {
+            return _iterator.HasCurrent();
+        }
+
         return true;
     }
     bool CustomIteratorTest::MoveNext()
     {
+        if (_iterator)
+        {
+            return _iterator.MoveNext();
+        }
+
         return true;
     }
     uint32_t CustomIteratorTest::GetMany(array_view<int32_t> items)
     {
+        if (_iterator)
+        {
+            return _iterator.GetMany(items);
+        }
+
         throw hresult_not_implemented();
     }
 }
