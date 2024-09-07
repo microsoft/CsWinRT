@@ -6,7 +6,7 @@ namespace winrt::TestComponentCSharp::implementation
 {
     CustomIterableTest::CustomIterableTest()
     {
-        _iterable = winrt::single_threaded_vector(std::vector{ 0, 2, 4 });
+        _iterable = winrt::single_threaded_vector(std::vector{ 1, 2, 4 });
     }
 
     CustomIterableTest::CustomIterableTest(winrt::Windows::Foundation::Collections::IIterable<int32_t> const& iterable)

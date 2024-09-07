@@ -199,7 +199,7 @@ foreach (var i in customIterableTest)
     sum += i;
 }
 
-if (sum != 6)
+if (sum != 7)
 {
     return 101;
 }
@@ -233,7 +233,7 @@ foreach (var i in customIterableTest3)
     sum += i;
 }
 
-if (sum != 6)
+if (sum != 7)
 {
     return 101;
 }

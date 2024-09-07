@@ -243,8 +243,15 @@ namespace ABI.System.Collections.Generic
                 // Unwrap to get the C# enumerator if it was originally one.
                 return toAbiAdapter.m_enumerator;
             }
+            else if (first is IWinRTObject winrtObject)
+            {
+                // This is a projected RCW implementing IEnumerator<T>, but since it is being used
+                // as part of GetEnumerator, we need to remap the enumerator starting index.
+                // Due to that, we don't return the RCW itself.
+                return new global::ABI.System.Collections.Generic.FromAbiEnumerator<T>(winrtObject.NativeObject);
+            }
 
-            return first;
+            throw new InvalidOperationException("Unexpected type for enumerator");
         }
 
         private static IntPtr abiToProjectionVftablePtr;
