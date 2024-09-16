@@ -1574,15 +1574,8 @@ namespace Generator
             }
         }
 
-        private void AddGuidAttribute(EntityHandle parentHandle, string name)
+        private void AddGuidAttribute(EntityHandle parentHandle, Guid guid)
         {
-            Guid guid;
-            using (SHA1 sha = new SHA1CryptoServiceProvider())
-            {
-                var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(name));
-                guid = Helper.EncodeGuid(hash);
-            }
-
             var uint32Type = Model.Compilation.GetTypeByMetadataName("System.UInt32");
             var uint16Type = Model.Compilation.GetTypeByMetadataName("System.UInt16");
             var byteType = Model.Compilation.GetTypeByMetadataName("System.Byte");
@@ -1618,6 +1611,18 @@ namespace Generator
             };
 
             AddCustomAttributes("Windows.Foundation.Metadata.GuidAttribute", types, arguments, parentHandle);
+        }
+
+        private void AddGuidAttribute(EntityHandle parentHandle, string name)
+        {
+            Guid guid;
+            using (SHA1 sha = new SHA1CryptoServiceProvider())
+            {
+                var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(name));
+                guid = Helper.EncodeGuid(hash);
+            }
+
+            AddGuidAttribute(parentHandle, guid);
         }
 
         private void AddCustomAttributes(
@@ -1795,7 +1800,17 @@ namespace Generator
             currentTypeDeclaration.Handle = typeDefinitionHandle;
             typeDefinitionMapping[QualifiedName(symbol, true)] = currentTypeDeclaration;
 
-            AddGuidAttribute(typeDefinitionHandle, symbol.ToString());
+            if (symbol.TryGetAttributeWithType(Model.Compilation.GetTypeByMetadataName("System.Runtime.InteropServices.GuidAttribute"), out AttributeData guidAttribute)
+                    && guidAttribute is { ConstructorArguments.IsDefaultOrEmpty: false }
+                    && guidAttribute.ConstructorArguments[0].Value is string guidString
+                    && Guid.TryParse(guidString, out Guid guid))
+            {
+                AddGuidAttribute(typeDefinitionHandle, guid);
+            }
+            else
+            {
+                AddGuidAttribute(typeDefinitionHandle, symbol.ToString());
+            }
         }
 
         public void AddEventDeclaration(string eventName, ITypeSymbol eventType, ISymbol symbol, bool isStatic, bool isInterfaceParent, bool isPublic = true)
@@ -2068,7 +2083,17 @@ namespace Generator
 
             if (isInterface)
             {
-                AddGuidAttribute(typeDefinitionHandle, type.ToString());
+                if (type.TryGetAttributeWithType(Model.Compilation.GetTypeByMetadataName("System.Runtime.InteropServices.GuidAttribute"), out AttributeData guidAttribute)
+                    && guidAttribute is { ConstructorArguments.IsDefaultOrEmpty: false }
+                    && guidAttribute.ConstructorArguments[0].Value is string guidString
+                    && Guid.TryParse(guidString, out Guid guid))
+                {
+                    AddGuidAttribute(typeDefinitionHandle, guid);
+                }
+                else
+                {
+                    AddGuidAttribute(typeDefinitionHandle, type.ToString());
+                }
                 AddOverloadAttributeForInterfaceMethods(typeDeclaration);
             }
 
