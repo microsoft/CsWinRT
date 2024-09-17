@@ -1854,6 +1854,17 @@ namespace AuthoringTest
             }
         }
     }
+
+    [System.Runtime.InteropServices.Guid("26D8EE57-8B1B-46F4-A4F9-8C6DEEEAF53A")]
+    public interface ICustomInterfaceGuid
+    {
+        string HelloWorld();
+    }
+
+    public sealed class CustomInterfaceGuidClass : ICustomInterfaceGuid
+    {
+        public string HelloWorld() => "Hello World!";
+    }
 }
 
 namespace ABI.AuthoringTest
