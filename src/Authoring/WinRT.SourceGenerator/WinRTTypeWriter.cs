@@ -2088,7 +2088,7 @@ namespace Generator
 
             if (isInterface)
             {
-                AddGuidAttribute(typeDefinitionHandle, symbol);
+                AddGuidAttribute(typeDefinitionHandle, type);
                 AddOverloadAttributeForInterfaceMethods(typeDeclaration);
             }
 
