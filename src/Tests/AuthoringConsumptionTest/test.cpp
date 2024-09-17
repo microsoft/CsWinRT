@@ -726,13 +726,13 @@ TEST(AuthoringTest, XamlMetadataProvider)
 
 TEST(AuthoringTest, CustomInterfaceGuid)
 {
-	CustomInterfaceGuidClass customInterfaceGuidClass;
+    CustomInterfaceGuidClass customInterfaceGuidClass;
     winrt::com_ptr<::IUnknown> customInterfaceClassUnknown = customInterfaceGuidClass.as<::IUnknown>();
-	ICustomInterfaceGuid customInterface;
+    ICustomInterfaceGuid customInterface;
 
     IID customInterfaceIid;
     check_result(IIDFromString(L"{26D8EE57-8B1B-46F4-A4F9-8C6DEEEAF53A}", &customInterfaceIid));
-	check_hresult(customInterfaceClassUnknown->QueryInterface(customInterfaceIid, reinterpret_cast<void**>(winrt::put_abi(customInterface))));
+    check_hresult(customInterfaceClassUnknown->QueryInterface(customInterfaceIid, reinterpret_cast<void**>(winrt::put_abi(customInterface))));
 
     EXPECT_EQ(customInterface.HelloWorld(), L"Hello World!");
 }
