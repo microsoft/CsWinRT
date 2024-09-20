@@ -437,6 +437,14 @@ namespace winrt::TestComponentCSharp::implementation
         return nullptr;
     }
 
+    winrt::TestComponentCSharp::Class Class::GetEntryFromList2(
+        winrt::Windows::Foundation::Collections::IVector<winrt::TestComponentCSharp::Class> const& list,
+        winrt::Windows::Foundation::Collections::IVector<winrt::TestComponentCSharp::Class> const& list2,
+        winrt::TestComponentCSharp::Class c)
+    {
+        return nullptr;
+    }
+
     winrt::guid Class::TestReturnGuid(winrt::guid const& arg)
     {
         return arg;

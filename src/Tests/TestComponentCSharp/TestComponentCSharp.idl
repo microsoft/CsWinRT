@@ -218,6 +218,7 @@ namespace TestComponentCSharp
 
         [nullable(1)]
         Class GetEntryFromList([nullable(10)]Windows.Foundation.Collections.IVector<Class> list);
+        Class GetEntryFromList2([nullable(10)]Windows.Foundation.Collections.IVector<Class> list, [nullable(8)]Windows.Foundation.Collections.IVector<Class> list2, [nullable(2)]Class c);
 
         Int32 IntProperty;
         event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;

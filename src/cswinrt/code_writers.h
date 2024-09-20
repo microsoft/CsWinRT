@@ -384,8 +384,8 @@ namespace cswinrt
         byte nullableVal = 0;
         if (!skipNullable && !w._nullable.data.empty())
         {
-            nullableVal = w._nullable.data.back();
-            w._nullable.data.pop_back();
+            nullableVal = w._nullable.data.front();
+            w._nullable.data.erase(w._nullable.data.begin());
         }
 
         call(semantics,

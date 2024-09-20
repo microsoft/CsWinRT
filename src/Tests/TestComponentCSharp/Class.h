@@ -145,6 +145,10 @@ namespace winrt::TestComponentCSharp::implementation
         void PropertyChangedEventHandler(winrt::event_token const& token) noexcept;
 
         winrt::TestComponentCSharp::Class GetEntryFromList(winrt::Windows::Foundation::Collections::IVector<winrt::TestComponentCSharp::Class> const& list);
+        winrt::TestComponentCSharp::Class GetEntryFromList2(
+            winrt::Windows::Foundation::Collections::IVector<winrt::TestComponentCSharp::Class> const& list,
+            winrt::Windows::Foundation::Collections::IVector<winrt::TestComponentCSharp::Class> const& list2,
+            winrt::TestComponentCSharp::Class c);
 
         int32_t IntProperty();
         void IntProperty(int32_t value);
