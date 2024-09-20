@@ -1568,7 +1568,6 @@ namespace Generator
                     }
 
                     bool alreadyHasOverload = method.TryGetAttributeWithType(Model.Compilation.GetTypeByMetadataName("Windows.Foundation.Metadata.OverloadAttribute"), out AttributeData _);
-                    Logger.Log($"Overload {methodName.Key}: {alreadyHasOverload}");
                     if (alreadyHasOverload)
                         continue;
 
