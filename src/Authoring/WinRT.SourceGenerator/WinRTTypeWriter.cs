@@ -1567,6 +1567,11 @@ namespace Generator
                         overloadedMethodName = methodName.Key + (++lastSuffix);
                     }
 
+                    bool alreadyHasOverload = method.TryGetAttributeWithType(Model.Compilation.GetTypeByMetadataName("Windows.Foundation.Metadata.OverloadAttribute"), out AttributeData _);
+                    Logger.Log($"Overload {methodName.Key}: {alreadyHasOverload}");
+                    if (alreadyHasOverload)
+                        continue;
+
                     Logger.Log("Overloading " + methodName.Key + " with " + overloadedMethodName);
                     AddOverloadAttribute(interfaceTypeDeclaration.MethodDefinitions[method].First(), overloadedMethodName);
                     interfaceTypeDeclaration.AddMethodOverload(method, overloadedMethodName);
