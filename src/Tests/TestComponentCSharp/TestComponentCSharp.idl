@@ -5,6 +5,14 @@
 
 namespace TestComponentCSharp
 {
+    [attributeusage(target_delegate, target_event, target_interface, target_method, target_parameter, target_property, target_runtimeclass)]
+    [attributename("nullable")]
+    [version(0x06020000)]
+    attribute NullableAttribute
+    {
+       unsigned __int32 flags;
+    }
+
     // Event handlers
     delegate void EventHandler0();
     delegate void EventHandler1(Class sender);
@@ -207,6 +215,9 @@ namespace TestComponentCSharp
         Int32 InvokeReturnEvent(Int32 arg0);
         Guid TestReturnGuid(Guid arg);
         event Microsoft.UI.Xaml.Data.PropertyChangedEventHandler PropertyChangedEventHandler;
+
+        [nullable(1)]
+        Class GetEntryFromList([nullable(10)]Windows.Foundation.Collections.IVector<Class> list);
 
         Int32 IntProperty;
         event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;

@@ -24,6 +24,8 @@ namespace cswinrt
         bool _check_platform = false;
         std::string _platform;
 
+        nullable_information _nullable;
+
         writer(std::string_view current_namespace) :
             _current_namespace(current_namespace)
         {
@@ -260,6 +262,19 @@ namespace %%
             {
                 _writer._check_platform = false;
                 _writer._platform = {};
+            }
+        };
+
+        struct write_nullable_guard
+        {
+            writer& _writer;
+            write_nullable_guard(writer& w, nullable_information nullable) : _writer(w)
+            {
+                _writer._nullable = nullable;
+            }
+            ~write_nullable_guard()
+            {
+                _writer._nullable = {};
             }
         };
     };

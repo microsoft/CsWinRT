@@ -217,7 +217,7 @@ namespace cswinrt
     }
 
     void write_projection_type(writer& w, type_semantics const& semantics);
-    void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType);
+    void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType, bool skipNullable = false);
     void write_guid(writer& w, TypeDef const& type, bool lowerCase);
 
     void write_generic_type_name_base(writer& w, uint32_t index)
@@ -379,8 +379,15 @@ namespace cswinrt
         w.write("%", bind<write_type_name>(semantics, typedef_name_type::StaticAbiClass, false));
     }
 
-    void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType)
+    void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType, bool skipNullable)
     {
+        byte nullableVal = 0;
+        if (!skipNullable && !w._nullable.data.empty())
+        {
+            nullableVal = w._nullable.data.back();
+            w._nullable.data.pop_back();
+        }
+
         call(semantics,
             [&](object_type) { w.write("object"); },
             [&](guid_type) { w.write("Guid"); },
@@ -391,8 +398,8 @@ namespace cswinrt
             {
                 auto guard{ w.push_generic_args(type) };
                 w.write("%<%>",
-                    bind<write_projection_type_for_name_type>(type.generic_type, nameType),
-                    bind_list<write_projection_type_for_name_type>(", ", type.generic_args, nameType));
+                    bind<write_projection_type_for_name_type>(type.generic_type, nameType, true),
+                    bind_list<write_projection_type_for_name_type>(", ", type.generic_args, nameType, false));
             },
             [&](generic_type_param const& param) { w.write(param.Name()); },
             [&](fundamental_type const& type)
@@ -406,6 +413,11 @@ namespace cswinrt
                     write_fundamental_type(w, type);
                 }
             });
+
+        if (nullableVal == 2)
+        {
+			w.write("?");
+        }
     }
 
     void write_projection_type(writer& w, type_semantics const& semantics)
@@ -491,6 +503,7 @@ namespace cswinrt
     void write_projection_parameter_type(writer& w, method_signature::param_t const& param)
     {
         auto semantics = get_type_semantics(param.second->Type());
+        writer::write_nullable_guard g(w, get_param_nullable_information(param));
 
         switch (get_param_category(param))
         {
@@ -10844,7 +10857,7 @@ private static unsafe int Do_Abi_Invoke(%)
                 [&](writer& w) {
                     auto invoke = w.write_temp(
                         "%%.Abi_Invoke(thisPtr, %)",
-                        bind<write_projection_type_for_name_type>(instance.generic_type, typedef_name_type::StaticAbiClass),
+                        bind<write_projection_type_for_name_type>(instance.generic_type, typedef_name_type::StaticAbiClass, true),
                         [&](writer& w)
                         {
                             writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index)
@@ -11005,7 +11018,7 @@ return true;
                         auto guard{ w.push_generic_args(instance.instance) };
 
                         auto genericInstantiationMethodsClass = w.write_temp("%%",
-                            bind<write_projection_type_for_name_type>(instance.instance.generic_type, typedef_name_type::StaticAbiClass),
+                            bind<write_projection_type_for_name_type>(instance.instance.generic_type, typedef_name_type::StaticAbiClass, true),
                             [&](writer& w)
                             {
                                 writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index)

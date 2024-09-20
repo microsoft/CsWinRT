@@ -432,6 +432,11 @@ namespace winrt::TestComponentCSharp::implementation
         _propertyChangedEventHandler.remove(token);
     }
 
+    winrt::TestComponentCSharp::Class Class::GetEntryFromList(winrt::Windows::Foundation::Collections::IVector<winrt::TestComponentCSharp::Class> const& list)
+    {
+        return nullptr;
+    }
+
     winrt::guid Class::TestReturnGuid(winrt::guid const& arg)
     {
         return arg;
@@ -1881,6 +1886,7 @@ namespace winrt::TestComponentCSharp::implementation
         propertySet.Insert(L"alpha", winrt::box_value(L"first"));
         propertySet.Insert(L"beta", winrt::box_value(L"second"));
         propertySet.Insert(L"charlie", winrt::box_value(L"third"));
+
         return propertySet;
     }
 

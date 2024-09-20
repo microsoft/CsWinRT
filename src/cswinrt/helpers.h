@@ -1332,6 +1332,36 @@ namespace cswinrt
         return has_attribute(ifaceImpl, "Windows.Foundation.Metadata", "DefaultAttribute");
     }
 
+    struct nullable_information
+    {
+        std::vector<byte> data;
+    };
+
+    auto get_param_nullable_information(method_signature::param_t const& param)
+    {
+        nullable_information nullable;
+
+        for (auto&& attribute : param.first.CustomAttribute())
+        {
+            auto attribute_name = attribute.TypeNamespaceAndName();
+            if (attribute_name.second != "NullableAttribute")
+            {
+                continue;
+            }
+
+            auto sig = attribute.Value();
+            auto const& args = sig.NamedArgs();
+            auto val = std::get<uint32_t>(std::get<ElemSig>(args[0].value.value).value);
+            while (val != 0)
+            {
+				nullable.data.push_back(val & 0x3);
+				val >>= 2;
+            }
+        }
+
+        return nullable;
+    }
+
     std::optional<TypeDef> find_fast_abi_class_type(TypeDef const& iface)
     {
         static std::map<TypeDef, std::optional<TypeDef>> cache;

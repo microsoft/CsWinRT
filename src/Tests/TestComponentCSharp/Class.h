@@ -144,6 +144,8 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event_token PropertyChangedEventHandler(winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventHandler const& handler);
         void PropertyChangedEventHandler(winrt::event_token const& token) noexcept;
 
+        winrt::TestComponentCSharp::Class GetEntryFromList(winrt::Windows::Foundation::Collections::IVector<winrt::TestComponentCSharp::Class> const& list);
+
         int32_t IntProperty();
         void IntProperty(int32_t value);
         winrt::event_token IntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler);
