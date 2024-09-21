@@ -1989,7 +1989,7 @@ private static % _% = new %("%.%", %.IID);
     {
         auto objrefname = w.write_temp("%", bind<write_objref_type_name>(classType));
         w.write(R"(
-private static volatile IObjectReference __%;
+private static volatile IObjectReference? __%;
 private static IObjectReference %
 {
     get
@@ -2048,7 +2048,7 @@ private static ObjectReference<%> % => __% ?? Make__%();
         {
             auto objrefname = w.write_temp("%", bind<write_objref_type_name>(staticsType));
             w.write(R"(
-private static volatile IObjectReference __%;
+private static volatile IObjectReference? __%;
 private static IObjectReference %
 {
     get
@@ -2282,7 +2282,7 @@ ComWrappersHelper.Init(_inner, false);
                     if (!useInner)
                     {
                         w.write(R"(
-private volatile IObjectReference __%;
+private volatile IObjectReference? __%;
 private IObjectReference Make__%()
 {
 )",
@@ -2334,7 +2334,7 @@ private IObjectReference % => __% ?? Make__%();
                     }
                     else
                     {
-                        w.write(R"(private IObjectReference % => _inner;)", objrefname);
+                        w.write(R"(private IObjectReference? % => _inner;)", objrefname);
                     }
                 });
         }
@@ -7492,14 +7492,14 @@ IObjectReference IWinRTObject.NativeObject => _inner;
 
 bool IWinRTObject.HasUnwrappableNativeObject => true;
 
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>? _queryInterfaceCache;
 private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
 {
 global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
 return _queryInterfaceCache;
 }
 global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>? _additionalTypeData;
 private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
 {
 global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
@@ -7533,7 +7533,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                     writtenInterfaces.insert(objrefname);
 
                     w.write(R"(
-private volatile IObjectReference __%;
+private volatile IObjectReference? __%;
 private IObjectReference Make__%()
 {
 %
@@ -8364,7 +8364,7 @@ public static implicit operator %(% comp)
 {
 return new %(comp);
 }
-public static %% FromAbi(IntPtr thisPtr)
+public static %%? FromAbi(IntPtr thisPtr)
 {
 if (thisPtr == IntPtr.Zero) return null;
 return MarshalInspectable<%>.FromAbi(thisPtr);
@@ -8400,7 +8400,7 @@ private readonly % _comp;
             w.write(R"(%%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 %internal % partial class %
 {
-public static % FromAbi(IntPtr thisPtr)
+public static %? FromAbi(IntPtr thisPtr)
 {
 if (thisPtr == IntPtr.Zero) return null;
 return MarshalInspectable<%>.FromAbi(thisPtr);
@@ -8451,7 +8451,7 @@ private readonly Lazy<%> _defaultLazy;
 
 private % _default => _defaultLazy.Value;
 %
-public static %% FromAbi(IntPtr thisPtr)
+public static %%? FromAbi(IntPtr thisPtr)
 {
 if (thisPtr == IntPtr.Zero) return null;
 return MarshalInspectable<%>.FromAbi(thisPtr);
@@ -8520,18 +8520,18 @@ GC.RemoveMemoryPressure(%);
                 bool return_type_matches = false;
                 if (!has_class_equals_method(type, &return_type_matches))
                 {
-                    w.write("public bool Equals(% other) => this == other;\n", type_name);
+                    w.write("public bool Equals(%? other) => this == other;\n", type_name);
                 }
                 // Even though there is an equals method defined, it doesn't match the signature for IEquatable
                 // so we define an explicitly implemented one.
                 else if (!return_type_matches)
                 {
-                    w.write("bool IEquatable<%>.Equals(% other) => this == other;\n", type_name, type_name);
+                    w.write("bool IEquatable<%>.Equals(%? other) => this == other;\n", type_name, type_name);
                 }
 
                 if (!has_object_equals_method(type))
                 {
-                    w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", type_name);
+                    w.write("public override bool Equals(object? obj) => obj is % that && this == that;\n", type_name);
                 }
 
                 if (!has_object_hashcode_method(type))
@@ -8617,14 +8617,14 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
 {
 private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
 
-private readonly IObjectReference _inner = null;
+private readonly IObjectReference? _inner = null;
 %
 %
 
 %
 %
 %
-public static %% FromAbi(IntPtr thisPtr)
+public static %%? FromAbi(IntPtr thisPtr)
 {
 if (thisPtr == IntPtr.Zero) return null;
 return MarshalInspectable<%>.FromAbi(thisPtr);
@@ -8717,18 +8717,18 @@ GC.RemoveMemoryPressure(%);
                 bool return_type_matches = false;
                 if (!has_class_equals_method(type, &return_type_matches))
                 {
-                    w.write("public bool Equals(% other) => this == other;\n", type_name);
+                    w.write("public bool Equals(%? other) => this == other;\n", type_name);
                 }
                 // Even though there is an equals method defined, it doesn't match the signature for IEquatable
                 // so we define an explicitly implemented one.
                 else if (!return_type_matches)
                 {
-                    w.write("bool IEquatable<%>.Equals(% other) => this == other;\n", type_name, type_name);
+                    w.write("bool IEquatable<%>.Equals(%? other) => this == other;\n", type_name, type_name);
                 }
 
                 if (!has_object_equals_method(type))
                 {
-                    w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", type_name);
+                    w.write("public override bool Equals(object? obj) => obj is % that && this == that;\n", type_name);
                 }
 
                 if (!has_object_hashcode_method(type))
@@ -8792,18 +8792,18 @@ bool IWinRTObject.HasUnwrappableNativeObject => true;)");
                 }
 
                 w.write(R"(
-IObjectReference IWinRTObject.NativeObject => _inner;)");
+IObjectReference? IWinRTObject.NativeObject => _inner;)");
                 if (!has_base_type)
                 { 
                 w.write(R"(
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>? _queryInterfaceCache;
 private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
 {
     global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
     return _queryInterfaceCache;
 }
 global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>? _additionalTypeData;
 private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
 {
     global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
@@ -8866,9 +8866,9 @@ internal sealed class %RcwFactoryAttribute : global::WinRT.WinRTImplementationTy
 % struct %
 {
 %
-public static IntPtr GetAbi(IObjectReference value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
-public static % FromAbi(IntPtr thisPtr) => %.FromAbi(thisPtr);
-public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler2(obj).Detach();
+public static IntPtr GetAbi(IObjectReference? value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
+public static %? FromAbi(IntPtr thisPtr) => %.FromAbi(thisPtr);
+public static IntPtr FromManaged(%? obj) => obj is null ? IntPtr.Zero : CreateMarshaler2(obj).Detach();
 public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<%>.GetAbiArray(box);
 public static unsafe %[] FromAbiArray(object box) => MarshalInterfaceHelper<%>.FromAbiArray(box, FromAbi);
@@ -8905,7 +8905,7 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
                 if (is_exclusive_to_default)
                 {
                     w.write(R"(
-public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler<%>(obj, %);
+public static IObjectReference? CreateMarshaler(%? obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler<%>(obj, %);
 public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInspectable<object>.CreateMarshaler2(obj, %);)",
                         projected_type_name,
                         projected_type_name,
@@ -8918,7 +8918,7 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInspectable
                 {
                     auto default_interface_name = get_default_interface_name(w, type, false);
                     w.write(R"(
-public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInterface<%>.CreateMarshaler(obj);
+public static IObjectReference? CreateMarshaler(%? obj) => obj is null ? null : MarshalInterface<%>.CreateMarshaler(obj);
 public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%>.CreateMarshaler2(obj, %);)",
                         projected_type_name,
                         default_interface_name,
@@ -9034,7 +9034,7 @@ static unsafe @()
 %
 }
 %
-public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => 
+public static unsafe IObjectReference? CreateMarshaler(%? managedDelegate) => 
 managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);
 
 public static unsafe ObjectReferenceValue CreateMarshaler2(% managedDelegate) => 
@@ -9069,14 +9069,14 @@ _nativeDelegate = nativeDelegate;
 #if NET
 IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
 bool IWinRTObject.HasUnwrappableNativeObject => true;
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>? _queryInterfaceCache;
 private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
 {
     global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
     return _queryInterfaceCache;
 }
 global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>? _additionalTypeData;
 private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
 {
     global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
@@ -9708,8 +9708,8 @@ public %(%)
 
 public static bool operator ==(% x, % y) => %;
 public static bool operator !=(% x, % y) => !(x == y);
-public bool Equals(% other) => this == other;
-public override bool Equals(object obj) => obj is % that && this == that;
+public bool Equals(%? other) => this == other;
+public override bool Equals(object? obj) => obj is % that && this == that;
 public override int GetHashCode() => %;
 }
 )",
