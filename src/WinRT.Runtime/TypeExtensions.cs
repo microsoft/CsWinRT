@@ -277,6 +277,19 @@ namespace WinRT
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Windows.Foundation.IReferenceArray<>);
         }
 
+        internal static bool IsAbiIReferenceArray(this Type type)
+        {
+            // If support for 'IReference<T>' is disabled, we'll never instantiate any types implementing this interface. We
+            // can guard this check behind the feature switch to avoid making 'IReferenceArray<T>' reflectable, which will
+            // otherwise root some unnecessary code and metadata from the ABI implementation type.
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                return false;
+            }
+
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ABI.Windows.Foundation.IReferenceArray<>);
+        }
+
         internal static bool ShouldProvideIReference(this Type type)
         {
             if (!FeatureSwitches.EnableIReferenceSupport)

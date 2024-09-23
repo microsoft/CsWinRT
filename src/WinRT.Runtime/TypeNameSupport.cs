@@ -267,9 +267,7 @@ namespace WinRT
                     {
                         if (FeatureSwitches.EnableIReferenceSupport)
                         {
-                            return ABI.Windows.Foundation.IReferenceArrayType.GetArrayTypeAndRegisterHelperType(
-                                typeof(global::Windows.Foundation.IReferenceArray<>).MakeGenericType(genericTypes),
-                                typeof(global::ABI.Windows.Foundation.IReferenceArray<>).MakeGenericType(genericTypes));
+                            return typeof(global::ABI.Windows.Foundation.IReferenceArray<>).MakeGenericType(genericTypes);
                         }
 
                         throw GetExceptionForUnsupportedIReferenceType(runtimeClassName.AsSpan());

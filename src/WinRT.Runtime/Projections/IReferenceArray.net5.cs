@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using ABI.System;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -170,31 +171,31 @@ namespace ABI.Windows.Foundation
                 throw new NotSupportedException("Support for 'IReferenceArray<T>' is not enabled.");
             }
 
-            if (type == typeof(int)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<int>), typeof(global::ABI.Windows.Foundation.IReferenceArray<int>));
-            if (type == typeof(byte)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<byte>), typeof(global::ABI.Windows.Foundation.IReferenceArray<byte>));
-            if (type == typeof(bool)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<bool>), typeof(global::ABI.Windows.Foundation.IReferenceArray<bool>));
-            if (type == typeof(sbyte)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<sbyte>), typeof(global::ABI.Windows.Foundation.IReferenceArray<sbyte>));
-            if (type == typeof(short)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<short>), typeof(global::ABI.Windows.Foundation.IReferenceArray<short>));
-            if (type == typeof(ushort)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<ushort>), typeof(global::ABI.Windows.Foundation.IReferenceArray<ushort>));
-            if (type == typeof(char)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<char>), typeof(global::ABI.Windows.Foundation.IReferenceArray<char>));
-            if (type == typeof(uint)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<uint>), typeof(global::ABI.Windows.Foundation.IReferenceArray<uint>));
-            if (type == typeof(long)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<long>), typeof(global::ABI.Windows.Foundation.IReferenceArray<long>));
-            if (type == typeof(ulong)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<ulong>), typeof(global::ABI.Windows.Foundation.IReferenceArray<ulong>));
-            if (type == typeof(float)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<float>), typeof(global::ABI.Windows.Foundation.IReferenceArray<float>));
-            if (type == typeof(double)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<double>), typeof(global::ABI.Windows.Foundation.IReferenceArray<double>));
-            if (type == typeof(Guid)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<Guid>), typeof(global::ABI.Windows.Foundation.IReferenceArray<Guid>));
-            if (type == typeof(global::System.TimeSpan)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.TimeSpan>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.TimeSpan>));
-            if (type == typeof(global::System.DateTimeOffset)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.DateTimeOffset>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.DateTimeOffset>));
-            if (type == typeof(global::Windows.Foundation.Point)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::Windows.Foundation.Point>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::Windows.Foundation.Point>));
-            if (type == typeof(global::Windows.Foundation.Size)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::Windows.Foundation.Size>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::Windows.Foundation.Size>));
-            if (type == typeof(global::Windows.Foundation.Rect)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::Windows.Foundation.Rect>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::Windows.Foundation.Rect>));
-            if (type == typeof(global::System.Numerics.Matrix3x2)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix3x2>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix3x2>));
-            if (type == typeof(global::System.Numerics.Matrix4x4)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix4x4>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix4x4>));
-            if (type == typeof(global::System.Numerics.Plane)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Plane>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Plane>));
-            if (type == typeof(global::System.Numerics.Quaternion)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Quaternion>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Quaternion>));
-            if (type == typeof(global::System.Numerics.Vector2)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Vector2>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Vector2>));
-            if (type == typeof(global::System.Numerics.Vector3)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Vector3>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Vector3>));
-            if (type == typeof(global::System.Numerics.Vector4)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Vector4>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Vector4>));
+            if (type == typeof(int)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<int>);
+            if (type == typeof(byte)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<byte>);
+            if (type == typeof(bool)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<bool>);
+            if (type == typeof(sbyte)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<sbyte>);
+            if (type == typeof(short)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<short>);
+            if (type == typeof(ushort)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<ushort>);
+            if (type == typeof(char)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<char>);
+            if (type == typeof(uint)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<uint>);
+            if (type == typeof(long)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<long>);
+            if (type == typeof(ulong)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<ulong>);
+            if (type == typeof(float)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<float>);
+            if (type == typeof(double)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<double>);
+            if (type == typeof(Guid)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<Guid>);
+            if (type == typeof(global::System.TimeSpan)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.TimeSpan>);
+            if (type == typeof(global::System.DateTimeOffset)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.DateTimeOffset>);
+            if (type == typeof(global::Windows.Foundation.Point)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::Windows.Foundation.Point>);
+            if (type == typeof(global::Windows.Foundation.Size)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::Windows.Foundation.Size>);
+            if (type == typeof(global::Windows.Foundation.Rect)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::Windows.Foundation.Rect>);
+            if (type == typeof(global::System.Numerics.Matrix3x2)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix3x2>);
+            if (type == typeof(global::System.Numerics.Matrix4x4)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix4x4>);
+            if (type == typeof(global::System.Numerics.Plane)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Plane>);
+            if (type == typeof(global::System.Numerics.Quaternion)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Quaternion>);
+            if (type == typeof(global::System.Numerics.Vector2)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Vector2>);
+            if (type == typeof(global::System.Numerics.Vector3)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Vector3>);
+            if (type == typeof(global::System.Numerics.Vector4)) return typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Vector4>);
 
 #if NET
             var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
@@ -224,16 +225,263 @@ namespace ABI.Windows.Foundation
             return null;
         }
 
-        internal static Type GetArrayTypeAndRegisterHelperType(
-            Type implementationType,
-#if NET
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
-                                        DynamicallyAccessedMemberTypes.PublicFields)]
-#endif
-            Type helperType)
+        public static Func<IInspectable, object> GetValueFactory(global::System.Type type)
         {
-            ComWrappersSupport.RegisterHelperType(implementationType, helperType);
-            return implementationType;
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReferenceArray<T>' is not enabled.");
+            }
+
+            return ComWrappersSupport.CreateReferenceCachingFactory(GetValueFactoryInternal(type));
+        }
+
+        private static Func<IInspectable, object> GetValueFactoryInternal(global::System.Type type)
+        {
+            if (type == typeof(string)) return GetStringValue;
+            if (type == typeof(int)) return GetBlittableValue<int>;
+            if (type == typeof(byte)) return GetBlittableValue<byte>;
+            if (type == typeof(bool)) return GetBlittableValue<bool>;
+            if (type == typeof(sbyte)) return GetBlittableValue<sbyte>;
+            if (type == typeof(short)) return GetBlittableValue<short>;
+            if (type == typeof(ushort)) return GetBlittableValue<ushort>;
+            if (type == typeof(char)) return GetBlittableValue<char>;
+            if (type == typeof(uint)) return GetBlittableValue<uint>;
+            if (type == typeof(long)) return GetBlittableValue<long>;
+            if (type == typeof(ulong)) return GetBlittableValue<ulong>;
+            if (type == typeof(float)) return GetBlittableValue<float>;
+            if (type == typeof(double)) return GetBlittableValue<double>;
+            if (type == typeof(Guid)) return GetBlittableValue<Guid>;
+            if (type == typeof(global::System.Type)) return GetTypeValue;
+            if (type == typeof(global::System.TimeSpan)) return GetNonBlittableValue<global::System.TimeSpan>;
+            if (type == typeof(global::System.Exception)) return GetNonBlittableValue<global::System.Exception>;
+            if (type == typeof(global::System.DateTimeOffset)) return GetNonBlittableValue<global::System.DateTimeOffset>;
+            if (type == typeof(global::Windows.Foundation.Point)) return GetBlittableValue<global::Windows.Foundation.Point>;
+            if (type == typeof(global::Windows.Foundation.Size)) return GetBlittableValue<global::Windows.Foundation.Size>;
+            if (type == typeof(global::Windows.Foundation.Rect)) return GetBlittableValue<global::Windows.Foundation.Rect>;
+            if (type == typeof(global::System.Numerics.Matrix3x2)) return GetBlittableValue<global::System.Numerics.Matrix3x2>;
+            if (type == typeof(global::System.Numerics.Matrix4x4)) return GetBlittableValue<global::System.Numerics.Matrix4x4>;
+            if (type == typeof(global::System.Numerics.Plane)) return GetBlittableValue<global::System.Numerics.Plane>;
+            if (type == typeof(global::System.Numerics.Quaternion)) return GetBlittableValue<global::System.Numerics.Quaternion>;
+            if (type == typeof(global::System.Numerics.Vector2)) return GetBlittableValue<global::System.Numerics.Vector2>;
+            if (type == typeof(global::System.Numerics.Vector3)) return GetBlittableValue<global::System.Numerics.Vector3>;
+            if (type == typeof(global::System.Numerics.Vector4)) return GetBlittableValue<global::System.Numerics.Vector4>;
+            if (type == typeof(global::System.EventHandler)) return GetEventHandlerValue;
+            if (type == typeof(global::System.ComponentModel.PropertyChangedEventHandler)) return GetPropertyChangedEventHandlerValue;
+            if (type == typeof(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)) return GetNotifyCollectionChangedEventHandlerValue;
+            if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(int)) return (inspectable) => Nullable_IntEnum.GetValue(type, inspectable);
+            if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint)) return (inspectable) => Nullable_FlagsEnum.GetValue(type, inspectable);
+
+#if NET
+            var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+            if (winrtExposedClassAttribute == null)
+            {
+                var authoringMetadaType = type.GetAuthoringMetadataType();
+                if (authoringMetadaType != null)
+                {
+                    winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+                }
+            }
+
+            if (winrtExposedClassAttribute != null && winrtExposedClassAttribute.WinRTExposedTypeDetails != null)
+            {
+                if (Activator.CreateInstance(winrtExposedClassAttribute.WinRTExposedTypeDetails) is IWinRTNullableTypeDetails nullableTypeDetails)
+                {
+                    return nullableTypeDetails.GetNullableValue;
+                }
+            }
+
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Failed to get the value from nullable with type '{type}'.");
+            }
+#endif
+
+            // Fallback for .NET standard and pre-existing projections.
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+            if (type.IsDelegate())
+            {
+                return ComWrappersSupport.CreateAbiNullableTFactory(typeof(Nullable_Delegate<>).MakeGenericType(type));
+            }
+            else
+            {
+                return ComWrappersSupport.CreateNullableTFactory(typeof(global::System.Nullable<>).MakeGenericType(type));
+            }
+#pragma warning restore IL3050
+        }
+
+        private static unsafe object GetBlittableValue<T>(IInspectable inspectable) where T : unmanaged
+        {
+            IntPtr referenceArrayPtr = IntPtr.Zero;
+            int __retval_length = default;
+            IntPtr __retval_data = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<T>.PIID, out referenceArrayPtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<T>.PIID), out referenceArrayPtr)
+#endif
+                    );
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
+                return MarshalBlittable<T>.FromAbiArray((__retval_length, __retval_data));
+            }
+            finally
+            {
+                MarshalBlittable<T>.DisposeAbiArray((__retval_length, __retval_data));
+                Marshal.Release(referenceArrayPtr);
+            }
+        }
+
+        private static unsafe object GetStringValue(IInspectable inspectable)
+        {
+            IntPtr referenceArrayPtr = IntPtr.Zero;
+            int __retval_length = default;
+            IntPtr __retval_data = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+#endif
+                    );
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
+                return MarshalString.FromAbiArray((__retval_length, __retval_data));
+            }
+            finally
+            {
+                MarshalString.DisposeAbiArray((__retval_length, __retval_data));
+                Marshal.Release(referenceArrayPtr);
+            }
+        }
+
+        private static unsafe object GetTypeValue(IInspectable inspectable)
+        {
+            IntPtr referenceArrayPtr = IntPtr.Zero;
+            int __retval_length = default;
+            IntPtr __retval_data = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+#endif
+                    );
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
+                return ABI.System.Type.FromAbiArray((__retval_length, __retval_data));
+            }
+            finally
+            {
+                ABI.System.Type.DisposeAbiArray((__retval_length, __retval_data));
+                Marshal.Release(referenceArrayPtr);
+            }
+        }
+
+        private static unsafe object GetNonBlittableValue<T>(IInspectable inspectable)
+        {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
+            }
+#endif
+
+            IntPtr referenceArrayPtr = IntPtr.Zero;
+            int __retval_length = default;
+            IntPtr __retval_data = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+#endif
+                    );
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
+                return MarshalNonBlittable<T>.FromAbiArray((__retval_length, __retval_data));
+            }
+            finally
+            {
+                MarshalNonBlittable<T>.DisposeAbiArray((__retval_length, __retval_data));
+                Marshal.Release(referenceArrayPtr);
+            }
+        }
+
+        private static unsafe object GetEventHandlerValue(IInspectable inspectable)
+        {
+            IntPtr referenceArrayPtr = IntPtr.Zero;
+            int __retval_length = default;
+            IntPtr __retval_data = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+#endif
+                    );
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
+                return ABI.System.EventHandler.FromAbiArray((__retval_length, __retval_data));
+            }
+            finally
+            {
+                ABI.System.EventHandler.DisposeAbiArray((__retval_length, __retval_data));
+                Marshal.Release(referenceArrayPtr);
+            }
+        }
+
+        private static unsafe object GetPropertyChangedEventHandlerValue(IInspectable inspectable)
+        {
+            IntPtr referenceArrayPtr = IntPtr.Zero;
+            int __retval_length = default;
+            IntPtr __retval_data = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+#endif
+                    );
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
+                return ABI.System.ComponentModel.PropertyChangedEventHandler.FromAbiArray((__retval_length, __retval_data));
+            }
+            finally
+            {
+                ABI.System.ComponentModel.PropertyChangedEventHandler.DisposeAbiArray((__retval_length, __retval_data));
+                Marshal.Release(referenceArrayPtr);
+            }
+        }
+
+        private static unsafe object GetNotifyCollectionChangedEventHandlerValue(IInspectable inspectable)
+        {
+            IntPtr referenceArrayPtr = IntPtr.Zero;
+            int __retval_length = default;
+            IntPtr __retval_data = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(
+#if NET8_0_OR_GREATER
+                    Marshal.QueryInterface(inspectable.ThisPtr, in IReferenceArray<string>.PIID, out referenceArrayPtr)
+#else
+                    Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in IReferenceArray<string>.PIID), out referenceArrayPtr)
+#endif
+                    );
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
+                return ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.FromAbiArray((__retval_length, __retval_data));
+            }
+            finally
+            {
+                ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.DisposeAbiArray((__retval_length, __retval_data));
+                Marshal.Release(referenceArrayPtr);
+            }
         }
     }
 }
