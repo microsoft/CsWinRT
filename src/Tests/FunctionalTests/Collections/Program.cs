@@ -157,7 +157,12 @@ if (propertySet["test"] is not short[] shortArray || shortArray.Length != 4)
     return 101;
 }
 
-if (propertySet["delta"] is not byte[] byteArray || byteArray.Length != 4)
+if (propertySet["delta"] is not byte[] byteArray || byteArray.Length != 4 || byteArray[1] != 2)
+{
+    return 101;
+}
+
+if (propertySet["echo"] is not Point[] pointArray || pointArray.Length != 3 || pointArray[1].X != 2 || pointArray[1].Y != 2)
 {
     return 101;
 }
