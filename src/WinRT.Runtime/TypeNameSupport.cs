@@ -261,6 +261,29 @@ namespace WinRT
                 }
 
 #if NET
+                if (resolvedType == typeof(Windows.Foundation.IReferenceArray<>))
+                {
+                    if (genericTypes[0].IsDelegate())
+                    {
+                        if (FeatureSwitches.EnableIReferenceSupport)
+                        {
+                            return ABI.Windows.Foundation.IReferenceArrayType.GetArrayTypeAndRegisterHelperType(
+                                typeof(global::Windows.Foundation.IReferenceArray<>).MakeGenericType(genericTypes),
+                                typeof(global::ABI.Windows.Foundation.IReferenceArray<>).MakeGenericType(genericTypes));
+                        }
+
+                        throw GetExceptionForUnsupportedIReferenceType(runtimeClassName.AsSpan());
+                    }
+                    else
+                    {
+                        var referenceArrayType = ABI.Windows.Foundation.IReferenceArrayType.GetTypeAsIReferenceArrayType(genericTypes[0]);
+                        if (referenceArrayType is not null)
+                        {
+                            return referenceArrayType;
+                        }
+                    }
+                }
+
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
                     foreach (var type in genericTypes)

@@ -688,6 +688,7 @@ namespace WinRT
                 if (implementationType != null &&
                     implementationType.IsInterface && 
                     implementationType.IsGenericType &&
+                    implementationType.GetGenericTypeDefinition() != typeof(Windows.Foundation.IReferenceArray<>) &&
                     !TypedObjectFactoryCacheForType.ContainsKey(implementationType))
                 {
                     return staticallyDeterminedType;

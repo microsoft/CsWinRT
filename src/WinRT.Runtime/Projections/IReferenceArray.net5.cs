@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
@@ -240,5 +241,82 @@ namespace ABI.Windows.Foundation
     internal static class IReferenceArray_Delegates
     {
         public unsafe delegate int get_Value_0(IntPtr thisPtr, int* ____return_value__Size, IntPtr* __return_value__);
+    }
+
+    internal static class IReferenceArrayType
+    {
+        // Gets the IReferenceArray type representation for some built-in known types.
+        public static global::System.Type GetTypeAsIReferenceArrayType(global::System.Type type)
+        {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReferenceArray<T>' is not enabled.");
+            }
+
+            if (type == typeof(int)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<int>), typeof(global::ABI.Windows.Foundation.IReferenceArray<int>));
+            if (type == typeof(byte)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<byte>), typeof(global::ABI.Windows.Foundation.IReferenceArray<byte>));
+            if (type == typeof(bool)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<bool>), typeof(global::ABI.Windows.Foundation.IReferenceArray<bool>));
+            if (type == typeof(sbyte)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<sbyte>), typeof(global::ABI.Windows.Foundation.IReferenceArray<sbyte>));
+            if (type == typeof(short)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<short>), typeof(global::ABI.Windows.Foundation.IReferenceArray<short>));
+            if (type == typeof(ushort)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<ushort>), typeof(global::ABI.Windows.Foundation.IReferenceArray<ushort>));
+            if (type == typeof(char)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<char>), typeof(global::ABI.Windows.Foundation.IReferenceArray<char>));
+            if (type == typeof(uint)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<uint>), typeof(global::ABI.Windows.Foundation.IReferenceArray<uint>));
+            if (type == typeof(long)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<long>), typeof(global::ABI.Windows.Foundation.IReferenceArray<long>));
+            if (type == typeof(ulong)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<ulong>), typeof(global::ABI.Windows.Foundation.IReferenceArray<ulong>));
+            if (type == typeof(float)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<float>), typeof(global::ABI.Windows.Foundation.IReferenceArray<float>));
+            if (type == typeof(double)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<double>), typeof(global::ABI.Windows.Foundation.IReferenceArray<double>));
+            if (type == typeof(Guid)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<Guid>), typeof(global::ABI.Windows.Foundation.IReferenceArray<Guid>));
+            if (type == typeof(global::System.TimeSpan)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.TimeSpan>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.TimeSpan>));
+            if (type == typeof(global::System.DateTimeOffset)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.DateTimeOffset>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.DateTimeOffset>));
+            if (type == typeof(global::Windows.Foundation.Point)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::Windows.Foundation.Point>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::Windows.Foundation.Point>));
+            if (type == typeof(global::Windows.Foundation.Size)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::Windows.Foundation.Size>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::Windows.Foundation.Size>));
+            if (type == typeof(global::Windows.Foundation.Rect)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::Windows.Foundation.Rect>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::Windows.Foundation.Rect>));
+            if (type == typeof(global::System.Numerics.Matrix3x2)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix3x2>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix3x2>));
+            if (type == typeof(global::System.Numerics.Matrix4x4)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix4x4>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Matrix4x4>));
+            if (type == typeof(global::System.Numerics.Plane)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Plane>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Plane>));
+            if (type == typeof(global::System.Numerics.Quaternion)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Quaternion>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Quaternion>));
+            if (type == typeof(global::System.Numerics.Vector2)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Vector2>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Vector2>));
+            if (type == typeof(global::System.Numerics.Vector3)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Vector3>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Vector3>));
+            if (type == typeof(global::System.Numerics.Vector4)) return GetArrayTypeAndRegisterHelperType(typeof(global::Windows.Foundation.IReferenceArray<global::System.Numerics.Vector4>), typeof(global::ABI.Windows.Foundation.IReferenceArray<global::System.Numerics.Vector4>));
+
+#if NET
+            var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+            if (winrtExposedClassAttribute == null)
+            {
+                var authoringMetadaType = type.GetAuthoringMetadataType();
+                if (authoringMetadaType != null)
+                {
+                    winrtExposedClassAttribute = authoringMetadaType.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
+                }
+            }
+
+            if (winrtExposedClassAttribute != null && winrtExposedClassAttribute.WinRTExposedTypeDetails != null)
+            {
+                if (Activator.CreateInstance(winrtExposedClassAttribute.WinRTExposedTypeDetails) is IWinRTNullableTypeDetails nullableTypeDetails)
+                {
+                    return nullableTypeDetails.GetNullableArrayType();
+                }
+            }
+
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Failed to construct IReferenceArray with type '{type}'.");
+            }
+#endif
+
+            return null;
+        }
+
+        internal static Type GetArrayTypeAndRegisterHelperType(
+            Type implementationType,
+#if NET
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods |
+                                        DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
+            Type helperType)
+        {
+            ComWrappersSupport.RegisterHelperType(implementationType, helperType);
+            return implementationType;
+        }
     }
 }
