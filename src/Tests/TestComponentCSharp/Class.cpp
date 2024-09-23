@@ -1881,6 +1881,8 @@ namespace winrt::TestComponentCSharp::implementation
         propertySet.Insert(L"alpha", winrt::box_value(L"first"));
         propertySet.Insert(L"beta", winrt::box_value(L"second"));
         propertySet.Insert(L"charlie", winrt::box_value(L"third"));
+        auto arr = com_array<byte>({ 1, 2, 3, 4 });
+        propertySet.Insert(L"delta", winrt::box_value(arr));
         return propertySet;
     }
 

@@ -71,6 +71,17 @@ if (propertySet["beta"] is not string str || str != "second")
     return 101;
 }
 
+propertySet.Add("test", new short[] { 1, 2, 3, 4 });
+if (propertySet["test"] is not short[] shortArray || shortArray.Length != 4)
+{
+    return 101;
+}
+
+if (propertySet["delta"] is not byte[] byteArray || byteArray.Length != 4)
+{
+    return 101;
+}
+
 var types = Class.ListOfTypes;
 if (types.Count != 2 || types[0] != typeof(Class))
 {
