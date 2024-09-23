@@ -2458,10 +2458,7 @@ namespace ABI.System
 
         Type IWinRTNullableTypeDetails.GetNullableType() => typeof(global::System.Nullable<T>);
 
-        Type IWinRTNullableTypeDetails.GetNullableArrayType() => 
-            global::ABI.Windows.Foundation.IReferenceArrayType.GetArrayTypeAndRegisterHelperType(
-                typeof(global::Windows.Foundation.IReferenceArray<T>),
-                typeof(global::ABI.Windows.Foundation.IReferenceArray<T>));
+        Type IWinRTNullableTypeDetails.GetNullableArrayType() => typeof(global::ABI.Windows.Foundation.IReferenceArray<T>);
     }
 
     public abstract class DelegateTypeDetails<T> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T : global::System.Delegate
@@ -2568,10 +2565,7 @@ namespace ABI.System
 
         Type IWinRTNullableTypeDetails.GetNullableType() => typeof(global::System.Nullable<T>);
 
-        Type IWinRTNullableTypeDetails.GetNullableArrayType() =>
-            global::ABI.Windows.Foundation.IReferenceArrayType.GetArrayTypeAndRegisterHelperType(
-                typeof(global::Windows.Foundation.IReferenceArray<T>),
-                typeof(global::ABI.Windows.Foundation.IReferenceArray<T>));
+        Type IWinRTNullableTypeDetails.GetNullableArrayType() => typeof(global::ABI.Windows.Foundation.IReferenceArray<T>);
 
         // Unboxing enums are handled separately.
         object IWinRTNullableTypeDetails.GetNullableValue(IInspectable inspectable) => throw new NotImplementedException();

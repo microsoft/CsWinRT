@@ -638,6 +638,11 @@ namespace WinRT
                 return CreateReferenceCachingFactory(CreateArrayFactory(implementationType));
             }
 
+            if (implementationType.IsAbiIReferenceArray())
+            {
+                return CreateReferenceCachingFactory(CreateArrayFactory(implementationType));
+            }
+
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
         }
 
