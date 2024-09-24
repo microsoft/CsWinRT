@@ -351,10 +351,7 @@ namespace ABI.Windows.Foundation
             if (type == typeof(global::System.EventHandler)) return GetEventHandlerValue;
             if (type == typeof(global::System.ComponentModel.PropertyChangedEventHandler)) return GetPropertyChangedEventHandlerValue;
             if (type == typeof(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)) return GetNotifyCollectionChangedEventHandlerValue;
-            if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(int)) return (inspectable) => Nullable_IntEnum.GetValue(type, inspectable);
-            if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint)) return (inspectable) => Nullable_FlagsEnum.GetValue(type, inspectable);
 
-#if NET
             var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
             if (winrtExposedClassAttribute == null)
             {
@@ -369,30 +366,16 @@ namespace ABI.Windows.Foundation
             {
                 if (Activator.CreateInstance(winrtExposedClassAttribute.WinRTExposedTypeDetails) is IWinRTNullableTypeDetails nullableTypeDetails)
                 {
-                    return nullableTypeDetails.GetNullableValue;
+                    return nullableTypeDetails.GetNullableArrayValue;
                 }
             }
 
-            if (!RuntimeFeature.IsDynamicCodeCompiled)
-            {
-                throw new NotSupportedException($"Failed to get the value from nullable with type '{type}'.");
-            }
-#endif
-
-            // Fallback for .NET standard and pre-existing projections.
-#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-            if (type.IsDelegate())
-            {
-                return ComWrappersSupport.CreateAbiNullableTFactory(typeof(Nullable_Delegate<>).MakeGenericType(type));
-            }
-            else
-            {
-                return ComWrappersSupport.CreateNullableTFactory(typeof(global::System.Nullable<>).MakeGenericType(type));
-            }
-#pragma warning restore IL3050
+            // If this is an old projection, we shoudn't come here as we pivot based on whether the ABI type
+            // for IReferenceArray is used or not.
+            throw new NotSupportedException($"Failed to get the value from nullable with type '{type}'.");
         }
 
-        private static unsafe object GetBlittableValue<T>(IInspectable inspectable) where T : unmanaged
+        internal static unsafe object GetBlittableValue<T>(IInspectable inspectable) where T : unmanaged
         {
             IntPtr referenceArrayPtr = IntPtr.Zero;
             int __retval_length = default;
@@ -464,7 +447,7 @@ namespace ABI.Windows.Foundation
             }
         }
 
-        private static unsafe object GetNonBlittableValue<T>(IInspectable inspectable)
+        internal static unsafe object GetNonBlittableValue<T>(IInspectable inspectable)
         {
 #if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
