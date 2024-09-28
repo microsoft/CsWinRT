@@ -223,7 +223,7 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class &apos;{0}&apos; implements WinRT interfaces but isn&apos;t marked partial.  Type should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI..
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; implements WinRT interfaces but it or a parent type isn&apos;t marked partial.  Type and any parent types should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI..
         /// </summary>
         internal static string ClassNotMarkedPartial_Text {
             get {

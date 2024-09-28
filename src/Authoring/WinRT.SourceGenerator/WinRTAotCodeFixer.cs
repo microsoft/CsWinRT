@@ -416,13 +416,21 @@ namespace WinRT.SourceGenerator
 
         private static async Task<Document> MakeTypePartial(Document document, ClassDeclarationSyntax @class, CancellationToken token)
         {
-            var newClass = @class.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
-
             var oldRoot = await document.GetSyntaxRootAsync(token).ConfigureAwait(false);
             if (oldRoot is null)
                 return document;
 
-            var newRoot = oldRoot.ReplaceNode(@class, newClass);
+            var newRoot = oldRoot.ReplaceNodes(@class.AncestorsAndSelf().OfType<TypeDeclarationSyntax>(),
+                (_, typeDeclaration) =>
+                {
+                    if (!typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
+                    {
+                        return typeDeclaration.AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
+                    }
+
+                    return typeDeclaration;
+                });
+
             return document.WithSyntaxRoot(newRoot);
         }
 

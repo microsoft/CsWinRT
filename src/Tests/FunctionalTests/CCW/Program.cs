@@ -622,6 +622,17 @@ partial class TestClass2
     }
 }
 
+class TestClass3
+{
+    // Making sure it compiles if the parent class isn't partial, but the actual class is.
+#pragma warning disable CsWinRT1028 // Class is not marked partial
+    partial class NestedTestClass2 : IProperties2
+#pragma warning restore CsWinRT1028 // Class is not marked partial
+    {
+        private int _value;
+        public int ReadWriteProperty { get => _value; set => _value = value; }
+    }
+}
 sealed partial class CustomCommand : ICommand
 {
     public event EventHandler CanExecuteChanged;

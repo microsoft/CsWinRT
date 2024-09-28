@@ -113,7 +113,7 @@
     <value>Class is not marked partial</value>
   </data>
   <data name="ClassNotMarkedPartial_Text" xml:space="preserve">
-    <value>Class '{0}' implements WinRT interfaces but isn't marked partial.  Type should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI.</value>
+    <value>Class '{0}' implements WinRT interfaces but it or a parent type isn't marked partial.  Type and any parent types should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI.</value>
   </data>
   <data name="DisjointNamespaceRule_Brief" xml:space="preserve">
     <value>Namespace is disjoint from main (winmd) namespace</value>

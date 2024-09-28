@@ -11,6 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace Generator
 {
@@ -488,7 +489,24 @@ namespace Generator
 
         public static bool IsPartial(INamedTypeSymbol symbol)
         {
-            return symbol.DeclaringSyntaxReferences.Any(syntax => syntax.GetSyntax() is BaseTypeDeclarationSyntax declaration && declaration.Modifiers.Any(SyntaxKind.PartialKeyword));
+            bool isPartial = true;
+            for (ITypeSymbol parent = symbol; parent is not null; parent = parent.ContainingType)
+            {
+                isPartial &= parent.DeclaringSyntaxReferences.Any(
+                    syntax => syntax.GetSyntax() is BaseTypeDeclarationSyntax declaration &&
+                    declaration.Modifiers.Any(SyntaxKind.PartialKeyword));
+            }
+            return isPartial;
+        }
+
+        public static bool IsPartial(TypeDeclarationSyntax node)
+        {
+            bool isPartial = true;
+            for (TypeDeclarationSyntax parent = node; parent is not null; parent = parent.Parent as TypeDeclarationSyntax)
+            {
+                isPartial &= parent.Modifiers.Any(static m => m.IsKind(SyntaxKind.PartialKeyword));
+            }
+            return isPartial;
         }
 
         public static bool HasPrivateclass(ITypeSymbol symbol)

@@ -122,7 +122,7 @@ namespace Generator
         {
             return node is ClassDeclarationSyntax declaration &&
                 !declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword)) &&
-                declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)) &&
+                GeneratorHelper.IsPartial(declaration) &&
                 !GeneratorHelper.IsWinRTType(declaration); // Making sure it isn't an RCW we are projecting.
         }
 
@@ -140,7 +140,7 @@ namespace Generator
         {
             return node is ClassDeclarationSyntax declaration &&
                 !declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword)) &&
-                declaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)) &&
+                GeneratorHelper.IsPartial(declaration) &&
                 GeneratorHelper.HasBindableCustomPropertyAttribute(declaration);
         }
 
