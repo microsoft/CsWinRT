@@ -28,7 +28,8 @@ namespace WinRT.SourceGenerator
                 WinRTRules.ClassNotAotCompatibleOldProjectionWarning,
                 WinRTRules.ClassNotAotCompatibleOldProjectionInfo,
                 WinRTRules.ClassEnableUnsafeWarning,
-                WinRTRules.ClassEnableUnsafeInfo);
+                WinRTRules.ClassEnableUnsafeInfo,
+                WinRTRules.ClassWithBindableCustomPropertyNotPartial);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => _supportedDiagnostics;
 
@@ -47,7 +48,8 @@ namespace WinRT.SourceGenerator
                 bool isComponentProject = context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTComponent();
                 var winrtTypeAttribute = context.Compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
                 var winrtExposedTypeAttribute = context.Compilation.GetTypeByMetadataName("WinRT.WinRTExposedTypeAttribute");
-                if (winrtTypeAttribute is null || winrtExposedTypeAttribute is null)
+                var generatedBindableCustomPropertyAttribute = context.Compilation.GetTypeByMetadataName("WinRT.GeneratedBindableCustomPropertyAttribute");
+                if (winrtTypeAttribute is null || winrtExposedTypeAttribute is null || generatedBindableCustomPropertyAttribute is null)
                 {
                     return;
                 }
@@ -114,6 +116,13 @@ namespace WinRT.SourceGenerator
                                     WinRTRules.ClassNotAotCompatibleOldProjectionWarning : WinRTRules.ClassNotAotCompatibleOldProjectionInfo;
                                 context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, namedType.Locations[0], namedType.Name, string.Join(", ", interfacesFromOldProjections)));
                             }
+                        }
+
+                        // Make sure classes with the GeneratedBindableCustomProperty attribute are marked partial.
+                        if (GeneratorHelper.HasAttributeWithType(namedType, generatedBindableCustomPropertyAttribute) &&
+                            !GeneratorHelper.IsPartial(namedType))
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassWithBindableCustomPropertyNotPartial, namedType.Locations[0], namedType.Name));
                         }
                     }
                 }, SymbolKind.NamedType);

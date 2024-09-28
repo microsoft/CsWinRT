@@ -674,6 +674,28 @@ partial class LanguageDervied2 : Language
     public int Derived { get; set; }
 }
 
+// Testing code compiles when not marked partial
+[GeneratedBindableCustomProperty]
+#pragma warning disable CsWinRT1028 // Class is not marked partial
+class LanguageDervied3 : Language
+#pragma warning restore CsWinRT1028 // Class is not marked partial
+{
+    public int Derived { get; set; }
+}
+
+class ParentClass
+{
+    // Testing code compiles when not marked partial
+    [GeneratedBindableCustomProperty]
+#pragma warning disable CsWinRT1028 // Class is not marked partial
+    partial class LanguageDervied3 : Language
+#pragma warning restore CsWinRT1028 // Class is not marked partial
+    {
+        public int Derived { get; set; }
+    }
+}
+
+
 [GeneratedBindableCustomPropertyAttribute]
 sealed partial class Language2
 {

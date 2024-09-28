@@ -178,6 +178,15 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; has attribute GeneratedBindableCustomProperty but it or a parent type isn&apos;t marked partial.  Type and any parent types should be marked partial to allow source generation for trimming and AOT compatibility..
+        /// </summary>
+        internal static string BindableCustomPropertyClassNotMarkedPartial_Text {
+            get {
+                return ResourceManager.GetString("BindableCustomPropertyClassNotMarkedPartial_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Class Constructor Rule.
         /// </summary>
         internal static string ClassConstructorRule_Brief {
