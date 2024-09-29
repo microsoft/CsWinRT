@@ -158,7 +158,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CCW", "Tests\FunctionalTest
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinAppSDK", "Projections\WinAppSDK\WinAppSDK.csproj", "{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestLibrary", "Tests\FunctionalTests\TestLibrary\TestLibrary.csproj", "{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test-Library", "Tests\FunctionalTests\TestLibrary\Test-Library.csproj", "{335D51AC-1DCF-4487-A2BD-34CE2F17B3C4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Windows.UI.Xaml", "Projections\Windows.UI.Xaml\Windows.UI.Xaml.csproj", "{E85F3614-79B6-4652-BDB0-64AF68874CE0}"
 EndProject
