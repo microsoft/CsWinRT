@@ -11,6 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace Generator
 {
@@ -172,6 +173,11 @@ namespace Generator
             }
 
             return 0;
+        }
+
+        public static bool IsCsWinRTAotOptimizerEnabledForBuiltInInterfaces(this AnalyzerConfigOptionsProvider provider)
+        {
+            return GetCsWinRTAotWarningLevel(provider) == 2;
         }
 
         public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
@@ -1121,6 +1127,11 @@ namespace Generator
             }
 
             return null;
+        }
+
+        public static bool HasWinRTRuntimeReference(Compilation compilation, CancellationToken ct)
+        {
+            return compilation.GetUsedAssemblyReferences(ct).Any(reference => compilation.GetAssemblyOrModuleSymbol(reference).Name == "WinRT.Runtime");
         }
     }
 }
