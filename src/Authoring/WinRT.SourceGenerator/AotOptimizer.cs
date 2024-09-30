@@ -19,14 +19,28 @@ namespace Generator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var analyzerConfigProperties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => 
-                    (provider.IsCsWinRTAotOptimizerEnabled(), provider.IsCsWinRTComponent(), provider.IsCsWinRTCcwLookupTableGeneratorEnabled(), provider.IsCsWinRTAotOptimizerEnabledForBuiltInInterfaces()));
+            var analyzerConfigProperties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => (
+                    provider.IsCsWinRTAotOptimizerEnabled(),
+                    provider.IsCsWinRTComponent(),
+                    provider.IsCsWinRTCcwLookupTableGeneratorEnabled(),
+                    provider.IsCsWinRTAotOptimizerEnabledForBuiltInInterfaces(),
+                    provider.IsCsWinRTEmbeddedSupport())
+                );
 
-            var hasWinRTRuntimeReference = context.CompilationProvider.Select(static (compilation, ct) => GeneratorHelper.HasWinRTRuntimeReference(compilation, ct));
-
-            var properties = analyzerConfigProperties.Combine(hasWinRTRuntimeReference).Select(
-                static (((bool isCsWinRTAotOptimizerEnabled, bool, bool, bool isCsWinRTAotOptimizerEnabledForBuiltInInterfaces) properties, bool hasWinRTRuntimeReference) value, CancellationToken _) =>
-                (value.properties.isCsWinRTAotOptimizerEnabled && (value.hasWinRTRuntimeReference || value.properties.isCsWinRTAotOptimizerEnabledForBuiltInInterfaces), value.properties.Item2, value.properties.Item3));
+            var properties = context.CompilationProvider.Combine(analyzerConfigProperties).
+                    Select(static ((Compilation compilation, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool, bool isCsWinRTAotOptimizerEnabledForBuiltInInterfaces, bool isCsWinRTEmbeddedSupport) properties) value, CancellationToken ct) =>
+                    // Enable the optimizer if the optimizer property is set and we would have a WinRT.Runtime reference.
+                    // There are a couple scenarios where we might not detect a WinRT.Runtime reference which we explicitly
+                    // check for such as component support where the generator introduces the reference and embedded support.
+                    // We will allow for an override for this by detecting whether CsWinRTAotWarningLevel is set to 2 which
+                    // indicates the component cares about optimization for built-in interfaces.
+                    (value.properties.isCsWinRTAotOptimizerEnabled && 
+                     (value.properties.isCsWinRTComponent ||
+                      value.properties.isCsWinRTAotOptimizerEnabledForBuiltInInterfaces ||
+                      value.properties.isCsWinRTEmbeddedSupport ||
+                      GeneratorHelper.HasWinRTRuntimeReference(value.compilation, ct)), 
+                     value.properties.isCsWinRTComponent,
+                     value.properties.Item3));
 
             var assemblyName = context.CompilationProvider.Select(static (compilation, _) => GeneratorHelper.EscapeTypeNameForIdentifier(compilation.AssemblyName));
 

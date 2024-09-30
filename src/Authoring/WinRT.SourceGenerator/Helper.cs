@@ -104,6 +104,16 @@ namespace Generator
             return false;
         }
 
+        public static bool IsCsWinRTEmbeddedSupport(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTEmbedded", out var isCsWinRTEmbeddedStr))
+            {
+                return bool.TryParse(isCsWinRTEmbeddedStr, out var isCsWinRTEmbedded) && isCsWinRTEmbedded;
+            }
+
+            return false;
+        }
+
         public static bool IsCsWinRTAotOptimizerEnabled(this AnalyzerConfigOptionsProvider provider)
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotOptimizerEnabled", out var isCsWinRTAotOptimizerEnabledStr))
@@ -1131,7 +1141,8 @@ namespace Generator
 
         public static bool HasWinRTRuntimeReference(Compilation compilation, CancellationToken ct)
         {
-            return compilation.GetUsedAssemblyReferences(ct).Any(reference => compilation.GetAssemblyOrModuleSymbol(reference).Name == "WinRT.Runtime");
+            return compilation.GetUsedAssemblyReferences(ct).Any(reference => 
+                string.Equals(compilation.GetAssemblyOrModuleSymbol(reference)?.Name, "WinRT.Runtime", StringComparison.OrdinalIgnoreCase));
         }
     }
 }
