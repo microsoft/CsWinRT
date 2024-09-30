@@ -196,7 +196,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             Debug.Assert(sourceIndex <= int.MaxValue);
 
-            Span<byte> srcSpan = source.TryGetUnderlyingData(out byte[] srcDataArr, out int srcOffset) ? srcDataArr.AsSpan(srcOffset + (int)sourceIndex, count) : source.GetSpanForCapacityUnsafe(sourceIndex);
+            Span<byte> srcSpan = source.TryGetUnderlyingData(out byte[] srcDataArr, out int srcOffset) ? srcDataArr.AsSpan(srcOffset + (int)sourceIndex, count) : source.GetSpanForCapacityUnsafe(sourceIndex).Slice(0, (int)count);
             srcSpan.CopyTo(destination);
 
             // Ensure source and destination stay alive for the copy operation
@@ -252,8 +252,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Debug.Assert(destinationIndex <= int.MaxValue);
 
             // If source are destination are backed by managed arrays, use the arrays instead of the pointers as it does not require pinning:
-            Span<byte> srcSpan = source.TryGetUnderlyingData(out byte[] srcDataArr, out int srcOffset) ? srcDataArr.AsSpan(srcOffset + (int)sourceIndex, (int)count) : source.GetSpanForCapacityUnsafe(sourceIndex);
-            Span<byte> destSpan = destination.TryGetUnderlyingData(out byte[] destDataArr, out int destOffset) ? destDataArr.AsSpan(destOffset + (int)destinationIndex) : destination.GetSpanForCapacityUnsafe(destinationIndex);
+            Span<byte> srcSpan = source.TryGetUnderlyingData(out byte[] srcDataArr, out int srcOffset) ? srcDataArr.AsSpan(srcOffset + (int)sourceIndex, (int)count) : source.GetSpanForCapacityUnsafe(sourceIndex).Slice(0, (int)count);
+            Span<byte> destSpan = destination.TryGetUnderlyingData(out byte[] destDataArr, out int destOffset) ? destDataArr.AsSpan(destOffset + (int)destinationIndex) : destination.GetSpanForCapacityUnsafe(destinationIndex).Slice(0, (int)count);
 
             srcSpan.CopyTo(destSpan);
 
