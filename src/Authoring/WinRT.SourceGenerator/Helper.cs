@@ -1045,7 +1045,7 @@ namespace Generator
 
         public static string EscapeTypeNameForIdentifier(string typeName)
         {
-            return Regex.Replace(typeName, """[(\ |:<>,\.\-@)]""", "_");
+            return Regex.Replace(typeName, """[(\ |:<>,\.\-@;+'^!`)]""", "_");
         }
 
         public readonly struct MappedType
