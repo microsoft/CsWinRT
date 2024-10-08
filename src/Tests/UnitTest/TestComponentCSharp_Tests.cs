@@ -459,6 +459,34 @@ namespace UnitTest
             Assert.True(array.Length == 0);
         }
 
+        [Fact]
+        public void TestBufferToArrayCapacityLargerThanLength()
+        {
+            var buffer = new Windows.Storage.Streams.Buffer(100);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(0, buffer, 0, 3);
+
+            byte[] newArr = buffer.ToArray();
+            Assert.True(newArr.Length == 3);
+        }
+
+        [Fact]
+        public void TestBufferCopyToBufferCapacityLargerThanLength()
+        {
+            var buffer = new Windows.Storage.Streams.Buffer(100);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(0, buffer, 0, 3);
+
+            var buffer2 = new Windows.Storage.Streams.Buffer(50);
+            byte[] arr2 = new byte[] { 0x01, 0x02 };
+            arr2.CopyTo(0, buffer2, 0, 2);
+
+            Assert.True(buffer2.Length == 2);
+
+            buffer.CopyTo(buffer2);
+            Assert.True(buffer2.Length == 3);
+        }
+
 #if NET
         [Fact]
         public void TestTryGetDataUnsafe()
