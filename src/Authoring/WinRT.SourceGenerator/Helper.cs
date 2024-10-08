@@ -104,16 +104,6 @@ namespace Generator
             return false;
         }
 
-        public static bool IsCsWinRTEmbeddedSupport(this AnalyzerConfigOptionsProvider provider)
-        {
-            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTEmbedded", out var isCsWinRTEmbeddedStr))
-            {
-                return bool.TryParse(isCsWinRTEmbeddedStr, out var isCsWinRTEmbedded) && isCsWinRTEmbedded;
-            }
-
-            return false;
-        }
-
         public static bool IsCsWinRTAotOptimizerEnabled(this AnalyzerConfigOptionsProvider provider)
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotOptimizerEnabled", out var isCsWinRTAotOptimizerEnabledStr))
@@ -183,11 +173,6 @@ namespace Generator
             }
 
             return 0;
-        }
-
-        public static bool IsCsWinRTAotOptimizerEnabledForBuiltInInterfaces(this AnalyzerConfigOptionsProvider provider)
-        {
-            return GetCsWinRTAotWarningLevel(provider) == 2;
         }
 
         public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
@@ -1137,12 +1122,6 @@ namespace Generator
             }
 
             return null;
-        }
-
-        public static bool HasWinRTRuntimeReference(Compilation compilation, CancellationToken ct)
-        {
-            return compilation.GetUsedAssemblyReferences(ct).Any(reference => 
-                string.Equals(compilation.GetAssemblyOrModuleSymbol(reference)?.Name, "WinRT.Runtime", StringComparison.OrdinalIgnoreCase));
         }
     }
 }
