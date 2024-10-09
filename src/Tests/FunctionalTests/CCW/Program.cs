@@ -7,6 +7,7 @@ using System.Collections;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Runtime.InteropServices;
+using System.Collections.Specialized;
 
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
@@ -173,6 +174,9 @@ if (properties2CCW == null)
 
 var managedWarningClassList = new List<ManagedWarningClass>();
 instance.BindableIterableProperty = managedWarningClassList;
+
+var notifyCollectionChangedActionList = new List<NotifyCollectionChangedAction>();
+instance.BindableIterableProperty = notifyCollectionChangedActionList;
 
 var customCommand = new CustomCommand() as ICommand;
 ccw = MarshalInspectable<object>.CreateMarshaler(customCommand);
@@ -738,7 +742,7 @@ namespace Test
 {
     namespace Test2
     {
-        sealed partial class Nested
+        sealed partial class Nested2
         {
             [GeneratedBindableCustomProperty([nameof(Value)], [])]
             sealed partial class Language3 : IProperties2

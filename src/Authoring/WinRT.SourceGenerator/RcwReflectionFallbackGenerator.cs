@@ -147,10 +147,10 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 }
 
                 // Check if we are able to resolve the type using GetTypeByMetadataName.  If not,
-                // it typically indicates there are multiple definitions of this type in the references
+                // it indicates there are multiple definitions of this type in the references
                 // and us emitting a dependency on this type would cause compiler error.  So emit
                 // a warning instead.
-                bool hasMultipleDefinitions = compilation.GetTypeByMetadataName(typeSymbol.MetadataName) is null;
+                bool hasMultipleDefinitions = compilation.GetTypeByMetadataName(GeneratorHelper.TrimGlobalFromTypeName(typeName)) is null;
                 executableTypeNames.Add(new RcwReflectionFallbackType(typeName, hasMultipleDefinitions));
             }
 
@@ -208,7 +208,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                     var diagnosticDescriptor = value.csWinRTAotWarningEnabled ?
                         WinRTRules.ClassNotAotCompatibleOldProjectionMultipleInstancesWarning : WinRTRules.ClassNotAotCompatibleOldProjectionMultipleInstancesInfo;
                     // We have no location to emit the diagnostic as this is just a reference we detect.
-                    context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, null, projectedTypeName.TypeName));
+                    context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, null, GeneratorHelper.TrimGlobalFromTypeName(projectedTypeName.TypeName)));
                 }
                 else
                 {

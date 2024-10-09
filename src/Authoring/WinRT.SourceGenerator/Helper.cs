@@ -1122,5 +1122,10 @@ namespace Generator
 
             return null;
         }
+
+        public static string TrimGlobalFromTypeName(string typeName)
+        {
+            return typeName.StartsWith("global::") ? typeName[8..] : typeName;
+        }
     }
 }
