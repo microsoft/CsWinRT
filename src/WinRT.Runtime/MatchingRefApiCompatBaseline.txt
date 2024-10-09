@@ -277,4 +277,5 @@ TypesMustExist : Type 'Windows.UI.Xaml.LayoutCycleException' does not exist in t
 TypesMustExist : Type 'Windows.UI.Xaml.Automation.ElementNotAvailableException' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'Windows.UI.Xaml.Automation.ElementNotEnabledException' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'Windows.UI.Xaml.Markup.XamlParseException' does not exist in the reference but it does exist in the implementation.
-Total Issues: 278
+TypesMustExist : Type 'WinRT.WinRTManagedOnlyTypeDetails' does not exist in the reference but it does exist in the implementation.
+Total Issues: 279
