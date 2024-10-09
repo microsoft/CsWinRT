@@ -326,7 +326,7 @@ namespace Generator
         public static bool IsWinRTType(ISymbol type, Func<ISymbol, TypeMapper, bool> isAuthoringWinRTType, TypeMapper mapper)
         {
             bool isProjectedType = type.GetAttributes().
-                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0) ||
+                Any(static attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0) ||
                 IsFundamentalType(type);
 
             if (!isProjectedType & type.ContainingNamespace != null)
@@ -492,7 +492,7 @@ namespace Generator
             for (ITypeSymbol parent = symbol; parent is not null; parent = parent.ContainingType)
             {
                 isPartial &= parent.DeclaringSyntaxReferences.Any(
-                    syntax => syntax.GetSyntax() is BaseTypeDeclarationSyntax declaration &&
+                    static syntax => syntax.GetSyntax() is BaseTypeDeclarationSyntax declaration &&
                     declaration.Modifiers.Any(SyntaxKind.PartialKeyword));
             }
             return isPartial;
@@ -512,13 +512,13 @@ namespace Generator
         {
             return symbol is INamedTypeSymbol namedType &&
                 (namedType.DeclaredAccessibility == Accessibility.Private ||
-                 namedType.TypeArguments.Any(argument => argument.DeclaredAccessibility == Accessibility.Private));
+                 namedType.TypeArguments.Any(static argument => argument.DeclaredAccessibility == Accessibility.Private));
         }
 
         public static bool HasWinRTExposedTypeAttribute(ISymbol type)
         {
             return type.GetAttributes().
-                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WinRTExposedTypeAttribute") == 0);
+                Any(static attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WinRTExposedTypeAttribute") == 0);
         }
 
         public static bool HasWinRTRuntimeClassNameAttribute(ISymbol type, Compilation compilation)
@@ -534,14 +534,14 @@ namespace Generator
 
         public static bool IsWinRTType(MemberDeclarationSyntax node)
         {
-            bool isProjectedType = node.AttributeLists.SelectMany(list => list.Attributes).
-                Any(attribute => string.CompareOrdinal(attribute.Name.NormalizeWhitespace().ToFullString(), "global::WinRT.WindowsRuntimeType") == 0);
+            bool isProjectedType = node.AttributeLists.SelectMany(static list => list.Attributes).
+                Any(static attribute => string.CompareOrdinal(attribute.Name.NormalizeWhitespace().ToFullString(), "global::WinRT.WindowsRuntimeType") == 0);
             return isProjectedType;
         }
 
         public static bool HasBindableCustomPropertyAttribute(MemberDeclarationSyntax node)
         {
-            return node.AttributeLists.SelectMany(list => list.Attributes).Any(IsBindableCustomPropertyAttribute);
+            return node.AttributeLists.SelectMany(static list => list.Attributes).Any(IsBindableCustomPropertyAttribute);
 
             // Check based on identifier name if this is the GeneratedBindableCustomProperty attribute.
             // Technically this can be a different namespace, but we will confirm later once
@@ -712,7 +712,7 @@ namespace Generator
                 if (!IsBlittableValueType(type, mapper))
                 {
                     var winrtHelperAttribute = type.GetAttributes().
-                        Where(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeHelperTypeAttribute") == 0).
+                        Where(static attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeHelperTypeAttribute") == 0).
                         FirstOrDefault();
                     if (winrtHelperAttribute != null &&
                         winrtHelperAttribute.ConstructorArguments.Any())
