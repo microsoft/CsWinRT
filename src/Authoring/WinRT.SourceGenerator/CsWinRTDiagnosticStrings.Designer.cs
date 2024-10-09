@@ -241,6 +241,15 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; was generated using an older version of CsWinRT and due to the type being defined in multiple DLLs, CsWinRT can not generate compat code to make it trimming safe.  Update to a projection generated using CsWinRT 2.1.0 or later for trimming and AOT compatibility..
+        /// </summary>
+        internal static string ClassOldProjectionMultipleInstances_Text {
+            get {
+                return ResourceManager.GetString("ClassOldProjectionMultipleInstances_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Namespace is disjoint from main (winmd) namespace.
         /// </summary>
         internal static string DisjointNamespaceRule_Brief {
