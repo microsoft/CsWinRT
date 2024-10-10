@@ -1889,6 +1889,26 @@ namespace AuthoringTest
             return new("Test123");
         }
     }
+
+    public sealed class TypeOnlyActivatableViaItsOwnFactory
+    {
+        private readonly string _text;
+
+        private TypeOnlyActivatableViaItsOwnFactory(string text)
+        {
+            _text = text;
+        }
+
+        public static TypeOnlyActivatableViaItsOwnFactory Create()
+        {
+            return new("Hello!");
+        }
+
+        public string GetText()
+        {
+            return _text;
+        }
+    }
 }
 
 namespace ABI.AuthoringTest
