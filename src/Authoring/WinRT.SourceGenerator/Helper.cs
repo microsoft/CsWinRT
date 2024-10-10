@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -297,6 +298,13 @@ namespace Generator
 
             // This assembly is not a projection assembly
             return false;
+        }
+
+        public static bool IsOldCsWinRTExe(GeneratorExecutionContext context)
+        {
+            string cswinrtExe = context.GetCsWinRTExe();
+            var cswinrtExeVersion = new Version(FileVersionInfo.GetVersionInfo(cswinrtExe).FileVersion);
+            return cswinrtExeVersion < new Version(2, 1, 0) && cswinrtExeVersion != new Version(0, 0, 0, 0);
         }
 
         public static bool AllowUnsafe(Compilation compilation)
