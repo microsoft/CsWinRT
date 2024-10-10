@@ -82,8 +82,12 @@
        name="AuthoringTest.CustomXamlMetadataProvider"
        threadingModel="both"
        xmlns="urn:schemas-microsoft-com:winrt.v1" />
-     <activatableClass
+    <activatableClass
        name="AuthoringTest.CustomInterfaceGuidClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.NonActivatableType"
        threadingModel="both"
        xmlns="urn:schemas-microsoft-com:winrt.v1" />
   </file>

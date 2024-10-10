@@ -1865,6 +1865,18 @@ namespace AuthoringTest
     {
         public string HelloWorld() => "Hello World!";
     }
+
+    public sealed class NonActivatableType
+    {
+        // This should not be referenced by the generated activation factory
+        internal NonActivatableType(string dummyParameter)
+        {
+        }
+
+        public void Dummy()
+        {
+        }
+    }
 }
 
 namespace ABI.AuthoringTest
