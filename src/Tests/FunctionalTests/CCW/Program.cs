@@ -742,7 +742,7 @@ namespace Test
 {
     namespace Test2
     {
-        sealed partial class Nested2
+        sealed partial class Nested
         {
             [GeneratedBindableCustomProperty([nameof(Value)], [])]
             sealed partial class Language3 : IProperties2
