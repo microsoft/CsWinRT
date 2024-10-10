@@ -94,5 +94,9 @@
        name="AuthoringTest.NonActivatableFactory"
        threadingModel="both"
        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.TypeOnlyActivatableViaItsOwnFactory"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
   </file>
 </assembly>
