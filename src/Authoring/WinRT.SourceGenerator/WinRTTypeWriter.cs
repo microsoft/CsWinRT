@@ -1932,12 +1932,25 @@ namespace Generator
 
             bool isInterface = type.TypeKind == TypeKind.Interface;
             bool hasConstructor = false;
+            bool hasAtLeastOneNonPublicConstructor = false;
             bool hasDefaultConstructor = false;
             foreach (var member in type.GetMembers())
             {
                 if (!IsPublic(member) || typeDeclaration.CustomMappedSymbols.Contains(member))
                 {
                     Logger.Log(member.Kind + " member skipped " + member.Name);
+
+                    // We want to track whether a given public class has at least one non-public constructor.
+                    // In this case, the class is still exposed to WinRT, but it's not activatable. This is
+                    // different than a class with no explicit constructor, where we do want to generate that
+                    // in the .winmd, and make the class activatable. But we want to avoid always emitting a
+                    // default constructor for classes that only have non-public ones.
+                    if (type.TypeKind == TypeKind.Class &&
+                        member is IMethodSymbol { MethodKind: MethodKind.Constructor })
+                    {
+                        hasAtLeastOneNonPublicConstructor = true;
+                    }
+
                     continue;
                 }
 
@@ -1988,8 +2001,8 @@ namespace Generator
                 CheckAndMarkSymbolForAttributes(member);
             }
 
-            // implicit constructor if none defined
-            if (!hasConstructor && type.TypeKind == TypeKind.Class && !type.IsStatic)
+            // Implicit constructor if none defined, but only if the type doesn't already have some non-public constructor
+            if (!hasConstructor && !hasAtLeastOneNonPublicConstructor && type.TypeKind == TypeKind.Class && !type.IsStatic)
             {
                 string constructorMethodName = ".ctor";
                 var methodDefinitionHandle = AddMethodDefinition(
