@@ -109,6 +109,9 @@
   <data name="ClassImplementsOldProjection_Text" xml:space="preserve">
     <value>Class '{0}' implements WinRT interface(s) {1} generated using an older version of CsWinRT.  Update to a projection generated using CsWinRT 2.1.0 or later for trimming and AOT compatibility.</value>
   </data>
+  <data name="ClassOldProjectionMultipleInstances_Text" xml:space="preserve">
+    <value>Class '{0}' was generated using an older version of CsWinRT and due to the type being defined in multiple DLLs, CsWinRT can not generate compat code to make it trimming safe.  Update to a projection generated using CsWinRT 2.1.0 or later for trimming and AOT compatibility.</value>
+  </data>
   <data name="ClassNotMarkedPartial_Brief" xml:space="preserve">
     <value>Class is not marked partial</value>
   </data>
