@@ -736,3 +736,13 @@ TEST(AuthoringTest, CustomInterfaceGuid)
 
     EXPECT_EQ(customInterface.HelloWorld(), L"Hello World!");
 }
+
+TEST(AuthoringTest, NonActivatableFactory)
+{
+    EXPECT_EQ(NonActivatableFactory::Create().GetText(), L"Test123");
+}
+
+TEST(AuthoringTest, TypeOnlyActivatableViaItsOwnFactory)
+{
+    EXPECT_EQ(TypeOnlyActivatableViaItsOwnFactory::Create().GetText(), L"Hello!");
+}
