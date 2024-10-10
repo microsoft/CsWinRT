@@ -651,11 +651,17 @@ namespace Generator
         {
             foreach (AttributeData attribute in symbol.GetAttributes())
             {
-                if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, winrtExposedTypeAttribute) &&
-                    attribute.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Type: ITypeSymbol exposedTypeDetails }] &&
-                    SymbolEqualityComparer.Default.Equals(exposedTypeDetails, winrtManagedOnlyTypeDetails))
+                if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, winrtExposedTypeAttribute))
                 {
-                    return true;
+                    if (attribute.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Type: ITypeSymbol exposedTypeDetails }] &&
+                        SymbolEqualityComparer.Default.Equals(exposedTypeDetails, winrtManagedOnlyTypeDetails))
+                    {
+                        return true;
+                    }
+
+                    // A type can have just one [WinRTExposedType] attribute. If the details are not WinRTManagedOnlyTypeDetails,
+                    // we can immediatley stop here and avoid checking all remaining attributes, as we couldn't possibly match.
+                    return false;
                 }
             }
 
