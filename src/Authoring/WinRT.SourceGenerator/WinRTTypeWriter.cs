@@ -2753,6 +2753,8 @@ namespace Generator
             List<VtableAttribute> vtableAttributesToAdd = new();
             HashSet<VtableAttribute> vtableAttributesToAddOnLookupTable = new();
 
+            Func<ISymbol, bool> isManagedOnlyTypeFunc = GeneratorHelper.IsManagedOnlyType(context.Compilation);
+
             foreach (var typeDeclaration in typeDefinitionMapping.Values)
             {
                 if (typeDeclaration.IsComponentType && 
@@ -2760,12 +2762,12 @@ namespace Generator
                     symbol.TypeKind == TypeKind.Class && 
                     !symbol.IsStatic)
                 {
-                    var vtableAttribute = WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, mapper, context.Compilation, true, typeDeclaration.DefaultInterface);
+                    var vtableAttribute = WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, isManagedOnlyTypeFunc, IsWinRTType, mapper, context.Compilation, true, typeDeclaration.DefaultInterface);
                     if (vtableAttribute != default)
                     {
                         vtableAttributesToAdd.Add(vtableAttribute);
                     }
-                    WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, IsWinRTType, mapper, vtableAttributesToAddOnLookupTable);
+                    WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, isManagedOnlyTypeFunc, IsWinRTType, mapper, vtableAttributesToAddOnLookupTable);
                 }
             }
 
