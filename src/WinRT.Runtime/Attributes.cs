@@ -199,6 +199,17 @@ namespace WinRT
         /// <inheritdoc/>
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
         {
+            ThrowNotSupportedException();
+
+            return Array.Empty<ComWrappers.ComInterfaceEntry>();
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> to signal that a blocked type is being marshalled.
+        /// </summary>
+        [DoesNotReturn]
+        internal static void ThrowNotSupportedException()
+        {
             throw new NotSupportedException(
                 "The annotated type does not support WinRT marshalling, and can only be used by managed code. If you do intend " +
                 "on marshalling it, remove the '[WinRTExposedType(typeof(WinRTManagedOnlyTypeDetails))]' annotation on it, " +
