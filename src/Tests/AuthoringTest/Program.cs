@@ -1868,13 +1868,25 @@ namespace AuthoringTest
 
     public sealed class NonActivatableType
     {
+        private readonly string _text;
+
         // This should not be referenced by the generated activation factory
-        internal NonActivatableType(string dummyParameter)
+        internal NonActivatableType(string text)
         {
+            _text = text;
         }
 
-        public void Dummy()
+        public string GetText()
         {
+            return _text;
+        }
+    }
+
+    public static class NonActivatableFactory
+    {
+        public static NonActivatableType Create()
+        {
+            return new("Test123");
         }
     }
 }
