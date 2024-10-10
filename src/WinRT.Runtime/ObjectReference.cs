@@ -674,7 +674,19 @@ namespace WinRT
 #if NET
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             {
-                throw new NotSupportedException("Managed vtable types (ie. containing any reference types) are not supported.");
+                if (!RuntimeFeature.IsDynamicCodeCompiled)
+                {
+                    throw new NotSupportedException("Managed vtable types (ie. containing any reference types) are not supported.");
+                }
+
+                return GetVtableForJitEnvironment(thisPtr);
+
+                [UnconditionalSuppressMessage("Trimming", "IL2090", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static T GetVtableForJitEnvironment(IntPtr thisPtr)
+                {
+                    return (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
+                }
             }
 #else
             if (typeof(T).IsGenericType)
