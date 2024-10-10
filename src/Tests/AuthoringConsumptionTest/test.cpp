@@ -736,3 +736,21 @@ TEST(AuthoringTest, CustomInterfaceGuid)
 
     EXPECT_EQ(customInterface.HelloWorld(), L"Hello World!");
 }
+
+TEST(AuthoringTest, NonActivatableType)
+{
+    bool hasFailed = false;
+
+    try
+    {
+        NonActivatableType nonActivatableType;
+
+        nonActivatableType.Dummy();
+    }
+    catch (...)
+    {
+        hasFailed = true;
+    }
+
+    ASSERT_TRUE(hasFailed);
+}
