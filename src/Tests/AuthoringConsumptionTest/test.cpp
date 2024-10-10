@@ -745,7 +745,7 @@ TEST(AuthoringTest, NonActivatableType)
     {
         NonActivatableType nonActivatableType;
 
-        nonActivatableType.Dummy();
+        nonActivatableType.GetText();
     }
     catch (...)
     {
@@ -753,4 +753,9 @@ TEST(AuthoringTest, NonActivatableType)
     }
 
     ASSERT_TRUE(hasFailed);
+}
+
+TEST(AuthoringTest, NonActivatableFactory)
+{
+    EXPECT_EQ(NonActivatableFactory::Create().GetText(), L"Test123");
 }
