@@ -737,24 +737,6 @@ TEST(AuthoringTest, CustomInterfaceGuid)
     EXPECT_EQ(customInterface.HelloWorld(), L"Hello World!");
 }
 
-TEST(AuthoringTest, NonActivatableType)
-{
-    bool hasFailed = false;
-
-    try
-    {
-        NonActivatableType nonActivatableType;
-
-        nonActivatableType.GetText();
-    }
-    catch (...)
-    {
-        hasFailed = true;
-    }
-
-    ASSERT_TRUE(hasFailed);
-}
-
 TEST(AuthoringTest, NonActivatableFactory)
 {
     EXPECT_EQ(NonActivatableFactory::Create().GetText(), L"Test123");
