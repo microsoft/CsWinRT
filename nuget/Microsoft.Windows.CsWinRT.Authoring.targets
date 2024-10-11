@@ -42,7 +42,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTRuntimeCopyLocalItemsFromNuGetPackage Include="@(RuntimeCopyLocalItems->HasMetadata('NuGetPackageVersion'))" />
       <_CsWinRTDetectedPackages Include="%(_CsWinRTRuntimeCopyLocalItemsFromNuGetPackage.NuGetPackageId)\%(_CsWinRTRuntimeCopyLocalItemsFromNuGetPackage.NuGetPackageVersion)" Condition="@(_CsWinRTRuntimeCopyLocalItemsFromNuGetPackage->Count()) > 0" />
       <_CsWinRTDetectedDistinctPackages Include="@(_CsWinRTDetectedPackages->Distinct())" />
-      <CsWinRTAuthoringDetectedWinMDs Include="$(NuGetPackageRoot)%(_CsWinRTDetectedDistinctPackages.Identity)\**\*.winmd" Condition="@(_CsWinRTDetectedDistinctPackages->Count()) > 0" />
+      <CsWinRTAuthoringDetectedWinMDs Include="$([MSBuild]::EnsureTrailingSlash($(NuGetPackageRoot)))%(_CsWinRTDetectedDistinctPackages.Identity)\**\*.winmd" Condition="@(_CsWinRTDetectedDistinctPackages->Count()) > 0" />
     </ItemGroup>
 
     <ItemGroup>
