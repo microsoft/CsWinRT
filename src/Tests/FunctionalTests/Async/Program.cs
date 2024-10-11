@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TestComponentCSharp;
 using Windows.Foundation;
 using Windows.Storage.Streams;
+using Windows.Web.Http;
 using WinRT;
 
 var instance = new Class();
@@ -118,6 +119,9 @@ if (ptr == IntPtr.Zero)
 {
     return 113;
 }
+
+var asyncProgressHandler = new AsyncActionProgressHandler<HttpProgress>((info, progress) => { });
+instance.ObjectProperty = asyncProgressHandler;
 
 return 100;
 

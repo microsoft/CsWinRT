@@ -708,7 +708,7 @@ namespace Generator
                 return "ABI.System.Exception";
             }
 
-            if (type.IsValueType)
+            if (type.IsValueType && !type.NullableAnnotation.HasFlag(NullableAnnotation.Annotated))
             {
                 string customTypeMapKey = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
                 if (mapper.HasMappingForType(customTypeMapKey))
@@ -912,8 +912,8 @@ namespace Generator
 
         public static string GetCreateMarshaler(string type, string abiType, TypeKind kind, string arg)
         {
-            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType) || 
-                type == "bool" || 
+            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType) ||
+                type == "bool" ||
                 type == "char")
             {
                 return "";
@@ -922,6 +922,11 @@ namespace Generator
             {
                 // TODO: Consider switching to pinning
                 return $$"""__{{arg}} = MarshalString.CreateMarshaler({{arg}});""";
+            }
+            else if (kind == TypeKind.Struct)
+            {
+                string marshalerClass = GetMarshalerClass(type, abiType, kind, false);
+                return $$"""__{{arg}} = {{marshalerClass}}.CreateMarshaler({{arg}});""";
             }
             else
             {
@@ -1000,6 +1005,10 @@ namespace Generator
                 type == "char")
             {
                 return "";
+            }
+            else if (kind == TypeKind.Struct)
+            {
+                return $"{GetAbiMarshalerType(type, abiType, kind, false)}.Marshaler __{arg} = default;";
             }
             else
             {

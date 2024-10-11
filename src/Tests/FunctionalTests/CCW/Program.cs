@@ -8,6 +8,8 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Runtime.InteropServices;
 using System.Collections.Specialized;
+using Windows.Foundation;
+using Windows.Web.Http;
 
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
@@ -177,6 +179,12 @@ instance.BindableIterableProperty = managedWarningClassList;
 
 var notifyCollectionChangedActionList = new List<NotifyCollectionChangedAction>();
 instance.BindableIterableProperty = notifyCollectionChangedActionList;
+
+var nullableDoubleList = new List<double?>();
+instance.BindableIterableProperty = nullableDoubleList;
+
+var nullableDoubleList2 = new List<System.Nullable<double>>();
+instance.BindableIterableProperty = nullableDoubleList2;
 
 var customCommand = new CustomCommand() as ICommand;
 ccw = MarshalInspectable<object>.CreateMarshaler(customCommand);
