@@ -120,8 +120,19 @@ if (ptr == IntPtr.Zero)
     return 113;
 }
 
-var asyncProgressHandler = new AsyncActionProgressHandler<HttpProgress>((info, progress) => { });
-instance.ObjectProperty = asyncProgressHandler;
+bool progressCalledWithExpectedResults = false;
+var asyncProgressHandler = new AsyncActionProgressHandler<HttpProgress>((info, progress) => 
+{
+    if (progress.BytesReceived == 3 && progress.TotalBytesToReceive == 4)
+    {
+        progressCalledWithExpectedResults = true;
+    }
+});
+Class.UnboxAndCallProgressHandler(asyncProgressHandler);
+if (!progressCalledWithExpectedResults)
+{
+    return 114;
+}
 
 return 100;
 
