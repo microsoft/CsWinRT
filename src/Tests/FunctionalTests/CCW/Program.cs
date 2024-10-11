@@ -186,6 +186,9 @@ instance.BindableIterableProperty = nullableDoubleList;
 var nullableDoubleList2 = new List<System.Nullable<double>>();
 instance.BindableIterableProperty = nullableDoubleList2;
 
+var nullableHandleList = new List<GCHandle?>();
+instance.BindableIterableProperty = nullableHandleList;
+
 var customCommand = new CustomCommand() as ICommand;
 ccw = MarshalInspectable<object>.CreateMarshaler(customCommand);
 ccw.TryAs<IUnknownVftbl>(ABI.System.Windows.Input.ICommandMethods.IID, out var commandCCW);
