@@ -1865,6 +1865,50 @@ namespace AuthoringTest
     {
         public string HelloWorld() => "Hello World!";
     }
+
+    public sealed class NonActivatableType
+    {
+        private readonly string _text;
+
+        // This should not be referenced by the generated activation factory
+        internal NonActivatableType(string text)
+        {
+            _text = text;
+        }
+
+        public string GetText()
+        {
+            return _text;
+        }
+    }
+
+    public static class NonActivatableFactory
+    {
+        public static NonActivatableType Create()
+        {
+            return new("Test123");
+        }
+    }
+
+    public sealed class TypeOnlyActivatableViaItsOwnFactory
+    {
+        private readonly string _text;
+
+        private TypeOnlyActivatableViaItsOwnFactory(string text)
+        {
+            _text = text;
+        }
+
+        public static TypeOnlyActivatableViaItsOwnFactory Create()
+        {
+            return new("Hello!");
+        }
+
+        public string GetText()
+        {
+            return _text;
+        }
+    }
 }
 
 namespace ABI.AuthoringTest
