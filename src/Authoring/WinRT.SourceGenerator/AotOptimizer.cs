@@ -836,6 +836,10 @@ namespace Generator
 
         internal static void GenerateVtableAttributes(Action<string, string> addSource, ImmutableArray<VtableAttribute> vtableAttributes, bool isCsWinRTComponentFromAotOptimizer, string escapedAssemblyName)
         {
+            var vtableEntryToCCWClassName = new Dictionary<VtableEntry, string>();
+            StringBuilder ccwClassesSource = new();
+            bool firstCCWClass = true;
+
             // Using ToImmutableHashSet to avoid duplicate entries from the use of partial classes by the developer
             // to split out their implementation.  When they do that, we will get multiple entries here for that
             // and try to generate the same attribute and file with the same data as we use the semantic model
@@ -846,17 +850,25 @@ namespace Generator
                 // from the AOT optimizer, then any public types are not handled
                 // right now as they are handled by the WinRT component source generator
                 // calling this.
-                if (((isCsWinRTComponentFromAotOptimizer && !vtableAttribute.IsPublic) || !isCsWinRTComponentFromAotOptimizer) && 
+                if (((isCsWinRTComponentFromAotOptimizer && !vtableAttribute.IsPublic) || !isCsWinRTComponentFromAotOptimizer) &&
                     vtableAttribute.Interfaces.Any())
                 {
                     StringBuilder source = new();
-                    source.AppendLine("using static WinRT.TypeExtensions;\n");
                     if (!vtableAttribute.IsGlobalNamespace)
                     {
                         source.AppendLine($$"""
                         namespace {{vtableAttribute.Namespace}}
                         {
                         """);
+                    }
+
+                    VtableEntry entry = new(vtableAttribute.Interfaces, vtableAttribute.GenericInterfaces, vtableAttribute.IsDelegate);
+                    bool vtableEntryExists = vtableEntryToCCWClassName.TryGetValue(entry, out var ccwClassName);
+                    if (!vtableEntryExists)
+                    {
+                        var @namespace = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
+                        ccwClassName = GeneratorHelper.EscapeTypeNameForIdentifier(@namespace + vtableAttribute.ClassName);
+                        vtableEntryToCCWClassName.Add(entry, ccwClassName);
                     }
 
                     var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(vtableAttribute.ClassName);
@@ -870,7 +882,7 @@ namespace Generator
                         }
 
                         source.AppendLine($$"""
-                            [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
+                            [global::WinRT.WinRTExposedType(typeof(WinRT.{{escapedAssemblyName}}CCWClasses.{{ccwClassName}}WinRTTypeDetails))]
                             partial class {{vtableAttribute.ClassName}}
                             {
                             }
@@ -896,7 +908,7 @@ namespace Generator
                         }
 
                         source.AppendLine($$"""
-                            [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
+                            [global::WinRT.WinRTExposedType(typeof(WinRT.{{escapedAssemblyName}}CCWClasses.{{ccwClassName}}WinRTTypeDetails))]
                             partial {{classHierarchy[0].GetTypeKeyword()}} {{classHierarchy[0].QualifiedName}}
                             {
                             }
@@ -909,62 +921,77 @@ namespace Generator
                         }
                     }
 
-                    source.AppendLine();
-                    source.AppendLine($$"""
-                    internal sealed class {{escapedClassName}}WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+                    if (!vtableEntryExists)
+                    {
+                        if (firstCCWClass)
+                        {
+                            ccwClassesSource.AppendLine($$""" 
+                            namespace WinRT.{{escapedAssemblyName}}CCWClasses
+                            {
+                            """);
+                            firstCCWClass = false;
+                        }
+                        else
+                        {
+                            ccwClassesSource.AppendLine();
+                        }
+
+                        ccwClassesSource.AppendLine($$"""
+                    internal sealed class {{ccwClassName}}WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
                     {
                         public global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
                         {
                     """);
 
-                    if (vtableAttribute.Interfaces.Any())
-                    {
-                        foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+                        if (vtableAttribute.Interfaces.Any())
                         {
-                            source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
-                                genericInterface.GenericDefinition,
-                                genericInterface.GenericParameters,
-                                escapedAssemblyName));
-                        }
+                            foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+                            {
+                                ccwClassesSource.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
+                                    genericInterface.GenericDefinition,
+                                    genericInterface.GenericParameters,
+                                    escapedAssemblyName));
+                            }
 
-                        source.AppendLine();
-                        source.AppendLine($$"""
+                            ccwClassesSource.AppendLine();
+                            ccwClassesSource.AppendLine($$"""
                                 return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]
                                 {
                         """);
 
-                        foreach (var @interface in vtableAttribute.Interfaces)
-                        {
-                            var genericStartIdx = @interface.IndexOf('<');
-                            var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
-                            if (genericStartIdx != -1)
+                            foreach (var @interface in vtableAttribute.Interfaces)
                             {
-                                interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
-                            }
+                                var genericStartIdx = @interface.IndexOf('<');
+                                var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
+                                if (genericStartIdx != -1)
+                                {
+                                    interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
+                                }
 
-                            source.AppendLine($$"""
+                                ccwClassesSource.AppendLine($$"""
                                                 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
                                                 {
                                                     IID = global::ABI.{{interfaceStaticsMethod}}.IID,
                                                     Vtable = global::ABI.{{interfaceStaticsMethod}}.AbiToProjectionVftablePtr
                                                 },
                                     """);
-                        }
-                        source.AppendLine($$"""
+                            }
+                            ccwClassesSource.AppendLine($$"""
                                 };
                                 """);
-                    }
-                    else
-                    {
-                        source.AppendLine($$"""
+                        }
+                        else
+                        {
+                            ccwClassesSource.AppendLine($$"""
                                         return global::System.Array.Empty<global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry>();
                                 """);
-                    }
+                        }
 
-                    source.AppendLine($$"""
+                        ccwClassesSource.AppendLine($$"""
                                 }
                             }
                         """);
+                    }
 
                     if (!vtableAttribute.IsGlobalNamespace)
                     {
@@ -974,6 +1001,12 @@ namespace Generator
                     string prefix = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
                     addSource($"{prefix}{escapedClassName}.WinRTVtable.g.cs", source.ToString());
                 }
+            }
+
+            if (ccwClassesSource.Length != 0)
+            {
+                ccwClassesSource.AppendLine("}");
+                addSource($"WinRTCCWVtable.g.cs", ccwClassesSource.ToString());
             }
         }
 
