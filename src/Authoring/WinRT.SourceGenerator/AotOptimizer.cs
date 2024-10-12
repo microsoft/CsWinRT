@@ -836,9 +836,9 @@ namespace Generator
 
         internal static void GenerateVtableAttributes(Action<string, string> addSource, ImmutableArray<VtableAttribute> vtableAttributes, bool isCsWinRTComponentFromAotOptimizer, string escapedAssemblyName)
         {
-            var vtableEntryToCCWClassName = new Dictionary<VtableEntry, string>();
-            StringBuilder ccwClassesSource = new();
-            bool firstCCWClass = true;
+            var vtableEntryToVtableClassName = new Dictionary<VtableEntry, string>();
+            StringBuilder vtableClassesSource = new();
+            bool firstVtableClass = true;
 
             // Using ToImmutableHashSet to avoid duplicate entries from the use of partial classes by the developer
             // to split out their implementation.  When they do that, we will get multiple entries here for that
@@ -862,13 +862,14 @@ namespace Generator
                         """);
                     }
 
+                    // Check if this class shares the same vtable as another class.  If so, reuse the same generated class for it.
                     VtableEntry entry = new(vtableAttribute.Interfaces, vtableAttribute.GenericInterfaces, vtableAttribute.IsDelegate);
-                    bool vtableEntryExists = vtableEntryToCCWClassName.TryGetValue(entry, out var ccwClassName);
+                    bool vtableEntryExists = vtableEntryToVtableClassName.TryGetValue(entry, out var ccwClassName);
                     if (!vtableEntryExists)
                     {
                         var @namespace = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
                         ccwClassName = GeneratorHelper.EscapeTypeNameForIdentifier(@namespace + vtableAttribute.ClassName);
-                        vtableEntryToCCWClassName.Add(entry, ccwClassName);
+                        vtableEntryToVtableClassName.Add(entry, ccwClassName);
                     }
 
                     var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(vtableAttribute.ClassName);
@@ -921,22 +922,23 @@ namespace Generator
                         }
                     }
 
+                    // Only generate class, if this is the first time we run into this set of vtables.
                     if (!vtableEntryExists)
                     {
-                        if (firstCCWClass)
+                        if (firstVtableClass)
                         {
-                            ccwClassesSource.AppendLine($$""" 
+                            vtableClassesSource.AppendLine($$""" 
                             namespace WinRT.{{escapedAssemblyName}}VtableClasses
                             {
                             """);
-                            firstCCWClass = false;
+                            firstVtableClass = false;
                         }
                         else
                         {
-                            ccwClassesSource.AppendLine();
+                            vtableClassesSource.AppendLine();
                         }
 
-                        ccwClassesSource.AppendLine($$"""
+                        vtableClassesSource.AppendLine($$"""
                     internal sealed class {{ccwClassName}}WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
                     {
                         public global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
@@ -947,14 +949,14 @@ namespace Generator
                         {
                             foreach (var genericInterface in vtableAttribute.GenericInterfaces)
                             {
-                                ccwClassesSource.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
+                                vtableClassesSource.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
                                     genericInterface.GenericDefinition,
                                     genericInterface.GenericParameters,
                                     escapedAssemblyName));
                             }
 
-                            ccwClassesSource.AppendLine();
-                            ccwClassesSource.AppendLine($$"""
+                            vtableClassesSource.AppendLine();
+                            vtableClassesSource.AppendLine($$"""
                                 return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]
                                 {
                         """);
@@ -968,7 +970,7 @@ namespace Generator
                                     interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
                                 }
 
-                                ccwClassesSource.AppendLine($$"""
+                                vtableClassesSource.AppendLine($$"""
                                                 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
                                                 {
                                                     IID = global::ABI.{{interfaceStaticsMethod}}.IID,
@@ -976,18 +978,18 @@ namespace Generator
                                                 },
                                     """);
                             }
-                            ccwClassesSource.AppendLine($$"""
+                            vtableClassesSource.AppendLine($$"""
                                 };
                                 """);
                         }
                         else
                         {
-                            ccwClassesSource.AppendLine($$"""
+                            vtableClassesSource.AppendLine($$"""
                                         return global::System.Array.Empty<global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry>();
                                 """);
                         }
 
-                        ccwClassesSource.AppendLine($$"""
+                        vtableClassesSource.AppendLine($$"""
                                 }
                             }
                         """);
@@ -1003,10 +1005,10 @@ namespace Generator
                 }
             }
 
-            if (ccwClassesSource.Length != 0)
+            if (vtableClassesSource.Length != 0)
             {
-                ccwClassesSource.AppendLine("}");
-                addSource($"WinRTCCWVtable.g.cs", ccwClassesSource.ToString());
+                vtableClassesSource.AppendLine("}");
+                addSource($"WinRTCCWVtable.g.cs", vtableClassesSource.ToString());
             }
         }
 
@@ -1473,6 +1475,8 @@ namespace Generator
                                     """);
             }
 
+            // We gather all the class names that have the same vtable and generate it
+            // as part of one if to reduce generated code.
             var vtableEntryToClassNameList = new Dictionary<VtableEntry, List<string>>();
             foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet())
             {
