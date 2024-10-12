@@ -769,11 +769,11 @@ namespace Generator
             GenerateVtableAttributes(sourceProductionContext.AddSource, value.vtableAttributes, value.context.properties.isCsWinRTComponent, value.context.escapedAssemblyName);
         }
 
-        internal static string GenerateVtableEntry(VtableAttribute vtableAttribute, string escapedAssemblyName)
+        internal static string GenerateVtableEntry(VtableEntry vtableEntry, string escapedAssemblyName)
         {
             StringBuilder source = new();
 
-            foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+            foreach (var genericInterface in vtableEntry.GenericInterfaces)
             {
                 source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
                     genericInterface.GenericDefinition,
@@ -781,9 +781,9 @@ namespace Generator
                     escapedAssemblyName));
             }
 
-            if (vtableAttribute.IsDelegate)
+            if (vtableEntry.IsDelegate)
             {
-                var @interface = vtableAttribute.Interfaces.First();
+                var @interface = vtableEntry.Interfaces.First();
                 source.AppendLine();
                 source.AppendLine($$"""
                                 var delegateInterface = new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
@@ -795,7 +795,7 @@ namespace Generator
                                 return global::WinRT.DelegateTypeDetails<{{@interface}}>.GetExposedInterfaces(delegateInterface);
                         """);
             }
-            else if (vtableAttribute.Interfaces.Any())
+            else if (vtableEntry.Interfaces.Any())
             {
                 source.AppendLine();
                 source.AppendLine($$"""
@@ -803,7 +803,7 @@ namespace Generator
                                 {
                         """);
 
-                foreach (var @interface in vtableAttribute.Interfaces)
+                foreach (var @interface in vtableEntry.Interfaces)
                 {
                     var genericStartIdx = @interface.IndexOf('<');
                     var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
@@ -1440,12 +1440,35 @@ namespace Generator
                                     """);
             }
 
+            var vtableEntryToClassNameList = new Dictionary<VtableEntry, List<string>>();
             foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet())
             {
+                VtableEntry entry = new(vtableAttribute.Interfaces, vtableAttribute.GenericInterfaces, vtableAttribute.IsDelegate);
+                if (!vtableEntryToClassNameList.TryGetValue(entry, out var classNameList))
+                {
+                    classNameList = new List<string>();
+                    vtableEntryToClassNameList.Add(entry, classNameList);
+                }
+                classNameList.Add(vtableAttribute.VtableLookupClassName);
+            }
+
+            foreach (var vtableEntry in vtableEntryToClassNameList)
+            {
                 source.AppendLine($$"""
-                                if (typeName == "{{vtableAttribute.VtableLookupClassName}}")
+                                if (typeName == "{{vtableEntry.Value[0]}}"
+                    """);
+
+                for (var i = 1; i < vtableEntry.Value.Count; i++)
+                {
+                    source.AppendLine($$"""
+                                    || typeName == "{{vtableEntry.Value[i]}}"
+                        """);
+                }
+
+                source.AppendLine($$"""
+                                )
                                 {
-                                    {{GenerateVtableEntry(vtableAttribute, value.context.escapedAssemblyName)}}
+                                    {{GenerateVtableEntry(vtableEntry.Key, value.context.escapedAssemblyName)}}
                                 }
                     """);
             }
@@ -1465,12 +1488,34 @@ namespace Generator
                                     string typeName = type.ToString();
                                 """);
 
+                    var runtimeClassNameToClassNameList = new Dictionary<string, List<string>>();
                     foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet().Where(static v => !string.IsNullOrEmpty(v.RuntimeClassName)))
                     {
+                        if (!runtimeClassNameToClassNameList.TryGetValue(vtableAttribute.RuntimeClassName, out var classNameList))
+                        {
+                            classNameList = new List<string>();
+                            runtimeClassNameToClassNameList.Add(vtableAttribute.RuntimeClassName, classNameList);
+                        }
+                        classNameList.Add(vtableAttribute.VtableLookupClassName);
+                    }
+
+                    foreach (var entry in runtimeClassNameToClassNameList)
+                    {
                         source.AppendLine($$"""
-                                if (typeName == "{{vtableAttribute.VtableLookupClassName}}")
+                                if (typeName == "{{entry.Value[0]}}"
+                                """);
+
+                        for (var i = 1; i < entry.Value.Count; i++)
+                        {
+                            source.AppendLine($$"""
+                                    || typeName == "{{entry.Value[i]}}"
+                                    """);
+                        }
+
+                        source.AppendLine($$"""
+                                )
                                 {
-                                    return "{{vtableAttribute.RuntimeClassName}}";
+                                    return "{{entry.Key}}";
                                 }
                                 """);
                     }
@@ -1625,6 +1670,11 @@ namespace Generator
         bool IsDelegate,
         bool IsPublic,
         string RuntimeClassName = default);
+
+    sealed record VtableEntry(
+        EquatableArray<string> Interfaces,
+        EquatableArray<GenericInterface> GenericInterfaces,
+        bool IsDelegate);
 
     internal readonly record struct BindableCustomProperty(
         string Name,
