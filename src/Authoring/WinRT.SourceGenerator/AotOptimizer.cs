@@ -882,7 +882,7 @@ namespace Generator
                         }
 
                         source.AppendLine($$"""
-                            [global::WinRT.WinRTExposedType(typeof(WinRT.{{escapedAssemblyName}}CCWClasses.{{ccwClassName}}WinRTTypeDetails))]
+                            [global::WinRT.WinRTExposedType(typeof(global::WinRT.{{escapedAssemblyName}}VtableClasses.{{ccwClassName}}WinRTTypeDetails))]
                             partial class {{vtableAttribute.ClassName}}
                             {
                             }
@@ -908,7 +908,7 @@ namespace Generator
                         }
 
                         source.AppendLine($$"""
-                            [global::WinRT.WinRTExposedType(typeof(WinRT.{{escapedAssemblyName}}CCWClasses.{{ccwClassName}}WinRTTypeDetails))]
+                            [global::WinRT.WinRTExposedType(typeof(global::WinRT.{{escapedAssemblyName}}VtableClasses.{{ccwClassName}}WinRTTypeDetails))]
                             partial {{classHierarchy[0].GetTypeKeyword()}} {{classHierarchy[0].QualifiedName}}
                             {
                             }
@@ -926,7 +926,7 @@ namespace Generator
                         if (firstCCWClass)
                         {
                             ccwClassesSource.AppendLine($$""" 
-                            namespace WinRT.{{escapedAssemblyName}}CCWClasses
+                            namespace WinRT.{{escapedAssemblyName}}VtableClasses
                             {
                             """);
                             firstCCWClass = false;
