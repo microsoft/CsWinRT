@@ -2078,7 +2078,8 @@ namespace WinRT
                          typeof(T) == typeof(global::System.Numerics.Quaternion) ||
                          typeof(T) == typeof(global::System.Numerics.Vector2) ||
                          typeof(T) == typeof(global::System.Numerics.Vector3) ||
-                         typeof(T) == typeof(global::System.Numerics.Vector4))
+                         typeof(T) == typeof(global::System.Numerics.Vector4) ||
+                         typeof(T) == typeof(global::WinRT.EventRegistrationToken))
                 {
                     // Manually handle well known primitive types and common types, as well
                     // as two common projected types (below). This allows the linker to trim
@@ -2191,6 +2192,7 @@ namespace WinRT
                     typeof(T) == typeof(global::System.Numerics.Vector2) ||
                     typeof(T) == typeof(global::System.Numerics.Vector3) ||
                     typeof(T) == typeof(global::System.Numerics.Vector4) ||
+                    typeof(T) == typeof(global::WinRT.EventRegistrationToken) ||
                     AbiType == null)
                 {
                     Func<T, object> ReturnTypedParameterFunc = (T value) => value;
