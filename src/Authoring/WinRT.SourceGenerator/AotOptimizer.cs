@@ -365,7 +365,7 @@ namespace Generator
                 globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
                 typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
                 genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-                miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+                miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.ExpandNullable);
 
             var qualifiedString = symbol.ToDisplayString(symbolDisplayString);
             return qualifiedString.StartsWith("global::") ? qualifiedString[8..] : qualifiedString;
@@ -410,7 +410,8 @@ namespace Generator
                     var arity = symbol is INamedTypeSymbol namedType && namedType.Arity > 0 ? "`" + namedType.Arity : "";
                     var symbolDisplayString = new SymbolDisplayFormat(
                         globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
-                        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
+                        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+                        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable);
                     return symbol.ToDisplayString(symbolDisplayString) + arity;
                 }
                 else
@@ -640,9 +641,12 @@ namespace Generator
                     List<GenericParameter> genericParameters = new();
                     foreach (var genericParameter in iface.TypeArguments)
                     {
+                        var isNullable = genericParameter.IsValueType && genericParameter.NullableAnnotation.HasFlag(NullableAnnotation.Annotated);
+
                         // Handle initialization of nested generics as they may not be
                         // initialized already.
-                        if (genericParameter is INamedTypeSymbol genericParameterIface && 
+                        if (!isNullable &&
+                            genericParameter is INamedTypeSymbol genericParameterIface && 
                             genericParameterIface.IsGenericType)
                         {
                             AddGenericInterfaceInstantiation(genericParameterIface);
@@ -651,7 +655,7 @@ namespace Generator
                         genericParameters.Add(new GenericParameter(
                             ToFullyQualifiedString(genericParameter),
                             GeneratorHelper.GetAbiType(genericParameter, mapper),
-                            genericParameter.TypeKind));
+                            isNullable ? TypeKind.Interface : genericParameter.TypeKind));
                     }
 
                     genericInterfacesToAddToVtable.Add(new GenericInterface(

@@ -241,6 +241,29 @@ if (sum != 7)
     return 101;
 }
 
+var nullableDoubleList = new List<double?>() { 1, 2, null, 3, 4, null};
+var result = instance.Calculate(nullableDoubleList);
+if (result != 10)
+{
+    return 101;
+}
+
+sum = 0;
+
+var nullableIntList = instance.GetNullableIntList();
+foreach (var num in nullableIntList)
+{
+    if (num.HasValue)
+    {
+        sum += num.Value;
+    }
+}
+
+if (sum != 3)
+{
+    return 101;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));

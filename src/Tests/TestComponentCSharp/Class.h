@@ -406,6 +406,10 @@ namespace winrt::TestComponentCSharp::implementation
         static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
         static com_array<hstring> UnboxStringArray(IInspectable const& obj);
 
+        static void UnboxAndCallProgressHandler(IInspectable const& httpProgressHandler);
+        double Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values);
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> GetNullableIntList();
+
         static int GetPropertyType(Windows::Foundation::IInspectable const& obj);
         static hstring GetName(Windows::Foundation::IInspectable const& obj);
 

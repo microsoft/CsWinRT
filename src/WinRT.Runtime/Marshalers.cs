@@ -2126,6 +2126,31 @@ namespace WinRT
 
                     return;
                 }
+                else if (typeof(T).IsNullableT())
+                {
+                    AbiType = typeof(IntPtr);
+                    CreateMarshaler = (T value) => MarshalInterface<T>.CreateMarshaler2(value);
+                    CreateMarshaler2 = CreateMarshaler;
+                    GetAbi = (object objRef) => objRef is ObjectReferenceValue objRefValue ?
+                        MarshalInspectable<object>.GetAbi(objRefValue) : MarshalInterface<T>.GetAbi((IObjectReference)objRef);
+                    FromAbi = (object value) => MarshalInterface<T>.FromAbi((IntPtr)value);
+                    FromManaged = (T value) => MarshalInterface<T>.CreateMarshaler2(value).Detach();
+                    DisposeMarshaler = MarshalInterface<T>.DisposeMarshaler;
+                    DisposeAbi = (object box) => MarshalInterface<T>.DisposeAbi((IntPtr)box);
+                    CreateMarshalerArray = (T[] array) => MarshalInterface<T>.CreateMarshalerArray(array);
+                    GetAbiArray = MarshalInterface<T>.GetAbiArray;
+                    FromAbiArray = MarshalInterface<T>.FromAbiArray;
+                    FromManagedArray = MarshalInterface<T>.FromManagedArray;
+                    CopyManagedArray = MarshalInterface<T>.CopyManagedArray;
+                    DisposeMarshalerArray = MarshalInterface<T>.DisposeMarshalerArray;
+                    DisposeAbiArray = MarshalInterface<T>.DisposeAbiArray;
+
+#if !NET
+                    RefAbiType = AbiType.MakeByRefType();
+#endif
+
+                    return;
+                }
                 else
                 {
                     Type abiType = typeof(T).FindHelperType();

@@ -423,6 +423,9 @@ namespace TestComponentCSharp
         // HResult->Exception type mapping
         Windows.Foundation.HResult HResultProperty;
 
+        Double Calculate(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Double> > values);
+        Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Int32> > GetNullableIntList();
+
         // Boxing
         static Int32 UnboxInt32(Object obj);
         static Boolean UnboxBoolean(Object obj);
@@ -436,6 +439,7 @@ namespace TestComponentCSharp
         static Object BoxedDelegate{ get; };
         static Object BoxedEnum{ get; };
         static Object BoxedEventHandler{ get; };
+        static void UnboxAndCallProgressHandler(Object httpProgressHandler);
 
         static Int32 GetPropertyType(Object obj);
         static String GetName(Object obj);
