@@ -388,8 +388,21 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                             hstring = IntPtr.Zero;
                         }
 
+#if NET
+                        IntPtr managedExceptionWrapper = ComWrappersSupport.CreateCCWForObjectUnsafe(ex);
+
+                        try
+                        {
+                            roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper);
+                        }
+                        finally
+                        {
+                            Marshal.Release(managedExceptionWrapper);
+                        }
+#else
                         using var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex);
                         roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper.ThisPtr);
+#endif
                     }
                 }
             }
