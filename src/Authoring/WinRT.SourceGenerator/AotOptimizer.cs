@@ -773,11 +773,11 @@ namespace Generator
             GenerateVtableAttributes(sourceProductionContext.AddSource, value.vtableAttributes, value.context.properties.isCsWinRTComponent, value.context.escapedAssemblyName);
         }
 
-        internal static string GenerateVtableEntry(VtableAttribute vtableAttribute, string escapedAssemblyName)
+        internal static string GenerateVtableEntry(VtableEntry vtableEntry, string escapedAssemblyName)
         {
             StringBuilder source = new();
 
-            foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+            foreach (var genericInterface in vtableEntry.GenericInterfaces)
             {
                 source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
                     genericInterface.GenericDefinition,
@@ -785,9 +785,9 @@ namespace Generator
                     escapedAssemblyName));
             }
 
-            if (vtableAttribute.IsDelegate)
+            if (vtableEntry.IsDelegate)
             {
-                var @interface = vtableAttribute.Interfaces.First();
+                var @interface = vtableEntry.Interfaces.First();
                 source.AppendLine();
                 source.AppendLine($$"""
                                 var delegateInterface = new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
@@ -799,7 +799,7 @@ namespace Generator
                                 return global::WinRT.DelegateTypeDetails<{{@interface}}>.GetExposedInterfaces(delegateInterface);
                         """);
             }
-            else if (vtableAttribute.Interfaces.Any())
+            else if (vtableEntry.Interfaces.Any())
             {
                 source.AppendLine();
                 source.AppendLine($$"""
@@ -807,7 +807,7 @@ namespace Generator
                                 {
                         """);
 
-                foreach (var @interface in vtableAttribute.Interfaces)
+                foreach (var @interface in vtableEntry.Interfaces)
                 {
                     var genericStartIdx = @interface.IndexOf('<');
                     var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
@@ -840,6 +840,10 @@ namespace Generator
 
         internal static void GenerateVtableAttributes(Action<string, string> addSource, ImmutableArray<VtableAttribute> vtableAttributes, bool isCsWinRTComponentFromAotOptimizer, string escapedAssemblyName)
         {
+            var vtableEntryToVtableClassName = new Dictionary<VtableEntry, string>();
+            StringBuilder vtableClassesSource = new();
+            bool firstVtableClass = true;
+
             // Using ToImmutableHashSet to avoid duplicate entries from the use of partial classes by the developer
             // to split out their implementation.  When they do that, we will get multiple entries here for that
             // and try to generate the same attribute and file with the same data as we use the semantic model
@@ -850,17 +854,26 @@ namespace Generator
                 // from the AOT optimizer, then any public types are not handled
                 // right now as they are handled by the WinRT component source generator
                 // calling this.
-                if (((isCsWinRTComponentFromAotOptimizer && !vtableAttribute.IsPublic) || !isCsWinRTComponentFromAotOptimizer) && 
+                if (((isCsWinRTComponentFromAotOptimizer && !vtableAttribute.IsPublic) || !isCsWinRTComponentFromAotOptimizer) &&
                     vtableAttribute.Interfaces.Any())
                 {
                     StringBuilder source = new();
-                    source.AppendLine("using static WinRT.TypeExtensions;\n");
                     if (!vtableAttribute.IsGlobalNamespace)
                     {
                         source.AppendLine($$"""
                         namespace {{vtableAttribute.Namespace}}
                         {
                         """);
+                    }
+
+                    // Check if this class shares the same vtable as another class.  If so, reuse the same generated class for it.
+                    VtableEntry entry = new(vtableAttribute.Interfaces, vtableAttribute.GenericInterfaces, vtableAttribute.IsDelegate);
+                    bool vtableEntryExists = vtableEntryToVtableClassName.TryGetValue(entry, out var ccwClassName);
+                    if (!vtableEntryExists)
+                    {
+                        var @namespace = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
+                        ccwClassName = GeneratorHelper.EscapeTypeNameForIdentifier(@namespace + vtableAttribute.ClassName);
+                        vtableEntryToVtableClassName.Add(entry, ccwClassName);
                     }
 
                     var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(vtableAttribute.ClassName);
@@ -874,7 +887,7 @@ namespace Generator
                         }
 
                         source.AppendLine($$"""
-                            [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
+                            [global::WinRT.WinRTExposedType(typeof(global::WinRT.{{escapedAssemblyName}}VtableClasses.{{ccwClassName}}WinRTTypeDetails))]
                             partial class {{vtableAttribute.ClassName}}
                             {
                             }
@@ -900,7 +913,7 @@ namespace Generator
                         }
 
                         source.AppendLine($$"""
-                            [global::WinRT.WinRTExposedType(typeof({{escapedClassName}}WinRTTypeDetails))]
+                            [global::WinRT.WinRTExposedType(typeof(global::WinRT.{{escapedAssemblyName}}VtableClasses.{{ccwClassName}}WinRTTypeDetails))]
                             partial {{classHierarchy[0].GetTypeKeyword()}} {{classHierarchy[0].QualifiedName}}
                             {
                             }
@@ -913,62 +926,78 @@ namespace Generator
                         }
                     }
 
-                    source.AppendLine();
-                    source.AppendLine($$"""
-                    internal sealed class {{escapedClassName}}WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
+                    // Only generate class, if this is the first time we run into this set of vtables.
+                    if (!vtableEntryExists)
+                    {
+                        if (firstVtableClass)
+                        {
+                            vtableClassesSource.AppendLine($$""" 
+                            namespace WinRT.{{escapedAssemblyName}}VtableClasses
+                            {
+                            """);
+                            firstVtableClass = false;
+                        }
+                        else
+                        {
+                            vtableClassesSource.AppendLine();
+                        }
+
+                        vtableClassesSource.AppendLine($$"""
+                    internal sealed class {{ccwClassName}}WinRTTypeDetails : global::WinRT.IWinRTExposedTypeDetails
                     {
                         public global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
                         {
                     """);
 
-                    if (vtableAttribute.Interfaces.Any())
-                    {
-                        foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+                        if (vtableAttribute.Interfaces.Any())
                         {
-                            source.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
-                                genericInterface.GenericDefinition,
-                                genericInterface.GenericParameters,
-                                escapedAssemblyName));
-                        }
+                            foreach (var genericInterface in vtableAttribute.GenericInterfaces)
+                            {
+                                vtableClassesSource.AppendLine(GenericVtableInitializerStrings.GetInstantiationInitFunction(
+                                    genericInterface.GenericDefinition,
+                                    genericInterface.GenericParameters,
+                                    escapedAssemblyName));
+                            }
 
-                        source.AppendLine();
-                        source.AppendLine($$"""
+                            vtableClassesSource.AppendLine();
+                            vtableClassesSource.AppendLine($$"""
                                 return new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry[]
                                 {
                         """);
 
-                        foreach (var @interface in vtableAttribute.Interfaces)
-                        {
-                            var genericStartIdx = @interface.IndexOf('<');
-                            var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
-                            if (genericStartIdx != -1)
+                            foreach (var @interface in vtableAttribute.Interfaces)
                             {
-                                interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
-                            }
+                                var genericStartIdx = @interface.IndexOf('<');
+                                var interfaceStaticsMethod = @interface[..(genericStartIdx == -1 ? @interface.Length : genericStartIdx)] + "Methods";
+                                if (genericStartIdx != -1)
+                                {
+                                    interfaceStaticsMethod += @interface[genericStartIdx..@interface.Length];
+                                }
 
-                            source.AppendLine($$"""
+                                vtableClassesSource.AppendLine($$"""
                                                 new global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry
                                                 {
                                                     IID = global::ABI.{{interfaceStaticsMethod}}.IID,
                                                     Vtable = global::ABI.{{interfaceStaticsMethod}}.AbiToProjectionVftablePtr
                                                 },
                                     """);
-                        }
-                        source.AppendLine($$"""
+                            }
+                            vtableClassesSource.AppendLine($$"""
                                 };
                                 """);
-                    }
-                    else
-                    {
-                        source.AppendLine($$"""
+                        }
+                        else
+                        {
+                            vtableClassesSource.AppendLine($$"""
                                         return global::System.Array.Empty<global::System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry>();
                                 """);
-                    }
+                        }
 
-                    source.AppendLine($$"""
+                        vtableClassesSource.AppendLine($$"""
                                 }
                             }
                         """);
+                    }
 
                     if (!vtableAttribute.IsGlobalNamespace)
                     {
@@ -978,6 +1007,12 @@ namespace Generator
                     string prefix = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
                     addSource($"{prefix}{escapedClassName}.WinRTVtable.g.cs", source.ToString());
                 }
+            }
+
+            if (vtableClassesSource.Length != 0)
+            {
+                vtableClassesSource.AppendLine("}");
+                addSource($"WinRTCCWVtable.g.cs", vtableClassesSource.ToString());
             }
         }
 
@@ -1444,12 +1479,37 @@ namespace Generator
                                     """);
             }
 
+            // We gather all the class names that have the same vtable and generate it
+            // as part of one if to reduce generated code.
+            var vtableEntryToClassNameList = new Dictionary<VtableEntry, List<string>>();
             foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet())
             {
+                VtableEntry entry = new(vtableAttribute.Interfaces, vtableAttribute.GenericInterfaces, vtableAttribute.IsDelegate);
+                if (!vtableEntryToClassNameList.TryGetValue(entry, out var classNameList))
+                {
+                    classNameList = new List<string>();
+                    vtableEntryToClassNameList.Add(entry, classNameList);
+                }
+                classNameList.Add(vtableAttribute.VtableLookupClassName);
+            }
+
+            foreach (var vtableEntry in vtableEntryToClassNameList)
+            {
                 source.AppendLine($$"""
-                                if (typeName == "{{vtableAttribute.VtableLookupClassName}}")
+                                if (typeName == "{{vtableEntry.Value[0]}}"
+                    """);
+
+                for (var i = 1; i < vtableEntry.Value.Count; i++)
+                {
+                    source.AppendLine($$"""
+                                    || typeName == "{{vtableEntry.Value[i]}}"
+                        """);
+                }
+
+                source.AppendLine($$"""
+                                )
                                 {
-                                    {{GenerateVtableEntry(vtableAttribute, value.context.escapedAssemblyName)}}
+                                    {{GenerateVtableEntry(vtableEntry.Key, value.context.escapedAssemblyName)}}
                                 }
                     """);
             }
@@ -1469,12 +1529,34 @@ namespace Generator
                                     string typeName = type.ToString();
                                 """);
 
+                    var runtimeClassNameToClassNameList = new Dictionary<string, List<string>>();
                     foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet().Where(static v => !string.IsNullOrEmpty(v.RuntimeClassName)))
                     {
+                        if (!runtimeClassNameToClassNameList.TryGetValue(vtableAttribute.RuntimeClassName, out var classNameList))
+                        {
+                            classNameList = new List<string>();
+                            runtimeClassNameToClassNameList.Add(vtableAttribute.RuntimeClassName, classNameList);
+                        }
+                        classNameList.Add(vtableAttribute.VtableLookupClassName);
+                    }
+
+                    foreach (var entry in runtimeClassNameToClassNameList)
+                    {
                         source.AppendLine($$"""
-                                if (typeName == "{{vtableAttribute.VtableLookupClassName}}")
+                                if (typeName == "{{entry.Value[0]}}"
+                                """);
+
+                        for (var i = 1; i < entry.Value.Count; i++)
+                        {
+                            source.AppendLine($$"""
+                                    || typeName == "{{entry.Value[i]}}"
+                                    """);
+                        }
+
+                        source.AppendLine($$"""
+                                )
                                 {
-                                    return "{{vtableAttribute.RuntimeClassName}}";
+                                    return "{{entry.Key}}";
                                 }
                                 """);
                     }
@@ -1629,6 +1711,11 @@ namespace Generator
         bool IsDelegate,
         bool IsPublic,
         string RuntimeClassName = default);
+
+    sealed record VtableEntry(
+        EquatableArray<string> Interfaces,
+        EquatableArray<GenericInterface> GenericInterfaces,
+        bool IsDelegate);
 
     internal readonly record struct BindableCustomProperty(
         string Name,
