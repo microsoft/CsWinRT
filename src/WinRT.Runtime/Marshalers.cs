@@ -583,6 +583,10 @@ namespace WinRT
             {
                 HelperType = typeof(global::ABI.Windows.Foundation.Rect);
             }
+            else if (typeof(T) == typeof(global::WinRT.EventRegistrationToken))
+            {
+                HelperType = typeof(global::ABI.WinRT.EventRegistrationToken);
+            }
             else if (typeof(T) == typeof(int) ||
                      typeof(T) == typeof(byte) ||
                      typeof(T) == typeof(sbyte) ||
@@ -1039,7 +1043,8 @@ namespace WinRT
                 typeof(T) == typeof(global::System.Numerics.Quaternion) ||
                 typeof(T) == typeof(global::System.Numerics.Vector2) ||
                 typeof(T) == typeof(global::System.Numerics.Vector3) ||
-                typeof(T) == typeof(global::System.Numerics.Vector4))
+                typeof(T) == typeof(global::System.Numerics.Vector4) ||
+                typeof(T) == typeof(global::WinRT.EventRegistrationToken))
             {
                 return null;
             }
