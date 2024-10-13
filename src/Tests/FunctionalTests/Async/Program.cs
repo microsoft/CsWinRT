@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TestComponentCSharp;
 using Windows.Foundation;
 using Windows.Storage.Streams;
+using Windows.Web.Http;
 using WinRT;
 
 var instance = new Class();
@@ -117,6 +118,20 @@ ptr = MarshalInterface<IAsyncInfo>.FromManaged(asyncOperation);
 if (ptr == IntPtr.Zero)
 {
     return 113;
+}
+
+bool progressCalledWithExpectedResults = false;
+var asyncProgressHandler = new AsyncActionProgressHandler<HttpProgress>((info, progress) => 
+{
+    if (progress.BytesReceived == 3 && progress.TotalBytesToReceive == 4)
+    {
+        progressCalledWithExpectedResults = true;
+    }
+});
+Class.UnboxAndCallProgressHandler(asyncProgressHandler);
+if (!progressCalledWithExpectedResults)
+{
+    return 114;
 }
 
 return 100;

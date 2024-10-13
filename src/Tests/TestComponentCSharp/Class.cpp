@@ -1805,6 +1805,33 @@ namespace winrt::TestComponentCSharp::implementation
         throw hresult_not_implemented();
     }
 
+    void Class::UnboxAndCallProgressHandler(WF::IInspectable const& httpProgressHandler)
+	{
+        Windows::Web::Http::HttpProgress progress;
+        progress.BytesReceived = 3;
+        progress.TotalBytesToReceive = 4;
+
+        winrt::unbox_value<Windows::Foundation::AsyncActionProgressHandler<Windows::Web::Http::HttpProgress>>(httpProgressHandler)(nullptr, progress);
+    }
+
+    double Class::Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values)
+    {
+        double result = 0;
+        for (auto val : values)
+        {
+            if (val)
+            {
+                result += val.Value();
+            }
+        }
+        return result;
+    }
+
+    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> Class::GetNullableIntList()
+    {
+        return single_threaded_vector<winrt::Windows::Foundation::IReference<int32_t>>({ 1, nullptr, 2 });
+    }
+
     TestComponentCSharp::IProperties1 Class::NativeProperties1()
     {
         struct native_properties1 : winrt::implements<native_properties1, TestComponentCSharp::IProperties1>

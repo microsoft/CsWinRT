@@ -69,7 +69,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <Reference Remove="WinRT.Runtime" /> 
       <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="'%(DestinationSubPath)' == 'WinRT.Runtime.dll'"/>
       <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(HintPath)' == '$(CsWinRTPath)lib\net6.0\WinRT.Runtime.dll'"/>
-    </ItemGroup>
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(HintPath)' == '$(CsWinRTPath)lib\net8.0\WinRT.Runtime.dll'"/>
+	</ItemGroup>
 
   </Target>
 
