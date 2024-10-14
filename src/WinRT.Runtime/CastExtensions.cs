@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 using System;
+#if !NET
 using System.Reflection;
+#endif
+using System.Runtime.CompilerServices;
 using WinRT.Interop;
 
 namespace WinRT
@@ -28,9 +31,11 @@ namespace WinRT
         /// <exception cref="ArgumentException">Thrown if the runtime type of <paramref name="value"/> is not a projected type (if the object is a managed object).</exception>
         public static TInterface As<TInterface>(this object value)
         {
+            IObjectReference objRef;
+
             if (typeof(TInterface) == typeof(object))
             {
-                if (TryGetRefForObject(value, allowComposed: false, out IObjectReference objRef))
+                if (TryGetRefForObject(value, allowComposed: false, out objRef))
                 {
                     using (objRef)
                     {
@@ -44,10 +49,31 @@ namespace WinRT
                 return convertableInMetadata;
             }
 
-            using (var objRef = GetRefForObject(value))
+            if (TryGetRefForObject(value, allowComposed: true, out objRef))
             {
-                return objRef.AsInterface<TInterface>();
+                using (objRef)
+                {
+                    return objRef.AsInterface<TInterface>();
+                }
             }
+
+            // Shared helper to get an exception with a helpful message, that we can efficiently throw
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static Exception GetArgumentExceptionForFailedCast(object value)
+            {
+                if (value is null)
+                {
+                    return new ArgumentNullException(
+                        paramName: nameof(value),
+                        message: $"The source object being cast to type '{typeof(TInterface)}' is 'null'.");
+                }
+
+                return new ArgumentException(
+                    paramName: nameof(value),
+                    message: $"The source object type ('{value.GetType()}') being cast to type '{typeof(TInterface)}' is not a projected type, nor does it inherit from a projected type.");
+            }
+
+            throw GetArgumentExceptionForFailedCast(value);
         }
 
         /// <summary>
@@ -101,12 +127,6 @@ namespace WinRT
             }
             reference = null;
             return false;
-        }
-        
-        private static IObjectReference GetRefForObject(object value)
-        {
-            return TryGetRefForObject(value, allowComposed: true, out var objRef) ? objRef
-                : throw new ArgumentException("Source object type is not a projected type and does not inherit from a projected type.", nameof(value));
         }
 
         private static bool TryGetComposedRefForQI(object value, out IObjectReference objRef)
