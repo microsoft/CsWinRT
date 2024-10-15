@@ -1283,10 +1283,12 @@ namespace Generator
                     encoder.Scalar().Constant(constant.Value);
                     break;
                 case TypedConstantKind.Enum:
-                    encoder.TaggedScalar(
-                        type => type.Enum(constant.Type.ToString()),
-                        scalar => scalar.Constant(constant.Value)
-                    );
+                    encoder.Scalar().Constant(constant.Value);
+
+                    //encoder.TaggedScalar(
+                    //    type => type.Enum(constant.Type.ToString()),
+                    //    scalar => scalar.Constant(constant.Value)
+                    //);
                     break;
                 case TypedConstantKind.Type:
                     encoder.Scalar().SystemType(constant.Type.ToString());
