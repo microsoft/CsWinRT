@@ -1283,10 +1283,15 @@ namespace Generator
                     encoder.Scalar().Constant(constant.Value);
                     break;
                 case TypedConstantKind.Enum:
-                    encoder.TaggedScalar(
-                        type => type.Enum(constant.Type.ToString()),
-                        scalar => scalar.Constant(constant.Value)
-                    );
+                    encoder.Scalar().Constant(constant.Value);
+
+                    // This looks more correct, but the code above matches what the C# compiler produces.
+                    // Eg. win32metadata does the same (see 'MetadataUtils.EncodeHelpers' in https://github.com/microsoft/win32metadata).
+                    // encoder.TaggedScalar(
+                    //     type => type.Enum(constant.Type.ToString()),
+                    //     scalar => scalar.Constant(constant.Value)
+                    // );
+
                     break;
                 case TypedConstantKind.Type:
                     encoder.Scalar().SystemType(constant.Type.ToString());
