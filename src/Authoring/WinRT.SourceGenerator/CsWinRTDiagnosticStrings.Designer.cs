@@ -178,6 +178,15 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; has attribute GeneratedBindableCustomProperty but it or a parent type isn&apos;t marked partial.  Type and any parent types should be marked partial to allow source generation for trimming and AOT compatibility..
+        /// </summary>
+        internal static string BindableCustomPropertyClassNotMarkedPartial_Text {
+            get {
+                return ResourceManager.GetString("BindableCustomPropertyClassNotMarkedPartial_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Class Constructor Rule.
         /// </summary>
         internal static string ClassConstructorRule_Brief {
@@ -223,11 +232,20 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class &apos;{0}&apos; implements WinRT interfaces but isn&apos;t marked partial.  Type should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI..
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; implements WinRT interfaces but it or a parent type isn&apos;t marked partial.  Type and any parent types should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI..
         /// </summary>
         internal static string ClassNotMarkedPartial_Text {
             get {
                 return ResourceManager.GetString("ClassNotMarkedPartial_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; was generated using an older version of CsWinRT and due to the type being defined in multiple DLLs, CsWinRT can not generate compat code to make it trimming safe.  Update to a projection generated using CsWinRT 2.1.0 or later for trimming and AOT compatibility..
+        /// </summary>
+        internal static string ClassOldProjectionMultipleInstances_Text {
+            get {
+                return ResourceManager.GetString("ClassOldProjectionMultipleInstances_Text", resourceCulture);
             }
         }
         

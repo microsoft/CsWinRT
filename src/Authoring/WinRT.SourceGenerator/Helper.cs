@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -299,6 +300,13 @@ namespace Generator
             return false;
         }
 
+        public static bool IsOldCsWinRTExe(GeneratorExecutionContext context)
+        {
+            string cswinrtExe = context.GetCsWinRTExe();
+            var cswinrtExeVersion = new Version(FileVersionInfo.GetVersionInfo(cswinrtExe).FileVersion);
+            return cswinrtExeVersion < new Version(2, 1, 0) && cswinrtExeVersion != new Version(0, 0, 0, 0);
+        }
+
         public static bool AllowUnsafe(Compilation compilation)
         {
             return compilation is CSharpCompilation csharpCompilation && csharpCompilation.Options.AllowUnsafe;
@@ -326,7 +334,7 @@ namespace Generator
         public static bool IsWinRTType(ISymbol type, Func<ISymbol, TypeMapper, bool> isAuthoringWinRTType, TypeMapper mapper)
         {
             bool isProjectedType = type.GetAttributes().
-                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0) ||
+                Any(static attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0) ||
                 IsFundamentalType(type);
 
             if (!isProjectedType & type.ContainingNamespace != null)
@@ -488,20 +496,37 @@ namespace Generator
 
         public static bool IsPartial(INamedTypeSymbol symbol)
         {
-            return symbol.DeclaringSyntaxReferences.Any(syntax => syntax.GetSyntax() is BaseTypeDeclarationSyntax declaration && declaration.Modifiers.Any(SyntaxKind.PartialKeyword));
+            bool isPartial = true;
+            for (ITypeSymbol parent = symbol; parent is not null; parent = parent.ContainingType)
+            {
+                isPartial &= parent.DeclaringSyntaxReferences.Any(
+                    static syntax => syntax.GetSyntax() is BaseTypeDeclarationSyntax declaration &&
+                    declaration.Modifiers.Any(SyntaxKind.PartialKeyword));
+            }
+            return isPartial;
+        }
+
+        public static bool IsPartial(TypeDeclarationSyntax node)
+        {
+            bool isPartial = true;
+            for (TypeDeclarationSyntax parent = node; parent is not null; parent = parent.Parent as TypeDeclarationSyntax)
+            {
+                isPartial &= parent.Modifiers.Any(static m => m.IsKind(SyntaxKind.PartialKeyword));
+            }
+            return isPartial;
         }
 
         public static bool HasPrivateclass(ITypeSymbol symbol)
         {
             return symbol is INamedTypeSymbol namedType &&
                 (namedType.DeclaredAccessibility == Accessibility.Private ||
-                 namedType.TypeArguments.Any(argument => argument.DeclaredAccessibility == Accessibility.Private));
+                 namedType.TypeArguments.Any(static argument => argument.DeclaredAccessibility == Accessibility.Private));
         }
 
         public static bool HasWinRTExposedTypeAttribute(ISymbol type)
         {
             return type.GetAttributes().
-                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WinRTExposedTypeAttribute") == 0);
+                Any(static attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WinRTExposedTypeAttribute") == 0);
         }
 
         public static bool HasWinRTRuntimeClassNameAttribute(ISymbol type, Compilation compilation)
@@ -517,14 +542,14 @@ namespace Generator
 
         public static bool IsWinRTType(MemberDeclarationSyntax node)
         {
-            bool isProjectedType = node.AttributeLists.SelectMany(list => list.Attributes).
-                Any(attribute => string.CompareOrdinal(attribute.Name.NormalizeWhitespace().ToFullString(), "global::WinRT.WindowsRuntimeType") == 0);
+            bool isProjectedType = node.AttributeLists.SelectMany(static list => list.Attributes).
+                Any(static attribute => string.CompareOrdinal(attribute.Name.NormalizeWhitespace().ToFullString(), "global::WinRT.WindowsRuntimeType") == 0);
             return isProjectedType;
         }
 
         public static bool HasBindableCustomPropertyAttribute(MemberDeclarationSyntax node)
         {
-            return node.AttributeLists.SelectMany(list => list.Attributes).Any(IsBindableCustomPropertyAttribute);
+            return node.AttributeLists.SelectMany(static list => list.Attributes).Any(IsBindableCustomPropertyAttribute);
 
             // Check based on identifier name if this is the GeneratedBindableCustomProperty attribute.
             // Technically this can be a different namespace, but we will confirm later once
@@ -683,7 +708,7 @@ namespace Generator
                 return "ABI.System.Exception";
             }
 
-            if (type.IsValueType)
+            if (type.IsValueType && !type.NullableAnnotation.HasFlag(NullableAnnotation.Annotated))
             {
                 string customTypeMapKey = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
                 if (mapper.HasMappingForType(customTypeMapKey))
@@ -695,7 +720,7 @@ namespace Generator
                 if (!IsBlittableValueType(type, mapper))
                 {
                     var winrtHelperAttribute = type.GetAttributes().
-                        Where(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeHelperTypeAttribute") == 0).
+                        Where(static attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeHelperTypeAttribute") == 0).
                         FirstOrDefault();
                     if (winrtHelperAttribute != null &&
                         winrtHelperAttribute.ConstructorArguments.Any())
@@ -887,8 +912,8 @@ namespace Generator
 
         public static string GetCreateMarshaler(string type, string abiType, TypeKind kind, string arg)
         {
-            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType) || 
-                type == "bool" || 
+            if (kind == TypeKind.Enum || (kind == TypeKind.Struct && type == abiType) ||
+                type == "bool" ||
                 type == "char")
             {
                 return "";
@@ -897,6 +922,11 @@ namespace Generator
             {
                 // TODO: Consider switching to pinning
                 return $$"""__{{arg}} = MarshalString.CreateMarshaler({{arg}});""";
+            }
+            else if (kind == TypeKind.Struct)
+            {
+                string marshalerClass = GetMarshalerClass(type, abiType, kind, false);
+                return $$"""__{{arg}} = {{marshalerClass}}.CreateMarshaler({{arg}});""";
             }
             else
             {
@@ -976,6 +1006,10 @@ namespace Generator
             {
                 return "";
             }
+            else if (kind == TypeKind.Struct)
+            {
+                return $"{GetAbiMarshalerType(type, abiType, kind, false)}.Marshaler __{arg} = default;";
+            }
             else
             {
                 return $"{GetAbiMarshalerType(type, abiType, kind, false)} __{arg} = default;";
@@ -1028,7 +1062,7 @@ namespace Generator
 
         public static string EscapeTypeNameForIdentifier(string typeName)
         {
-            return Regex.Replace(typeName, """[(\ |:<>,\.)]""", "_");
+            return Regex.Replace(typeName, """[(\ |:<>,\.\-@;+'^!`)]""", "_");
         }
 
         public readonly struct MappedType
@@ -1104,6 +1138,11 @@ namespace Generator
             }
 
             return null;
+        }
+
+        public static string TrimGlobalFromTypeName(string typeName)
+        {
+            return typeName.StartsWith("global::") ? typeName[8..] : typeName;
         }
     }
 }

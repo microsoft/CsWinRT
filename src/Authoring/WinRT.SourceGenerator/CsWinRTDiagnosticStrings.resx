@@ -109,12 +109,18 @@
   <data name="ClassImplementsOldProjection_Text" xml:space="preserve">
     <value>Class '{0}' implements WinRT interface(s) {1} generated using an older version of CsWinRT.  Update to a projection generated using CsWinRT 2.1.0 or later for trimming and AOT compatibility.</value>
   </data>
+  <data name="ClassOldProjectionMultipleInstances_Text" xml:space="preserve">
+    <value>Class '{0}' was generated using an older version of CsWinRT and due to the type being defined in multiple DLLs, CsWinRT can not generate compat code to make it trimming safe.  Update to a projection generated using CsWinRT 2.1.0 or later for trimming and AOT compatibility.</value>
+  </data>
   <data name="ClassNotMarkedPartial_Brief" xml:space="preserve">
     <value>Class is not marked partial</value>
   </data>
   <data name="ClassNotMarkedPartial_Text" xml:space="preserve">
-    <value>Class '{0}' implements WinRT interfaces but isn't marked partial.  Type should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI.</value>
+    <value>Class '{0}' implements WinRT interfaces but it or a parent type isn't marked partial.  Type and any parent types should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI.</value>
   </data>
+  <data name="BindableCustomPropertyClassNotMarkedPartial_Text" xml:space="preserve">
+    <value>Class '{0}' has attribute GeneratedBindableCustomProperty but it or a parent type isn't marked partial.  Type and any parent types should be marked partial to allow source generation for trimming and AOT compatibility.</value>
+  </data>	
   <data name="DisjointNamespaceRule_Brief" xml:space="preserve">
     <value>Namespace is disjoint from main (winmd) namespace</value>
   </data>

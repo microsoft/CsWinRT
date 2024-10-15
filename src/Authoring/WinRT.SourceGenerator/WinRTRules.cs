@@ -218,5 +218,25 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.EnableUnsafe_Brief,
             CsWinRTDiagnosticStrings.EnableUnsafe_Text,
             false);
+
+        public static DiagnosticDescriptor ClassWithBindableCustomPropertyNotPartial = MakeRule(
+            "CsWinRT1028",
+            CsWinRTDiagnosticStrings.ClassNotMarkedPartial_Brief,
+            CsWinRTDiagnosticStrings.BindableCustomPropertyClassNotMarkedPartial_Text,
+            false,
+            true);
+
+        public static DiagnosticDescriptor ClassNotAotCompatibleOldProjectionMultipleInstancesWarning = MakeRule(
+            "CsWinRT1029",
+            CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Brief,
+            CsWinRTDiagnosticStrings.ClassOldProjectionMultipleInstances_Text,
+            false,
+            true);
+
+        public static DiagnosticDescriptor ClassNotAotCompatibleOldProjectionMultipleInstancesInfo = MakeRule(
+            "CsWinRT1029",
+            CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Brief,
+            CsWinRTDiagnosticStrings.ClassOldProjectionMultipleInstances_Text,
+            false);
     }
 } 

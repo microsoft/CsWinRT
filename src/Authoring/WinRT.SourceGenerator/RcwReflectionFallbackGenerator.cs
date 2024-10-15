@@ -58,6 +58,11 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
             return options.GetCsWinRTRcwFactoryFallbackGeneratorForceOptOut();
         });
 
+        IncrementalValueProvider<bool> csWinRTAotWarningEnabled = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
+        {
+            return options.GetCsWinRTAotWarningLevel() >= 1;
+        });
+
         // Get whether the generator should actually run or not
         IncrementalValueProvider<bool> isGeneratorEnabled =
             isOutputTypeExe
@@ -72,20 +77,20 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
             .Where(static item => item.Right);
 
         // Get all the names of the projected types to root
-        IncrementalValuesProvider<EquatableArray<string>> executableTypeNames = enabledExecutableReferences.Select(static (executableReference, token) =>
+        IncrementalValuesProvider<EquatableArray<RcwReflectionFallbackType>> executableTypeNames = enabledExecutableReferences.Select(static (executableReference, token) =>
         {
             Compilation compilation = executableReference.Value.GetCompilationUnsafe();
 
             // We only care about resolved assembly symbols (this should always be the case anyway)
             if (compilation.GetAssemblyOrModuleSymbol(executableReference.Value.Reference) is not IAssemblySymbol assemblySymbol)
             {
-                return EquatableArray<string>.FromImmutableArray(ImmutableArray<string>.Empty);
+                return EquatableArray<RcwReflectionFallbackType>.FromImmutableArray(ImmutableArray<RcwReflectionFallbackType>.Empty);
             }
 
             // If the assembly is not an old projections assembly, we have nothing to do
             if (!GeneratorHelper.IsOldProjectionAssembly(assemblySymbol))
             {
-                return EquatableArray<string>.FromImmutableArray(ImmutableArray<string>.Empty);
+                return EquatableArray<RcwReflectionFallbackType>.FromImmutableArray(ImmutableArray<RcwReflectionFallbackType>.Empty);
             }
 
             token.ThrowIfCancellationRequested();
@@ -93,7 +98,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
             ITypeSymbol attributeSymbol = compilation.GetTypeByMetadataName("System.Attribute")!;
             ITypeSymbol windowsRuntimeTypeAttributeSymbol = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute")!;
 
-            ImmutableArray<string>.Builder executableTypeNames = ImmutableArray.CreateBuilder<string>();
+            ImmutableArray<RcwReflectionFallbackType>.Builder executableTypeNames = ImmutableArray.CreateBuilder<RcwReflectionFallbackType>();
 
             // Process all type symbols in the current assembly
             foreach (INamedTypeSymbol typeSymbol in VisitNamedTypeSymbolsExceptABI(assemblySymbol))
@@ -141,25 +146,31 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                     continue;
                 }
 
-                executableTypeNames.Add(typeName);
+                // Check if we are able to resolve the type using GetTypeByMetadataName.  If not,
+                // it indicates there are multiple definitions of this type in the references
+                // and us emitting a dependency on this type would cause compiler error.  So emit
+                // a warning instead.
+                bool hasMultipleDefinitions = compilation.GetTypeByMetadataName(GeneratorHelper.TrimGlobalFromTypeName(typeName)) is null;
+                executableTypeNames.Add(new RcwReflectionFallbackType(typeName, hasMultipleDefinitions));
             }
 
             token.ThrowIfCancellationRequested();
 
-            return EquatableArray<string>.FromImmutableArray(executableTypeNames.ToImmutable());
+            return EquatableArray<RcwReflectionFallbackType>.FromImmutableArray(executableTypeNames.ToImmutable());
         });
 
         // Combine all names into a single sequence
-        IncrementalValueProvider<ImmutableArray<string>> projectedTypeNames =
+        IncrementalValueProvider<(ImmutableArray<RcwReflectionFallbackType>, bool)> projectedTypeNamesAndAotWarningEnabled =
             executableTypeNames
             .Where(static names => !names.IsEmpty)
             .SelectMany(static (executableTypeNames, token) => executableTypeNames.AsImmutableArray())
-            .Collect();
+            .Collect()
+            .Combine(csWinRTAotWarningEnabled);
 
         // Generate the [DynamicDependency] attributes
-        context.RegisterImplementationSourceOutput(projectedTypeNames, static (context, projectedTypeNames) =>
+        context.RegisterImplementationSourceOutput(projectedTypeNamesAndAotWarningEnabled, static (SourceProductionContext context, (ImmutableArray<RcwReflectionFallbackType> projectedTypeNames, bool csWinRTAotWarningEnabled) value) =>
         {
-            if (projectedTypeNames.IsEmpty)
+            if (value.projectedTypeNames.IsEmpty)
             {
                 return;
             }
@@ -187,11 +198,25 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                         [ModuleInitializer]                    
                 """);
 
-            foreach (string projectedTypeName in projectedTypeNames)
+            bool emittedDynamicDependency = false;
+            foreach (RcwReflectionFallbackType projectedTypeName in value.projectedTypeNames)
             {
-                builder.Append("        [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(");
-                builder.Append(projectedTypeName);
-                builder.AppendLine("))]");
+                // If there are multiple definitions of the type, emitting a dependency would result in a compiler error.
+                // So instead, emit a diagnostic for it.
+                if (projectedTypeName.HasMultipleDefinitions)
+                {
+                    var diagnosticDescriptor = value.csWinRTAotWarningEnabled ?
+                        WinRTRules.ClassNotAotCompatibleOldProjectionMultipleInstancesWarning : WinRTRules.ClassNotAotCompatibleOldProjectionMultipleInstancesInfo;
+                    // We have no location to emit the diagnostic as this is just a reference we detect.
+                    context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, null, GeneratorHelper.TrimGlobalFromTypeName(projectedTypeName.TypeName)));
+                }
+                else
+                {
+                    emittedDynamicDependency = true;
+                    builder.Append("        [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(");
+                    builder.Append(projectedTypeName.TypeName);
+                    builder.AppendLine("))]");
+                }
             }
 
             builder.Append("""
@@ -202,7 +227,10 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 }
                 """);
 
-            context.AddSource("RcwFallbackInitializer.g.cs", builder.ToString());
+            if (emittedDynamicDependency)
+            {
+                context.AddSource("RcwFallbackInitializer.g.cs", builder.ToString());
+            }
         });
     }
 
@@ -306,4 +334,6 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
             return other.Reference.GetMetadataId() == Reference.GetMetadataId();
         }
     }
+
+    internal readonly record struct RcwReflectionFallbackType(string TypeName, bool HasMultipleDefinitions);
 }

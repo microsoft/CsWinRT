@@ -4,7 +4,6 @@
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection.Metadata;
 using WinRT.SourceGenerator;
 
 namespace Generator
@@ -183,7 +182,7 @@ namespace Generator
             // Splitting on the dots and the generic specifier (`) will get us the class name
             // in the 2nd last element.
             var interfaceName = genericInterface.Split('.', '`')[^2];
-            var genericParametersStr = string.Join("_", genericParameters.Select(genericParameter => GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType)));
+            var genericParametersStr = string.Join("_", genericParameters.Select(static genericParameter => GeneratorHelper.EscapeTypeNameForIdentifier(genericParameter.ProjectedType)));
             return $$"""        _ = global::WinRT.{{escapedAssemblyName}}GenericHelpers.{{interfaceName}}_{{genericParametersStr}}.Initialized;""";
         }
 
