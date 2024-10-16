@@ -8092,7 +8092,7 @@ internal unsafe interface % : %
 %%%%}
 )",
 // Interface abi implementation
-            is_exclusive_to(type) ? "" : "[DynamicInterfaceCastableImplementation]",
+            is_exclusive_to(type) && !settings.idic_exclusiveto ? "" : "[DynamicInterfaceCastableImplementation]",
             bind<write_guid_attribute>(type),
             type_name,
             bind<write_type_name>(type, typedef_name_type::CCW, false),
@@ -8223,7 +8223,7 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
             bind<write_interface_members>(type),
             "",
             [&](writer& w) {
-                if (!is_exclusive_to(type))
+                if (!is_exclusive_to(type) || settings.idic_exclusiveto)
                 {
                     for (auto required_interface : required_interfaces)
                     {
