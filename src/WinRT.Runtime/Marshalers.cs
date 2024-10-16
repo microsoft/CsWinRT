@@ -16,6 +16,21 @@ namespace WinRT
 {
     internal static class MarshalExtensions
     {
+        /// <summary>
+        /// Releases a COM object, if not <see langword="null"/>.
+        /// </summary>
+        /// <param name="pUnk">The input COM object to release.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void ReleaseIfNotNull(IntPtr pUnk)
+        {
+            if ((void*)pUnk == null)
+            {
+                return;
+            }
+
+            _ = ((delegate* unmanaged[Stdcall]<IntPtr, int>)(*(*(void***)pUnk + 2 /* IUnknown.Release slot */)))(pUnk);
+        }
+
         public static void Dispose(this GCHandle handle)
         {
             if (handle.IsAllocated)
