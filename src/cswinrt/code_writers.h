@@ -4997,7 +4997,7 @@ remove => %.Unsubscribe(value);
 
     void write_interface_members(writer& w, TypeDef const& type)
     {
-        if (is_exclusive_to(type))
+        if (is_exclusive_to(type) && !settings.idic_exclusiveto)
         {
             return;
         }
@@ -8041,8 +8041,9 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
         // For exclusive interfaces which aren't overridable interfaces that are implemented by unsealed types,
         // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
         // But we are still keeping the interface itself for any helper type lookup that may happen for like GUID lookup.
+        // We avoid this path if we want to generate IDIC implementations for them though.
         if (!is_generic &&
-            (is_exclusive_to(type) && !settings.public_exclusiveto) &&
+            (is_exclusive_to(type) && !settings.public_exclusiveto && !settings.idic_exclusiveto) &&
             // check for !authored type
             !(settings.component && settings.filter.includes(type)))
         {
@@ -8091,7 +8092,7 @@ internal unsafe interface % : %
 {
 %%%%}
 )",
-// Interface abi implementation
+            // Interface abi implementation
             is_exclusive_to(type) && !settings.idic_exclusiveto ? "" : "[DynamicInterfaceCastableImplementation]",
             bind<write_guid_attribute>(type),
             type_name,
@@ -8099,6 +8100,13 @@ internal unsafe interface % : %
             // Vftbl
             bind([&](writer& w)
             {
+                // If the interface is exclusive and not public, we don't need to emit any abi members.
+                // In this scenario, we'll only ever generating the IDIC implementation for the type.
+                if (is_exclusive_to(type) && !settings.public_exclusiveto)
+                {
+                    return;
+                }
+
                 auto methods = type.MethodList();
                 if (is_generic)
                 {
