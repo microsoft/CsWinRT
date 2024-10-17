@@ -257,6 +257,7 @@ $(CsWinRTIncludeWinRTInterop)
 $(CsWinRTEmbeddedProjection)
 $(CsWinRTEmbeddedEnums)
 $(CsWinRTPublicExclusiveTo)
+$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)
       </CsWinRTParams>
 
       <CsWinRTPrivateParams Condition="'$(CsWinRTPrivateParams)' == ''">
