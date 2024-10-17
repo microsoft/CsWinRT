@@ -101,7 +101,7 @@ namespace ABI.Windows.Foundation
             finally
             {
                 Marshaler<T>.DisposeAbiArray((__retval_length, __retval_data));
-                Marshal.Release(referenceArrayPtr);
+                MarshalExtensions.ReleaseIfNotNull(referenceArrayPtr);
             }
         }
 

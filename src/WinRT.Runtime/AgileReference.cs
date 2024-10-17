@@ -146,7 +146,7 @@ namespace WinRT
             }
             finally
             {
-                Marshal.Release(gitPtr);
+                MarshalExtensions.ReleaseIfNotNull(gitPtr);
             }
         }
 

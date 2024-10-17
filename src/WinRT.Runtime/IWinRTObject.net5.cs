@@ -188,17 +188,21 @@ namespace WinRT
                 AdditionalTypeData.GetOrAdd(projectIEnum, (_) => new ABI.System.Collections.IEnumerable.AdaptiveFromAbiHelper(type, this));
             }
 
-            using (objRef)
+            bool hasMovedObjRefOwnership = false;
+
+            try
             {
                 var vftblType = helperType.FindVftblType();
 
+                // If there is no nested vftbl type, we want to add the object reference with the IID from the helper type
+                // to the cache. Rather than doing 'QueryInterface' again with the same IID, on the object reference we
+                // already have, we can just store that same instance in the cache, and suppress the 'objRef.Dispose()'
+                // call for it. This avoids that extra call, plus the overhead of allocating a new object reference.
+                // For all other cases, we dispose the object reference as usual at the end of this scope.
                 if (vftblType is null)
                 {
-                    var qiObjRef = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
-                    if (!QueryInterfaceCache.TryAdd(interfaceType, qiObjRef))
-                    {
-                        qiObjRef.Dispose();
-                    }
+                    hasMovedObjRefOwnership = QueryInterfaceCache.TryAdd(interfaceType, objRef);
+
                     return true;
                 }
 
@@ -229,6 +233,13 @@ namespace WinRT
                 }
 
                 return true;
+            }
+            finally
+            {
+                if (!hasMovedObjRefOwnership)
+                {
+                    objRef.Dispose();
+                }
             }
         }
         

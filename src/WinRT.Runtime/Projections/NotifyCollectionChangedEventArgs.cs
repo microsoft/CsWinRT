@@ -157,7 +157,7 @@ namespace ABI.System.Collections.Specialized
             {
                 MarshalInterface<global::System.Collections.IList>.DisposeAbi(newItems);
                 MarshalInterface<global::System.Collections.IList>.DisposeAbi(oldItems);
-                Marshal.Release(thisPtr);
+                MarshalExtensions.ReleaseIfNotNull(thisPtr);
             }
         }
 
