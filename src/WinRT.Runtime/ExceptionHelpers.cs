@@ -374,15 +374,15 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                         message = ex.GetType().FullName;
                     }
 
-                    IntPtr hstringHeader = IntPtr.Zero;
-                    IntPtr hstring = IntPtr.Zero;
+                    MarshalString.HSTRING_HEADER header = default;
+                    IntPtr hstring = default;
 
                     fixed (char* lpMessage = message)
                     {
                         if (Platform.WindowsCreateStringReference(
                             sourceString: (ushort*)lpMessage,
                             length: message.Length,
-                            hstring_header: &hstringHeader,
+                            hstring_header: (IntPtr*)&header,
                             hstring: &hstring) != 0)
                         {
                             hstring = IntPtr.Zero;
