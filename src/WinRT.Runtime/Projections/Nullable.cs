@@ -417,7 +417,7 @@ namespace ABI.System
             }
             finally
             {
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
 
@@ -630,7 +630,7 @@ namespace ABI.System
             finally
             {
                 MarshalString.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -1427,7 +1427,7 @@ namespace ABI.System
             finally
             {
                 DateTimeOffset.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -1504,7 +1504,7 @@ namespace ABI.System
             finally
             {
                 TimeSpan.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -1641,7 +1641,7 @@ namespace ABI.System
             finally
             {
                 Type.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -1724,7 +1724,7 @@ namespace ABI.System
             finally
             {
                 Exception.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -1784,7 +1784,7 @@ namespace ABI.System
             finally
             {
                 EventHandler.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -1849,7 +1849,7 @@ namespace ABI.System
             finally
             {
                 global::ABI.System.ComponentModel.PropertyChangedEventHandler.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -1914,7 +1914,7 @@ namespace ABI.System
             finally
             {
                 global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -1977,7 +1977,7 @@ namespace ABI.System
             finally
             {
                 Marshaler<T>.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -2039,7 +2039,7 @@ namespace ABI.System
             }
             finally
             {
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -2101,7 +2101,7 @@ namespace ABI.System
             }
             finally
             {
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -2129,7 +2129,7 @@ namespace ABI.System
             }
             finally
             {
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
     }
@@ -2387,7 +2387,7 @@ namespace ABI.System
             finally
             {
                 Marshaler<T>.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
 
@@ -2443,7 +2443,7 @@ namespace ABI.System
             finally
             {
                 Marshaler<T>.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
+                MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
 

@@ -647,10 +647,7 @@ namespace WinRT
             }
             finally
             {
-                if (ptr != IntPtr.Zero)
-                {
-                    Marshal.Release(ptr);
-                }
+                MarshalExtensions.ReleaseIfNotNull(ptr);
             }
         }
 
