@@ -8038,12 +8038,14 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
 
+        bool shouldOmitCcwCodegen = false;
+
         // For exclusive interfaces which aren't overridable interfaces that are implemented by unsealed types,
         // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
         // But we are still keeping the interface itself for any helper type lookup that may happen for like GUID lookup.
         // We avoid this path if we want to generate IDIC implementations for them though.
         if (!is_generic &&
-            (is_exclusive_to(type) && !settings.public_exclusiveto && !settings.idic_exclusiveto) &&
+            (is_exclusive_to(type) && !settings.public_exclusiveto) &&
             // check for !authored type
             !(settings.component && settings.filter.includes(type)))
         {
@@ -8067,6 +8069,15 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
 
             if (!hasOverridableAttribute)
             {
+                // Under normal conditions, we would stop here and just emit a minimal amount of code.
+                // However, if IDIC is requested, just continue normally, but omit the CCW generation.
+                // We know we can safely omit that because it wouldn't have normally be generated.
+                if (settings.idic_exclusiveto)
+                {
+                    shouldOmitCcwCodegen = true;
+                    break;
+                }
+
                 w.write(R"(%
 internal interface % : %
 {
@@ -8100,9 +8111,7 @@ internal unsafe interface % : %
             // Vftbl
             bind([&](writer& w)
             {
-                // If the interface is exclusive and not public, we don't need to emit any abi members.
-                // In this scenario, we'll only ever generating the IDIC implementation for the type.
-                if (is_exclusive_to(type) && !settings.public_exclusiveto)
+                if (shouldOmitCcwCodegen)
                 {
                     return;
                 }
