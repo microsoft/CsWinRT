@@ -11068,4 +11068,15 @@ return true;
 //------------------------------------------------------------------------------
 )", VERSION_STRING);
     }
+
+    void write_deprecated_attribute(writer& w, CustomAttribute const& deprecatedAttribute)
+    {
+        std::string_view message = std::get<std::string_view>(std::get<ElemSig>(deprecatedAttribute.Value().FixedArgs()[0].value).value);
+        ElemSig::EnumValue deprecationType = std::get<ElemSig::EnumValue>(std::get<ElemSig>(deprecatedAttribute.Value().FixedArgs()[1].value).value);
+        bool shouldError = deprecationType.equals_enumerator("Remove");
+        w.write(R"([System.Obsolete("%", %)])",
+			message,
+			shouldError ? "true" : "false");
+        w.write('\n');
+    }
 }
