@@ -1294,7 +1294,7 @@ namespace Generator
 
                     break;
                 case TypedConstantKind.Type:
-                    encoder.Scalar().SystemType(constant.Type.ToString());
+                    encoder.Scalar().SystemType(constant.Value.ToString());
                     break;
                 case TypedConstantKind.Array:
                     {
