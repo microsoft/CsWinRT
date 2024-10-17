@@ -264,11 +264,22 @@ if (sum != 3)
     return 101;
 }
 
+// Testing to ensure no exceptions from any of the analyzers while building.
+Action<int, int> s = (a, b) => { _ = a + b; };
+ActionToFunction(s)(2, 3);
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
 
 static bool AllEqual<T>(T[] x, params T[][] list) => list.All((y) => x.SequenceEqual(y));
+
+static Func<TA1, TA2, TA1> ActionToFunction<TA1, TA2>(Action<TA1, TA2> action) =>
+    (a1, a2) =>
+    {
+        action(a1, a2);
+        return a1;
+    };
 
 sealed partial class CustomClass : INotifyPropertyChanged
 {

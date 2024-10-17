@@ -136,7 +136,7 @@ namespace WinRT.SourceGenerator
 
                         if (context.Node is InvocationExpressionSyntax invocation)
                         {
-                            var invocationSymbol = context.SemanticModel.GetSymbolInfo(invocation.Expression).Symbol;
+                            var invocationSymbol = context.SemanticModel.GetSymbolInfo(invocation).Symbol;
                             if (invocationSymbol is IMethodSymbol methodSymbol)
                             {
                                 var taskAdapter = GeneratorHelper.GetTaskAdapterIfAsyncMethod(methodSymbol);

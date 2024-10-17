@@ -25,7 +25,7 @@ namespace Generator
                     provider.IsCsWinRTCcwLookupTableGeneratorEnabled())
                 );
 
-            var assemblyName = context.CompilationProvider.Select(static (compilation, _) => GeneratorHelper.EscapeTypeNameForIdentifier(compilation.AssemblyName));
+            var assemblyName = context.CompilationProvider.Select(static (compilation, _) => GeneratorHelper.EscapeAssemblyNameForIdentifier(compilation.AssemblyName));
 
             var propertiesAndAssemblyName = properties.Combine(assemblyName);
 
@@ -1107,7 +1107,7 @@ namespace Generator
 
             if (context.Node is InvocationExpressionSyntax invocation)
             {
-                var invocationSymbol = context.SemanticModel.GetSymbolInfo(invocation.Expression).Symbol;
+                var invocationSymbol = context.SemanticModel.GetSymbolInfo(invocation).Symbol;
                 if (invocationSymbol is IMethodSymbol methodSymbol &&
                     // Filter checks for boxing and casts to ones calling CsWinRT projected functions and
                     // functions within same assembly.  Functions within same assembly can take a boxed value
