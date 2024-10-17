@@ -1060,6 +1060,11 @@ namespace Generator
             throw new ArgumentException();
         }
 
+        public static string EscapeAssemblyNameForIdentifier(string typeName)
+        {
+            return Regex.Replace(typeName, """[^a-zA-Z0-9_]""", "_");
+        }
+
         public static string EscapeTypeNameForIdentifier(string typeName)
         {
             return Regex.Replace(typeName, """[(\ |:<>,\.\-@;+'^!`)]""", "_");
