@@ -8075,10 +8075,11 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
                 if (settings.idic_exclusiveto)
                 {
                     shouldOmitCcwCodegen = true;
-                    break;
                 }
-
-                w.write(R"(%
+                else
+                {
+                    // Otherwise, just write the minimal non-IDIC interface
+                    w.write(R"(%
 internal interface % : %
 {
 }
@@ -8086,7 +8087,9 @@ internal interface % : %
                     bind<write_guid_attribute>(type),
                     type_name,
                     bind<write_type_name>(type, typedef_name_type::CCW, false));
-                return true;
+                    
+                    return true;
+                }
             }
         }
 
