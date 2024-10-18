@@ -374,18 +374,36 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                         message = ex.GetType().FullName;
                     }
 
-                    IntPtr hstring;
+                    MarshalString.HSTRING_HEADER header = default;
+                    IntPtr hstring = default;
 
                     fixed (char* lpMessage = message)
                     {
-                        if (Platform.WindowsCreateString((ushort*)lpMessage, message.Length, &hstring) != 0)
+                        if (Platform.WindowsCreateStringReference(
+                            sourceString: (ushort*)lpMessage,
+                            length: message.Length,
+                            hstring_header: (IntPtr*)&header,
+                            hstring: &hstring) != 0)
                         {
                             hstring = IntPtr.Zero;
                         }
-                    }
 
-                    using var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex);
-                    roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper.ThisPtr);
+#if NET
+                        IntPtr managedExceptionWrapper = ComWrappersSupport.CreateCCWForObjectUnsafe(ex);
+
+                        try
+                        {
+                            roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper);
+                        }
+                        finally
+                        {
+                            Marshal.Release(managedExceptionWrapper);
+                        }
+#else
+                        using var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex);
+                        roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper.ThisPtr);
+#endif
+                    }
                 }
             }
             else
