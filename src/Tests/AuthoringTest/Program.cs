@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Markup;
 using System;
 using System.Collections;
@@ -204,6 +205,70 @@ namespace AuthoringTest
     {
         public int Number { get; } = 4;
         public string Value => "CsWinRT";
+    }
+
+    public sealed partial class CustomPropertyProviderWithExplicitImplementation : ICustomPropertyProvider
+    {
+        public Type Type => typeof(CustomPropertyProviderWithExplicitImplementation);
+
+        public ICustomProperty GetCustomProperty(string name)
+        {
+            if (name == "TestCustomProperty")
+            {
+                return new CustomPropertyWithExplicitImplementation();
+            }
+
+            return null;
+        }
+
+        public ICustomProperty GetIndexedProperty(string name, Type type)
+        {
+            return null;
+        }
+
+        public string GetStringRepresentation()
+        {
+            return string.Empty;
+        }
+    }
+
+    public sealed partial class CustomPropertyWithExplicitImplementation : ICustomProperty
+    {
+        internal CustomPropertyWithExplicitImplementation()
+        {
+        }
+
+        public bool CanRead => true;
+
+        public bool CanWrite => false;
+
+        public string Name => "TestCustomProperty";
+
+        public Type Type => typeof(CustomPropertyWithExplicitImplementation);
+
+        /// <inheritdoc />
+        public object GetIndexedValue(object target, object index)
+        {
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc />
+        public object GetValue(object target)
+        {
+            return "TestPropertyValue";
+        }
+
+        /// <inheritdoc />
+        public void SetIndexedValue(object target, object value, object index)
+        {
+            throw new NotSupportedException();
+        }
+
+        /// <inheritdoc />
+        public void SetValue(object target, object value)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     [Version(3u)]
