@@ -10235,6 +10235,7 @@ protected override ObjectReferenceValue CreateMarshaler(% handler) =>
 protected override global::ABI.WinRT.Interop.EventSourceState<%> CreateEventSourceState() =>
 new EventState(ObjectReference.ThisPtr, Index);
 
+%
 private sealed class EventState : global::ABI.WinRT.Interop.EventSourceState<%>
 {
 public EventState(System.IntPtr obj, int index)
@@ -10268,6 +10269,7 @@ genericInstantiationInitialization == "" ? "" : "_ = initialized;",
 eventTypeCode, // % handler
 abiTypeName,
 eventTypeCode, // EventSourceState<%>
+settings.netstandard_compat ? "" : "[global::WinRT.WinRTExposedType]",
 eventTypeCode, // EventSourceState<%>
 eventTypeCode, // % GetEventInvoke()
 bind<write_event_invoke_params>(invokeMethodSig),
