@@ -189,7 +189,8 @@ namespace WinRT
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(Type type)
         {
             var entries = new List<ComInterfaceEntry>();
-            bool hasCustomIMarshalInterface = false;
+            bool hasUserImplementedIMarshalInterface = false;
+            bool hasUserImplementedICustomPropertyProviderInterface = false;
             bool hasWinrtExposedClassAttribute = false;
 
 #if NET
@@ -229,7 +230,23 @@ namespace WinRT
                         return false;
                     }
 
-                    hasCustomIMarshalInterface = GetHasCustomIMarshalInterface(entries);
+                    // Same as above, for 'ICustomPropertyProvider' (separate method for a small perf boost).
+                    // The method is very tiny, so the code duplication is not really a concern here.
+                    static bool GetHasICustomPropertyProviderInterface(List<ComInterfaceEntry> entries)
+                    {
+                        foreach (ref readonly ComInterfaceEntry entry in CollectionsMarshal.AsSpan(entries))
+                        {
+                            if (entry.IID == IID.IID_ICustomPropertyProvider)
+                            {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    }
+
+                    hasUserImplementedIMarshalInterface = GetHasCustomIMarshalInterface(entries);
+                    hasUserImplementedICustomPropertyProviderInterface = GetHasICustomPropertyProviderInterface(entries);
                 }
             }
             else if (type == typeof(global::System.EventHandler))
@@ -260,7 +277,11 @@ namespace WinRT
             else if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
             {
-                static void AddInterfaceToVtable(Type iface, List<ComInterfaceEntry> entries, bool hasCustomIMarshalInterface)
+                static void AddInterfaceToVtable(
+                    Type iface,
+                    List<ComInterfaceEntry> entries,
+                    ref bool hasUserImplementedIMarshalInterface,
+                    ref bool hasUserImplementedICustomPropertyProviderInterface)
                 {
                     var interfaceHelperType = iface.FindHelperType();
                     Guid iid = GuidGenerator.GetIID(interfaceHelperType);
@@ -270,9 +291,14 @@ namespace WinRT
                         Vtable = interfaceHelperType.GetAbiToProjectionVftblPtr()
                     });
 
-                    if (!hasCustomIMarshalInterface && iid == IID.IID_IMarshal)
+                    if (!hasUserImplementedIMarshalInterface && iid == IID.IID_IMarshal)
                     {
-                        hasCustomIMarshalInterface = true;
+                        hasUserImplementedIMarshalInterface = true;
+                    }
+
+                    if (!hasUserImplementedICustomPropertyProviderInterface && iid == IID.IID_ICustomPropertyProvider)
+                    {
+                        hasUserImplementedICustomPropertyProviderInterface = true;
                     }
                 }
 
@@ -283,7 +309,11 @@ namespace WinRT
                 [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Fallback method for JIT environments that is not trim-safe by design.")]
                 [MethodImpl(MethodImplOptions.NoInlining)]
 #endif
-                static void GetInterfaceTableEntriesForJitEnvironment(Type type, List<ComInterfaceEntry> entries, bool hasCustomIMarshalInterface)
+                static void GetInterfaceTableEntriesForJitEnvironment(
+                    Type type,
+                    List<ComInterfaceEntry> entries,
+                    ref bool hasUserImplementedIMarshalInterface,
+                    ref bool hasUserImplementedICustomPropertyProviderInterface)
                 {
                     if (type.IsDelegate())
                     {
@@ -312,7 +342,7 @@ namespace WinRT
                         {
                             if (Projections.IsTypeWindowsRuntimeType(iface))
                             {
-                                AddInterfaceToVtable(iface, entries, hasCustomIMarshalInterface);
+                                AddInterfaceToVtable(iface, entries, ref hasUserImplementedIMarshalInterface, ref hasUserImplementedICustomPropertyProviderInterface);
                             }
 
                             if (iface.IsConstructedGenericType
@@ -322,14 +352,14 @@ namespace WinRT
                             {
                                 foreach (var compatibleIface in compatibleIfaces)
                                 {
-                                    AddInterfaceToVtable(compatibleIface, entries, hasCustomIMarshalInterface);
+                                    AddInterfaceToVtable(compatibleIface, entries, ref hasUserImplementedIMarshalInterface, ref hasUserImplementedICustomPropertyProviderInterface);
                                 }
                             }
                         }
                     }
                 }
 
-                GetInterfaceTableEntriesForJitEnvironment(type, entries, hasCustomIMarshalInterface);
+                GetInterfaceTableEntriesForJitEnvironment(type, entries, ref hasUserImplementedIMarshalInterface, ref hasUserImplementedICustomPropertyProviderInterface);
             }
 
 #if !NET
@@ -383,7 +413,10 @@ namespace WinRT
                 Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
             });
 
-            if (FeatureSwitches.EnableICustomPropertyProviderSupport)
+            // There are two scenarios where we want to support 'ICustomPropertyProvider':
+            //   - The user is explicitly implementing the interface on their type
+            //   - The user is using '[GeneratedBindableCustomProperty]', which uses our internal CCW
+            if (FeatureSwitches.EnableICustomPropertyProviderSupport && !hasUserImplementedICustomPropertyProviderInterface)
             {
                 entries.Add(new ComInterfaceEntry
                 {
@@ -400,7 +433,7 @@ namespace WinRT
 
             // Add IMarhal implemented using the free threaded marshaler
             // to all CCWs if it doesn't already have its own.
-            if (!hasCustomIMarshalInterface)
+            if (!hasUserImplementedIMarshalInterface)
             {
                 entries.Add(new ComInterfaceEntry
                 {
