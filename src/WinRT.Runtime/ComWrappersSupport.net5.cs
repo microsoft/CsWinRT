@@ -159,6 +159,11 @@ namespace WinRT
             return ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
         }
 
+        internal static IntPtr CreateCCWForObjectUnsafe(object obj)
+        {
+            return ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
+        }
+
         public static IObjectReference CreateCCWForObject(object obj)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
