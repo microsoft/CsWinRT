@@ -1,0 +1,45 @@
+name: Feature request
+description: Suggest a new feature or ide
+title: 'Proposal: '
+type: Feature
+body:
+
+  # Summary
+  - type: textarea
+    attributes:
+      label: Summary
+      description: Include 1-2 sentences summarizing your feature/proposal
+    validations:
+      required: true
+
+  # Rationale
+  - type: textarea
+    attributes:
+      label: Rationale
+      description: Describe why we should consider this proposal with a couple of reasons.
+      placeholder: |
+        - The first reason
+        - The second reason
+        - etc...
+    validations:
+      required: true
+
+  # Important Notes
+  - type: textarea
+    attributes:
+      label: Important Notes
+      description: Please include any other important details.
+      placeholder: |
+        - Usage examples
+        - Implementation details
+        - etc...
+    validations:
+      required: false
+
+  # Open Questions
+  - type: textarea
+    attributes:
+      label: Open Questions
+      description: Please list any open issues that you think still need to be addressed.
+    validations:
+      required: false
