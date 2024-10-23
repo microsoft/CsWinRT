@@ -267,6 +267,53 @@ namespace WinRT
         internal Type[] IndexerPropertyTypes { get; }
     }
 #endif
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// An attribute used to indicate that the type definition it is put on
+    /// is exposed to the WinRT ABI and needs a vtable generated for it.
+    /// The type which this attribute is placed on also needs to be marked partial.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class GeneratedWinRTExposedTypeAttribute : Attribute
+    {
+        /// <summary>
+        /// Marks the type it is put on as exposed to the WinRT ABI
+        /// so that a vtable can be generated for it.
+        /// </summary>
+        public GeneratedWinRTExposedTypeAttribute()
+        {
+        }
+    }
+
+    /// <summary>
+    /// An attribute used to indicate that the the type passed to the constructor
+    /// is exposed to the WinRT ABI and needs a vtable generated for it.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class GeneratedWinRTExposedExternalTypeAttribute : Attribute
+    {
+        /// <summary>
+        /// Marks the given type as exposed to the WinRT ABI so that a vtable can be generated for it.
+        /// </summary>
+        public GeneratedWinRTExposedExternalTypeAttribute(Type type)
+        {
+            Type = type;
+        }
+
+        internal Type Type { get; }
+    }
+#endif
 }
 
 namespace System.Runtime.InteropServices.WindowsRuntime
