@@ -21,6 +21,7 @@
 
     <!-- Projections should not require runtime marshalling. -->
     <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
+    <CsWinRTAotOptimizerEnabled>Auto</CsWinRTAotOptimizerEnabled>
   </PropertyGroup>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
