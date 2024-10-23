@@ -1092,7 +1092,7 @@ namespace WinRT
 
         public static new unsafe MarshalerArray CreateMarshalerArray(T[] array)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1108,7 +1108,12 @@ namespace WinRT
             {
                 int length = array.Length;
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                var abi_element_size = Marshal.SizeOf(AbiType);
+                var abi_element_size =
+#if NET9_0_OR_GREATER
+                    RuntimeHelpers.SizeOf(AbiType.TypeHandle);
+#else
+                    Marshal.SizeOf(AbiType);
+#endif
 #pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 m._array = Marshal.AllocCoTaskMem(byte_length);
@@ -1140,7 +1145,7 @@ namespace WinRT
 
         public static new unsafe T[] FromAbiArray(object box)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1158,10 +1163,20 @@ namespace WinRT
             var array = new T[abi.length];
             var data = (byte*)abi.data.ToPointer();
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-            var abi_element_size = Marshal.SizeOf(AbiType);
+            var abi_element_size =
+#if NET9_0_OR_GREATER
+                RuntimeHelpers.SizeOf(AbiType.TypeHandle);
+#else
+                Marshal.SizeOf(AbiType);
+#endif
             for (int i = 0; i < abi.length; i++)
             {
-                var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
+                var abi_element =
+#if NET9_0_OR_GREATER
+                    RuntimeHelpers.Box(ref *data, AbiType.TypeHandle);
+#else
+                    Marshal.PtrToStructure((IntPtr)data, AbiType);
+#endif
 #pragma warning restore IL3050
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
@@ -1171,7 +1186,7 @@ namespace WinRT
 
         public static unsafe void CopyAbiArray(T[] array, object box)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1184,10 +1199,20 @@ namespace WinRT
             }
             var data = (byte*)abi.data.ToPointer();
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-            var abi_element_size = Marshal.SizeOf(AbiType);
+            var abi_element_size =
+#if NET9_0_OR_GREATER
+                RuntimeHelpers.SizeOf(AbiType.TypeHandle);
+#else
+                Marshal.SizeOf(AbiType);
+#endif
             for (int i = 0; i < abi.length; i++)
             {
-                var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
+                var abi_element =
+#if NET9_0_OR_GREATER
+                    RuntimeHelpers.Box(ref *data, AbiType.TypeHandle);
+#else
+                    Marshal.PtrToStructure((IntPtr)data, AbiType);
+#endif
 #pragma warning restore IL3050
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
@@ -1196,7 +1221,7 @@ namespace WinRT
 
         public static new unsafe (int length, IntPtr data) FromManagedArray(T[] array)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1213,7 +1238,12 @@ namespace WinRT
             {
                 int length = array.Length;
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                var abi_element_size = Marshal.SizeOf(AbiType);
+                var abi_element_size =
+#if NET9_0_OR_GREATER
+                    RuntimeHelpers.SizeOf(AbiType.TypeHandle);
+#else
+                    Marshal.SizeOf(AbiType);
+#endif
 #pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 data = Marshal.AllocCoTaskMem(byte_length);
@@ -1237,7 +1267,7 @@ namespace WinRT
 
         public static unsafe void CopyManagedArray(T[] array, IntPtr data)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1254,7 +1284,12 @@ namespace WinRT
             {
                 int length = array.Length;
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-                var abi_element_size = Marshal.SizeOf(AbiType);
+                var abi_element_size =
+#if NET9_0_OR_GREATER
+                    RuntimeHelpers.SizeOf(AbiType.TypeHandle);
+#else
+                    Marshal.SizeOf(AbiType);
+#endif
 #pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 var bytes = (byte*)data.ToPointer();
@@ -1278,7 +1313,7 @@ namespace WinRT
 
         public static unsafe void DisposeAbiArrayElements((int length, IntPtr data) abi)
         {
-#if NET
+#if NET && !NET9_0_OR_GREATER
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1286,10 +1321,20 @@ namespace WinRT
 #endif
             var data = (byte*)abi.data.ToPointer();
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
-            var abi_element_size = Marshal.SizeOf(AbiType);
+            var abi_element_size =
+#if NET9_0_OR_GREATER
+                RuntimeHelpers.SizeOf(AbiType.TypeHandle);
+#else
+                Marshal.SizeOf(AbiType);
+#endif
             for (int i = 0; i < abi.length; i++)
             {
-                var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
+                var abi_element =
+#if NET9_0_OR_GREATER
+                    RuntimeHelpers.Box(ref *data, AbiType.TypeHandle);
+#else
+                    Marshal.PtrToStructure((IntPtr)data, AbiType);
+#endif
 #pragma warning restore IL3050
                 Marshaler<T>.DisposeAbi(abi_element);
                 data += abi_element_size;
