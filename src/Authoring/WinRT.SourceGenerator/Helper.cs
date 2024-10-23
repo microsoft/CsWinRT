@@ -135,7 +135,12 @@ namespace Generator
                 // For CsWinRT components, we also run by default in auto mode.
                 return provider.IsCsWinRTComponent() ||
                        compilation.GetTypeByMetadataName("Microsoft.UI.Xaml.Controls.Button") is not null ||
-                       compilation.GetTypeByMetadataName("Windows.UI.Xaml.Controls.Button") is not null;
+                       compilation.GetTypeByMetadataName("Windows.UI.Xaml.Controls.Button") is not null ||
+                       // If warning level was explicitly set to 2 without a mode set,
+                       // we don't want to change the behavior of those projects who were
+                       // relying on it running. If they set the mode, then the mode would
+                       // be respected.
+                       provider.GetCsWinRTAotWarningLevel() == 2;
             }
 
             // If mode is not the default, check if it is set explicitly to Auto.
