@@ -1,0 +1,4 @@
+Compat issues with assembly WinRT.Runtime:
+TypesMustExist : Type 'WinRT.GeneratedWinRTExposedExternalTypeAttribute' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.GeneratedWinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
+Total Issues: 2
