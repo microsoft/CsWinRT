@@ -27,8 +27,6 @@ body:
     attributes:
       label: Expected Behavior
       description: Please provide a description of what you expected to happen.
-      value: |
-        - e.g. Fix crash that occurs when...
     validations:
       required: true
 
