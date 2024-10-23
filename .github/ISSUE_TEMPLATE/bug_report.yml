@@ -1,0 +1,48 @@
+name: Bug Report
+description: File a bug report to help improve CsWinRT
+title: 'Bug: '
+type: Bug
+body:
+
+  # Description
+  - type: textarea
+    attributes:
+      label: Description
+      description: Please enter a short, clear description of the bug.
+    validations:
+      required: true
+
+  # Step To Reproduce
+  - type: textarea
+    attributes:
+      label: Steps To Reproduce
+      description: Please provide any required setup and steps to reproduce the behavior.
+      placeholder: |
+        1.
+        2.
+    validations:
+      required: true
+
+  # Expected Behavior
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: Please provide a description of what you expected to happen.
+    validations:
+      required: true
+
+  # Version Info
+  - type: textarea
+    attributes:
+      label: Version Info
+      description: Specify version of CsWinRT NuGet, .NET SDK, Windows SDK, or other relevant info.
+    validations:
+      required: true
+
+  # Additional Context
+  - type: textarea
+    attributes:
+      label: Additional Context
+      description: 'Enter any other applicable info here'
+    validations:
+      required: false
