@@ -28,9 +28,9 @@
     <IsTargetFrameworkNet8OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">true</IsTargetFrameworkNet8OrGreater>
     <AppBuildTFMs>netcoreapp3.1;net8.0</AppBuildTFMs>
     <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netcoreapp3.1;net8.0</AppBuildTFMs>
-    <LibBuildTFMs>netstandard2.0;net8.0</LibBuildTFMs>
+    <LibBuildTFMs>netstandard2.0;net8.0;net9.0</LibBuildTFMs>
     <LibBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">netstandard2.0;net8.0</LibBuildTFMs>
-    <LibBuildTFMsNoNetStandard>net8.0</LibBuildTFMsNoNetStandard>
+    <LibBuildTFMsNoNetStandard>net8.0;net9.0</LibBuildTFMsNoNetStandard>
     <LibBuildTFMsNoNetStandard Condition="'$(CIBuildReason)' == 'CI'">net8.0</LibBuildTFMsNoNetStandard>
     <TestsBuildTFMs>net8.0-windows10.0.19041.0</TestsBuildTFMs>
     <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net8.0-windows10.0.19041.0</TestsBuildTFMs>
