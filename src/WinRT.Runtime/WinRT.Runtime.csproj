@@ -13,7 +13,6 @@
     <PackageId>WinRT.Runtime</PackageId>
     <FileVersion>$(VersionNumber)</FileVersion>
     <Version>$(VersionNumber)</Version>
-    <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
     <InformationalVersion>$(VersionNumber)</InformationalVersion>
     <NeutralLanguage>en</NeutralLanguage>
     <Description>C#/WinRT Runtime v$(VersionString)</Description>
@@ -27,6 +26,15 @@
     <!-- Set remote for source link. -->
     <AdoMirrorBuild Condition="'$(AdoMirrorBuild)' == ''">false</AdoMirrorBuild>
     <GitRepositoryRemoteName Condition="$(AdoMirrorBuild)">github</GitRepositoryRemoteName>
+  </PropertyGroup>
+	
+  <!-- Keep assembly version constant for .NET 6 as new APIs are added for the .NET 8 version. -->
+  <PropertyGroup Condition="'$(TargetFramework)' != 'net6.0'">
+    <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <!-- NativeAOT specific options, only starting from .NET 8 -->

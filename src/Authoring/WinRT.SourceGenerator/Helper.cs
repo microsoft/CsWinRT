@@ -108,10 +108,61 @@ namespace Generator
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotOptimizerEnabled", out var isCsWinRTAotOptimizerEnabledStr))
             {
-                return bool.TryParse(isCsWinRTAotOptimizerEnabledStr, out var isCsWinRTAotOptimizerEnabled) && isCsWinRTAotOptimizerEnabled;
+                return (bool.TryParse(isCsWinRTAotOptimizerEnabledStr, out var isCsWinRTAotOptimizerEnabled) && isCsWinRTAotOptimizerEnabled) ||
+                    string.Equals(isCsWinRTAotOptimizerEnabledStr, "OptIn", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(isCsWinRTAotOptimizerEnabledStr, "Auto", StringComparison.OrdinalIgnoreCase);
             }
 
             return false;
+        }
+
+        private enum CsWinRTAotOptimizerMode
+        {
+            Disabled = 0,
+            OptIn = 1,
+            Auto = 2,
+            Default = 3,
+        }
+
+        public static bool IsCsWinRTAotOptimizerInAutoMode(AnalyzerConfigOptionsProvider provider, Compilation compilation)
+        {
+            var mode = GetMode(provider);
+
+            if (mode == CsWinRTAotOptimizerMode.Default)
+            {
+                // If mode is default and this is a WinUI or UWP project, which we detect by using the Button type as a marker,
+                // then AOT optimizer is running in auto mode because in both projects the main API boundary is WinRT.
+                // For CsWinRT components, we also run by default in auto mode.
+                return provider.IsCsWinRTComponent() ||
+                       compilation.GetTypeByMetadataName("Microsoft.UI.Xaml.Controls.Button") is not null ||
+                       compilation.GetTypeByMetadataName("Windows.UI.Xaml.Controls.Button") is not null;
+            }
+
+            // If mode is not the default, check if it is set explicitly to Auto.
+            return mode == CsWinRTAotOptimizerMode.Auto;
+
+            static CsWinRTAotOptimizerMode GetMode(AnalyzerConfigOptionsProvider provider)
+            {
+                if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotOptimizerEnabled", out var isCsWinRTAotOptimizerEnabledStr))
+                {
+                    if (string.Equals(isCsWinRTAotOptimizerEnabledStr, "OptIn", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CsWinRTAotOptimizerMode.OptIn;
+                    }
+
+                    if (string.Equals(isCsWinRTAotOptimizerEnabledStr, "Auto", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CsWinRTAotOptimizerMode.Auto;
+                    }
+
+                    if (bool.TryParse(isCsWinRTAotOptimizerEnabledStr, out var isCsWinRTAotOptimizerEnabled) && isCsWinRTAotOptimizerEnabled)
+                    {
+                        return CsWinRTAotOptimizerMode.Default;
+                    }
+                }
+
+                return CsWinRTAotOptimizerMode.Disabled;
+            }
         }
 
         public static bool GetCsWinRTRcwFactoryFallbackGeneratorForceOptIn(this AnalyzerConfigOptionsProvider provider)
@@ -149,6 +200,24 @@ namespace Generator
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTCcwLookupTableGeneratorEnabled", out var csWinRTCcwLookupTableGeneratorEnabled))
             {
                 return bool.TryParse(csWinRTCcwLookupTableGeneratorEnabled, out var isCsWinRTCcwLookupTableGeneratorEnabled) && isCsWinRTCcwLookupTableGeneratorEnabled;
+            }
+
+            return false;
+        }
+
+        public static bool GenerateCsWinRTCcwLookupTable(this AnalyzerConfigOptionsProvider provider)
+        {
+            // If trimming isn't enabled, we don't generate the lookup table or do an analysis for
+            // whether there is anything to be generated. This allows to avoid the cost of the analysis
+            // and also avoid generating unnecessary code that our reflection support can handle.
+            return IsCsWinRTCcwLookupTableGeneratorEnabled(provider) && IsEnableTrimAnalyzer(provider);
+        }
+
+        public static bool IsEnableTrimAnalyzer(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.EnableTrimAnalyzer", out var enableTrimAnalyzerStr))
+            {
+                return bool.TryParse(enableTrimAnalyzerStr, out var enableTrimAnalyzer) && enableTrimAnalyzer;
             }
 
             return false;
