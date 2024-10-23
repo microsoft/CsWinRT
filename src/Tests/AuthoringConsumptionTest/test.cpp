@@ -770,5 +770,5 @@ TEST(AuthoringTest, ExplicitlyImplementedICustomPropertyProvider)
     EXPECT_EQ(propertyType.Name, L"AuthoringTest.CustomPropertyWithExplicitImplementation");
 
     auto propertyValue = customProperty.GetValue(nullptr);
-    EXPECT_EQ(propertyValue, L"TestPropertyValue");
+    EXPECT_EQ(winrt::unbox_value<hstring>(propertyValue), L"TestPropertyValue");
 }
