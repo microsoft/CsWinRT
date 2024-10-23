@@ -54,6 +54,14 @@ namespace WinRT.SourceGenerator
                     return;
                 }
 
+                bool isCsWinRTAotOptimizerAutoMode = GeneratorExecutionContextHelper.IsCsWinRTAotOptimizerInAutoMode(context.Options.AnalyzerConfigOptionsProvider, context.Compilation);
+                var generatedWinRTExposedTypeAttribute = context.Compilation.GetTypeByMetadataName("WinRT.GeneratedWinRTExposedTypeAttribute");
+                var generatedWinRTExposedExternalTypeAttribute = context.Compilation.GetTypeByMetadataName("WinRT.GeneratedWinRTExposedExternalTypeAttribute");
+                if (!isCsWinRTAotOptimizerAutoMode && (generatedWinRTExposedTypeAttribute is null || generatedWinRTExposedExternalTypeAttribute is null))
+                {
+                    return;
+                }
+
                 var typeMapper = new TypeMapper(context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTUseWindowsUIXamlProjections());
                 var csWinRTAotWarningLevel = context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningLevel();
                 var allowUnsafe = GeneratorHelper.AllowUnsafe(context.Compilation);
@@ -67,6 +75,20 @@ namespace WinRT.SourceGenerator
                         !namedType.IsAbstract &&
                         !namedType.IsStatic)
                     {
+                        // Make sure classes with the GeneratedBindableCustomProperty attribute are marked partial.
+                        if (GeneratorHelper.HasAttributeWithType(namedType, generatedBindableCustomPropertyAttribute) &&
+                            !GeneratorHelper.IsPartial(namedType))
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassWithBindableCustomPropertyNotPartial, namedType.Locations[0], namedType.Name));
+                        }
+
+                        // In opt-in mode, make sure it has the attribute asking to generate the vtable for it.
+                        if (isCsWinRTAotOptimizerAutoMode || 
+                            (!isCsWinRTAotOptimizerAutoMode && !GeneratorHelper.HasAttributeWithType(namedType, generatedWinRTExposedTypeAttribute)))
+                        {
+                            return;
+                        }
+
                         // Make sure this is a class that we would generate the WinRTExposedType attribute on
                         // and that it isn't already partial.
                         if (!GeneratorHelper.IsWinRTType(namedType, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly) &&
@@ -118,17 +140,10 @@ namespace WinRT.SourceGenerator
                                 context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, namedType.Locations[0], namedType.Name, string.Join(", ", interfacesFromOldProjections)));
                             }
                         }
-
-                        // Make sure classes with the GeneratedBindableCustomProperty attribute are marked partial.
-                        if (GeneratorHelper.HasAttributeWithType(namedType, generatedBindableCustomPropertyAttribute) &&
-                            !GeneratorHelper.IsPartial(namedType))
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassWithBindableCustomPropertyNotPartial, namedType.Locations[0], namedType.Name));
-                        }
                     }
                 }, SymbolKind.NamedType);
 
-                if (!allowUnsafe && isCsWinRTCcwLookupTableGeneratorEnabled)
+                if (!allowUnsafe && isCsWinRTCcwLookupTableGeneratorEnabled && isCsWinRTAotOptimizerAutoMode)
                 {
                     context.RegisterSyntaxNodeAction(context =>
                     {
@@ -324,7 +339,7 @@ namespace WinRT.SourceGenerator
                                 }
 
                                 // This handles the case where the source generator wasn't able to run
-                                // and put the WinRTExposedType attribute on the class. This can be in the
+                                // and put the WinRTExposedType attributeData on the class. This can be in the
                                 // scenario where the caller defined their own generic class and
                                 // pass it as a parameter.  With generic classes, the interface itself
                                 // might be generic too and due to that we handle it here.
@@ -339,7 +354,7 @@ namespace WinRT.SourceGenerator
                                         addClassOnLookupTable =
                                             !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
                                             // If the type is defined in the same assembly as what the source generator is running on,
-                                            // we let the WinRTExposedType attribute generator handle it. The only scenario the generator
+                                            // we let the WinRTExposedType attributeData generator handle it. The only scenario the generator
                                             // doesn't handle which we handle here is if it is a generic type implementing generic WinRT interfaces.
                                             (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) ||
                                               GeneratorHelper.HasNonInstantiatedWinRTGeneric(instantiatedTypeSymbol.OriginalDefinition, typeMapper)) &&
@@ -351,7 +366,7 @@ namespace WinRT.SourceGenerator
                                         addClassOnLookupTable =
                                             !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
                                             // If the type is defined in the same assembly as what the source generator is running on,
-                                            // we let the WinRTExposedType attribute generator handle it.
+                                            // we let the WinRTExposedType attributeData generator handle it.
                                             !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) &&
                                             // Make sure the type we are passing is being boxed or cast to another interface.
                                             !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol);
@@ -388,6 +403,47 @@ namespace WinRT.SourceGenerator
                             WinRTRules.ClassEnableUnsafeWarning : WinRTRules.ClassEnableUnsafeInfo;
                         reportDiagnostic(Diagnostic.Create(diagnosticDescriptor, location, symbol));
                     }
+                }
+
+                if (!allowUnsafe && isCsWinRTCcwLookupTableGeneratorEnabled && !isCsWinRTAotOptimizerAutoMode)
+                {
+                    context.RegisterCompilationEndAction(context =>
+                    {
+                        // If any of generated code for the type in the attribute requires unsafe code, report the first one.
+                        foreach (AttributeData attributeData in context.Compilation.Assembly.GetAttributes())
+                        {
+                            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, generatedWinRTExposedExternalTypeAttribute))
+                            {
+                                if (attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol vtableType }])
+                                {
+                                    if (vtableType is IArrayTypeSymbol)
+                                    {
+                                        context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassEnableUnsafeWarning, null, vtableType));
+                                        return;
+                                    }
+                                    else if (vtableType.TypeKind == TypeKind.Delegate &&
+                                             vtableType.MetadataName.Contains("`") &&
+                                             GeneratorHelper.IsWinRTType(vtableType, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
+                                    {
+                                        context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassEnableUnsafeWarning, null, vtableType));
+                                        return;
+                                    }
+                                    else if (vtableType.TypeKind == TypeKind.Class)
+                                    {
+                                        foreach (var iface in vtableType.AllInterfaces)
+                                        {
+                                            if (iface.IsGenericType &&
+                                                GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
+                                            {
+                                                context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassEnableUnsafeWarning, null, vtableType));
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
                 }
             });
         }
