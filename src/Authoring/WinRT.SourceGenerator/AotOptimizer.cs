@@ -61,8 +61,8 @@ namespace Generator
                             GetVtableAttributeToAdd(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, false, value.typeMapperAndProperties.properties.IsCsWinRTCcwLookupTableGeneratorEnabled) : default)
                 .Where(static vtableAttribute => vtableAttribute != default);
 
-            var optinVtableAttributesToAdd = vtablesToAddFromDetectedClassTypes.Select(static (vtable, _) => vtable.Item1);
-            var optinAdapterTypesToAddOnLookupTable = vtablesToAddFromDetectedClassTypes.SelectMany(static (vtable, _) => vtable.Item2);
+            var optinVtableAttributesToAdd = vtablesToAddFromOptInClassTypes.Select(static (vtable, _) => vtable.Item1);
+            var optinAdapterTypesToAddOnLookupTable = vtablesToAddFromOptInClassTypes.SelectMany(static (vtable, _) => vtable.Item2);
 
             // Merge both auto detected vtables and opt-in vtables.
             var vtableAttributesToAdd = autoDetectedVtableAttributesToAdd.Collect().Combine(optinVtableAttributesToAdd.Collect()).SelectMany(static (value, _) => value.Left.AddRange(value.Right).Distinct());
@@ -94,7 +94,7 @@ namespace Generator
 
             var optinInstantiatedTypesToAddOnLookupTable = context.SyntaxProvider.ForAttributeWithMetadataName(
                     "WinRT.GeneratedWinRTExposedExternalTypeAttribute",
-                    static (n, _) => n is ClassDeclarationSyntax,
+                    static (n, _) => true,
                     static (n, _) => n)
                 .Combine(typeMapperAndProperties)
                 .Select(static ((GeneratorAttributeSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, CsWinRTAotOptimizerProperties properties) typeMapperAndProperties) value,
@@ -1415,7 +1415,7 @@ namespace Generator
 
             foreach (var attributeData in context.Attributes)
             {
-                if (attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value : INamedTypeSymbol vtableType }])
+                if (attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value : ITypeSymbol vtableType }])
                 {
                     if (vtableType is IArrayTypeSymbol arrayType)
                     {

@@ -178,6 +178,10 @@ namespace WinRT
                 Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ccw, ref iid, out var iidCcw));
                 return iidCcw;
             }
+            catch (InvalidCastException ex)
+            {
+                throw new InvalidCastException($"Specified cast of object {obj} to interface with IID {iid} is not valid", ex);
+            }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(ccw);
