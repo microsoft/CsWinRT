@@ -432,7 +432,8 @@ namespace WinRT.SourceGenerator
                                         foreach (var iface in vtableType.AllInterfaces)
                                         {
                                             if (iface.IsGenericType &&
-                                                GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
+                                                (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly) ||
+                                                 GeneratorHelper.IsWinRTType(iface.OriginalDefinition, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly)))
                                             {
                                                 context.ReportDiagnostic(Diagnostic.Create(WinRTRules.ClassEnableUnsafeWarning, null, vtableType));
                                                 return;
