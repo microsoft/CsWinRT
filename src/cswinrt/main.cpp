@@ -41,7 +41,7 @@ namespace cswinrt
         { "embedded", 0, 0, {}, "Generates an embedded projection."},
         { "public_enums", 0, 0, {}, "Used with embedded option to generate enums as public"},
         { "public_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces public in the projection (default is internal)"},
-        { "idic_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces support IDIC for RCW scenarios (default is false)"},
+        { "idic_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces support IDynamicInterfaceCastable (IDIC) for RCW scenarios (default is false)"},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
