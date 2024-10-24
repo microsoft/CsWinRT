@@ -83,8 +83,7 @@ namespace WinRT.SourceGenerator
                         }
 
                         // In opt-in mode, make sure it has the attribute asking to generate the vtable for it.
-                        if (isCsWinRTAotOptimizerAutoMode || 
-                            (!isCsWinRTAotOptimizerAutoMode && !GeneratorHelper.HasAttributeWithType(namedType, generatedWinRTExposedTypeAttribute)))
+                        if (!isCsWinRTAotOptimizerAutoMode && !GeneratorHelper.HasAttributeWithType(namedType, generatedWinRTExposedTypeAttribute))
                         {
                             return;
                         }
@@ -339,7 +338,7 @@ namespace WinRT.SourceGenerator
                                 }
 
                                 // This handles the case where the source generator wasn't able to run
-                                // and put the WinRTExposedType attributeData on the class. This can be in the
+                                // and put the WinRTExposedType attribute on the class. This can be in the
                                 // scenario where the caller defined their own generic class and
                                 // pass it as a parameter.  With generic classes, the interface itself
                                 // might be generic too and due to that we handle it here.
@@ -354,7 +353,7 @@ namespace WinRT.SourceGenerator
                                         addClassOnLookupTable =
                                             !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
                                             // If the type is defined in the same assembly as what the source generator is running on,
-                                            // we let the WinRTExposedType attributeData generator handle it. The only scenario the generator
+                                            // we let the WinRTExposedType attribute generator handle it. The only scenario the generator
                                             // doesn't handle which we handle here is if it is a generic type implementing generic WinRT interfaces.
                                             (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) ||
                                               GeneratorHelper.HasNonInstantiatedWinRTGeneric(instantiatedTypeSymbol.OriginalDefinition, typeMapper)) &&
@@ -366,7 +365,7 @@ namespace WinRT.SourceGenerator
                                         addClassOnLookupTable =
                                             !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
                                             // If the type is defined in the same assembly as what the source generator is running on,
-                                            // we let the WinRTExposedType attributeData generator handle it.
+                                            // we let the WinRTExposedType attribute generator handle it.
                                             !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) &&
                                             // Make sure the type we are passing is being boxed or cast to another interface.
                                             !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol);
