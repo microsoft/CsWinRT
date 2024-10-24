@@ -26,7 +26,7 @@ namespace Generator
                     new CsWinRTAotOptimizerProperties(
                         value.provider.IsCsWinRTAotOptimizerEnabled(),
                         value.provider.IsCsWinRTComponent(),
-                        value.provider.GenerateCsWinRTCcwLookupTable(),
+                        value.provider.IsCsWinRTCcwLookupTableGeneratorEnabled(),
                         GeneratorExecutionContextHelper.IsCsWinRTAotOptimizerInAutoMode(value.provider, value.compilation))
                 );
 

@@ -210,24 +210,6 @@ namespace Generator
             return false;
         }
 
-        public static bool GenerateCsWinRTCcwLookupTable(this AnalyzerConfigOptionsProvider provider)
-        {
-            // If trimming isn't enabled, we don't generate the lookup table or do an analysis for
-            // whether there is anything to be generated. This allows to avoid the cost of the analysis
-            // and also avoid generating unnecessary code that our reflection support can handle.
-            return IsCsWinRTCcwLookupTableGeneratorEnabled(provider) && IsEnableTrimAnalyzer(provider);
-        }
-
-        public static bool IsEnableTrimAnalyzer(this AnalyzerConfigOptionsProvider provider)
-        {
-            if (provider.GlobalOptions.TryGetValue("build_property.EnableTrimAnalyzer", out var enableTrimAnalyzerStr))
-            {
-                return bool.TryParse(enableTrimAnalyzerStr, out var enableTrimAnalyzer) && enableTrimAnalyzer;
-            }
-
-            return false;
-        }
-
         public static bool GetCsWinRTUseWindowsUIXamlProjections(this AnalyzerConfigOptionsProvider provider)
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTUseWindowsUIXamlProjections", out var csWinRTUseWindowsUIXamlProjections))

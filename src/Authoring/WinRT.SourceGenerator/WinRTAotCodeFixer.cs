@@ -65,7 +65,7 @@ namespace WinRT.SourceGenerator
                 var typeMapper = new TypeMapper(context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTUseWindowsUIXamlProjections());
                 var csWinRTAotWarningLevel = context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningLevel();
                 var allowUnsafe = GeneratorHelper.AllowUnsafe(context.Compilation);
-                var isCsWinRTCcwLookupTableGeneratorEnabled = context.Options.AnalyzerConfigOptionsProvider.GenerateCsWinRTCcwLookupTable();
+                var isCsWinRTCcwLookupTableGeneratorEnabled = context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTCcwLookupTableGeneratorEnabled();
 
                 context.RegisterSymbolAction(context =>
                 {
