@@ -413,7 +413,7 @@ namespace WinRT.SourceGenerator
                         {
                             if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, generatedWinRTExposedExternalTypeAttribute))
                             {
-                                if (attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol vtableType }])
+                                if (attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: ITypeSymbol vtableType }])
                                 {
                                     if (vtableType is IArrayTypeSymbol)
                                     {
