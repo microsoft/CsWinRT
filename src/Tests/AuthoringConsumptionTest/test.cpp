@@ -746,3 +746,29 @@ TEST(AuthoringTest, TypeOnlyActivatableViaItsOwnFactory)
 {
     EXPECT_EQ(TypeOnlyActivatableViaItsOwnFactory::Create().GetText(), L"Hello!");
 }
+
+TEST(AuthoringTest, ExplicitlyImplementedICustomPropertyProvider)
+{
+    CustomPropertyProviderWithExplicitImplementation userObject;
+
+    // We should be able to cast to 'ICustomPropertyProvider'
+    auto propertyProvider = userObject.as<Microsoft::UI::Xaml::Data::ICustomPropertyProvider>();
+
+    auto providerType = propertyProvider.Type();
+    EXPECT_EQ(providerType.Kind, Windows::UI::Xaml::Interop::TypeKind::Metadata);
+    EXPECT_EQ(providerType.Name, L"AuthoringTest.CustomPropertyProviderWithExplicitImplementation");
+
+    auto customProperty = propertyProvider.GetCustomProperty(L"TestCustomProperty");
+    
+    EXPECT_NE(customProperty, nullptr);
+    EXPECT_TRUE(customProperty.CanRead());
+    EXPECT_FALSE(customProperty.CanWrite());
+    EXPECT_EQ(customProperty.Name(), L"TestCustomProperty");
+
+    auto propertyType = customProperty.Type();
+    EXPECT_EQ(propertyType.Kind, Windows::UI::Xaml::Interop::TypeKind::Metadata);
+    EXPECT_EQ(propertyType.Name, L"AuthoringTest.CustomPropertyWithExplicitImplementation");
+
+    auto propertyValue = customProperty.GetValue(nullptr);
+    EXPECT_EQ(winrt::unbox_value<hstring>(propertyValue), L"TestPropertyValue");
+}
