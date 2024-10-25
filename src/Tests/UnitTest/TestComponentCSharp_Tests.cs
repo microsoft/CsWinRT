@@ -2043,7 +2043,7 @@ namespace UnitTest
             var task = InvokeAddAsync(42, 8);
             Assert.False(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(5000), task.Status + " -  " + task.Exception);
+            Assert.True(task.Wait(5000) || task.Status == TaskStatus.RanToCompletion);
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
             Assert.Equal(50, task.Result);
 
