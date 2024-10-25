@@ -1382,10 +1382,28 @@ namespace Generator
 
             if (classType is INamedTypeSymbol namedType && IsDerivedFromOrIsObservableCollection(namedType))
             {
-                // ObservableCollection make use of an internal built-in type as part of its
-                // implementation for INotifyPropertyChanged.  Handling that manually here.
+                // ObservableCollection make use of two internal built-in types as part of its
+                // implementation for INotifyPropertyChanged.  Handling those manually here.
                 var genericInterfaces = new List<string>() { "System.Collections.IList", "System.Collections.IEnumerable" };
                 var mapping = mapper.GetMappedType("System.Collections.IList").GetMapping();
+                var runtimeClassName = mapping.Item1 + "." + mapping.Item2;
+
+                // System.Collections.Specialized.ReadOnlyList
+                vtableAttributes.Add(
+                    new VtableAttribute(
+                        "System.Collections.Specialized",
+                        false,
+                        "ReadOnlyList",
+                        ImmutableArray<TypeInfo>.Empty,
+                        "System.Collections.Specialized.ReadOnlyList",
+                        genericInterfaces.ToImmutableArray(),
+                        ImmutableArray<GenericInterface>.Empty,
+                        false,
+                        false,
+                        false,
+                        runtimeClassName));
+
+                // System.Collections.Specialized.SingleItemReadOnlyList
                 vtableAttributes.Add(
                     new VtableAttribute(
                         "System.Collections.Specialized",
@@ -1398,7 +1416,7 @@ namespace Generator
                         false,
                         false,
                         false,
-                        mapping.Item1 + "." + mapping.Item2));
+                        runtimeClassName));
             }
 
             void LookupAndAddVtableAttributeForGenericType(string type, ImmutableArray<ITypeSymbol> genericArgs)
