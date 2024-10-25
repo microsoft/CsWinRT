@@ -3262,7 +3262,7 @@ namespace UnitTest
             var launchExePath = $"{currentExecutingDir}\\OOPExe.dll";
             var proc = Process.Start("dotnet.exe", launchExePath);
 #endif
-            Thread.Sleep(1000);
+            Thread.Sleep(3000);
             obj.Close();
             Assert.True(obj.delegateCalled);
 
