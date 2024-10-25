@@ -43,6 +43,15 @@ stages:
           Write-Host "##vso[task.setvariable variable=DOTNET_ROOT;]$env:LOCALAPPDATA\Microsoft\dotnet\"
           Write-Host "##vso[task.setvariable variable=DOTNET_ROOT(x86);]$env:LOCALAPPDATA\Microsoft\dotnet\x86\"
 
+# Enable GC stress
+    - task: PowerShell@2
+      displayName: Enable GC Stress
+      condition: and(succeeded(), eq(variables['_RunGCStress'], 'true'))
+      inputs:
+        targetType: inline
+        script: |
+          Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0xC"
+
 # Run Unit Tests
     - task: DotNetCoreCLI@2
       displayName: Run Unit Tests
