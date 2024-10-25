@@ -25,6 +25,8 @@ namespace OOPExe
             asyncAction.Completed = Completed;
 
             done.WaitOne(5000);
+
+            GC.KeepAlive(asyncAction);
         }
 
         public static void Completed(IAsyncAction asyncInfo, AsyncStatus asyncStatus)
