@@ -126,6 +126,16 @@ stages:
           set CIBuildReason=CI
           set cswinrt_label=functionaltest
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
+
+# Disable GC stress
+    - task: PowerShell@2
+      displayName: Disable GC Stress
+      condition: and(succeeded(), eq(variables['_RunGCStress'], 'true'))
+      inputs:
+        targetType: inline
+        script: |
+          Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0x0"
+
     templateContext:
       outputs:
       - output: pipelineArtifact
