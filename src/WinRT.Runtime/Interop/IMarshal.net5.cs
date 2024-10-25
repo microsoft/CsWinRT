@@ -216,36 +216,42 @@ namespace ABI.WinRT.Interop
         {
             IntPtr thisPtr = ThisPtr;
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, MSHCTX, IntPtr, MSHLFLAGS, Guid*, int>)(*(void***)thisPtr)[3])(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid));
+            GC.KeepAlive(_obj);
         }
 
         public unsafe void GetMarshalSizeMax(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags, uint* pSize)
         {
             IntPtr thisPtr = ThisPtr;
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, MSHCTX, IntPtr, MSHLFLAGS, uint*, int>)(*(void***)thisPtr)[4])(thisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize));
+            GC.KeepAlive(_obj);
         }
 
         public unsafe void MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags)
         {
             IntPtr thisPtr = ThisPtr;
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr, MSHCTX, IntPtr, MSHLFLAGS, int>)(*(void***)thisPtr)[5])(thisPtr, pStm, riid, pv, dwDestContext, pvDestContext, mshlflags));
+            GC.KeepAlive(_obj);
         }
 
         public unsafe void UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv)
         {
             IntPtr thisPtr = ThisPtr;
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)(*(void***)thisPtr)[6])(thisPtr, pStm, riid, ppv));
+            GC.KeepAlive(_obj);
         }
 
         public unsafe void ReleaseMarshalData(IntPtr pStm)
         {
             IntPtr thisPtr = ThisPtr;
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)(*(void***)thisPtr)[7])(thisPtr, pStm));
+            GC.KeepAlive(_obj);
         }
 
         public unsafe void DisconnectObject(uint dwReserved)
         {
             IntPtr thisPtr = ThisPtr;
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, uint, int>)(*(void***)thisPtr)[8])(thisPtr, dwReserved));
+            GC.KeepAlive(_obj);
         }
     }
 }

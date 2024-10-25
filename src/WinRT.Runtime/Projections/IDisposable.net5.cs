@@ -24,6 +24,7 @@ namespace ABI.System
         {
             var ThisPtr = obj.ThisPtr;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[6](ThisPtr));
+            GC.KeepAlive(obj);
         }
     }
 

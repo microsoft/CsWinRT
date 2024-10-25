@@ -55,6 +55,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 fixed (void* ___name = __name)
                 {
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), &__retval));
+                    GC.KeepAlive(_obj);
                     return ObjectReference<IUnknownVftbl>.Attach(ref __retval, IID.IID_IUnknown);
                 }
             }
@@ -71,6 +72,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
             fixed (void* ___name = __name)
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), &__retval));
+                GC.KeepAlive(_obj);
                 return new ObjectReferenceValue(__retval);
             }
         }
