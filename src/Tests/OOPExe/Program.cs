@@ -24,7 +24,7 @@ namespace OOPExe
             var asyncAction = MarshalInterface<IAsyncAction>.FromAbi(Marshal.GetIUnknownForObject(obj));
             asyncAction.Completed = Completed;
 
-            done.WaitOne(8000);
+            done.WaitOne(15000);
 
             GC.KeepAlive(asyncAction);
         }

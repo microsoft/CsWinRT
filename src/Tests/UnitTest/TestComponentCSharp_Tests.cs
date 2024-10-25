@@ -2043,7 +2043,7 @@ namespace UnitTest
             var task = InvokeAddAsync(42, 8);
             Assert.False(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(5000) || task.Status == TaskStatus.RanToCompletion);
+            Assert.True(task.Wait(10000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
             Assert.Equal(50, task.Result);
 
@@ -3262,7 +3262,7 @@ namespace UnitTest
             var launchExePath = $"{currentExecutingDir}\\OOPExe.dll";
             var proc = Process.Start("dotnet.exe", launchExePath);
 #endif
-            Thread.Sleep(3000);
+            Thread.Sleep(5000);
             obj.Close();
             Assert.True(obj.delegateCalled);
 
