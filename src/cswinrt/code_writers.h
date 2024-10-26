@@ -4648,7 +4648,7 @@ event % %;)",
         return marshalers;
     }
 
-    void write_abi_method_call_marshalers(writer& w, std::string_view invoke_target, std::string_view invoke_objref,  bool is_generic, std::vector<abi_marshaler> const& marshalers, bool has_noexcept_attr = false)
+    void write_abi_method_call_marshalers(writer& w, std::string_view invoke_target, std::optional<std::string_view> invoke_objref,  bool is_generic, std::vector<abi_marshaler> const& marshalers, bool has_noexcept_attr = false)
     {
         auto write_abi_invoke = [&](writer& w)
         {
@@ -4685,8 +4685,11 @@ event % %;)",
             if (is_generic)
             {
                 w.write("global::System.Runtime.InteropServices.Marshal.ThrowExceptionForHR((int)%.DynamicInvoke(__params));\n", invoke_target);
-                w.write("global::System.GC.KeepAlive(__params);\n");
-                w.write("global::System.GC.KeepAlive(%);\n", invoke_objref);
+                if (invoke_objref)
+                {
+                    w.write("global::System.GC.KeepAlive(__params);\n");
+                    w.write("global::System.GC.KeepAlive(%);\n", invoke_objref.value());
+                }
             }
             else if (!has_noexcept_attr)
             {
@@ -4697,7 +4700,11 @@ event % %;)",
                         w.write(", ");
                         m.write_marshal_to_abi(w);
                     }, marshalers));
-                w.write("global::System.GC.KeepAlive(%);\n", invoke_objref);
+
+                if (invoke_objref)
+                {
+                    w.write("global::System.GC.KeepAlive(%);\n", invoke_objref.value());
+                }
             }
             else {
                 w.write("%(ThisPtr%);\n",
@@ -4707,7 +4714,11 @@ event % %;)",
                             w.write(", ");
                             m.write_marshal_to_abi(w);
                         }, marshalers));
-                w.write("global::System.GC.KeepAlive(%);\n", invoke_objref);
+
+                if (invoke_objref)
+                {
+                    w.write("global::System.GC.KeepAlive(%);\n", invoke_objref.value());
+                }
             }
             for (auto&& m : marshalers)
             {
@@ -4767,7 +4778,7 @@ finally
         );
     }
 
-    void write_abi_method_call(writer& w, method_signature signature, std::string_view invoke_target, std::string_view invoke_objref, bool is_generic, bool raw_return_type = false, bool has_noexcept_attr = false, bool is_generic_instantiation_class = false)
+    void write_abi_method_call(writer& w, method_signature signature, std::string_view invoke_target, std::optional<std::string_view> invoke_objref, bool is_generic, bool raw_return_type = false, bool has_noexcept_attr = false, bool is_generic_instantiation_class = false)
     {
         write_abi_method_call_marshalers(w, invoke_target, invoke_objref, is_generic, get_abi_marshalers(w, signature, is_generic, "", raw_return_type, is_generic_instantiation_class), has_noexcept_attr);
     }
