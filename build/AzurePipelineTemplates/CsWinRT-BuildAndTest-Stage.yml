@@ -55,7 +55,7 @@ stages:
 # Run Unit Tests
     - task: DotNetCoreCLI@2
       displayName: Run Unit Tests
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      condition: or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64'))
       inputs:
         command: test
         projects: 'src/Tests/UnitTest/UnitTest.csproj'
@@ -65,7 +65,7 @@ stages:
 # Run Embedded Unit Tests
     - task: DotNetCoreCLI@2
       displayName: Run Embedded Unit Tests
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      condition: or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64'))
       inputs:
         command: test
         projects: 'src/Samples/TestEmbedded/UnitTestEmbedded/UnitTestEmbedded.csproj'
@@ -75,7 +75,7 @@ stages:
 # Run Object Lifetime Tests
     - task: VSTest@2
       displayName: Run Object Lifetime Tests
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      condition: or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64'))
       inputs:
         testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
@@ -83,7 +83,7 @@ stages:
 # Run Host Tests
     - task: CmdLine@2
       displayName: Run Host Tests
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      condition: or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64'))
       continueOnError: True
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src
@@ -95,7 +95,7 @@ stages:
 # Run Source Generator Tests  
     - task: CmdLine@2
       displayName: Run Source Generator Tests
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      condition: or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64'))
       continueOnError: True
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src
@@ -107,7 +107,7 @@ stages:
 # Run WUX Tests
     - task: CmdLine@2
       displayName: Run WUX Tests
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      condition: or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64'))
       continueOnError: True
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src
@@ -119,7 +119,7 @@ stages:
 # Run Functional Tests  
     - task: CmdLine@2
       displayName: Run Functional Tests
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      condition: or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64'))
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src
         script: |
@@ -130,7 +130,7 @@ stages:
 # Disable GC stress
     - task: PowerShell@2
       displayName: Disable GC Stress
-      condition: and(succeeded(), eq(variables['_RunGCStress'], 'true'))
+      condition: eq(variables['_RunGCStress'], 'true')
       inputs:
         targetType: inline
         script: |
