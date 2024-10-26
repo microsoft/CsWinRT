@@ -5003,7 +5003,7 @@ remove => %.Unsubscribe(value);
 
     void write_interface_members(writer& w, TypeDef const& type)
     {
-        if (is_exclusive_to(type))
+        if (is_exclusive_to(type) && !settings.idic_exclusiveto)
         {
             return;
         }
@@ -8044,9 +8044,12 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
 
+        bool shouldOmitCcwCodegen = false;
+
         // For exclusive interfaces which aren't overridable interfaces that are implemented by unsealed types,
         // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
         // But we are still keeping the interface itself for any helper type lookup that may happen for like GUID lookup.
+        // We avoid this path if we want to generate IDIC implementations for them though.
         if (!is_generic &&
             (is_exclusive_to(type) && !settings.public_exclusiveto) &&
             // check for !authored type
@@ -8072,7 +8075,17 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
 
             if (!hasOverridableAttribute)
             {
-                w.write(R"(%
+                // Under normal conditions, we would stop here and just emit a minimal amount of code.
+                // However, if IDIC is requested, just continue normally, but omit the CCW generation.
+                // We know we can safely omit that because it wouldn't have normally be generated.
+                if (settings.idic_exclusiveto)
+                {
+                    shouldOmitCcwCodegen = true;
+                }
+                else
+                {
+                    // Otherwise, just write the minimal non-IDIC interface
+                    w.write(R"(%
 internal interface % : %
 {
 }
@@ -8080,7 +8093,9 @@ internal interface % : %
                     bind<write_guid_attribute>(type),
                     type_name,
                     bind<write_type_name>(type, typedef_name_type::CCW, false));
-                return true;
+                    
+                    return true;
+                }
             }
         }
 
@@ -8097,14 +8112,19 @@ internal unsafe interface % : %
 {
 %%%%}
 )",
-// Interface abi implementation
-            is_exclusive_to(type) ? "" : "[DynamicInterfaceCastableImplementation]",
+            // Interface abi implementation
+            is_exclusive_to(type) && !settings.idic_exclusiveto ? "" : "[DynamicInterfaceCastableImplementation]",
             bind<write_guid_attribute>(type),
             type_name,
             bind<write_type_name>(type, typedef_name_type::CCW, false),
             // Vftbl
             bind([&](writer& w)
             {
+                if (shouldOmitCcwCodegen)
+                {
+                    return;
+                }
+
                 auto methods = type.MethodList();
                 if (is_generic)
                 {
@@ -8229,7 +8249,7 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
             bind<write_interface_members>(type),
             "",
             [&](writer& w) {
-                if (!is_exclusive_to(type))
+                if (!is_exclusive_to(type) || settings.idic_exclusiveto)
                 {
                     for (auto required_interface : required_interfaces)
                     {
