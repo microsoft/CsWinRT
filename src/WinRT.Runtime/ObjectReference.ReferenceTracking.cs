@@ -37,7 +37,7 @@ namespace WinRT
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IntPtr GetRefUnsafe()
         {
-            return GetThisPtrForCurrentContext();
+            return GetThisPtrForCurrentContextUnsafe();
         }
 
         /// <summary>
