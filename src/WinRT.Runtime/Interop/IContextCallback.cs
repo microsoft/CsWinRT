@@ -123,7 +123,6 @@ namespace ABI.WinRT.Interop
         {
             var callback = Marshal.GetFunctionPointerForDelegate(pfnCallback);
             var result = _obj.Vftbl.ContextCallback_4(ThisPtr, callback, pParam, &riid, iMethod, IntPtr.Zero);
-            GC.KeepAlive(_obj);
             GC.KeepAlive(pfnCallback);
             Marshal.ThrowExceptionForHR(result);
         }

@@ -770,7 +770,6 @@ namespace ABI.System.Collections.Generic
             try
             {
                 _obj.Vftbl.GetAt_0.DynamicInvokeAbi(__params);
-                GC.KeepAlive(_obj);
                 return Marshaler<T>.FromAbi(__params[2]);
             }
             finally
@@ -785,7 +784,6 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(ThisPtr, out __retval));
-                GC.KeepAlive(_obj);
                 return MarshalInterface<global::Windows.Foundation.Collections.IVectorView<T>>.FromAbi(__retval);
             }
             finally
@@ -803,7 +801,6 @@ namespace ABI.System.Collections.Generic
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.IndexOf_3.DynamicInvokeAbi(__params);
-                GC.KeepAlive(_obj);
                 index = (uint)__params[2];
                 return (byte)__params[3] != 0;
             }
@@ -822,8 +819,6 @@ namespace ABI.System.Collections.Generic
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[2] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.SetAt_4.DynamicInvokeAbi(__params);
-                GC.KeepAlive(_obj);
-                GC.KeepAlive(__params);
             }
             finally
             {
@@ -840,8 +835,6 @@ namespace ABI.System.Collections.Generic
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[2] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.InsertAt_5.DynamicInvokeAbi(__params);
-                GC.KeepAlive(_obj);
-                GC.KeepAlive(__params);
             }
             finally
             {
@@ -852,7 +845,6 @@ namespace ABI.System.Collections.Generic
         public unsafe void RemoveAt(uint index)
         {
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAt_6(ThisPtr, index));
-            GC.KeepAlive(_obj);
         }
 
         public unsafe void Append(T value)
@@ -864,8 +856,6 @@ namespace ABI.System.Collections.Generic
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.Append_7.DynamicInvokeAbi(__params);
-                GC.KeepAlive(_obj);
-                GC.KeepAlive(__params);
             }
             finally
             {
@@ -876,13 +866,11 @@ namespace ABI.System.Collections.Generic
         public unsafe void RemoveAtEnd()
         {
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAtEnd_8(ThisPtr));
-            GC.KeepAlive(_obj);
         }
 
         public unsafe void _Clear()
         {
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Clear_9(ThisPtr));
-            GC.KeepAlive(_obj);
         }
 
         public unsafe uint GetMany(uint startIndex, ref T[] items)
@@ -896,7 +884,6 @@ namespace ABI.System.Collections.Generic
                 __items = Marshaler<T>.CreateMarshalerArray(items);
                 (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_10(ThisPtr, startIndex, __items_length, __items_data, out __retval));
-                GC.KeepAlive(_obj);
                 items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                 return __retval;
             }
@@ -916,7 +903,6 @@ namespace ABI.System.Collections.Generic
                 __items = Marshaler<T>.CreateMarshalerArray(items);
                 (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ReplaceAll_11(ThisPtr, __items_length, __items_data));
-                GC.KeepAlive(_obj);
             }
             finally
             {
@@ -930,7 +916,6 @@ namespace ABI.System.Collections.Generic
             {
                 uint __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
-                GC.KeepAlive(_obj);
                 return __retval;
             }
         }

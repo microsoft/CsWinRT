@@ -1370,7 +1370,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             byte __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8_2(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1380,7 +1379,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             short __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16_3(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1390,7 +1388,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             ushort __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16_4(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1400,7 +1397,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             int __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32_5(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1410,7 +1406,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             uint __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32_6(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1420,7 +1415,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             long __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64_7(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1430,7 +1424,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             ulong __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64_8(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1440,7 +1433,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             float __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingle_9(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1450,7 +1442,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             double __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDouble_10(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1460,7 +1451,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             ushort __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16_11(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return (char)__retval;
         }
 
@@ -1470,7 +1460,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             byte __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBoolean_12(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval != 0;
         }
 
@@ -1482,7 +1471,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetString_13(ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return MarshalString.FromAbi(__retval);
             }
             finally
@@ -1497,7 +1485,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             Guid __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuid_14(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1509,7 +1496,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTime_15(ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return global::ABI.System.DateTimeOffset.FromAbi(__retval);
             }
             finally
@@ -1526,7 +1512,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpan_16(ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return global::ABI.System.TimeSpan.FromAbi(__retval);
             }
             finally
@@ -1541,7 +1526,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             global::Windows.Foundation.Point __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPoint_17(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1551,7 +1535,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             global::Windows.Foundation.Size __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_18(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1561,7 +1544,6 @@ namespace ABI.Windows.Foundation
             var ThisPtr = _obj.ThisPtr;
             global::Windows.Foundation.Rect __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRect_19(ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval;
         }
 
@@ -1574,7 +1556,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt8Array_20(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<byte>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1592,7 +1573,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt16Array_21(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<short>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1610,7 +1590,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt16Array_22(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<ushort>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1628,7 +1607,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt32Array_23(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<int>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1646,7 +1624,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt32Array_24(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<uint>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1664,7 +1641,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInt64Array_25(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<long>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1682,7 +1658,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetUInt64Array_26(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<ulong>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1700,7 +1675,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSingleArray_27(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<float>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1718,7 +1692,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDoubleArray_28(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<double>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1736,7 +1709,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetChar16Array_29(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalNonBlittable<char>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1754,7 +1726,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetBooleanArray_30(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalNonBlittable<bool>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1772,7 +1743,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetStringArray_31(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalString.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1790,7 +1760,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInspectableArray_32(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalInspectable<object>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1808,7 +1777,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetGuidArray_33(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<Guid>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1826,7 +1794,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetDateTimeArray_34(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalNonBlittable<global::System.DateTimeOffset>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1844,7 +1811,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetTimeSpanArray_35(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalNonBlittable<global::System.TimeSpan>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1862,7 +1828,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetPointArray_36(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<global::Windows.Foundation.Point>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1880,7 +1845,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSizeArray_37(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<global::Windows.Foundation.Size>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1898,7 +1862,6 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRectArray_38(ThisPtr, &__value_length, &__value_data));
-                GC.KeepAlive(_obj);
                 value = MarshalBlittable<global::Windows.Foundation.Rect>.FromAbiArray((__value_length, __value_data));
             }
             finally
@@ -1915,7 +1878,6 @@ namespace ABI.Windows.Foundation
                 var ThisPtr = _obj.ThisPtr;
                 byte __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_IsNumericScalar_1(ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return __retval != 0;
             }
         }
@@ -1928,7 +1890,6 @@ namespace ABI.Windows.Foundation
                 var ThisPtr = _obj.ThisPtr;
                 global::Windows.Foundation.PropertyType __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Type_0(ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return __retval;
             }
         }

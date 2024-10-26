@@ -120,7 +120,6 @@ namespace ABI.WinRT.Interop
 #else
                         ExceptionHelpers.ThrowExceptionForHR(_addHandler(_objectReference.ThisPtr, nativeDelegate, out token));
 #endif
-                        global::System.GC.KeepAlive(_objectReference);
                         state.token = token;
                     }
                     finally
@@ -158,7 +157,6 @@ namespace ABI.WinRT.Interop
         private void UnsubscribeFromNative(EventSourceState<TDelegate> state)
         {
             ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_objectReference.ThisPtr, state.token));
-            global::System.GC.KeepAlive(_objectReference);
             state.Dispose();
             _state = null;
         }

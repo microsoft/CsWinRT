@@ -95,7 +95,6 @@ namespace ABI.Windows.Foundation
                     Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out referenceArrayPtr)
 #endif
                     );
-                GC.KeepAlive(inspectable);
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
                 return Marshaler<T>.FromAbiArray((__retval_length, __retval_data));
             }
@@ -144,7 +143,6 @@ namespace ABI.Windows.Foundation
                 try
                 {
                     ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval_length, &__retval_data));
-                    GC.KeepAlive(_obj);
                     return Marshaler<T>.FromAbiArray((__retval_length, __retval_data));
                 }
                 finally

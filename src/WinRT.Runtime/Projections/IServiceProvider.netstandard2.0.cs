@@ -79,7 +79,6 @@ namespace ABI.System
             {
                 __type = global::ABI.System.Type.CreateMarshaler(type);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetService_0(ThisPtr, global::ABI.System.Type.GetAbi(__type), &__retval));
-                GC.KeepAlive(_obj);
                 return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally

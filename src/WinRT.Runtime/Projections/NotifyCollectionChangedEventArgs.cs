@@ -58,7 +58,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                     IntPtr.Zero,
                     &__innerInterface,
                     &__retval));
-                GC.KeepAlive(_obj);
                 return new ObjectReferenceValue(__retval);
             }
             finally

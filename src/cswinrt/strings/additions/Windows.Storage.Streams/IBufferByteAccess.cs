@@ -82,7 +82,6 @@ namespace ABI.Windows.Storage.Streams
             {
                 IntPtr __retval = default;
                 Marshal.ThrowExceptionForHR(_obj.Vftbl.get_Buffer_0(ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return __retval;
             }
         }
@@ -135,7 +134,6 @@ namespace ABI.Windows.Storage.Streams
                 var ThisPtr = _obj.ThisPtr;
                 IntPtr buffer = default;
                 Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)ThisPtr)[3])(ThisPtr, &buffer));
-                GC.KeepAlive(_obj);
                 return buffer;
             }
         }

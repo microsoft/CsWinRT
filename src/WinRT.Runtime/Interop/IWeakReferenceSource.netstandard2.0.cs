@@ -121,7 +121,6 @@ namespace ABI.WinRT.Interop
             try
             {
                 ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetWeakReference(ThisPtr, out objRef));
-                GC.KeepAlive(_obj);
                 return MarshalInterface<WinRT.Interop.IWeakReference>.FromAbi(objRef);
             }
             finally
@@ -194,7 +193,6 @@ namespace ABI.WinRT.Interop
         public IObjectReference Resolve(Guid riid)
         {
             ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Resolve(ThisPtr, ref riid, out IntPtr objRef));
-            GC.KeepAlive(_obj);
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(objRef, riid, requireQI: false);

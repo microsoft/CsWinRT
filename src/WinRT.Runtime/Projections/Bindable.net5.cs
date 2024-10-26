@@ -166,7 +166,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             var ThisPtr = _obj.ThisPtr;
             byte __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)ThisPtr)[8](ThisPtr, &__retval));
-            GC.KeepAlive(_obj);
             return __retval != 0;
         }
 
@@ -186,7 +185,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 try
                 {
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval));
-                    GC.KeepAlive(_obj);
                     return MarshalInspectable<object>.FromAbi(__retval);
                 }
                 finally
@@ -204,7 +202,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 var ThisPtr = _obj.ThisPtr;
                 byte __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)ThisPtr)[7](ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return __retval != 0;
             }
         }
@@ -310,7 +307,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int>**)ThisPtr)[6](ThisPtr, index, &__retval));
-                GC.KeepAlive(_obj);
                 return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
@@ -334,7 +330,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                     MarshalInspectable<object>.GetAbi(__value),
                     &__index,
                     &__retval));
-                GC.KeepAlive(_obj);
                 index = __index;
                 return __retval != 0;
             }
@@ -352,7 +347,6 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 var ThisPtr = _obj.ThisPtr;
                 uint __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return __retval;
             }
         }
@@ -594,7 +588,6 @@ namespace ABI.System.Collections
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.FromAbi(__retval);
             }
             finally
@@ -1303,7 +1296,6 @@ namespace ABI.System.Collections
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int>**)ThisPtr)[6](ThisPtr, index, &__retval));
-                GC.KeepAlive(_obj);
                 return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
@@ -1320,7 +1312,6 @@ namespace ABI.System.Collections
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[8](ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.FromAbi(__retval);
             }
             finally
@@ -1340,7 +1331,6 @@ namespace ABI.System.Collections
             {
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int>**)ThisPtr)[9](ThisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
-                GC.KeepAlive(_obj);
                 index = __index;
                 return __retval != 0;
             }
@@ -1359,7 +1349,6 @@ namespace ABI.System.Collections
             {
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int>**)ThisPtr)[10](ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
-                GC.KeepAlive(_obj);
             }
             finally
             {
@@ -1376,7 +1365,6 @@ namespace ABI.System.Collections
             {
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int>**)ThisPtr)[11](ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
-                GC.KeepAlive(_obj);
             }
             finally
             {
@@ -1389,7 +1377,6 @@ namespace ABI.System.Collections
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
             var ThisPtr = _obj.ThisPtr;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int>**)ThisPtr)[12](ThisPtr, index));
-            GC.KeepAlive(_obj);
         }
 
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.Append(object value)
@@ -1401,7 +1388,6 @@ namespace ABI.System.Collections
             {
                 __value = MarshalInspectable<object>.CreateMarshaler2(value);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>**)ThisPtr)[13](ThisPtr, MarshalInspectable<object>.GetAbi(__value)));
-                GC.KeepAlive(_obj);
             }
             finally
             {
@@ -1414,7 +1400,6 @@ namespace ABI.System.Collections
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
             var ThisPtr = _obj.ThisPtr;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[14](ThisPtr));
-            GC.KeepAlive(_obj);
         }
 
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.Clear()
@@ -1422,7 +1407,6 @@ namespace ABI.System.Collections
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
             var ThisPtr = _obj.ThisPtr;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[15](ThisPtr));
-            GC.KeepAlive(_obj);
         }
 
         unsafe uint global::Microsoft.UI.Xaml.Interop.IBindableVector.Size
@@ -1433,7 +1417,6 @@ namespace ABI.System.Collections
                 var ThisPtr = _obj.ThisPtr;
                 uint __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
-                GC.KeepAlive(_obj);
                 return __retval;
             }
         }

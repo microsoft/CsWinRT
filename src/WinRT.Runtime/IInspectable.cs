@@ -159,7 +159,6 @@ namespace WinRT
             {
                 IntPtr thisPtr = ThisPtr;
                 var hr = ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[4])(thisPtr, &__retval);
-                GC.KeepAlive(_obj);
                 if (hr != 0)
                 {
                     if (noThrow)

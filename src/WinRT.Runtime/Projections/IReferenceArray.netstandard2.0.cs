@@ -154,7 +154,6 @@ namespace ABI.Windows.Foundation
                 try
                 {
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Value_0(ThisPtr, out __retval_length, out __retval_data));
-                    GC.KeepAlive(_obj);
                     return Marshaler<T>.FromAbiArray((__retval_length, __retval_data));
                 }
                 finally

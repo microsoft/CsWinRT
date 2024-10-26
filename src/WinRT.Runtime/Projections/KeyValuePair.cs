@@ -159,7 +159,6 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)ThisPtr)[6](ThisPtr, &keyAbi));
-                GC.KeepAlive(obj);
                 return Marshaler<K>.FromAbi(keyAbi);
             }
             finally
@@ -175,7 +174,6 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)ThisPtr)[7](ThisPtr, &valueAbi));
-                GC.KeepAlive(obj);
                 return Marshaler<V>.FromAbi(valueAbi);
             }
             finally

@@ -257,7 +257,6 @@ namespace Windows.Storage.Streams
                         ThisPtr,
                         abiAsyncInfo,
                         progressInfo));
-                    GC.KeepAlive(objRef);
                 }
                 finally
                 {
@@ -463,7 +462,6 @@ namespace Windows.Storage.Streams
                         ThisPtr,
                         abiAsyncInfo,
                         progressInfo));
-                    GC.KeepAlive(objRef);
                 }
                 finally
                 {

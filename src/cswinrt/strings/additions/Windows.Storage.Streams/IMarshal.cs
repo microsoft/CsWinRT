@@ -230,7 +230,6 @@ namespace ABI.Com
 #else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.GetUnmarshalClass_0(ThisPtr, riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid));
 #endif
-            GC.KeepAlive(_obj);
         }
 
         public unsafe void GetMarshalSizeMax(Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, uint* pSize)
@@ -241,7 +240,6 @@ namespace ABI.Com
 #else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.GetMarshalSizeMax_1(ThisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize));
 #endif
-            GC.KeepAlive(_obj);
         }
 
         public unsafe void MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
@@ -252,7 +250,6 @@ namespace ABI.Com
 #else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.MarshalInterface_2(ThisPtr, pStm, riid, pv, dwDestContext, pvDestContext, mshlflags));
 #endif
-            GC.KeepAlive(_obj);
         }
 
         public unsafe void UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv)
@@ -263,7 +260,6 @@ namespace ABI.Com
 #else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.UnmarshalInterface_3(ThisPtr, pStm, riid, ppv));
 #endif
-            GC.KeepAlive(_obj);
         }
 
         public unsafe void ReleaseMarshalData(IntPtr pStm)
@@ -274,7 +270,6 @@ namespace ABI.Com
 #else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.ReleaseMarshalData_4(ThisPtr, pStm));
 #endif
-            GC.KeepAlive(_obj);
         }
 
         public unsafe void DisconnectObject(uint dwReserved)
@@ -285,7 +280,6 @@ namespace ABI.Com
 #else
             Marshal.ThrowExceptionForHR(_obj.Vftbl.DisconnectObject_5(ThisPtr, dwReserved));
 #endif
-            GC.KeepAlive(_obj);
         }
     }
 

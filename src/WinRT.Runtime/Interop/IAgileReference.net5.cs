@@ -42,7 +42,6 @@ namespace ABI.WinRT.Interop
             IntPtr ptr = IntPtr.Zero;
             ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
                 ThisPtr, &riid, &ptr));
-            global::System.GC.KeepAlive(_obj);
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);
@@ -61,7 +60,6 @@ namespace ABI.WinRT.Interop
             IntPtr ptr = IntPtr.Zero;
             ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
                 ThisPtr, &riid, &ptr));
-            global::System.GC.KeepAlive(_obj);
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid, requireQI: false);
@@ -141,7 +139,6 @@ namespace ABI.WinRT.Interop
             IntPtr thisPtr = ThisPtr;
             IntPtr cookie;
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)(*(void***)thisPtr)[3])(thisPtr, ptr, &riid, &cookie));
-            global::System.GC.KeepAlive(_obj);
             return cookie;
 
         }
@@ -150,7 +147,6 @@ namespace ABI.WinRT.Interop
         {
             IntPtr thisPtr = ThisPtr;
             int hresult = ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)(*(void***)thisPtr)[4])(thisPtr, cookie);
-            global::System.GC.KeepAlive(_obj);
 
             if (hresult == ExceptionHelpers.E_INVALIDARG)
             {
@@ -168,8 +164,6 @@ namespace ABI.WinRT.Interop
             IntPtr thisPtr = ThisPtr;
             IntPtr ptr;
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)(*(void***)thisPtr)[5])(thisPtr, cookie, &riid, &ptr));
-            global::System.GC.KeepAlive(_obj);
-
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);

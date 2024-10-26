@@ -97,7 +97,6 @@ namespace ABI.WinRT.Interop
             try
             {
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[3](ThisPtr, &objRef));
-                GC.KeepAlive(_obj);
                 return MarshalInterface<global::WinRT.Interop.IWeakReference>.FromAbi(objRef);
             }
             finally
@@ -186,7 +185,6 @@ namespace ABI.WinRT.Interop
 
             IntPtr objRef;
             ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](ThisPtr, &riid, &objRef));
-            GC.KeepAlive(_obj);
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(objRef, riid, requireQI: false);

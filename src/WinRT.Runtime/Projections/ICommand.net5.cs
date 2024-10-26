@@ -30,7 +30,6 @@ namespace ABI.System.Windows.Input
             {
                 __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int>**)ThisPtr)[8](ThisPtr, MarshalInspectable<object>.GetAbi(__parameter), &__retval));
-                GC.KeepAlive(obj);
                 return __retval != 0;
             }
             finally
@@ -47,7 +46,6 @@ namespace ABI.System.Windows.Input
             {
                 __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>**)ThisPtr)[9](ThisPtr, MarshalInspectable<object>.GetAbi(__parameter)));
-                GC.KeepAlive(obj);
             }
             finally
             {

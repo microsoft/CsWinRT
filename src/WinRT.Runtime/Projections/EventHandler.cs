@@ -253,8 +253,6 @@ namespace ABI.System
                         __args = Marshaler<T>.CreateMarshaler2(args);
                         __params[2] = Marshaler<T>.GetAbi(__args);
                         abiInvoke.DynamicInvokeAbi(__params);
-                        GC.KeepAlive(_nativeDelegate);
-                        GC.KeepAlive(__params);
                     }
                     finally
                     {
@@ -424,7 +422,6 @@ namespace ABI.System
                         ThisPtr,
                         MarshalInspectable<object>.GetAbi(__sender),
                         MarshalInspectable<EventArgs>.GetAbi(__args)));
-                    GC.KeepAlive(_nativeDelegate);
                 }
                 finally
                 {
