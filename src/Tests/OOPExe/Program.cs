@@ -24,9 +24,11 @@ namespace OOPExe
             var asyncAction = MarshalInterface<IAsyncAction>.FromAbi(Marshal.GetIUnknownForObject(obj));
             asyncAction.Completed = Completed;
 
-            done.WaitOne(30000);
-
-            GC.KeepAlive(asyncAction);
+            if (done.WaitOne(20000))
+            {
+                // Allow Completed handler to finish.
+                Thread.Sleep(5000);
+            }
         }
 
         public static void Completed(IAsyncAction asyncInfo, AsyncStatus asyncStatus)
