@@ -21,22 +21,31 @@ namespace WinRT
 #else
     public
 #endif
-    abstract class IObjectReference : IDisposable
+    abstract partial class IObjectReference : IDisposable
     {
-        // Flags for the '_disposedFlags' field, see notes in the Dispose() method below
-        private const int NOT_DISPOSED = 0;
-        private const int DISPOSE_PENDING = 1;
-        private const int DISPOSE_COMPLETED = 2;
-
         private readonly IntPtr _thisPtr;
         private IntPtr _referenceTrackerPtr;
-        private int _disposedFlags;
+
+        /// <summary>
+        /// A mask that indicates the state of the current object.
+        /// The mask uses the following schema:
+        /// <list type="bullet">
+        ///     <item>[0, 30]: the number of existing reference tracking leases.</item>
+        ///     <item>[31]: whether or not <see cref="IDisposable.Dispose"/> has been called.</item>
+        /// </list>
+        /// </summary>
+        /// <remarks>
+        /// Because this counts the additional "managed" references that are alive, the starting
+        /// value is 0. That is, there is no additional reference count to increment upon object
+        /// creation. This count just indicates how many active callers exist across all stacks.
+        /// </remarks>
+        private volatile int _referenceTrackingMask;
 
         public IntPtr ThisPtr
         {
             get
             {
-                ThrowIfDisposed();
+                ThrowIfDisposedUnsafe();
                 return GetThisPtrForCurrentContext();
             }
         }
@@ -56,7 +65,7 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
+                ThrowIfDisposedUnsafe();
                 return _thisPtr;
             }
         }
@@ -102,7 +111,7 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
+                ThrowIfDisposedUnsafe();
                 return **(IReferenceTrackerVftbl**)ReferenceTrackerPtr;
             }
         }
@@ -111,7 +120,7 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
+                ThrowIfDisposedUnsafe();
                 return **(IUnknownVftbl**)ThisPtr;
             }
         }
@@ -120,7 +129,7 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
+                ThrowIfDisposedUnsafe();
                 return **(IUnknownVftbl**)ThisPtrFromOriginalContext;
             }
         }
@@ -151,11 +160,6 @@ namespace WinRT
 #else
             GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
 #endif
-        }
-
-        ~IObjectReference()
-        {
-            Dispose();
         }
 
 #if NET
@@ -241,7 +245,7 @@ namespace WinRT
         public virtual unsafe int TryAs(Guid iid, out IntPtr ppv)
         {
             ppv = IntPtr.Zero;
-            ThrowIfDisposed();
+            ThrowIfDisposedUnsafe();
             IntPtr thatPtr = IntPtr.Zero;
             int hr = Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr);
             if (hr >= 0)
@@ -259,7 +263,7 @@ namespace WinRT
 #endif
         public T AsType<T>()
         {
-            ThrowIfDisposed();
+            ThrowIfDisposedUnsafe();
 
 #if NET
             // Same logic as in 'ComWrappersSupport.CreateFactoryForImplementationType', see notes there
@@ -315,96 +319,9 @@ namespace WinRT
 
         public IntPtr GetRef()
         {
-            ThrowIfDisposed();
+            ThrowIfDisposedUnsafe();
             AddRef(false);
             return ThisPtr;
-        }
-
-        /// <summary>
-        /// Throws an <see cref="ObjectDisposedException"/> if <see cref="Dispose"/> has already been called on the current instance.
-        /// </summary>
-        /// <remarks>
-        /// Note that calling this method does not protect callers against concurrent threads calling <see cref="Dispose"/> on the
-        /// same instance, as that behavior is explicitly undefined. Similarly, callers using this to then access the underlying
-        /// pointers should also make sure to keep the current instance alive until they're done using the pointer (unless they're
-        /// also incrementing it via <c>AddRef</c> in some way), or the GC could concurrently collect the instance and cause the
-        /// same problem (ie. the underlying pointer being in use becoming invalid right after retrieving it from the object).
-        /// </remarks>
-        /// <exception cref="ObjectDisposedException">Thrown if the current instance is disposed.</exception>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void ThrowIfDisposed()
-        {
-            if (Volatile.Read(ref _disposedFlags) == DISPOSE_COMPLETED)
-            {
-                ThrowObjectDisposedException();
-            }
-
-            static void ThrowObjectDisposedException()
-            {
-                throw new ObjectDisposedException("ObjectReference");
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-
-            // We swap the disposed flag and only dispose the first time. This is safe with respect to
-            // different threads concurrently trying to dispose the same object, as only the first one
-            // will actually dispose it, and the others will just do nothing.
-            //
-            // It is not safe when combined with ThrowIfDisposed(), as the following scenario is possible:
-            //   - Thread A calls ProjectedType.Foo()
-            //   - Thread A calls ThisPtr, the dispose check passes and it gets the IntPtr value (not incremented)
-            //   - Thread B calls Dispose(), which releases the object
-            //   - Thread A now uses that IntPtr to invoke some function pointer
-            //   - Thread A goes ka-boom 💥
-            //
-            // However, this is by design, as the ObjectReference owns the 'ThisPtr' property, and disposing it while it
-            // is still in use can lead to all kinds of things going wrong. This is conceptually the same as calling
-            // SafeHandle.DangerousGetHandle(). Furthermore, the same exact behavior was already possible with an actual
-            // lock object guarding all the logic within the Dispose() method. The only difference is that simply using
-            // a flag this way avoids one object allocation per ObjectReference instance, and also allows making the size
-            // of the whole object smaller by sizeof(object), when taking into account padding.
-            //
-            // Additionally, note that the '_disposedFlags' field has 3 different states:
-            //   - NOT_DISPOSED: the initial state, when the object is alive
-            //   - DISPOSE_PENDING: indicates that a thread is currently executing the Dispose() method and got past the
-            //     first check, and is in the process of releasing the native resources. This state is checked by the
-            //     ThrowIfDisposed() method above, and still treated as if the object can be used normally. This is
-            //     necessary, because the dispose logic still has to access the 'ThisPtr' property and others in order
-            //     to perform the various Release() calls on the native objects being used. If the state was immediately
-            //     set to disposed, that method would just start throwing immediately, and this logic would not work.
-            //   - DISPOSE_COMPLETED: set when all the Dispose() logic has been completed and the object should not be
-            //     used at all anymore. When this is set, the ThrowIfDisposed() method will start throwing exceptions.
-            if (Interlocked.CompareExchange(ref _disposedFlags, DISPOSE_PENDING, NOT_DISPOSED) == NOT_DISPOSED)
-            {
-#if DEBUG
-                if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
-                {
-                    System.Diagnostics.Debugger.Break();
-                }
-#endif
-
-                if (!PreventReleaseOnDispose)
-                {
-                    Release();
-                }
-
-                DisposeTrackerSource();
-#if NET
-                // Disable on AOT for now until dotnet runtime #104583 is addressed to avoid making the issue happen more often.
-                if (RuntimeFeature.IsDynamicCodeCompiled)
-                {
-                    GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-                }
-#else
-                GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-#endif
-
-                Volatile.Write(ref _disposedFlags, DISPOSE_COMPLETED);
-            }
         }
 
         protected virtual unsafe void AddRef(bool refFromTrackerSource)
@@ -511,7 +428,7 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
+                ThrowIfDisposedUnsafe();
                 return GetVftblForCurrentContext();
             }
         }
