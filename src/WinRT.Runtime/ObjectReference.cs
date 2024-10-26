@@ -338,16 +338,25 @@ namespace WinRT
             AddRef(true);
         }
 
+        /// <summary>
+        /// Releases the current object (both the original object and the reference tracker source).
+        /// </summary>
+        /// <remarks>
+        /// This method does not check for disposal before releasing the reference.
+        /// This allows it to be used from <see cref="ReleaseNativeObject"/>.
+        /// </remarks>
         protected virtual unsafe void Release()
         {
-            ReleaseFromTrackerSource();
-            Marshal.Release(ThisPtr);
+            ReleaseFromTrackerSourceUnsafe();
+
+            Marshal.Release(GetRefUnsafe());
         }
 
         private protected unsafe void ReleaseWithoutContext()
         {
-            ReleaseFromTrackerSource();
-            Marshal.Release(ThisPtrFromOriginalContext);
+            ReleaseFromTrackerSourceUnsafe();
+
+            Marshal.Release(_thisPtr);
         }
 
         internal unsafe bool IsReferenceToManagedObject
@@ -366,23 +375,43 @@ namespace WinRT
             }
         }
 
-        internal unsafe void ReleaseFromTrackerSource()
+        /// <summary>
+        /// Releases the reference from the tracker source.
+        /// </summary>
+        /// <remarks>
+        /// This method does not check for disposal before releasing the reference.
+        /// This allows it to be used from <see cref="ReleaseNativeObject"/>.
+        /// </remarks>
+        internal unsafe void ReleaseFromTrackerSourceUnsafe()
         {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
+            IntPtr referenceTrackerPtr = _referenceTrackerPtr;
+
+            if (referenceTrackerPtr != IntPtr.Zero)
             {
-                ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
+                _ = (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(referenceTrackerPtr);
             }
         }
 
-        private unsafe void DisposeTrackerSource()
+        /// <summary>
+        /// Releases the reference from the tracker source, if <see cref="PreventReleaseFromTrackerSourceOnDispose"/>
+        /// is not set, and then the reference tracker itself.
+        /// </summary>
+        /// <remarks>
+        /// This method does not check for disposal before releasing the reference.
+        /// This allows it to be used from <see cref="ReleaseNativeObject"/>.
+        /// </remarks>
+        private unsafe void DisposeTrackerSourceUnsafe()
         {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
+            IntPtr referenceTrackerPtr = _referenceTrackerPtr;
+
+            if (referenceTrackerPtr != IntPtr.Zero)
             {
                 if (!PreventReleaseFromTrackerSourceOnDispose)
                 {
-                    ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
+                    _ = (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(referenceTrackerPtr);
                 }
-                Marshal.Release(ReferenceTrackerPtr);
+
+                Marshal.Release(referenceTrackerPtr);
             }
         }
 

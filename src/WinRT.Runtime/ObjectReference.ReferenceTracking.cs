@@ -232,7 +232,7 @@ namespace WinRT
                 Release();
             }
 
-            DisposeTrackerSource();
+            DisposeTrackerSourceUnsafe();
 
             GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
         }
