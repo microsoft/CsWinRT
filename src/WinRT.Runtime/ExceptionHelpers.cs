@@ -7,7 +7,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT.Interop;
 
 namespace WinRT
@@ -160,9 +159,8 @@ namespace WinRT
                 if (restrictedErrorInfoRef != null)
                 {
                     restrictedErrorInfoToSave = restrictedErrorInfoRef.As<IUnknownVftbl>(IID.IID_IRestrictedErrorInfo);
-                    ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new(restrictedErrorInfoRef);
-                    restrictedErrorInfo.GetErrorDetails(out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
-                    restrictedErrorReference = restrictedErrorInfo.GetReference();
+                    ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoRef, out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
+                    restrictedErrorReference = ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoRef);
                     if (restrictedErrorInfoRef.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo, out var languageErrorInfoRef) >= 0)
                     {
 #if NET
@@ -429,7 +427,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             int hr = ex.HResult;
             if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
             {
-                new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorObject).GetErrorDetails(out _, out hr, out _, out _);
+                ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject, out _, out hr, out _, out _);
             }
 
             switch (hr)
@@ -509,14 +507,14 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
                     if (restrictedErrorInfoPtr != IntPtr.Zero)
                     {
-                        ObjectReference<IUnknownVftbl> restrictedErrorInfoRef = ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
+                        using ObjectReference<IUnknownVftbl> restrictedErrorInfoRef = ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
 
-                        ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
-
-                        restrictedErrorInfo.GetErrorDetails(out string description,
-                                                            out int restrictedErrorInfoHResult,
-                                                            out string restrictedDescription,
-                                                            out string capabilitySid);
+                        ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(
+                            restrictedErrorInfoRef,
+                            out string description,
+                            out int restrictedErrorInfoHResult,
+                            out string restrictedDescription,
+                            out string capabilitySid);
 
                         // Since this is a special case where by convention there may be a correlation, there is not a
                         // guarantee that the restricted error info does belong to the async error code.  In order to
@@ -527,8 +525,8 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                         if (e.HResult == restrictedErrorInfoHResult)
                         {
                             e.AddExceptionDataForRestrictedErrorInfo(description,
-                                                                    restrictedDescription,
-                                                                     restrictedErrorInfo.GetReference(),
+                                                                     restrictedDescription,
+                                                                     ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoRef),
                                                                      capabilitySid,
                                                                      restrictedErrorInfoRef.As<IUnknownVftbl>(IID.IID_IRestrictedErrorInfo));
                         }
@@ -575,6 +573,75 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             }
             e.SetHResult(hresult);
             return e;
+        }
+    }
+}
+
+namespace ABI.WinRT.Interop
+{
+    internal static class IRestrictedErrorInfoMethods
+    {
+        public static unsafe void GetErrorDetails(
+            global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> obj,
+            out string description,
+            out int error,
+            out string restrictedDescription,
+            out string capabilitySid)
+        {
+            IntPtr _description = IntPtr.Zero;
+            IntPtr _restrictedDescription = IntPtr.Zero;
+            IntPtr _capabilitySid = IntPtr.Zero;
+
+            try
+            {
+                fixed (int* pError = &error)
+                {
+                    IntPtr thisPtr = obj.ThisPtr;
+
+                    // GetErrorDetails
+                    Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)(*(void***)thisPtr)[3])(
+                        thisPtr,
+                        &_description,
+                        pError,
+                        &_restrictedDescription,
+                        &_capabilitySid));
+
+                    GC.KeepAlive(obj);
+                }
+
+                description = _description != IntPtr.Zero ? Marshal.PtrToStringBSTR(_description) : string.Empty;
+                restrictedDescription = _restrictedDescription != IntPtr.Zero ? Marshal.PtrToStringBSTR(_restrictedDescription) : string.Empty;
+                capabilitySid = _capabilitySid != IntPtr.Zero ? Marshal.PtrToStringBSTR(_capabilitySid) : string.Empty;
+            }
+            finally
+            {
+                Marshal.FreeBSTR(_description);
+                Marshal.FreeBSTR(_restrictedDescription);
+                Marshal.FreeBSTR(_capabilitySid);
+            }
+        }
+
+        public static unsafe string GetReference(global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> obj)
+        {
+            IntPtr __retval = default;
+
+            try
+            {
+                IntPtr thisPtr = obj.ThisPtr;
+
+                // GetReference
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[4])(
+                    thisPtr,
+                    &__retval));
+
+                GC.KeepAlive(obj);
+
+                return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
+            }
+            finally
+            {
+                Marshal.FreeBSTR(__retval);
+            }
         }
     }
 }

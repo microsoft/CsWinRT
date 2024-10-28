@@ -29,18 +29,6 @@ namespace WinRT.Interop
         IObjectReference GetLanguageException();
     }
 
-    [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-    internal interface IRestrictedErrorInfo
-    {
-        void GetErrorDetails(
-            out string description,
-            out int error,
-            out string restrictedDescription,
-            out string capabilitySid);
-
-        string GetReference();
-    }
-
     internal sealed class ManagedExceptionErrorInfo : IErrorInfo, ISupportErrorInfo
     {
         private readonly Exception _exception;
@@ -390,75 +378,6 @@ namespace ABI.WinRT.Interop
         public bool InterfaceSupportsErrorInfo(Guid riid)
         {
             return _obj.Vftbl.InterfaceSupportsErrorInfo_0(ThisPtr, &riid) == 0;
-        }
-    }
-
-    [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-    internal unsafe class IRestrictedErrorInfo : global::WinRT.Interop.IRestrictedErrorInfo
-    {
-        [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-        public struct Vftbl
-        {
-            internal global::WinRT.Interop.IUnknownVftbl unknownVftbl;
-            private void* _GetErrorDetails_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int> GetErrorDetails_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)_GetErrorDetails_0;
-            private void* _GetReference_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetReference_1 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetReference_1;
-        }
-
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        public static implicit operator IRestrictedErrorInfo(IObjectReference obj) => (obj != null) ? new IRestrictedErrorInfo(obj) : null;
-        public static implicit operator IRestrictedErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new IRestrictedErrorInfo(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public IRestrictedErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public IRestrictedErrorInfo(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
-        }
-
-        public void GetErrorDetails(
-            out string description,
-            out int error,
-            out string restrictedDescription,
-            out string capabilitySid)
-        {
-            IntPtr _description = IntPtr.Zero;
-            IntPtr _restrictedDescription = IntPtr.Zero;
-            IntPtr _capabilitySid = IntPtr.Zero;
-            try
-            {
-                fixed (int* pError = &error)
-                {
-                    Marshal.ThrowExceptionForHR(_obj.Vftbl.GetErrorDetails_0(ThisPtr, &_description, pError, &_restrictedDescription, &_capabilitySid));
-                }
-                description = _description != IntPtr.Zero ? Marshal.PtrToStringBSTR(_description) : string.Empty;
-                restrictedDescription = _restrictedDescription != IntPtr.Zero ? Marshal.PtrToStringBSTR(_restrictedDescription) : string.Empty;
-                capabilitySid = _capabilitySid != IntPtr.Zero ? Marshal.PtrToStringBSTR(_capabilitySid) : string.Empty;
-            }
-            finally
-            {
-                Marshal.FreeBSTR(_description);
-                Marshal.FreeBSTR(_restrictedDescription);
-                Marshal.FreeBSTR(_capabilitySid);
-            }
-        }
-
-        public string GetReference()
-        {
-            IntPtr __retval = default;
-            try
-            {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetReference_1(ThisPtr, &__retval));
-                return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
-            }
-            finally
-            {
-                Marshal.FreeBSTR(__retval);
-            }
         }
     }
 }
