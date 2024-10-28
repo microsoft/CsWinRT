@@ -28,6 +28,7 @@ namespace ABI.System.ComponentModel
             var ThisPtr = obj.ThisPtr;
             byte __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)ThisPtr)[6](ThisPtr, &__retval));
+            GC.KeepAlive(obj);
             return __retval != 0;
         }
 
@@ -51,6 +52,7 @@ namespace ABI.System.ComponentModel
                         ThisPtr,
                         MarshalString.GetAbi(ref __propertyName),
                         &__retval));
+                    GC.KeepAlive(obj);
                     return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
                 }
             }

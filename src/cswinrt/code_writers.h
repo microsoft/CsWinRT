@@ -4648,7 +4648,7 @@ event % %;)",
         return marshalers;
     }
 
-    void write_abi_method_call_marshalers(writer& w, std::string_view invoke_target, bool is_generic, std::vector<abi_marshaler> const& marshalers, bool has_noexcept_attr = false)
+    void write_abi_method_call_marshalers(writer& w, std::string_view invoke_target, std::string_view invoke_objref,  bool is_generic, std::vector<abi_marshaler> const& marshalers, bool has_noexcept_attr = false)
     {
         auto write_abi_invoke = [&](writer& w)
         {
@@ -4685,6 +4685,8 @@ event % %;)",
             if (is_generic)
             {
                 w.write("global::System.Runtime.InteropServices.Marshal.ThrowExceptionForHR((int)%.DynamicInvoke(__params));\n", invoke_target);
+                w.write("global::System.GC.KeepAlive(__params);\n");
+                w.write("global::System.GC.KeepAlive(%);\n", invoke_objref);
             }
             else if (!has_noexcept_attr)
             {
@@ -4695,6 +4697,7 @@ event % %;)",
                         w.write(", ");
                         m.write_marshal_to_abi(w);
                     }, marshalers));
+                w.write("global::System.GC.KeepAlive(%);\n", invoke_objref);
             }
             else {
                 w.write("%(ThisPtr%);\n",
@@ -4704,6 +4707,7 @@ event % %;)",
                             w.write(", ");
                             m.write_marshal_to_abi(w);
                         }, marshalers));
+                w.write("global::System.GC.KeepAlive(%);\n", invoke_objref);
             }
             for (auto&& m : marshalers)
             {
@@ -4763,9 +4767,9 @@ finally
         );
     }
 
-    void write_abi_method_call(writer& w, method_signature signature, std::string_view invoke_target, bool is_generic, bool raw_return_type = false, bool has_noexcept_attr = false, bool is_generic_instantiation_class = false)
+    void write_abi_method_call(writer& w, method_signature signature, std::string_view invoke_target, std::string_view invoke_objref, bool is_generic, bool raw_return_type = false, bool has_noexcept_attr = false, bool is_generic_instantiation_class = false)
     {
-        write_abi_method_call_marshalers(w, invoke_target, is_generic, get_abi_marshalers(w, signature, is_generic, "", raw_return_type, is_generic_instantiation_class), has_noexcept_attr);
+        write_abi_method_call_marshalers(w, invoke_target, invoke_objref, is_generic, get_abi_marshalers(w, signature, is_generic, "", raw_return_type, is_generic_instantiation_class), has_noexcept_attr);
     }
 
     void write_static_abi_method_with_raw_return_type(writer& w, TypeDef const& iface, MethodDef const& method)
@@ -4798,6 +4802,7 @@ finally
 
         method_signature signature{ method };
         auto [invoke_target, is_generic] = get_invoke_info(w, method);
+        auto objRef = generic_type ? "_genericObj" : "_obj";
         w.write(R"(
 public static unsafe % %(% %%%)
 {%%}
@@ -4805,11 +4810,11 @@ public static unsafe % %(% %%%)
             bind(write_raw_return_type, signature),
             method.Name(),
             settings.netstandard_compat ? w.write_temp("ObjectReference<%.Vftbl>", bind<write_type_name>(iface, typedef_name_type::ABI, true)) : "IObjectReference",
-            generic_type ? "_genericObj" : "_obj",
+            objRef,
             signature.has_params() ? ", " : "",
             bind_list<write_projection_parameter>(", ", signature.params()),
             bind(init_call_variables),
-            bind<write_abi_method_call>(signature, invoke_target, is_generic, true, is_noexcept(method), false));
+            bind<write_abi_method_call>(signature, invoke_target, objRef, is_generic, true, is_noexcept(method), false));
     }
 
 
@@ -4879,6 +4884,7 @@ public static unsafe % %(% %%%)
             true
         };
 
+        auto objRef = generic_type ? "_genericObj" : "_obj";
         w.write(R"(
 public static unsafe % %(% %%%)
 {%%}
@@ -4886,11 +4892,11 @@ public static unsafe % %(% %%%)
             bind(write_raw_return_type, signature),
             method.Name(),
             settings.netstandard_compat ? w.write_temp("ObjectReference<%.Vftbl>", bind<write_type_name>(iface, typedef_name_type::ABI, true)) : "IObjectReference",
-            generic_type ? "_genericObj" : "_obj",
+            objRef,
             signature.has_params() ? ", " : "",
             bind(write_composable_constructor_params, signature),
             bind(init_call_variables),
-            bind<write_abi_method_call_marshalers>(invoke_target, is_generic, abi_marshalers, is_noexcept(method)));
+            bind<write_abi_method_call_marshalers>(invoke_target, objRef, is_generic, abi_marshalers, is_noexcept(method)));
     }
 
     void write_interface_members_netstandard(writer& w, TypeDef const& type)
@@ -4912,7 +4918,7 @@ public unsafe %% %(%)
             bind<write_projection_return_type>(signature),
             method.Name(),
             bind_list<write_projection_parameter>(", ", signature.params()),
-            bind<write_abi_method_call>(signature, invoke_target, is_generic, false, is_noexcept(method), false));
+            bind<write_abi_method_call>(signature, invoke_target, "_obj", is_generic, false, is_noexcept(method), false));
         }
 
         for (auto&& prop : type.PropertyList())
@@ -4941,7 +4947,7 @@ bind([&](writer& w)
                 w.write(R"(get
 {%}
 )",
-bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
+bind<write_abi_method_call_marshalers>(invoke_target, "_obj", is_generic, marshalers, is_noexcept(prop)));
             }
             if (setter)
             {
@@ -4961,7 +4967,7 @@ bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is
                 w.write(R"(set
 {%}
 )",
-bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
+bind<write_abi_method_call_marshalers>(invoke_target, "_obj", is_generic, marshalers, is_noexcept(prop)));
             }
             w.write("}\n");
         }
@@ -5298,13 +5304,13 @@ static % %Fallback(% %%%)
                             bind_list<write_parameter_name>(", ", signature.params()),
                             bind([&](writer& w) {
                                 init_call_variables(w);
-                                write_abi_method_call(w, signature, invoke_target, is_generic, false, is_noexcept(method));
+                                write_abi_method_call(w, signature, invoke_target, "_obj", is_generic, false, is_noexcept(method));
                             }));
                     }
                     else
                     {
                         init_call_variables(w);
-                        write_abi_method_call(w, signature, invoke_target, is_generic, false, is_noexcept(method));
+                        write_abi_method_call(w, signature, invoke_target, "_obj", is_generic, false, is_noexcept(method));
                     }
                 }));
         }
@@ -5385,13 +5391,13 @@ static % get_%Fallback(IObjectReference _genericObj)
                                 getter.Name(),
                                 bind([&](writer& w) {
                                     init_call_variables(w);
-                                    write_abi_method_call_marshalers(w, invoke_target, is_generic, marshalers, is_noexcept(prop));
+                                    write_abi_method_call_marshalers(w, invoke_target, "_obj", is_generic, marshalers, is_noexcept(prop));
                                 }));
                         }
                         else
                         {
                             init_call_variables(w);
-                            write_abi_method_call_marshalers(w, invoke_target, is_generic, marshalers, is_noexcept(prop));
+                            write_abi_method_call_marshalers(w, invoke_target, "_obj", is_generic, marshalers, is_noexcept(prop));
                         }
                     }));
             }
@@ -5452,13 +5458,13 @@ static void set_%Fallback(IObjectReference _genericObj, % value)
                                 setter.Name(),
                                 bind([&](writer& w) {
                                     init_call_variables(w);
-                                    write_abi_method_call_marshalers(w, invoke_target, is_generic, marshalers, is_noexcept(prop));
+                                    write_abi_method_call_marshalers(w, invoke_target, "_obj", is_generic, marshalers, is_noexcept(prop));
                                 }));
                         }
                         else
                         {
                             init_call_variables(w);
-                            write_abi_method_call_marshalers(w, invoke_target, is_generic, marshalers, is_noexcept(prop));
+                            write_abi_method_call_marshalers(w, invoke_target, "_obj", is_generic, marshalers, is_noexcept(prop));
                         }
                     }));
             }
@@ -9366,7 +9372,7 @@ else
                         bind<write_abi_parameter_types_pointer>(signature));
                 }
             }),
-            bind<write_abi_method_call>(signature, "abiInvoke", have_generic_params, false, is_noexcept(method), false),
+            bind<write_abi_method_call>(signature, "abiInvoke", "_nativeDelegate", have_generic_params, false, is_noexcept(method), false),
             // FromManaged
             type_name,
             // DisposeMarshaler
@@ -10821,7 +10827,7 @@ var ThisPtr = _obj.ThisPtr;
                     method.Name(),
                     signature.has_params() ? ", " : "",
                     bind_list<write_projection_parameter>(", ", signature.params()),
-                    bind<write_abi_method_call>(signature, invoke_target, false, false, is_noexcept(method), true));
+                    bind<write_abi_method_call>(signature, invoke_target, "_obj", false, false, is_noexcept(method), true));
             }
 
             vtableFunctions.emplace_back(method.Name());
@@ -10899,7 +10905,7 @@ var ThisPtr = _obj.ThisPtr;
                     method.Name(),
                     signature.has_params() ? ", " : "",
                     bind_list<write_projection_parameter>(", ", signature.params()),
-                    bind<write_abi_method_call>(signature, invoke_target, false, false, is_noexcept(method), true));
+                    bind<write_abi_method_call>(signature, invoke_target, "_obj", false, false, is_noexcept(method), true));
             }
 
             for (auto&& prop : instance.generic_type.PropertyList())
@@ -10919,7 +10925,7 @@ var ThisPtr = _obj.ThisPtr;
 )",
                         write_prop_type(w, prop),
                         getter.Name(),
-                        bind<write_abi_method_call_marshalers>(invoke_target, false, marshalers, is_noexcept(prop)));
+                        bind<write_abi_method_call_marshalers>(invoke_target, "_obj", false, marshalers, is_noexcept(prop)));
                 }
                 if (setter && projected_signature_has_generic_parameters(w, method_signature{ setter }))
                 {
@@ -10934,7 +10940,7 @@ var ThisPtr = _obj.ThisPtr;
 )",
                         setter.Name(),
                         write_prop_type(w, prop),
-                        bind<write_abi_method_call_marshalers>(invoke_target, false, marshalers, is_noexcept(prop)));
+                        bind<write_abi_method_call_marshalers>(invoke_target, "_obj", false, marshalers, is_noexcept(prop)));
                 }
                 w.write("\n");
             }

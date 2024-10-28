@@ -186,6 +186,7 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
+                GC.KeepAlive(_obj);
                 return ABI.System.Collections.Generic.IEnumerator<T>.FromAbi(__retval);
             }
             finally
@@ -609,6 +610,7 @@ namespace ABI.System.Collections.Generic
         {
             byte __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.MoveNext_2(ThisPtr, out __retval));
+            GC.KeepAlive(_obj);
             return __retval != 0;
         }
 
@@ -623,6 +625,7 @@ namespace ABI.System.Collections.Generic
                 __items = Marshaler<T>.CreateMarshalerArray(items);
                 (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_3(ThisPtr, __items_length, __items_data, out __retval));
+                GC.KeepAlive(_obj);
                 items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                 return __retval;
             }
@@ -640,6 +643,7 @@ namespace ABI.System.Collections.Generic
                 try
                 {
                     _obj.Vftbl.get_Current_0.DynamicInvokeAbi(__params);
+                    GC.KeepAlive(_obj);
                     return Marshaler<T>.FromAbi(__params[1]);
                 }
                 finally
@@ -655,6 +659,7 @@ namespace ABI.System.Collections.Generic
             {
                 byte __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasCurrent_1(ThisPtr, out __retval));
+                GC.KeepAlive(_obj);
                 return __retval != 0;
             }
         }

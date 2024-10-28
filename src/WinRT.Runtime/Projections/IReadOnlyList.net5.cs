@@ -145,6 +145,7 @@ namespace ABI.Windows.Foundation.Collections
 
             uint __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
+            GC.KeepAlive(obj);
             return __retval;
         }
 
@@ -180,6 +181,7 @@ namespace ABI.Windows.Foundation.Collections
                     __items = Marshaler<T>.CreateMarshalerArray(items);
                     (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, uint*, int>**)ThisPtr)[9](ThisPtr, startIndex, __items_length, __items_data, &__retval));
+                    GC.KeepAlive(obj);
                     items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                     return __retval;
                 }
@@ -316,6 +318,7 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint, void*, int>**)ThisPtr)[6](ThisPtr, index, &result));
+                GC.KeepAlive(obj);
                 return Marshaler<T>.FromAbi(result);
             }
             finally
@@ -339,6 +342,8 @@ namespace ABI.System.Collections.Generic
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 DelegateHelper.Get(obj).IndexOf.DynamicInvokeAbi(__params);
+                GC.KeepAlive(obj);
+                GC.KeepAlive(__params);
                 index = _index;
                 return found != 0;
             }

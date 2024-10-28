@@ -31,6 +31,7 @@ namespace ABI.System
                     ThisPtr,
                     global::ABI.System.Type.GetAbi(__type),
                     &__retval));
+                GC.KeepAlive(obj);
                 return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
