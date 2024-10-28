@@ -297,25 +297,11 @@ namespace WinRT
             return ThisPtr;
         }
 
-        /// <summary>
-        /// Releases the current object (both the original object and the reference tracker source).
-        /// </summary>
-        /// <remarks>
-        /// This method does not check for disposal before releasing the reference.
-        /// This allows it to be used from <see cref="NativeReleaseUnsafe"/>.
-        /// </remarks>
+        /// <inheritdoc cref="NativeReleaseUnsafe"/>
+        [Obsolete("This method is obsoleted and should not be used. Use 'Dispose()' instead.")]
         protected virtual unsafe void Release()
         {
-            ReleaseFromTrackerSourceUnsafe();
-
-            Marshal.Release(GetThisPtrUnsafe());
-        }
-
-        private protected unsafe void ReleaseWithoutContext()
-        {
-            ReleaseFromTrackerSourceUnsafe();
-
-            Marshal.Release(_thisPtr);
+            NativeReleaseUnsafe();
         }
 
         internal unsafe bool IsReferenceToManagedObject
@@ -331,7 +317,7 @@ namespace WinRT
         /// </summary>
         /// <remarks>
         /// This method does not check for disposal before releasing the reference.
-        /// This allows it to be used from <see cref="NativeReleaseUnsafe"/>.
+        /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
         /// </remarks>
         internal unsafe void ReleaseFromTrackerSourceUnsafe()
         {
@@ -349,7 +335,7 @@ namespace WinRT
         /// </summary>
         /// <remarks>
         /// This method does not check for disposal before releasing the reference.
-        /// This allows it to be used from <see cref="NativeReleaseUnsafe"/>.
+        /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
         /// </remarks>
         private unsafe void DisposeTrackerSourceUnsafe()
         {
@@ -371,7 +357,7 @@ namespace WinRT
         /// </summary>
         /// <remarks>
         /// This method does not check for disposal before releasing the reference.
-        /// This allows it to be used from <see cref="NativeReleaseUnsafe"/>.
+        /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
         /// </remarks>
         internal virtual IntPtr GetThisPtrForCurrentContextUnsafe()
         {
@@ -834,7 +820,7 @@ namespace WinRT
             }
         }
 
-        protected override unsafe void Release()
+        private protected override unsafe void NativeReleaseUnsafe()
         {
             // Don't initialize cached context by calling through property if it is already null.
             if (__cachedContext != null)
@@ -860,14 +846,14 @@ namespace WinRT
             {
                 ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
 
-                @this.ReleaseFromBase();
+                @this.BaseNativeReleaseUnsafe();
             }
 
             static void ReleaseWithoutContext(object state)
             {
                 ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
 
-                @this.ReleaseWithoutContext();
+                @this.NativeReleaseWithoutContextUnsafe();
             }
         }
 
@@ -875,9 +861,9 @@ namespace WinRT
         // We can't just do 'param.base.Release()' (or something like that), so the only way to specifically
         // invoke the base implementation of an overridden method on that object is to go through a helper
         // instance method invoked on it that just calls the base implementation of the method we want.
-        private void ReleaseFromBase()
+        private void BaseNativeReleaseUnsafe()
         {
-            base.Release();
+            base.NativeReleaseUnsafe();
         }
 
         public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)

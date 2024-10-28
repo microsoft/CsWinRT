@@ -204,7 +204,7 @@ namespace WinRT
             // tracked object will just be released once the last active lease is returned.
             if (!isDisposed && currentValue == 0)
             {
-                NativeReleaseUnsafe();
+                NativeDisposeUnsafe();
             }
         }
 
@@ -230,7 +230,7 @@ namespace WinRT
             // This is the case if the dispose bit is set (the 32nd one), and no other bit is set.
             if (currentValue == 1 << 31)
             {
-                NativeReleaseUnsafe();
+                NativeDisposeUnsafe();
             }
         }
 
@@ -306,7 +306,7 @@ namespace WinRT
         /// Callers are responsible for ensuring no active callers exist when this method is used.
         /// Only <see cref="Dispose()"/> and <see cref="ReleaseUnsafe"/> should call this method.
         /// </remarks>
-        private void NativeReleaseUnsafe()
+        private void NativeDisposeUnsafe()
         {
 #if DEBUG
             if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
@@ -317,12 +317,40 @@ namespace WinRT
 
             if (!PreventReleaseOnDispose)
             {
-                Release();
+                NativeReleaseUnsafe();
             }
 
             DisposeTrackerSourceUnsafe();
 
             GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
+        }
+
+        /// <summary>
+        /// Releases the current object (both the original object and the reference tracker source).
+        /// </summary>
+        /// <remarks>
+        /// This method does not check for disposal before releasing the reference.
+        /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
+        /// </remarks>
+        private protected virtual void NativeReleaseUnsafe()
+        {
+            ReleaseFromTrackerSourceUnsafe();
+
+            Marshal.Release(GetThisPtrUnsafe());
+        }
+
+        /// <summary>
+        /// Releases the current object (both the original object and the reference tracker source), with no context.
+        /// </summary>
+        /// <remarks>
+        /// This method does not check for disposal before releasing the reference.
+        /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
+        /// </remarks>
+        private protected void NativeReleaseWithoutContextUnsafe()
+        {
+            ReleaseFromTrackerSourceUnsafe();
+
+            Marshal.Release(_thisPtr);
         }
     }
 }
