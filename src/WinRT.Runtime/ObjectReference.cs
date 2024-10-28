@@ -61,15 +61,6 @@ namespace WinRT
             }
         }
 
-        private protected IntPtr ThisPtrFromOriginalContext
-        {
-            get
-            {
-                ThrowIfDisposedUnsafe();
-                return _thisPtr;
-            }
-        }
-
 #if DEBUG
         private unsafe uint RefCount
         {
@@ -102,17 +93,8 @@ namespace WinRT
                 if (_referenceTrackerPtr != IntPtr.Zero)
                 {
                     Marshal.AddRef(_referenceTrackerPtr);
-                    AddRefFromTrackerSource();
+                    AddRefFromTrackerSourceUnsafe();
                 }
-            }
-        }
-
-        internal unsafe IReferenceTrackerVftbl ReferenceTracker
-        {
-            get
-            {
-                ThrowIfDisposedUnsafe();
-                return **(IReferenceTrackerVftbl**)ReferenceTrackerPtr;
             }
         }
 
@@ -122,15 +104,6 @@ namespace WinRT
             {
                 ThrowIfDisposedUnsafe();
                 return **(IUnknownVftbl**)ThisPtr;
-            }
-        }
-
-        private protected unsafe IUnknownVftbl VftblIUnknownFromOriginalContext
-        {
-            get
-            {
-                ThrowIfDisposedUnsafe();
-                return **(IUnknownVftbl**)ThisPtrFromOriginalContext;
             }
         }
 
@@ -329,7 +302,7 @@ namespace WinRT
             Marshal.AddRef(ThisPtr);
             if (refFromTrackerSource)
             {
-                AddRefFromTrackerSource();
+                AddRefFromTrackerSourceUnsafe();
             }
         }
 
@@ -367,11 +340,13 @@ namespace WinRT
             }
         }
 
-        internal unsafe void AddRefFromTrackerSource()
+        internal unsafe void AddRefFromTrackerSourceUnsafe()
         {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
+            IntPtr referenceTrackerPtr = _referenceTrackerPtr;
+
+            if (referenceTrackerPtr != IntPtr.Zero)
             {
-                ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
+                _ = (**(IReferenceTrackerVftbl**)referenceTrackerPtr).AddRefFromTrackerSource(referenceTrackerPtr);
             }
         }
 
@@ -446,7 +421,7 @@ namespace WinRT
             {
                 Marshal.Release(thatPtr);
             }
-            AddRefFromTrackerSource();
+            AddRefFromTrackerSourceUnsafe();
 
             return new ObjectReferenceValue(thatPtr, ReferenceTrackerPtr, IsAggregated, this);
         }
@@ -670,7 +645,7 @@ namespace WinRT
                     Marshal.Release(thatPtr);
                 }
 
-                sourceRef.AddRefFromTrackerSource();
+                sourceRef.AddRefFromTrackerSourceUnsafe();
 
                 objRef = Attach(ref thatPtr, iid);
                 objRef.IsAggregated = sourceRef.IsAggregated;
@@ -954,7 +929,7 @@ namespace WinRT
                     Marshal.Release(thatPtr);
                 }
 
-                sourceRef.AddRefFromTrackerSource();
+                sourceRef.AddRefFromTrackerSourceUnsafe();
 
                 objRef = new ObjectReferenceWithContext<T>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
                 {
