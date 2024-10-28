@@ -202,7 +202,7 @@ namespace WinRT
 
         public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
-            AddRef(true);
+            NativeAddRefUnsafe(addRefFromTrackerSource: true);
             var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr, IID.IID_IUnknown);
             objRef.IsAggregated = IsAggregated;
             objRef.PreventReleaseOnDispose = IsAggregated;
@@ -293,22 +293,8 @@ namespace WinRT
         public IntPtr GetRef()
         {
             ThrowIfDisposedUnsafe();
-            AddRef(false);
+            NativeAddRefUnsafe(addRefFromTrackerSource: false);
             return ThisPtr;
-        }
-
-        protected virtual unsafe void AddRef(bool refFromTrackerSource)
-        {
-            Marshal.AddRef(ThisPtr);
-            if (refFromTrackerSource)
-            {
-                AddRefFromTrackerSourceUnsafe();
-            }
-        }
-
-        protected virtual unsafe void AddRef()
-        {
-            AddRef(true);
         }
 
         /// <summary>
@@ -906,7 +892,7 @@ namespace WinRT
 
         public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
-            AddRef(true);
+            NativeAddRefUnsafe(addRefFromTrackerSource: true);
             var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken(), IID.IID_IUnknown)
             {
                 IsAggregated = IsAggregated,
