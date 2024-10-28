@@ -187,6 +187,7 @@ namespace ABI.System.ComponentModel
                 fixed (void* ___propertyName = __propertyName)
                 {
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(ref __propertyName), &__retval));
+                    GC.KeepAlive(_obj);
                     return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
                 }
             }
@@ -202,6 +203,7 @@ namespace ABI.System.ComponentModel
             {
                 byte __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasErrors_0(ThisPtr, &__retval));
+                GC.KeepAlive(_obj);
                 return __retval != 0;
             }
         }

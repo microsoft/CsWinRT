@@ -51,6 +51,8 @@ namespace ABI.WinRT.Interop
             IntPtr ptr = IntPtr.Zero;
             ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
                 ThisPtr, &riid, &ptr));
+            global::System.GC.KeepAlive(_obj);
+
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);
@@ -69,6 +71,8 @@ namespace ABI.WinRT.Interop
             IntPtr ptr = IntPtr.Zero;
             ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
                 ThisPtr, &riid, &ptr));
+            global::System.GC.KeepAlive(_obj);
+
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr, riid, requireQI: false);
@@ -231,6 +235,7 @@ namespace ABI.WinRT.Interop
         public IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid)
         {
             ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RegisterInterfaceInGlobal(ThisPtr, ptr, ref riid, out IntPtr cookie));
+            global::System.GC.KeepAlive(_obj);
             return cookie;
 
         }
@@ -238,11 +243,13 @@ namespace ABI.WinRT.Interop
         public void RevokeInterfaceFromGlobal(IntPtr cookie)
         {
             ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RevokeInterfaceFromGlobal(ThisPtr, cookie));
+            global::System.GC.KeepAlive(_obj);
         }
 
         public IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid)
         {
             ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInterfaceFromGlobal(ThisPtr, cookie, ref riid, out IntPtr ptr));
+            global::System.GC.KeepAlive(_obj);
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(ptr, riid, requireQI: false);

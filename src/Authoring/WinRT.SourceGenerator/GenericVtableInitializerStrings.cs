@@ -1029,6 +1029,7 @@ namespace Generator
                          IntPtr abiSender = MarshalInspectable<object>.GetAbi(__sender);
                          {{GeneratorHelper.GetCreateMarshaler(genericType, abiType, typeKind, "args")}}
                          global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, {{abiType}}, int>**)ThisPtr)[3](ThisPtr, abiSender, {{GeneratorHelper.GetAbiFromMarshaler(genericType, abiType, typeKind, "args")}}));
+                         global::System.GC.KeepAlive(objRef);
                      }
                      finally
                      {
@@ -1086,6 +1087,7 @@ namespace Generator
                          {{GeneratorHelper.GetCreateMarshaler(genericParameters[0], "sender")}}
                          {{GeneratorHelper.GetCreateMarshaler(genericParameters[1], "args")}}
                          global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, {{genericParameters[0].AbiType}}, {{genericParameters[1].AbiType}}, int>**)ThisPtr)[3](ThisPtr, {{GeneratorHelper.GetAbiFromMarshaler(genericParameters[0], "sender")}}, {{GeneratorHelper.GetAbiFromMarshaler(genericParameters[1], "args")}}));
+                         global::System.GC.KeepAlive(objRef);
                      }
                      finally
                      {
@@ -1218,6 +1220,7 @@ namespace Generator
                          IntPtr abiAsyncInfo = MarshalInspectable<object>.GetAbi(__asyncInfo);
                          {{GeneratorHelper.GetCreateMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}}
                          global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, {{progressParameter.AbiType}}, int>**)ThisPtr)[3](ThisPtr, abiAsyncInfo, {{GeneratorHelper.GetAbiFromMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}}));
+                         global::System.GC.KeepAlive(objRef);
                      }
                      finally
                      {

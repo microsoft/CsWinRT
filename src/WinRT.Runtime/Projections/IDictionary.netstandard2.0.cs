@@ -736,6 +736,7 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
+                GC.KeepAlive(_obj);
                 return Marshaler<V>.FromAbi(__params[2]);
             }
             finally
@@ -754,6 +755,7 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.HasKey_2.DynamicInvokeAbi(__params);
+                GC.KeepAlive(_obj);
                 return (byte)__params[2] != 0;
             }
             finally
@@ -768,6 +770,7 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_3(ThisPtr, out __retval));
+                GC.KeepAlive(_obj);
                 return MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__retval);
             }
             finally
@@ -788,6 +791,8 @@ namespace ABI.System.Collections.Generic
                 __value = Marshaler<V>.CreateMarshaler2(value);
                 __params[2] = Marshaler<V>.GetAbi(__value);
                 _obj.Vftbl.Insert_4.DynamicInvokeAbi(__params);
+                GC.KeepAlive(_obj);
+                GC.KeepAlive(__params);
                 return (byte)__params[3] != 0;
             }
             finally
@@ -806,6 +811,8 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Remove_5.DynamicInvokeAbi(__params);
+                GC.KeepAlive(_obj);
+                GC.KeepAlive(__params);
             }
             finally
             {
@@ -816,6 +823,7 @@ namespace ABI.System.Collections.Generic
         public unsafe void Clear()
         {
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Clear_6(ThisPtr));
+            GC.KeepAlive(_obj);
         }
 
         public unsafe uint Size
@@ -824,6 +832,7 @@ namespace ABI.System.Collections.Generic
             {
                 uint __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+                GC.KeepAlive(_obj);
                 return __retval;
             }
         }

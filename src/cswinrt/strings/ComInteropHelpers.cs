@@ -532,6 +532,7 @@ namespace Windows.ApplicationModel.DataTransfer
                 // IDataTransferManagerInterop inherits IUnknown (3 functions) and provides GetForWindow giving a total of 5 functions
                 fixed(Guid* _riid = &riid)
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, global::System.Guid*, global::System.IntPtr*, int>**)thisPtr)[3](thisPtr, appWindow, _riid, &ptr));
+                GC.KeepAlive(_obj);
                 return global::WinRT.MarshalInspectable<global::Windows.ApplicationModel.DataTransfer.DataTransferManager>.FromAbi(ptr);
             }
             finally
@@ -546,6 +547,7 @@ namespace Windows.ApplicationModel.DataTransfer
 
             // IDataTransferManagerInterop inherits IUnknown (3 functions) and provides ShowShareUIForWindow giving a total of 5 functions
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, int>**)thisPtr)[4](thisPtr, appWindow));
+            GC.KeepAlive(_obj);
         }
     }
 }

@@ -24,6 +24,8 @@ variables:
   value: $[coalesce(variables.IsRelease, '')]
 - name: _RunBenchmarks
   value: $[coalesce(variables.RunBenchmarks, 'false')]
+- name: _RunGCStress
+  value: $[coalesce(variables.RunGCStress, 'false')]
 - name: _DotNetRuntimeVersion
   value: $[coalesce(variables.DotNetRuntimeVersion, '6.0.32')]  
 - name: _WindowsSdkVersionSuffix

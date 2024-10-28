@@ -148,6 +148,7 @@ namespace ABI.Windows.Foundation.Collections
                 try
                 {
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, IntPtr*, int>**)ThisPtr)[9](ThisPtr, &__first, &__second));
+                    GC.KeepAlive(obj);
                     first = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__first);
                     second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__second);
                 }
@@ -165,6 +166,7 @@ namespace ABI.Windows.Foundation.Collections
 
             uint __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
+            GC.KeepAlive(obj);
             return __retval;   
         }
     }
@@ -504,6 +506,8 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 DelegateHelper.Get(obj).Lookup.DynamicInvokeAbi(__params);
+                GC.KeepAlive(obj);
+                GC.KeepAlive(__params);
                 return Marshaler<V>.FromAbi(valueAbi);
             }
             finally
@@ -527,6 +531,8 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 DelegateHelper.Get(obj).HasKey.DynamicInvokeAbi(__params);
+                GC.KeepAlive(obj);
+                GC.KeepAlive(__params);
                 return found != 0;
             }
             finally
