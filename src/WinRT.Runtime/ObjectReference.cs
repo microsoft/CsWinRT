@@ -124,15 +124,7 @@ namespace WinRT
             // pressure rather than tracking all the IObjectReferences that are connected
             // to the same object and only releasing the memory pressure once all of them
             // have been finalized.
-#if NET
-            // Disable on AOT for now until dotnet runtime #104583 is addressed to avoid making the issue happen more often.
-            if (RuntimeFeature.IsDynamicCodeCompiled)
-            {
-                GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-            }
-#else
             GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-#endif
         }
 
 #if NET
