@@ -316,7 +316,7 @@ namespace WinRT
         /// </summary>
         /// <remarks>
         /// This method does not check for disposal before releasing the reference.
-        /// This allows it to be used from <see cref="ReleaseNativeObject"/>.
+        /// This allows it to be used from <see cref="NativeReleaseUnsafe"/>.
         /// </remarks>
         protected virtual unsafe void Release()
         {
@@ -355,7 +355,7 @@ namespace WinRT
         /// </summary>
         /// <remarks>
         /// This method does not check for disposal before releasing the reference.
-        /// This allows it to be used from <see cref="ReleaseNativeObject"/>.
+        /// This allows it to be used from <see cref="NativeReleaseUnsafe"/>.
         /// </remarks>
         internal unsafe void ReleaseFromTrackerSourceUnsafe()
         {
@@ -373,7 +373,7 @@ namespace WinRT
         /// </summary>
         /// <remarks>
         /// This method does not check for disposal before releasing the reference.
-        /// This allows it to be used from <see cref="ReleaseNativeObject"/>.
+        /// This allows it to be used from <see cref="NativeReleaseUnsafe"/>.
         /// </remarks>
         private unsafe void DisposeTrackerSourceUnsafe()
         {
@@ -395,7 +395,7 @@ namespace WinRT
         /// </summary>
         /// <remarks>
         /// This method does not check for disposal before releasing the reference.
-        /// This allows it to be used from <see cref="ReleaseNativeObject"/>.
+        /// This allows it to be used from <see cref="NativeReleaseUnsafe"/>.
         /// </remarks>
         internal virtual IntPtr GetThisPtrForCurrentContextUnsafe()
         {

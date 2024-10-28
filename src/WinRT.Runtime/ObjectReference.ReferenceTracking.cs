@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace WinRT
@@ -24,6 +25,32 @@ namespace WinRT
             GC.SuppressFinalize(this);
 
             DisposeUnsafe();
+        }
+
+        /// <summary>
+        /// Gets the underlying pointer owned by the current instance, after incrementing its reference count.
+        /// </summary>
+        /// <returns>The underlying pointer owned by the current instance.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method retrieves the same pointer as <see cref="ThisPtr"/>. That is,
+        /// it retrieves the pointer to the underlying object, for the current context.
+        /// </para>
+        /// <para>
+        /// This method will increment the reference count of the returned pointer.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
+        public IntPtr GetThisPtr()
+        {
+            AddRefUnsafe();
+            NativeAddRefUnsafe(addRefFromTrackerSource: false);
+
+            IntPtr thisPtr = GetThisPtrUnsafe();
+
+            ReleaseUnsafe();
+
+            return thisPtr;
         }
 
         /// <summary>
@@ -176,7 +203,7 @@ namespace WinRT
             // tracked object will just be released once the last active lease is returned.
             if (!isDisposed && currentValue == 0)
             {
-                ReleaseNativeObject();
+                NativeReleaseUnsafe();
             }
         }
 
@@ -202,7 +229,7 @@ namespace WinRT
             // This is the case if the dispose bit is set (the 32nd one), and no other bit is set.
             if (currentValue == 1 << 31)
             {
-                ReleaseNativeObject();
+                NativeReleaseUnsafe();
             }
         }
 
@@ -237,13 +264,31 @@ namespace WinRT
         }
 
         /// <summary>
+        /// Increments the native reference count for the current <see cref="IObjectReference"/> instance.
+        /// </summary>
+        /// <param name="addRefFromTrackerSource">Whether to also increment the reference count from the tracker source.</param>
+        /// <remarks>
+        /// This method does not check for disposal, nor does it increment the managed reference count of
+        /// the current object. Callers must call <see cref="AddRefUnsafe"/> and <see cref="ReleaseUnsafe"/>.
+        /// </remarks>
+        private protected void NativeAddRefUnsafe(bool addRefFromTrackerSource)
+        {
+            Marshal.AddRef(GetThisPtrUnsafe());
+
+            if (addRefFromTrackerSource)
+            {
+                AddRefFromTrackerSourceUnsafe();
+            }
+        }
+
+        /// <summary>
         /// Releases all native resources owned by the current <see cref="IObjectReference"/> instance.
         /// </summary>
         /// <remarks>
         /// Callers are responsible for ensuring no active callers exist when this method is used.
         /// Only <see cref="Dispose()"/> and <see cref="ReleaseUnsafe"/> should call this method.
         /// </remarks>
-        private void ReleaseNativeObject()
+        private void NativeReleaseUnsafe()
         {
 #if DEBUG
             if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
