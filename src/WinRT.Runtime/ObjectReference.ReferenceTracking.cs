@@ -41,7 +41,7 @@ namespace WinRT
         /// </para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IntPtr GetThisRefUnsafe()
+        public IntPtr GetThisPtrUnsafe()
         {
             return GetThisPtrForCurrentContextUnsafe();
         }
@@ -60,9 +60,9 @@ namespace WinRT
         /// </para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IntPtr GetReferenceTrackerRefUnsafe()
+        public IntPtr GetReferenceTrackerPtrUnsafe()
         {
-            return GetThisPtrForCurrentContextUnsafe();
+            return _referenceTrackerPtr;
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace WinRT
         /// </para>
         /// <para>
         /// This method exists mostly for backwards compatibility for older APIs. New code should always use <see cref="AddRefUnsafe"/>
-        /// and <see cref="ReleaseUnsafe"/>, and then <see cref="GetThisRefUnsafe"/> to access the native pointer to use for interop.
+        /// and <see cref="ReleaseUnsafe"/>, and then <see cref="GetThisPtrUnsafe"/> to access the native pointer to use for interop.
         /// </para>
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the current instance is disposed.</exception>
