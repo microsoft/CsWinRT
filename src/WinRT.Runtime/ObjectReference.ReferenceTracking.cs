@@ -5,10 +5,11 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using WinRT.Interop;
 
 namespace WinRT
 {
-    partial class IObjectReference
+    unsafe partial class IObjectReference
     {
         /// <summary>
         /// Finalizes the current object instance. If the underlying native
@@ -271,13 +272,30 @@ namespace WinRT
         /// This method does not check for disposal, nor does it increment the managed reference count of
         /// the current object. Callers must call <see cref="AddRefUnsafe"/> and <see cref="ReleaseUnsafe"/>.
         /// </remarks>
-        private protected void NativeAddRefUnsafe(bool addRefFromTrackerSource)
+        internal void NativeAddRefUnsafe(bool addRefFromTrackerSource)
         {
             Marshal.AddRef(GetThisPtrUnsafe());
 
             if (addRefFromTrackerSource)
             {
-                AddRefFromTrackerSourceUnsafe();
+                NativeAddRefFromTrackerSourceUnsafe();
+            }
+        }
+
+        /// <summary>
+        /// Increments the native reference count for the current <see cref="IObjectReference"/> instance from the tracker source.
+        /// </summary>
+        /// <remarks>
+        /// This method does not check for disposal, nor does it increment the managed reference count of
+        /// the current object. Callers must call <see cref="AddRefUnsafe"/> and <see cref="ReleaseUnsafe"/>.
+        /// </remarks>
+        internal void NativeAddRefFromTrackerSourceUnsafe()
+        {
+            IntPtr referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
+
+            if (referenceTrackerPtr != IntPtr.Zero)
+            {
+                _ = (**(IReferenceTrackerVftbl**)referenceTrackerPtr).AddRefFromTrackerSource(referenceTrackerPtr);
             }
         }
 

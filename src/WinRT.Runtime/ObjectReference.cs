@@ -93,7 +93,7 @@ namespace WinRT
                 if (_referenceTrackerPtr != IntPtr.Zero)
                 {
                     Marshal.AddRef(_referenceTrackerPtr);
-                    AddRefFromTrackerSourceUnsafe();
+                    NativeAddRefFromTrackerSourceUnsafe();
                 }
             }
         }
@@ -326,16 +326,6 @@ namespace WinRT
             }
         }
 
-        internal unsafe void AddRefFromTrackerSourceUnsafe()
-        {
-            IntPtr referenceTrackerPtr = _referenceTrackerPtr;
-
-            if (referenceTrackerPtr != IntPtr.Zero)
-            {
-                _ = (**(IReferenceTrackerVftbl**)referenceTrackerPtr).AddRefFromTrackerSource(referenceTrackerPtr);
-            }
-        }
-
         /// <summary>
         /// Releases the reference from the tracker source.
         /// </summary>
@@ -407,7 +397,7 @@ namespace WinRT
             {
                 Marshal.Release(thatPtr);
             }
-            AddRefFromTrackerSourceUnsafe();
+            NativeAddRefFromTrackerSourceUnsafe();
 
             return new ObjectReferenceValue(thatPtr, ReferenceTrackerPtr, IsAggregated, this);
         }
@@ -631,7 +621,7 @@ namespace WinRT
                     Marshal.Release(thatPtr);
                 }
 
-                sourceRef.AddRefFromTrackerSourceUnsafe();
+                sourceRef.NativeAddRefFromTrackerSourceUnsafe();
 
                 objRef = Attach(ref thatPtr, iid);
                 objRef.IsAggregated = sourceRef.IsAggregated;
@@ -915,7 +905,7 @@ namespace WinRT
                     Marshal.Release(thatPtr);
                 }
 
-                sourceRef.AddRefFromTrackerSourceUnsafe();
+                sourceRef.NativeAddRefFromTrackerSourceUnsafe();
 
                 objRef = new ObjectReferenceWithContext<T>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
                 {
