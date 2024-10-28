@@ -361,10 +361,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 // as our error so as to propagate the error through WinRT end-to-end.
                 if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
                 {
-                    using (restrictedErrorObject)
-                    {
-                        setRestrictedErrorInfo(restrictedErrorObject.ThisPtr);
-                    }
+                    setRestrictedErrorInfo(restrictedErrorObject.ThisPtr);
                 }
                 else
                 {
