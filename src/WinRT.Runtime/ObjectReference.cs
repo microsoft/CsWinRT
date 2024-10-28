@@ -290,6 +290,8 @@ namespace WinRT
             throw new InvalidOperationException($"Target type '{typeof(T)}' is not a projected type.");
         }
 
+        [Obsolete("This method is not safe. Use 'GetThisPtr()' instead.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public IntPtr GetRef()
         {
             ThrowIfDisposedUnsafe();
@@ -298,7 +300,8 @@ namespace WinRT
         }
 
         /// <inheritdoc cref="NativeReleaseUnsafe"/>
-        [Obsolete("This method is obsoleted and should not be used. Use 'Dispose()' instead.")]
+        [Obsolete("This method is not safe. Use 'Dispose()' instead.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         protected virtual unsafe void Release()
         {
             NativeReleaseUnsafe();
