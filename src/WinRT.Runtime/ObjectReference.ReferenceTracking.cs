@@ -320,7 +320,7 @@ namespace WinRT
                 NativeReleaseUnsafe();
             }
 
-            DisposeTrackerSourceUnsafe();
+            NativeReleaseTrackerSourceUnsafe();
 
             GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
         }
@@ -334,7 +334,7 @@ namespace WinRT
         /// </remarks>
         private protected virtual void NativeReleaseUnsafe()
         {
-            ReleaseFromTrackerSourceUnsafe();
+            NativeReleaseFromTrackerSourceUnsafe();
 
             Marshal.Release(GetThisPtrUnsafe());
         }
@@ -348,9 +348,49 @@ namespace WinRT
         /// </remarks>
         private protected void NativeReleaseWithoutContextUnsafe()
         {
-            ReleaseFromTrackerSourceUnsafe();
+            NativeReleaseFromTrackerSourceUnsafe();
 
             Marshal.Release(_thisPtr);
+        }
+
+        /// <summary>
+        /// Releases the reference from the tracker source.
+        /// </summary>
+        /// <remarks>
+        /// This method does not check for disposal before releasing the reference.
+        /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
+        /// </remarks>
+        internal unsafe void NativeReleaseFromTrackerSourceUnsafe()
+        {
+            IntPtr referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
+
+            if (referenceTrackerPtr != IntPtr.Zero)
+            {
+                _ = (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(referenceTrackerPtr);
+            }
+        }
+
+        /// <summary>
+        /// Releases the reference from the tracker source, if <see cref="PreventReleaseFromTrackerSourceOnDispose"/>
+        /// is not set, and then the reference tracker itself.
+        /// </summary>
+        /// <remarks>
+        /// This method does not check for disposal before releasing the reference.
+        /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
+        /// </remarks>
+        private void NativeReleaseTrackerSourceUnsafe()
+        {
+            IntPtr referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
+
+            if (referenceTrackerPtr != IntPtr.Zero)
+            {
+                if (!PreventReleaseFromTrackerSourceOnDispose)
+                {
+                    _ = (**(IReferenceTrackerVftbl**)referenceTrackerPtr).ReleaseFromTrackerSource(referenceTrackerPtr);
+                }
+
+                Marshal.Release(referenceTrackerPtr);
+            }
         }
     }
 }
