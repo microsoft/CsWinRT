@@ -31,11 +31,36 @@ namespace WinRT
         /// </summary>
         /// <returns>The underlying pointer owned by the current instance.</returns>
         /// <remarks>
+        /// <para>
+        /// This method retrieves the same pointer as <see cref="ThisPtr"/>. That is,
+        /// it retrieves the pointer to the underlying object, for the current context.
+        /// </para>
+        /// <para>
         /// This method does not check for disposal, nor does it increment the managed reference count of
         /// the current object. Callers must call <see cref="AddRefUnsafe"/> and <see cref="ReleaseUnsafe"/>.
+        /// </para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IntPtr GetRefUnsafe()
+        public IntPtr GetThisRefUnsafe()
+        {
+            return GetThisPtrForCurrentContextUnsafe();
+        }
+
+        /// <summary>
+        /// Gets the pointer to the reference tracker object tied to the current instance.
+        /// </summary>
+        /// <returns>The pointer to the reference tracker object tied to the current instance.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method retrieves the same pointer as <see cref="ReferenceTrackerPtr"/>.
+        /// </para>
+        /// <para>
+        /// This method does not check for disposal, nor does it increment the managed reference count of
+        /// the current object. Callers must call <see cref="AddRefUnsafe"/> and <see cref="ReleaseUnsafe"/>.
+        /// </para>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IntPtr GetReferenceTrackerRefUnsafe()
         {
             return GetThisPtrForCurrentContextUnsafe();
         }
@@ -194,7 +219,7 @@ namespace WinRT
         /// </para>
         /// <para>
         /// This method exists mostly for backwards compatibility for older APIs. New code should always use <see cref="AddRefUnsafe"/>
-        /// and <see cref="ReleaseUnsafe"/>, and then <see cref="GetRefUnsafe"/> to access the native pointer to use for interop.
+        /// and <see cref="ReleaseUnsafe"/>, and then <see cref="GetThisRefUnsafe"/> to access the native pointer to use for interop.
         /// </para>
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the current instance is disposed.</exception>

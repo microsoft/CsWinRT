@@ -349,7 +349,7 @@ namespace WinRT
         {
             ReleaseFromTrackerSourceUnsafe();
 
-            Marshal.Release(GetRefUnsafe());
+            Marshal.Release(GetThisRefUnsafe());
         }
 
         private protected unsafe void ReleaseWithoutContext()
