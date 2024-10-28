@@ -132,7 +132,6 @@ namespace WinRT
             if (setRestrictedErrorInfo != null)
             {
                 setRestrictedErrorInfo(restrictedErrorInfoPtr);
-                return ObjectReference<IUnknownVftbl>.FromAbi(restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
             }
 
             return ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
@@ -169,7 +168,7 @@ namespace WinRT
                         ABI.WinRT.Interop.ILanguageExceptionErrorInfo languageErrorInfo = new(languageErrorInfoRef);
                         using IObjectReference languageException = languageErrorInfo.GetLanguageException();
 #endif
-                        if (languageException is object)
+                        if (languageException is not null)
                         {
                             if (languageException.IsReferenceToManagedObject)
                             {
