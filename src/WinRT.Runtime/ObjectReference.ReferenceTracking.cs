@@ -69,9 +69,23 @@ namespace WinRT
         /// </para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IntPtr GetThisPtrUnsafe()
+        public virtual IntPtr GetThisPtrUnsafe()
         {
-            return GetThisPtrForCurrentContextUnsafe();
+            return _thisPtr;
+        }
+
+        /// <summary>
+        /// Gets the underlying pointer owned by the current instance, with no context.
+        /// </summary>
+        /// <returns>The underlying pointer owned by the current instance.</returns>
+        /// <remarks>
+        /// This method does not check for disposal, nor does it increment the managed reference count of
+        /// the current object. Callers must call <see cref="AddRefUnsafe"/> and <see cref="ReleaseUnsafe"/>.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private IntPtr GetThisPtrWithoutContextUnsafe()
+        {
+            return _thisPtr;
         }
 
         /// <summary>
@@ -350,7 +364,7 @@ namespace WinRT
         {
             NativeReleaseFromTrackerSourceUnsafe();
 
-            Marshal.Release(_thisPtr);
+            Marshal.Release(GetThisPtrWithoutContextUnsafe());
         }
 
         /// <summary>
@@ -360,7 +374,7 @@ namespace WinRT
         /// This method does not check for disposal before releasing the reference.
         /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
         /// </remarks>
-        internal unsafe void NativeReleaseFromTrackerSourceUnsafe()
+        internal void NativeReleaseFromTrackerSourceUnsafe()
         {
             IntPtr referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
 

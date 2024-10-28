@@ -46,7 +46,7 @@ namespace WinRT
             get
             {
                 ThrowIfDisposedUnsafe();
-                return GetThisPtrForCurrentContextUnsafe();
+                return GetThisPtrUnsafe();
             }
         }
 
@@ -310,18 +310,6 @@ namespace WinRT
             {
                 return VftblIUnknown.Equals(IUnknownVftbl.AbiToProjectionVftbl);
             }
-        }
-
-        /// <summary>
-        /// Gets the underlying pointer for the current context, owned by the current instance.
-        /// </summary>
-        /// <remarks>
-        /// This method does not check for disposal before releasing the reference.
-        /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
-        /// </remarks>
-        internal virtual IntPtr GetThisPtrForCurrentContextUnsafe()
-        {
-            return _thisPtr;
         }
 
         private protected virtual IntPtr GetContextToken()
@@ -676,15 +664,15 @@ namespace WinRT
             _iid = iid;
         }
 
-        internal override IntPtr GetThisPtrForCurrentContextUnsafe()
+        public override IntPtr GetThisPtrUnsafe()
         {
             ObjectReference<T> cachedObjRef = GetCurrentContext();
             if (cachedObjRef == null)
             {
-                return base.GetThisPtrForCurrentContextUnsafe();
+                return base.GetThisPtrUnsafe();
             }
 
-            return cachedObjRef.GetThisPtrForCurrentContextUnsafe();
+            return cachedObjRef.GetThisPtrUnsafe();
         }
 
         private protected override IntPtr GetContextToken()
