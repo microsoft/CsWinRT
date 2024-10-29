@@ -145,10 +145,16 @@ namespace Generator
 
         private static bool NeedCustomPropertyImplementation(SyntaxNode node)
         {
-            return node is ClassDeclarationSyntax declaration &&
-                !declaration.Modifiers.Any(static m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword)) &&
-                GeneratorHelper.IsPartial(declaration) &&
-                GeneratorHelper.HasBindableCustomPropertyAttribute(declaration);
+            if ((node is ClassDeclarationSyntax classDeclaration && !classDeclaration.Modifiers.Any(static m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword))) ||
+                (node is RecordDeclarationSyntax recordDeclaration && !recordDeclaration.Modifiers.Any(static m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword))) ||
+                (node is StructDeclarationSyntax structDeclaration && !structDeclaration.Modifiers.Any(static m => m.IsKind(SyntaxKind.StaticKeyword))))
+            {
+                TypeDeclarationSyntax typeDeclaration = (TypeDeclarationSyntax)node;
+
+                return GeneratorHelper.IsPartial(typeDeclaration) && GeneratorHelper.HasBindableCustomPropertyAttribute(typeDeclaration);
+            }
+
+            return false;
         }
 
         private static (VtableAttribute, EquatableArray<VtableAttribute>) GetVtableAttributeToAdd(
