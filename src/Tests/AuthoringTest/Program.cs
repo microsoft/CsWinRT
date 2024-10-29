@@ -210,6 +210,9 @@ namespace AuthoringTest
     [GeneratedBindableCustomProperty]
     public partial struct CustomPropertyStructType
     {
+        // Public WinRT struct types must have at least one field
+        public int Dummy;
+
         public int Number => 4;
         public string Value => "CsWinRTFromStructType";
     }
