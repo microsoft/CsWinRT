@@ -683,6 +683,12 @@ TEST(AuthoringTest, MixedWinRTClassicCOM)
     winrt::com_ptr<::IUnknown> internalInterface2;
     EXPECT_EQ(unknown2->QueryInterface(internalInterface2Iid, internalInterface2.put_void()), S_OK);
 
+    IID internalInterface3Iid;
+	check_hresult(IIDFromString(L"{6234C2F7-9917-469F-BDB4-3E8C630598AF", &internalInterface3Iid));
+	winrt::com_ptr<::IUnknown> unknown3 = wrapper.as<::IUnknown>();
+	winrt::com_ptr<::IUnknown> internalInterface3;
+	EXPECT_EQ(unknown3->QueryInterface(internalInterface3Iid, internalInterface3.put_void()), S_OK);
+
     typedef int (__stdcall* GetNumber)(void*, int*);
 
     int number;
@@ -694,6 +700,10 @@ TEST(AuthoringTest, MixedWinRTClassicCOM)
     // Validate the second call on IInternalInterface2
     EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface2.get()))[3])(internalInterface2.get(), &number), S_OK);
     EXPECT_EQ(number, 123);
+
+	// Validate the third call on IInternalInterface3
+	EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface3.get()))[3])(internalInterface3.get(), &number), S_OK);
+	EXPECT_EQ(number, 1);
 }
 
 TEST(AuthoringTest, GetRuntimeClassName)

@@ -1804,7 +1804,8 @@ namespace AuthoringTest
         }
     }
 
-    public sealed class TestMixedWinRTCOMWrapper : IGraphicsEffectSource, IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2
+    [System.Runtime.InteropServices.Marshalling.GeneratedComClass]
+    public sealed partial class TestMixedWinRTCOMWrapper : IGraphicsEffectSource, IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2, IInternalInterface3
     {
         public string HelloWorld()
         {
@@ -1823,6 +1824,11 @@ namespace AuthoringTest
             *value = 123;
 
             return 0;
+        }
+
+        int IInternalInterface3.GetNumber()
+        {
+            return 1;
         }
     }
 
@@ -1918,6 +1924,13 @@ namespace AuthoringTest
                 }
             }
         }
+    }
+
+    [System.Runtime.InteropServices.Guid("6234C2F7-9917-469F-BDB4-3E8C630598AF")]
+    [System.Runtime.InteropServices.Marshalling.GeneratedComInterface]
+    internal partial interface IInternalInterface3
+    {
+        int GetNumber();
     }
 
     [System.Runtime.InteropServices.Guid("26D8EE57-8B1B-46F4-A4F9-8C6DEEEAF53A")]
