@@ -340,6 +340,8 @@ namespace Generator
                 @namespace,
                 isGlobalNamespace,
                 typeName,
+                symbol.TypeKind,
+                symbol.IsRecord,
                 classHierarchy,
                 ToFullyQualifiedString(symbol),
                 bindableCustomProperties.ToImmutableArray());
@@ -1620,7 +1622,7 @@ namespace Generator
                         """);
                 }
 
-                var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(bindableCustomProperties.ClassName);
+                var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(bindableCustomProperties.TypeName);
 
                 ReadOnlySpan<TypeInfo> classHierarchy = bindableCustomProperties.ClassHierarchy.AsSpan();
                 // If the type is nested, correctly nest the type definition
@@ -1632,8 +1634,10 @@ namespace Generator
                                 """);
                 }
 
+                string typeKeyword = TypeInfo.GetTypeKeyword(bindableCustomProperties.TypeKind, bindableCustomProperties.IsRecord);
+
                 source.AppendLine($$"""
-                            partial class {{(classHierarchy.IsEmpty ? bindableCustomProperties.ClassName : classHierarchy[0].QualifiedName)}} : global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation
+                            partial {{typeKeyword}} {{(classHierarchy.IsEmpty ? bindableCustomProperties.TypeName : classHierarchy[0].QualifiedName)}} : global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation
                             {
                                 global::Microsoft.UI.Xaml.Data.BindableCustomProperty global::Microsoft.UI.Xaml.Data.IBindableCustomPropertyImplementation.GetProperty(string name)
                                 {
@@ -1753,7 +1757,9 @@ namespace Generator
     internal readonly record struct BindableCustomProperties(
         string Namespace,
         bool IsGlobalNamespace,
-        string ClassName,
+        string TypeName,
+        TypeKind TypeKind,
+        bool IsRecord,
         EquatableArray<TypeInfo> ClassHierarchy,
         string QualifiedClassName,
         EquatableArray<BindableCustomProperty> Properties);
@@ -1762,7 +1768,7 @@ namespace Generator
     /// A model describing a type info in a type hierarchy.
     /// </summary>
     /// <param name="QualifiedName">The qualified name for the type.</param>
-    /// <param name="Kind">The type of the type in the hierarchy.</param>
+    /// <param name="Kind">The kind of the type in the hierarchy.</param>
     /// <param name="IsRecord">Whether the type is a record type.</param>
     // Ported from https://github.com/Sergio0694/ComputeSharp
     internal sealed record TypeInfo(string QualifiedName, TypeKind Kind, bool IsRecord)
@@ -1773,12 +1779,23 @@ namespace Generator
         /// <returns>The keyword for the current type kind.</returns>
         public string GetTypeKeyword()
         {
-            return Kind switch
+            return GetTypeKeyword(Kind, IsRecord);
+        }
+
+        /// <summary>
+        /// Gets the keyword for a given kind and record option.
+        /// </summary>
+        /// <param name="kind">The type kind.</param>
+        /// <param name="isRecord">Whether the type is a record.</param>
+        /// <returns>The keyword for a given kind and record option.</returns>
+        public static string GetTypeKeyword(TypeKind kind, bool isRecord)
+        {
+            return kind switch
             {
-                TypeKind.Struct when IsRecord => "record struct",
+                TypeKind.Struct when isRecord => "record struct",
                 TypeKind.Struct => "struct",
                 TypeKind.Interface => "interface",
-                TypeKind.Class when IsRecord => "record",
+                TypeKind.Class when isRecord => "record",
                 _ => "class"
             };
         }
