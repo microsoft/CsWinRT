@@ -207,6 +207,13 @@ namespace AuthoringTest
         public string Value => "CsWinRT";
     }
 
+    [GeneratedBindableCustomProperty]
+    public sealed partial struct CustomPropertyStructType
+    {
+        public int Number { get; } = 4;
+        public string Value => "CsWinRTFromStructType";
+    }
+
     public sealed partial class CustomPropertyProviderWithExplicitImplementation : ICustomPropertyProvider
     {
         public Type Type => typeof(CustomPropertyProviderWithExplicitImplementation);
