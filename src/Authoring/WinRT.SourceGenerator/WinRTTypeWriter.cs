@@ -1696,6 +1696,14 @@ namespace Generator
                     continue;
                 }
 
+                // Skip the [GeneratedBindableCustomProperty] attribute. It is valid to add this on types in WinRT
+                // components (if they need to be exposed and implement ICustomPropertyProvider), but the attribute
+                // should never show up in the .winmd file (it would also cause build errors in the projections).
+                if (attributeType.ToString() == "WinRT.GeneratedBindableCustomPropertyAttribute")
+                {
+                    continue;
+                }
+
                 Logger.Log("attribute: " + attribute);
                 Logger.Log("attribute type: " + attributeType);
                 Logger.Log("attribute constructor: " + attribute.AttributeConstructor);
