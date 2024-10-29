@@ -222,10 +222,15 @@ namespace AuthoringTest
     }
 
     [GeneratedBindableCustomProperty]
-    public partial record struct CustomPropertyRecordStructType
+    internal partial record struct CustomPropertyRecordStructType
     {
         public int Number => 4;
         public string Value => "CsWinRTFromRecordStructType";
+    }
+
+    public static class CustomPropertyRecordStructTypeFactory
+    {
+        public static ICustomPropertyProvider Create() => default(CustomPropertyRecordStructType);
     }
 
     public sealed partial class CustomPropertyProviderWithExplicitImplementation : ICustomPropertyProvider
