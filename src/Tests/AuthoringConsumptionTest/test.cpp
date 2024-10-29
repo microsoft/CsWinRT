@@ -808,3 +808,18 @@ TEST(AuthoringTest, GeneratedCustomPropertyStructType)
     auto propertyValue = customProperty.GetValue(nullptr);
     EXPECT_EQ(winrt::unbox_value<hstring>(propertyValue), L"CsWinRTFromRecordType");
 }
+
+TEST(AuthoringTest, CustomPropertyRecordStructTypeFactoryAndICPP)
+{
+    auto propertyProvider = CustomPropertyRecordStructTypeFactory::Create();
+
+    auto customProperty = propertyProvider.GetCustomProperty(L"Value");
+
+    EXPECT_NE(customProperty, nullptr);
+    EXPECT_TRUE(customProperty.CanRead());
+    EXPECT_FALSE(customProperty.CanWrite());
+    EXPECT_EQ(customProperty.Name(), L"Value");
+
+    auto propertyValue = customProperty.GetValue(nullptr);
+    EXPECT_EQ(winrt::unbox_value<hstring>(propertyValue), L"CsWinRTFromRecordStructType");
+}
