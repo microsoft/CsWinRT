@@ -1696,6 +1696,11 @@ namespace Generator
                     continue;
                 }
 
+                if (attributeType.ToString() == "System.Runtime.InteropServices.GuidAttribute")
+                {
+                    continue;
+                }
+
                 Logger.Log("attribute: " + attribute);
                 Logger.Log("attribute type: " + attributeType);
                 Logger.Log("attribute constructor: " + attribute.AttributeConstructor);
