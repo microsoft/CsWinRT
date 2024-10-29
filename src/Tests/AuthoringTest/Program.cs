@@ -233,7 +233,7 @@ namespace AuthoringTest
 
     public static class CustomPropertyRecordStructTypeFactory
     {
-        public static ICustomPropertyProvider Create() => default(CustomPropertyRecordStructType);
+        public static object Create() => default(CustomPropertyRecordStructType);
     }
 
     public sealed partial class CustomPropertyProviderWithExplicitImplementation : ICustomPropertyProvider

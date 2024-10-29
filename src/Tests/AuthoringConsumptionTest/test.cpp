@@ -811,7 +811,10 @@ TEST(AuthoringTest, GeneratedCustomPropertyStructType)
 
 TEST(AuthoringTest, CustomPropertyRecordStructTypeFactoryAndICPP)
 {
-    auto propertyProvider = CustomPropertyRecordStructTypeFactory::Create();
+    auto userObject = CustomPropertyRecordStructTypeFactory::Create();
+
+    // We should be able to cast to 'ICustomPropertyProvider'
+    auto propertyProvider = userObject.as<Microsoft::UI::Xaml::Data::ICustomPropertyProvider>();
 
     auto customProperty = propertyProvider.GetCustomProperty(L"Value");
 
