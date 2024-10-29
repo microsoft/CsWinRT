@@ -255,7 +255,7 @@ namespace Generator
 #nullable enable
         private static BindableCustomProperties GetBindableCustomProperties(GeneratorSyntaxContext context)
         {
-            var symbol = context.SemanticModel.GetDeclaredSymbol((ClassDeclarationSyntax)context.Node)!;
+            var symbol = context.SemanticModel.GetDeclaredSymbol((TypeDeclarationSyntax)context.Node)!;
             INamedTypeSymbol bindableCustomPropertyAttributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName("WinRT.GeneratedBindableCustomPropertyAttribute")!;
 
             if (bindableCustomPropertyAttributeSymbol is null ||
