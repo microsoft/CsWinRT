@@ -102,5 +102,9 @@
        name="AuthoringTest.CustomPropertyProviderWithExplicitImplementation"
        threadingModel="both"
        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+	<activatableClass
+       name="AuthoringTest.CustomPropertyRecordType"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
   </file>
 </assembly>
