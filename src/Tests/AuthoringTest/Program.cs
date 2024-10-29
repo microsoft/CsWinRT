@@ -208,10 +208,24 @@ namespace AuthoringTest
     }
 
     [GeneratedBindableCustomProperty]
-    public sealed partial struct CustomPropertyStructType
+    public partial struct CustomPropertyStructType
+    {
+        public int Number => 4;
+        public string Value => "CsWinRTFromStructType";
+    }
+
+    [GeneratedBindableCustomProperty]
+    public sealed partial record CustomPropertyRecordType
     {
         public int Number { get; } = 4;
-        public string Value => "CsWinRTFromStructType";
+        public string Value => "CsWinRTFromRecordType";
+    }
+
+    [GeneratedBindableCustomProperty]
+    public partial record struct CustomPropertyRecordStructType
+    {
+        public int Number => 4;
+        public string Value => "CsWinRTFromRecordStructType";
     }
 
     public sealed partial class CustomPropertyProviderWithExplicitImplementation : ICustomPropertyProvider
