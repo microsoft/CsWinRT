@@ -90,7 +90,6 @@ stages:
         script: |
           dir _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin
           _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin\HostTest.exe --gtest_output=xml:HOSTTEST-$(Build.BuildNumber).xml 
-          exit /b 0
 
 # Run Source Generator Tests  
     - task: CmdLine@2
@@ -102,7 +101,6 @@ stages:
         script: |
           dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
-          exit /b 0
 
 # Run WUX Tests
     - task: CmdLine@2
@@ -114,7 +112,6 @@ stages:
         script: |
           dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
-          exit /b 0 
 
 # Run Functional Tests  
     - task: CmdLine@2
