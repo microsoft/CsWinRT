@@ -408,7 +408,8 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
                     throw new NotSupportedException(
-                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
+                        $"ICustomProperty support used by XAML binding for type '{target.GetType()}' (property '{_name}') requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
+
                         $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
                 }
 
@@ -446,7 +447,6 @@ namespace ABI.Microsoft.UI.Xaml.Data
             global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
             try
             {
-                string _name = MarshalString.FromAbi(name);
                 Type _type = global::ABI.System.Type.FromAbi(type);
 
                 object target = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
@@ -461,9 +461,13 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
                     throw new NotSupportedException(
-                        $"ICustomProperty support used by XAML binding for '{target.GetType()}' requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
+                        $"ICustomProperty support used by XAML binding for type '{target.GetType()}' (indexer with parameter of type '{_type}') requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
                         $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
                 }
+
+                // Intentionally declare this here to avoid marshalling this value entirely on AOT,
+                // as it's not needed. The indexer property is just matched by the parameter type.
+                string _name = MarshalString.FromAbi(name);
 
                 GetCustomPropertyForJit(target, _name, _type, result);
 
