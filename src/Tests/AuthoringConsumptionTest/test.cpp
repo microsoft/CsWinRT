@@ -791,9 +791,9 @@ TEST(AuthoringTest, GeneratedCustomPropertyStructType)
     EXPECT_EQ(winrt::unbox_value<hstring>(propertyValue), L"CsWinRTFromStructType");
 }
 
-TEST(AuthoringTest, GeneratedCustomPropertyStructType)
+TEST(AuthoringTest, GeneratedCustomPropertyRecordType)
 {
-    CustomPropertyRecordType userObject;
+    auto userObject = CustomPropertyRecordTypeFactory::CreateRecord();
 
     // We should be able to cast to 'ICustomPropertyProvider'
     auto propertyProvider = userObject.as<Microsoft::UI::Xaml::Data::ICustomPropertyProvider>();
@@ -811,7 +811,7 @@ TEST(AuthoringTest, GeneratedCustomPropertyStructType)
 
 TEST(AuthoringTest, CustomPropertyRecordStructTypeFactoryAndICPP)
 {
-    auto userObject = CustomPropertyRecordStructTypeFactory::Create();
+    auto userObject = CustomPropertyRecordTypeFactory::CreateRecordStruct();
 
     // We should be able to cast to 'ICustomPropertyProvider'
     auto propertyProvider = userObject.as<Microsoft::UI::Xaml::Data::ICustomPropertyProvider>();
