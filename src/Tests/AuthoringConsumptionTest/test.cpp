@@ -683,8 +683,9 @@ TEST(AuthoringTest, MixedWinRTClassicCOM)
     winrt::com_ptr<::IUnknown> internalInterface2;
     EXPECT_EQ(unknown2->QueryInterface(internalInterface2Iid, internalInterface2.put_void()), S_OK);
 
+    // Verify we can grab the generated COM interface
     IID internalInterface3Iid;
-	check_hresult(IIDFromString(L"{6234C2F7-9917-469F-BDB4-3E8C630598AF", &internalInterface3Iid));
+	check_hresult(IIDFromString(L"{6234C2F7-9917-469F-BDB4-3E8C630598AF}", &internalInterface3Iid));
 	winrt::com_ptr<::IUnknown> unknown3 = wrapper.as<::IUnknown>();
 	winrt::com_ptr<::IUnknown> internalInterface3;
 	EXPECT_EQ(unknown3->QueryInterface(internalInterface3Iid, internalInterface3.put_void()), S_OK);
