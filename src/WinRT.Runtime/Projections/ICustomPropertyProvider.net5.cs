@@ -408,7 +408,8 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
                     throw new NotSupportedException(
-                        $"ICustomProperty support used by XAML binding for type '{target.GetType()}' (property '{name}') requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
+                        $"ICustomProperty support used by XAML binding for type '{target.GetType()}' (property '{_name}') requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
+
                         $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
                 }
 
