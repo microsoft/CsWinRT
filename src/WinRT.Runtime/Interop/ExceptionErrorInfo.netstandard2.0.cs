@@ -23,12 +23,6 @@ namespace WinRT.Interop
         bool InterfaceSupportsErrorInfo(Guid riid);
     }
 
-    [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-    internal interface ILanguageExceptionErrorInfo
-    {
-        IObjectReference GetLanguageException();
-    }
-
     internal sealed class ManagedExceptionErrorInfo : IErrorInfo, ISupportErrorInfo
     {
         private readonly Exception _exception;
@@ -270,50 +264,6 @@ namespace ABI.WinRT.Interop
             finally
             {
                 Marshal.FreeBSTR(__retval);
-            }
-        }
-    }
-
-    [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-    internal unsafe class ILanguageExceptionErrorInfo : global::WinRT.Interop.ILanguageExceptionErrorInfo
-    {
-        [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-        public struct Vftbl
-        {
-            internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            private void* _GetLanguageException_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetLanguageException_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetLanguageException_0;
-        }
-
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        public static implicit operator ILanguageExceptionErrorInfo(IObjectReference obj) => (obj != null) ? new ILanguageExceptionErrorInfo(obj) : null;
-        public static implicit operator ILanguageExceptionErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new ILanguageExceptionErrorInfo(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public ILanguageExceptionErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public ILanguageExceptionErrorInfo(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
-        }
-
-        public IObjectReference GetLanguageException()
-        {
-            IntPtr __return_value__ = IntPtr.Zero;
-
-            try
-            {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetLanguageException_0(ThisPtr, &__return_value__));
-                return ObjectReference<global::WinRT.Interop.IUnknownVftbl>.Attach(ref __return_value__);
-            }
-            finally
-            {
-                if (__return_value__ != IntPtr.Zero)
-                {
-                    (*(global::WinRT.Interop.IUnknownVftbl**)__return_value__)->Release(__return_value__);
-                }
             }
         }
     }

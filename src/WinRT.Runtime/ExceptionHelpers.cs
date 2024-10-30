@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using WinRT;
 using WinRT.Interop;
 
 namespace WinRT
@@ -150,7 +151,6 @@ namespace WinRT
             string restrictedError = null;
             string restrictedErrorReference = null;
             string restrictedCapabilitySid = null;
-            bool hasOtherLanguageException = false;
             string errorMessage = string.Empty;
 
             if (useGlobalErrorState)
@@ -163,28 +163,12 @@ namespace WinRT
                     restrictedErrorReference = ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoRef);
                     if (restrictedErrorInfoRef.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo, out var languageErrorInfoRef) >= 0)
                     {
-#if NET
-                        using IObjectReference languageException = ABI.WinRT.Interop.ILanguageExceptionErrorInfo.GetLanguageException(languageErrorInfoRef);
-#else
-                        ABI.WinRT.Interop.ILanguageExceptionErrorInfo languageErrorInfo = new(languageErrorInfoRef);
-                        using IObjectReference languageException = languageErrorInfo.GetLanguageException();
-#endif
-                        if (languageException is not null)
+                        ex = GetLanguageException(languageErrorInfoRef, hr);
+                        if (ex is not null)
                         {
-                            if (languageException.IsReferenceToManagedObject)
-                            {
-                                ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
-                                if (GetHRForException(ex) == hr)
-                                {
-                                    restoredExceptionFromGlobalState = true;
-                                    return ex;
-                                }
-                            }
-                            else
-                            {
-                                // This could also be a proxy to a managed exception.
-                                hasOtherLanguageException = true;
-                            }
+                            restoredExceptionFromGlobalState = true;
+                            ex.AddExceptionDataForRestrictedErrorInfo(restrictedErrorInfoToSave, true);
+                            return ex;
                         }
                     }
 
@@ -345,21 +329,84 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     restrictedErrorReference,
                     restrictedCapabilitySid,
                     restrictedErrorInfoToSave,
-                    hasOtherLanguageException);
+                    false);
             }
 
             return ex;
+        }
+
+        private static Exception GetLanguageException(ObjectReference<IUnknownVftbl> languageErrorInfoRef, int hr)
+        {
+            // Check the error info first for the language exception.
+            var exception = GetLanguageExceptionInternal(languageErrorInfoRef, hr);
+            if (exception is not null)
+            {
+                return exception;
+            }
+
+            // If propagated exceptions are supported, traverse it and check if any one of those is our exception to reuse.
+            if (languageErrorInfoRef.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo2, out var languageErrorInfo2Ref) >= 0)
+            {
+                using (languageErrorInfo2Ref)
+                {
+                    ObjectReference<IUnknownVftbl> currentLanguageExceptionErrorInfo2
+                        = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPropagationContextHead(languageErrorInfo2Ref);
+                    while (currentLanguageExceptionErrorInfo2 != null)
+                    {
+                        var propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2, hr);
+                        if (propagatedException is not null)
+                        {
+                            return propagatedException;
+                        }
+
+                        currentLanguageExceptionErrorInfo2 = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPreviousLanguageExceptionErrorInfo(currentLanguageExceptionErrorInfo2);
+                    }
+                }
+            }
+
+            return null;
+
+            static Exception GetLanguageExceptionInternal(ObjectReference<IUnknownVftbl> languageErrorInfoRef, int hr)
+            {
+                using IObjectReference languageException = ABI.WinRT.Interop.ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoRef);
+                if (languageException is not null)
+                {
+                    if (languageException.IsReferenceToManagedObject)
+                    {
+                        var ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
+                        if (GetHRForException(ex) == hr)
+                        {
+                            return ex;
+                        }
+                    }
+                }
+
+                return null;
+            }
         }
 
         public static unsafe void SetErrorInfo(Exception ex)
         {
             if (getRestrictedErrorInfo != null && setRestrictedErrorInfo != null && roOriginateLanguageException != null)
             {
-                // If the exception has information for an IRestrictedErrorInfo, use that
-                // as our error so as to propagate the error through WinRT end-to-end.
-                if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
+                // If the exception has an IRestrictedErrorInfo, use that as our error info
+                // to allow to propagate the original error through WinRT with the end to end information
+                // rather than losing that context.
+                if (ex.TryGetRestrictedLanguageErrorInfo(out var restrictedErrorObject, out var isLanguageException))
                 {
+                    // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
+                    // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
+                    if (!isLanguageException && restrictedErrorObject.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo2, out var languageErrorInfo2Ref) >= 0)
+                    {
+                        using (languageErrorInfo2Ref)
+                        {
+                            global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.CapturePropagationContext(languageErrorInfo2Ref, ex);
+                        }
+                    }
+
                     setRestrictedErrorInfo(restrictedErrorObject.ThisPtr);
+
+                    GC.KeepAlive(restrictedErrorObject);
                 }
                 else
                 {
@@ -425,7 +472,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
         public static int GetHRForException(Exception ex)
         {
             int hr = ex.HResult;
-            if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
+            if (ex.TryGetRestrictedLanguageErrorInfo(out var restrictedErrorObject, out var _))
             {
                 ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject, out _, out hr, out _, out _);
             }
@@ -471,19 +518,43 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             }
         }
 
-        internal static bool TryGetRestrictedLanguageErrorObject(
+        internal static void AddExceptionDataForRestrictedErrorInfo(
             this Exception ex,
-            out ObjectReference<IUnknownVftbl> restrictedErrorObject)
+            ObjectReference<IUnknownVftbl> restrictedErrorObject,
+            bool hasRestrictedLanguageErrorObject)
+        {
+            IDictionary dict = ex.Data;
+            if (dict != null)
+            {
+                // Keep the error object alive so that user could retrieve error information
+                // using Data["RestrictedErrorReference"]
+                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
+                dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
+            }
+        }
+
+        internal static bool TryGetRestrictedLanguageErrorInfo(
+            this Exception ex,
+            out ObjectReference<IUnknownVftbl> restrictedErrorObject,
+            out bool isLanguageException)
         {
             restrictedErrorObject = null;
+            isLanguageException = false;
+
             IDictionary dict = ex.Data;
-            if (dict != null && dict.Contains("__HasRestrictedLanguageErrorObject"))
+            if (dict != null )
             {
                 if (dict.Contains("__RestrictedErrorObjectReference"))
                 {
                     restrictedErrorObject = (ObjectReference<IUnknownVftbl>)dict["__RestrictedErrorObjectReference"];
                 }
-                return (bool)dict["__HasRestrictedLanguageErrorObject"]!;
+
+                if (dict.Contains("__HasRestrictedLanguageErrorObject"))
+                {
+                    isLanguageException = (bool)dict["__HasRestrictedLanguageErrorObject"]!;
+                }
+
+                return restrictedErrorObject is not null;
             }
 
             return false;
@@ -573,75 +644,6 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             }
             e.SetHResult(hresult);
             return e;
-        }
-    }
-}
-
-namespace ABI.WinRT.Interop
-{
-    internal static class IRestrictedErrorInfoMethods
-    {
-        public static unsafe void GetErrorDetails(
-            global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> obj,
-            out string description,
-            out int error,
-            out string restrictedDescription,
-            out string capabilitySid)
-        {
-            IntPtr _description = IntPtr.Zero;
-            IntPtr _restrictedDescription = IntPtr.Zero;
-            IntPtr _capabilitySid = IntPtr.Zero;
-
-            try
-            {
-                fixed (int* pError = &error)
-                {
-                    IntPtr thisPtr = obj.ThisPtr;
-
-                    // GetErrorDetails
-                    Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)(*(void***)thisPtr)[3])(
-                        thisPtr,
-                        &_description,
-                        pError,
-                        &_restrictedDescription,
-                        &_capabilitySid));
-
-                    GC.KeepAlive(obj);
-                }
-
-                description = _description != IntPtr.Zero ? Marshal.PtrToStringBSTR(_description) : string.Empty;
-                restrictedDescription = _restrictedDescription != IntPtr.Zero ? Marshal.PtrToStringBSTR(_restrictedDescription) : string.Empty;
-                capabilitySid = _capabilitySid != IntPtr.Zero ? Marshal.PtrToStringBSTR(_capabilitySid) : string.Empty;
-            }
-            finally
-            {
-                Marshal.FreeBSTR(_description);
-                Marshal.FreeBSTR(_restrictedDescription);
-                Marshal.FreeBSTR(_capabilitySid);
-            }
-        }
-
-        public static unsafe string GetReference(global::WinRT.ObjectReference<global::WinRT.Interop.IUnknownVftbl> obj)
-        {
-            IntPtr __retval = default;
-
-            try
-            {
-                IntPtr thisPtr = obj.ThisPtr;
-
-                // GetReference
-                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[4])(
-                    thisPtr,
-                    &__retval));
-
-                GC.KeepAlive(obj);
-
-                return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
-            }
-            finally
-            {
-                Marshal.FreeBSTR(__retval);
-            }
         }
     }
 }

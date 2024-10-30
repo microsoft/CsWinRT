@@ -226,31 +226,4 @@ namespace ABI.WinRT.Interop
             }
         }
     }
-
-    internal static class ILanguageExceptionErrorInfo
-    {
-        public static unsafe IObjectReference GetLanguageException(ObjectReference<IUnknownVftbl> obj)
-        {
-            IntPtr __return_value__ = IntPtr.Zero;
-
-            try
-            {
-                IntPtr thisPtr = obj.ThisPtr;
-
-                // GetLanguageException
-                Marshal.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)(*(void***)thisPtr)[3])(thisPtr, &__return_value__));
-
-                GC.KeepAlive(obj);
-
-                return ObjectReference<IUnknownVftbl>.Attach(ref __return_value__, IID.IID_IUnknown);
-            }
-            finally
-            {
-                if (__return_value__ != IntPtr.Zero)
-                {
-                    (*(IUnknownVftbl**)__return_value__)->Release(__return_value__);
-                }
-            }
-        }
-    }
 }
