@@ -775,10 +775,10 @@ TEST(AuthoringTest, ExplicitlyImplementedICustomPropertyProvider)
 
 TEST(AuthoringTest, GeneratedCustomPropertyStructType)
 {
-    CustomPropertyStructType userObject;
+    auto userObject = CustomPropertyRecordTypeFactory::CreateStruct();
 
     // We should be able to cast to 'ICustomPropertyProvider'
-    auto propertyProvider = winrt::box_value(userObject).as<Microsoft::UI::Xaml::Data::ICustomPropertyProvider>();
+    auto propertyProvider = userObject.as<Microsoft::UI::Xaml::Data::ICustomPropertyProvider>();
 
     auto customProperty = propertyProvider.GetCustomProperty(L"Value");
 
@@ -787,7 +787,7 @@ TEST(AuthoringTest, GeneratedCustomPropertyStructType)
     EXPECT_FALSE(customProperty.CanWrite());
     EXPECT_EQ(customProperty.Name(), L"Value");
 
-    auto propertyValue = customProperty.GetValue(nullptr);
+    auto propertyValue = customProperty.GetValue(userObject);
     EXPECT_EQ(winrt::unbox_value<hstring>(propertyValue), L"CsWinRTFromStructType");
 }
 
@@ -805,7 +805,7 @@ TEST(AuthoringTest, GeneratedCustomPropertyRecordType)
     EXPECT_FALSE(customProperty.CanWrite());
     EXPECT_EQ(customProperty.Name(), L"Value");
 
-    auto propertyValue = customProperty.GetValue(nullptr);
+    auto propertyValue = customProperty.GetValue(userObject);
     EXPECT_EQ(winrt::unbox_value<hstring>(propertyValue), L"CsWinRTFromRecordType");
 }
 
@@ -823,6 +823,6 @@ TEST(AuthoringTest, CustomPropertyRecordStructTypeFactoryAndICPP)
     EXPECT_FALSE(customProperty.CanWrite());
     EXPECT_EQ(customProperty.Name(), L"Value");
 
-    auto propertyValue = customProperty.GetValue(nullptr);
+    auto propertyValue = customProperty.GetValue(userObject);
     EXPECT_EQ(winrt::unbox_value<hstring>(propertyValue), L"CsWinRTFromRecordStructType");
 }

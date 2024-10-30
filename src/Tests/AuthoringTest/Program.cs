@@ -233,6 +233,8 @@ namespace AuthoringTest
 
     public static class CustomPropertyRecordTypeFactory
     {
+        public static object CreateStruct() => new CustomPropertyStructType();
+        
         public static object CreateRecord() => new CustomPropertyRecordType();
 
         public static object CreateRecordStruct() => default(CustomPropertyRecordStructType);
