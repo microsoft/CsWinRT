@@ -162,7 +162,7 @@ namespace WinRT
                     restrictedErrorReference = ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoRef);
                     if (restrictedErrorInfoRef.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo, out var languageErrorInfoRef) >= 0)
                     {
-                        ex = GetLanguageException(languageErrorInfoRef, hr, associateErrorInfo);
+                        ex = GetLanguageException(languageErrorInfoRef, hr);
                         if (ex is not null)
                         {
                             restoredExceptionFromGlobalState = true;
@@ -339,10 +339,10 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
         // This is a helper method specifically to be used by exception propagation scenarios where we carefully
         // manage the lifetime of the CCW for the exception object to avoid cycles and thereby leaking it.
-        private static Exception GetLanguageException(ObjectReference<IUnknownVftbl> languageErrorInfoRef, int hr, bool associateErrorInfo)
+        private static Exception GetLanguageException(ObjectReference<IUnknownVftbl> languageErrorInfoRef, int hr)
         {
             // Check the error info first for the language exception.
-            var exception = GetLanguageExceptionInternal(languageErrorInfoRef, hr, associateErrorInfo);
+            var exception = GetLanguageExceptionInternal(languageErrorInfoRef, hr);
             if (exception is not null)
             {
                 return exception;
@@ -357,7 +357,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                         = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPropagationContextHead(languageErrorInfo2Ref);
                     while (currentLanguageExceptionErrorInfo2 != null)
                     {
-                        var propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2, hr, associateErrorInfo);
+                        var propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2, hr);
                         if (propagatedException is not null)
                         {
                             return propagatedException;
@@ -370,44 +370,18 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
             return null;
 
-            static Exception GetLanguageExceptionInternal(ObjectReference<IUnknownVftbl> languageErrorInfoRef, int hr, bool associateErrorInfo)
+            static Exception GetLanguageExceptionInternal(ObjectReference<IUnknownVftbl> languageErrorInfoRef, int hr)
             {
-                IObjectReference languageException = ABI.WinRT.Interop.ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoRef);
+                using IObjectReference languageException = ABI.WinRT.Interop.ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoRef);
                 if (languageException is not null)
                 {
-                    try
+                    if (languageException.IsReferenceToManagedObject)
                     {
-                        if (languageException.IsReferenceToManagedObject)
+                        var ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
+                        if (GetHRForException(ex) == hr)
                         {
-                            var ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
-                            if (GetHRForException(ex) == hr)
-                            {
-                                if (associateErrorInfo)
-                                {
-                                    ex.Data["__RestrictedLanguageExceptionObjectReference"] = languageException;
-
-                                    // Release the ref held onto by the objref being stored in the exception data
-                                    // as it would be holding onto its own CCW.
-                                    languageException.PreventReleaseOnDispose = true;
-                                    Marshal.Release(languageException.ThisPtr);
-
-                                    // Release the ref held onto by the error info as that will also cause a
-                                    // cycle to be created which will never get cleaned up if the exception is caught.
-                                    // Since the exception is propagating and the exception now owns the error info,
-                                    // until it hits an ABI boundary, this is fine.  At the ABI boundary, we will fix
-                                    // the ref if we set the error info again.
-                                    Marshal.Release(languageException.ThisPtr);
-
-                                    // Prevent disposing it in finally.
-                                    languageException = null;
-                                }
-                                return ex;
-                            }
+                            return ex;
                         }
-                    }
-                    finally
-                    {
-                        languageException?.Dispose();
                     }
                 }
 
@@ -435,17 +409,11 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     }
                     else if (isLanguageException)
                     {
-                        if (ex.Data.Contains("__RestrictedLanguageExceptionObjectReference") &&
-                            ex.Data["__RestrictedLanguageExceptionObjectReference"] is ObjectReference<IUnknownVftbl> objRef)
-                        {
-                            // Add ref as we are going to pass the responsibility for keeping the exception alive
-                            // to the error info.
-                            Marshal.AddRef(objRef.ThisPtr);
-
-                            ex.Data.Remove("__RestrictedErrorObjectReference");
-                            ex.Data.Remove("__HasRestrictedLanguageErrorObject");
-                            ex.Data.Remove("__RestrictedLanguageExceptionObjectReference");
-                        }
+                        // Remove object reference to avoid cycles between error info holding exception
+                        // and exception holding error info.  We currently can't avoid this cycle
+                        // when the C# exception is caught on the C# side.
+                        ex.Data.Remove("__RestrictedErrorObjectReference");
+                        ex.Data.Remove("__HasRestrictedLanguageErrorObject");
                     }
 
                     setRestrictedErrorInfo(restrictedErrorObject.ThisPtr);
