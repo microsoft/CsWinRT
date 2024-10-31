@@ -91,12 +91,13 @@ namespace Generator
             {
                 using var cswinrtProcess = Process.Start(processInfo);
                 Logger.Log(cswinrtProcess.StandardOutput.ReadToEnd());
-                Logger.Log(cswinrtProcess.StandardError.ReadToEnd());
+                var error = cswinrtProcess.StandardError.ReadToEnd();
+                Logger.Log(error);
                 cswinrtProcess.WaitForExit();
 
                 if (cswinrtProcess.ExitCode != 0)
                 {
-                    throw new Win32Exception(cswinrtProcess.ExitCode);
+                    throw new Win32Exception(cswinrtProcess.ExitCode, error);
                 }
 
                 foreach (var file in Directory.GetFiles(outputDir, "*.cs", SearchOption.TopDirectoryOnly))
