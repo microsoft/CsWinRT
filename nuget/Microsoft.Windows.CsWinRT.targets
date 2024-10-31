@@ -41,6 +41,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 7">net7.0</CsWinRTExeTFM>
     <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">net8.0</CsWinRTExeTFM>
     <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
+	<CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+	<CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
   </PropertyGroup>
 
   <ItemGroup>
@@ -188,8 +190,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
       <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
       <CsWinRTCommandPrivateProjection>"$(CsWinRTExe)" %40"$(CsWinRTResponseFilePrivateProjection)"</CsWinRTCommandPrivateProjection>
-	  <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
-      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
     </PropertyGroup>
 
