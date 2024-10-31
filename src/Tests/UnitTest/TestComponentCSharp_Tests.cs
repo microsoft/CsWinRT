@@ -1864,11 +1864,23 @@ namespace UnitTest
         public void TestExceptionPropagation_Managed()
         {
             var exceptionToThrow = new ArgumentNullException("foo");
+            var weakException = new System.WeakReference(exceptionToThrow, false);
             var properties = new ThrowingManagedProperties(exceptionToThrow);
             Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties));
+            properties = null;
+            exceptionToThrow = null;
 
             var properties2 = new ThrowingManagedProperties2(TestObject);
             Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties2));
+
+
+            while (weakException.IsAlive)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+
+            Assert.False(weakException.IsAlive);
         }
 
         [Fact]
