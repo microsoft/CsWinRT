@@ -43,6 +43,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                             MarshalInspectable<object>.GetAbi(__baseInterface),
                             &__innerInterface,
                             &__retval));
+                    global::System.GC.KeepAlive(_obj);
                     innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface, IID.IID_IUnknown);
                     return ObjectReference<IUnknownVftbl>.Attach(ref __retval, IID.IID_IUnknown);
                 }
@@ -72,6 +73,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                             IntPtr.Zero,
                             &__innerInterface,
                             &__retval));
+                    global::System.GC.KeepAlive(_obj);
                     return new ObjectReferenceValue(__retval);
                 }
             }

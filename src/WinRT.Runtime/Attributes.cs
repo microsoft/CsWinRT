@@ -231,10 +231,13 @@ namespace WinRT
     }
 
     /// <summary>
-    /// An attribute used to indicate the properties which are bindable via the <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation provided for use in WinUI scenarios.
-    /// The type which this attribute is placed on also needs to be marked partial and needs to be non-generic.
+    /// An attribute used to indicate the properties which are bindable via the <see cref="Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation
+    /// provided for use in WinUI scenarios. The type which this attribute is placed on also needs to be marked partial and needs to be non-generic.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    /// <remarks>
+    /// This type also provides equivalent support for the UWP XAML interface (as it shares the same IID as the WinUI type).
+    /// </remarks>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
 #if EMBED
     internal
 #else

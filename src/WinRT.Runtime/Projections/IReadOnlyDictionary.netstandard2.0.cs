@@ -673,6 +673,7 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
+                GC.KeepAlive(_obj);
                 return Marshaler<V>.FromAbi(__params[2]);
             }
             finally
@@ -691,6 +692,7 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.HasKey_2.DynamicInvokeAbi(__params);
+                GC.KeepAlive(_obj);
                 return (byte)__params[2] != 0;
             }
             finally
@@ -706,6 +708,7 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Split_3(ThisPtr, out __first, out __second));
+                GC.KeepAlive(_obj);
                 first = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__first);
                 second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__second);
             }
@@ -722,6 +725,7 @@ namespace ABI.System.Collections.Generic
             {
                 uint __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+                GC.KeepAlive(_obj);
                 return __retval;
             }
         }

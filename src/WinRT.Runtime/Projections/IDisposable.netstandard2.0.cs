@@ -80,6 +80,7 @@ namespace ABI.System
         public unsafe void Dispose()
         {
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Close_0(ThisPtr));
+            GC.KeepAlive(_obj);
         }
     }
 }

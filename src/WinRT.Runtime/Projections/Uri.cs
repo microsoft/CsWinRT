@@ -68,6 +68,7 @@ namespace ABI.System
             fixed (void* ___uri = __uri)
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, MarshalString.GetAbi(ref __uri), &__retval));
+                GC.KeepAlive(_obj);
                 return ObjectReference<IUnknownVftbl>.Attach(ref __retval, IID.IID_IUnknown);
             }
         }
@@ -79,6 +80,7 @@ namespace ABI.System
             fixed (void* ___uri = __uri)
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, MarshalString.GetAbi(ref __uri), &__retval));
+                GC.KeepAlive(_obj);
                 return new ObjectReferenceValue(__retval);
             }
         }

@@ -198,6 +198,7 @@ namespace ABI.Windows.Foundation.Collections
                 try
                 {
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[9](ThisPtr, &__retval));
+                    GC.KeepAlive(obj);
                     return MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>.FromAbi(__retval);
                 }
                 finally
@@ -226,6 +227,7 @@ namespace ABI.Windows.Foundation.Collections
         {
             var ThisPtr = obj.ThisPtr;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int>**)ThisPtr)[12](ThisPtr));
+            GC.KeepAlive(obj);
         }
 
         public static unsafe uint get_Size(IObjectReference obj)
@@ -233,6 +235,7 @@ namespace ABI.Windows.Foundation.Collections
             var ThisPtr = obj.ThisPtr;
             uint __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, uint*, int>**)ThisPtr)[7](ThisPtr, &__retval));
+            GC.KeepAlive(obj);
             return __retval;
         }
     }
@@ -764,6 +767,8 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 DelegateHelper.Get(obj).Lookup.DynamicInvokeAbi(__params);
+                GC.KeepAlive(obj);
+                GC.KeepAlive(__params);
                 return Marshaler<V>.FromAbi(valueAbi);
             }
             finally
@@ -787,6 +792,8 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 DelegateHelper.Get(obj).HasKey.DynamicInvokeAbi(__params);
+                GC.KeepAlive(obj);
+                GC.KeepAlive(__params);
                 return found != 0;
             }
             finally
@@ -812,6 +819,8 @@ namespace ABI.System.Collections.Generic
                 __value = Marshaler<V>.CreateMarshaler2(value);
                 __params[2] = Marshaler<V>.GetAbi(__value);
                 DelegateHelper.Get(obj).Insert.DynamicInvokeAbi(__params);
+                GC.KeepAlive(obj);
+                GC.KeepAlive(__params);
                 return replaced != 0;
             }
             finally
@@ -834,6 +843,8 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 DelegateHelper.Get(obj).Remove.DynamicInvokeAbi(__params);
+                GC.KeepAlive(obj);
+                GC.KeepAlive(__params);
             }
             finally
             {

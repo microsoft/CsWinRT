@@ -380,6 +380,7 @@ namespace ABI.System.Collections.Generic
             try
             {
                 _obj.Vftbl.GetAt_0.DynamicInvokeAbi(__params);
+                GC.KeepAlive(_obj);
                 return Marshaler<T>.FromAbi(__params[2]);
             }
             finally
@@ -397,6 +398,7 @@ namespace ABI.System.Collections.Generic
                 __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.IndexOf_2.DynamicInvokeAbi(__params);
+                GC.KeepAlive(_obj);
                 index = (uint)__params[2];
                 return (byte)__params[3] != 0;
             }
@@ -417,6 +419,7 @@ namespace ABI.System.Collections.Generic
                 __items = Marshaler<T>.CreateMarshalerArray(items);
                 (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_3(ThisPtr, startIndex, __items_length, __items_data, out __retval));
+                GC.KeepAlive(_obj);
                 items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                 return __retval;
             }
@@ -432,6 +435,7 @@ namespace ABI.System.Collections.Generic
             {
                 uint __retval = default;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+                GC.KeepAlive(_obj);
                 return __retval;
             }
         }

@@ -64,6 +64,7 @@ namespace ABI.Windows.Foundation.Collections
                 {
                     var ThisPtr = obj.ThisPtr;
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval));
+                    GC.KeepAlive(obj);
                     return ABI.System.Collections.Generic.FromAbiEnumerator<T>.FromAbi(__retval);
                 }
                 finally
@@ -474,6 +475,7 @@ namespace ABI.System.Collections.Generic
             var ThisPtr = obj.ThisPtr;
             byte __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)ThisPtr)[8](ThisPtr, &__retval));
+            GC.KeepAlive(obj);
             return __retval != 0;
         }
 
@@ -503,6 +505,7 @@ namespace ABI.System.Collections.Generic
                     __items = Marshaler<T>.CreateMarshalerArray(items);
                     (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int>**)ThisPtr)[9](ThisPtr, __items_length, __items_data, &__retval));
+                    GC.KeepAlive(obj);
                     items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
                     return __retval;
                 }
@@ -523,6 +526,7 @@ namespace ABI.System.Collections.Generic
             var ThisPtr = obj.ThisPtr;
             byte __retval = default;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, byte*, int>**)ThisPtr)[7](ThisPtr, &__retval));
+            GC.KeepAlive(obj);
             return __retval != 0;
         }
     }
@@ -661,6 +665,7 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)ThisPtr)[6](ThisPtr, &result));
+                GC.KeepAlive(obj);
                 return Marshaler<T>.FromAbi(result);
             }
             finally

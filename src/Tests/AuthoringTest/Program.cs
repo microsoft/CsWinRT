@@ -207,6 +207,39 @@ namespace AuthoringTest
         public string Value => "CsWinRT";
     }
 
+    [GeneratedBindableCustomProperty]
+    public partial struct CustomPropertyStructType
+    {
+        // Public WinRT struct types must have at least one field
+        public int Dummy;
+
+        public int Number => 4;
+        public string Value => "CsWinRTFromStructType";
+    }
+
+    [GeneratedBindableCustomProperty]
+    internal sealed partial record CustomPropertyRecordType
+    {
+        public int Number { get; } = 4;
+        public string Value => "CsWinRTFromRecordType";
+    }
+
+    [GeneratedBindableCustomProperty]
+    internal partial record struct CustomPropertyRecordStructType
+    {
+        public int Number => 4;
+        public string Value => "CsWinRTFromRecordStructType";
+    }
+
+    public static class CustomPropertyRecordTypeFactory
+    {
+        public static object CreateStruct() => new CustomPropertyStructType();
+        
+        public static object CreateRecord() => new CustomPropertyRecordType();
+
+        public static object CreateRecordStruct() => default(CustomPropertyRecordStructType);
+    }
+
     public sealed partial class CustomPropertyProviderWithExplicitImplementation : ICustomPropertyProvider
     {
         public Type Type => typeof(CustomPropertyProviderWithExplicitImplementation);
