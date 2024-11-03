@@ -237,7 +237,11 @@ namespace WinRT
     /// <remarks>
     /// This type also provides equivalent support for the UWP XAML interface (as it shares the same IID as the WinUI type).
     /// </remarks>
+#if NET8_0_OR_GREATER
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
+#else
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+#endif
 #if EMBED
     internal
 #else
