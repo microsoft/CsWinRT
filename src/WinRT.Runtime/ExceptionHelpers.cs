@@ -121,22 +121,22 @@ namespace WinRT
         }
 
         // Retrieve restricted error info from thread without removing it, for propagation and debugging (watch, locals, etc)
-        private static ObjectReference<IUnknownVftbl> BorrowRestrictedErrorInfo()
+        private static ObjectReferenceValue BorrowRestrictedErrorInfo()
         {
             if (getRestrictedErrorInfo == null)
-                return null;
+                return default;
 
             IntPtr restrictedErrorInfoPtr = IntPtr.Zero;
             Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(&restrictedErrorInfoPtr));
             if (restrictedErrorInfoPtr == IntPtr.Zero)
-                return null;
+                return default;
 
             if (setRestrictedErrorInfo != null)
             {
                 setRestrictedErrorInfo(restrictedErrorInfoPtr);
             }
 
-            return ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
+            return ObjectReferenceValue.Attach(ref restrictedErrorInfoPtr);
         }
 
         public static Exception GetExceptionForHR(int hr) => hr >= 0 ? null : GetExceptionForHR(hr, true, false, out _);
@@ -155,28 +155,37 @@ namespace WinRT
 
             if (useGlobalErrorState)
             {
+                ObjectReferenceValue restrictedErrorInfoValue = default;
                 try
                 {
-                    using var restrictedErrorInfoRef = BorrowRestrictedErrorInfo();
-                    if (restrictedErrorInfoRef != null)
+                    restrictedErrorInfoValue = BorrowRestrictedErrorInfo();
+                    var restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetAbi();
+                    if (restrictedErrorInfoValuePtr != default)
                     {
-                        restrictedErrorInfoToSave = restrictedErrorInfoRef.As<IUnknownVftbl>(IID.IID_IRestrictedErrorInfo);
-                        ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoRef, out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
-                        restrictedErrorReference = ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoRef);
-                        if (restrictedErrorInfoRef.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo, out var languageErrorInfoRef) >= 0)
+                        if (Marshal.QueryInterface(restrictedErrorInfoValuePtr, ref Unsafe.AsRef(in IID.IID_ILanguageExceptionErrorInfo), out var languageErrorInfoPtr) >= 0)
                         {
-                            ex = GetLanguageException(languageErrorInfoRef, hr);
-                            if (ex is not null)
+                            try
                             {
-                                restoredExceptionFromGlobalState = true;
-                                if (associateErrorInfo)
+                                ex = GetLanguageException(languageErrorInfoPtr, hr);
+                                if (ex is not null)
                                 {
-                                    ex.AddExceptionDataForRestrictedErrorInfo(restrictedErrorInfoToSave, true);
+                                    restoredExceptionFromGlobalState = true;
+                                    if (associateErrorInfo)
+                                    {
+                                        ex.AddExceptionDataForRestrictedErrorInfo(ObjectReference<IUnknownVftbl>.FromAbi(restrictedErrorInfoValuePtr, IID.IID_IRestrictedErrorInfo), true);
+                                    }
+                                    return ex;
                                 }
-                                return ex;
+                            }
+                            finally
+                            {
+                                Marshal.Release(languageErrorInfoPtr);
                             }
                         }
 
+                        restrictedErrorInfoToSave = ObjectReference<IUnknownVftbl>.FromAbi(restrictedErrorInfoValuePtr, IID.IID_IRestrictedErrorInfo);
+                        ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorInfoValuePtr, out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
+                        restrictedErrorReference = ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoValuePtr);
                         if (hr == hrLocal)
                         {
                             // For cross language WinRT exceptions, general information will be available in the description,
@@ -206,6 +215,10 @@ namespace WinRT
                     // If we fail to get the error info or the exception from it,
                     // we fallback to using the hresult to create the exception.
                     Debug.Assert(false, e.Message, e.StackTrace);
+                }
+                finally
+                {
+                    restrictedErrorInfoValue.Dispose();
                 }
             }
 
@@ -349,49 +362,64 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
         // This is a helper method specifically to be used by exception propagation scenarios where we carefully
         // manage the lifetime of the CCW for the exception object to avoid cycles and thereby leaking it.
-        private static Exception GetLanguageException(ObjectReference<IUnknownVftbl> languageErrorInfoRef, int hr)
+        private static Exception GetLanguageException(IntPtr languageErrorInfoPtr, int hr)
         {
             // Check the error info first for the language exception.
-            var exception = GetLanguageExceptionInternal(languageErrorInfoRef, hr);
+            var exception = GetLanguageExceptionInternal(languageErrorInfoPtr, hr);
             if (exception is not null)
             {
                 return exception;
             }
 
             // If propagated exceptions are supported, traverse it and check if any one of those is our exception to reuse.
-            if (languageErrorInfoRef.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo2, out var languageErrorInfo2Ref) >= 0)
+            if (Marshal.QueryInterface(languageErrorInfoPtr, ref Unsafe.AsRef(in IID.IID_ILanguageExceptionErrorInfo2), out var languageErrorInfo2Ptr) >= 0)
             {
-                using (languageErrorInfo2Ref)
+                IntPtr currentLanguageExceptionErrorInfo2Ptr = default;
+                try
                 {
-                    ObjectReference<IUnknownVftbl> currentLanguageExceptionErrorInfo2
-                        = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPropagationContextHead(languageErrorInfo2Ref);
-                    while (currentLanguageExceptionErrorInfo2 != null)
+                    currentLanguageExceptionErrorInfo2Ptr
+                        = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPropagationContextHead(languageErrorInfo2Ptr);
+                    while (currentLanguageExceptionErrorInfo2Ptr != default)
                     {
-                        var propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2, hr);
+                        var propagatedException = GetLanguageExceptionInternal(currentLanguageExceptionErrorInfo2Ptr, hr);
                         if (propagatedException is not null)
                         {
                             return propagatedException;
                         }
 
-                        currentLanguageExceptionErrorInfo2 = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPreviousLanguageExceptionErrorInfo(currentLanguageExceptionErrorInfo2);
+                        var previousLanguageExceptionErrorInfo2Ptr = currentLanguageExceptionErrorInfo2Ptr;
+                        currentLanguageExceptionErrorInfo2Ptr = global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.GetPreviousLanguageExceptionErrorInfo(currentLanguageExceptionErrorInfo2Ptr);
+                        Marshal.Release(previousLanguageExceptionErrorInfo2Ptr);
                     }
+                }
+                finally
+                {
+                    MarshalExtensions.ReleaseIfNotNull(currentLanguageExceptionErrorInfo2Ptr);
+                    Marshal.Release(languageErrorInfo2Ptr);
                 }
             }
 
             return null;
 
-            static Exception GetLanguageExceptionInternal(ObjectReference<IUnknownVftbl> languageErrorInfoRef, int hr)
+            static Exception GetLanguageExceptionInternal(IntPtr languageErrorInfoPtr, int hr)
             {
-                using IObjectReference languageException = ABI.WinRT.Interop.ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoRef);
-                if (languageException is not null)
+                var languageExceptionPtr = ABI.WinRT.Interop.ILanguageExceptionErrorInfoMethods.GetLanguageException(languageErrorInfoPtr);
+                if (languageExceptionPtr != default)
                 {
-                    if (languageException.IsReferenceToManagedObject)
+                    try
                     {
-                        var ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
-                        if (GetHRForException(ex) == hr)
+                        if (IUnknownVftbl.IsReferenceToManagedObject(languageExceptionPtr))
                         {
-                            return ex;
+                            var ex = ComWrappersSupport.FindObject<Exception>(languageExceptionPtr);
+                            if (GetHRForException(ex) == hr)
+                            {
+                                return ex;
+                            }
                         }
+                    }
+                    finally
+                    {
+                        Marshal.Release(languageExceptionPtr);
                     }
                 }
 
@@ -412,11 +440,16 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     {
                         // Capture the C# language exception if it hasn't already been captured previously either during the throw or during a propagation.
                         // Given the C# exception itself captures propagation context on rethrow, we don't do it each time.
-                        if (!isLanguageException && restrictedErrorObject.TryAs<IUnknownVftbl>(IID.IID_ILanguageExceptionErrorInfo2, out var languageErrorInfo2Ref) >= 0)
+                        if (!isLanguageException &&
+                            Marshal.QueryInterface(restrictedErrorObject.ThisPtr, ref Unsafe.AsRef(in IID.IID_ILanguageExceptionErrorInfo2), out var languageErrorInfo2Ptr) >= 0)
                         {
-                            using (languageErrorInfo2Ref)
+                            try
                             {
-                                global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.CapturePropagationContext(languageErrorInfo2Ref, ex);
+                                global::ABI.WinRT.Interop.ILanguageExceptionErrorInfo2Methods.CapturePropagationContext(languageErrorInfo2Ptr, ex);
+                            }
+                            finally
+                            {
+                                Marshal.Release(languageErrorInfo2Ptr);
                             }
                         }
                         else if (isLanguageException)
@@ -490,11 +523,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             SetErrorInfo(ex);
             if (roReportUnhandledError != null)
             {
-                var restrictedErrorInfoRef = BorrowRestrictedErrorInfo();
-                if (restrictedErrorInfoRef != null)
+                var restrictedErrorInfoValue = BorrowRestrictedErrorInfo();
+                var restrictedErrorInfoValuePtr = restrictedErrorInfoValue.GetAbi();
+                if (restrictedErrorInfoValuePtr != default)
                 {
-                    roReportUnhandledError(restrictedErrorInfoRef.ThisPtr);
-                    GC.KeepAlive(restrictedErrorInfoRef);
+                    roReportUnhandledError(restrictedErrorInfoValuePtr);
+                    restrictedErrorInfoValue.Dispose();
                 }
             }
         }
@@ -506,7 +540,8 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             {
                 if (ex.TryGetRestrictedLanguageErrorInfo(out var restrictedErrorObject, out var _))
                 {
-                    ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject, out _, out hr, out _, out _);
+                    ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(restrictedErrorObject.ThisPtr, out hr);
+                    GC.KeepAlive(restrictedErrorObject);
                 }
             }
             catch (Exception e)
@@ -603,6 +638,8 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             // If there is no exception, then the restricted error info doesn't apply to it
             if (e != null)
             {
+                IntPtr restrictedErrorInfoPtr = IntPtr.Zero;
+
                 try
                 {
                     // Get the restricted error info for this thread and see if it may correlate to the current
@@ -611,15 +648,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     // HRESULT ABI return values.   However, in many cases async APIs will set the thread's restricted
                     // error info as a convention in order to provide extended debugging information for the ErrorCode
                     // property.
-                    IntPtr restrictedErrorInfoPtr = IntPtr.Zero;
                     Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(&restrictedErrorInfoPtr));
 
                     if (restrictedErrorInfoPtr != IntPtr.Zero)
                     {
-                        using ObjectReference<IUnknownVftbl> restrictedErrorInfoRef = ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo);
-
                         ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetErrorDetails(
-                            restrictedErrorInfoRef,
+                            restrictedErrorInfoPtr,
                             out string description,
                             out int restrictedErrorInfoHResult,
                             out string restrictedDescription,
@@ -633,11 +667,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                         // for the IAsyncInfo case.
                         if (e.HResult == restrictedErrorInfoHResult)
                         {
+                            string reference = ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
                             e.AddExceptionDataForRestrictedErrorInfo(description,
                                                                      restrictedDescription,
-                                                                     ABI.WinRT.Interop.IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoRef),
+                                                                     reference,
                                                                      capabilitySid,
-                                                                     restrictedErrorInfoRef.As<IUnknownVftbl>(IID.IID_IRestrictedErrorInfo));
+                                                                     ObjectReference<IUnknownVftbl>.Attach(ref restrictedErrorInfoPtr, IID.IID_IRestrictedErrorInfo));
                         }
                     }
                 }
@@ -645,6 +680,10 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 {
                     // If we can't get the restricted error info, then proceed as if it isn't associated with this
                     // error.
+                }
+                finally
+                {
+                    MarshalExtensions.ReleaseIfNotNull(restrictedErrorInfoPtr);
                 }
             }
 
