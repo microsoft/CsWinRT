@@ -17,7 +17,9 @@ CsWinRT makes use of a source generator as part of making generated projections 
 | True* | If running in a project that references WinUI / UWP, then runs in `Auto`. Otherwise runs in `OptIn`. |
 | False | Disables any generation of code and the analyzer. |
 
-Given projects making use of WinUI / UWP frequently pass things across the WinRT boundary, the source generator by default runs in `Auto` mode for such projects to avoid having to mark every type with the attribute and to avoid listing every generic type used. Eventually the plan is to have the source generator in these scenarios to run as a build task. For all other projects, the source generator runs in `OptIn` mode where when it is sees one of the generator attributes used, it will generate code for it to make it trimming and AOT compatible. The `OptIn` mode attributes still do work in `Auto` mode to allow to use in scenarios where the source generator didn't detect a scenario.
+In the default mode of `True`, the source generator looks at the type of project to determine whether it runs in `Auto` or `OptIn` mode. For WinUI / UWP projects, it runs in `Auto` mode given they frequently pass things across the WinRT boundary. This is to avoid having to mark every class with the attribute and to avoid listing every generic type used. Eventually the plan is to have the source generator in these scenarios to run as a build task. For projects which have explictly set `CsWinRTAotWarningLevel` to `2`, it also runs in `Auto` mode given the project had explicitly opted in to warnings for scenarios involving built-in interfaces and we want to avoid the changing the current behavior for such projects. These projects can manually still set to `OptIn` if that is what they desire. For all other projects, the source generator runs in `OptIn` mode where when it sees one of the generator attributes used, it will generate code for it to make it trimming and AOT compatible.
+
+The `OptIn` mode attributes still does work in `Auto` mode to allow to use in scenarios where the source generator didn't detect a certain scenario.
 
 ## Consuming projected types and being trimming and AOT compatible
 
