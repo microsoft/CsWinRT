@@ -41,7 +41,7 @@ namespace WinRT
         private const int E_NOTIMPL = unchecked((int)0x80004001);
         private const int E_ACCESSDENIED = unchecked((int)0x80070005);
         internal const int E_INVALIDARG = unchecked((int)0x80070057);
-        private const int E_NOINTERFACE = unchecked((int)0x80004002);
+        internal const int E_NOINTERFACE = unchecked((int)0x80004002);
         private const int E_OUTOFMEMORY = unchecked((int)0x8007000e);
         private const int ERROR_ARITHMETIC_OVERFLOW = unchecked((int)0x80070216);
         private const int ERROR_FILENAME_EXCED_RANGE = unchecked((int)0x800700ce);
