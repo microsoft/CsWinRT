@@ -463,6 +463,9 @@ namespace TestComponentCSharp
         // Keyword escapes
         String Catch(String params, out String lock);
 
+        String ThrowExceptionWithMessage(String message, Boolean throwNonMappedError);
+        String OriginateAndThrowExceptionWithMessage(String message);
+
         // Interface projections
         static IProperties1 NativeProperties1{ get; };
         static Object ServiceProvider{ get; };
