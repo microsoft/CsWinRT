@@ -152,6 +152,7 @@ namespace WinRT
             string restrictedErrorReference = null;
             string restrictedCapabilitySid = null;
             string errorMessage = string.Empty;
+            Exception internalGetGlobalErrorStateException = null;
 
             if (useGlobalErrorState)
             {
@@ -214,7 +215,9 @@ namespace WinRT
                 {
                     // If we fail to get the error info or the exception from it,
                     // we fallback to using the hresult to create the exception.
+                    // But we do store it in the exception data for debugging purposes.
                     Debug.Assert(false, e.Message, e.StackTrace);
+                    internalGetGlobalErrorStateException = e;
                 }
                 finally
                 {
@@ -354,7 +357,8 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     restrictedErrorReference,
                     restrictedCapabilitySid,
                     restrictedErrorInfoToSave,
-                    false);
+                    false,
+                    internalGetGlobalErrorStateException);
             }
 
             return ex;
@@ -574,7 +578,8 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             string restrictedErrorReference,
             string restrictedCapabilitySid,
             ObjectReference<IUnknownVftbl> restrictedErrorObject,
-            bool hasRestrictedLanguageErrorObject = false)
+            bool hasRestrictedLanguageErrorObject = false,
+            Exception internalGetGlobalErrorStateException = null)
         {
             IDictionary dict = ex.Data;
             if (dict != null)
@@ -588,6 +593,11 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                 // using Data["RestrictedErrorReference"]
                 dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
                 dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
+
+                if (internalGetGlobalErrorStateException != null)
+                {
+                    dict["_InternalCsWinRTException"] = internalGetGlobalErrorStateException;
+                }
             }
         }
 
