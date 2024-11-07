@@ -14,6 +14,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading;
+using WinRT.SourceGenerator;
 
 namespace Generator
 {
@@ -97,6 +98,10 @@ namespace Generator
 
                 if (cswinrtProcess.ExitCode != 0)
                 {
+                    WinRTComponentScanner winrtScanner = new(context, assemblyName);
+
+                    var diagnosticDescriptor = WinRTRules.SourceGeneratorFailed;
+                    context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, null, error));
                     throw new Win32Exception(cswinrtProcess.ExitCode, error);
                 }
 
