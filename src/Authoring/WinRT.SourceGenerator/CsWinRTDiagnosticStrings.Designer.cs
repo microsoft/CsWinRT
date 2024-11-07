@@ -574,6 +574,24 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Source generator failed.
+        /// </summary>
+        internal static string SourceGeneratorFailed_Brief {
+            get {
+                return ResourceManager.GetString("SourceGeneratorFailed_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source generator failed to create WinMD because of &apos;{0}&apos;.
+        /// </summary>
+        internal static string SourceGeneratorFailed_Text {
+            get {
+                return ResourceManager.GetString("SourceGeneratorFailed_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Const field in struct.
         /// </summary>
         internal static string StructHasConstFieldRule_Brief {
