@@ -13,7 +13,6 @@
     <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64"/>
     <ProjectReference Include="..\..\..\Projections\Test\Test.csproj" />
     <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj" />
-	<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="9.0.0-rc.2.24473.5" />
   </ItemGroup>
 
 </Project>
