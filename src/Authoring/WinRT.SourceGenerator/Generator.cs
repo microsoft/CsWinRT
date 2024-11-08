@@ -196,7 +196,7 @@ namespace Generator
                 }
                 Logger.Close();
                 Environment.ExitCode = -2;
-                throw;
+                return;
             }
 
             Logger.Log("Done");
