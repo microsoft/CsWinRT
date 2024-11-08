@@ -142,6 +142,9 @@ namespace WinRT
     /// or deriving from a WinRT exposed type. However, it is also possible to use this manually to further customize the behavior.
     /// When that is the case, the AOT generator will detect the presence of this attribute and skip processing that type.
     /// </remarks>
+#if !NET8_0_OR_GREATER
+    [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Delegate | AttributeTargets.Struct | AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
 #if EMBED
     internal
@@ -185,6 +188,7 @@ namespace WinRT
         internal Type WinRTExposedTypeDetails { get; }
     }
 
+#if NET8_0_OR_GREATER
     /// <summary>
     /// An <see cref="IWinRTExposedTypeDetails"/> implementation for types that are explicitly not meant to be marshalled to native code.
     /// </summary>
@@ -194,7 +198,12 @@ namespace WinRT
     /// type). When support for marshalling is not needed, using this type allows suppressing warnings, and disabling that code generation.
     /// This can also provide a small binary size improvement in such cases, as that unnecessary marshalling code will not be emitted.
     /// </remarks>
-    public sealed class WinRTManagedOnlyTypeDetails : IWinRTExposedTypeDetails
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class WinRTManagedOnlyTypeDetails : IWinRTExposedTypeDetails
     {
         /// <inheritdoc/>
         public ComWrappers.ComInterfaceEntry[] GetExposedInterfaces()
@@ -216,6 +225,7 @@ namespace WinRT
                 "and mark the type as partial, to allow the CsWinRT AOT generator to emit the necessary marshalling code for it.");
         }
     }
+#endif
 
     /// <summary>
     /// An attributes used for generated RCW types, to expose a factory method for them.

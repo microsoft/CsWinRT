@@ -1,3 +1,4 @@
 Compat issues with assembly WinRT.Runtime:
 CannotChangeAttribute : Attribute 'System.AttributeUsageAttribute' on 'WinRT.GeneratedBindableCustomPropertyAttribute' changed from '[AttributeUsageAttribute(AttributeTargets.Class, Inherited=false, AllowMultiple=false)]' in the contract to '[AttributeUsageAttribute(AttributeTargets.Class | AttributeTargets.Struct, Inherited=false, AllowMultiple=false)]' in the implementation.
-Total Issues: 1
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.WinRTExposedTypeAttribute' in the contract but not the implementation.
+Total Issues: 2

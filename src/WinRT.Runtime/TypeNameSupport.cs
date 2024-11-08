@@ -473,6 +473,7 @@ namespace WinRT
                 return true;
             }
 
+#if NET8_0_OR_GREATER
             // If the type is blocked for marshalling, throw. We should have never gotten here.
             // We do this check only if the lookup fails, to avoid a perf hit for valid cases.
             var winrtExposedClassAttribute = type.GetCustomAttribute<WinRTExposedTypeAttribute>(false);
@@ -480,6 +481,7 @@ namespace WinRT
             {
                 WinRTManagedOnlyTypeDetails.ThrowNotSupportedException();
             }
+#endif
 
             // AOT source generator should have generated the attribute with the class name.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
