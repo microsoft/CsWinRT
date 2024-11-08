@@ -108,10 +108,66 @@ namespace Generator
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotOptimizerEnabled", out var isCsWinRTAotOptimizerEnabledStr))
             {
-                return bool.TryParse(isCsWinRTAotOptimizerEnabledStr, out var isCsWinRTAotOptimizerEnabled) && isCsWinRTAotOptimizerEnabled;
+                return (bool.TryParse(isCsWinRTAotOptimizerEnabledStr, out var isCsWinRTAotOptimizerEnabled) && isCsWinRTAotOptimizerEnabled) ||
+                    string.Equals(isCsWinRTAotOptimizerEnabledStr, "OptIn", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(isCsWinRTAotOptimizerEnabledStr, "Auto", StringComparison.OrdinalIgnoreCase);
             }
 
             return false;
+        }
+
+        private enum CsWinRTAotOptimizerMode
+        {
+            Disabled = 0,
+            OptIn = 1,
+            Auto = 2,
+            Default = 3,
+        }
+
+        public static bool IsCsWinRTAotOptimizerInAutoMode(AnalyzerConfigOptionsProvider provider, Compilation compilation)
+        {
+            var mode = GetMode(provider);
+
+            if (mode == CsWinRTAotOptimizerMode.Default)
+            {
+                // If mode is default and this is a WinUI or UWP project, which we detect by using the Button type as a marker,
+                // then AOT optimizer is running in auto mode because in both projects the main API boundary is WinRT.
+                // For CsWinRT components, we also run by default in auto mode.
+                return provider.IsCsWinRTComponent() ||
+                       compilation.GetTypeByMetadataName("Microsoft.UI.Xaml.Controls.Button") is not null ||
+                       compilation.GetTypeByMetadataName("Windows.UI.Xaml.Controls.Button") is not null ||
+                       // If warning level was explicitly set to 2 without a mode set,
+                       // we don't want to change the behavior of those projects who were
+                       // relying on it running. If they set the mode, then the mode would
+                       // be respected.
+                       provider.GetCsWinRTAotWarningLevel() == 2;
+            }
+
+            // If mode is not the default, check if it is set explicitly to Auto.
+            return mode == CsWinRTAotOptimizerMode.Auto;
+
+            static CsWinRTAotOptimizerMode GetMode(AnalyzerConfigOptionsProvider provider)
+            {
+                if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotOptimizerEnabled", out var isCsWinRTAotOptimizerEnabledStr))
+                {
+                    if (string.Equals(isCsWinRTAotOptimizerEnabledStr, "OptIn", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CsWinRTAotOptimizerMode.OptIn;
+                    }
+
+                    if (string.Equals(isCsWinRTAotOptimizerEnabledStr, "Auto", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CsWinRTAotOptimizerMode.Auto;
+                    }
+
+                    if (bool.TryParse(isCsWinRTAotOptimizerEnabledStr, out var isCsWinRTAotOptimizerEnabled) && isCsWinRTAotOptimizerEnabled)
+                    {
+                        return CsWinRTAotOptimizerMode.Default;
+                    }
+                }
+
+                return CsWinRTAotOptimizerMode.Disabled;
+            }
         }
 
         public static bool GetCsWinRTRcwFactoryFallbackGeneratorForceOptIn(this AnalyzerConfigOptionsProvider provider)

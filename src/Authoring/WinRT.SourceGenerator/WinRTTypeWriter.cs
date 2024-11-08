@@ -2760,7 +2760,11 @@ namespace Generator
                     symbol.TypeKind == TypeKind.Class && 
                     !symbol.IsStatic)
                 {
-                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, mapper, context.Compilation, true, typeDeclaration.DefaultInterface));
+                    var vtableAttribute = WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, mapper, context.Compilation, true, typeDeclaration.DefaultInterface);
+                    if (vtableAttribute != default)
+                    {
+                        vtableAttributesToAdd.Add(vtableAttribute);
+                    }
                     WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, IsWinRTType, mapper, vtableAttributesToAddOnLookupTable);
                 }
             }
@@ -2784,7 +2788,7 @@ namespace Generator
 
             if (vtableAttributesToAddOnLookupTable.Any())
             {
-                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), ((true, true, true), escapedAssemblyName)), true);
+                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), (new CsWinRTAotOptimizerProperties(true, true, true, false), escapedAssemblyName)), true);
             }
         }
 

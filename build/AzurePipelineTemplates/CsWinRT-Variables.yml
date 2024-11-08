@@ -3,11 +3,11 @@ variables:
 - name: MajorVersion
   value: 2
 - name: MinorVersion
-  value: 1
+  value: 2
 - name: PatchVersion
-  value: 7
+  value: 0
 - name: WinRT.Runtime.AssemblyVersion
-  value: '2.1.0.0'
+  value: '2.2.0.0'
 - name: Net5.SDK.Feed
   value: 'https://dotnetcli.blob.core.windows.net/dotnet'
 - name: Net6.SDK.Version
