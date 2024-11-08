@@ -440,6 +440,31 @@ namespace WinRT.Interop
             }
         }
 
+        /// <summary>The IID for <c>ILanguageExceptionErrorInfo2</c> (5746E5C4-5B97-424C-B620-2822915734DD).</summary>
+        internal static ref readonly Guid IID_ILanguageExceptionErrorInfo2
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+            get
+            {
+                ReadOnlySpan<byte> data = new byte[]
+                {
+                    0xC4, 0xE5, 0x46, 0x57,
+                    0x97, 0x5B,
+                    0x4C, 0x42,
+                    0xB6,
+                    0x20,
+                    0x28,
+                    0x22,
+                    0x91,
+                    0x57,
+                    0x34,
+                    0xDD
+                };
+
+                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+            }
+        }
+
         /// <summary>The IID for <c>IRestrictedErrorInfo</c> (82BA7092-4C88-427D-A7BC-16DD93FEB67E).</summary>
         internal static ref readonly Guid IID_IRestrictedErrorInfo
         {

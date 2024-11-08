@@ -431,6 +431,9 @@ namespace winrt::TestComponentCSharp::implementation
 
         hstring Catch(hstring const& params, hstring& locks);
 
+        hstring ThrowExceptionWithMessage(hstring message, bool throwNonMappedError);
+        hstring OriginateAndThrowExceptionWithMessage(hstring message);
+
         static IProperties1 NativeProperties1();
         static Windows::Foundation::IInspectable ServiceProvider();
         static winrt::Windows::Foundation::IInspectable ComInterop();

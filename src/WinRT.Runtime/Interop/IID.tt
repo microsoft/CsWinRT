@@ -39,6 +39,7 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("IErrorInfo", "1CF2B120-547D-101B-8E65-08002B2BD119", false),
     ("ISupportErrorInfo", "DF0B3D60-548F-101B-8E65-08002B2BD119", false),
     ("ILanguageExceptionErrorInfo", "04A2DBF3-DF83-116C-0946-0812ABF6E07D", false),
+    ("ILanguageExceptionErrorInfo2", "5746E5C4-5B97-424C-B620-2822915734DD", false),
     ("IRestrictedErrorInfo", "82BA7092-4C88-427D-A7BC-16DD93FEB67E", false),
     ("MUX_INotifyPropertyChanged", "90B17601-B065-586E-83D9-9ADC3A695284", false),
     ("WUX_INotifyPropertyChanged", "CF75D69C-F2F4-486B-B302-BB4C09BAEBFA", false),
