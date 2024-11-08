@@ -7,7 +7,7 @@
     <Company>Microsoft Corporation</Company>
     <Product>C#/WinRT</Product>
     <PackageId>WinRT.SourceGenerator</PackageId>
-    <FileVersion>3.0.0</FileVersion>
+    <FileVersion>$(VersionNumber)</FileVersion>
     <Version>$(VersionNumber)</Version>
     <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
     <InformationalVersion>$(VersionNumber)</InformationalVersion>
