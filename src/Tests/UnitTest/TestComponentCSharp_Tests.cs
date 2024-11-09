@@ -1866,6 +1866,49 @@ namespace UnitTest
             var exceptionToThrow = new ArgumentNullException("foo");
             var properties = new ThrowingManagedProperties(exceptionToThrow);
             Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties));
+
+            var properties2 = new ThrowingManagedProperties2(TestObject);
+            Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties2));
+        }
+
+        [Fact]
+        public void TestExceptionPropagation()
+        {
+            VerifyException<ArgumentException>(() => TestObject.ThrowExceptionWithMessage("Parameter1", false), "Parameter1");
+            VerifyException<COMException>(() => TestObject.ThrowExceptionWithMessage("Error message", true), "Error message");
+
+            void callProperties()
+            {
+                var properties = new ThrowingManagedProperties(TestObject);
+                TestObject.CopyProperties(properties);
+            }
+            VerifyException<ArgumentException>(callProperties, "Property threw");
+
+            VerifyException<ArgumentException>(() => TestObject.OriginateAndThrowExceptionWithMessage("Parameter3"), "Parameter3");
+
+            void callProperties2()
+            {
+                var properties = new ThrowingManagedProperties(TestObject, true);
+                TestObject.CopyProperties(properties);
+            }
+            VerifyException<ArgumentException>(callProperties2, "Property threw with language exception");
+
+            static void VerifyException<T>(Action action, string expectedMessage) where T : Exception
+            {
+                try
+                {
+                    action();
+                    Assert.True(false);
+                }
+                catch (T ex)
+                {
+                    Assert.Contains(expectedMessage, ex.Message);
+                }
+                catch (Exception)
+                {
+                    Assert.True(false);
+                }
+            }
         }
 
         class ManagedProperties : IProperties1
@@ -1886,10 +1929,62 @@ namespace UnitTest
                 ExceptionToThrow = exceptionToThrow;
             }
 
+            public ThrowingManagedProperties(Class instance, bool includeLanguageException = false)
+            {
+                Instance = instance;
+                IncludeLanguageException = includeLanguageException;
+            }
+
             public Exception ExceptionToThrow { get; }
 
-            public int ReadWriteProperty => throw ExceptionToThrow;
+            public Class Instance { get; }
+
+            public bool IncludeLanguageException { get; }
+
+            public int ReadWriteProperty
+            {
+                get
+                {
+                    if (Instance is not null)
+                    {
+                        if (IncludeLanguageException)
+                        {
+                            return Instance.OriginateAndThrowExceptionWithMessage("Property threw with language exception").Length;
+                        }
+                        else
+                        {
+                            return Instance.ThrowExceptionWithMessage("Property threw", false).Length;
+                        }
+                    }
+                    else
+                    {
+                        throw ExceptionToThrow;
+                    }
+                }
+            }
         }
+
+        class ThrowingManagedProperties2 : IProperties1
+        {
+            public ThrowingManagedProperties2(Class instance)
+            {
+                Instance = instance;
+            }
+
+            public Class Instance { get; }
+
+            public int ReadWriteProperty
+            {
+                get
+                {
+                    var exceptionToThrow = new ArgumentNullException("foo");
+                    var properties = new ThrowingManagedProperties(exceptionToThrow);
+                    Instance.CopyProperties(properties);
+                    return 1;
+                }
+            }
+        }
+
 
         readonly int E_FAIL = -2147467259;
 
