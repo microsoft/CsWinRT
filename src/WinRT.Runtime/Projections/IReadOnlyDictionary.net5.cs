@@ -114,13 +114,34 @@ namespace ABI.Windows.Foundation.Collections
             void> _Split;
         internal volatile static bool _RcwHelperInitialized;
 
+        internal static unsafe void EnsureInitialized()
+        {
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                if (!_RcwHelperInitialized)
+                {
+                    [MethodImpl(MethodImplOptions.NoInlining)]
+                    static void ThrowNotInitialized()
+                    {
+                        throw new NotImplementedException(
+                            $"'{typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>)}' was called without initializing the RCW methods using 'IReadOnlyDictionaryMethods.InitRcwHelper'. " +
+                            $"If using IDynamicCastableInterface support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
+                    }
+
+                    ThrowNotInitialized();
+                }
+            }
+        }
+
         public static unsafe V Lookup(IObjectReference obj, K key)
         {
+            EnsureInitialized();
             return _Lookup(obj, key);
         }
 
         public static unsafe bool HasKey(IObjectReference obj, K key)
         {
+            EnsureInitialized();
             return _HasKey(obj, key);
         }
 
@@ -130,8 +151,8 @@ namespace ABI.Windows.Foundation.Collections
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
+                EnsureInitialized();
                 _Split(obj, out first, out second);
-
                 return;
             }
 

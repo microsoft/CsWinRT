@@ -997,6 +997,25 @@ namespace ABI.System.Collections.Generic
         internal volatile static bool _RcwHelperInitialized;
         internal volatile unsafe static delegate*<bool> _EnsureEnumerableInitialized;
 
+        internal static unsafe void EnsureInitialized()
+        {
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                if (!_RcwHelperInitialized)
+                {
+                    [MethodImpl(MethodImplOptions.NoInlining)]
+                    static void ThrowNotInitialized()
+                    {
+                        throw new NotImplementedException(
+                            $"'{typeof(global::System.Collections.Generic.IList<T>)}' was called without initializing the RCW methods using 'IListMethods.InitRcwHelper'. " +
+                            $"If using IDynamicCastableInterface support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
+                    }
+
+                    ThrowNotInitialized();
+                }
+            }
+        }
+
         public static unsafe uint get_Size(IObjectReference obj)
         {
             IntPtr ThisPtr = obj.ThisPtr;
@@ -1008,6 +1027,7 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe T GetAt(IObjectReference obj, uint index)
         {
+            EnsureInitialized();
             return _GetAt(obj, index);
         }
 
@@ -1017,6 +1037,7 @@ namespace ABI.System.Collections.Generic
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
+                EnsureInitialized();
                 return _GetView(obj);
             }
 
@@ -1043,16 +1064,19 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe bool IndexOf(IObjectReference obj, T value, out uint index)
         {
+            EnsureInitialized();
             return _IndexOf(obj, value, out index);
         }
 
         public static unsafe void SetAt(IObjectReference obj, uint index, T value)
         {
+            EnsureInitialized();
             _SetAt(obj, index, value);
         }
 
         public static unsafe void InsertAt(IObjectReference obj, uint index, T value)
         {
+            EnsureInitialized();
             _InsertAt(obj, index, value);
         }
 
@@ -1065,6 +1089,7 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe void Append(IObjectReference obj, T value)
         {
+            EnsureInitialized();
             _Append(obj, value);
         }
 
@@ -1088,6 +1113,7 @@ namespace ABI.System.Collections.Generic
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
+                EnsureInitialized();
                 return _GetMany(obj, startIndex, items);
             }
 
@@ -1124,6 +1150,7 @@ namespace ABI.System.Collections.Generic
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
+                EnsureInitialized();
                 _ReplaceAll(obj, items);
 
                 return;

@@ -44,12 +44,32 @@ namespace ABI.Windows.Foundation.Collections
         internal volatile unsafe static delegate*<IObjectReference, IEnumerator<T>> _First;
         internal volatile static bool _RcwHelperInitialized;
 
+        internal static unsafe void EnsureInitialized()
+        {
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                if (!_RcwHelperInitialized)
+                {
+                    [MethodImpl(MethodImplOptions.NoInlining)]
+                    static void ThrowNotInitialized()
+                    {
+                        throw new NotImplementedException(
+                            $"'{typeof(global::System.Collections.Generic.IEnumerable<T>)}' was called without initializing the RCW methods using 'IEnumerableMethods.InitRcwHelper'. " +
+                            $"If using IDynamicCastableInterface support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
+                    }
+
+                    ThrowNotInitialized();
+                }
+            }
+        }
+
         public unsafe static IEnumerator<T> First(IObjectReference obj)
         {
             // Early return to ensure things are trimmed correctly on NAOT.
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
+                EnsureInitialized();
                 return _First(obj);
             }
 
@@ -470,6 +490,25 @@ namespace ABI.System.Collections.Generic
         internal volatile unsafe static delegate*<IObjectReference, T[], uint> _GetMany;
         internal volatile static bool _RcwHelperInitialized;
 
+        internal static unsafe void EnsureInitialized()
+        {
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                if (!_RcwHelperInitialized)
+                {
+                    [MethodImpl(MethodImplOptions.NoInlining)]
+                    static void ThrowNotInitialized()
+                    {
+                        throw new NotImplementedException(
+                            $"'{typeof(global::System.Collections.Generic.IEnumerator<T>)}' was called without initializing the RCW methods using 'IEnumeratorMethods.InitRcwHelper'. " +
+                            $"If using IDynamicCastableInterface support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
+                    }
+
+                    ThrowNotInitialized();
+                }
+            }
+        }
+
         public static unsafe bool MoveNext(IObjectReference obj)
         {
             var ThisPtr = obj.ThisPtr;
@@ -485,6 +524,7 @@ namespace ABI.System.Collections.Generic
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
+                EnsureInitialized();
                 return _GetMany(obj, items);
             }
 
@@ -518,6 +558,7 @@ namespace ABI.System.Collections.Generic
 
         public static unsafe T get_Current(IObjectReference obj)
         {
+            EnsureInitialized();
             return _GetCurrent(obj);
         }
 
