@@ -644,6 +644,30 @@ namespace Generator
             return false;
         }
 
+        /// <summary>
+        /// Checks whether a symbol is annotated with <c>[WinRTExposedType(typeof(WinRTManagedOnlyTypeDetails))]</c>.
+        /// </summary>
+        public static bool IsManagedOnlyType(ISymbol symbol, ITypeSymbol winrtExposedTypeAttribute, ITypeSymbol winrtManagedOnlyTypeDetails)
+        {
+            foreach (AttributeData attribute in symbol.GetAttributes())
+            {
+                if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, winrtExposedTypeAttribute))
+                {
+                    if (attribute.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Type: ITypeSymbol exposedTypeDetails }] &&
+                        SymbolEqualityComparer.Default.Equals(exposedTypeDetails, winrtManagedOnlyTypeDetails))
+                    {
+                        return true;
+                    }
+
+                    // A type can have just one [WinRTExposedType] attribute. If the details are not WinRTManagedOnlyTypeDetails,
+                    // we can immediatley stop here and avoid checking all remaining attributes, as we couldn't possibly match.
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
         public static Func<ISymbol, TypeMapper, bool> IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(Compilation compilation)
         {
             var winrtTypeAttribute = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
@@ -652,6 +676,19 @@ namespace Generator
             bool IsWinRTTypeHelper(ISymbol type, TypeMapper typeMapper)
             {
                 return IsWinRTType(type, winrtTypeAttribute, typeMapper, true, compilation.Assembly);
+            }
+        }
+
+        public static Func<ISymbol, bool> IsManagedOnlyType(Compilation compilation)
+        {
+            var winrtExposedTypeAttribute = compilation.GetTypeByMetadataName("WinRT.WinRTExposedTypeAttribute");
+            var winrtManagedOnlyTypeDetails = compilation.GetTypeByMetadataName("WinRT.WinRTManagedOnlyTypeDetails");
+
+            return IsManagedOnlyTypeHelper;
+
+            bool IsManagedOnlyTypeHelper(ISymbol type)
+            {
+                return IsManagedOnlyType(type, winrtExposedTypeAttribute, winrtManagedOnlyTypeDetails);
             }
         }
 
