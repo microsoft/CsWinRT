@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -18,11 +19,36 @@ namespace ABI.WinRT.Interop
     }
 
 #if NET && CsWinRT_LANG_11_FEATURES
-    internal unsafe struct CallbackData
+    internal sealed unsafe class CallbackData
     {
+        [ThreadStatic]
+        private static CallbackData TlsInstance;
+
         public delegate*<object, void> Callback;
         public object State;
+        public GCHandle Handle;
+
+        private CallbackData()
+        {
+            // Create a handle to access the object from a native callback invoked on another thread.
+            // The handle is weak to ensure that the object does not leak (or it would keep itself
+            // alive). The target is guaranteed to be alive because callers will use 'GC.KeepAlive'.
+            Handle = GCHandle.Alloc(this, GCHandleType.Weak);
+        }
+
+        ~CallbackData()
+        {
+            Handle.Free();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CallbackData GetOrCreate()
+        {
+            return TlsInstance ??= new CallbackData();
+        }
     }
+
+
 #endif
 
 #if NET && CsWinRT_LANG_11_FEATURES
@@ -39,25 +65,18 @@ namespace ABI.WinRT.Interop
             comCallData.dwDispid = 0;
             comCallData.dwReserved = 0;
 
-            CallbackData callbackData;
-            callbackData.Callback = callback;
-            callbackData.State = state;
+            CallbackData callbackData = CallbackData.GetOrCreate();
 
-            // We can just store a pointer to the callback to invoke in the context,
-            // so we don't need to allocate another closure or anything. The callback
-            // will be kept alive automatically, because 'comCallData' is address exposed.
-            // We only do this if we can use C# 11, and if we're on modern .NET, to be safe.
-            // In the callback below, we can then just retrieve the Action again to invoke it.
-            comCallData.pUserDefined = (IntPtr)(void*)&callbackData;
-            
+            comCallData.pUserDefined = GCHandle.ToIntPtr(callbackData.Handle);
+
             [UnmanagedCallersOnly]
             static int InvokeCallback(ComCallData* comCallData)
             {
                 try
                 {
-                    CallbackData* callbackData = (CallbackData*)comCallData->pUserDefined;
+                    CallbackData callbackData = Unsafe.As<CallbackData>(GCHandle.FromIntPtr(comCallData->pUserDefined).Target);
 
-                    callbackData->Callback(callbackData->State);
+                    callbackData.Callback(callbackData.State);
 
                     return 0; // S_OK
                 }
@@ -76,6 +95,11 @@ namespace ABI.WinRT.Interop
                 &iid,
                 /* iMethod */ 5,
                 IntPtr.Zero);
+
+            // This call is critical to ensure that the callback data is kept alive until we get here.
+            // This prevents its finalizer to run (that finalizer would free the GC handle used in the
+            // native callback to get back the target callback data that contains the dispatch parameters).
+            GC.KeepAlive(callbackData);
 
             if (hresult < 0)
             {
