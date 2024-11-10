@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WinRT;
 using WinRT.Interop;
 
@@ -19,36 +20,14 @@ namespace ABI.WinRT.Interop
     }
 
 #if NET && CsWinRT_LANG_11_FEATURES
-    internal sealed unsafe class CallbackData
+    internal unsafe struct CallbackData
     {
         [ThreadStatic]
-        private static CallbackData TlsInstance;
+        public static object PerThreadObject;
 
         public delegate*<object, void> Callback;
-        public object State;
-        public GCHandle Handle;
-
-        private CallbackData()
-        {
-            // Create a handle to access the object from a native callback invoked on another thread.
-            // The handle is weak to ensure that the object does not leak (or it would keep itself
-            // alive). The target is guaranteed to be alive because callers will use 'GC.KeepAlive'.
-            Handle = GCHandle.Alloc(this, GCHandleType.Weak);
-        }
-
-        ~CallbackData()
-        {
-            Handle.Free();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CallbackData GetOrCreate()
-        {
-            return TlsInstance ??= new CallbackData();
-        }
+        public object* StatePtr;
     }
-
-
 #endif
 
 #if NET && CsWinRT_LANG_11_FEATURES
@@ -61,22 +40,19 @@ namespace ABI.WinRT.Interop
 
         public static void ContextCallback(IntPtr contextCallbackPtr, delegate*<object, void> callback, delegate*<object, void> onFailCallback, object state)
         {
-            ComCallData comCallData;
-            comCallData.dwDispid = 0;
-            comCallData.dwReserved = 0;
-
-            CallbackData callbackData = CallbackData.GetOrCreate();
-
-            comCallData.pUserDefined = GCHandle.ToIntPtr(callbackData.Handle);
-
+            // Native method that invokes the callback on the target context. The state object
+            // is guaranteed to be pinned, so we can access it from a pointer. Note that the
+            // object will be stored in a static field, and it will not be on the stack of the
+            // original thread, so it's safe with respect to cross-thread access of managed objects.
+            // See: https://github.com/dotnet/runtime/blob/main/docs/design/specs/Memory-model.md#cross-thread-access-to-local-variables.
             [UnmanagedCallersOnly]
             static int InvokeCallback(ComCallData* comCallData)
             {
                 try
                 {
-                    CallbackData callbackData = Unsafe.As<CallbackData>(GCHandle.FromIntPtr(comCallData->pUserDefined).Target);
+                    CallbackData* callbackData = (CallbackData*)comCallData->pUserDefined;
 
-                    callbackData.Callback(callbackData.State);
+                    callbackData->Callback(*callbackData->StatePtr);
 
                     return 0; // S_OK
                 }
@@ -86,20 +62,37 @@ namespace ABI.WinRT.Interop
                 }
             }
 
-            Guid iid = IID.IID_ICallbackWithNoReentrancyToApplicationSTA;
+            ComCallData comCallData;
+            comCallData.dwDispid = 0;
+            comCallData.dwReserved = 0;
 
-            int hresult = (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback_4(
-                contextCallbackPtr,
-                (IntPtr)(delegate* unmanaged<ComCallData*, int>)&InvokeCallback,
-                &comCallData,
-                &iid,
-                /* iMethod */ 5,
-                IntPtr.Zero);
+            CallbackData.PerThreadObject = state;
 
-            // This call is critical to ensure that the callback data is kept alive until we get here.
-            // This prevents its finalizer to run (that finalizer would free the GC handle used in the
-            // native callback to get back the target callback data that contains the dispatch parameters).
-            GC.KeepAlive(callbackData);
+            int hresult;
+
+            fixed (object* statePtr = &CallbackData.PerThreadObject)
+            {
+                CallbackData callbackData;
+                callbackData.Callback = callback;
+                callbackData.StatePtr = statePtr;
+
+                Guid iid = IID.IID_ICallbackWithNoReentrancyToApplicationSTA;
+
+                // Add a memory barrier to be extra safe that the target thread will be able to see
+                // the write we just did on 'PerThreadObject' with the state to pass to the callback.
+                Thread.MemoryBarrier();
+
+                hresult = (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback_4(
+                    contextCallbackPtr,
+                    (IntPtr)(delegate* unmanaged<ComCallData*, int>)&InvokeCallback,
+                    &comCallData,
+                    &iid,
+                    /* iMethod */ 5,
+                    IntPtr.Zero);
+            }
+
+            // Reset the static field to avoid keeping the state alive for longer
+            Volatile.Write(ref CallbackData.PerThreadObject, null);
 
             if (hresult < 0)
             {
