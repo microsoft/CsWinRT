@@ -70,6 +70,11 @@ namespace ABI.WinRT.Interop
 
             int hresult;
 
+            // We use a thread local static field to efficiently store the state that's used by the callback. Note that this
+            // is safe with respect to reentrancy, as the target callback will never try to switch back on the original thread.
+            // We're only ever switching once on the original context, only to release the object reference that is passed as
+            // state. There is no way for that to possibly switch back on the starting thread. As such, using a thread static
+            // field to pass the state to the target context (we need to store it somewhere on the managed heap) is fine.
             fixed (object* statePtr = &CallbackData.PerThreadObject)
             {
                 CallbackData callbackData;
