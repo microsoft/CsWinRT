@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -270,13 +271,19 @@ ActionToFunction(s)(2, 3);
 
 var intToListDict = instance.GetIntToListDictionary();
 intToListDict.Add(2, new List<EnumValue> { EnumValue.One, EnumValue.Two });
-if (intToListDict.Count != 2 ||
+intToListDict[4] = new Collection<EnumValue> { EnumValue.Two };
+if (intToListDict.Count != 3 ||
     intToListDict[1].First() != EnumValue.One)
 {
     return 101;
 }
 
 if (intToListDict[2].Count != 2 || intToListDict[2].First() != EnumValue.One)
+{
+    return 101;
+}
+
+if (intToListDict[4].Count != 1 || intToListDict[4].First() != EnumValue.Two)
 {
     return 101;
 }
