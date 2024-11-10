@@ -5484,13 +5484,15 @@ static void set_%Fallback(IObjectReference _genericObj, % value)
         if (writeEnsureRcwMethodsInitialized)
         {
             w.write(R"(
+[MethodImpl(MethodImplOptions.AggressiveInlining)]
 internal static unsafe void _EnsureRcwMethodsInitialized()
 {
-if (!RuntimeFeature.IsDynamicCodeCompiled)
+if (RuntimeFeature.IsDynamicCodeCompiled)
 {
+return;
+}
 if (!_RcwHelperInitialized)
 {
-[MethodImpl(MethodImplOptions.NoInlining)]
 static void ThrowNotInitialized()
 {
 throw new NotImplementedException(
@@ -5499,7 +5501,6 @@ $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this inte
 }
 
 ThrowNotInitialized();
-}
 }
 }
 )",
