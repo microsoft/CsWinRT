@@ -268,6 +268,19 @@ if (sum != 3)
 Action<int, int> s = (a, b) => { _ = a + b; };
 ActionToFunction(s)(2, 3);
 
+var intToListDict = instance.GetIntToListDictionary();
+intToListDict.Add(2, new List<EnumValue> { EnumValue.One, EnumValue.Two });
+if (intToListDict.Count != 2 ||
+    intToListDict[1].First() != EnumValue.One)
+{
+    return 101;
+}
+
+if (intToListDict[2].Count != 2 || intToListDict[2].First() != EnumValue.One)
+{
+    return 101;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
