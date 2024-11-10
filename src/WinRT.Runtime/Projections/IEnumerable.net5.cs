@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -44,22 +45,25 @@ namespace ABI.Windows.Foundation.Collections
         internal volatile unsafe static delegate*<IObjectReference, IEnumerator<T>> _First;
         internal volatile static bool _RcwHelperInitialized;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static unsafe void EnsureInitialized()
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
             {
-                if (!_RcwHelperInitialized)
-                {
-                    [MethodImpl(MethodImplOptions.NoInlining)]
-                    static void ThrowNotInitialized()
-                    {
-                        throw new NotImplementedException(
-                            $"Type '{typeof(global::System.Collections.Generic.IEnumerable<T>)}' was called without initializing the RCW methods using 'IEnumerableMethods.InitRcwHelper'. " +
-                            $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
-                    }
+                return;
+            }
 
-                    ThrowNotInitialized();
+            if (!_RcwHelperInitialized)
+            {
+                [DoesNotReturn]
+                static void ThrowNotInitialized()
+                {
+                    throw new NotImplementedException(
+                        $"Type '{typeof(global::System.Collections.Generic.IEnumerable<T>)}' was called without initializing the RCW methods using 'IEnumerableMethods.InitRcwHelper'. " +
+                        $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
                 }
+
+                ThrowNotInitialized();
             }
         }
 
@@ -490,22 +494,25 @@ namespace ABI.System.Collections.Generic
         internal volatile unsafe static delegate*<IObjectReference, T[], uint> _GetMany;
         internal volatile static bool _RcwHelperInitialized;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static unsafe void EnsureInitialized()
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
             {
-                if (!_RcwHelperInitialized)
-                {
-                    [MethodImpl(MethodImplOptions.NoInlining)]
-                    static void ThrowNotInitialized()
-                    {
-                        throw new NotImplementedException(
-                            $"'{typeof(global::System.Collections.Generic.IEnumerator<T>)}' was called without initializing the RCW methods using 'IEnumeratorMethods.InitRcwHelper'. " +
-                            $"If using IDynamicInterfaceCastable support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
-                    }
+                return;
+            }
 
-                    ThrowNotInitialized();
+            if (!_RcwHelperInitialized)
+            {
+                [DoesNotReturn]
+                static void ThrowNotInitialized()
+                {
+                    throw new NotImplementedException(
+                        $"'{typeof(global::System.Collections.Generic.IEnumerator<T>)}' was called without initializing the RCW methods using 'IEnumeratorMethods.InitRcwHelper'. " +
+                        $"If using IDynamicInterfaceCastable support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
                 }
+
+                ThrowNotInitialized();
             }
         }
 

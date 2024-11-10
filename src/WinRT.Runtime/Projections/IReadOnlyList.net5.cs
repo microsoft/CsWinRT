@@ -128,22 +128,21 @@ namespace ABI.Windows.Foundation.Collections
                         initRcwHelperFallback();
                     }
                 }
+
+                return;
             }
 
-            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            if (!_RcwHelperInitialized)
             {
-                if (!_RcwHelperInitialized)
+                [DoesNotReturn]
+                static void ThrowNotInitialized()
                 {
-                    [MethodImpl(MethodImplOptions.NoInlining)]
-                    static void ThrowNotInitialized()
-                    {
-                        throw new NotImplementedException(
-                            $"Type '{typeof(global::System.Collections.Generic.IReadOnlyList<T>)}' was called without initializing the RCW methods using 'IReadOnlyListMethods.InitRcwHelper'. " +
-                            $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
-                    }
-
-                    ThrowNotInitialized();
+                    throw new NotImplementedException(
+                        $"Type '{typeof(global::System.Collections.Generic.IReadOnlyList<T>)}' was called without initializing the RCW methods using 'IReadOnlyListMethods.InitRcwHelper'. " +
+                        $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
                 }
+
+                ThrowNotInitialized();
             }
         }
 

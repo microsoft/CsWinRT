@@ -997,22 +997,25 @@ namespace ABI.System.Collections.Generic
         internal volatile static bool _RcwHelperInitialized;
         internal volatile unsafe static delegate*<bool> _EnsureEnumerableInitialized;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static unsafe void EnsureInitialized()
         {
-            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            if (RuntimeFeature.IsDynamicCodeCompiled)
             {
-                if (!_RcwHelperInitialized)
-                {
-                    [MethodImpl(MethodImplOptions.NoInlining)]
-                    static void ThrowNotInitialized()
-                    {
-                        throw new NotImplementedException(
-                            $"Type '{typeof(global::System.Collections.Generic.IList<T>)}' was called without initializing the RCW methods using 'IListMethods.InitRcwHelper'. " +
-                            $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
-                    }
+                return;
+            }
 
-                    ThrowNotInitialized();
+            if (!_RcwHelperInitialized)
+            {
+                [DoesNotReturn]
+                static void ThrowNotInitialized()
+                {
+                    throw new NotImplementedException(
+                        $"Type '{typeof(global::System.Collections.Generic.IList<T>)}' was called without initializing the RCW methods using 'IListMethods.InitRcwHelper'. " +
+                        $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
                 }
+
+                ThrowNotInitialized();
             }
         }
 

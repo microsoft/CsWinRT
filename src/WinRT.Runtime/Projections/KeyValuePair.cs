@@ -57,12 +57,12 @@ namespace ABI.System.Collections.Generic
             {
                 if (!_RcwHelperInitialized)
                 {
-                    [MethodImpl(MethodImplOptions.NoInlining)]
+                    [DoesNotReturn]
                     static void ThrowNotInitialized()
                     {
                         throw new NotImplementedException(
-                            $"'{typeof(global::System.Collections.Generic.KeyValuePair<K, V>)}' was called without initializing the RCW methods using 'KeyValuePairMethods.InitRcwHelper'. " +
-                            $"Ensure InitRcwHelper is called.");
+                            $"Type '{typeof(global::System.Collections.Generic.KeyValuePair<K, V>)}' was called without initializing the RCW methods using 'KeyValuePairMethods.InitRcwHelper'. " +
+                            $"Ensure the 'InitRcwHelper' method is called.");
                     }
 
                     ThrowNotInitialized();
