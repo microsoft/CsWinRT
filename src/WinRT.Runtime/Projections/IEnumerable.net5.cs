@@ -54,8 +54,8 @@ namespace ABI.Windows.Foundation.Collections
                     static void ThrowNotInitialized()
                     {
                         throw new NotImplementedException(
-                            $"'{typeof(global::System.Collections.Generic.IEnumerable<T>)}' was called without initializing the RCW methods using 'IEnumerableMethods.InitRcwHelper'. " +
-                            $"If using IDynamicCastableInterface support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
+                            $"Type '{typeof(global::System.Collections.Generic.IEnumerable<T>)}' was called without initializing the RCW methods using 'IEnumerableMethods.InitRcwHelper'. " +
+                            $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
                     }
 
                     ThrowNotInitialized();
@@ -501,7 +501,7 @@ namespace ABI.System.Collections.Generic
                     {
                         throw new NotImplementedException(
                             $"'{typeof(global::System.Collections.Generic.IEnumerator<T>)}' was called without initializing the RCW methods using 'IEnumeratorMethods.InitRcwHelper'. " +
-                            $"If using IDynamicCastableInterface support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
+                            $"If using IDynamicInterfaceCastable support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
                     }
 
                     ThrowNotInitialized();

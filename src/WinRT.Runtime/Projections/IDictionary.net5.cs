@@ -178,8 +178,8 @@ namespace ABI.Windows.Foundation.Collections
                     static void ThrowNotInitialized()
                     {
                         throw new NotImplementedException(
-                            $"'{typeof(global::System.Collections.Generic.IDictionary<K, V>)}' was called without initializing the RCW methods using 'IDictionaryMethods.InitRcwHelper'. " +
-                            $"If using IDynamicCastableInterface support to do a dynamic cast to this interface, ensure InitRcwHelper is called.");
+                            $"Type '{typeof(global::System.Collections.Generic.IDictionary<K, V>)}' was called without initializing the RCW methods using 'IDictionaryMethods.InitRcwHelper'. " +
+                            $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
                     }
 
                     ThrowNotInitialized();
