@@ -368,16 +368,22 @@ namespace Generator
             return compilation is CSharpCompilation csharpCompilation && csharpCompilation.Options.AllowUnsafe;
         }
 
-        // Whether the class itself is a WinRT projected class.
-        // This is similar to whether it is a WinRT type, but custom type mappings
-        // are excluded given those are C# implemented classes.
-        public static Func<ISymbol, bool> IsWinRTClass(Compilation compilation)
+        // Returns whether it is a WinRT class or interface.
+        // If the bool parameter is true, then custom mapped interfaces are also considered.
+        // This function is similar to whether it is a WinRT type, but custom type mapped
+        // classes are excluded given those are C# implemented classes such as string.
+        public static Func<ISymbol, bool, bool> IsWinRTClassOrInterface(Compilation compilation, Func<ISymbol, TypeMapper, bool> isWinRTType, TypeMapper mapper)
         {
             var winrtRuntimeTypeAttribute = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
-            return IsWinRTClassHelper;
+            return IsWinRTClassOrInterfaceHelper;
 
-            bool IsWinRTClassHelper(ISymbol type)
+            bool IsWinRTClassOrInterfaceHelper(ISymbol type, bool includeMappedInterfaces)
             {
+                if (type is ITypeSymbol typeSymbol && typeSymbol.TypeKind == TypeKind.Interface)
+                {
+                    return isWinRTType(type, mapper);
+                }
+
                 return HasAttributeWithType(type, winrtRuntimeTypeAttribute);
             }
         }
@@ -668,14 +674,14 @@ namespace Generator
             return false;
         }
 
-        public static Func<ISymbol, TypeMapper, bool> IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(Compilation compilation)
+        public static Func<ISymbol, TypeMapper, bool> IsWinRTType(Compilation compilation, bool isComponentProject)
         {
             var winrtTypeAttribute = compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
             return IsWinRTTypeHelper;
 
             bool IsWinRTTypeHelper(ISymbol type, TypeMapper typeMapper)
             {
-                return IsWinRTType(type, winrtTypeAttribute, typeMapper, true, compilation.Assembly);
+                return IsWinRTType(type, winrtTypeAttribute, typeMapper, isComponentProject, compilation.Assembly);
             }
         }
 

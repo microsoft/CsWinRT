@@ -1097,6 +1097,12 @@ namespace winrt::TestComponentCSharp::implementation
             { L"String2", ComposedNonBlittableStruct{ { 2 }, { L"String2" }, { true, false, true, false }, { 2 } } }
         });
     }
+
+    IMap<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>> Class::GetIntToListDictionary()
+    {
+        auto vector = winrt::single_threaded_vector(std::vector { TestComponentCSharp::EnumValue::One });
+        return single_threaded_map<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>>(std::map<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>>{ {1, vector}});
+    }
     
     struct ComposedBlittableStructComparer
     {
