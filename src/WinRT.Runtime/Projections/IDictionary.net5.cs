@@ -168,13 +168,37 @@ namespace ABI.Windows.Foundation.Collections
         internal volatile unsafe static delegate*<IObjectReference, K, void> _Remove;
         internal volatile static bool _RcwHelperInitialized;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static unsafe void EnsureInitialized()
+        {
+            if (RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                return;
+            }
+
+            if (!_RcwHelperInitialized)
+            {
+                [DoesNotReturn]
+                static void ThrowNotInitialized()
+                {
+                    throw new NotImplementedException(
+                        $"Type '{typeof(global::System.Collections.Generic.IDictionary<K, V>)}' was called without initializing the RCW methods using 'IDictionaryMethods.InitRcwHelper'. " +
+                        $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
+                }
+
+                ThrowNotInitialized();
+            }
+        }
+
         public static unsafe V Lookup(IObjectReference obj, K key)
         {
+            EnsureInitialized();
             return _Lookup(obj, key);
         }
 
         public static unsafe bool HasKey(IObjectReference obj, K key)
         {
+            EnsureInitialized();
             return _HasKey(obj, key);
         }
 
@@ -184,6 +208,7 @@ namespace ABI.Windows.Foundation.Collections
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
+                EnsureInitialized();
                 return _GetView(obj);
             }
 
@@ -210,11 +235,13 @@ namespace ABI.Windows.Foundation.Collections
 
         public static unsafe bool Insert(IObjectReference obj, K key, V value)
         {
+            EnsureInitialized();
             return _Insert(obj, key, value);
         }
 
         public static unsafe void Remove(IObjectReference obj, K key)
         {
+            EnsureInitialized();
             _Remove(obj, key);
         }
 
