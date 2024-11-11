@@ -98,8 +98,6 @@ namespace Generator
 
                 if (cswinrtProcess.ExitCode != 0)
                 {
-                    WinRTComponentScanner winrtScanner = new(context, assemblyName);
-
                     var diagnosticDescriptor = WinRTRules.SourceGeneratorFailed;
                     context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, null, error));
                     throw new Win32Exception(cswinrtProcess.ExitCode, error);
