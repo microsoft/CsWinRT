@@ -213,7 +213,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 else
                 {
                     emittedDynamicDependency = true;
-                    builder.Append("        [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(");
+                    builder.Append("        [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.Interfaces, typeof(");
                     builder.Append(projectedTypeName.TypeName);
                     builder.AppendLine("))]");
                 }
