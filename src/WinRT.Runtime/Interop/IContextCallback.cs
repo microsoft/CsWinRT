@@ -62,10 +62,8 @@ namespace ABI.WinRT.Interop
                 }
             }
 
-            ComCallData comCallData;
-            comCallData.dwDispid = 0;
-            comCallData.dwReserved = 0;
-
+            // Store the state object in the thread static to pass to the callback.
+            // We don't need a volatile write here, we have a memory barrier below.
             CallbackData.PerThreadObject = state;
 
             int hresult;
@@ -80,6 +78,11 @@ namespace ABI.WinRT.Interop
                 CallbackData callbackData;
                 callbackData.Callback = callback;
                 callbackData.StatePtr = statePtr;
+
+                ComCallData comCallData;
+                comCallData.dwDispid = 0;
+                comCallData.dwReserved = 0;
+                comCallData.pUserDefined = (IntPtr)(void*)&callbackData;
 
                 Guid iid = IID.IID_ICallbackWithNoReentrancyToApplicationSTA;
 
