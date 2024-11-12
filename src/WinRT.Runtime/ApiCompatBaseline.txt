@@ -43,4 +43,7 @@ MembersMustExist : Member 'public ABI.System.Collections.Generic.KeyValuePair<K,
 MembersMustExist : Member 'public ABI.WinRT.Interop.IActivationFactory ABI.WinRT.Interop.IActivationFactory.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public WinRT.IInspectable WinRT.IInspectable.op_Implicit(WinRT.IObjectReference)' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public WinRT.IInspectable WinRT.IInspectable.op_Implicit(WinRT.ObjectReference<WinRT.IInspectable.Vftbl>)' does not exist in the implementation but it does exist in the contract.
-Total Issues: 44
+MembersMustExist : Member 'protected void WinRT.IObjectReference.ThrowIfDisposed()' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef()' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef(System.Boolean)' does not exist in the implementation but it does exist in the contract.
+Total Issues: 47

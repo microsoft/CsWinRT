@@ -21,23 +21,37 @@ namespace WinRT
 #else
     public
 #endif
-    abstract class IObjectReference : IDisposable
+    abstract partial class IObjectReference : IDisposable
     {
-        // Flags for the '_disposedFlags' field, see notes in the Dispose() method below
-        private const int NOT_DISPOSED = 0;
-        private const int DISPOSE_PENDING = 1;
-        private const int DISPOSE_COMPLETED = 2;
-
         private readonly IntPtr _thisPtr;
         private IntPtr _referenceTrackerPtr;
-        private int _disposedFlags;
 
+        /// <summary>
+        /// A mask that indicates the state of the current object.
+        /// The mask uses the following schema:
+        /// <list type="bullet">
+        ///     <item>[0, 30]: the number of existing reference tracking leases.</item>
+        ///     <item>[31]: whether or not <see cref="IDisposable.Dispose"/> has been called.</item>
+        /// </list>
+        /// </summary>
+        /// <remarks>
+        /// Because this counts the additional "managed" references that are alive, the starting
+        /// value is 0. That is, there is no additional reference count to increment upon object
+        /// creation. This count just indicates how many active callers exist across all stacks.
+        /// </remarks>
+        private volatile int _referenceTrackingMask;
+
+        /// <remarks>
+        /// Do <b>not</b> use this API. <see cref="ThisPtr"/> is not safe, and will be removed in a
+        /// future release. Use <see cref="GetThisPtr"/>, or use the safe-handle pattern instead.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public IntPtr ThisPtr
         {
             get
             {
-                ThrowIfDisposed();
-                return GetThisPtrForCurrentContext();
+                ThrowIfDisposedUnsafe();
+                return GetThisPtrUnsafe();
             }
         }
 
@@ -49,15 +63,6 @@ namespace WinRT
             {
                 var contextToken = GetContextToken();
                 return contextToken == IntPtr.Zero || contextToken == Context.GetContextToken();
-            }
-        }
-
-        private protected IntPtr ThisPtrFromOriginalContext
-        {
-            get
-            {
-                ThrowIfDisposed();
-                return _thisPtr;
             }
         }
 
@@ -93,17 +98,8 @@ namespace WinRT
                 if (_referenceTrackerPtr != IntPtr.Zero)
                 {
                     Marshal.AddRef(_referenceTrackerPtr);
-                    AddRefFromTrackerSource();
+                    NativeAddRefFromTrackerSourceUnsafe();
                 }
-            }
-        }
-
-        internal unsafe IReferenceTrackerVftbl ReferenceTracker
-        {
-            get
-            {
-                ThrowIfDisposed();
-                return **(IReferenceTrackerVftbl**)ReferenceTrackerPtr;
             }
         }
 
@@ -111,17 +107,8 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
+                ThrowIfDisposedUnsafe();
                 return **(IUnknownVftbl**)ThisPtr;
-            }
-        }
-
-        private protected unsafe IUnknownVftbl VftblIUnknownFromOriginalContext
-        {
-            get
-            {
-                ThrowIfDisposed();
-                return **(IUnknownVftbl**)ThisPtrFromOriginalContext;
             }
         }
 
@@ -142,20 +129,7 @@ namespace WinRT
             // pressure rather than tracking all the IObjectReferences that are connected
             // to the same object and only releasing the memory pressure once all of them
             // have been finalized.
-#if NET
-            // Disable on AOT for now until dotnet runtime #104583 is addressed to avoid making the issue happen more often.
-            if (RuntimeFeature.IsDynamicCodeCompiled)
-            {
-                GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-            }
-#else
             GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-#endif
-        }
-
-        ~IObjectReference()
-        {
-            Dispose();
         }
 
 #if NET
@@ -225,7 +199,7 @@ namespace WinRT
 
         public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
-            AddRef(true);
+            NativeAddRefUnsafe(addRefFromTrackerSource: true);
             var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr, IID.IID_IUnknown);
             objRef.IsAggregated = IsAggregated;
             objRef.PreventReleaseOnDispose = IsAggregated;
@@ -241,7 +215,7 @@ namespace WinRT
         public virtual unsafe int TryAs(Guid iid, out IntPtr ppv)
         {
             ppv = IntPtr.Zero;
-            ThrowIfDisposed();
+            ThrowIfDisposedUnsafe();
             IntPtr thatPtr = IntPtr.Zero;
             int hr = Marshal.QueryInterface(ThisPtr, ref iid, out thatPtr);
             if (hr >= 0)
@@ -259,7 +233,7 @@ namespace WinRT
 #endif
         public T AsType<T>()
         {
-            ThrowIfDisposed();
+            ThrowIfDisposedUnsafe();
 
 #if NET
             // Same logic as in 'ComWrappersSupport.CreateFactoryForImplementationType', see notes there
@@ -313,124 +287,24 @@ namespace WinRT
             throw new InvalidOperationException($"Target type '{typeof(T)}' is not a projected type.");
         }
 
+        /// <remarks>
+        /// Do <b>not</b> use this API. <see cref="GetRef"/> is not safe, and will be removed in a
+        /// future release. Use <see cref="GetThisPtr"/>, or use the safe-handle pattern instead.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public IntPtr GetRef()
         {
-            ThrowIfDisposed();
-            AddRef(false);
+            ThrowIfDisposedUnsafe();
+            NativeAddRefUnsafe(addRefFromTrackerSource: false);
             return ThisPtr;
         }
 
-        /// <summary>
-        /// Throws an <see cref="ObjectDisposedException"/> if <see cref="Dispose"/> has already been called on the current instance.
-        /// </summary>
-        /// <remarks>
-        /// Note that calling this method does not protect callers against concurrent threads calling <see cref="Dispose"/> on the
-        /// same instance, as that behavior is explicitly undefined. Similarly, callers using this to then access the underlying
-        /// pointers should also make sure to keep the current instance alive until they're done using the pointer (unless they're
-        /// also incrementing it via <c>AddRef</c> in some way), or the GC could concurrently collect the instance and cause the
-        /// same problem (ie. the underlying pointer being in use becoming invalid right after retrieving it from the object).
-        /// </remarks>
-        /// <exception cref="ObjectDisposedException">Thrown if the current instance is disposed.</exception>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void ThrowIfDisposed()
-        {
-            if (Volatile.Read(ref _disposedFlags) == DISPOSE_COMPLETED)
-            {
-                ThrowObjectDisposedException();
-            }
-
-            static void ThrowObjectDisposedException()
-            {
-                throw new ObjectDisposedException("ObjectReference");
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-
-            // We swap the disposed flag and only dispose the first time. This is safe with respect to
-            // different threads concurrently trying to dispose the same object, as only the first one
-            // will actually dispose it, and the others will just do nothing.
-            //
-            // It is not safe when combined with ThrowIfDisposed(), as the following scenario is possible:
-            //   - Thread A calls ProjectedType.Foo()
-            //   - Thread A calls ThisPtr, the dispose check passes and it gets the IntPtr value (not incremented)
-            //   - Thread B calls Dispose(), which releases the object
-            //   - Thread A now uses that IntPtr to invoke some function pointer
-            //   - Thread A goes ka-boom 💥
-            //
-            // However, this is by design, as the ObjectReference owns the 'ThisPtr' property, and disposing it while it
-            // is still in use can lead to all kinds of things going wrong. This is conceptually the same as calling
-            // SafeHandle.DangerousGetHandle(). Furthermore, the same exact behavior was already possible with an actual
-            // lock object guarding all the logic within the Dispose() method. The only difference is that simply using
-            // a flag this way avoids one object allocation per ObjectReference instance, and also allows making the size
-            // of the whole object smaller by sizeof(object), when taking into account padding.
-            //
-            // Additionally, note that the '_disposedFlags' field has 3 different states:
-            //   - NOT_DISPOSED: the initial state, when the object is alive
-            //   - DISPOSE_PENDING: indicates that a thread is currently executing the Dispose() method and got past the
-            //     first check, and is in the process of releasing the native resources. This state is checked by the
-            //     ThrowIfDisposed() method above, and still treated as if the object can be used normally. This is
-            //     necessary, because the dispose logic still has to access the 'ThisPtr' property and others in order
-            //     to perform the various Release() calls on the native objects being used. If the state was immediately
-            //     set to disposed, that method would just start throwing immediately, and this logic would not work.
-            //   - DISPOSE_COMPLETED: set when all the Dispose() logic has been completed and the object should not be
-            //     used at all anymore. When this is set, the ThrowIfDisposed() method will start throwing exceptions.
-            if (Interlocked.CompareExchange(ref _disposedFlags, DISPOSE_PENDING, NOT_DISPOSED) == NOT_DISPOSED)
-            {
-#if DEBUG
-                if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
-                {
-                    System.Diagnostics.Debugger.Break();
-                }
-#endif
-
-                if (!PreventReleaseOnDispose)
-                {
-                    Release();
-                }
-
-                DisposeTrackerSource();
-#if NET
-                // Disable on AOT for now until dotnet runtime #104583 is addressed to avoid making the issue happen more often.
-                if (RuntimeFeature.IsDynamicCodeCompiled)
-                {
-                    GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-                }
-#else
-                GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-#endif
-
-                Volatile.Write(ref _disposedFlags, DISPOSE_COMPLETED);
-            }
-        }
-
-        protected virtual unsafe void AddRef(bool refFromTrackerSource)
-        {
-            Marshal.AddRef(ThisPtr);
-            if (refFromTrackerSource)
-            {
-                AddRefFromTrackerSource();
-            }
-        }
-
-        protected virtual unsafe void AddRef()
-        {
-            AddRef(true);
-        }
-
+        /// <inheritdoc cref="NativeReleaseUnsafe"/>
+        [Obsolete("This method is not safe. Use 'Dispose()' instead.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         protected virtual unsafe void Release()
         {
-            ReleaseFromTrackerSource();
-            Marshal.Release(ThisPtr);
-        }
-
-        private protected unsafe void ReleaseWithoutContext()
-        {
-            ReleaseFromTrackerSource();
-            Marshal.Release(ThisPtrFromOriginalContext);
+            NativeReleaseUnsafe();
         }
 
         internal unsafe bool IsReferenceToManagedObject
@@ -439,39 +313,6 @@ namespace WinRT
             {
                 return VftblIUnknown.Equals(IUnknownVftbl.AbiToProjectionVftbl);
             }
-        }
-
-        internal unsafe void AddRefFromTrackerSource()
-        {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
-            {
-                ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
-            }
-        }
-
-        internal unsafe void ReleaseFromTrackerSource()
-        {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
-            {
-                ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
-            }
-        }
-
-        private unsafe void DisposeTrackerSource()
-        {
-            if (ReferenceTrackerPtr != IntPtr.Zero)
-            {
-                if (!PreventReleaseFromTrackerSourceOnDispose)
-                {
-                    ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
-                }
-                Marshal.Release(ReferenceTrackerPtr);
-            }
-        }
-
-        private protected virtual IntPtr GetThisPtrForCurrentContext()
-        {
-            return ThisPtrFromOriginalContext;
         }
 
         private protected virtual IntPtr GetContextToken()
@@ -493,7 +334,7 @@ namespace WinRT
             {
                 Marshal.Release(thatPtr);
             }
-            AddRefFromTrackerSource();
+            NativeAddRefFromTrackerSourceUnsafe();
 
             return new ObjectReferenceValue(thatPtr, ReferenceTrackerPtr, IsAggregated, this);
         }
@@ -511,7 +352,7 @@ namespace WinRT
         {
             get
             {
-                ThrowIfDisposed();
+                ThrowIfDisposedUnsafe();
                 return GetVftblForCurrentContext();
             }
         }
@@ -717,7 +558,7 @@ namespace WinRT
                     Marshal.Release(thatPtr);
                 }
 
-                sourceRef.AddRefFromTrackerSource();
+                sourceRef.NativeAddRefFromTrackerSourceUnsafe();
 
                 objRef = Attach(ref thatPtr, iid);
                 objRef.IsAggregated = sourceRef.IsAggregated;
@@ -826,15 +667,15 @@ namespace WinRT
             _iid = iid;
         }
 
-        private protected override IntPtr GetThisPtrForCurrentContext()
+        public override IntPtr GetThisPtrUnsafe()
         {
             ObjectReference<T> cachedObjRef = GetCurrentContext();
             if (cachedObjRef == null)
             {
-                return base.GetThisPtrForCurrentContext();
+                return base.GetThisPtrUnsafe();
             }
 
-            return cachedObjRef.ThisPtr;
+            return cachedObjRef.GetThisPtrUnsafe();
         }
 
         private protected override IntPtr GetContextToken()
@@ -930,7 +771,7 @@ namespace WinRT
             }
         }
 
-        protected override unsafe void Release()
+        private protected override unsafe void NativeReleaseUnsafe()
         {
             // Don't initialize cached context by calling through property if it is already null.
             if (__cachedContext != null)
@@ -956,14 +797,14 @@ namespace WinRT
             {
                 ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
 
-                @this.ReleaseFromBase();
+                @this.BaseNativeReleaseUnsafe();
             }
 
             static void ReleaseWithoutContext(object state)
             {
                 ObjectReferenceWithContext<T> @this = Unsafe.As<ObjectReferenceWithContext<T>>(state);
 
-                @this.ReleaseWithoutContext();
+                @this.NativeReleaseWithoutContextUnsafe();
             }
         }
 
@@ -971,14 +812,14 @@ namespace WinRT
         // We can't just do 'param.base.Release()' (or something like that), so the only way to specifically
         // invoke the base implementation of an overridden method on that object is to go through a helper
         // instance method invoked on it that just calls the base implementation of the method we want.
-        private void ReleaseFromBase()
+        private void BaseNativeReleaseUnsafe()
         {
-            base.Release();
+            base.NativeReleaseUnsafe();
         }
 
         public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
-            AddRef(true);
+            NativeAddRefUnsafe(addRefFromTrackerSource: true);
             var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken(), IID.IID_IUnknown)
             {
                 IsAggregated = IsAggregated,
@@ -1001,7 +842,7 @@ namespace WinRT
                     Marshal.Release(thatPtr);
                 }
 
-                sourceRef.AddRefFromTrackerSource();
+                sourceRef.NativeAddRefFromTrackerSourceUnsafe();
 
                 objRef = new ObjectReferenceWithContext<T>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
                 {
