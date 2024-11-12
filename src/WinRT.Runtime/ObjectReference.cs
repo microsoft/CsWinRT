@@ -41,6 +41,11 @@ namespace WinRT
         /// </remarks>
         private volatile int _referenceTrackingMask;
 
+        /// <remarks>
+        /// Do <b>not</b> use this API. <see cref="ThisPtr"/> is not safe, and will be removed in a
+        /// future release. Use <see cref="GetThisPtr"/>, or use the safe-handle pattern instead.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public IntPtr ThisPtr
         {
             get
@@ -282,7 +287,10 @@ namespace WinRT
             throw new InvalidOperationException($"Target type '{typeof(T)}' is not a projected type.");
         }
 
-        [Obsolete("This method is not safe. Use 'GetThisPtr()' instead.")]
+        /// <remarks>
+        /// Do <b>not</b> use this API. <see cref="GetRef"/> is not safe, and will be removed in a
+        /// future release. Use <see cref="GetThisPtr"/>, or use the safe-handle pattern instead.
+        /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public IntPtr GetRef()
         {
