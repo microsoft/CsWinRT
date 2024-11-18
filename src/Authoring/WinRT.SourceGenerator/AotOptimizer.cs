@@ -223,7 +223,7 @@ namespace Generator
                     }
 
                     // Avoid cases where the type to be cast from is unknown, or can be done purely through static metadata.
-                    // That is, the type to be cast to inherits from the type of the expression to be cast,
+                    // That is, the type of the expression inherits from the type to be cast to,
                     // as we know the cast will always work.
                     var sourceType = context.SemanticModel.GetTypeInfo(expression).Type;
                     if (sourceType == null || GeneratorHelper.IsDerivedFromType(sourceType, namedTypeSymbol))
