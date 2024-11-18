@@ -167,6 +167,115 @@ namespace Generator
                 .Collect()
                 .Combine(properties);
             context.RegisterImplementationSourceOutput(bindableCustomPropertyAttributes, GenerateBindableCustomProperties);
+
+            // Generate type metadata for casts to WinRT runtime classes.
+            var castsToWinRTClasses = context.SyntaxProvider.CreateSyntaxProvider(
+                static (node, _) => node.IsKind(SyntaxKind.CastExpression) || node.IsKind(SyntaxKind.AsExpression) || node.IsKind(SyntaxKind.IsExpression) || node.IsKind(SyntaxKind.IsPatternExpression),
+                static (context, _) =>
+                {
+                    TypeSyntax type = null;
+                    ExpressionSyntax expression = null;
+
+                    // Try to retrieve the type being cast to, and the expression to be cast.
+                    if (context.Node is CastExpressionSyntax castExpression)
+                    {
+                        type = castExpression.Type;
+                        expression = castExpression.Expression;
+                    }
+                    else if (context.Node is IsPatternExpressionSyntax patternExpression)
+                    {
+                        expression = patternExpression.Expression;
+                        if (patternExpression.Pattern is DeclarationPatternSyntax declarationPattern)
+                        {
+                            type = declarationPattern.Type;
+                        }
+                        else if (patternExpression.Pattern is RecursivePatternSyntax recursivePattern)
+                        {
+                            type = recursivePattern.Type;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else if (context.Node is BinaryExpressionSyntax binaryExpression)
+                    {
+                        type = binaryExpression.Right as TypeSyntax;
+                        expression = binaryExpression.Left;
+                    }
+
+                    if (type == null)
+                    {
+                        return null;
+                    }
+
+                    INamedTypeSymbol namedTypeSymbol = context.SemanticModel.GetSymbolInfo(type).Symbol as INamedTypeSymbol;
+                    if (namedTypeSymbol == null)
+                    {
+                        return null;
+                    }
+
+                    // Only generate if the type being cast to is a WinRT runtime class.
+                    var winrtAttributeType = context.SemanticModel.Compilation.GetTypeByMetadataName("WinRT.WindowsRuntimeTypeAttribute");
+                    if (namedTypeSymbol.TypeKind != TypeKind.Class || !GeneratorHelper.HasAttributeWithType(namedTypeSymbol, winrtAttributeType))
+                    {
+                        return null;
+                    }
+
+                    // Avoid cases where the type to be cast from is unknown, or can be done purely through static metadata.
+                    // That is, the type to be cast to inherits from the type of the expression to be cast,
+                    // as we know the cast will always work.
+                    var sourceType = context.SemanticModel.GetTypeInfo(expression).Type;
+                    if (sourceType == null || GeneratorHelper.IsDerivedFromType(sourceType, namedTypeSymbol))
+                    {
+                        return null;
+                    }
+
+                    // Return the fully qualified name of the type to be cast to.
+                    return namedTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                })
+                .Where(static x => x is not null)
+                .Collect()
+                .Select(static (x, _) => x.Distinct())
+                .Combine(assemblyName);
+
+            context.RegisterImplementationSourceOutput(castsToWinRTClasses, (spc, typesAndAssemblyName) =>
+            {
+                if (typesAndAssemblyName.Left.Count() == 0)
+                {
+                    // Don't generate anything if there are no casts.
+                    return;
+                }
+
+                StringBuilder builder = new();
+                builder.AppendLine($$"""
+                    namespace WinRT.{{typesAndAssemblyName.Right}}CastSupport
+                    {
+                        internal static class CastSupport
+                        {
+                            [global::System.Runtime.CompilerServices.ModuleInitializer]
+                            internal static void InitializeCastSupport()
+                            {
+                    """);
+                foreach (string fullyQualifiedType in typesAndAssemblyName.Left)
+                {
+                    string typeofString = fullyQualifiedType.StartsWith("global::") ? fullyQualifiedType : "global::" + fullyQualifiedType;
+                    string runtimeClassName = fullyQualifiedType.StartsWith("global::") ? fullyQualifiedType[8..] : fullyQualifiedType;
+                    builder.Append("            global::WinRT.CastSupport.RegisterTypeName(\"");
+                    builder.Append(runtimeClassName);
+                    builder.Append("\", typeof(");
+                    builder.Append(typeofString);
+                    builder.AppendLine("));");
+                }
+
+                builder.AppendLine("""
+                            }
+                        }
+                    }
+                    """);
+
+                spc.AddSource("WinRTCastExtensions.g.cs", builder.ToString());
+            });
         }
 
         // Restrict to non-projected classes which can be instantiated

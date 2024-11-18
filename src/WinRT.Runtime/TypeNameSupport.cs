@@ -95,6 +95,11 @@ namespace WinRT
                 });
         }
 
+        public static void RegisterTypeName(string runtimeClassName, Type runtimeClass)
+        {
+            typeNameCache.TryAdd(runtimeClassName, runtimeClass);
+        }
+
         // Helper to get an exception if the input type is 'IReference<T>' when support for it is disabled
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Exception GetExceptionForUnsupportedIReferenceType(ReadOnlySpan<char> runtimeClassName)

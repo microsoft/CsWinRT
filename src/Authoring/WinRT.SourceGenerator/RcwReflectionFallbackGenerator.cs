@@ -118,7 +118,7 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 }
 
                 // Ignore attribute types (they're never instantiated like normal RCWs)
-                if (IsDerivedFromType(typeSymbol, attributeSymbol))
+                if (GeneratorHelper.IsDerivedFromType(typeSymbol, attributeSymbol))
                 {
                     continue;
                 }
@@ -262,27 +262,6 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
         }
 
         return Visit(assemblySymbol.GlobalNamespace);
-    }
-
-    /// <summary>
-    /// Checks whether a given type is derived from a specified type.
-    /// </summary>
-    /// <param name="typeSymbol">The input <see cref="ITypeSymbol"/> instance to check.</param>
-    /// <param name="baseTypeSymbol">The base type to look for.</param>
-    /// <returns>Whether <paramref name="typeSymbol"/> derives from <paramref name="baseTypeSymbol"/>.</returns>
-    private static bool IsDerivedFromType(ITypeSymbol typeSymbol, ITypeSymbol baseTypeSymbol)
-    {
-        for (ITypeSymbol? currentSymbol = typeSymbol.BaseType;
-             currentSymbol is { SpecialType: not SpecialType.System_Object };
-             currentSymbol = currentSymbol.BaseType)
-        {
-            if (SymbolEqualityComparer.Default.Equals(currentSymbol, baseTypeSymbol))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /// <summary>
