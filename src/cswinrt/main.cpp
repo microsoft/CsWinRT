@@ -34,7 +34,7 @@ namespace cswinrt
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
         { "addition_exclude", 0, option::no_max, "<prefix>", "One or more namespace prefixes to exclude from the projection additions" },
-        { "target", 0, 1, "<net8.0|net7.0|net6.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with .NET 6." },
+        { "target", 0, 1, "<net8.0|net7.0|net6.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with .NET 8." },
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "internal", 0, 0, {}, "Generates a private projection."},
@@ -97,6 +97,11 @@ Where <spec> is one or more of:
         if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net5.0") && !starts_with(target, "net6.0") && !starts_with(target, "net7.0") && !starts_with(target, "net8.0"))
         {
             throw usage_exception();
+        }
+        else if (target.empty())
+        {
+            // Default to .NET 8 if no explicit target is set
+            target = "net8.0";
         }
         settings.netstandard_compat = target == "netstandard2.0";
         settings.net7_0_or_greater = starts_with(target, "net7.0") || starts_with(target, "net8.0");
