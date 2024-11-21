@@ -86,8 +86,8 @@ if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
 if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking_compat_errors=false
 if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
 
-set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
-set cswinrt_aot_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
+set cswinrt_functional_tests=CastMetadata, JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
+set cswinrt_aot_functional_tests=CastMetadata, JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW
 
 if "%cswinrt_platform%" EQU "x86" set run_functional_tests=true
 if "%cswinrt_platform%" EQU "x64" (

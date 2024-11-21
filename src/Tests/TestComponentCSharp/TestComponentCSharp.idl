@@ -757,4 +757,19 @@ And this is another one"
             static Int32 StaticProperty { get; };
         }
     }
+
+    namespace CastMetadata
+    {
+        [default_interface]
+        runtimeclass Class
+        {
+            Class();
+        }
+
+		// Test for casting Object to a runtimeclass
+        static runtimeclass ClassFactory
+        {
+			static Object Create();
+        }
+    }
 }
