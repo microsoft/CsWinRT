@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <Platforms>x64;x86</Platforms>
-    <RuntimeIdentifiers>win10-x86;win10-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <!-- CsWinRT properties -->

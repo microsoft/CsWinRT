@@ -77,7 +77,7 @@ stages:
       displayName: Run Object Lifetime Tests
       condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
       inputs:
-        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net8.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
+        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net8.0-windows10.0.19041.0\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
 
 # Run Host Tests
