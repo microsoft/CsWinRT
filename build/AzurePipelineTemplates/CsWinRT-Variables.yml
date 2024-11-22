@@ -25,7 +25,7 @@ variables:
 - name: _RunGCStress
   value: $[coalesce(variables.RunGCStress, 'false')]
 - name: _DotNetRuntimeVersion
-  value: $[coalesce(variables.DotNetRuntimeVersion, '6.0.32')]  
+  value: $[coalesce(variables.DotNetRuntimeVersion, '8.0.303')]  
 - name: _WindowsSdkVersionSuffix
   value: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  
 - name: _PublishCsWinMD
