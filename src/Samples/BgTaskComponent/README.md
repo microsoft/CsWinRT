@@ -14,7 +14,7 @@ This sample includes the following projects:
 
 ## Prerequisites
 
-* [.NET 6](https://dotnet.microsoft.com/download/dotnet/6.0)
+* [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0)
 * Visual Studio 2022
 
 **Note**: This sample can be modified to target .NET 5 and Visual Studio 2019. This involves editing the `TargetFramework` properties to target `net5.0-windows10.0.19041.0`.
