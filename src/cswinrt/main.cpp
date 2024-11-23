@@ -104,7 +104,6 @@ Where <spec> is one or more of:
             target = "net8.0";
         }
         settings.netstandard_compat = target == "netstandard2.0";
-        settings.net7_0_or_greater = starts_with(target, "net7.0") || starts_with(target, "net8.0");
         settings.component = args.exists("component");
         settings.internal = args.exists("internal");
         settings.embedded = args.exists("embedded");
