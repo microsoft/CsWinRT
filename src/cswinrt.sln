@@ -174,7 +174,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonWinRT", "Tests\Functiona
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OptInMode", "Tests\FunctionalTests\OptInMode\OptInMode.csproj", "{FFC0B06E-78E7-44D5-8E67-8FE5744CE071}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGeneratorTest", "Tests\UnitTest\SourceGeneratorTest\SourceGeneratorTest.csproj", "{CB7C338F-3850-4744-A1EA-3DC47B703C4A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGeneratorTest", "Tests\SourceGeneratorTest\SourceGeneratorTest.csproj", "{CB7C338F-3850-4744-A1EA-3DC47B703C4A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
