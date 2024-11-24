@@ -11,4 +11,9 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.11.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" />
+    <ProjectReference Include="..\..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+  </ItemGroup>
 </Project>
