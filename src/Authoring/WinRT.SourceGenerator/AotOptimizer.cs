@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -1166,7 +1167,8 @@ namespace Generator
                     node is AssignmentExpressionSyntax ||
                     node is VariableDeclarationSyntax ||
                     node is PropertyDeclarationSyntax ||
-                    node is ReturnStatementSyntax;
+                    node is ReturnStatementSyntax ||
+                    node is CollectionExpressionSyntax;
         }
 
         private static EquatableArray<VtableAttribute> GetVtableAttributesToAddOnLookupTable(
@@ -1244,9 +1246,9 @@ namespace Generator
                     AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), fieldSymbol.Type);
                 }
             }
-            // Detect scenarios where the variable declaration is to a boxed or cast type during initialization.
             else if (context.Node is VariableDeclarationSyntax variableDeclaration)
             {
+                // Detect scenarios where the variable declaration is to a boxed or cast type during initialization.
                 var leftSymbol = context.SemanticModel.GetSymbolInfo(variableDeclaration.Type).Symbol;
                 if (leftSymbol is INamedTypeSymbol namedType)
                 {
@@ -1260,9 +1262,9 @@ namespace Generator
                     }
                 }
             }
-            // Detect scenarios where the property declaration has an initializer and is to a boxed or cast type during initialization.
             else if (context.Node is PropertyDeclarationSyntax propertyDeclaration)
             {
+                // Detect scenarios where the property declaration has an initializer and is to a boxed or cast type during initialization.
                 if (propertyDeclaration.Initializer != null)
                 {
                     var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
@@ -1282,10 +1284,10 @@ namespace Generator
                     }
                 }
             }
-            // Detect scenarios where the method or property being returned from is doing a box or cast of the type
-            // in the return statement.
-            else if (context.Node is ReturnStatementSyntax returnDeclaration && returnDeclaration.Expression is not null)
+            else if (context.Node is ReturnStatementSyntax { Expression: not null } returnDeclaration)
             {
+                // Detect scenarios where the method or property being returned from is doing a box or cast of the type
+                // in the return statement.
                 var returnSymbol = context.SemanticModel.GetTypeInfo(returnDeclaration.Expression);
                 var parent = returnDeclaration.Ancestors().OfType<MemberDeclarationSyntax>().FirstOrDefault();
                 if (parent is MethodDeclarationSyntax methodDeclaration)
@@ -1305,18 +1307,53 @@ namespace Generator
                     }
                 }
             }
+            else if (context.Node is CollectionExpressionSyntax collectionExpression)
+            {
+                // Detect collection expressions scenarios targeting interfaces, where we can rely on the concrete type
+                if (context.SemanticModel.GetOperation(collectionExpression) is ICollectionExpressionOperation operation &&
+                    operation.Type is INamedTypeSymbol { TypeKind: TypeKind.Interface, IsGenericType: true, IsUnboundGenericType: false, ConstructedFrom: not null } collectionType)
+                {
+                    // Case 1: empty collection expression targeting 'IEnumerable<T>', 'IReadOnlyCollection<T>', or 'IReadOnlyList<T>'.
+                    // In this case, we can rely on Roslyn using an empty array. So let's pretend we saw it, and gather it for lookups.
+                    if (operation.Elements.IsEmpty &&
+                        collectionType.ConstructedFrom.SpecialType is
+                        SpecialType.System_Collections_Generic_IEnumerable_T or
+                        SpecialType.System_Collections_Generic_IReadOnlyCollection_T or
+                        SpecialType.System_Collections_Generic_IReadOnlyList_T)
+                    {
+                        IArrayTypeSymbol arrayTypeSymbol = context.SemanticModel.Compilation.CreateArrayTypeSymbol(collectionType.TypeArguments[0], rank: 1);
+
+                        AddVtableAttributesForTypeDirect(arrayTypeSymbol, null, collectionType);
+                    }
+                    else if (collectionType.ConstructedFrom.SpecialType is SpecialType.System_Collections_Generic_ICollection_T or SpecialType.System_Collections_Generic_IList_T)
+                    {
+                        // Case 2: a collection expression (empty or not) targeting 'ICollection<T>' or 'IList<T>'.
+                        // In this case, Roslyn guarantees that 'List<T>' will be used, so we can gather that type.
+                        INamedTypeSymbol listOfTSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.Generic.List`1")!;
+                        INamedTypeSymbol constructedListSymbol = listOfTSymbol.Construct(collectionType.TypeArguments[0]);
+
+                        AddVtableAttributesForTypeDirect(constructedListSymbol, null, collectionType);
+                    }
+                }
+            }
 
             return vtableAttributes.ToImmutableArray();
+
+            // Helper to directly use 'AddVtableAttributesForTypeDirect' with 'TypeInfo' values
+            void AddVtableAttributesForType(Microsoft.CodeAnalysis.TypeInfo instantiatedType, ITypeSymbol convertedToTypeSymbol)
+            {
+                AddVtableAttributesForTypeDirect(instantiatedType.Type, instantiatedType.ConvertedType, convertedToTypeSymbol);
+            }
 
             // This handles adding vtable information for types for which we can not directly put an attribute on them.
             // This includes generic types that are boxed and and non-WinRT types for which our AOT source generator hasn't
             // ran on but implements WinRT interfaces.
-            void AddVtableAttributesForType(Microsoft.CodeAnalysis.TypeInfo instantiatedType, ITypeSymbol convertedToTypeSymbol)
+            void AddVtableAttributesForTypeDirect(ITypeSymbol instantiatedTypeSymbol, ITypeSymbol instantiatedConvertedTypeSymbol, ITypeSymbol convertedToTypeSymbol)
             {
                 // This handles the case where there is an WinRT array possibly being assigned
                 // to an object type or a list. In this case, the IList interfaces of the array
                 // type need to be put on the CCW.
-                if (instantiatedType.Type is IArrayTypeSymbol arrayType)
+                if (instantiatedTypeSymbol is IArrayTypeSymbol arrayType)
                 {
                     if (convertedToTypeSymbol is not IArrayTypeSymbol &&
                         // Make sure we aren't just assigning it to a value type such as ReadOnlySpan
@@ -1338,10 +1375,10 @@ namespace Generator
                         AddEnumeratorAdapterForType(arrayType.ElementType, typeMapper, context.SemanticModel.Compilation, isManagedOnlyType, isWinRTType, vtableAttributes);
                     }
                 }
-                else if (instantiatedType.Type is not null || instantiatedType.ConvertedType is not null)
+                else if (instantiatedTypeSymbol is not null || instantiatedConvertedTypeSymbol is not null)
                 {
                     // Type might be null such as for lambdas, so check converted type in that case.
-                    var instantiatedTypeSymbol = instantiatedType.Type ?? instantiatedType.ConvertedType;
+                    instantiatedTypeSymbol ??= instantiatedConvertedTypeSymbol;
 
                     if (visitedTypes.Contains(instantiatedTypeSymbol))
                     {
@@ -1386,7 +1423,7 @@ namespace Generator
                                 // If the type is defined in the same assembly as what the source generator is running on,
                                 // we let the WinRTExposedType attribute generator handle it. The only scenario the generator
                                 // doesn't handle which we handle here is if it is a generic type implementing generic WinRT interfaces.
-                                (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) || 
+                                (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) ||
                                   GeneratorHelper.HasNonInstantiatedWinRTGeneric(instantiatedTypeSymbol.OriginalDefinition, typeMapper)) &&
                                 // Make sure the type we are passing is being boxed or cast to another interface.
                                 !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol);
