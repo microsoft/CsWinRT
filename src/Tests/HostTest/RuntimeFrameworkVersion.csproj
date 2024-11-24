@@ -8,7 +8,7 @@
     <ItemGroup>
       <NetCoreAppRuntimeFrameworkVersion 
           Condition="%(KnownFrameworkReference.Identity) == 'Microsoft.NETCore.App' and
-            %(KnownFrameworkReference.TargetFramework) == 'netcoreapp6.0'" 
+            %(KnownFrameworkReference.TargetFramework) == 'netcoreapp8.0'" 
           Include="@(KnownFrameworkReference->Metadata('DefaultRuntimeFrameworkVersion')->Distinct())">
       </NetCoreAppRuntimeFrameworkVersion>
     </ItemGroup>
