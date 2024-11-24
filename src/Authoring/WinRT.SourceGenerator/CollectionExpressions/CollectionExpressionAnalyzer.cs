@@ -38,14 +38,22 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
             {
                 ICollectionExpressionOperation operation = (ICollectionExpressionOperation)context.Operation;
 
-                // We only possibly warn if the target type is an interface type
-                if (operation.Type is not INamedTypeSymbol { TypeKind: TypeKind.Interface } typeSymbol)
+                // We only possibly warn if the target type is a generic interface type
+                if (operation.Type is not INamedTypeSymbol { TypeKind: TypeKind.Interface, IsGenericType: true } typeSymbol)
                 {
                     return;
                 }
 
                 // We can also skip all cases where the collection expression is empty, those are fine
                 if (operation.Elements.IsEmpty)
+                {
+                    return;
+                }
+
+                // We can skip 'ICollection<T>' and 'IList<T>', as those guarantee to use 'List<T>'
+                if (typeSymbol.ConstructedFrom.SpecialType is
+                    SpecialType.System_Collections_Generic_ICollection_T or
+                    SpecialType.System_Collections_Generic_IList_T)
                 {
                     return;
                 }
