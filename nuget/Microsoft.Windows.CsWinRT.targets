@@ -60,6 +60,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <Error Text="Support for .NET 5 ended with C#/WinRT 2.0. For .NET 5 support, use C#/WinRT version 1.6.5. See https://github.com/microsoft/CsWinRT/discussions/1232" />
   </Target>
 
+  <Target Name="CsWinRTNet6EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 6 or $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 7" BeforeTargets="CsWinRTPrepareProjection">
+    <Error Text="Support for .NET 6 and .NET 7 ended with C#/WinRT 2.2. For .NET 6 or .NET 7 support, use C#/WinRT version 2.2.x." />
+  </Target>
+
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
   <Target Name="CsWinRTSetGeneratorProperties" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore">
     <PropertyGroup>
