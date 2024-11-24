@@ -265,6 +265,16 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+:sourcegeneratortest
+rem Running Source Generator Unit Tests
+echo Running source generator tests for %cswinrt_platform% %cswinrt_configuration%
+call :exec %dotnet_exe% test --verbosity normal --no-build --logger trx;LogFilePath=%~dp0sourcegeneratortest_%cswinrt_version_string%.trx %this_dir%Tests\SourceGeneratorTest\SourceGeneratorTest.csproj /nologo /m /p:configuration=%cswinrt_configuration% -- RunConfiguration.TreatNoTestsAsError=true
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Source generator unit test failed, skipping NuGet pack
+  exit /b !ErrorLevel!
+)
+
 :hosttest
 rem Run WinRT.Host tests
 echo Running cswinrt host tests for %cswinrt_platform% %cswinrt_configuration%
