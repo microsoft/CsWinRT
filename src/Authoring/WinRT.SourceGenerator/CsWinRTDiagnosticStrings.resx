@@ -120,7 +120,7 @@
   </data>
   <data name="BindableCustomPropertyClassNotMarkedPartial_Text" xml:space="preserve">
     <value>Class '{0}' has attribute GeneratedBindableCustomProperty but it or a parent type isn't marked partial.  Type and any parent types should be marked partial to allow source generation for trimming and AOT compatibility.</value>
-  </data>	
+  </data>
   <data name="DisjointNamespaceRule_Brief" xml:space="preserve">
     <value>Namespace is disjoint from main (winmd) namespace</value>
   </data>
@@ -291,5 +291,11 @@
   <data name="UnsupportedTypeRule_Text4" xml:space="preserve">
     <value>Consider changing the type '{1} in the member signature to one of the following types from System.Collections.Generic: {2}.</value>
     <comment>{1} and {2} will be keywords (types) from DotNet</comment>
+  </data>
+  <data name="NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief" xml:space="preserve">
+    <value>Collection expression not safe for WinRT</value>
+  </data>
+  <data name="NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text" xml:space="preserve">
+    <value>Collection expressions targeting interface type '{0}' do not have a defined concrete type, and are not supported for trimming and AOT compatibility with WinRT scenarios (consider changing the target type to be a concrete type, or avoid using a collection expression in this case)</value>
   </data>
 </root>
