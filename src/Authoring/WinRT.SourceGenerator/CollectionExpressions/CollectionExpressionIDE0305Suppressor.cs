@@ -34,31 +34,40 @@ public sealed class CollectionExpressionIDE0305Suppressor : DiagnosticSuppressor
     {
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
-            // Try to get the syntax node matching the location of the diagnostic
-            SyntaxNode? syntaxNode = diagnostic.Location.SourceTree?.GetRoot(context.CancellationToken).FindNode(diagnostic.Location.SourceSpan);
-
-            // We expect to have found an invocation expression (eg. 'ToList()')
-            if (syntaxNode?.Kind() is not SyntaxKind.InvocationExpression)
-            {
-                continue;
-            }
-
-            Microsoft.CodeAnalysis.TypeInfo typeInfo = context.GetSemanticModel(syntaxNode.SyntaxTree).GetTypeInfo(syntaxNode, context.CancellationToken);
-
-            // We only want to suppress this diagnostic when the result of the invocation is assigned to an unsupported interface type
-            if (typeInfo.ConvertedType is not INamedTypeSymbol { TypeKind: TypeKind.Interface, IsGenericType: true, IsUnboundGenericType: false } typeSymbol)
-            {
-                continue;
-            }
-
-            // Like for 'IDE0300', suppress diagnostics for 'IEnumerable<T>', 'IReadOnlyCollection<T>', or 'IReadOnlyList<T>'
-            if (typeSymbol.SpecialType is
-                SpecialType.System_Collections_Generic_IEnumerable_T or
-                SpecialType.System_Collections_Generic_IReadOnlyCollection_T or
-                SpecialType.System_Collections_Generic_IReadOnlyList_T)
+            if (IsInvocationAssignedToUnsupportedInterfaceType(context, diagnostic))
             {
                 context.ReportSuppression(Suppression.Create(WinRTSuppressions.CollectionExpressionIDE0305, diagnostic));
             }
         }
+    }
+
+    /// <summary>
+    /// Checks whether a given diagnostic is over an invocation assigning to an unsupported interface type.
+    /// </summary>
+    public static bool IsInvocationAssignedToUnsupportedInterfaceType(SuppressionAnalysisContext context, Diagnostic diagnostic)
+    {
+        // Try to get the syntax node matching the location of the diagnostic
+        SyntaxNode? syntaxNode = diagnostic.Location.SourceTree?.GetRoot(context.CancellationToken).FindNode(diagnostic.Location.SourceSpan);
+
+        // We expect to have found an invocation expression (eg. 'ToList()')
+        if (syntaxNode?.Kind() is not SyntaxKind.InvocationExpression)
+        {
+            return false;
+        }
+
+        Microsoft.CodeAnalysis.TypeInfo typeInfo = context.GetSemanticModel(syntaxNode.SyntaxTree).GetTypeInfo(syntaxNode, context.CancellationToken);
+
+        // We only want to suppress this diagnostic when the result of the invocation is assigned to an unsupported interface type
+        if (typeInfo.ConvertedType is not INamedTypeSymbol { TypeKind: TypeKind.Interface, IsGenericType: true, IsUnboundGenericType: false } typeSymbol)
+        {
+            return false;
+        }
+
+        // Like for 'IDE0300', suppress diagnostics for 'IEnumerable<T>', 'IReadOnlyCollection<T>', or 'IReadOnlyList<T>'
+        return
+            typeSymbol.SpecialType is
+            SpecialType.System_Collections_Generic_IEnumerable_T or
+            SpecialType.System_Collections_Generic_IReadOnlyCollection_T or
+            SpecialType.System_Collections_Generic_IReadOnlyList_T;
     }
 }
