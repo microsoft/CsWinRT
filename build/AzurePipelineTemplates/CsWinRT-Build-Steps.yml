@@ -62,8 +62,6 @@ steps:
      
      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
      
-     dotnet new globaljson --sdk-version "$($env:NET8_SDK_VERSION)" 
-     
      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET8_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 # Install .NET 9 SDK 
