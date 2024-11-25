@@ -133,9 +133,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FunctionalTests", "Function
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PublishProfiles", "PublishProfiles", "{6FBE79A9-9D6D-4436-9F84-797ED1C9F676}"
 	ProjectSection(SolutionItems) = preProject
-		Tests\FunctionalTests\PublishProfiles\win10-arm64.pubxml = Tests\FunctionalTests\PublishProfiles\win10-arm64.pubxml
-		Tests\FunctionalTests\PublishProfiles\win10-x64.pubxml = Tests\FunctionalTests\PublishProfiles\win10-x64.pubxml
-		Tests\FunctionalTests\PublishProfiles\win10-x86.pubxml = Tests\FunctionalTests\PublishProfiles\win10-x86.pubxml
+		Tests\FunctionalTests\PublishProfiles\win-arm64.pubxml = Tests\FunctionalTests\PublishProfiles\win-arm64.pubxml
+		Tests\FunctionalTests\PublishProfiles\win-x64.pubxml = Tests\FunctionalTests\PublishProfiles\win-x64.pubxml
+		Tests\FunctionalTests\PublishProfiles\win-x86.pubxml = Tests\FunctionalTests\PublishProfiles\win-x86.pubxml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassActivation", "Tests\FunctionalTests\ClassActivation\ClassActivation.csproj", "{F0D6034B-5368-4B13-BBB9-4ABBC535AA0E}"

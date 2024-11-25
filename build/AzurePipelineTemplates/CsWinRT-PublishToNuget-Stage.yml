@@ -57,14 +57,6 @@ stages:
         itemPattern: ''
         targetPath: $(Build.SourcesDirectory)\netstandard2.0
 
-# Download Net6.0
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download Net6.0'
-      inputs:
-        artifactName: net6.0
-        itemPattern: ''
-        targetPath: $(Build.SourcesDirectory)\net6.0
-
 # Download Net8.0
     - task: DownloadPipelineArtifact@2
       displayName: 'Download Net8.0'
@@ -99,8 +91,7 @@ stages:
           netstandard2.0\WinRT.Runtime.dll
           netstandard2.0\WinRT.Host.Shim.dll
           netstandard2.0\WinRT.SourceGenerator.dll
-          net6.0\WinRT.Host.Shim.dll
-          net6.0\WinRT.Runtime.dll
+          net8.0\WinRT.Host.Shim.dll
           net8.0\WinRT.Runtime.dll
           release_x64\WinRT.Host.dll
           release_x64\WinRT.Host.dll.mui
@@ -108,10 +99,10 @@ stages:
           release_x86\WinRT.Host.dll.mui
           release_arm64\WinRT.Host.dll
           release_arm64\WinRT.Host.dll.mui
-          net6.0\IIDOptimizer\IIDOptimizer.exe
-          net6.0\IIDOptimizer\IIDOptimizer.dll
-          net6.0\CsWinMD\CsWinMD.exe
-          net6.0\CsWinMD\CsWinMD.dll
+          net8.0\IIDOptimizer\IIDOptimizer.exe
+          net8.0\IIDOptimizer\IIDOptimizer.dll
+          net8.0\CsWinMD\CsWinMD.exe
+          net8.0\CsWinMD\CsWinMD.dll
         UseMinimatch: true
         signConfigType: inlineSignParams
         inlineOperation: |
@@ -159,10 +150,10 @@ stages:
         AuthSignCertName: $(SigningSignCertName)
         FolderPath: $(Build.SourcesDirectory)
         Pattern: |
-          net6.0\IIDOptimizer\Mono.Cecil.dll
-          net6.0\IIDOptimizer\Mono.Cecil.Mdb.dll
-          net6.0\IIDOptimizer\Mono.Cecil.Pdb.dll
-          net6.0\IIDOptimizer\Mono.Cecil.Rocks.dll
+          net8.0\IIDOptimizer\Mono.Cecil.dll
+          net8.0\IIDOptimizer\Mono.Cecil.Mdb.dll
+          net8.0\IIDOptimizer\Mono.Cecil.Pdb.dll
+          net8.0\IIDOptimizer\Mono.Cecil.Rocks.dll
         UseMinimatch: true
         signConfigType: inlineSignParams
         inlineOperation: |
@@ -230,7 +221,7 @@ stages:
         command: pack
         searchPatternPack: nuget/Microsoft.Windows.CsWinRT.nuspec
         configurationToPack: Release
-        buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\WinRT.Interop.winmd;netstandard2_runtime=$(Build.SourcesDirectory)\netstandard2.0\WinRT.Runtime.dll;net6_runtime=$(Build.SourcesDirectory)\net6.0\WinRT.Runtime.dll;net8_runtime=$(Build.SourcesDirectory)\net8.0\WinRT.Runtime.dll;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\net6.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll.mui;guid_patch=$(Build.SourcesDirectory)\net6.0\IIDOptimizer\*.*
+        buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\WinRT.Interop.winmd;netstandard2_runtime=$(Build.SourcesDirectory)\netstandard2.0\WinRT.Runtime.dll;net8_runtime=$(Build.SourcesDirectory)\net8.0\WinRT.Runtime.dll;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\net8.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll.mui;guid_patch=$(Build.SourcesDirectory)\net8.0\IIDOptimizer\*.*
 
     - task: NuGetCommand@2
       displayName: NuGet pack
@@ -239,7 +230,7 @@ stages:
         command: pack
         searchPatternPack: nuget/Microsoft.Windows.CsWinMD.nuspec
         configurationToPack: Release
-        buildProperties: cswinmd_nuget_version=$(NugetVersion);cswinmd_outpath=$(Build.SourcesDirectory)\net6.0\CsWinMD;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll
+        buildProperties: cswinmd_nuget_version=$(NugetVersion);cswinmd_outpath=$(Build.SourcesDirectory)\net8.0\CsWinMD;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll
 
 # ESRP CodeSigning 
     - task: EsrpCodeSigning@5

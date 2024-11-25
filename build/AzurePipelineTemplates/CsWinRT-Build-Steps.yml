@@ -51,19 +51,6 @@ steps:
   env:
     PROCESSOR_ARCHITECTURE: x86
 
-# Install .NET 6 SDK 
-- task: PowerShell@2
-  displayName: Install .NET 6 SDK
-  inputs:
-    targetType: inline
-    failOnStderr: true
-    script: |
-     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
-     
-     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-     
-     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
-
 # Install .NET 8 SDK 
 - task: PowerShell@2
   displayName: Install .NET 8 SDK
@@ -261,7 +248,7 @@ steps:
   displayName: Stage Unit Test
   condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
   inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0
+    SourceFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net8.0
     Contents: |
       unittest.dll
       unittest.pdb
@@ -289,17 +276,6 @@ steps:
       WinRT.SourceGenerator.pdb
     TargetFolder: $(Build.ArtifactStagingDirectory)\release_netstandard2.0\
 
-# Stage Net6.0
-- task: CopyFiles@2
-  displayName: Stage Net6.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net6.0
-    Contents: |
-      WinRT.Runtime.dll
-      WinRT.Runtime.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0
-
 # Stage Net8.0
 - task: CopyFiles@2
   displayName: Stage Net8.0
@@ -317,11 +293,11 @@ steps:
   condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
   continueOnError: True
   inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net6.0
+    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net8.0
     Contents: |
       WinRT.Host.Shim.dll
       WinRT.Host.Shim.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net8.0
 
 # Stage IID Optimizer
 - task: CopyFiles@2
@@ -329,7 +305,7 @@ steps:
   condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
   continueOnError: True
   inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Perf\IIDOptimizer\bin\$(BuildConfiguration)\net6.0
+    SourceFolder: $(Build.SourcesDirectory)\src\Perf\IIDOptimizer\bin\$(BuildConfiguration)\net8.0
     Contents: |
       IIDOptimizer.exe 
       IIDOptimizer.dll
@@ -353,7 +329,7 @@ steps:
       tr/System.CommandLine.resources.dll
       zh-Hans/System.CommandLine.resources.dll
       zh-Hant/System.CommandLine.resources.dll 
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0\IIDOptimizer
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net8.0\IIDOptimizer
 
 # Stage WinRT.Runtime ResX
 - task: CopyFiles@2
@@ -380,7 +356,7 @@ steps:
   displayName: Stage CsWinMD
   condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
   inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\$(BuildConfiguration)\net6.0
+    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\$(BuildConfiguration)\net8.0
     Contents: |
       CsWinMD.dll
       CsWinMD.exe
@@ -389,4 +365,4 @@ steps:
       CsWinMD.runtimeconfig.json
       Microsoft.CodeAnalysis.CSharp.dll
       Microsoft.CodeAnalysis.dll
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net6.0\CsWinMD
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net8.0\CsWinMD

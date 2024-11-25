@@ -42,4 +42,4 @@ stages:
     - template: ..\..\eng\common\AzurePipelineTemplates\Maestro-PublishBuildToMaestro-Steps.yml@self 
       parameters:
         AssetNames: Microsoft.Windows.CsWinRT;CsWinRT.Dependency.DotNetCoreSdk;CsWinRT.Dependency.DotNetCoreRuntime;CsWinRT.Dependency.WindowsSdkVersionSuffix
-        AssetVersions: $(NugetVersion);$(Net6.Sdk.Version);$(_DotNetRuntimeVersion);$(_WindowsSdkVersionSuffix)
+        AssetVersions: $(NugetVersion);$(Net8.Sdk.Version);$(_DotNetRuntimeVersion);$(_WindowsSdkVersionSuffix)
