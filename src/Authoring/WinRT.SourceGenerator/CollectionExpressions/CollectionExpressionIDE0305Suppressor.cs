@@ -67,7 +67,7 @@ public sealed class CollectionExpressionIDE0305Suppressor : DiagnosticSuppressor
 
         // Like for 'IDE0300', suppress diagnostics for 'IEnumerable<T>', 'IReadOnlyCollection<T>', or 'IReadOnlyList<T>'
         return
-            typeSymbol.SpecialType is
+            typeSymbol.ConstructedFrom.SpecialType is
             SpecialType.System_Collections_Generic_IEnumerable_T or
             SpecialType.System_Collections_Generic_IReadOnlyCollection_T or
             SpecialType.System_Collections_Generic_IReadOnlyList_T;

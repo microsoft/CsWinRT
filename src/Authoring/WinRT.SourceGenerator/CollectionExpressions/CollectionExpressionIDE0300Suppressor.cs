@@ -70,7 +70,7 @@ public sealed class CollectionExpressionIDE0300Suppressor : DiagnosticSuppressor
 
             // If the target type is either 'IEnumerable<T>', 'IReadOnlyCollection<T>', or 'IReadOnlyList<T>', suppress the diagnostic.
             // This is because using a collection expression in this case would produce an opaque type we cannot analyze for marshalling.
-            if (typeSymbol.SpecialType is
+            if (typeSymbol.ConstructedFrom.SpecialType is
                 SpecialType.System_Collections_Generic_IEnumerable_T or
                 SpecialType.System_Collections_Generic_IReadOnlyCollection_T or
                 SpecialType.System_Collections_Generic_IReadOnlyList_T)
