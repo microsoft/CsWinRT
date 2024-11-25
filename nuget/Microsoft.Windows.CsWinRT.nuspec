@@ -15,6 +15,7 @@
     <projectUrl>https://github.com/microsoft/cswinrt</projectUrl>
     <dependencies>
       <group targetFramework=".NET8.0" />
+      <group targetFramework=".NET9.0" />
     </dependencies>
   </metadata>
   <files>
@@ -31,12 +32,14 @@
     <file src="$interop_winmd$" target="metadata"/>
     <file src="readme.txt"/>
     <file src="$net8_runtime$" target="lib\net8.0\"/>
+    <file src="$net9_runtime$" target="lib\net9.0\"/>
     <file src="$source_generator_roslyn4080$" target="analyzers\dotnet\cs\roslyn4.8"/>
     <file src="$source_generator_roslyn4120$" target="analyzers\dotnet\cs\roslyn4.12"/>
     <file src="$winrt_host_x64$" target ="hosting\x64\native"/>
     <file src="$winrt_host_x86$" target ="hosting\x86\native"/>
     <file src="$winrt_host_arm64$" target ="hosting\arm64\native"/>
     <file src="$winrt_shim$" target ="lib\net8.0\"/>
+    <file src="$winrt_shim$" target ="lib\net9.0\"/>
 
     <!-- Localized resources for error strings 
          The paths here leads to a folder of folders, 
@@ -45,12 +48,13 @@
     <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="hosting\x64\native"/>
     <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="hosting\x86\native"/>
     <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="hosting\arm64\native"/>
-    <file src="$winrt_host_resource_x64$" target ="hosting\x64\native\en-US"/>
-    <file src="$winrt_host_resource_x86$" target ="hosting\x86\native\en-US"/>
+    <file src="$winrt_host_resource_x64$"   target ="hosting\x64\native\en-US"/>
+    <file src="$winrt_host_resource_x86$"   target ="hosting\x86\native\en-US"/>
     <file src="$winrt_host_resource_arm64$" target ="hosting\arm64\native\en-US"/>
 
     <!-- Pack the .resx files for WinRT.Runtime for those using the embedded support -->
     <file src="..\src\WinRT.Runtime\ResX\**" target ="lib\net8.0\"/>
+    <file src="..\src\WinRT.Runtime\ResX\**" target ="lib\net9.0\"/>
 
     <!-- Add the WinRT.Runtime sources to the pkg for embedded scenarios -->
 
