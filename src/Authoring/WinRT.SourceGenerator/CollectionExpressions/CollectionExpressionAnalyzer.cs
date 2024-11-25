@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if ROSLYN_4_12_0_OR_GREATER
+
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
@@ -70,3 +72,5 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
         });
     }
 }
+
+#endif

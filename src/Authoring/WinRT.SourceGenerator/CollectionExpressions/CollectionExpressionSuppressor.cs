@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if ROSLYN_4_12_0_OR_GREATER
+
 using System;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
@@ -90,3 +92,5 @@ public sealed class CollectionExpressionSuppressor : DiagnosticSuppressor
         return !GeneratorHelper.HasAttributeWithType(typeSymbol, collectionBuilderSymbol);
     }
 }
+
+#endif

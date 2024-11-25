@@ -1307,6 +1307,7 @@ namespace Generator
                     }
                 }
             }
+#if ROSLYN_4_12_0_OR_GREATER
             else if (context.Node is CollectionExpressionSyntax collectionExpression)
             {
                 // Detect collection expressions scenarios targeting interfaces, where we can rely on the concrete type
@@ -1336,6 +1337,7 @@ namespace Generator
                     }
                 }
             }
+#endif
 
             return vtableAttributes.ToImmutableArray();
 

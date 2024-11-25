@@ -178,6 +178,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGeneratorTest", "Test
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "WinRT.SourceGenerator", "Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.shproj", "{B0E5E9CC-5FB4-4F94-BD54-115A91A6AE9D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinRT.SourceGenerator.Roslyn4120", "Authoring\WinRT.SourceGenerator.Roslyn4120\WinRT.SourceGenerator.Roslyn4120.csproj", "{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -862,6 +864,22 @@ Global
 		{CB7C338F-3850-4744-A1EA-3DC47B703C4A}.Release|x64.Build.0 = Release|Any CPU
 		{CB7C338F-3850-4744-A1EA-3DC47B703C4A}.Release|x86.ActiveCfg = Release|Any CPU
 		{CB7C338F-3850-4744-A1EA-3DC47B703C4A}.Release|x86.Build.0 = Release|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Debug|ARM.Build.0 = Debug|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Debug|x64.Build.0 = Debug|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Debug|x86.Build.0 = Debug|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|ARM.ActiveCfg = Release|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|ARM.Build.0 = Release|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|ARM64.Build.0 = Release|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|x64.ActiveCfg = Release|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|x64.Build.0 = Release|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|x86.ActiveCfg = Release|Any CPU
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -916,11 +934,13 @@ Global
 		{FFC0B06E-78E7-44D5-8E67-8FE5744CE071} = {5ECC38F0-16FD-47E1-B8DC-8C474008AD55}
 		{CB7C338F-3850-4744-A1EA-3DC47B703C4A} = {CFB651EC-DAA4-4A11-ABCD-C77F90602EB5}
 		{B0E5E9CC-5FB4-4F94-BD54-115A91A6AE9D} = {DA5AE0BA-E43D-4282-BC80-807DDE0C22C0}
+		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9} = {DA5AE0BA-E43D-4282-BC80-807DDE0C22C0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5AE8C9D7-2613-4E1A-A4F2-579BAC28D0A2}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.projitems*{20f67b53-bdf2-4252-a0e1-6d0ab55ba2f9}*SharedItemsImports = 5
 		Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.projitems*{b0e5e9cc-5fb4-4f94-bd54-115a91a6ae9d}*SharedItemsImports = 13
 		Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.projitems*{e0c26d3a-504a-4826-bae2-de775f865b2a}*SharedItemsImports = 5
 	EndGlobalSection
