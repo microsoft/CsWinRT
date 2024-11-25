@@ -34,6 +34,12 @@ public sealed class CollectionExpressionIDE0305Suppressor : DiagnosticSuppressor
     /// <inheritdoc/>
     public override void ReportSuppressions(SuppressionAnalysisContext context)
     {
+        // Skip the logic if CsWinRT is not in 'auto' mode
+        if (!GeneratorExecutionContextHelper.IsCsWinRTAotOptimizerInAutoMode(context.Options.AnalyzerConfigOptionsProvider, context.Compilation))
+        {
+            return;
+        }
+
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
             if (IsInvocationAssignedToUnsupportedInterfaceType(context, diagnostic))

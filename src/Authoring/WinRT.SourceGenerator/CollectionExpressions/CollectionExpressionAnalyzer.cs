@@ -30,6 +30,12 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(static context =>
         {
+            // We only need to emit warnings if CsWinRT is in 'auto' mode
+            if (!GeneratorExecutionContextHelper.IsCsWinRTAotOptimizerInAutoMode(context.Options.AnalyzerConfigOptionsProvider, context.Compilation))
+            {
+                return;
+            }
+
             // Get the symbol for '[CollectionBuilder]', we need it for lookups
             if (context.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.CollectionBuilderAttribute") is not { } collectionBuilderSymbol)
             {
