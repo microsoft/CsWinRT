@@ -83,7 +83,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinRT.Host.Shim", "Authorin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestHost.ProbeByClass", "Projections\TestHost.ProbeByClass\TestHost.ProbeByClass.csproj", "{EF3326B5-716F-41D2-AB30-4EFAB30955E2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinRT.SourceGenerator", "Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj", "{E0C26D3A-504A-4826-BAE2-DE775F865B2A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinRT.SourceGenerator.Roslyn4080", "Authoring\WinRT.SourceGenerator.Roslyn4080\WinRT.SourceGenerator.Roslyn4080.csproj", "{E0C26D3A-504A-4826-BAE2-DE775F865B2A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthoringTest", "Tests\AuthoringTest\AuthoringTest.csproj", "{41E2A272-150F-42F5-AD40-047AAD9088A0}"
 EndProject

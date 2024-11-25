@@ -1,0 +1,271 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ArrayMarkedInOrOut_Brief" xml:space="preserve">
+    <value>陣列參數標示為 InAttribute 或 OutAttribute</value>
+  </data>
+  <data name="ArrayMarkedInOrOut_Text1" xml:space="preserve">
+    <value>方法 [{0}] 具有參數 [{1}]，它是陣列，而且具有 System.Runtime.InteropServices.InAttribute 或 System.Runtime.InteropServices.OutAttribute。</value>
+  </data>
+  <data name="ArrayMarkedInOrOut_Text2" xml:space="preserve">
+    <value>在Windows 執行階段中，陣列參數必須有 ReadOnlyArray 或 WriteOnlyArray。</value>
+  </data>
+  <data name="ArrayMarkedInOrOut_Text3" xml:space="preserve">
+    <value>請移除這些屬性，或視需要以適當的 Windows 執行階段屬性加以取代。</value>
+  </data>
+  <data name="ArrayOutputParamMarkedRead_Brief" xml:space="preserve">
+    <value>陣列參數已標示為 [out] 和 ReadOnlyArray</value>
+  </data>
+  <data name="ArrayOutputParamMarkedRead_Text1" xml:space="preserve">
+    <value>方法 [{0}] 具有輸出參數 [{1}] 這是陣列，但具有 ReadOnlyArray 屬性。</value>
+  </data>
+  <data name="ArrayOutputParamMarkedRead_Text2" xml:space="preserve">
+    <value>在Windows 執行階段中，輸出陣列的內容是可寫入的。請從'{1}'移除屬性。</value>
+  </data>
+  <data name="ArrayParamMarkedBoth_Brief" xml:space="preserve">
+    <value>陣列參數同時標示為 ReadOnlyArray 和 WriteOnlyArray</value>
+  </data>
+  <data name="ArrayParamMarkedBoth_Text1" xml:space="preserve">
+    <value>方法 [{0}] 具有參數 [{1}]，它是一個陣列，而且同時具有 ReadOnlyArray 和 WriteOnlyArray。</value>
+  </data>
+  <data name="ArrayParamMarkedBoth_Text2" xml:space="preserve">
+    <value>在Windows 執行階段中，內容陣列參數必須是可讀取或可寫入，請從'{1}'移除其中一個屬性。</value>
+  </data>
+  <data name="ArrayParamNotMarked_Brief" xml:space="preserve">
+    <value>陣列參數未標示為 ReadOnlyArray 或 WriteOnlyArray 方式</value>
+  </data>
+  <data name="ArrayParamNotMarked_Text1" xml:space="preserve">
+    <value>方法'{0}'具有參數'{1}'為數組。</value>
+  </data>
+  <data name="ArrayParamNotMarked_Text2" xml:space="preserve">
+    <value>在Windows 執行階段中，陣列參數的內容必須是可讀取或可寫入;請將 ReadOnlyArray 或 WriteOnlyArray 套用至 '{1}'。</value>
+  </data>
+  <data name="ClassConstructorRule_Brief" xml:space="preserve">
+    <value>類別建構函式規則</value>
+  </data>
+  <data name="ClassConstructorRule_Text" xml:space="preserve">
+    <value>類別在 Windows 執行階段中不能有多個相同 arity 的建構函式，類別 {0} 具有多個 {1} arity 建構函式</value>
+  </data>
+  <data name="DisjointNamespaceRule_Brief" xml:space="preserve">
+    <value>命名空間與主要 (winmd) 命名空間不相符</value>
+  </data>
+  <data name="DisjointNamespaceRule_Text1" xml:space="preserve">
+    <value>公用類型具有命名空間 ('{1}')與其他命名空間 ('{0}')沒有共同首碼。</value>
+    <comment>{1} and {0} will be some user-defined keyword</comment>
+  </data>
+  <data name="DisjointNamespaceRule_Text2" xml:space="preserve">
+    <value>Windows 中繼資料檔案內的所有類型都必須存在於檔案名所隱含的命名空間子命名空間中。</value>
+    <comment>"sub namespace" means a namespace defined within another namespace</comment>
+  </data>
+  <data name="GenericTypeRule_Brief" xml:space="preserve">
+    <value>類別 (或介面) 為一般</value>
+  </data>
+  <data name="GenericTypeRule_Text" xml:space="preserve">
+    <value>類型 {0} 為一般，Windows 執行階段類型不可以是一般</value>
+    <comment>{0} will be some user-defined keyword</comment>
+  </data>
+  <data name="JaggedArrayRule_Brief" xml:space="preserve">
+    <value>找到有鋸齒狀陣列的陣列簽章，這不是有效的 WinRT 類型</value>
+  </data>
+  <data name="JaggedArrayRule_Text" xml:space="preserve">
+    <value>方法 {0} 的簽章中有類型為 {1} 的巢狀陣列；Windows 執行階段方法簽章中的陣列無法為巢狀</value>
+  </data>
+  <data name="MultiDimensionalArrayRule_Brief" xml:space="preserve">
+    <value>使用多重維度陣列找到陣列簽章，這不是有效的 Windows 執行時間類型</value>
+  </data>
+  <data name="MultiDimensionalArrayRule_Text" xml:space="preserve">
+    <value>方法 [{0}] 的簽章中有類型為 [{1}] 的多維陣列;Windows 執行階段方法簽章中的陣列必須是一維</value>
+  </data>
+  <data name="MultipleDefaultOverloadAttribute_Brief" xml:space="preserve">
+    <value>只應指定一個超載預設值</value>
+  </data>
+  <data name="MultipleDefaultOverloadAttribute_Text1" xml:space="preserve">
+    <value>在類別 {2}: 使用 Windows.Foundation.Metadata.DefaultOverloadAttribute 裝飾多個 {1} 的 {0}-參數超載。</value>
+  </data>
+  <data name="MultipleDefaultOverloadAttribute_Text2" xml:space="preserve">
+    <value>屬性只能套用至方法的一個超載。</value>
+  </data>
+  <data name="NamespacesDifferByCase_Brief" xml:space="preserve">
+    <value>命名空間名稱不能只因大小寫而不同</value>
+  </data>
+  <data name="NamespacesDifferByCase_Text" xml:space="preserve">
+    <value>找到多個名稱為 '{0}';命名空間名稱不能只因Windows 執行階段中的大小寫不同</value>
+    <comment>{0} will be some user-defined keyword</comment>
+  </data>
+  <data name="NeedDefaultOverloadAttribute_Brief" xml:space="preserve">
+    <value>已查看多個超載，但未顯示 DefaultOverload 屬性</value>
+  </data>
+  <data name="NeedDefaultOverloadAttribute_Text" xml:space="preserve">
+    <value>類別{2}: {1} 的 {0}-參數超載必須使用 Windows.Foundation.Metadata.DefaultOverloadAttribute 裝飾，將它指定為預設超載的方法</value>
+  </data>
+  <data name="NonArrayMarkedInOrOut_Brief" xml:space="preserve">
+    <value>參數(標示為 InAttribute 或 OutAttribute)陣列類型</value>
+  </data>
+  <data name="NonArrayMarkedInOrOut_Text1" xml:space="preserve">
+    <value>方法 [{0}] 具有具有 System.Runtime.InteropServices.InAttribute 或 System.Runtime.InteropServices.OutAttribute.Windows 執行階段的 [{1}] 參數 Windows 執行階段不支援標記具有 System.Runtime.InteropServices.InAttribute 或 System.Runtime.InteropServices.OutAttribute 的參數。</value>
+  </data>
+  <data name="NonArrayMarkedInOrOut_Text2" xml:space="preserve">
+    <value>請考慮移除 System.Runtime.InteropServices.InAttribute，並改用 'out' 修飾詞取代 System.Runtime.InteropServices.OutAttribute。</value>
+  </data>
+  <data name="NonArrayMarked_Brief" xml:space="preserve">
+    <value>以 ReadOnlyArray 或 WriteOnlyArray 標示的非陣列參數</value>
+  </data>
+  <data name="NonArrayMarked_Text1" xml:space="preserve">
+    <value>方法 [{0}] 具有非陣列的參數 [{1}]，而且該參數具有 ReadOnlyArray 屬性或 WriteOnlyArray 屬性。</value>
+  </data>
+  <data name="NonArrayMarked_Text2" xml:space="preserve">
+    <value>Windows 執行階段不支援以 ReadOnlyArray 或 WriteOnlyArray 標示非陣列參數。</value>
+  </data>
+  <data name="NonWinRTInterface_Brief" xml:space="preserve">
+    <value>繼承的介面無效</value>
+  </data>
+  <data name="NonWinRTInterface_Text" xml:space="preserve">
+    <value>Windows 執行階段元件類型{0}無法實作介面{1}，因為介面不是有效的Windows 執行階段介面</value>
+  </data>
+  <data name="NoPublicTypesRule_Brief" xml:space="preserve">
+    <value>未定義公用類型</value>
+  </data>
+  <data name="NoPublicTypesRule_Text" xml:space="preserve">
+    <value>Windows 執行階段元件必須至少有一個公用類型</value>
+  </data>
+  <data name="OperatorOverloadedRule_Brief" xml:space="preserve">
+    <value>運算子超載已公開</value>
+  </data>
+  <data name="OperatorOverloadedRule_Text" xml:space="preserve">
+    <value>{0} 為運算子超載，受管理類型無法在Windows 執行階段中公開運算子超載</value>
+  </data>
+  <data name="ParameterNamedValueRule_Brief" xml:space="preserve">
+    <value>參數命名值規則</value>
+  </data>
+  <data name="ParameterNamedValueRule_Text" xml:space="preserve">
+    <value>方法 {0} 中{1}的參數名稱，與產生 C#/WinRT interop 中使用的傳回值參數名稱相同;使用不同的參數名稱</value>
+  </data>
+  <data name="PrivateGetterRule_Brief" xml:space="preserve">
+    <value>屬性必須有公用 getter</value>
+  </data>
+  <data name="PrivateGetterRule_Text" xml:space="preserve">
+    <value>屬性'{0}'沒有公用 getter 方法。Windows 執行階段不支援 setter 專用屬性。</value>
+    <comment>{0} will be some user-defined keyword</comment>
+  </data>
+  <data name="RefParameterFound_Brief" xml:space="preserve">
+    <value>參考所傳遞的參數</value>
+  </data>
+  <data name="RefParameterFound_Text" xml:space="preserve">
+    <value>方法 [{0}] 具有參數 [{1}] 標示為 `ref';Windows 執行階段中不允許參照參數</value>
+  </data>
+  <data name="StructHasConstFieldRule_Brief" xml:space="preserve">
+    <value>結構中的 Const 欄位</value>
+  </data>
+  <data name="StructHasConstFieldRule_Text" xml:space="preserve">
+    <value>結構 {0} 具有常數位段 - 常數只能出現在Windows 執行階段列舉上。</value>
+  </data>
+  <data name="StructHasInvalidFieldRule_Brief" xml:space="preserve">
+    <value>結構中的欄位無效</value>
+  </data>
+  <data name="StructHasInvalidFieldRule_Text1" xml:space="preserve">
+    <value>結構{0}具有類型為 {1};{1}不是有效的Windows 執行階段欄位類型。</value>
+  </data>
+  <data name="StructHasInvalidFieldRule_Text2" xml:space="preserve">
+    <value>在 Windows 執行階段結構中的每個欄位只能是 UInt8、Int16、UInt16、Int32、UInt32、Int64、UInt64、Single、Double、Boolean、String、Enum 或本身的結構。</value>
+  </data>
+  <data name="StructHasPrivateFieldRule_Brief" xml:space="preserve">
+    <value>結構中的私用欄位</value>
+  </data>
+  <data name="StructHasPrivateFieldRule_Text" xml:space="preserve">
+    <value>結構 {0} 具有非公用欄位。Windows 執行時間結構的所有欄位都必須為公用。</value>
+  </data>
+  <data name="StructWithNoFieldsRule_Brief" xml:space="preserve">
+    <value>空白結構規則</value>
+  </data>
+  <data name="StructWithNoFieldsRule_Text" xml:space="preserve">
+    <value>結構{0}未包含公用欄位。Windows 執行階段結構至少必須包含一個公用欄位。</value>
+  </data>
+  <data name="UnimplementedInterface_Brief" xml:space="preserve">
+    <value>類別不正確地實作介面</value>
+  </data>
+  <data name="UnimplementedInterface_Text" xml:space="preserve">
+    <value>類別'{0}'未正確實作介面'{1}'，因為成員'{2}'遺失或非公用</value>
+  </data>
+  <data name="UnsealedClassRule_Brief" xml:space="preserve">
+    <value>類別未密封</value>
+  </data>
+  <data name="UnsealedClassRule_Text" xml:space="preserve">
+    <value>CsWinRT 不支援匯出未密封的類型，請將類型 {0} 標示為密封</value>
+    <comment>{0} will be some user-defined keyword</comment>
+  </data>
+  <data name="UnsupportedTypeRule_Brief" xml:space="preserve">
+    <value>正在公開不支援的類型</value>
+  </data>
+  <data name="UnsupportedTypeRule_Text1" xml:space="preserve">
+    <value>成員'{0}'的簽章中有類型'{1}'。</value>
+    <comment>{0} and {1} will be user-defined keywords</comment>
+  </data>
+  <data name="UnsupportedTypeRule_Text2" xml:space="preserve">
+    <value>類型 '{1}' 不是有效的Windows 執行階段類型。</value>
+    <comment>{1} will be some user-defined keyword</comment>
+  </data>
+  <data name="UnsupportedTypeRule_Text3" xml:space="preserve">
+    <value>不過，此類型 (或它的一般參數) 會執行有效的 Windows 執行時間類型的介面。</value>
+  </data>
+  <data name="UnsupportedTypeRule_Text4" xml:space="preserve">
+    <value>請考慮將成員簽章中的類型 ‘{1} 從 System.Collections.Generic 變更為下列其中一種類型: {2}。</value>
+    <comment>{1} and {2} will be keywords (types) from DotNet</comment>
+  </data>
+</root>
