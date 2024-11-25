@@ -27,7 +27,7 @@
     <file src="$cswinmd_outpath$\CsWinMD.runtimeconfig.json" target="tools\native"/>
     <file src="$cswinmd_outpath$\Microsoft.CodeAnalysis.CSharp.dll" target="tools\native"/>
     <file src="$cswinmd_outpath$\Microsoft.CodeAnalysis.dll" target="tools\native"/>
-    <file src="$source_generator$" target="tools\native"/>
+    <file src="$source_generator_roslyn4080$" target="tools\native"/>
     <file src="Microsoft.Windows.CsWinMD.targets" target="build"/>
 
   </files>
