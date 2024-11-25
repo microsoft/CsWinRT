@@ -1,32 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>11</LangVersion>
-    <Authors>Microsoft Corporation</Authors>
-    <Company>Microsoft Corporation</Company>
-    <Product>C#/WinRT</Product>
-    <PackageId>WinRT.SourceGenerator</PackageId>
-    <FileVersion>$(VersionNumber)</FileVersion>
-    <Version>$(VersionNumber)</Version>
-    <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
-    <InformationalVersion>$(VersionNumber)</InformationalVersion>
-    <NeutralLanguage>en</NeutralLanguage>
-    <Description>C#/WinRT Authoring Source Generator Preview $(VersionString)</Description>
-    <AssemblyTitle>C#/WinRT Authoring Source Generator Preview v$(VersionString)</AssemblyTitle>
-    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
-    <IsRoslynComponent>true</IsRoslynComponent>
-    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.2" PrivateAssets="all" />
-    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
-  </ItemGroup>
-
-  <!-- Analyzer Release Tracking -->
+  <Import Project="..\WinRT.SourceGenerator\WinRT.SourceGenerator.props" />
   <Import Project="..\WinRT.SourceGenerator\WinRT.SourceGenerator.projitems" Label="Shared" />
 
 </Project>

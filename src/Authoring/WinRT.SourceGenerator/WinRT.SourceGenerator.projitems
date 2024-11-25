@@ -9,6 +9,7 @@
     <Import_RootNamespace>WinRT.SourceGenerator</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)WinRT.SourceGenerator.props" />
     <None Include="$(MSBuildThisFileDirectory)Properties\launchSettings.json" />
   </ItemGroup>
   <ItemGroup>

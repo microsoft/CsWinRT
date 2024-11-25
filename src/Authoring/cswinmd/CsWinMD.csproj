@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.SourceGenerator\WinRT.SourceGenerator.Roslyn4080.csproj" />
+    <ProjectReference Include="..\WinRT.SourceGenerator.Roslyn4080\WinRT.SourceGenerator.Roslyn4080.csproj" />
   </ItemGroup>
 
 </Project>

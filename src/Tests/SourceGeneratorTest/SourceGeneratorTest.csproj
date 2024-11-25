@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.Roslyn4080.csproj" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator.Roslyn4080\WinRT.SourceGenerator.Roslyn4080.csproj" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 </Project>
