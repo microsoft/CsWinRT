@@ -28,13 +28,9 @@
     <GitRepositoryRemoteName Condition="$(AdoMirrorBuild)">github</GitRepositoryRemoteName>
   </PropertyGroup>
 	
-  <!-- Keep assembly version constant for .NET 6 as new APIs are added for the .NET 8 version. -->
-  <PropertyGroup Condition="'$(TargetFramework)' != 'net6.0'">
+  <!-- Configure the assembly version as needed -->
+  <PropertyGroup>
     <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <AssemblyVersion>2.1.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <!-- NativeAOT specific options, only starting from .NET 8 -->
@@ -43,7 +39,7 @@
   </PropertyGroup>
 
   <!-- Include the ILLink file (to properly trim configuration switches in publish builds) -->
-  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <EmbeddedResource Include="Configuration\ILLink.Substitutions.xml" LogicalName="ILLink.Substitutions.xml" />
   </ItemGroup>
 
@@ -91,7 +87,7 @@
     <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --allow-default-interface-methods</MatchingRefApiCompatArgs>
   </PropertyGroup> 
   
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net8.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" PrivateAssets="All" />
     <PackageDownload Include="Microsoft.Windows.CsWinRT" Version="[$(CsWinRTApiCompatVersion)]" />
   </ItemGroup> 
@@ -101,7 +97,7 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
-  <Target Name="_ResolveResolvedMatchingContract" BeforeTargets="ValidateApiCompatForSrc;RunMatchingRefApiCompat" Condition="'$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net8.0'">
+  <Target Name="_ResolveResolvedMatchingContract" BeforeTargets="ValidateApiCompatForSrc;RunMatchingRefApiCompat" Condition="'$(TargetFramework)' == 'net8.0'">
     <ItemGroup>
       <_ReferencePathDirectories Include="@(ReferencePath -> '%(RootDir)%(Directory)')" />
       <ResolvedMatchingContract Include="$(NuGetPackageRoot)\Microsoft.Windows.CsWinRT\$(CsWinRTApiCompatVersion)\lib\$(TargetFramework)\$(TargetFileName)">

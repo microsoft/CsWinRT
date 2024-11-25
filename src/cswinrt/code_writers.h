@@ -10210,7 +10210,7 @@ default:
     // just calling it. Otherwise, we switch on the string parameter, and generate a dummy ReadOnlySpan<char>
     // overload just allocating and calling that. We always need both exports to make sure that hosting
     // scenarios also work, since those will be looking up the string overload via reflection.
-    settings.net7_0_or_greater ? "ReadOnlySpan<char>" : "string",
+    settings.netstandard_compat ? "string" : "ReadOnlySpan<char>",
 bind_each([](writer& w, TypeDef const& type)
     {
         w.write(R"(
@@ -10224,15 +10224,15 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
     },
     types
         ),
-    settings.net7_0_or_greater ? R"(
-public static IntPtr GetActivationFactory(string runtimeClassId)
-{
-    return GetActivationFactory(runtimeClassId.AsSpan());
-}
-)" : R"(
+    settings.netstandard_compat ? R"(
 public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
 {
     return GetActivationFactory(runtimeClassId.ToString());
+}
+)" : R"(
+public static IntPtr GetActivationFactory(string runtimeClassId)
+{
+    return GetActivationFactory(runtimeClassId.AsSpan());
 }
 )");
     }

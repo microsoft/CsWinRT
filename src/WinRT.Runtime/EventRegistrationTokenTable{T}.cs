@@ -54,7 +54,7 @@ namespace WinRT
         // is expected to eventually wrap around, and we don't want to lose the
         // additional possible range of negative values (there's no reason for that).
         private int m_low32Bits =
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
             Random.Shared.Next(int.MinValue, int.MaxValue);
 #else
             new Random().Next(int.MinValue, int.MaxValue);
@@ -109,7 +109,7 @@ namespace WinRT
                 // where we'll use a different token value).
                 int tokenLow32Bits;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 do
                 {
                     // When on .NET 6+, just iterate on TryAdd, which allows skipping the extra
@@ -147,7 +147,7 @@ namespace WinRT
         /// <returns>Whether or not a registered event handler could be retrieved and removed from the table.</returns>
         public bool RemoveEventHandler(
             EventRegistrationToken token,
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
             [NotNullWhen(true)]
 #endif
             out T? handler)
@@ -169,7 +169,7 @@ namespace WinRT
 
             lock (m_tokens)
             {
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 // On .NET 6 and above, we can use a single lookup to both check whether the token
                 // exists in the table, remove it, and also retrieve the removed handler to return.
                 if (m_tokens.Remove((int)token.Value, out object? obj))

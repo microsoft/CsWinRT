@@ -60,26 +60,26 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Projections\TestHost.ProbeByClass\TestHost.ProbeByClass.csproj">
       <Project>{ef3326b5-716f-41d2-ab30-4efab30955e2}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Projections\Test\Test.csproj">
       <Project>{c6d580c5-7037-4733-b933-916ff400afe2}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj">
       <Project>{ffa9a78b-f53f-43ee-af87-24a80f4c330a}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Authoring\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\..\Authoring\WinRT.Host\WinRT.Host.vcxproj">
       <Project>{7e33bcb7-19c5-4061-981d-ba695322708a}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj">
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
-      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
