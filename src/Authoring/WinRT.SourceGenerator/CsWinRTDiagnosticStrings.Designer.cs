@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace WinRT.SourceGenerator.Roslyn4080 {
+namespace WinRT.SourceGenerator {
     using System;
     
     

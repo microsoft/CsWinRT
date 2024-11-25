@@ -27,22 +27,6 @@
   </ItemGroup>
 
   <!-- Analyzer Release Tracking -->
-  <ItemGroup>
-    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
-    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="CsWinRTDiagnosticStrings.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>CsWinRTDiagnosticStrings.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="CsWinRTDiagnosticStrings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>CsWinRTDiagnosticStrings.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
+  <Import Project="..\WinRT.SourceGenerator\WinRT.SourceGenerator.projitems" Label="Shared" />
 
 </Project>
