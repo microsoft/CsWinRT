@@ -26,7 +26,7 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerWithLanguageVersionTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
     }
 
     [TestMethod]
@@ -48,7 +48,7 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerWithLanguageVersionTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
     }
 
     [TestMethod]
@@ -71,7 +71,7 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerWithLanguageVersionTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
     }
 
     [TestMethod]
@@ -121,7 +121,7 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerWithLanguageVersionTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
     }
 
     [TestMethod]
@@ -147,6 +147,6 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerWithLanguageVersionTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
     }
 }
