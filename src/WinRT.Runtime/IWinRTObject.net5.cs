@@ -68,7 +68,7 @@ namespace WinRT
 #if NET
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    return throwIfNotImplemented ? throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type '{type}'.") : false;
+                    return throwIfNotImplemented ? throw new NotSupportedException($"'IDynamicInterfaceCastable' is not supported for generic type '{type}'.") : false;
                 }
 #endif
 
@@ -104,7 +104,7 @@ namespace WinRT
 #if NET
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    return throwIfNotImplemented ? throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type '{type}'.") : false;
+                    return throwIfNotImplemented ? throw new NotSupportedException($"'IDynamicInterfaceCastable' is not supported for generic type '{type}'.") : false;
                 }
 #endif
 

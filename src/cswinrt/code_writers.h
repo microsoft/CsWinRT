@@ -5193,6 +5193,8 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
         // to make them internal.
         bool isExclusiveInterface = is_exclusive_to(iface);
 
+        bool writeEnsureRcwMethodsInitialized = false;
+
         for (auto&& method : iface.MethodList())
         {
             if (is_special(method))
@@ -5246,6 +5248,8 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
                 bind([&](writer& w) {
                     if (signature_has_only_generic_return && !is_generic_method_instantiation_class)
                     {
+                        writeEnsureRcwMethodsInitialized = true;
+                        w.write("\n_EnsureRcwMethodsInitialized();");
                         w.write("\nreturn _%(_genericObj%%);\n",
                             method.Name(),
                             signature.has_params() ? ", " : "",
@@ -5253,9 +5257,11 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
                     }
                     else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                     {
+                        writeEnsureRcwMethodsInitialized = true;
                         w.write(R"(
 if (%)
 {
+    _EnsureRcwMethodsInitialized();
     % _%(_genericObj%%);
 }
 else
@@ -5362,9 +5368,11 @@ static % %Fallback(% %%%)
                         }
                         else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
+                            writeEnsureRcwMethodsInitialized = true;
                             w.write(R"(
 if (!RuntimeFeature.IsDynamicCodeCompiled)
 {
+    _EnsureRcwMethodsInitialized();
     return _%(_genericObj);
 }
 
@@ -5427,9 +5435,11 @@ static % get_%Fallback(IObjectReference _genericObj)
                     bind([&](writer& w) {
                         if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
+                            writeEnsureRcwMethodsInitialized = true;
                             w.write(R"(
 if (!RuntimeFeature.IsDynamicCodeCompiled)
 {
+    _EnsureRcwMethodsInitialized();
     _%(_genericObj, value);
 }
 else
@@ -5469,6 +5479,33 @@ static void set_%Fallback(IObjectReference _genericObj, % value)
                     }));
             }
             w.write("\n");
+        }
+
+        if (writeEnsureRcwMethodsInitialized)
+        {
+            w.write(R"(
+[MethodImpl(MethodImplOptions.AggressiveInlining)]
+internal static unsafe void _EnsureRcwMethodsInitialized()
+{
+if (RuntimeFeature.IsDynamicCodeCompiled)
+{
+return;
+}
+if (!_RcwHelperInitialized)
+{
+static void ThrowNotInitialized()
+{
+throw new NotImplementedException(
+$"Type '{typeof(%)}' was called without initializing the RCW methods using '@Methods.InitRcwHelper'. " +
+$"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
+}
+
+ThrowNotInitialized();
+}
+}
+)",
+    bind<write_type_name>(iface, typedef_name_type::Projected, true),
+    iface.TypeName());
         }
 
         if (is_generic_method_instantiation_class)

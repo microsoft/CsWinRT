@@ -24,7 +24,7 @@ namespace ABI.System.Collections.Generic
 #if NET
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type argument '{typeof(T)}'.");
+                    throw new NotSupportedException($"'IDynamicInterfaceCastable' is not supported for generic type argument '{typeof(T)}'.");
                 }
 #endif
 
@@ -77,7 +77,7 @@ namespace ABI.System.Collections.Generic
 #if NET
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    throw new NotSupportedException($"IDynamicInterfaceCastable is not supported for generic type argument '{typeof(T)}'.");
+                    throw new NotSupportedException($"'IDynamicInterfaceCastable' is not supported for generic type argument '{typeof(T)}'.");
                 }
 #endif
 

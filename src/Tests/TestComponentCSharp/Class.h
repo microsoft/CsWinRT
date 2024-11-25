@@ -291,7 +291,8 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedBlittableStruct> GetStringToBlittableDictionary();
         Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedNonBlittableStruct> GetStringToNonBlittableDictionary();
         Windows::Foundation::Collections::IMap<TestComponentCSharp::ComposedBlittableStruct, Windows::Foundation::IInspectable> GetBlittableToObjectDictionary();
-       
+        Windows::Foundation::Collections::IMap<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>> GetIntToListDictionary();
+
         // Test IIDOptimizer -- testing the windows projection covers most code paths, and these two types exercise the rest.
         Windows::Foundation::Collections::IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> GetEventArgsVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ProvideUri> GetNonGenericDelegateVector();
@@ -430,6 +431,9 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::Foundation::IInspectable BoxedEventHandler();
 
         hstring Catch(hstring const& params, hstring& locks);
+
+        hstring ThrowExceptionWithMessage(hstring message, bool throwNonMappedError);
+        hstring OriginateAndThrowExceptionWithMessage(hstring message);
 
         static IProperties1 NativeProperties1();
         static Windows::Foundation::IInspectable ServiceProvider();

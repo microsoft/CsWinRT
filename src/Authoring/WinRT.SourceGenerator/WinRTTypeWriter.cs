@@ -1696,6 +1696,11 @@ namespace Generator
                     continue;
                 }
 
+                if (attributeType.ToString() == "System.Runtime.InteropServices.GuidAttribute")
+                {
+                    continue;
+                }
+
                 // Skip the [GeneratedBindableCustomProperty] attribute. It is valid to add this on types in WinRT
                 // components (if they need to be exposed and implement ICustomPropertyProvider), but the attribute
                 // should never show up in the .winmd file (it would also cause build errors in the projections).
@@ -2753,6 +2758,8 @@ namespace Generator
             List<VtableAttribute> vtableAttributesToAdd = new();
             HashSet<VtableAttribute> vtableAttributesToAddOnLookupTable = new();
 
+            Func<ISymbol, bool> isManagedOnlyTypeFunc = GeneratorHelper.IsManagedOnlyType(context.Compilation);
+
             foreach (var typeDeclaration in typeDefinitionMapping.Values)
             {
                 if (typeDeclaration.IsComponentType && 
@@ -2760,8 +2767,12 @@ namespace Generator
                     symbol.TypeKind == TypeKind.Class && 
                     !symbol.IsStatic)
                 {
-                    vtableAttributesToAdd.Add(WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, IsWinRTType, mapper, context.Compilation, true, typeDeclaration.DefaultInterface));
-                    WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, IsWinRTType, mapper, vtableAttributesToAddOnLookupTable);
+                    var vtableAttribute = WinRTAotSourceGenerator.GetVtableAttributeToAdd(symbol, isManagedOnlyTypeFunc, IsWinRTType, mapper, context.Compilation, true, typeDeclaration.DefaultInterface);
+                    if (vtableAttribute != default)
+                    {
+                        vtableAttributesToAdd.Add(vtableAttribute);
+                    }
+                    WinRTAotSourceGenerator.AddVtableAdapterTypeForKnownInterface(symbol, context.Compilation, isManagedOnlyTypeFunc, IsWinRTType, mapper, vtableAttributesToAddOnLookupTable);
                 }
             }
 
@@ -2784,7 +2795,7 @@ namespace Generator
 
             if (vtableAttributesToAddOnLookupTable.Any())
             {
-                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), ((true, true, true), escapedAssemblyName)), true);
+                WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), (new CsWinRTAotOptimizerProperties(true, true, true, false), escapedAssemblyName)), true);
             }
         }
 

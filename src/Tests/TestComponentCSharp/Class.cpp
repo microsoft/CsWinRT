@@ -1097,6 +1097,12 @@ namespace winrt::TestComponentCSharp::implementation
             { L"String2", ComposedNonBlittableStruct{ { 2 }, { L"String2" }, { true, false, true, false }, { 2 } } }
         });
     }
+
+    IMap<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>> Class::GetIntToListDictionary()
+    {
+        auto vector = winrt::single_threaded_vector(std::vector { TestComponentCSharp::EnumValue::One });
+        return single_threaded_map<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>>(std::map<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>>{ {1, vector}});
+    }
     
     struct ComposedBlittableStructComparer
     {
@@ -1803,6 +1809,30 @@ namespace winrt::TestComponentCSharp::implementation
     {
         // Compile-only test for keyword escaping
         throw hresult_not_implemented();
+    }
+
+    hstring Class::ThrowExceptionWithMessage(hstring message, bool throwNonMappedError)
+    {
+        if (throwNonMappedError)
+        {
+            throw hresult_wrong_thread(message.c_str());
+        }
+        else
+        {
+            throw hresult_invalid_argument(message.c_str());
+        }
+    }
+
+    extern "C" BOOL __stdcall RoOriginateLanguageException(HRESULT error, void* message, void* languageException);
+
+    hstring Class::OriginateAndThrowExceptionWithMessage(hstring message)
+    {
+        struct language_exception : winrt::implements<language_exception, ::IUnknown>
+        {
+        };
+
+        RoOriginateLanguageException(winrt::impl::error_invalid_argument, get_abi(message), get_abi(winrt::make<language_exception>()));
+        throw hresult_invalid_argument(hresult_error::from_abi);
     }
 
     void Class::UnboxAndCallProgressHandler(WF::IInspectable const& httpProgressHandler)

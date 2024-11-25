@@ -98,7 +98,7 @@ namespace ABI.Windows.Foundation.Collections
         internal volatile unsafe static delegate*<IObjectReference, uint, T[], uint> _GetMany;
         internal volatile static bool _RcwHelperInitialized;
 
-        internal static unsafe bool EnsureInitialized()
+        internal static unsafe void EnsureInitialized()
         {
             if (RuntimeFeature.IsDynamicCodeCompiled)
             {
@@ -128,9 +128,22 @@ namespace ABI.Windows.Foundation.Collections
                         initRcwHelperFallback();
                     }
                 }
+
+                return;
             }
 
-            return true;
+            if (!_RcwHelperInitialized)
+            {
+                [DoesNotReturn]
+                static void ThrowNotInitialized()
+                {
+                    throw new NotImplementedException(
+                        $"Type '{typeof(global::System.Collections.Generic.IReadOnlyList<T>)}' was called without initializing the RCW methods using 'IReadOnlyListMethods.InitRcwHelper'. " +
+                        $"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
+                }
+
+                ThrowNotInitialized();
+            }
         }
 
         public static unsafe T GetAt(IObjectReference obj, uint index)
@@ -161,6 +174,7 @@ namespace ABI.Windows.Foundation.Collections
             // See https://github.com/dotnet/runtime/blob/main/docs/design/tools/illink/feature-checks.md.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
+                EnsureInitialized();
                 return _GetMany(obj, startIndex, items);
             }
 
