@@ -134,15 +134,15 @@ public class DiagnosticAnalyzerTests
             {
                 void M(int x, IEnumerable<int> y)
                 {
-                    IEnumerable<int> a = {|CsWinRT1031:[1, 2, 3]|};
-                    IEnumerable<int> b = {|CsWinRT1031:[x]|};
-                    IEnumerable<int> c = {|CsWinRT1031:[1, x, ..y]|};
-                    IReadOnlyCollection<int> d = {|CsWinRT1031:[1, 2, 3]|};
-                    IReadOnlyCollection<int> e = {|CsWinRT1031:[x]|};
-                    IReadOnlyCollection<int> f = {|CsWinRT1031:[1, x, ..y]|};
-                    IReadOnlyList<int> g = {|CsWinRT1031:[1, 2, 3]|};
-                    IReadOnlyList<int> h = {|CsWinRT1031:[x]|};
-                    IReadOnlyList<int> i = {|CsWinRT1031:[1, x, ..y]|};
+                    IEnumerable<int> a = {|CsWinRT1032:[1, 2, 3]|};
+                    IEnumerable<int> b = {|CsWinRT1032:[x]|};
+                    IEnumerable<int> c = {|CsWinRT1032:[1, x, ..y]|};
+                    IReadOnlyCollection<int> d = {|CsWinRT1032:[1, 2, 3]|};
+                    IReadOnlyCollection<int> e = {|CsWinRT1032:[x]|};
+                    IReadOnlyCollection<int> f = {|CsWinRT1032:[1, x, ..y]|};
+                    IReadOnlyList<int> g = {|CsWinRT1032:[1, 2, 3]|};
+                    IReadOnlyList<int> h = {|CsWinRT1032:[x]|};
+                    IReadOnlyList<int> i = {|CsWinRT1032:[1, x, ..y]|};
                 }
             }
             """;

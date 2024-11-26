@@ -54,4 +54,4 @@ CsWinRT1030 | Usage | Warning | Project needs to be updated with `<AllowUnsafeBl
 ### New Rules
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-CsWinRT1031 | Usage | Warning | Collection expressions can only be used when statically verifiable for AOT support with WinRT.
+CsWinRT1032 | Usage | Warning | Collection expressions can only be used when statically verifiable for AOT support with WinRT.

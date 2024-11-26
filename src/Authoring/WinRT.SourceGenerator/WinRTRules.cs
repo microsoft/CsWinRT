@@ -240,7 +240,7 @@ namespace WinRT.SourceGenerator
             false);
 
         public static DiagnosticDescriptor NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType = MakeRule(
-            "CsWinRT1031",
+            "CsWinRT1032",
             CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief,
             CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text,
             false,
