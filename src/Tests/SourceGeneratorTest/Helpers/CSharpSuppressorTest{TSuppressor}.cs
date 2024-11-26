@@ -1,15 +1,17 @@
-﻿using System.Collections.Generic;
-using System;
-using System.Collections.Immutable;
+﻿using System;
 using System.ComponentModel;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
+using Microsoft.CodeAnalysis.Text;
 using WinRT;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace SourceGeneratorTest.Helpers;
 
@@ -123,6 +125,31 @@ public sealed class CSharpSuppressorTest<TSuppressor> : CSharpAnalyzerTest<TSupp
     public CSharpSuppressorTest<TSuppressor> WithExpectedDiagnosticsResults(params DiagnosticResult[] diagnostics)
     {
         ExpectedDiagnostics.AddRange(diagnostics);
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies the .editorconfig properties to use.
+    /// </summary>
+    /// <param name="editorconfig">The .editorconfig properties to use.</param>
+    /// <returns>The current test instance.</returns>
+    public CSharpSuppressorTest<TSuppressor> WithEditorconfig(params (string PropertyName, object PropertyValue)[] editorconfig)
+    {
+        // Add any editorconfig properties, if present
+        if (editorconfig.Length > 0)
+        {
+            SolutionTransforms.Add((solution, projectId) =>
+                solution.AddAnalyzerConfigDocument(
+                    DocumentId.CreateNewId(projectId),
+                    "CsWinRTSourceGeneratorTest.editorconfig",
+                    SourceText.From($"""
+                        is_global = true
+                        {string.Join(Environment.NewLine, editorconfig.Select(static p => $"build_property.{p.PropertyName} = {p.PropertyValue}"))}
+                        """,
+                        Encoding.UTF8),
+                filePath: "/CsWinRTSourceGeneratorTest.editorconfig"));
+        }
 
         return this;
     }

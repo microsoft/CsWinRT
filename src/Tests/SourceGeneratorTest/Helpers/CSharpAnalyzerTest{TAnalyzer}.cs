@@ -56,7 +56,7 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
 
     /// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.VerifyAnalyzerAsync"/>
     /// <param name="source">The source code to analyze.</param>
-    /// <param name="languageVersion">The language version to use to run the test.</param>
+    /// <param name="editorconfig">The .editorconfig properties to use.</param>
     public static Task VerifyAnalyzerAsync(string source, params (string PropertyName, object PropertyValue)[] editorconfig)
     {
         CSharpAnalyzerTest<TAnalyzer> test = new(true, LanguageVersion.Latest) { TestCode = source };

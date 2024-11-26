@@ -149,4 +149,41 @@ public class DiagnosticAnalyzerTests
 
         await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
     }
+
+    [TestMethod]
+    public async Task CollectionExpression_TargetingInterface_ReadOnly_NotEmpty_WithMultipleBuilderTypes_Warns()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            namespace MyApp
+            {
+                class Test
+                {
+                    void M(int x, IEnumerable<int> y)
+                    {
+                        IEnumerable<int> a = {|CsWinRT1032:[1, 2, 3]|};
+                    }
+                }
+            }
+
+            namespace System.Runtime.CompilerServices
+            {
+                [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, Inherited = false)]
+                internal sealed class CollectionBuilderAttribute : Attribute
+                {
+                    public CollectionBuilderAttribute(Type builderType, string methodName)
+                    {
+                        BuilderType = builderType;
+                        MethodName = methodName;
+                    }
+
+                    public Type BuilderType { get; }
+                    public string MethodName { get; }
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
+    }
 }

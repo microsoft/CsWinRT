@@ -30,6 +30,29 @@ public sealed class DiagnosticSuppressorTests
             """)
             .WithAnalyzer("Microsoft.CodeAnalysis.CSharp.UseCollectionExpression.CSharpUseCollectionExpressionForArrayDiagnosticAnalyzer, Microsoft.CodeAnalysis.CSharp.CodeStyle")
             .WithSpecificDiagnostics(IDE0300)
+            .WithEditorconfig(("CsWinRTAotOptimizerEnabled", "auto"))
+            .RunAsync();
+    }
+
+    [TestMethod]
+    [Ignore("Bug in the Roslyn test runner that throws a 'TypeInitializationException'")]
+    public async Task CollectionExpression_IDE0300_ArrayCreation_TargetingInterfaceType_Suppressed()
+    {
+        await new CSharpSuppressorTest<CollectionExpressionIDE0300Suppressor>(
+            """
+            using System.Collections.Generic;
+
+            class TestClass
+            {
+                void TestMethod()
+                {
+                    IEnumerable<int> a = {|IDE0300:new[] {|} 1, 2, 3 };
+                }
+            }
+            """)
+            .WithAnalyzer("Microsoft.CodeAnalysis.CSharp.UseCollectionExpression.CSharpUseCollectionExpressionForArrayDiagnosticAnalyzer, Microsoft.CodeAnalysis.CSharp.CodeStyle")
+            .WithSpecificDiagnostics(IDE0300)
+            .WithEditorconfig(("CsWinRTAotOptimizerEnabled", "auto"))
             .RunAsync();
     }
 }
