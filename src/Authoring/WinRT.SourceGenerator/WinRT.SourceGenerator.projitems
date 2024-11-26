@@ -43,17 +43,18 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)CsWinRTDiagnosticStrings.resx">
       <LastGenOutput>CsWinRTDiagnosticStrings.Designer.cs</LastGenOutput>
       <Generator>ResXFileCodeGenerator</Generator>
+      <LogicalName>WinRT.SourceGenerator.CsWinRTDiagnosticStrings.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\de-DE\CsWinRTDiagnosticStrings.resx" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\es-ES\CsWinRTDiagnosticStrings.resx" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\fr-FR\CsWinRTDiagnosticStrings.resx" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\it-IT\CsWinRTDiagnosticStrings.resx" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\ja-JP\CsWinRTDiagnosticStrings.resx" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\ko-KR\CsWinRTDiagnosticStrings.resx" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\pt-BR\CsWinRTDiagnosticStrings.resx" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\ru-RU\CsWinRTDiagnosticStrings.resx" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\zh-CN\CsWinRTDiagnosticStrings.resx" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\zh-TW\CsWinRTDiagnosticStrings.resx" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\de-DE\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.de_DE.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\es-ES\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.es_ES.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\fr-FR\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.fr_FR.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\it-IT\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.it_IT.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\ja-JP\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.ja_JP.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\ko-KR\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.ko_KR.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\pt-BR\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.pt_BR.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\ru-RU\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.ru_RU.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\zh-CN\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.zh_CN.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\zh-TW\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.zh_TW.CsWinRTDiagnosticStrings.resources" />
   </ItemGroup>
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)AnalyzerReleases.Shipped.md" />
