@@ -4,6 +4,7 @@
 #if ROSLYN_4_12_0_OR_GREATER
 
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp;
@@ -57,6 +58,14 @@ public sealed class CollectionExpressionIDE0305Suppressor : DiagnosticSuppressor
         // Try to get the syntax node matching the location of the diagnostic
         SyntaxNode? syntaxNode = diagnostic.Location.SourceTree?.GetRoot(context.CancellationToken).FindNode(diagnostic.Location.SourceSpan);
 
+        return IsInvocationAssignedToUnsupportedInterfaceType(context, syntaxNode);
+    }
+
+    /// <summary>
+    /// Checks whether a given invocation is assigning to an unsupported interface type.
+    /// </summary>
+    public static bool IsInvocationAssignedToUnsupportedInterfaceType(SuppressionAnalysisContext context, [NotNullWhen(true)] SyntaxNode? syntaxNode)
+    {
         // We expect to have found an invocation expression (eg. 'ToList()')
         if (syntaxNode?.Kind() is not SyntaxKind.InvocationExpression)
         {

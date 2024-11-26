@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)CollectionExpressions\CollectionExpressionAnalyzer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CollectionExpressions\CollectionExpressionIDE0300Suppressor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CollectionExpressions\CollectionExpressionIDE0303Suppressor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CollectionExpressions\CollectionExpressionIDE0304Suppressor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CollectionExpressions\CollectionExpressionIDE0305Suppressor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CsWinRTDiagnosticStrings.Designer.cs">
       <DependentUpon>CsWinRTDiagnosticStrings.resx</DependentUpon>
