@@ -36,11 +36,12 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            // Get the symbol for '[CollectionBuilder]', we need it for lookups
-            if (context.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.CollectionBuilderAttribute") is not { } collectionBuilderSymbol)
-            {
-                return;
-            }
+            // Get the symbols for '[CollectionBuilder]', we need them for lookups. Note that we cannot just
+            // use 'GetTypeByMetadataName' here, as it's possible for the attribute to exist across multiple
+            // assemblies. This is the case if any referenced assemblies is using polyfills due to targeting
+            // an older TFM that does not have the attribute. We still want to work correctly in those cases.
+            // We can just use an array here, since in the vast majority of cases we only expect 1-2 items.
+            ImmutableArray<INamedTypeSymbol> collectionBuilderSymbols = context.Compilation.GetTypesByMetadataName("System.Runtime.CompilerServices.CollectionBuilderAttribute");
 
             context.RegisterOperationAction(context =>
             {
@@ -67,7 +68,7 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 }
 
                 // If the target interface type doesn't have '[CollectionBuilder]' on it, we should warn
-                if (!GeneratorHelper.HasAttributeWithType(typeSymbol, collectionBuilderSymbol))
+                if (!GeneratorHelper.HasAttributeWithAnyType(typeSymbol, collectionBuilderSymbols))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         WinRTRules.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType,
