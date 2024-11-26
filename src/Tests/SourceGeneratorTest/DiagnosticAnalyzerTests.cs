@@ -26,7 +26,7 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
     }
 
     [TestMethod]
@@ -48,7 +48,7 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
     }
 
     [TestMethod]
@@ -71,7 +71,7 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
     }
 
     [TestMethod]
@@ -121,7 +121,7 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
     }
 
     [TestMethod]
@@ -147,6 +147,6 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source);
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
     }
 }

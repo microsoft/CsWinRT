@@ -1,10 +1,14 @@
+using System;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp.Testing;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using WinRT;
 
 namespace SourceGeneratorTest.Helpers;
@@ -52,17 +56,28 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
 
     /// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.VerifyAnalyzerAsync"/>
     /// <param name="source">The source code to analyze.</param>
-    /// <param name="allowUnsafeBlocks">Whether to enable unsafe blocks.</param>
     /// <param name="languageVersion">The language version to use to run the test.</param>
-    public static Task VerifyAnalyzerAsync(
-        string source,
-        bool allowUnsafeBlocks = true,
-        LanguageVersion languageVersion = LanguageVersion.CSharp12)
+    public static Task VerifyAnalyzerAsync(string source, params (string PropertyName, object PropertyValue)[] editorconfig)
     {
-        CSharpAnalyzerTest<TAnalyzer> test = new(allowUnsafeBlocks, languageVersion) { TestCode = source };
+        CSharpAnalyzerTest<TAnalyzer> test = new(true, LanguageVersion.Latest) { TestCode = source };
 
         test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ComWrappersSupport).Assembly.Location));
+
+        // Add any editorconfig properties, if present
+        if (editorconfig.Length > 0)
+        {
+            test.SolutionTransforms.Add((solution, projectId) =>
+                solution.AddAnalyzerConfigDocument(
+                    DocumentId.CreateNewId(projectId),
+                    "CsWinRTSourceGeneratorTest.editorconfig",
+                    SourceText.From($"""
+                        is_global = true
+                        {string.Join(Environment.NewLine, editorconfig.Select(static p => $"build_property.{p.PropertyName} = {p.PropertyValue}"))}
+                        """,
+                        Encoding.UTF8),
+                filePath: "/CsWinRTSourceGeneratorTest.editorconfig"));
+        }
 
         return test.RunAsync(CancellationToken.None);
     }
