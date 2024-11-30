@@ -84,12 +84,12 @@
     </ProjectReference>
     <ProjectReference Include="..\AuthoringWuxTest\AuthoringWuxTest.csproj">
       <Project>{d60cfcad-4a13-4047-91c8-9d7df4753493}</Project>
-      <SetTargetFramework>TargetFramework=net6.0-windows10.0.19041.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net6.0</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AuthoringWuxTest">
-      <HintPath>..\AuthoringWuxTest\bin\$(_WinMDPlatform)\$(Configuration)\net6.0-windows10.0.19041.0\AuthoringWuxTest.winmd</HintPath>
+      <HintPath>..\AuthoringWuxTest\bin\$(_WinMDPlatform)\$(Configuration)\net6.0\AuthoringWuxTest.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
