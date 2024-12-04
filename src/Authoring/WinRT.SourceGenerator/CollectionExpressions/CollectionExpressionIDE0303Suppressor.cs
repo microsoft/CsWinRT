@@ -41,7 +41,13 @@ public sealed class CollectionExpressionIDE0303Suppressor : DiagnosticSuppressor
 
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
-            if (CollectionExpressionIDE0305Suppressor.IsInvocationAssignedToUnsupportedInterfaceType(context, diagnostic))
+            // The 'IDE0303' analyzer will add the location of the invocation expression in the additional locations set
+            if (diagnostic.AdditionalLocations is not [{ } invocationLocation, ..])
+            {
+                continue;
+            }
+
+            if (CollectionExpressionIDE0305Suppressor.IsInvocationAssignedToUnsupportedInterfaceType(context, invocationLocation))
             {
                 context.ReportSuppression(Suppression.Create(WinRTSuppressions.CollectionExpressionIDE0303, diagnostic));
             }

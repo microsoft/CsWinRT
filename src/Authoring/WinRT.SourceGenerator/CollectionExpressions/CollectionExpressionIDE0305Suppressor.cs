@@ -43,7 +43,13 @@ public sealed class CollectionExpressionIDE0305Suppressor : DiagnosticSuppressor
 
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
-            if (IsInvocationAssignedToUnsupportedInterfaceType(context, diagnostic))
+            // The 'IDE0305' analyzer will add the location of the invocation expression in the additional locations set
+            if (diagnostic.AdditionalLocations is not [{ } invocationLocation, ..])
+            {
+                continue;
+            }
+
+            if (IsInvocationAssignedToUnsupportedInterfaceType(context, invocationLocation))
             {
                 context.ReportSuppression(Suppression.Create(WinRTSuppressions.CollectionExpressionIDE0305, diagnostic));
             }
@@ -53,18 +59,20 @@ public sealed class CollectionExpressionIDE0305Suppressor : DiagnosticSuppressor
     /// <summary>
     /// Checks whether a given diagnostic is over an invocation assigning to an unsupported interface type.
     /// </summary>
-    public static bool IsInvocationAssignedToUnsupportedInterfaceType(SuppressionAnalysisContext context, Diagnostic diagnostic)
+    public static bool IsInvocationAssignedToUnsupportedInterfaceType(SuppressionAnalysisContext context, Location location)
     {
         // Try to get the syntax node matching the location of the diagnostic
-        SyntaxNode? syntaxNode = diagnostic.Location.SourceTree?.GetRoot(context.CancellationToken).FindNode(diagnostic.Location.SourceSpan);
+        SyntaxNode? syntaxNode = location.SourceTree?.GetRoot(context.CancellationToken).FindNode(location.SourceSpan);
 
+        // Check the target invocation. The only thing we care about for this warning is whether the final invocation
+        // was being assigned to a concrete type (which is supported), or to a readonly interface type (which isn't).
         return IsInvocationAssignedToUnsupportedInterfaceType(context, syntaxNode);
     }
 
     /// <summary>
     /// Checks whether a given invocation is assigning to an unsupported interface type.
     /// </summary>
-    public static bool IsInvocationAssignedToUnsupportedInterfaceType(SuppressionAnalysisContext context, [NotNullWhen(true)] SyntaxNode? syntaxNode)
+    private static bool IsInvocationAssignedToUnsupportedInterfaceType(SuppressionAnalysisContext context, [NotNullWhen(true)] SyntaxNode? syntaxNode)
     {
         // We expect to have found an invocation expression (eg. 'ToList()')
         if (syntaxNode?.Kind() is not SyntaxKind.InvocationExpression)

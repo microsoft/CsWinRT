@@ -49,11 +49,7 @@ public sealed class CollectionExpressionIDE0304Suppressor : DiagnosticSuppressor
                 continue;
             }
 
-            // Check the target invocation. The only thing we care about for this warning is whether the final invocation
-            // was being assigned to a concrete type (which is supported), or to a readonly interface type (which isn't).
-            SyntaxNode? syntaxNode = invocationLocation.SourceTree?.GetRoot(context.CancellationToken).FindNode(invocationLocation.SourceSpan);
-
-            if (CollectionExpressionIDE0305Suppressor.IsInvocationAssignedToUnsupportedInterfaceType(context, syntaxNode))
+            if (CollectionExpressionIDE0305Suppressor.IsInvocationAssignedToUnsupportedInterfaceType(context, invocationLocation))
             {
                 context.ReportSuppression(Suppression.Create(WinRTSuppressions.CollectionExpressionIDE0304, diagnostic));
             }
