@@ -26,6 +26,9 @@
     <!-- Set remote for source link. -->
     <AdoMirrorBuild Condition="'$(AdoMirrorBuild)' == ''">false</AdoMirrorBuild>
     <GitRepositoryRemoteName Condition="$(AdoMirrorBuild)">github</GitRepositoryRemoteName>
+
+    <!-- Suppress warnings for using 'ref' as 'in', to simplify multi-targeting -->
+    <NoWarn>$(NoWarn);CS9191</NoWarn>
   </PropertyGroup>
 	
   <!-- Configure the assembly version as needed -->
