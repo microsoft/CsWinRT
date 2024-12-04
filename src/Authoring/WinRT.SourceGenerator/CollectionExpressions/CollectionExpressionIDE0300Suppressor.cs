@@ -47,6 +47,12 @@ public sealed class CollectionExpressionIDE0300Suppressor : DiagnosticSuppressor
             // Try to get the syntax node matching the location of the diagnostic
             SyntaxNode? syntaxNode = diagnostic.Location.SourceTree?.GetRoot(context.CancellationToken).FindNode(diagnostic.Location.SourceSpan);
 
+            // If the target node is an argument, unwrap it
+            if (syntaxNode?.Kind() is SyntaxKind.Argument)
+            {
+                syntaxNode = ((ArgumentSyntax)syntaxNode).Expression;
+            }
+
             // We only support 3 types of expressions here:
             //   Array initializer expressions: '{ 1, 2, 3 }'
             //   Implicit array creation expressions: 'new[] { 1, 2, 3 }'
