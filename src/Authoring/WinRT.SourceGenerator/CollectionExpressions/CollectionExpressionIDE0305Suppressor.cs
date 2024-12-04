@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using WinRT.SourceGenerator;
 
 #nullable enable
@@ -74,6 +75,12 @@ public sealed class CollectionExpressionIDE0305Suppressor : DiagnosticSuppressor
     /// </summary>
     private static bool IsInvocationAssignedToUnsupportedInterfaceType(SuppressionAnalysisContext context, [NotNullWhen(true)] SyntaxNode? syntaxNode)
     {
+        // If the target node is an argument, unwrap it
+        if (syntaxNode?.Kind() is SyntaxKind.Argument)
+        {
+            syntaxNode = ((ArgumentSyntax)syntaxNode).Expression;
+        }
+
         // We expect to have found an invocation expression (eg. 'ToList()')
         if (syntaxNode?.Kind() is not SyntaxKind.InvocationExpression)
         {
