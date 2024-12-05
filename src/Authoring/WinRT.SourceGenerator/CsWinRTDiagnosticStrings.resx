@@ -296,6 +296,6 @@
     <value>Collection expression not safe for WinRT</value>
   </data>
   <data name="NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text" xml:space="preserve">
-    <value>Collection expressions targeting non mutable interface type '{0}' do not have a defined concrete type, and are not supported for trimming and AOT compatibility with WinRT scenarios (consider changing the target type to be a concrete type, a mutable interface type, or avoid using a collection expression in this case)</value>
+    <value>Collection expressions targeting non mutable interface type '{0}' do not have a defined concrete type, and are not supported for trimming and AOT compatibility with WinRT scenarios (consider changing the target type to be a concrete type, a mutable interface type, or add an explicit cast for either of these on the collection expression, eg. '(string[])["A", "B", "C"]')</value>
   </data>
 </root>
