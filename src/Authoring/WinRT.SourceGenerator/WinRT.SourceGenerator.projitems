@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>b0e5e9cc-5fb4-4f94-bd54-115a91a6ae9d</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>WinRT.SourceGenerator</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)WinRT.SourceGenerator.props" />
+    <None Include="$(MSBuildThisFileDirectory)Properties\launchSettings.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AotOptimizer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CollectionExpressions\CollectionExpressionAnalyzer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CsWinRTDiagnosticStrings.Designer.cs">
+      <DependentUpon>CsWinRTDiagnosticStrings.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)DiagnosticHelpers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DiagnosticUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\SymbolExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Generator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GenericVtableInitializerStrings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ImmutableEquatableArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MergeReferencedActivationFactoriesGenerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RcwReflectionFallbackGenerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TypeMapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WinRTAotCodeFixer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WinRTRules.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WinRTTypeWriter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)CsWinRTDiagnosticStrings.resx">
+      <LastGenOutput>CsWinRTDiagnosticStrings.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LogicalName>WinRT.SourceGenerator.CsWinRTDiagnosticStrings.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\de-DE\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.de_DE.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\es-ES\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.es_ES.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\fr-FR\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.fr_FR.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\it-IT\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.it_IT.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\ja-JP\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.ja_JP.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\ko-KR\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.ko_KR.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\pt-BR\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.pt_BR.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\ru-RU\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.ru_RU.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\zh-CN\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.zh_CN.CsWinRTDiagnosticStrings.resources" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)ResX\zh-TW\CsWinRTDiagnosticStrings.resx" LogicalName="WinRT.SourceGenerator.ResX.zh_TW.CsWinRTDiagnosticStrings.resources" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+</Project>

@@ -24,13 +24,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.6.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.6.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" />
+    <ProjectReference Include="..\WinRT.SourceGenerator.Roslyn4080\WinRT.SourceGenerator.Roslyn4080.csproj" />
   </ItemGroup>
 
 </Project>

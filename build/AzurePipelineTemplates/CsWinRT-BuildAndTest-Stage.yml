@@ -62,6 +62,16 @@ stages:
         arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
         testRunTitle: Unit Tests
 
+# Run Source Generator Tests
+    - task: DotNetCoreCLI@2
+      displayName: Run Source Generator Tests
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
+      inputs:
+        command: test
+        projects: 'src/Tests/SourceGeneratorTest/SourceGeneratorTest.csproj'
+        arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger trx;LogFilePath=UNITTEST-$(Build.BuildNumber).trx /nologo /m /p:configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
+        testRunTitle: Unit Tests
+
 # Run Embedded Unit Tests
     - task: DotNetCoreCLI@2
       displayName: Run Embedded Unit Tests

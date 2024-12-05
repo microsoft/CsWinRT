@@ -466,6 +466,24 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collection expression not safe for WinRT.
+        /// </summary>
+        internal static string NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief {
+            get {
+                return ResourceManager.GetString("NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collection expressions targeting non mutable interface type &apos;{0}&apos; do not have a defined concrete type, and are not supported for trimming and AOT compatibility with WinRT scenarios (consider changing the target type to be a concrete type, a mutable interface type, or avoid using a collection expression in this case).
+        /// </summary>
+        internal static string NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text {
+            get {
+                return ResourceManager.GetString("NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid Interface Inherited.
         /// </summary>
         internal static string NonWinRTInterface_Brief {

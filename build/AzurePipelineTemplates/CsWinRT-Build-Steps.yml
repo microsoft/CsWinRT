@@ -265,16 +265,27 @@ steps:
       WinRT.Runtime.pdb
     TargetFolder: $(Build.ArtifactStagingDirectory)\release_netstandard2.0\
 
-# Stage Source Generator
+# Stage Source Generator (Roslyn 4.8)
 - task: CopyFiles@2
   displayName: Stage Source Generator
   condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
   inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator\bin\$(BuildConfiguration)\netstandard2.0
+    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator.Roslyn4080\bin\$(BuildConfiguration)\netstandard2.0
     Contents: |
       WinRT.SourceGenerator.dll
       WinRT.SourceGenerator.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_netstandard2.0\
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_netstandard2.0\roslyn4080\
+
+# Stage Source Generator (Roslyn 4.12)
+- task: CopyFiles@2
+  displayName: Stage Source Generator
+  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator.Roslyn4120\bin\$(BuildConfiguration)\netstandard2.0
+    Contents: |
+      WinRT.SourceGenerator.dll
+      WinRT.SourceGenerator.pdb
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_netstandard2.0\roslyn4120\
 
 # Stage Net8.0
 - task: CopyFiles@2

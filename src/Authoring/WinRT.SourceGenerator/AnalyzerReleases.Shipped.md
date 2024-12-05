@@ -48,3 +48,10 @@ CsWinRT1029 | Usage | Warning | Class implements WinRT interfaces generated usin
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 CsWinRT1030 | Usage | Warning | Project needs to be updated with `<AllowUnsafeBlocks>true</AllowUnsafeBlocks>` to allow generic interface code generation.
+
+## Release 2.3.0
+
+### New Rules
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+CsWinRT1032 | Usage | Warning | Collection expressions can only be used when statically verifiable for AOT support with WinRT.

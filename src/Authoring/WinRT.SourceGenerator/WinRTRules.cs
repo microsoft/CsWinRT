@@ -238,5 +238,12 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Brief,
             CsWinRTDiagnosticStrings.ClassOldProjectionMultipleInstances_Text,
             false);
+
+        public static DiagnosticDescriptor NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType = MakeRule(
+            "CsWinRT1032",
+            CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief,
+            CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text,
+            false,
+            true);
     }
 } 
