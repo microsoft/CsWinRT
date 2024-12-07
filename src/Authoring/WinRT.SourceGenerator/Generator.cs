@@ -14,6 +14,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading;
+using WinRT.SourceGenerator;
 
 namespace Generator
 {
@@ -91,12 +92,15 @@ namespace Generator
             {
                 using var cswinrtProcess = Process.Start(processInfo);
                 Logger.Log(cswinrtProcess.StandardOutput.ReadToEnd());
-                Logger.Log(cswinrtProcess.StandardError.ReadToEnd());
+                var error = cswinrtProcess.StandardError.ReadToEnd();
+                Logger.Log(error);
                 cswinrtProcess.WaitForExit();
 
                 if (cswinrtProcess.ExitCode != 0)
                 {
-                    throw new Win32Exception(cswinrtProcess.ExitCode);
+                    var diagnosticDescriptor = WinRTRules.SourceGeneratorFailed;
+                    context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, null, error));
+                    throw new Win32Exception(cswinrtProcess.ExitCode, error);
                 }
 
                 foreach (var file in Directory.GetFiles(outputDir, "*.cs", SearchOption.TopDirectoryOnly))
@@ -190,7 +194,7 @@ namespace Generator
                 }
                 Logger.Close();
                 Environment.ExitCode = -2;
-                throw;
+                return;
             }
 
             Logger.Log("Done");
