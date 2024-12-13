@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using WinRT.Interop;
@@ -227,26 +228,9 @@ namespace WinRT
                 return factory;
             }
 
-            var moduleName = typeName;
-            while (true)
-            {
-                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
-                if (lastSegment <= 0)
-                {
-                    Marshal.ThrowExceptionForHR(hr);
-                }
-                moduleName = moduleName.Remove(lastSegment);
+            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(typeName, hr);
 
-                DllModule module = null;
-                if (DllModule.TryLoad(moduleName + ".dll", out module))
-                {
-                    (factory, hr) = module.GetActivationFactory(typeName);
-                    if (factory != null)
-                    {
-                        return factory;
-                    }
-                }
-            }
+            return ManifestFreeGet(typeName, hr);
         }
 
 #if NET
@@ -276,6 +260,10 @@ namespace WinRT
             {
                 return factory;
             }
+
+            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(typeName, hr);
+
+            return ManifestFreeGet(typeName, iid, hr);
 #else
             ObjectReference<I> factory;
             (factory, hr) = WinRTModule.GetActivationFactory<I>(typeName, iid);
@@ -283,8 +271,16 @@ namespace WinRT
             {
                 return factory;
             }
-#endif
 
+            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(typeName, hr);
+
+            return ManifestFreeGet<I>(typeName, iid, hr);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static IObjectReference ManifestFreeGet(string typeName, int hr)
+        {
             var moduleName = typeName;
             while (true)
             {
@@ -297,6 +293,34 @@ namespace WinRT
 
                 DllModule module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
+                {
+                    (ObjectReference<IUnknownVftbl> factory, hr) = module.GetActivationFactory(typeName);
+                    if (factory != null)
+                    {
+                        return factory;
+                    }
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+#if NET
+        private static IObjectReference ManifestFreeGet(string typeName, Guid iid, int hr)
+#else
+        private static ObjectReference<I> ManifestFreeGet<I>(string typeName, Guid iid, int hr)
+#endif
+        {
+            var moduleName = typeName;
+            while (true)
+            {
+                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
+                if (lastSegment <= 0)
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+                moduleName = moduleName.Remove(lastSegment);
+
+                if (DllModule.TryLoad(moduleName + ".dll", out DllModule module))
                 {
                     ObjectReference<IUnknownVftbl> activationFactory;
                     (activationFactory, hr) = module.GetActivationFactory(typeName);
@@ -313,6 +337,35 @@ namespace WinRT
                     }
                 }
             }
+        }
+
+        private static void ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(string typeName, int hr)
+        {
+            // If manifest free activation is enabled, we never throw here.
+            // Callers will always try the fallback path if we didn't succeed.
+            if (FeatureSwitches.EnableManifestFreeActivation)
+            {
+                return;
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static Exception GetException(string typeName, int hr)
+            {
+                Exception exception = Marshal.GetExceptionForHR(hr);
+
+                if (hr == ExceptionHelpers.REGDB_E_CLASSNOTREG)
+                {
+                    throw new NotSupportedException(
+                        $"Failed to activate type with runtime class name '{typeName}' with 'RoGetActivationFactory' (it returned 0x80040154, ie. 'REGDB_E_CLASSNOTREG'). Make sure to add the activatable class id for the type " +
+                        "to the APPX manifest, or enable the manifest free activation fallback path by disabling the 'CsWinRTEnableManifestFreeActivation' property (note: the fallback path incurs a performance hit).", exception);
+                }
+
+                return exception;
+            }
+
+            // Explicit throw so the JIT can see it and correctly optimize for always throwing paths.
+            // The exception instantiation is in a separate method so that codegen remains separate.
+            throw GetException(typeName, hr);
         }
 
 #if NET
