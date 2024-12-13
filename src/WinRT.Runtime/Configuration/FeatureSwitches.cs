@@ -52,6 +52,11 @@ namespace WinRT
         private const string EnableIDynamicInterfaceCastableSupportPropertyName = "CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE";
 
         /// <summary>
+        /// The configuration property name for <see cref="EnableManifestFreeActivation"/>.
+        /// </summary>
+        private const string EnableManifestFreeActivationPropertyName = "CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION";
+
+        /// <summary>
         /// The configuration property name for <see cref="UseWindowsUIXamlProjections"/>.
         /// </summary>
         private const string UseWindowsUIXamlProjectionsPropertyName = "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS";
@@ -85,6 +90,11 @@ namespace WinRT
         /// The backing field for <see cref="EnableIDynamicInterfaceCastableSupport"/>.
         /// </summary>
         private static int _enableIDynamicInterfaceCastableSupport;
+
+        /// <summary>
+        /// The backing field for <see cref="EnableManifestFreeActivation"/>.
+        /// </summary>
+        private static int _enableManifestFreeActivation;
 
         /// <summary>
         /// The backing field for <see cref="UseWindowsUIXamlProjections"/>.
@@ -143,6 +153,15 @@ namespace WinRT
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => GetConfigurationValue(EnableIDynamicInterfaceCastableSupportPropertyName, ref _enableIDynamicInterfaceCastableSupport, true);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether or not manifest free WinRT activation is supported (defaults to <see langword="true"/>).
+        /// </summary>
+        public static bool EnableManifestFreeActivation
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(EnableManifestFreeActivationPropertyName, ref _enableManifestFreeActivation, true);
         }
 
         /// <summary>
