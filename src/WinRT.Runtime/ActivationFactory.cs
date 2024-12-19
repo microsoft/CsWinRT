@@ -191,6 +191,8 @@ namespace WinRT
         }
     }
 
+#nullable enable
+
 #if EMBED
     internal
 #else
@@ -202,7 +204,7 @@ namespace WinRT
         /// <summary>
         /// This provides a hook into activation to hook/mock activation of WinRT types.
         /// </summary>
-        public static Func<string, Guid, IntPtr> ActivationHandler { get; set; }
+        public static Func<string, Guid, IntPtr>? ActivationHandler { get; set; }
 #endif
 
         public static IObjectReference Get(string typeName)
@@ -291,7 +293,7 @@ namespace WinRT
                 }
                 moduleName = moduleName.Remove(lastSegment);
 
-                DllModule module = null;
+                DllModule? module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
                     (ObjectReference<IUnknownVftbl> factory, hr) = module.GetActivationFactory(typeName);
@@ -351,7 +353,7 @@ namespace WinRT
             [MethodImpl(MethodImplOptions.NoInlining)]
             static Exception GetException(string typeName, int hr)
             {
-                Exception exception = Marshal.GetExceptionForHR(hr);
+                Exception exception = Marshal.GetExceptionForHR(hr)!;
 
                 if (hr == ExceptionHelpers.REGDB_E_CLASSNOTREG)
                 {
@@ -369,7 +371,7 @@ namespace WinRT
         }
 
 #if NET
-        private static IObjectReference GetFromActivationHandler(string typeName, Guid iid)
+        private static IObjectReference? GetFromActivationHandler(string typeName, Guid iid)
         {
             var activationHandler = ActivationHandler;
             if (activationHandler != null)
