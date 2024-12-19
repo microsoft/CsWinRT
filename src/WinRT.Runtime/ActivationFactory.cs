@@ -193,6 +193,9 @@ namespace WinRT
 
 #nullable enable
 
+    /// <summary>
+    /// Provides support for activating WinRT types.
+    /// </summary>
 #if EMBED
     internal
 #else
@@ -207,13 +210,28 @@ namespace WinRT
         public static Func<string, Guid, IntPtr>? ActivationHandler { get; set; }
 #endif
 
-        public static IObjectReference Get(string typeName)
+        /// <summary>
+        /// Activates a WinRT type with the specified runtime class name.
+        /// </summary>
+        /// <param name="activatableClassId">The ID of the activatable class (the fully qualified type name).</param>
+        /// <returns>An <see cref="IObjectReference"/> instance wrapping an instance of the activated WinRT type.</returns>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="activatableClassId"/> is not registered, and <c>CsWinRTEnableManifestFreeActivation</c> is disabled.</exception>
+        /// <exception cref="Exception">Thrown for any failure to activate the specified type (the exact exception type might be a derived type).</exception>
+        /// <remarks>
+        /// This method will try to activate the target type as follows:
+        /// <list type="bullet">
+        ///   <item>If <see cref="ActivationHandler"/> is set, it will be used first.</item>
+        ///   <item>Otherwise, <a href="https://learn.microsoft.com/windows/win32/api/roapi/nf-roapi-rogetactivationfactory"><c>RoGetActivationFactory</c></a> will be used.</item>
+        ///   <item>Otherwise, the manifest-free fallback path will be used to try to resolve the target .dll to load based on <paramref name="activatableClassId"/>.</item>
+        /// </list>
+        /// </remarks>
+        public static IObjectReference Get(string activatableClassId)
         {
 #if NET
             // Check hook first
             if (ActivationHandler != null)
             {
-                var factoryFromhandler = GetFromActivationHandler(typeName, IID.IID_IActivationFactory);
+                var factoryFromhandler = GetFromActivationHandler(activatableClassId, IID.IID_IActivationFactory);
                 if (factoryFromhandler != null)
                 {
                     return factoryFromhandler;
@@ -224,19 +242,26 @@ namespace WinRT
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
             ObjectReference<IUnknownVftbl> factory;
-            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(typeName, IID.IID_IActivationFactory);
+            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(activatableClassId, IID.IID_IActivationFactory);
             if (factory != null)
             {
                 return factory;
             }
 
-            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(typeName, hr);
+            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(activatableClassId, hr);
 
-            return ManifestFreeGet(typeName, hr);
+            return ManifestFreeGet(activatableClassId, hr);
         }
 
+        /// <summary>
+        /// Activates a WinRT type with the specified runtime class name and interface ID.
+        /// </summary>
+        /// <param name="activatableClassId">The ID of the activatable class (the fully qualified type name).</param>
+        /// <param name="iid">The interface ID to use to dispatch the activated type.</param>
+        /// <returns>An <see cref="IObjectReference"/> instance wrapping an instance of the activated WinRT type, dispatched with the specified interface ID.</returns>
+        /// <inheritdoc cref="Get(string)"/>
 #if NET
-        public static IObjectReference Get(string typeName, Guid iid)
+        public static IObjectReference Get(string activatableClassId, Guid iid)
 #else
         public static ObjectReference<I> Get<I>(string typeName, Guid iid)
 #endif
@@ -245,7 +270,7 @@ namespace WinRT
             // Check hook first
             if (ActivationHandler != null)
             {
-                var factoryFromhandler = GetFromActivationHandler(typeName, iid);
+                var factoryFromhandler = GetFromActivationHandler(activatableClassId, iid);
                 if (factoryFromhandler != null)
                 {
                     return factoryFromhandler;
@@ -257,15 +282,15 @@ namespace WinRT
             int hr;
 #if NET
             ObjectReference<IUnknownVftbl> factory;
-            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(typeName, iid);
+            (factory, hr) = WinRTModule.GetActivationFactory<IUnknownVftbl>(activatableClassId, iid);
             if (factory != null)
             {
                 return factory;
             }
 
-            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(typeName, hr);
+            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(activatableClassId, hr);
 
-            return ManifestFreeGet(typeName, iid, hr);
+            return ManifestFreeGet(activatableClassId, iid, hr);
 #else
             ObjectReference<I> factory;
             (factory, hr) = WinRTModule.GetActivationFactory<I>(typeName, iid);
