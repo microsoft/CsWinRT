@@ -185,7 +185,7 @@ namespace WinRT
             if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
             {
                 RuntimeTypeHandle projectIEnum = typeof(System.Collections.IEnumerable).TypeHandle;
-                AdditionalTypeData.GetOrAdd(projectIEnum, (_) => new ABI.System.Collections.IEnumerable.AdaptiveFromAbiHelper(type, this));
+                AdditionalTypeData.GetOrAdd(projectIEnum, static (_, info) => new ABI.System.Collections.IEnumerable.AdaptiveFromAbiHelper(info.Type, info.This), (Type: type, This: this));
             }
 
             bool hasMovedObjRefOwnership = false;
