@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -332,6 +333,9 @@ namespace WinRT
             return CreateIID(type);
         }
 
+#if NET8_0_OR_GREATER
+        [SkipLocalsInit]
+#endif
         internal static Guid CreateIIDForGenericType(string signature)
         {
 #if !NET
@@ -342,15 +346,33 @@ namespace WinRT
                 return encode_guid(sha.ComputeHash(data));
             }
 #else
-            var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(signature.Length);
+#nullable enable
+            // Get the maximum UTF8 byte size and allocate a buffer for the encoding.
+            // If the minimum buffer is small enough, we can stack-allocate it.
+            int maxUtf8ByteCount = Encoding.UTF8.GetMaxByteCount(signature.Length);
+            int minimumPooledLength = 16 /* Number of bytes in a GUID */ + maxUtf8ByteCount;
+            byte[]? utf8BytesFromPool = null;
+            Span<byte> utf8Bytes = minimumPooledLength <= 128
+                ? stackalloc byte[128]
+                : (utf8BytesFromPool = ArrayPool<byte>.Shared.Rent(minimumPooledLength));
 
-            var data = new byte[16 /* Number of bytes in a GUID */ + maxBytes];
-            Span<byte> dataSpan = data;
-            wrt_pinterface_namespace.TryWriteBytes(dataSpan);
-            var numBytes = UTF8Encoding.UTF8.GetBytes(signature, dataSpan[16..]);
-            data = data[..(16 + numBytes)];
+            wrt_pinterface_namespace.TryWriteBytes(utf8Bytes);
 
-            return encode_guid(SHA1.HashData(data));
+            int encodedUtf8BytesWritten = Encoding.UTF8.GetBytes(signature, utf8Bytes[16..]);
+            Span<byte> sha1Bytes = stackalloc byte[SHA1.HashSizeInBytes];
+
+            // Hash the encoded signature (the bytes written are guaranteed to always match the span)
+            _ = SHA1.HashData(utf8Bytes[..(16 + encodedUtf8BytesWritten)], sha1Bytes);
+
+            Guid iid = encode_guid(sha1Bytes);
+
+            // Before exiting, make sure to return the array from the pool, if we rented one
+            if (utf8BytesFromPool is not null)
+            {
+                ArrayPool<byte>.Shared.Return(utf8BytesFromPool);
+            }
+
+            return iid;
 #endif
         }
     }
