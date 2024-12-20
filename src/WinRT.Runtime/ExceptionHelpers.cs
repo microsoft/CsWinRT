@@ -53,6 +53,7 @@ namespace WinRT
         private const int ERROR_BAD_FORMAT = unchecked((int)0x8007000b);
         private const int ERROR_CANCELLED = unchecked((int)0x800704c7);
         private const int ERROR_TIMEOUT = unchecked((int)0x800705b4);
+        internal const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
 
         private static delegate* unmanaged[Stdcall]<IntPtr*, int> getRestrictedErrorInfo;
         private static delegate* unmanaged[Stdcall]<IntPtr, int> setRestrictedErrorInfo;
