@@ -349,11 +349,15 @@ namespace WinRT
 #nullable enable
             // Get the maximum UTF8 byte size and allocate a buffer for the encoding.
             // If the minimum buffer is small enough, we can stack-allocate it.
+            // The 512 threshold is the smallest one that will contain generally all
+            // enum types names. Eg. we'd get signature strings like this:
+            // 'pinterface({61c17706-2d65-11e0-9ae8-d48564015472};enum(Windows.UI.Xaml.Visibility;u4))'.
+            // Which would result in a number of bytes ~280, including the GUID size.
             int maxUtf8ByteCount = Encoding.UTF8.GetMaxByteCount(signature.Length);
             int minimumPooledLength = 16 /* Number of bytes in a GUID */ + maxUtf8ByteCount;
             byte[]? utf8BytesFromPool = null;
-            Span<byte> utf8Bytes = minimumPooledLength <= 128
-                ? stackalloc byte[128]
+            Span<byte> utf8Bytes = minimumPooledLength <= 512
+                ? stackalloc byte[512]
                 : (utf8BytesFromPool = ArrayPool<byte>.Shared.Rent(minimumPooledLength));
 
             wrt_pinterface_namespace.TryWriteBytes(utf8Bytes);
