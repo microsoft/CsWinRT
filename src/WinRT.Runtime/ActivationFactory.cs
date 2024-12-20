@@ -384,7 +384,7 @@ namespace WinRT
                 {
                     throw new NotSupportedException(
                         $"Failed to activate type with runtime class name '{typeName}' with 'RoGetActivationFactory' (it returned 0x80040154, ie. 'REGDB_E_CLASSNOTREG'). Make sure to add the activatable class id for the type " +
-                        "to the APPX manifest, or enable the manifest free activation fallback path by disabling the 'CsWinRTEnableManifestFreeActivation' property (note: the fallback path incurs a performance hit).", exception);
+                        "to the APPX manifest, or enable the manifest free activation fallback path by setting the 'CsWinRTEnableManifestFreeActivation' property (note: the fallback path incurs a performance hit).", exception);
                 }
 
                 return exception;
