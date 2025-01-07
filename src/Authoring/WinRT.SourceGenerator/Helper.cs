@@ -241,6 +241,16 @@ namespace Generator
             return false;
         }
 
+        public static bool GetCsWinRTComponentWinMD(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTComponentWinMD", out var CsWinRTComponentWinMDStr))
+            {
+                return bool.TryParse(CsWinRTComponentWinMDStr, out var isCsWinRTComponentWinMD) && isCsWinRTComponentWinMD;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Gets whether the <c>"CsWinRTAotExportsEnabled"</c> MSBuild property is defined.
         /// </summary>

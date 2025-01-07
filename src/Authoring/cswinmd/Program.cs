@@ -150,6 +150,7 @@ namespace Generator
                 config.Values["build_property.CsWinRTGeneratedFilesDir"] = outFolder;
                 config.Values["build_property.CsWinRTEnableLogging"] = "true";
                 config.Values["build_property.CsWinRTGenerateWinMDOnly"] = "true";
+                config.Values["build_property.CsWinRTComponentWinMD"] = "true";
 
                 var driver = CSharpGeneratorDriver.Create(
                     generators: ImmutableArray.Create(g),

@@ -179,6 +179,16 @@ namespace Generator
                 writer.FinalizeGeneration();
 
                 GenerateWinMD(metadataBuilder);
+
+                if (context.GetCsWinRTComponentWinMD())
+                {
+                    Logger.Log("GetCsWinRTComponentWinMD is true");
+                }
+                else
+                {
+                    Logger.Log("GetCsWinRTComponentWinMD is false");
+                }
+
                 if (!context.ShouldGenerateWinMDOnly())
                 {
                     GenerateSources();
