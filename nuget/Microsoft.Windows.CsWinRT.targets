@@ -316,6 +316,82 @@ $(CsWinRTInternalProjection)
     </ItemGroup>
   </Target>
 
+  <!-- Produces a stub .exe for the application, if requested -->
+  <Target
+    Name="_CsWinRTGenerateStubExe"
+    AfterTargets="Publish"
+    Condition="'$(CsWinRTGenerateStubExe)' == 'true'">
+
+    <PropertyGroup>
+    
+      <!-- Prepare the generated files directory -->
+      <_StubExeFolderName>StubExe</_StubExeFolderName>
+      <_StubExeGeneratedFilesDir Condition="'$(_StubExeGeneratedFilesDir)' == '' AND '$(GeneratedFilesDir)' != ''">$(GeneratedFilesDir)\$(_StubExeFolderName)\</_StubExeGeneratedFilesDir>
+      <_StubExeGeneratedFilesDir Condition="'$(_StubExeGeneratedFilesDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files', '$(_StubExeFolderName)'))</_StubExeGeneratedFilesDir>
+    
+      <!-- The path of the .lib file produced by the Native AOT toolchain, which we need for the linker -->
+      <_StubExeNativeLibraryPath>$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(NativeOutputPath), $(AssemblyName).lib))</_StubExeNativeLibraryPath>
+    
+      <!-- Prepare the path of the .c file with the stub .exe source we need to compile -->
+      <_StubExeSourceFileName>$(AssemblyName).c</_StubExeSourceFileName>
+      <_StubExeSourceFilePath>$([System.IO.Path]::Combine($(_StubExeGeneratedFilesDir), $(_StubExeSourceFileName)))</_StubExeSourceFilePath>
+    
+      <!-- Prepare the output path of the resulting stub .exe -->
+      <_StubExeBinaryFileName>$(AssemblyName).exe</_StubExeBinaryFileName>
+      <_StubExeBinaryOutputFilePath>$([System.IO.Path]::Combine($(_StubExeGeneratedFilesDir), $(_StubExeBinaryFileName)))</_StubExeBinaryOutputFilePath>
+      <_StubExeBinaryDestinationFilePath>$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(PublishDir), $(_StubExeBinaryFileName)))</_StubExeBinaryDestinationFilePath>
+    </PropertyGroup>
+    
+    <!--
+      This is a simple C source file just jumping into the special 'Main' program of the current project.
+      Note that we need to use '%3B' to escape the semicolons, as otherwise it'll be skipped entirely.
+    -->
+    <PropertyGroup>
+      <_StubExeSourceFileLines>
+        <![CDATA[#include <wchar.h>
+
+// Declare the import for '__managed__Main', which is a special export produced by the
+// Native AOT runtime to allow jumping into the real 'Main' of an application. This is
+// exported automatically when the 'CustomNativeMain' property is set to 'true'.
+__declspec(dllimport)
+int __stdcall __managed__Main(int argc, wchar_t** argv)%3B
+
+// Our entry point is simply a direct jump into the entry point from Native AOT
+int wmain(int argc, wchar_t** argv)
+{
+    return __managed__Main(argc, argv)%3B
+}]]>
+      </_StubExeSourceFileLines>
+    </PropertyGroup>
+    
+    <!-- This whole target might take a minute (and it might fail), so notify the user to help debug issues -->
+    <Message Text="Generating stub .exe" />
+
+    <!-- Ensure the folder exists, or writing to the source file will fail -->
+    <MakeDir Directories="$(_StubExeGeneratedFilesDir)"/>
+      
+    <!-- Write the stub .exe source -->
+    <WriteLinesToFile Lines="$(_StubExeSourceFileLines)" Overwrite="true" WriteOnlyWhenDifferent="true" File="$(_StubExeSourceFilePath)" />
+
+    <!--
+      We want to invoke MSVC in the folder where we also want the .exe to be produced in.
+      So we also need to adjust the input paths to be relative to that working directory.
+    -->
+    <PropertyGroup>
+      <_StubExeSourceFilePathRelative>$([MSBuild]::MakeRelative($(_StubExeGeneratedFilesDir), $(_StubExeSourceFilePath)))</_StubExeSourceFilePathRelative>
+      <_StubExeNativeLibraryPathRelative>$([MSBuild]::MakeRelative($(_StubExeGeneratedFilesDir), $(_StubExeNativeLibraryPath)))</_StubExeNativeLibraryPathRelative>
+    </PropertyGroup>
+    
+    <!-- Invoke MSVC to produce the native executable -->
+    <Exec
+      Command='cl -nologo "$(_StubExeSourceFilePathRelative)" "$(_StubExeNativeLibraryPathRelative)" /O2'
+      ConsoleToMsBuild="true"
+      WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
+    
+    <!-- Copy the resulting executable to the publish directory -->
+    <Copy SourceFiles="$(_StubExeBinaryOutputFilePath)" DestinationFiles="$(_StubExeBinaryDestinationFilePath)" />
+  </Target>
+
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
