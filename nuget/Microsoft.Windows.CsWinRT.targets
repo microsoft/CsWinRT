@@ -381,10 +381,46 @@ int wmain(int argc, wchar_t** argv)
       <_StubExeSourceFilePathRelative>$([MSBuild]::MakeRelative($(_StubExeGeneratedFilesDir), $(_StubExeSourceFilePath)))</_StubExeSourceFilePathRelative>
       <_StubExeNativeLibraryPathRelative>$([MSBuild]::MakeRelative($(_StubExeGeneratedFilesDir), $(_StubExeNativeLibraryPath)))</_StubExeNativeLibraryPathRelative>
     </PropertyGroup>
+
+    <!-- Prepare the arguments for MSVC -->
+    <PropertyGroup>
+
+      <!-- Hide the copyright banner, to reduce visual clutter (https://learn.microsoft.com/cpp/build/reference/nologo-suppress-startup-banner-c-cpp) -->
+      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /nologo</_StubExeMsvcArgs>
+
+      <!-- Optimize for speed (https://learn.microsoft.com/cpp/build/reference/o1-o2-minimize-size-maximize-speed) -->
+      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /O2</_StubExeMsvcArgs>
+
+      <!--
+        Remove some buffer overrun validation code that requires additional CRT support. This is not needed for the stub .exe,
+        as we are literally only jumping into the custom entry point of the app (which will have its own buffer overrun checks)
+        (https://learn.microsoft.com/cpp/build/reference/gs-buffer-security-check).
+      -->
+      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /GS-</_StubExeMsvcArgs>
+
+      <!-- Denote the start of the sequence of linker options (https://learn.microsoft.com/cpp/build/reference/compiler-command-line-syntax) -->
+      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /link</_StubExeMsvcArgs>
+
+      <!-- Skip the relocation section, as it's not needed for .exe files (https://learn.microsoft.com/cpp/build/reference/fixed-fixed-base-address) -->
+      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /fixed</_StubExeMsvcArgs>
+
+      <!-- Skip generating additional code for incremental linking (https://learn.microsoft.com/cpp/build/reference/incremental-link-incrementally) -->
+      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /incremental:no</_StubExeMsvcArgs>
+
+      <!-- Enable COMDAT folding and remove unreferenced code (https://learn.microsoft.com/cpp/build/reference/opt-optimizations) -->
+      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /opt:icf</_StubExeMsvcArgs>
+      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /opt:ref</_StubExeMsvcArgs>
+    </PropertyGroup>
+    
+    <!--
+      Remove the broken .exe, if present (see https://github.com/dotnet/runtime/issues/111313). We want to do this before
+      compiling the binary, to ensure users won't ever see the wrong one in the publish folder and use that by accident.
+    -->
+    <Delete Files="$(_StubExeBinaryDestinationFilePath)" />
     
     <!-- Invoke MSVC to produce the native executable -->
     <Exec
-      Command='cl -nologo "$(_StubExeSourceFilePathRelative)" "$(_StubExeNativeLibraryPathRelative)" /O2'
+      Command='cl "$(_StubExeSourceFilePathRelative)" "$(_StubExeNativeLibraryPathRelative)" $(_StubExeMsvcArgs)'
       ConsoleToMsBuild="true"
       WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
     
