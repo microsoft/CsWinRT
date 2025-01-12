@@ -402,33 +402,38 @@ int wmain(int argc, wchar_t** argv)
     </PropertyGroup>
 
     <!-- Prepare the arguments for MSVC -->
-    <PropertyGroup>
+    <ItemGroup>
 
       <!-- Hide the copyright banner, to reduce visual clutter (https://learn.microsoft.com/cpp/build/reference/nologo-suppress-startup-banner-c-cpp) -->
-      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /nologo</_StubExeMsvcArgs>
+      <_StubExeMsvcArgs Include="/nologo" />
 
       <!-- Optimize for speed (https://learn.microsoft.com/cpp/build/reference/o1-o2-minimize-size-maximize-speed) -->
-      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /O2</_StubExeMsvcArgs>
+      <_StubExeMsvcArgs Include=" /O2" />
 
       <!--
         Remove some buffer overrun validation code that requires additional CRT support. This is not needed for the stub .exe,
         as we are literally only jumping into the custom entry point of the app (which will have its own buffer overrun checks)
         (https://learn.microsoft.com/cpp/build/reference/gs-buffer-security-check).
       -->
-      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /GS-</_StubExeMsvcArgs>
+      <_StubExeMsvcArgs Include="/GS-" />
 
       <!-- Denote the start of the sequence of linker options (https://learn.microsoft.com/cpp/build/reference/compiler-command-line-syntax) -->
-      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /link</_StubExeMsvcArgs>
+      <_StubExeMsvcArgs Include="/link" />
 
       <!-- Skip the relocation section, as it's not needed for .exe files (https://learn.microsoft.com/cpp/build/reference/fixed-fixed-base-address) -->
-      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /fixed</_StubExeMsvcArgs>
+      <_StubExeMsvcArgs Include="/fixed" />
 
       <!-- Skip generating additional code for incremental linking (https://learn.microsoft.com/cpp/build/reference/incremental-link-incrementally) -->
-      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /incremental:no</_StubExeMsvcArgs>
+      <_StubExeMsvcArgs Include="/incremental:no" />
 
       <!-- Enable COMDAT folding and remove unreferenced code (https://learn.microsoft.com/cpp/build/reference/opt-optimizations) -->
-      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /opt:icf</_StubExeMsvcArgs>
-      <_StubExeMsvcArgs>$(_StubExeMsvcArgs) /opt:ref</_StubExeMsvcArgs>
+      <_StubExeMsvcArgs Include="/opt:icf" />
+      <_StubExeMsvcArgs Include="/opt:ref" />
+    </ItemGroup>
+
+    <!-- Combine all arguments, separated by a space (also, using a property makes it easier to inspect them, for debugging) -->
+    <PropertyGroup>
+      <_StubExeMsvcArgsText>@(_StubExeMsvcArgs, ' ')</_StubExeMsvcArgsText>
     </PropertyGroup>
     
     <!--
@@ -439,7 +444,7 @@ int wmain(int argc, wchar_t** argv)
     
     <!-- Invoke MSVC to produce the native executable -->
     <Exec
-      Command='"$(_ClExeFilePath)" "$(_StubExeSourceFilePathRelative)" "$(_StubExeNativeLibraryPathRelative)" $(_StubExeMsvcArgs)'
+      Command='"$(_ClExeFilePath)" "$(_StubExeSourceFilePathRelative)" "$(_StubExeNativeLibraryPathRelative)" $(_StubExeMsvcArgsText)'
       ConsoleToMsBuild="true"
       WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
     
