@@ -407,28 +407,37 @@ int wmain(int argc, wchar_t** argv)
       <!-- Hide the copyright banner, to reduce visual clutter (https://learn.microsoft.com/cpp/build/reference/nologo-suppress-startup-banner-c-cpp) -->
       <_StubExeMsvcArgs Include="/nologo" />
 
+      <!--
+        Configure the binary to dynamically link the C runtime library (the default would be to statically link it).
+        This library (UCRT) has the implementation of all standard C runtime methods, like 'printf'. The dynamically
+        linked version ships in the OS as 'ucrt.dll'. This matches the behavior of Native AOT as well, which links
+        UCRT dynamically, and VCRUNTIME140 (the MSVC-specific part of the C runtime) statically. The latter is much
+        smaller in size, so it does not matter. Dynamically linking UCRT reduces the size from 98 KB to 20 KB.
+        For additional info, see https://learn.microsoft.com/cpp/build/reference/md-mt-ld-use-run-time-library.
+      -->
+      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include=" /MDd" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include=" /MD" />
+
       <!-- Optimize for speed (https://learn.microsoft.com/cpp/build/reference/o1-o2-minimize-size-maximize-speed) -->
       <_StubExeMsvcArgs Include=" /O2" />
-
-      <!--
-        Remove some buffer overrun validation code that requires additional CRT support. This is not needed for the stub .exe,
-        as we are literally only jumping into the custom entry point of the app (which will have its own buffer overrun checks)
-        (https://learn.microsoft.com/cpp/build/reference/gs-buffer-security-check).
-      -->
-      <_StubExeMsvcArgs Include="/GS-" />
 
       <!-- Denote the start of the sequence of linker options (https://learn.microsoft.com/cpp/build/reference/compiler-command-line-syntax) -->
       <_StubExeMsvcArgs Include="/link" />
 
-      <!-- Skip the relocation section, as it's not needed for .exe files (https://learn.microsoft.com/cpp/build/reference/fixed-fixed-base-address) -->
-      <_StubExeMsvcArgs Include="/fixed" />
+      <!--
+        Change the behavior for VCRUNTIME140 to be statically linked (the default would be to dynamically link it, due to '/MD').
+        See: https://learn.microsoft.com/cpp/build/reference/defaultlib-specify-default-library.
+        Also see: https://learn.microsoft.com/cpp/build/reference/nodefaultlib-ignore-libraries.
+      -->
+      <_StubExeMsvcArgs Include="/DEFAULTLIB:libvcruntime.lib" />
+      <_StubExeMsvcArgs Include="/NODEFAULTLIB:vcruntime.lib" />
 
       <!-- Skip generating additional code for incremental linking (https://learn.microsoft.com/cpp/build/reference/incremental-link-incrementally) -->
-      <_StubExeMsvcArgs Include="/incremental:no" />
+      <_StubExeMsvcArgs Include="/INCREMENTAL:NO" />
 
       <!-- Enable COMDAT folding and remove unreferenced code (https://learn.microsoft.com/cpp/build/reference/opt-optimizations) -->
-      <_StubExeMsvcArgs Include="/opt:icf" />
-      <_StubExeMsvcArgs Include="/opt:ref" />
+      <_StubExeMsvcArgs Include="/OPT:ICF" />
+      <_StubExeMsvcArgs Include="/OPT:REF" />
     </ItemGroup>
 
     <!-- Combine all arguments, separated by a space (also, using a property makes it easier to inspect them, for debugging) -->
