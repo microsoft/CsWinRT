@@ -1,0 +1,27 @@
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+  
+    <!-- We need to set the final value of this property here, as if that's set, we need to do additional work before the .NET SDK .targets -->
+    <CsWinRTMergeReferencedActivationFactories Condition="'$(CsWinRTMergeReferencedActivationFactories)' == ''">false</CsWinRTMergeReferencedActivationFactories>
+  </PropertyGroup>
+
+  <!--
+    If we need to merge activation factories and the project is an executable, we need to emit a stub .exe,
+    so in order to do that we need to tell the .NET SDK to export a custom main, and compile to a .dll instead.
+    These two properties have to be set before the Native AOT toolchain runs, that's why it's done from here.
+  -->
+  <PropertyGroup Condition="'$(CsWinRTMergeReferencedActivationFactories)' == 'true' AND ('$(OutputType)' == 'Exe' OR '$(OutputType)' == 'WinExe')">
+    <NativeLib>Shared</NativeLib>
+    <CustomNativeMain>true</CustomNativeMain>
+
+    <!-- Activate our custom target to produce the stub .exe after the publish step -->
+    <_CsWinRTEnableStubExeGeneration>true</_CsWinRTEnableStubExeGeneration>
+  </PropertyGroup>
+
+</Project>

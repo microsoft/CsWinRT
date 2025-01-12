@@ -14,8 +14,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
-    <!-- Making sure ResolveAssemblyReferences runs before CoreCompile runs as we have seen it not run in WPF scenarios
-         causing for our targeting pack to not get included or conflicts to be resolved. -->
+
+    <!--
+      Making sure ResolveAssemblyReferences runs before CoreCompile runs as we have seen it not run
+      in WPF scenarios causing for our targeting pack to not get included or conflicts to be resolved.
+    -->
     <CoreCompileDependsOn>ResolveAssemblyReferences;CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess>
     <CsWinRTAotOptimizerEnabled Condition="'$(CsWinRTAotOptimizerEnabled)' == '' and $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">true</CsWinRTAotOptimizerEnabled>
@@ -316,12 +319,19 @@ $(CsWinRTInternalProjection)
     </ItemGroup>
   </Target>
 
+  <!-- Emit a warning when 'CsWinRTMergeReferencedActivationFactories' is used incorrectly -->
+  <Target
+    Name="_CsWinRTErrorForInvalidMergeReferencedActivationFactories"
+    BeforeTargets="BeforeCompile"
+    Condition="'$(CsWinRTMergeReferencedActivationFactories)' == 'true' AND '$(PublishAot)' != 'true'">
+    <Error Text="The 'CsWinRTMergeReferencedActivationFactories' property can only be set when publishing with Native AOT. Make sure to set the 'PublishAot' property to 'true'." />
+  </Target>
+
   <!-- Produces a stub .exe for the application, if requested -->
   <Target
     Name="_CsWinRTGenerateStubExe"
     AfterTargets="Publish"
-    Condition="'$(CsWinRTGenerateStubExe)' == 'true'">
-
+    Condition="'$(_CsWinRTEnableStubExeGeneration)' == 'true'">
     <PropertyGroup>
     
       <!-- Prepare the generated files directory -->
@@ -447,11 +457,6 @@ int wmain(int argc, wchar_t** argv)
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
       switch are set by the .NET SDK, so that the right projection mode is enabled even when CsWinRT is not directly referenced.
     -->
-  </PropertyGroup>
-
-  <!-- Default values for all other CsWinRT properties (without feature switches) -->
-  <PropertyGroup>
-    <CsWinRTMergeReferencedActivationFactories Condition="'$(CsWinRTMergeReferencedActivationFactories)' == ''">false</CsWinRTMergeReferencedActivationFactories>
   </PropertyGroup>
 
   <!--
