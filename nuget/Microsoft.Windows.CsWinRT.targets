@@ -392,6 +392,15 @@ int wmain(int argc, wchar_t** argv)
       <_StubExeNativeLibraryPathRelative>$([MSBuild]::MakeRelative($(_StubExeGeneratedFilesDir), $(_StubExeNativeLibraryPath)))</_StubExeNativeLibraryPathRelative>
     </PropertyGroup>
 
+    <!--
+      Get the path of 'cl.exe' from the Native AOT tooling, which finds the install folder for MSVC already.
+      By doing this, we make sure that this can work from a normal terminal too, not just a VS Developer cmd.
+    -->
+    <PropertyGroup>
+      <_ClExeFilePath Condition="'$(_ClExeFilePath)' == '' AND '$(_CppToolsDirectory)' != ''">$([System.IO.Path]::Combine($(_CppToolsDirectory), 'cl.exe'))</_ClExeFilePath>
+      <_ClExeFilePath Condition="'$(_ClExeFilePath)' == ''">cl</_ClExeFilePath>
+    </PropertyGroup>
+
     <!-- Prepare the arguments for MSVC -->
     <PropertyGroup>
 
@@ -430,7 +439,7 @@ int wmain(int argc, wchar_t** argv)
     
     <!-- Invoke MSVC to produce the native executable -->
     <Exec
-      Command='cl "$(_StubExeSourceFilePathRelative)" "$(_StubExeNativeLibraryPathRelative)" $(_StubExeMsvcArgs)'
+      Command='"$(_ClExeFilePath)" "$(_StubExeSourceFilePathRelative)" "$(_StubExeNativeLibraryPathRelative)" $(_StubExeMsvcArgs)'
       ConsoleToMsBuild="true"
       WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
     
