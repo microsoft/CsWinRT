@@ -424,6 +424,12 @@ int wmain(int argc, wchar_t** argv)
       <!-- Denote the start of the sequence of linker options (https://learn.microsoft.com/cpp/build/reference/compiler-command-line-syntax) -->
       <_StubExeMsvcArgs Include="/link" />
 
+      <!-- Hide the copyright banner for the linker as well -->
+      <_StubExeMsvcArgs Include="/NOLOGO" />
+
+      <!-- Skip generating a manifest file, matching Native AOT (https://learn.microsoft.com/cpp/build/reference/manifest-create-side-by-side-assembly-manifest) -->
+      <_StubExeMsvcArgs Include="/MANIFEST:NO" />
+
       <!--
         Change the behavior for VCRUNTIME140 to be statically linked (the default would be to dynamically link it, due to '/MD').
         See: https://learn.microsoft.com/cpp/build/reference/defaultlib-specify-default-library.
@@ -432,12 +438,42 @@ int wmain(int argc, wchar_t** argv)
       <_StubExeMsvcArgs Include="/DEFAULTLIB:libvcruntime.lib" />
       <_StubExeMsvcArgs Include="/NODEFAULTLIB:vcruntime.lib" />
 
+      <!--
+        Ignore the following warning (https://learn.microsoft.com/cpp/build/reference/ignore-ignore-specific-warnings):
+        "LINK : warning LNK4098: defaultlib 'libvcruntime.lib' conflicts with use of other libs; use /NODEFAULTLIB:library".
+        This is not an issue in this scenario.
+      -->
+      <_StubExeMsvcArgs Include="/IGNORE:4098" />
+
       <!-- Skip generating additional code for incremental linking (https://learn.microsoft.com/cpp/build/reference/incremental-link-incrementally) -->
       <_StubExeMsvcArgs Include="/INCREMENTAL:NO" />
 
       <!-- Enable COMDAT folding and remove unreferenced code (https://learn.microsoft.com/cpp/build/reference/opt-optimizations) -->
       <_StubExeMsvcArgs Include="/OPT:ICF" />
       <_StubExeMsvcArgs Include="/OPT:REF" />
+
+      <!--
+        Set the bit for AppContainer, for UWP apps (https://learn.microsoft.com/cpp/build/reference/appcontainer-windows-store-app).
+        This is not strictly needed on new Windows versions, but doing so matches the behavior of .NET Native as well.
+      -->
+      <_StubExeMsvcArgs Condition="'$(UseUwpTools)' == 'true'" Include="/APPCONTAINER" />
+
+      <!-- Set the right subsystem type, to match the project type (https://learn.microsoft.com/cpp/build/reference/subsystem-specify-subsystem) -->
+      <_StubExeMsvcArgs Condition="'$(OutputType)' == 'WinExe'" Include="/SUBSYSTEM:WINDOWS" />
+      <_StubExeMsvcArgs Condition="'$(OutputType)' != 'WinExe'" Include="/SUBSYSTEM:CONSOLE" />
+
+      <!-- Enable CFG, if requested (https://learn.microsoft.com/cpp/build/reference/guard-enable-control-flow-guard) -->
+      <_StubExeMsvcArgs Condition="'$(ControlFlowGuard)' == 'Guard'" Include="/guard:cf" />
+
+      <!-- Configure the CET shadow stack compatibility (https://learn.microsoft.com/cpp/build/reference/cetcompat) -->
+      <_StubExeMsvcArgs Condition="'$(CETCompat)' != 'false' and '$(Platform)' == 'x64'" Include="/CETCOMPAT" />
+      <_StubExeMsvcArgs Condition="'$(CETCompat)' == 'false' and '$(Platform)' == 'x64'" Include="/CETCOMPAT:NO" />
+
+      <!--
+        Enable EH continuation metadata if CET is not disabled and CFG is enabled, to match what Native AOT does.
+        See: https://learn.microsoft.com/cpp/build/reference/guard-enable-eh-continuation-metadata.
+      -->
+      <_StubExeMsvcArgs Condition="'$(CETCompat)' != 'false' and '$(Platform)' == 'x64' and '$(ControlFlowGuard)' == 'Guard'" Include="/guard:ehcont"/>
     </ItemGroup>
 
     <!-- Combine all arguments, separated by a space (also, using a property makes it easier to inspect them, for debugging) -->
