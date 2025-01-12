@@ -357,8 +357,11 @@ $(CsWinRTInternalProjection)
       Note that we need to use '%3B' to escape the semicolons, as otherwise it'll be skipped entirely.
     -->
     <PropertyGroup>
+      <_StubExeEntryPointName Condition="'$(OutputType)' == 'WinExe'">WinMainCRTStartup</_StubExeEntryPointName>
+      <_StubExeEntryPointName Condition="'$(OutputType)' != 'WinExe'">mainCRTStartup</_StubExeEntryPointName>
       <_StubExeSourceFileLines>
-        <![CDATA[#include <wchar.h>
+        <![CDATA[#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 // Declare the import for '__managed__Main', which is a special export produced by the
 // Native AOT runtime to allow jumping into the real 'Main' of an application. This is
@@ -367,11 +370,20 @@ __declspec(dllimport)
 int __stdcall __managed__Main(int argc, wchar_t** argv)%3B
 
 // Our entry point is simply a direct jump into the entry point from Native AOT
-int wmain(int argc, wchar_t** argv)
+int ENTRY_POINT()
 {
-    return __managed__Main(argc, argv)%3B
+    LPWSTR commandLine = GetCommandLineW()%3B
+    int argc%3B
+    LPWSTR* argv = CommandLineToArgvW(commandLine, &argc)%3B
+
+    int exitCode = __managed__Main(argc, argv)%3B
+
+    LocalFree(argv)%3B
+
+    return exitCode%3B
 }]]>
       </_StubExeSourceFileLines>
+      <_StubExeSourceFileLines>$(ENTRY_POINT.Replace('ENTRY_POINT', '$(_StubExeEntryPointName)'))</_StubExeSourceFileLines>
     </PropertyGroup>
     
     <!-- This whole target might take a minute (and it might fail), so notify the user to help debug issues -->
@@ -429,6 +441,15 @@ int wmain(int argc, wchar_t** argv)
       <!-- Enable COMDAT folding and remove unreferenced code (https://learn.microsoft.com/cpp/build/reference/opt-optimizations) -->
       <_StubExeMsvcArgs Include="/opt:icf" />
       <_StubExeMsvcArgs Include="/opt:ref" />
+
+      <!-- Select the right subsystem -->
+      <_StubExeMsvcArgs Condition="'$(OutputType)' == 'WinExe'" Include="/subsystem:windows" />
+      <_StubExeMsvcArgs Condition="'$(OutputType)' != 'WinExe'" Include="/subsystem:console" />
+
+      <!-- Standard C libraries -->
+      <_StubExeMsvcArgs Include="libvcruntime.lib" />
+      <_StubExeMsvcArgs Include="kernel32.lib" />
+      <_StubExeMsvcArgs Include="shell32.lib" />
     </ItemGroup>
 
     <!-- Combine all arguments, separated by a space (also, using a property makes it easier to inspect them, for debugging) -->
