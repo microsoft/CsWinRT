@@ -408,15 +408,15 @@ int wmain(int argc, wchar_t** argv)
       <_StubExeMsvcArgs Include="/nologo" />
 
       <!--
-        Configure the binary to dynamically link the C runtime library (the default would be to statically link it).
-        This library (UCRT) has the implementation of all standard C runtime methods, like 'printf'. The dynamically
-        linked version ships in the OS as 'ucrt.dll'. This matches the behavior of Native AOT as well, which links
-        UCRT dynamically, and VCRUNTIME140 (the MSVC-specific part of the C runtime) statically. The latter is much
-        smaller in size, so it does not matter. Dynamically linking UCRT reduces the size from 98 KB to 20 KB.
-        For additional info, see https://learn.microsoft.com/cpp/build/reference/md-mt-ld-use-run-time-library.
+        Configure the binary to statically link the C runtime library (https://learn.microsoft.com/cpp/build/reference/md-mt-ld-use-run-time-library).
+        This library (UCRT) has the implementation of all standard C runtime methods, like 'printf'. We want to actually link it dynamically, so we
+        will opt-in that individual library below. The dynamically linked version ships in the OS as 'ucrt.dll'. This matches the behavior of
+        Native AOT as well, which links UCRT dynamically, and VCRUNTIME140 (the MSVC-specific part of the C runtime) statically. The latter is much
+        smaller in size, so it does not matter. Dynamically linking UCRT reduces the size from 98 KB to 20 KB. The reason why we're not configuring
+        libraries to be dynamically linked, and then just having an opt-out for VCRUNTIME140, is that doing so causes a linker warning.
       -->
-      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include=" /MDd" />
-      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include=" /MD" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include=" /MTd" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include=" /MT" />
 
       <!-- Optimize for speed (https://learn.microsoft.com/cpp/build/reference/o1-o2-minimize-size-maximize-speed) -->
       <_StubExeMsvcArgs Include=" /O2" />
@@ -431,19 +431,12 @@ int wmain(int argc, wchar_t** argv)
       <_StubExeMsvcArgs Include="/MANIFEST:NO" />
 
       <!--
-        Change the behavior for VCRUNTIME140 to be statically linked (the default would be to dynamically link it, due to '/MD').
+        Change the behavior for UCRT to be dynamically linked (the default would be to statically link it, due to '/MT[d]').
         See: https://learn.microsoft.com/cpp/build/reference/defaultlib-specify-default-library.
         Also see: https://learn.microsoft.com/cpp/build/reference/nodefaultlib-ignore-libraries.
       -->
-      <_StubExeMsvcArgs Include="/DEFAULTLIB:libvcruntime.lib" />
-      <_StubExeMsvcArgs Include="/NODEFAULTLIB:vcruntime.lib" />
-
-      <!--
-        Ignore the following warning (https://learn.microsoft.com/cpp/build/reference/ignore-ignore-specific-warnings):
-        "LINK : warning LNK4098: defaultlib 'libvcruntime.lib' conflicts with use of other libs; use /NODEFAULTLIB:library".
-        This is not an issue in this scenario.
-      -->
-      <_StubExeMsvcArgs Include="/IGNORE:4098" />
+      <_StubExeMsvcArgs Include="/NODEFAULTLIB:libucrt.lib" />
+      <_StubExeMsvcArgs Include="/DEFAULTLIB:ucrt.lib" />
 
       <!-- Skip generating additional code for incremental linking (https://learn.microsoft.com/cpp/build/reference/incremental-link-incrementally) -->
       <_StubExeMsvcArgs Include="/INCREMENTAL:NO" />
