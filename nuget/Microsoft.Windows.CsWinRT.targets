@@ -391,15 +391,6 @@ int wmain(int argc, wchar_t** argv)
     <WriteLinesToFile Lines="$(_StubExeSourceFileLines)" Overwrite="true" WriteOnlyWhenDifferent="true" File="$(_StubExeSourceFilePath)" />
 
     <!--
-      We want to invoke MSVC in the folder where we also want the .exe to be produced in.
-      So we also need to adjust the input paths to be relative to that working directory.
-    -->
-    <PropertyGroup>
-      <_StubExeSourceFilePathRelative>$([MSBuild]::MakeRelative($(_StubExeGeneratedFilesDir), $(_StubExeSourceFilePath)))</_StubExeSourceFilePathRelative>
-      <_StubExeNativeLibraryPathRelative>$([MSBuild]::MakeRelative($(_StubExeGeneratedFilesDir), $(_StubExeNativeLibraryPath)))</_StubExeNativeLibraryPathRelative>
-    </PropertyGroup>
-
-    <!--
       Get the path of 'cl.exe' from the Native AOT tooling, which finds the install folder for MSVC already.
       By doing this, we make sure that this can work from a normal terminal too, not just a VS Developer cmd.
     -->
@@ -489,7 +480,7 @@ int wmain(int argc, wchar_t** argv)
     
     <!-- Invoke MSVC to produce the native executable -->
     <Exec
-      Command='"$(_ClExeFilePath)" "$(_StubExeSourceFilePathRelative)" "$(_StubExeNativeLibraryPathRelative)" $(_StubExeMsvcArgsText)'
+      Command='"$(_ClExeFilePath)" "$(_StubExeSourceFilePath)" "$(_StubExeNativeLibraryPath)" $(_StubExeMsvcArgsText)'
       ConsoleToMsBuild="true"
       WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
     
