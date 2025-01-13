@@ -327,11 +327,18 @@ $(CsWinRTInternalProjection)
     <Error Text="The 'CsWinRTMergeReferencedActivationFactories' property can only be set when publishing with Native AOT. Make sure to set the 'PublishAot' property to 'true'." />
   </Target>
 
-  <!-- Produces a stub .exe for the application, if requested -->
+  <!--
+    Produces a stub .exe for the application, if requested. This target is only executed when publishing, and
+    it's injected right after Native AOT invokes MSVC to produce the final binary, and before gathering all
+    publish artifacts. It's important for this target to run right after that, so that we can make sure that
+    the resulting stub .exe is gathered by the following MSIX packaging steps, which need to include it too.
+  -->
   <Target
     Name="_CsWinRTGenerateStubExe"
-    AfterTargets="Publish"
-    Condition="'$(_CsWinRTEnableStubExeGeneration)' == 'true'">
+    DependsOnTargets="PrepareForPublish"
+    AfterTargets="LinkNative"
+    BeforeTargets="ComputeLinkedFilesToPublish"
+    Condition="'$(CsWinRTMergeReferencedActivationFactories)' == 'true' AND '$(PublishAot)' == 'true'">
     <PropertyGroup>
     
       <!-- Prepare the generated files directory -->
