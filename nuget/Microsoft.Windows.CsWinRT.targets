@@ -356,7 +356,7 @@ $(CsWinRTInternalProjection)
       <!-- Prepare the output path of the resulting stub .exe -->
       <_StubExeBinaryFileName>$(AssemblyName).exe</_StubExeBinaryFileName>
       <_StubExeBinaryOutputFilePath>$([System.IO.Path]::Combine($(_StubExeGeneratedFilesDir), $(_StubExeBinaryFileName)))</_StubExeBinaryOutputFilePath>
-      <_StubExeBinaryDestinationFilePath>$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(PublishDir), $(_StubExeBinaryFileName)))</_StubExeBinaryDestinationFilePath>
+      <_StubExeBinaryDestinationFilePath>$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(NativeOutputPath), $(_StubExeBinaryFileName)))</_StubExeBinaryDestinationFilePath>
     </PropertyGroup>
     
     <!--
@@ -490,7 +490,7 @@ int wmain(int argc, wchar_t** argv)
       ConsoleToMsBuild="true"
       WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
     
-    <!-- Copy the resulting executable to the publish directory -->
+    <!-- Copy the resulting executable to the native directory -->
     <Copy SourceFiles="$(_StubExeBinaryOutputFilePath)" DestinationFiles="$(_StubExeBinaryDestinationFilePath)" />
 
     <!-- Also mark the stub .exe as being part of the published items (so it's gathered by the PRI/MSIX tools) -->
