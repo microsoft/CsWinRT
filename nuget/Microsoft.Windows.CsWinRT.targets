@@ -486,6 +486,15 @@ int wmain(int argc, wchar_t** argv)
     
     <!-- Copy the resulting executable to the publish directory -->
     <Copy SourceFiles="$(_StubExeBinaryOutputFilePath)" DestinationFiles="$(_StubExeBinaryDestinationFilePath)" />
+
+    <!-- Also mark the stub .exe as being part of the published items (so it's gathered by the PRI/MSIX tools) -->
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(_StubExeBinaryDestinationFilePath)"
+                             Condition="'$(CopyBuildOutputToPublishDirectory)' == 'true'">
+        <RelativePath>$(_StubExeBinaryFileName)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
   </Target>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
