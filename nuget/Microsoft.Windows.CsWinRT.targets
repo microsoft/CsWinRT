@@ -453,6 +453,12 @@ int wmain(int argc, wchar_t** argv)
       <_StubExeMsvcArgs Condition="'$(OutputType)' == 'WinExe'" Include="/SUBSYSTEM:WINDOWS" />
       <_StubExeMsvcArgs Condition="'$(OutputType)' != 'WinExe'" Include="/SUBSYSTEM:CONSOLE" />
 
+      <!--
+        Always set 'wmainCRTStartup' as the entry point (https://learn.microsoft.com/cpp/build/reference/entry-entry-point-symbol).
+        This matches what Native AOT does, and it allows us to always use 'wmain' for all application types, including 'WinExe'.
+      -->
+      <_StubExeMsvcArgs Include="/ENTRY:wmainCRTStartup" />
+
       <!-- Enable CFG, if requested (https://learn.microsoft.com/cpp/build/reference/guard-enable-control-flow-guard) -->
       <_StubExeMsvcArgs Condition="'$(ControlFlowGuard)' == 'Guard'" Include="/guard:cf" />
 
