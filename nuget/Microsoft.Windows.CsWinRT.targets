@@ -338,7 +338,7 @@ $(CsWinRTInternalProjection)
     DependsOnTargets="PrepareForPublish"
     AfterTargets="LinkNative"
     BeforeTargets="ComputeLinkedFilesToPublish"
-    Condition="'$(CsWinRTMergeReferencedActivationFactories)' == 'true' AND '$(PublishAot)' == 'true'">
+    Condition="'$(_CsWinRTEnableStubExeGeneration)' == 'true' AND '$(PublishAot)' == 'true'">
     <PropertyGroup>
     
       <!-- Prepare the generated files directory -->
