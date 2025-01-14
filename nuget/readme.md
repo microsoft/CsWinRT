@@ -50,6 +50,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTMergeReferencedActivationFactories | true \| *false | Makes the native `DllGetActivationFactory` exported function for AOT scenarios also forward the activation call to all referenced WinRT components, allowing them to all be merged into a single executable or shared library |
 | CsWinRTEnableManifestFreeActivation | *true \| false | Enables the manifest-free WinRT activation path as fallback when `RoGetActivationFactory` fails to resolve a WinRT type |
 | CsWinRTManifestFreeActivationReportOriginalException | true \| *false | If 'CsWinRTEnableManifestFreeActivation' is set and activating a type fails, ensures the original exception is thrown, rather than 'NotSupportedException' |
+| CsWinRTUseEnvironmentalTools | true \| *false | Makes the invocation of MSVC to produce a stub .exe (for Native AOT scenarios) rely on environmental tools, rather than looking up the MSVC install path |
 | CsWinRTAotWarningLevel | 0 \| *1 \| 2 | Specifies the warning level used by the code fixer for trimming and AOT compat (0 - no warnings, 1 - warnings for scenarios involving non built-in types, 2 - warnings for all scenarios) |
 \*Default value
 

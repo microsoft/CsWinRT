@@ -45,6 +45,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
+
+    <!-- Default to not using the environment tools -->
+    <CsWinRTUseEnvironmentalTools Condition="'$(CsWinRTUseEnvironmentalTools)' == ''">false</CsWinRTUseEnvironmentalTools>
   </PropertyGroup>
 
   <ItemGroup>
