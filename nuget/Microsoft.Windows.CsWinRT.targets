@@ -395,9 +395,14 @@ int wmain(int argc, wchar_t** argv)
       By doing this, we make sure that this can work from a normal terminal too, not just a VS Developer cmd.
     -->
     <PropertyGroup>
-      <_ClExeFilePath Condition="'$(_ClExeFilePath)' == '' AND '$(_CppToolsDirectory)' != ''">$([System.IO.Path]::Combine($(_CppToolsDirectory), 'cl.exe'))</_ClExeFilePath>
-      <_ClExeFilePath Condition="'$(_ClExeFilePath)' == ''">cl</_ClExeFilePath>
+      <_ClExeFilePath Condition="'$(_ClExeFilePath)' == '' AND '$(CsWinRTUseEnvironmentalTools)' == 'true'">cl</_ClExeFilePath>
+      <_ClExeFilePath Condition="'$(_ClExeFilePath)' == '' AND '$(_CppToolsDirectory)' != ''">"$([System.IO.Path]::Combine($(_CppToolsDirectory), 'cl.exe'))"</_ClExeFilePath>
     </PropertyGroup>
+
+    <!-- Fail if we can't find any 'cl.exe' -->
+    <Error
+      Condition="'$(_ClExeFilePath)' == ''"
+      Text="Failed to find 'cl.exe', which is needed to compile the project in the current configuration. Try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session." />
 
     <!-- Prepare the arguments for MSVC -->
     <ItemGroup>
@@ -495,8 +500,7 @@ int wmain(int argc, wchar_t** argv)
 
     <!-- Also mark the stub .exe as being part of the published items (so it's gathered by the PRI/MSIX tools) -->
     <ItemGroup>
-      <ResolvedFileToPublish Include="$(_StubExeBinaryDestinationFilePath)"
-                             Condition="'$(CopyBuildOutputToPublishDirectory)' == 'true'">
+      <ResolvedFileToPublish Include="$(_StubExeBinaryDestinationFilePath)" Condition="'$(CopyBuildOutputToPublishDirectory)' == 'true'">
         <RelativePath>$(_StubExeBinaryFileName)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
