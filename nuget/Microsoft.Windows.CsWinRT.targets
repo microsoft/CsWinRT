@@ -418,11 +418,11 @@ int wmain(int argc, wchar_t** argv)
         smaller in size, so it does not matter. Dynamically linking UCRT reduces the size from 98 KB to 20 KB. The reason why we're not configuring
         libraries to be dynamically linked, and then just having an opt-out for VCRUNTIME140, is that doing so causes a linker warning.
       -->
-      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include=" /MTd" />
-      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include=" /MT" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include="/MTd" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include="/MT" />
 
       <!-- Optimize for speed (https://learn.microsoft.com/cpp/build/reference/o1-o2-minimize-size-maximize-speed) -->
-      <_StubExeMsvcArgs Include=" /O2" />
+      <_StubExeMsvcArgs Include="/O2" />
 
       <!-- Denote the start of the sequence of linker options (https://learn.microsoft.com/cpp/build/reference/compiler-command-line-syntax) -->
       <_StubExeMsvcArgs Include="/link" />
