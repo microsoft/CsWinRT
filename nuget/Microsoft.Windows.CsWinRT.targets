@@ -360,6 +360,10 @@ $(CsWinRTInternalProjection)
       <_StubExeBinaryFileName>$(AssemblyName).exe</_StubExeBinaryFileName>
       <_StubExeBinaryOutputFilePath>$([System.IO.Path]::Combine($(_StubExeGeneratedFilesDir), $(_StubExeBinaryFileName)))</_StubExeBinaryOutputFilePath>
       <_StubExeBinaryDestinationFilePath>$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(NativeOutputPath), $(_StubExeBinaryFileName)))</_StubExeBinaryDestinationFilePath>
+
+      <!-- Get the target platform (we either use 'Platform', if set and not 'AnyCPU', or fallback to 'PlatformTarget' ) -->
+      <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(Platform)' != '' AND '$(Platform)' != 'AnyCPU'">$(Platform)</_StubExePlatform>
+      <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(PlatformTarget)' != ''">$(PlatformTarget)</_StubExePlatform>
     </PropertyGroup>
     
     <!--
@@ -407,11 +411,55 @@ int wmain(int argc, wchar_t** argv)
       Condition="'$(_ClExeFilePath)' == ''"
       Text="Failed to find 'cl.exe', which is needed to compile the project in the current configuration. Try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session." />
 
+    <!-- Get the path to the include directories, if not using the environmental tools -->
+    <PropertyGroup Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'">
+
+      <!-- Find the 'include' folder in the MSVC install folder -->
+      <_MsvcCurrentVersionInstallDirectory>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(_CppToolsDirectory), '..', '..', '..'))))</_MsvcCurrentVersionInstallDirectory>
+      <_MsvcIncludePath>$([System.IO.Path]::Combine($(_MsvcCurrentVersionInstallDirectory), 'include'))</_MsvcIncludePath>
+      <_MsvcLibPath>$([System.IO.Path]::Combine($(_MsvcCurrentVersionInstallDirectory), 'lib', '$(_StubExePlatform)'))</_MsvcLibPath>
+      <_MsvcLibWildcardPath>$([System.IO.Path]::Combine($(_MsvcLibPath), '*.lib'))</_MsvcLibWildcardPath>
+
+      <!-- Also get the root for the Windows SDK headers -->
+      <_WindowsSdk10InstallDirectory Condition="'$(_WindowsSdk10InstallDirectory)' == '' AND '$(WindowsSdkPath)' != ''">$(WindowsSdkPath)</_WindowsSdk10InstallDirectory>
+      <_WindowsSdk10InstallDirectory Condition="'$(_WindowsSdk10InstallDirectory)' == ''">C:\Program Files (x86)\Windows Kits\10</_WindowsSdk10InstallDirectory>
+      <_WindowsSdkIncludePath Condition="'$(TargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Include', '$(TargetPlatformVersion)'))</_WindowsSdkIncludePath>
+      <_WindowsSdk-ucrt-IncludePath>$([System.IO.Path]::Combine($(_WindowsSdkIncludePath), 'ucrt'))</_WindowsSdk-ucrt-IncludePath>
+      <_WindowsSdk-um-IncludePath>$([System.IO.Path]::Combine($(_WindowsSdkIncludePath), 'um'))</_WindowsSdk-um-IncludePath>
+
+      <!-- Do the same for libs as well -->
+      <_WindowsSdkLibPath Condition="'$(TargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Lib', '$(TargetPlatformVersion)'))</_WindowsSdkLibPath>
+      <_WindowsSdk-ucrt-LibPath>$([System.IO.Path]::Combine($(_WindowsSdkLibPath), 'ucrt', '$(_StubExePlatform)'))</_WindowsSdk-ucrt-LibPath>
+      <_WindowsSdk-um-LibPath>$([System.IO.Path]::Combine($(_WindowsSdkLibPath), 'um', '$(_StubExePlatform)'))</_WindowsSdk-um-LibPath>
+      <_WindowsSdk-ucrt-LibWildcardPath>$([System.IO.Path]::Combine($(_WindowsSdk-ucrt-LibPath), '*.lib'))</_WindowsSdk-ucrt-LibWildcardPath>
+      <_WindowsSdk-um-LibWildcardPath>$([System.IO.Path]::Combine($(_WindowsSdk-um-LibPath), '*.lib'))</_WindowsSdk-um-LibWildcardPath>
+    </PropertyGroup>
+
+    <!-- We can't find some of the additional include folders -->
+    <Error
+      Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' AND ('$(_MsvcIncludePath)' == '' OR !Exists('$(_MsvcIncludePath)') OR '$(_WindowsSdkIncludePath)' == '' OR !Exists('$(_WindowsSdkIncludePath)'))"
+      Text="Failed to find the paths for the include folders to pass to MSVC, which are needed to compile the project in the current configuration. Try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session." />
+    
+    <!-- Error on unsupported platforms -->
+    <Error
+      Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' AND '$(_StubExePlatform)' != 'arm64' AND '$(_StubExePlatform)' != 'x64' AND '$(_StubExePlatform)' != 'x86'"
+      Text="Invalid platform selected to invoke MSVC. Make sure to set 'Platform' to either 'arm64', 'x64', or 'x86'. Alternatively, try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session." />
+
     <!-- Prepare the arguments for MSVC -->
     <ItemGroup>
 
+      <!-- If not using the environmental tools, manually pass the paths to the required libs -->
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='"$(_MsvcLibWildcardPath)"' />
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='"$(_WindowsSdk-ucrt-LibWildcardPath)"' />
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='"$(_WindowsSdk-um-LibWildcardPath)"' />
+
       <!-- Hide the copyright banner, to reduce visual clutter (https://learn.microsoft.com/cpp/build/reference/nologo-suppress-startup-banner-c-cpp) -->
       <_StubExeMsvcArgs Include="/nologo" />
+
+      <!-- If not using the environmental tools, also pass the paths to the necessary include folders -->
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='/I "$(_MsvcIncludePath)"' />
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='/I "$(_WindowsSdk-ucrt-IncludePath)"' />
+      <_StubExeMsvcArgs Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true'" Include='/I "$(_WindowsSdk-um-IncludePath)"' />
 
       <!--
         Configure the binary to statically link the C runtime library (https://learn.microsoft.com/cpp/build/reference/md-mt-ld-use-run-time-library).
@@ -471,14 +519,14 @@ int wmain(int argc, wchar_t** argv)
       <_StubExeMsvcArgs Condition="'$(ControlFlowGuard)' == 'Guard'" Include="/guard:cf" />
 
       <!-- Configure the CET shadow stack compatibility (https://learn.microsoft.com/cpp/build/reference/cetcompat) -->
-      <_StubExeMsvcArgs Condition="'$(CETCompat)' != 'false' and '$(Platform)' == 'x64'" Include="/CETCOMPAT" />
-      <_StubExeMsvcArgs Condition="'$(CETCompat)' == 'false' and '$(Platform)' == 'x64'" Include="/CETCOMPAT:NO" />
+      <_StubExeMsvcArgs Condition="'$(CETCompat)' != 'false' and '$(_StubExePlatform)' == 'x64'" Include="/CETCOMPAT" />
+      <_StubExeMsvcArgs Condition="'$(CETCompat)' == 'false' and '$(_StubExePlatform)' == 'x64'" Include="/CETCOMPAT:NO" />
 
       <!--
         Enable EH continuation metadata if CET is not disabled and CFG is enabled, to match what Native AOT does.
         See: https://learn.microsoft.com/cpp/build/reference/guard-enable-eh-continuation-metadata.
       -->
-      <_StubExeMsvcArgs Condition="'$(CETCompat)' != 'false' and '$(Platform)' == 'x64' and '$(ControlFlowGuard)' == 'Guard'" Include="/guard:ehcont"/>
+      <_StubExeMsvcArgs Condition="'$(CETCompat)' != 'false' and '$(_StubExePlatform)' == 'x64' and '$(ControlFlowGuard)' == 'Guard'" Include="/guard:ehcont"/>
     </ItemGroup>
 
     <!-- Combine all arguments, separated by a space (also, using a property makes it easier to inspect them, for debugging) -->
@@ -494,7 +542,7 @@ int wmain(int argc, wchar_t** argv)
     
     <!-- Invoke MSVC to produce the native executable -->
     <Exec
-      Command='"$(_ClExeFilePath)" "$(_StubExeSourceFilePath)" "$(_StubExeNativeLibraryPath)" $(_StubExeMsvcArgsText)'
+      Command='$(_ClExeFilePath) "$(_StubExeSourceFilePath)" "$(_StubExeNativeLibraryPath)" $(_StubExeMsvcArgsText)'
       ConsoleToMsBuild="true"
       WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
     
