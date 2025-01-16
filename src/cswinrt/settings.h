@@ -19,6 +19,7 @@ namespace cswinrt
         bool embedded{};
         bool public_enums{};
         bool public_exclusiveto{};
+        bool abstract_class{};
         bool idic_exclusiveto{};
     };
 
