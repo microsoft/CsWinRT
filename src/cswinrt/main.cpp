@@ -41,6 +41,7 @@ namespace cswinrt
         { "embedded", 0, 0, {}, "Generates an embedded projection."},
         { "public_enums", 0, 0, {}, "Used with embedded option to generate enums as public"},
         { "public_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces public in the projection (default is internal)"},
+        { "abstract_class", 0, 0, {}, "Enable an abstract version of a component's class"},
         { "idic_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces support IDynamicInterfaceCastable (IDIC) for RCW scenarios (default is false)"},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
@@ -105,8 +106,11 @@ Where <spec> is one or more of:
         settings.embedded = args.exists("embedded");
         settings.public_enums = args.exists("public_enums");
         settings.public_exclusiveto = args.exists("public_exclusiveto");
+        settings.abstract_class = args.exists("abstract_class");
         settings.idic_exclusiveto = args.exists("idic_exclusiveto");
         settings.input = args.files("input", database::is_database);
+        
+		printf("abstract_class value: %d\n", settings.abstract_class); //TODO: remove this line later, it's just for testing
 
         for (auto && include : args.values("include"))
         {

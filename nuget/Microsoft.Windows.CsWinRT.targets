@@ -243,6 +243,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedProjection>
       <CsWinRTEmbeddedEnums Condition="'$(CsWinRTEmbeddedPublicEnums)' == 'true'">-public_enums</CsWinRTEmbeddedEnums>
       <CsWinRTPublicExclusiveTo Condition="'$(CsWinRTPublicExclusiveToInterfaces)' == 'true'">-public_exclusiveto</CsWinRTPublicExclusiveTo>
+	  <CsWinRTAbstract Condition="'$(CsWinRTAbstractClass)' == 'true'">-abstract_class</CsWinRTAbstract>
       <CsWinRTDynamicallyInterfaceCastableExclusiveTo Condition="'$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)' == 'true'">-idic_exclusiveto</CsWinRTDynamicallyInterfaceCastableExclusiveTo>
 
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
@@ -256,6 +257,7 @@ $(CsWinRTIncludeWinRTInterop)
 $(CsWinRTEmbeddedProjection)
 $(CsWinRTEmbeddedEnums)
 $(CsWinRTPublicExclusiveTo)
+$(CsWinRTAbstract)
 $(CsWinRTDynamicallyInterfaceCastableExclusiveTo)
       </CsWinRTParams>
 
