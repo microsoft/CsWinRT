@@ -69,6 +69,8 @@
 
     <file src="..\src\WinRT.Runtime\Configuration\*.cs" exclude="..\src\WinRT.Runtime\Configuration\*.net*.cs"  target="embedded\any\" />
 
-    <file src="$guid_patch$" target ="build\tools\IIDOptimizer"/>
+    <file src="sources\StubExe.c" target="build\sources"/>
+
+    <file src="$guid_patch$" target="build\tools\IIDOptimizer"/>
   </files>
 </package>

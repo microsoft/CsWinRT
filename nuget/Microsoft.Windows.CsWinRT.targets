@@ -355,6 +355,9 @@ $(CsWinRTInternalProjection)
       <!-- Prepare the path of the .c file with the stub .exe source we need to compile -->
       <_StubExeSourceFileName>$(AssemblyName).c</_StubExeSourceFileName>
       <_StubExeSourceFilePath>$([System.IO.Path]::Combine($(_StubExeGeneratedFilesDir), $(_StubExeSourceFileName)))</_StubExeSourceFilePath>
+
+      <!-- Get the path to the source in the NuGet package -->
+      <_StubExeOriginalSourceFilePath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), 'sources', 'StubExe.c'))</_StubExeOriginalSourceFilePath>
     
       <!-- Prepare the output path of the resulting stub .exe -->
       <_StubExeBinaryFileName>$(AssemblyName).exe</_StubExeBinaryFileName>
@@ -366,28 +369,6 @@ $(CsWinRTInternalProjection)
       <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(PlatformTarget)' != ''">$(PlatformTarget)</_StubExePlatform>
     </PropertyGroup>
     
-    <!--
-      This is a simple C source file just jumping into the special 'Main' program of the current project.
-      Note that we need to use '%3B' to escape the semicolons, as otherwise it'll be skipped entirely.
-    -->
-    <PropertyGroup>
-      <_StubExeSourceFileLines>
-        <![CDATA[#include <wchar.h>
-
-// Declare the import for '__managed__Main', which is a special export produced by the
-// Native AOT runtime to allow jumping into the real 'Main' of an application. This is
-// exported automatically when the 'CustomNativeMain' property is set to 'true'.
-__declspec(dllimport)
-int __stdcall __managed__Main(int argc, wchar_t** argv)%3B
-
-// Our entry point is simply a direct jump into the entry point from Native AOT
-int wmain(int argc, wchar_t** argv)
-{
-    return __managed__Main(argc, argv)%3B
-}]]>
-      </_StubExeSourceFileLines>
-    </PropertyGroup>
-    
     <!-- This whole target might take a minute (and it might fail), so notify the user to help debug issues -->
     <Message Text="Generating stub .exe" />
 
@@ -395,7 +376,7 @@ int wmain(int argc, wchar_t** argv)
     <MakeDir Directories="$(_StubExeGeneratedFilesDir)"/>
       
     <!-- Write the stub .exe source -->
-    <WriteLinesToFile Lines="$(_StubExeSourceFileLines)" Overwrite="true" WriteOnlyWhenDifferent="true" File="$(_StubExeSourceFilePath)" />
+    <Copy SourceFiles="$(_StubExeOriginalSourceFilePath)" DestinationFiles="$(_StubExeSourceFilePath)" />
 
     <!--
       Get the path of 'cl.exe' from the Native AOT tooling, which finds the install folder for MSVC already.
