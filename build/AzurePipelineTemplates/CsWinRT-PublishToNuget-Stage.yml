@@ -65,7 +65,7 @@ stages:
         itemPattern: ''
         targetPath: $(Build.SourcesDirectory)\net8.0
 
-# Download Net8.0
+# Download Net9.0
     - task: DownloadPipelineArtifact@2
       displayName: 'Download Net9.0'
       inputs:
