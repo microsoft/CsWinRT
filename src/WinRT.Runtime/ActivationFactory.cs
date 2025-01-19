@@ -192,7 +192,6 @@ namespace WinRT
     }
 
 #nullable enable
-
     /// <summary>
     /// Provides support for activating WinRT types.
     /// </summary>
@@ -420,4 +419,5 @@ namespace WinRT
         }
 #endif
     }
+#nullable restore
 }
