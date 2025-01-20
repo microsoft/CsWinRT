@@ -46,7 +46,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
 
-    <!-- Default to not using the environment tools -->
+    <!--
+      Default to using the environment tools if in a Visual Studio Developer Command Prompt (or PowerShell).
+      See: https://learn.microsoft.com/visualstudio/ide/reference/command-prompt-powershell#developer-command-prompt.
+    -->
+    <CsWinRTUseEnvironmentalTools Condition="'$(CsWinRTUseEnvironmentalTools)' == '' AND '$(VSCMD_VER)' != ''">true</CsWinRTUseEnvironmentalTools>
     <CsWinRTUseEnvironmentalTools Condition="'$(CsWinRTUseEnvironmentalTools)' == ''">false</CsWinRTUseEnvironmentalTools>
   </PropertyGroup>
 
