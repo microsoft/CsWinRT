@@ -49,7 +49,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTRcwFactoryFallbackGeneratorForceOptOut | true \| *false | Forces the RCW factory fallback generator to be disabled (overrides "ForceOptIn" as well)  |
 | CsWinRTMergeReferencedActivationFactories | true \| *false | Makes the native `DllGetActivationFactory` exported function for AOT scenarios also forward the activation call to all referenced WinRT components, allowing them to all be merged into a single executable or shared library |
 | CsWinRTEnableManifestFreeActivation | *true \| false | Enables the manifest-free WinRT activation path as fallback when `RoGetActivationFactory` fails to resolve a WinRT type |
-| CsWinRTManifestFreeActivationReportOriginalException | true \| **false | If 'CsWinRTEnableManifestFreeActivation' is set and activating a type fails, ensures the original exception is thrown, rather than 'NotSupportedException' |
+| CsWinRTManifestFreeActivationReportOriginalException | true \| *false | If 'CsWinRTEnableManifestFreeActivation' is set and activating a type fails, ensures the original exception is thrown, rather than 'NotSupportedException' |
 | CsWinRTAotWarningLevel | 0 \| *1 \| 2 | Specifies the warning level used by the code fixer for trimming and AOT compat (0 - no warnings, 1 - warnings for scenarios involving non built-in types, 2 - warnings for all scenarios) |
 \*Default value
 

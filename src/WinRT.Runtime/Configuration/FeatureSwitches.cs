@@ -180,7 +180,7 @@ namespace WinRT
         public static bool ManifestFreeActivationReportOriginalException
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => GetConfigurationValue(ManifestFreeActivationReportOriginalExceptionPropertyName, ref _manifestFreeActivationReportOriginalException, true);
+            get => GetConfigurationValue(ManifestFreeActivationReportOriginalExceptionPropertyName, ref _manifestFreeActivationReportOriginalException, false);
         }
 
         /// <summary>

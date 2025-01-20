@@ -383,7 +383,7 @@ $(CsWinRTInternalProjection)
                                     Value="$(CsWinRTEnableManifestFreeActivation)"
                                     Trim="true" />
 
-    <!-- CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION switch -->
+    <!-- CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION"
                                     Value="$(CsWinRTManifestFreeActivationReportOriginalException)"
                                     Trim="true" />
