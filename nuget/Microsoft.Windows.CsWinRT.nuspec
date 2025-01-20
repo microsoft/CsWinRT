@@ -31,7 +31,8 @@
     <file src="$interop_winmd$" target="metadata"/>
     <file src="readme.txt"/>
     <file src="$net8_runtime$" target="lib\net8.0\"/>
-    <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
+    <file src="$source_generator_roslyn4080$" target="analyzers\dotnet\cs\roslyn4.8"/>
+    <file src="$source_generator_roslyn4120$" target="analyzers\dotnet\cs\roslyn4.12"/>
     <file src="$winrt_host_x64$" target ="hosting\x64\native"/>
     <file src="$winrt_host_x86$" target ="hosting\x86\native"/>
     <file src="$winrt_host_arm64$" target ="hosting\arm64\native"/>
@@ -48,8 +49,8 @@
     <file src="$winrt_host_resource_x86$" target ="hosting\x86\native\en-US"/>
     <file src="$winrt_host_resource_arm64$" target ="hosting\arm64\native\en-US"/>
 
+    <!-- Pack the .resx files for WinRT.Runtime for those using the embedded support -->
     <file src="..\src\WinRT.Runtime\ResX\**" target ="lib\net8.0\"/>
-    <file src="..\src\Authoring\WinRT.SourceGenerator\ResX\**" target ="analyzers\dotnet\cs\"/>
 
     <!-- Add the WinRT.Runtime sources to the pkg for embedded scenarios -->
 

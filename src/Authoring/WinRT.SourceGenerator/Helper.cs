@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -642,6 +643,25 @@ namespace Generator
             foreach (AttributeData attribute in symbol.GetAttributes())
             {
                 if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeTypeSymbol))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks whether or not a given symbol has an attribute with any types in a given sequence.
+        /// </summary>
+        /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
+        /// <param name="attributeTypeSymbols">The <see cref="INamedTypeSymbol"/> instances for the attributes type to look for.</param>
+        /// <returns>Whether or not <paramref name="symbol"/> has an attribute with any of the specified types.</returns>
+        public static bool HasAttributeWithAnyType(ISymbol symbol, ImmutableArray<INamedTypeSymbol> attributeTypeSymbols)
+        {
+            foreach (AttributeData attribute in symbol.GetAttributes())
+            {
+                if (attributeTypeSymbols.Contains(attribute.AttributeClass, SymbolEqualityComparer.Default))
                 {
                     return true;
                 }
