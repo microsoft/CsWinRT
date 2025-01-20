@@ -238,5 +238,10 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.ClassImplementsOldProjection_Brief,
             CsWinRTDiagnosticStrings.ClassOldProjectionMultipleInstances_Text,
             false);
+
+        public static DiagnosticDescriptor SourceGeneratorFailed = MakeRule(
+            "CsWinRT1031",
+            CsWinRTDiagnosticStrings.SourceGeneratorFailed_Brief,
+            CsWinRTDiagnosticStrings.SourceGeneratorFailed_Text);
     }
 } 
