@@ -108,7 +108,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTCcwLookupTableGeneratorEnabled Condition="'$(CsWinRTCcwLookupTableGeneratorEnabled)' == ''">true</CsWinRTCcwLookupTableGeneratorEnabled>
 
       <!--
-	    CsWinRTAotWarningLevel decides the level of warning from the AOT analyzer.
+        CsWinRTAotWarningLevel decides the level of warning from the AOT analyzer.
             0: No warnings
            *1: Warnings for scenarios involving WinRT types that are not built-in system types mapped to WinRT.
             2: Level 1 warnings and warnings for scenarios involving built-in system types mapped to WinRT.
@@ -122,7 +122,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                                                         '$(OutputType)' == 'Library' and
                                                         '$(CsWinRTHasAnyIncludes)' == 'true'">0</CsWinRTAotWarningLevel>
       <CsWinRTAotWarningLevel Condition="'$(CsWinRTAotWarningLevel)' == ''">1</CsWinRTAotWarningLevel>
-	</PropertyGroup>
+    </PropertyGroup>
   </Target>
 
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
@@ -329,6 +329,7 @@ $(CsWinRTInternalProjection)
     <CsWinRTEnableIReferenceSupport Condition="'$(CsWinRTEnableIReferenceSupport)' == ''">true</CsWinRTEnableIReferenceSupport>
     <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
     <CsWinRTEnableManifestFreeActivation Condition="'$(CsWinRTEnableManifestFreeActivation)' == ''">true</CsWinRTEnableManifestFreeActivation>
+    <CsWinRTManifestFreeActivationReportOriginalException Condition="'$(CsWinRTManifestFreeActivationReportOriginalException)' == ''">false</CsWinRTManifestFreeActivationReportOriginalException>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
@@ -380,6 +381,11 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION"
                                     Value="$(CsWinRTEnableManifestFreeActivation)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION"
+                                    Value="$(CsWinRTManifestFreeActivationReportOriginalException)"
                                     Trim="true" />
   </ItemGroup>
 

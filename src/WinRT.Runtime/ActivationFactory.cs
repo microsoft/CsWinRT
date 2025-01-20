@@ -214,7 +214,7 @@ namespace WinRT
         /// </summary>
         /// <param name="typeName">The ID of the activatable class (the fully qualified type name).</param>
         /// <returns>An <see cref="IObjectReference"/> instance wrapping an instance of the activated WinRT type.</returns>
-        /// <exception cref="NotSupportedException">Thrown if <paramref name="typeName"/> is not registered, and <c>CsWinRTEnableManifestFreeActivation</c> is disabled.</exception>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="typeName"/> is not registered, <c>CsWinRTEnableManifestFreeActivation</c> is disabled, and <c>CsWinRTManifestFreeActivationReportOriginalException</c> is not set.</exception>
         /// <exception cref="Exception">Thrown for any failure to activate the specified type (the exact exception type might be a derived type).</exception>
         /// <remarks>
         /// This method will try to activate the target type as follows:
@@ -372,6 +372,12 @@ namespace WinRT
             if (FeatureSwitches.EnableManifestFreeActivation)
             {
                 return;
+            }
+
+            // Throw the exception directly, if the user requested to preserve it
+            if (FeatureSwitches.ManifestFreeActivationReportOriginalException)
+            {
+                Marshal.ThrowExceptionForHR(hr);
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
