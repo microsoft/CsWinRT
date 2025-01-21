@@ -88,6 +88,11 @@ namespace cswinrt
         return get_category(type) == category::class_type && type.Flags().Abstract();
     }
 
+    bool is_static(MethodDef const& method)
+    {
+        return method.Flags().Static();
+    }
+
     bool is_constructor(MethodDef const& method)
     {
         return method.Flags().RTSpecialName() && method.Name() == ".ctor";
@@ -108,14 +113,27 @@ namespace cswinrt
         return false;
     }
 
+    bool has_static_constructor(TypeDef const& type)
+    {
+        XLANG_ASSERT(get_category(type) == category::class_type);
+
+        for (auto&& method : type.MethodList())
+        {
+            if (is_constructor(method) && is_static(method))
+            {
+                // Static constructors can't have parameters
+                XLANG_ASSERT(size(method.ParamList()) == 0);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool is_special(MethodDef const& method)
     {
         return method.SpecialName() || method.Flags().RTSpecialName();
-    }
-
-    bool is_static(MethodDef const& method)
-    {
-        return method.Flags().Static();
     }
 
     auto get_delegate_invoke(TypeDef const& type)

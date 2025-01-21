@@ -10133,7 +10133,19 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
     {
         auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
         auto is_activatable = !is_static(type) && has_default_constructor(type);
+        auto should_run_class_constructor = has_static_constructor(type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
+
+        // If the type doesn't have a static constructor, we can omit calling 'RuntimeHelpers.RunClassConstructor'.
+        // This is technically only required if the type declares any dependency properties (we think, though we're
+        // not 100% sure), but at least skipping this for types without a static constructor is good enough.
+        // In practice, it will skip the call for most types.
+        auto static_constructor = should_run_class_constructor
+            ? w.write_temp(R"(static %()
+{
+    RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
+})", factory_type_name, type_name)
+            : "";
 
         // If the type is activatable, we implement IActivationFactory by creating an
         // instance and marshalling it to IntPtr. Otherwise, we just throw an exception.
@@ -10148,10 +10160,7 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
 internal sealed class % : global::WinRT.Interop.IActivationFactory%
 {
 
-static %()
-{
-RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
-}
+%
 
 public static IntPtr Make()
 {
@@ -10171,8 +10180,7 @@ public IntPtr ActivateInstance()
 bind<write_winrt_exposed_type_attribute>(type, true),
 factory_type_name,
 bind<write_factory_class_inheritance>(type),
-factory_type_name,
-type_name,
+static_constructor,
 factory_type_name,
 factory_type_name,
 factory_type_name,
