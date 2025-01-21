@@ -1472,6 +1472,12 @@ namespace Generator
             if (enumerableType != null)
             {
                 var constructedEnumerableType = enumerableType.Construct(type);
+                if (isWinRTType(constructedEnumerableType, mapper) &&
+                    !GeneratorHelper.IsInternalInterfaceFromReferences(constructedEnumerableType, compilation.Assembly))
+                {
+                    AddEnumeratorAdapter(constructedEnumerableType);
+                }
+
                 if (TryGetCompatibleWindowsRuntimeTypesForVariantType(constructedEnumerableType, mapper, null, isWinRTType, out var compatibleIfaces))
                 {
                     foreach (var compatibleIface in compatibleIfaces)
@@ -1479,17 +1485,22 @@ namespace Generator
                         if (compatibleIface.MetadataName == "IEnumerable`1" &&
                             !GeneratorHelper.IsInternalInterfaceFromReferences(compatibleIface, compilation.Assembly))
                         {
-                            var enumeratorAdapterType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1");
-                            if (enumeratorAdapterType != null)
-                            {
-                                var constructedEnumeratorAdapterType = enumeratorAdapterType.Construct(compatibleIface.TypeArguments[0]);
-                                var vtableAttribute = GetVtableAttributeToAdd(constructedEnumeratorAdapterType, isManagedOnlyType, isWinRTType, mapper, compilation, false);
-                                if (vtableAttribute != default)
-                                {
-                                    vtableAttributes.Add(vtableAttribute);
-                                }
-                            }
+                            AddEnumeratorAdapter(compatibleIface);
                         }
+                    }
+                }
+            }
+
+            void AddEnumeratorAdapter(INamedTypeSymbol iface)
+            {
+                var enumeratorAdapterType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1");
+                if (enumeratorAdapterType != null)
+                {
+                    var constructedEnumeratorAdapterType = enumeratorAdapterType.Construct(iface.TypeArguments[0]);
+                    var vtableAttribute = GetVtableAttributeToAdd(constructedEnumeratorAdapterType, isManagedOnlyType, isWinRTType, mapper, compilation, false);
+                    if (vtableAttribute != default)
+                    {
+                        vtableAttributes.Add(vtableAttribute);
                     }
                 }
             }
