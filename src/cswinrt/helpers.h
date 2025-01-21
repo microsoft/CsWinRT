@@ -98,6 +98,11 @@ namespace cswinrt
         return method.Flags().RTSpecialName() && method.Name() == ".ctor";
     }
 
+    bool is_static_constructor(MethodDef const& method)
+    {
+        return method.Flags().RTSpecialName() && method.Name() == ".cctor";
+    }
+
     bool has_default_constructor(TypeDef const& type)
     {
         XLANG_ASSERT(get_category(type) == category::class_type);
@@ -119,9 +124,10 @@ namespace cswinrt
 
         for (auto&& method : type.MethodList())
         {
-            if (is_constructor(method) && is_static(method))
+            if (is_static_constructor(method))
             {
-                // Static constructors can't have parameters
+                // Sanity check, these should always be true
+                XLANG_ASSERT(is_static(method));
                 XLANG_ASSERT(size(method.ParamList()) == 0);
 
                 return true;
