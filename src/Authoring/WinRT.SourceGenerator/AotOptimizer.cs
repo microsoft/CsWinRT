@@ -780,7 +780,7 @@ namespace Generator
             // Out of all the C# interfaces which are valid WinRT interfaces and
             // support covariance, they all only have one generic parameter,
             // so scoping to only handle that.
-            if (type is not { IsGenericType: true, TypeParameters: [{ Variance: VarianceKind.Out, IsValueType: false }] })
+            if (type is not { IsGenericType: true, TypeParameters: [{ Variance: VarianceKind.Out }], TypeArguments: [{ IsValueType: false }] })
             {
                 return false;
             }
