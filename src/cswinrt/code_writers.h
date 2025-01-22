@@ -1208,7 +1208,7 @@ namespace cswinrt
 
         // If this interface is overridable but the type is sealed, don't mark the member as virtual.
         // The C# compiler errors out about declaring a virtual member in a sealed class.
-        if (is_overridable && !class_type.Flags().Sealed())
+        if (is_overridable && !class_type.Flags().Sealed() || settings.abstract_class)
         {
             // All overridable methods in the WinRT type system have protected visibility.
             access_spec = "protected ";
@@ -1537,7 +1537,7 @@ remove => %;
             visibility = "protected ";
         }
 
-        if (is_overridable)
+        if (is_overridable || settings.abstract_class)
         {
             visibility = "protected virtual ";
         }
@@ -3458,8 +3458,8 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         {
             auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, is_private, getter_prop, setter_prop] = prop_data;
             if (is_private) continue;
-            std::string_view access_spec = is_public ? "public "sv : "protected "sv;
-            std::string_view method_spec = is_overridable ? "virtual "sv : ""sv;
+            std::string_view access_spec = (is_public && !settings.abstract_class) ? "public "sv : "protected "sv;
+            std::string_view method_spec = (is_overridable || settings.abstract_class)? "virtual "sv : ""sv;
             write_property(w, prop_name, prop_name, prop_type, 
                 getter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(getter_prop.value().first)) : getter_target,
                 setter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(setter_prop.value().first)) : setter_target,
