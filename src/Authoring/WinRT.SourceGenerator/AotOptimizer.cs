@@ -626,7 +626,7 @@ namespace Generator
                     CheckForInterfaceToUseForRuntimeClassName(iface);
                 }
 
-                if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, null, isWinRTType, out var compatibleIfaces))
+                if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, null, isWinRTType, compilation.ObjectType, out var compatibleIfaces))
                 {
                     foreach (var compatibleIface in compatibleIfaces)
                     {
@@ -773,7 +773,7 @@ namespace Generator
             }
         }
 
-        private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, TypeMapper mapper, Stack<INamedTypeSymbol> typeStack, Func<ISymbol, TypeMapper, bool> isWinRTType, out IList<INamedTypeSymbol> compatibleTypes)
+        private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, TypeMapper mapper, Stack<INamedTypeSymbol> typeStack, Func<ISymbol, TypeMapper, bool> isWinRTType, INamedTypeSymbol objectType, out IList<INamedTypeSymbol> compatibleTypes)
         {
             compatibleTypes = null;
 
@@ -819,13 +819,16 @@ namespace Generator
                 }
 
                 if (iface.IsGenericType
-                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, typeStack, isWinRTType, out var compatibleIfaces))
+                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, typeStack, isWinRTType, objectType, out var compatibleIfaces))
                 {
                     compatibleTypesForGeneric.UnionWith(compatibleIfaces);
                 }
             }
 
-            var baseType = type.TypeArguments[0].BaseType;
+            // BaseType reports null for interfaces, but interfaces still can be passed as an object.
+            // So we handle that separately.
+            var typeArgument = type.TypeArguments[0];
+            var baseType = typeArgument.TypeKind == TypeKind.Interface ? objectType : typeArgument.BaseType;
             while (baseType != null)
             {
                 if (isWinRTType(baseType, mapper))
@@ -1478,7 +1481,7 @@ namespace Generator
                     AddEnumeratorAdapter(constructedEnumerableType);
                 }
 
-                if (TryGetCompatibleWindowsRuntimeTypesForVariantType(constructedEnumerableType, mapper, null, isWinRTType, out var compatibleIfaces))
+                if (TryGetCompatibleWindowsRuntimeTypesForVariantType(constructedEnumerableType, mapper, null, isWinRTType, compilation.ObjectType, out var compatibleIfaces))
                 {
                     foreach (var compatibleIface in compatibleIfaces)
                     {

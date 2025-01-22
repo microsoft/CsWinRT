@@ -1667,6 +1667,16 @@ namespace winrt::TestComponentCSharp::implementation
         return true;
     }
 
+    bool Class::CheckForBindableObjectInterface(Microsoft::UI::Xaml::Interop::IBindableIterable const& iterable)
+    {
+        if (auto iterableObject = iterable.try_as<WF::Collections::IIterable<WF::IInspectable>>())
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     void Class::CopyProperties(winrt::TestComponentCSharp::IProperties1 const& src)
     {
         ReadWriteProperty(src.ReadWriteProperty());
