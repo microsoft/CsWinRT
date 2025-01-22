@@ -3458,7 +3458,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         {
             auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, is_private, getter_prop, setter_prop] = prop_data;
             if (is_private) continue;
-            std::string_view access_spec = is_public ? "public "sv : "protected "sv;
+            std::string_view access_spec = (is_public && !settings.abstract_class) ? "public "sv : "protected "sv;
             std::string_view method_spec = (is_overridable || settings.abstract_class)? "virtual "sv : ""sv;
             write_property(w, prop_name, prop_name, prop_type, 
                 getter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(getter_prop.value().first)) : getter_target,
