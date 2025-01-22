@@ -8,6 +8,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <PropertyGroup>
     <CsWinRTPath Condition="'$(CsWinRTPath)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</CsWinRTPath>
     <CsWinRTExe>$(CsWinRTPath)cswinrt.exe</CsWinRTExe>
+
+    <!-- Wire up the .targets that should be imported before the .NET SDK -->
+    <BeforeMicrosoftNETSdkTargets>$(BeforeMicrosoftNETSdkTargets);$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.BeforeMicrosoftNetSdk.targets</BeforeMicrosoftNETSdkTargets>
   </PropertyGroup>
 
 </Project>

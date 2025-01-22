@@ -271,13 +271,16 @@ namespace Generator
 
                 """);
 
-            // There's three possible cases for this method:
+            // There's four possible cases for this method:
             //   1a) The project is a standalone WinRT component
             //   1b) The project is a WinRT component, and we're chaining other WinRT components
             //   2)  The project is an app/library, but we also want to chain other WinRT components
+            //   4)  There's no possible types to activate (ie. no authored ones, no dependent ones)
             if (context.IsCsWinRTComponent())
             {
-                builder.AppendLine("IntPtr obj = GetActivationFactory(fullyQualifiedTypeName);");
+                builder.AppendLine("""
+                                    IntPtr obj = GetActivationFactory(fullyQualifiedTypeName);
+                    """);
                 builder.AppendLine();
 
                 // Only emit this call if we have actually generated that. We want to avoid generating
@@ -295,7 +298,18 @@ namespace Generator
             }
             else if (ShouldEmitCallToTryGetDependentActivationFactory(context))
             {
-                builder.AppendLine("IntPtr obj = TryGetDependentActivationFactory(fullyQualifiedTypeName);");
+                builder.AppendLine("""
+                                   IntPtr obj = TryGetDependentActivationFactory(fullyQualifiedTypeName);
+                    """);
+                builder.AppendLine();
+            }
+            else
+            {
+                // This ensures we don't get build errors if someone sets 'CsWinRTMergeReferencedActivationFactories'
+                // but there's no referenced activation factories defined yet (ie. no WinRT components referenced).
+                builder.AppendLine("""
+                                   IntPtr obj = IntPtr.Zero;
+                    """);
                 builder.AppendLine();
             }
 
