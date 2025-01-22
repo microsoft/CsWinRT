@@ -474,8 +474,10 @@ $(CsWinRTInternalProjection)
         See: https://learn.microsoft.com/cpp/build/reference/defaultlib-specify-default-library.
         Also see: https://learn.microsoft.com/cpp/build/reference/nodefaultlib-ignore-libraries.
       -->
-      <_StubExeMsvcArgs Include="/NODEFAULTLIB:libucrt.lib" />
-      <_StubExeMsvcArgs Include="/DEFAULTLIB:ucrt.lib" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include="/NODEFAULTLIB:libucrtd.lib" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include="/NODEFAULTLIB:libucrt.lib" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' == 'Debug'" Include="/DEFAULTLIB:ucrtd.lib" />
+      <_StubExeMsvcArgs Condition="'$(Configuration)' != 'Debug'" Include="/DEFAULTLIB:ucrt.lib" />
 
       <!-- Skip generating additional code for incremental linking (https://learn.microsoft.com/cpp/build/reference/incremental-link-incrementally) -->
       <_StubExeMsvcArgs Include="/INCREMENTAL:NO" />
