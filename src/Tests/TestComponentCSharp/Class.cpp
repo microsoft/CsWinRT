@@ -1671,7 +1671,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         if (auto iterableObject = iterable.try_as<WF::Collections::IIterable<WF::IInspectable>>())
         {
-            return true;
+            return iterableObject.First() != nullptr;
         }
 
         return false;
