@@ -1567,6 +1567,15 @@ namespace cswinrt
         default: throw_invalid("Unknown type");
         }
     }
+
+    // Returns whether the ABI interface should implement the CCW interface or not.
+    // In authoring scenarios, exclusive interfaces don't exist, so we use the CCW impl type.
+    bool does_abi_interface_implement_ccw_interface(TypeDef const& type)
+    {
+        return settings.component &&
+               settings.filter.includes(type) &&
+               is_exclusive_to(type);
+    }
 }
 
 namespace std
