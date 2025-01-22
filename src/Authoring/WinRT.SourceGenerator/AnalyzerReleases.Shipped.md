@@ -47,7 +47,14 @@ CsWinRT1029 | Usage | Warning | Class implements WinRT interfaces generated usin
 ### New Rules
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-CsWinRT1030 | Usage | Warning | Project needs to be updated with `<AllowUnsafeBlocks>true</AllowUnsafeBlocks>` to allow generic interface code generation.
+CsWinRT1030 | Usage | Warning | Project needs to be updated with '<AllowUnsafeBlocks>true</AllowUnsafeBlocks>' to allow generic interface code generation.
+
+## Release 2.2.1
+
+### New Rules
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+CsWinRT1031 | Usage | Error | Source generator failed.
 
 ## Release 2.3.0
 

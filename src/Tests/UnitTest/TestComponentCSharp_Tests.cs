@@ -2834,6 +2834,24 @@ namespace UnitTest
             using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
         }
 
+        [Fact]
+        public void TestForIterableObject()
+        {
+            // Make sure for collections of value types that they don't project IEnumerable<object>
+            // as it isn't a covariant interface.
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<int>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<EnumValue>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<System.DateTimeOffset>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new Dictionary<string, System.DateTimeOffset>()));
+
+            // Make sure for collections of object types that they do project IEnumerable<object>
+            // as it is an covariant interface.
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<object>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<Class>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<IProperties1>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<ManagedType2>()));
+        }
+
         internal class ManagedType2 : List<ManagedType2> { }
 
         internal class ManagedType3 : List<ManagedType3>, IDisposable

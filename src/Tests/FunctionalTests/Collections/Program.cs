@@ -288,6 +288,26 @@ if (intToListDict[4].Count != 1 || intToListDict[4].First() != EnumValue.Two)
     return 101;
 }
 
+// Make sure for collections of value types that they don't project IEnumerable<object>
+// as it isn't a covariant interface.
+if (instance.CheckForBindableObjectInterface(new List<int>()) ||
+    instance.CheckForBindableObjectInterface(new List<EnumValue>()) ||
+    instance.CheckForBindableObjectInterface(new List<System.DateTimeOffset>()) ||
+    instance.CheckForBindableObjectInterface(new Dictionary<string, System.DateTimeOffset>()))
+{
+    return 102;
+}
+
+// Make sure for collections of object types that they do project IEnumerable<object>
+// as it is an covariant interface.
+if (!instance.CheckForBindableObjectInterface(new List<object>()) ||
+    !instance.CheckForBindableObjectInterface(new List<CustomClass>()) ||
+    !instance.CheckForBindableObjectInterface(new List<Class>()) ||
+    !instance.CheckForBindableObjectInterface(new List<IProperties1>()))
+{
+    return 103;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
