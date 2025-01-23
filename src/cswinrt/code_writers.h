@@ -8631,8 +8631,57 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
             bind<write_custom_query_interface_impl>(type));
     }
 
+    void write_abstract_class_event(writer& w, Event const& event, std::string_view platform_attribute)
+    {
+		auto external_event_name = event.Name();
+        auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
+
+        w.write(R"(
+%% % event % %;
+)",
+platform_attribute,
+"protected",
+"abstract override",
+event_type,
+external_event_name
+);
+        
+    }
+
+    void write_abstract_class_property(writer& w, Property const& prop, std::string_view platform_attribute)
+    {
+        auto [getter, setter] = get_property_methods(prop);
+        auto prop_type = write_prop_type(w, prop);
+		auto external_prop_name = prop.Name();
+
+        w.write(R"(
+%% % % % {)",
+platform_attribute,
+"protected",
+"abstract override",
+prop_type,
+external_prop_name);
+        if (getter)
+        {
+            w.write(R"( get; )");
+        }
+
+        if (setter)
+        {
+            w.write(R"( set;)");
+        }
+
+		w.write(R"( }
+)");
+    }
+
     void write_abstract_class_method(writer& w, MethodDef const& method, std::string_view platform_attribute)
     {
+        if (is_special(method))
+        {
+            return;
+        }
+
         auto method_name = method.Name();
         method_signature signature{ method };
 
@@ -8651,22 +8700,35 @@ bind_list<write_projection_parameter>(", ", signature.params()));
     {
         auto type_namespace = type.TypeNamespace();
         auto type_name = write_type_name_temp(w, type);
+        auto abstract_type_name = "Abstract" + type_name;
         w.write(R"(
-%protected abstract class % : % 
-{
+%% % class % : % {
 )",
 bind<write_type_custom_attributes>(type, true),
-"Abstract" + type_name, 
+"public",
+"abstract",
+abstract_type_name,
 type_name);
+
         auto platform_attribute = write_platform_attribute_temp(w, type);
 
 		for (auto&& method : type.MethodList())
 		{
-			write_abstract_class_method(w, method, "");
+			write_abstract_class_method(w, method, platform_attribute);
 		}
 
-        w.write(R"(
-}
+		for (auto&& event : type.EventList())
+		{
+			write_abstract_class_event(w, event, platform_attribute);
+		}
+
+		for (auto&& prop : type.PropertyList())
+		{
+			write_abstract_class_property(w, prop, platform_attribute);
+		}
+
+        w.write(R"(}
+
 )");
     }
     
