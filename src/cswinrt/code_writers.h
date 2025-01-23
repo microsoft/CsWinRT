@@ -8631,6 +8631,44 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
             bind<write_custom_query_interface_impl>(type));
     }
 
+    void write_abstract_class_method(writer& w, MethodDef const& method, std::string_view platform_attribute)
+    {
+        auto method_name = method.Name();
+        method_signature signature{ method };
+
+        w.write(R"(
+%% % % %(%);
+)",
+platform_attribute,
+"protected",
+"abstract override",
+bind<write_projection_return_type>(signature),
+method_name,
+bind_list<write_projection_parameter>(", ", signature.params()));
+    }
+
+    void write_abstract_class(writer& w, TypeDef const& type)
+    {
+        auto type_namespace = type.TypeNamespace();
+        auto type_name = write_type_name_temp(w, type);
+        w.write(R"(
+%protected abstract class % : % 
+{
+)",
+bind<write_type_custom_attributes>(type, true),
+"Abstract" + type_name, 
+type_name);
+        auto platform_attribute = write_platform_attribute_temp(w, type);
+
+		for (auto&& method : type.MethodList())
+		{
+			write_abstract_class_method(w, method, "");
+		}
+
+        w.write(R"(
+}
+)");
+    }
     
     void write_class(writer& w, TypeDef const& type)
     {
