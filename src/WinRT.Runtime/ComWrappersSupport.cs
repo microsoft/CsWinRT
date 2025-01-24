@@ -210,6 +210,24 @@ namespace WinRT
                 }
             }
 
+#if NET8_0_OR_GREATER
+            var comExposedDetails = System.Runtime.InteropServices.Marshalling.StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetComExposedTypeDetails(type.TypeHandle);
+
+            if (comExposedDetails != null)
+            {
+                ReadOnlySpan<ComInterfaceEntry> comInterfaceEntries;
+                unsafe
+                {
+                    ComInterfaceEntry* entriesPointer = comExposedDetails.GetComInterfaceEntries(out int generatedEntriesCount);
+                    comInterfaceEntries = new ReadOnlySpan<ComInterfaceEntry>(entriesPointer, generatedEntriesCount);
+                }
+                foreach (var entry in comInterfaceEntries)
+                {
+                    entries.Add(entry);
+                }
+            }
+#endif
+
             if (winrtExposedClassAttribute != null)
             {
                 hasWinrtExposedClassAttribute = true;
