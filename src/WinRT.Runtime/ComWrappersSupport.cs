@@ -380,7 +380,7 @@ namespace WinRT
                     entries.Add(ProvideIReferenceArray(type));
                 }
             }
-            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>) && Projections.IsTypeWindowsRuntimeType(type))
             {
                 if (KeyValuePairHelper.KeyValuePairCCW.TryGetValue(type, out var entry))
                 {

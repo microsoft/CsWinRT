@@ -986,6 +986,15 @@ namespace UnitTest
             var out_nested = (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<string, string>>)TestObject.ObjectProperty;
             Assert.Equal(nested, out_nested);
 
+            // Test projected types in generic of KeyValuePair
+            TestObject.ObjectProperty = new KeyValuePair<string, IProperties1>("one", new Class());
+            TestObject.ObjectProperty = new KeyValuePair<string, Class>("two", new Class());
+            TestObject.ObjectProperty = new KeyValuePair<string, IDisposable>("two", new CustomDisposableTest());
+
+            // Test non-projected types in generic of KeyValuePair
+            TestObject.ObjectProperty = new KeyValuePair<string, PlatformID>("two", PlatformID.Win32NT);
+            TestObject.ObjectProperty = new KeyValuePair<string, Random>("two", new Random());
+
             var strings_in = new[] { "hello", "world" };
             TestObject.StringsProperty = strings_in;
             var strings_out = TestObject.StringsProperty;
@@ -2832,6 +2841,24 @@ namespace UnitTest
         {
             using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
             using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
+        }
+
+        [Fact]
+        public void TestForIterableObject()
+        {
+            // Make sure for collections of value types that they don't project IEnumerable<object>
+            // as it isn't a covariant interface.
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<int>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<EnumValue>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<System.DateTimeOffset>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new Dictionary<string, System.DateTimeOffset>()));
+
+            // Make sure for collections of object types that they do project IEnumerable<object>
+            // as it is an covariant interface.
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<object>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<Class>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<IProperties1>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<ManagedType2>()));
         }
 
         internal class ManagedType2 : List<ManagedType2> { }
