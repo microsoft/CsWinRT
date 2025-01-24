@@ -525,7 +525,7 @@ namespace WinRT
 
                     if (addRefFromTrackerSource)
                     {
-                        objRef.AddRefFromTrackerSource(); // ObjRef instance
+                        objRef.NativeAddRefFromTrackerSourceUnsafe(); // ObjRef instance
                     }
                     else
                     {
@@ -678,7 +678,7 @@ namespace WinRT
                 // Handle the scenario where the CLR has already done an AddRefFromTrackerSource on the instance
                 // stored by the RCW type.  We handle it by releasing the AddRef we did and not doing an release
                 // on destruction as the CLR would do it.
-                winrtObj.NativeObject.ReleaseFromTrackerSource();
+                winrtObj.NativeObject.NativeReleaseFromTrackerSourceUnsafe();
                 winrtObj.NativeObject.PreventReleaseFromTrackerSourceOnDispose = true;
             }
 

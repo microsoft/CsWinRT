@@ -27,7 +27,7 @@
     <AdoMirrorBuild Condition="'$(AdoMirrorBuild)' == ''">false</AdoMirrorBuild>
     <GitRepositoryRemoteName Condition="$(AdoMirrorBuild)">github</GitRepositoryRemoteName>
   </PropertyGroup>
-	
+    
   <!-- Configure the assembly version as needed -->
   <PropertyGroup>
     <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
