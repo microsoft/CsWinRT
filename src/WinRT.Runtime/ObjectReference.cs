@@ -103,6 +103,8 @@ namespace WinRT
             }
         }
 
+        [Obsolete("This method is not safe. Use 'GetThisPtr()' instead.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         protected unsafe IUnknownVftbl VftblIUnknown
         {
             get
@@ -305,14 +307,6 @@ namespace WinRT
         protected virtual unsafe void Release()
         {
             NativeReleaseUnsafe();
-        }
-
-        internal unsafe bool IsReferenceToManagedObject
-        {
-            get
-            {
-                return VftblIUnknown.Equals(IUnknownVftbl.AbiToProjectionVftbl);
-            }
         }
 
         private protected virtual IntPtr GetContextToken()

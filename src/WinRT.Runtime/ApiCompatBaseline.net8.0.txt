@@ -3,4 +3,7 @@ CannotChangeAttribute : Attribute 'System.AttributeUsageAttribute' on 'WinRT.Gen
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.WinRTExposedTypeAttribute' in the contract but not the implementation.
 ParameterNamesCannotChange : Parameter name on member 'WinRT.ActivationFactory.Get(System.String)' is 'activatableClassId' in the implementation but 'typeName' in the contract.
 ParameterNamesCannotChange : Parameter name on member 'WinRT.ActivationFactory.Get(System.String, System.Guid)' is 'activatableClassId' in the implementation but 'typeName' in the contract.
-Total Issues: 4
+MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef()' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef(System.Boolean)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void WinRT.IObjectReference.ThrowIfDisposed()' does not exist in the implementation but it does exist in the contract.
+Total Issues: 7
