@@ -986,6 +986,15 @@ namespace UnitTest
             var out_nested = (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<string, string>>)TestObject.ObjectProperty;
             Assert.Equal(nested, out_nested);
 
+            // Test projected types in generic of KeyValuePair
+            TestObject.ObjectProperty = new KeyValuePair<string, IProperties1>("one", new Class());
+            TestObject.ObjectProperty = new KeyValuePair<string, Class>("two", new Class());
+            TestObject.ObjectProperty = new KeyValuePair<string, IDisposable>("two", new CustomDisposableTest());
+
+            // Test non-projected types in generic of KeyValuePair
+            TestObject.ObjectProperty = new KeyValuePair<string, PlatformID>("two", PlatformID.Win32NT);
+            TestObject.ObjectProperty = new KeyValuePair<string, Random>("two", new Random());
+
             var strings_in = new[] { "hello", "world" };
             TestObject.StringsProperty = strings_in;
             var strings_out = TestObject.StringsProperty;
