@@ -337,6 +337,8 @@ namespace winrt::TestComponentCSharp::implementation
         void CopyProperties(TestComponentCSharp::IProperties1 const& src);
         void CopyPropertiesViaWeakReference(TestComponentCSharp::IProperties1 const& src);
 
+        bool CheckForBindableObjectInterface(Microsoft::UI::Xaml::Interop::IBindableIterable const& iterable);
+
         void CompleteAsync();
         void CompleteAsync(int32_t hr);
         void AdvanceAsync(int32_t delta);

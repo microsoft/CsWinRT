@@ -354,7 +354,7 @@ Where <spec> is one or more of:
                     {
                         writer console;
                         console.write("error: '%' when processing %%%\n", e.what(), ns, currentType.empty() ? "" : ".", currentType);
-                        console.flush_to_console();
+                        console.flush_to_console_error();
                         throw;
                     }
                 });
@@ -545,6 +545,8 @@ ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetM
         {
             w.write(" error: %\n", e.what());
             result = 1;
+            w.flush_to_console_error();
+            return result;
         }
 
         w.flush_to_console();

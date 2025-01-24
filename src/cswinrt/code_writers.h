@@ -1105,12 +1105,15 @@ namespace cswinrt
     void write_explicitly_implemented_method_for_abi(writer& w, MethodDef const& method,
         std::string_view return_type, TypeDef const& method_interface, std::string_view method_target)
     {
+        // In authoring scenarios, exclusive interfaces don't exist, so use the CCW impl type.
+        bool implement_ccw_interface = does_abi_interface_implement_ccw_interface(method_interface);
+
         method_signature signature{ method };
         w.write(R"(
 % %.%(%) => %.%(%);
 )",
             return_type,
-            bind<write_type_name>(method_interface, typedef_name_type::CCW, false),
+            bind<write_type_name>(method_interface, implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected, false),
             method.Name(),
             bind_list<write_projection_parameter>(", ", signature.params()),
             method_target,
@@ -1451,7 +1454,10 @@ private % Make_%()
 
     std::string write_explicit_name(writer& w, TypeDef const& iface, std::string_view name)
     {
-        return w.write_temp("%.%", write_type_name_temp(w, iface, "%", typedef_name_type::CCW), name);
+        // In authoring scenarios, exclusive interfaces don't exist, so use the CCW impl type.
+        bool implement_ccw_interface = does_abi_interface_implement_ccw_interface(iface);
+
+        return w.write_temp("%.%", write_type_name_temp(w, iface, "%", implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected), name);
     }
 
     std::string write_prop_type(writer& w, Property const& prop)
@@ -5008,6 +5014,9 @@ remove => %.Unsubscribe(value);
             return;
         }
 
+        // In authoring scenarios, exclusive interfaces don't exist, so use the CCW impl type.
+        bool implement_ccw_interface = does_abi_interface_implement_ccw_interface(type);
+
         auto init_call_variables = [&](writer& w)
         {
             if (!settings.netstandard_compat)
@@ -5038,7 +5047,7 @@ remove => %.Unsubscribe(value);
                 {
                     if (!settings.netstandard_compat)
                     {
-                        w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+                        w.write("%.", bind<write_type_name>(type, implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected, false));
                     }
                 }),
                 method.Name(),
@@ -5062,7 +5071,7 @@ bind([&](writer& w)
     {
         if (!settings.netstandard_compat)
         {
-            w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+            w.write("%.", bind<write_type_name>(type, implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected, false));
         }
     }),
                 prop.Name());
@@ -5133,7 +5142,7 @@ remove
                     {
                         if (!settings.netstandard_compat)
                         {
-                            w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+                            w.write("%.", bind<write_type_name>(type, implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected, false));
                         }
                     }),
                 evt.Name(),
@@ -8153,7 +8162,7 @@ internal unsafe interface % : %
             is_exclusive_to(type) && !settings.idic_exclusiveto ? "" : "[DynamicInterfaceCastableImplementation]",
             bind<write_guid_attribute>(type),
             type_name,
-            bind<write_type_name>(type, typedef_name_type::CCW, false),
+            bind<write_type_name>(type, does_abi_interface_implement_ccw_interface(type) ? typedef_name_type::CCW : typedef_name_type::Projected, false),
             // Vftbl
             bind([&](writer& w)
             {

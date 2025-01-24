@@ -382,6 +382,8 @@ namespace TestComponentCSharp
         void CopyProperties(IProperties1 src);
         void CopyPropertiesViaWeakReference(IProperties1 src);
 
+        Boolean CheckForBindableObjectInterface(Microsoft.UI.Xaml.Interop.IBindableIterable iterable);
+
         // Async
         void CompleteAsync(); // Completes the in-flight async operation successfully
         void CompleteAsync(Int32 hr); // Completes the in-flight async operation with a failed HRESULT

@@ -153,6 +153,14 @@ namespace cswinrt
             m_second.clear();
         }
 
+        void flush_to_console_error() noexcept
+        {
+            fprintf(stderr, "%.*s", static_cast<int>(m_first.size()), m_first.data());
+            fprintf(stderr, "%.*s", static_cast<int>(m_second.size()), m_second.data());
+            m_first.clear();
+            m_second.clear();
+        }
+
         void flush_to_file(std::string const& filename)
         {
             if (!file_equal(filename))
