@@ -45,9 +45,13 @@ namespace WinRT
         public IntPtr GetThisPtr()
         {
             AddRefUnsafe();
-            NativeAddRefUnsafe(addRefFromTrackerSource: false);
 
             IntPtr thisPtr = GetThisPtrUnsafe();
+
+            // We could use 'NativeAddRefUnsafe', but instead we inline the logic to avoid
+            // a repeated call to the virtual 'GetThisPtrUnsafe' method. We also don't need
+            // to add a reference from the tracker source here, so we just need this call.
+            Marshal.AddRef(thisPtr);
 
             ReleaseUnsafe();
 
@@ -266,7 +270,7 @@ namespace WinRT
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the current instance is disposed.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void ThrowIfDisposedUnsafe()
+        private protected void ThrowIfDisposedUnsafe()
         {
 #if NET8_0_OR_GREATER
             ObjectDisposedException.ThrowIf(_referenceTrackingMask < 0, this);
