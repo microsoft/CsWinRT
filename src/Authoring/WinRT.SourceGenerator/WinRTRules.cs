@@ -239,6 +239,11 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.ClassOldProjectionMultipleInstances_Text,
             false);
 
+        public static DiagnosticDescriptor SourceGeneratorFailed = MakeRule(
+            "CsWinRT1031",
+            CsWinRTDiagnosticStrings.SourceGeneratorFailed_Brief,
+            CsWinRTDiagnosticStrings.SourceGeneratorFailed_Text);
+
         public static DiagnosticDescriptor NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType = MakeRule(
             "CsWinRT1032",
             CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief,

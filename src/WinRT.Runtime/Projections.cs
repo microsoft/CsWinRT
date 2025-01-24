@@ -502,7 +502,7 @@ namespace WinRT
                 }
             }
 
-            Type baseType = type.BaseType;
+            Type baseType = type.IsInterface ? typeof(object) : type.BaseType;
             while (baseType != null)
             {
                 if (IsTypeWindowsRuntimeTypeNoArray(baseType))

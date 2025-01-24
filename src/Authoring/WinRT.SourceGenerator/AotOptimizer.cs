@@ -627,7 +627,7 @@ namespace Generator
                     CheckForInterfaceToUseForRuntimeClassName(iface);
                 }
 
-                if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, null, isWinRTType, out var compatibleIfaces))
+                if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, null, isWinRTType, compilation.ObjectType, out var compatibleIfaces))
                 {
                     foreach (var compatibleIface in compatibleIfaces)
                     {
@@ -774,14 +774,14 @@ namespace Generator
             }
         }
 
-        private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, TypeMapper mapper, Stack<INamedTypeSymbol> typeStack, Func<ISymbol, TypeMapper, bool> isWinRTType, out IList<INamedTypeSymbol> compatibleTypes)
+        private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, TypeMapper mapper, Stack<INamedTypeSymbol> typeStack, Func<ISymbol, TypeMapper, bool> isWinRTType, INamedTypeSymbol objectType, out IList<INamedTypeSymbol> compatibleTypes)
         {
             compatibleTypes = null;
 
             // Out of all the C# interfaces which are valid WinRT interfaces and
             // support covariance, they all only have one generic parameter,
             // so scoping to only handle that.
-            if (type is not { IsGenericType: true, TypeParameters: [{ Variance: VarianceKind.Out, IsValueType: false }] })
+            if (type is not { IsGenericType: true, TypeParameters: [{ Variance: VarianceKind.Out }], TypeArguments: [{ IsValueType: false }] })
             {
                 return false;
             }
@@ -820,13 +820,16 @@ namespace Generator
                 }
 
                 if (iface.IsGenericType
-                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, typeStack, isWinRTType, out var compatibleIfaces))
+                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, typeStack, isWinRTType, objectType, out var compatibleIfaces))
                 {
                     compatibleTypesForGeneric.UnionWith(compatibleIfaces);
                 }
             }
 
-            var baseType = type.TypeArguments[0].BaseType;
+            // BaseType reports null for interfaces, but interfaces still can be passed as an object.
+            // So we handle that separately.
+            var typeArgument = type.TypeArguments[0];
+            var baseType = typeArgument.TypeKind == TypeKind.Interface ? objectType : typeArgument.BaseType;
             while (baseType != null)
             {
                 if (isWinRTType(baseType, mapper))
@@ -1511,24 +1514,35 @@ namespace Generator
             if (enumerableType != null)
             {
                 var constructedEnumerableType = enumerableType.Construct(type);
-                if (TryGetCompatibleWindowsRuntimeTypesForVariantType(constructedEnumerableType, mapper, null, isWinRTType, out var compatibleIfaces))
+                if (isWinRTType(constructedEnumerableType, mapper) &&
+                    !GeneratorHelper.IsInternalInterfaceFromReferences(constructedEnumerableType, compilation.Assembly))
+                {
+                    AddEnumeratorAdapter(constructedEnumerableType);
+                }
+
+                if (TryGetCompatibleWindowsRuntimeTypesForVariantType(constructedEnumerableType, mapper, null, isWinRTType, compilation.ObjectType, out var compatibleIfaces))
                 {
                     foreach (var compatibleIface in compatibleIfaces)
                     {
                         if (compatibleIface.MetadataName == "IEnumerable`1" &&
                             !GeneratorHelper.IsInternalInterfaceFromReferences(compatibleIface, compilation.Assembly))
                         {
-                            var enumeratorAdapterType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1");
-                            if (enumeratorAdapterType != null)
-                            {
-                                var constructedEnumeratorAdapterType = enumeratorAdapterType.Construct(compatibleIface.TypeArguments[0]);
-                                var vtableAttribute = GetVtableAttributeToAdd(constructedEnumeratorAdapterType, isManagedOnlyType, isWinRTType, mapper, compilation, false);
-                                if (vtableAttribute != default)
-                                {
-                                    vtableAttributes.Add(vtableAttribute);
-                                }
-                            }
+                            AddEnumeratorAdapter(compatibleIface);
                         }
+                    }
+                }
+            }
+
+            void AddEnumeratorAdapter(INamedTypeSymbol iface)
+            {
+                var enumeratorAdapterType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1");
+                if (enumeratorAdapterType != null)
+                {
+                    var constructedEnumeratorAdapterType = enumeratorAdapterType.Construct(iface.TypeArguments[0]);
+                    var vtableAttribute = GetVtableAttributeToAdd(constructedEnumeratorAdapterType, isManagedOnlyType, isWinRTType, mapper, compilation, false);
+                    if (vtableAttribute != default)
+                    {
+                        vtableAttributes.Add(vtableAttribute);
                     }
                 }
             }
