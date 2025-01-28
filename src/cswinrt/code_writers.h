@@ -1206,7 +1206,7 @@ namespace cswinrt
         auto access_spec = is_protected || is_overridable ? "protected " : "public ";
         std::string method_spec = "";
 
-        if (settings.abstract_class)
+        if (settings.abstract_class && !class_type.Flags().Sealed())
         {
             method_spec = "virtual ";
         }
@@ -1537,7 +1537,7 @@ remove => %;
     {
         auto visibility = "public ";
 
-        if (settings.abstract_class) 
+        if (settings.abstract_class && !class_type.Flags().Sealed())
         {
             visibility = "public virtual ";
         }
@@ -1545,7 +1545,7 @@ remove => %;
         if (is_protected)
         {
             visibility = "protected ";
-            if (settings.abstract_class)
+            if (settings.abstract_class && !class_type.Flags().Sealed())
             {
 				visibility = "protected virtual ";
             }
@@ -3473,7 +3473,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, is_private, getter_prop, setter_prop] = prop_data;
             if (is_private) continue;
             std::string_view access_spec = is_public ? "public "sv : "protected "sv;
-            std::string_view method_spec = (is_overridable || settings.abstract_class)? "virtual "sv : ""sv;
+            std::string_view method_spec = (is_overridable || (settings.abstract_class && !type.Flags().Sealed()))? "virtual "sv : ""sv;
             write_property(w, prop_name, prop_name, prop_type, 
                 getter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(getter_prop.value().first)) : getter_target,
                 setter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(setter_prop.value().first)) : setter_target,

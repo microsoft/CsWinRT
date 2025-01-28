@@ -238,7 +238,7 @@ Where <spec> is one or more of:
                                     }
                                     else
                                     {
-                                        if (settings.abstract_class) {
+                                        if (settings.abstract_class && !type.Flags().Sealed()) {
                                             write_abstract_class(w, type);
                                         }
                                         write_class(w, type);
