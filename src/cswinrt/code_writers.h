@@ -1206,9 +1206,14 @@ namespace cswinrt
         auto access_spec = is_protected || is_overridable ? "protected " : "public ";
         std::string method_spec = "";
 
+        if (settings.abstract_class)
+        {
+            method_spec = "virtual ";
+        }
+
         // If this interface is overridable but the type is sealed, don't mark the member as virtual.
         // The C# compiler errors out about declaring a virtual member in a sealed class.
-        if (is_overridable && !class_type.Flags().Sealed() || settings.abstract_class)
+        if (is_overridable && !class_type.Flags().Sealed())
         {
             // All overridable methods in the WinRT type system have protected visibility.
             access_spec = "protected ";
@@ -1532,12 +1537,21 @@ remove => %;
     {
         auto visibility = "public ";
 
+        if (settings.abstract_class) 
+        {
+            visibility = "public virtual ";
+        }
+
         if (is_protected)
         {
             visibility = "protected ";
+            if (settings.abstract_class)
+            {
+				visibility = "protected virtual ";
+            }
         }
 
-        if (is_overridable || settings.abstract_class)
+        if (is_overridable)
         {
             visibility = "protected virtual ";
         }
@@ -3458,7 +3472,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         {
             auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, is_private, getter_prop, setter_prop] = prop_data;
             if (is_private) continue;
-            std::string_view access_spec = (is_public && !settings.abstract_class) ? "public "sv : "protected "sv;
+            std::string_view access_spec = is_public ? "public "sv : "protected "sv;
             std::string_view method_spec = (is_overridable || settings.abstract_class)? "virtual "sv : ""sv;
             write_property(w, prop_name, prop_name, prop_type, 
                 getter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(getter_prop.value().first)) : getter_target,
@@ -8640,7 +8654,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
 %% % event % %;
 )",
 platform_attribute,
-"protected",
+"public",
 "abstract override",
 event_type,
 external_event_name
@@ -8657,7 +8671,7 @@ external_event_name
         w.write(R"(
 %% % % % {)",
 platform_attribute,
-"protected",
+"public",
 "abstract override",
 prop_type,
 external_prop_name);
@@ -8689,7 +8703,7 @@ external_prop_name);
 %% % % %(%);
 )",
 platform_attribute,
-"protected",
+"public",
 "abstract override",
 bind<write_projection_return_type>(signature),
 method_name,

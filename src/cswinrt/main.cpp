@@ -238,7 +238,9 @@ Where <spec> is one or more of:
                                     }
                                     else
                                     {
-                                        write_abstract_class(w, type);
+                                        if (settings.abstract_class) {
+                                            write_abstract_class(w, type);
+                                        }
                                         write_class(w, type);
                                         add_base_type_entry(type, typeNameToBaseTypeMap);
                                         add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
