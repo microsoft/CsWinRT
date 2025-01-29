@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -2035,6 +2036,10 @@ namespace WinRT
         private static unsafe void CopyUIntEnumDirect(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)value;
     }
 
+#if NET
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
+#endif
 #if EMBED
     internal
 #else
