@@ -88,6 +88,9 @@ namespace ABI.Windows.Foundation
             }
         }
 
+#if NET8_0_OR_GREATER
+        [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
+#endif
         private static unsafe int Do_Abi_get_Value_0<TAbi>(void* thisPtr, out TAbi __return_value__)
         {
             T ____return_value__ = default;
@@ -469,6 +472,7 @@ namespace ABI.System
 #endif
             {
                 var __params = new object[] { thisPtr, null };
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 try
                 {
                     marshallingDelegate.DynamicInvokeAbi(__params);
@@ -478,6 +482,7 @@ namespace ABI.System
                 {
                     Marshaler<T>.DisposeAbi(__params[1]);
                 }
+#pragma warning restore IL3050
             }
 
             throw new NotSupportedException($"Cannot retrieve the value for the current Nullable`1 instance with type '{typeof(T)}'.");
@@ -1946,7 +1951,7 @@ namespace ABI.System
             try
             {
                 ____return_value__ = global::WinRT.ComWrappersSupport.FindObject<T>(thisPtr);
-                *__return_value__ = (IntPtr)Marshaler<T>.FromManaged(____return_value__);
+                *__return_value__ = (IntPtr)MarshalGeneric<T>.FromManaged(____return_value__);
             }
             catch (global::System.Exception __exception__)
             {
@@ -1972,11 +1977,11 @@ namespace ABI.System
 #endif
                     );
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return new Nullable(Marshaler<T>.FromAbi(__retval));
+                return new Nullable(MarshalDelegate.FromAbi<T>(__retval));
             }
             finally
             {
-                Marshaler<T>.DisposeAbi(__retval);
+                MarshalExtensions.ReleaseIfNotNull(__retval);
                 MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
