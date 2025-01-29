@@ -94,23 +94,15 @@ namespace WinRT
                 return new AgileReference<T>(null);
             }
 
-            var marshal = Marshaler<T>.CreateMarshaler2(value);
+            var objrefValue = MarshalInspectable<T>.CreateMarshaler2(value);
             try
             {
-                if (marshal is IObjectReference objref)
-                {
-                    return new AgileReference<T>(objref);
-                }
-                else if (marshal is ObjectReferenceValue objrefValue)
-                {
-                    return new AgileReference<T>(objrefValue);
-                }
+                return new AgileReference<T>(objrefValue);
             }
             finally
             {
-                Marshaler<T>.DisposeMarshaler(marshal);
+                objrefValue.Dispose();
             }
-            throw new InvalidOperationException($"Object type is not a projected type: {nameof(value)}.");
         }
 
         private static bool TryGetRefForObject(object value, bool allowComposed, out IObjectReference reference)
