@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -242,7 +243,6 @@ namespace ABI.System
 
                     IntPtr ThisPtr = _nativeDelegate.ThisPtr;
                     var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, _abi_invoke_type);
-#pragma warning restore IL3050
                     ObjectReferenceValue __sender = default;
                     object __args = default;
                     var __params = new object[] { ThisPtr, null, null };
@@ -262,6 +262,7 @@ namespace ABI.System
                         Marshaler<T>.DisposeMarshaler(__args);
                     }
                 }
+#pragma warning restore IL3050
             }
         }
 
@@ -280,6 +281,9 @@ namespace ABI.System
         public static void DisposeMarshalerArray(MarshalInterfaceHelper<global::System.EventHandler<T>>.MarshalerArray array) => MarshalInterfaceHelper<global::System.EventHandler<T>>.DisposeMarshalerArray(array);
         public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
 
+#if NET
+        [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
+#endif
         private static unsafe int Do_Abi_Invoke<TAbi>(void* thisPtr, IntPtr sender, TAbi args)
         {
             try
