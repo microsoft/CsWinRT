@@ -1,2 +1,0 @@
-Compat issues with assembly WinRT.Runtime:
-Total Issues: 0
