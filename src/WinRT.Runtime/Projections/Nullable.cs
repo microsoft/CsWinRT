@@ -2421,18 +2421,27 @@ namespace ABI.System
             {
                 ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, void*, int>**)nullablePtr)[6](nullablePtr, &__retval));
+
                 if (typeof(T) == typeof(TAbi))
                 {
                     return __retval;
                 }
                 else 
                 {
-                    return Marshaler<T>.FromAbi(__retval);
+                    // If 'typeof(T) != typeof(TAbi)', then we know the type is not blittable.
+                    // We can use the specific marshaller then to minimize binary size here.
+                    return MarshalNonBlittable<T>.FromAbi(__retval);
                 }
             }
             finally
             {
-                Marshaler<T>.DisposeAbi(__retval);
+                // We only need to dispose in the non blittable case. Otherwise,
+                // that value is returned directly to the caller and used as is.
+                if (typeof(T) != typeof(TAbi))
+                {
+                    MarshalNonBlittable<T>.DisposeAbi(__retval);
+                }
+
                 MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
@@ -2491,11 +2500,11 @@ namespace ABI.System
             {
                 ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref Unsafe.AsRef(in PIID), out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return new ABI.System.Nullable(Marshaler<T>.FromAbi(__retval));
+                return new ABI.System.Nullable(MarshalDelegate.FromAbi<T>(__retval));
             }
             finally
             {
-                Marshaler<T>.DisposeAbi(__retval);
+                MarshalExtensions.ReleaseIfNotNull(__retval);
                 MarshalExtensions.ReleaseIfNotNull(nullablePtr);
             }
         }
