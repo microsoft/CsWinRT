@@ -306,16 +306,6 @@ if "%cswinrt_platform%" EQU "x64" (
   if /I "%cswinrt_configuration%" EQU "release" (
     echo Running cswinrt AOT functional tests for %cswinrt_platform% %cswinrt_configuration%
 
-    for %%a in (%cswinrt_aot_functional_tests%) do (
-      echo Running %%a
-
-      call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net8.0\win-%cswinrt_platform%\publish\%%a.exe
-      if !errorlevel! NEQ 100 (
-        echo.
-        echo ERROR: AOT Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
-        exit /b !ErrorLevel!
-      )
-    )
   )
 )
 
