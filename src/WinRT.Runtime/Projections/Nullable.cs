@@ -179,7 +179,9 @@ namespace ABI.Windows.Foundation
         }
     }
 
-    internal static class BoxedValueIReferenceImpl<T, TAbi> where TAbi : unmanaged
+    internal static class BoxedValueIReferenceImpl<T, TAbi>
+        where T : struct
+        where TAbi : unmanaged
     {
         public static IntPtr AbiToProjectionVftablePtr;
         private static readonly global::ABI.System.Nullable_Delegates.GetValueDelegateAbi GetValue;
@@ -207,7 +209,7 @@ namespace ABI.Windows.Foundation
             try
             {
                 T ____return_value__ = (T)global::WinRT.ComWrappersSupport.FindObject<object>(new IntPtr(thisPtr));
-                *(TAbi*)__return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
+                *(TAbi*)__return_value__ = (TAbi)MarshalNonBlittable<T>.FromManaged(____return_value__);
             }
             catch (global::System.Exception __exception__)
             {
@@ -2390,7 +2392,9 @@ namespace ABI.System
         Type GetNullableType();
     }
 
-    public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails where T: struct where TAbi : unmanaged
+    public sealed class StructTypeDetails<T, TAbi> : IWinRTExposedTypeDetails, IWinRTNullableTypeDetails
+        where T: struct
+        where TAbi : unmanaged
     {
         private static readonly Guid PIID = ABI.System.Nullable<T>.PIID;
 
