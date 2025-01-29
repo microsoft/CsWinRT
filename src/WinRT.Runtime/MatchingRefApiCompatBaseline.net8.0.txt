@@ -9,4 +9,6 @@ CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableAttri
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableContextAttribute' exists on 'WinRT.EventRegistrationTokenTable<T>.AddEventHandler(T)' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.DynamicWindowsRuntimeCastAttribute' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Guid WinRT.Interop.IID.IID_IWeakReferenceSource.get()' does not exist in the reference but it does exist in the implementation.
-Total Issues: 10
+CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.Marshaler<T>' in the implementation but not the reference.
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute' exists on 'WinRT.Marshaler<T>' in the implementation but not the reference.
+Total Issues: 13
