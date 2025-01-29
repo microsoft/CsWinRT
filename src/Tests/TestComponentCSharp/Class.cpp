@@ -1815,6 +1815,18 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::box_value(handler);
     }
 
+    WF::IInspectable Class::BoxedStringArray()
+    {
+        hstring arr[] = { hstring{ L"one" }, hstring{ L"two" }, hstring{ L"three" } };
+        return WF::PropertyValue::CreateStringArray(arr);
+    }
+
+    WF::IInspectable Class::BoxedInt32Array()
+    {
+        int arr[] = { 1, 2, 3 };
+        return WF::PropertyValue::CreateInt32Array(arr);
+    }
+
     hstring Class::Catch(hstring const& /*params*/, hstring& /*lock*/)
     {
         // Compile-only test for keyword escaping

@@ -443,6 +443,8 @@ namespace TestComponentCSharp
         static Object BoxedEnum{ get; };
         static Object BoxedEventHandler{ get; };
         static void UnboxAndCallProgressHandler(Object httpProgressHandler);
+        static Object BoxedStringArray{ get; };
+        static Object BoxedInt32Array{ get; };
 
         static Int32 GetPropertyType(Object obj);
         static String GetName(Object obj);
