@@ -46,7 +46,7 @@ namespace ABI.Windows.Foundation
             try
             {
                 ____return_value__ = (T[])global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
-                (*____return_value__Size, *__return_value__) = Marshaler<T>.FromManagedArray(____return_value__);
+                (*____return_value__Size, *__return_value__) = FromManagedArray(____return_value__);
             }
             catch (global::System.Exception __exception__)
             {
@@ -54,6 +54,56 @@ namespace ABI.Windows.Foundation
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
+        }
+
+        private static (int, IntPtr) FromManagedArray(T[] items)
+        {
+            // Blittable value types
+            if (typeof(T) == typeof(byte) ||
+                typeof(T) == typeof(short) ||
+                typeof(T) == typeof(ushort) ||
+                typeof(T) == typeof(long) ||
+                typeof(T) == typeof(ulong) ||
+                typeof(T) == typeof(int) ||
+                typeof(T) == typeof(uint) ||
+                typeof(T) == typeof(float) ||
+                typeof(T) == typeof(double) ||
+                typeof(T) == typeof(Guid) ||
+                typeof(T) == typeof(global::System.Numerics.Vector2) ||
+                typeof(T) == typeof(global::System.Numerics.Vector3) ||
+                typeof(T) == typeof(global::System.Numerics.Vector4) ||
+                typeof(T) == typeof(global::System.Numerics.Quaternion) ||
+                typeof(T) == typeof(global::System.Numerics.Plane) ||
+                typeof(T) == typeof(global::System.Numerics.Matrix3x2) ||
+                typeof(T) == typeof(global::System.Numerics.Matrix4x4))
+            {
+                return MarshalBlittable<T>.FromManagedArray(items);
+            }
+
+            // Non-blittable value types
+            if (typeof(T) == typeof(bool) ||
+                typeof(T) == typeof(char) ||
+                typeof(T) == typeof(TimeSpan) ||
+                typeof(T) == typeof(DateTimeOffset))
+            {
+                return MarshalNonBlittable<T>.FromManagedArray(items);
+            }
+
+            // Other well-known reference types
+            if (typeof(T) == typeof(string)) return MarshalString.FromManagedArray(Unsafe.As<string[]>(items));
+            if (typeof(T) == typeof(Type)) return ABI.System.Type.FromManagedArray(Unsafe.As<Type[]>(items));
+            if (typeof(T) == typeof(Exception)) return MarshalNonBlittable<Exception>.FromManagedArray(Unsafe.As<Exception[]>(items));
+            if (typeof(T) == typeof(object)) return MarshalInspectable<object>.FromManagedArray(Unsafe.As<object[]>(items));
+
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException($"Support for 'IReferenceArray<T>' for type '{typeof(T)}' is not available in AOT environments.");
+            }
+#endif
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
+            return Marshaler<T>.FromManagedArray(items);
+#pragma warning restore IL3050
         }
     }
 
