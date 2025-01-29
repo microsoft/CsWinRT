@@ -2044,6 +2044,15 @@ namespace WinRT
     {
         static Marshaler()
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"'Marshaler<T>' is not supported in AOT environments, and is only supported for backwards compatibility in JIT environments. " +
+                    $"The type '{typeof(T)}' cannot be marshalled using it. Consider using the appropriate, more specific marshaller type instead.");
+            }    
+#endif
+
             // Structs cannot contain arrays, and arrays may only ever appear as parameters
             if (typeof(T).IsArray)
             {
