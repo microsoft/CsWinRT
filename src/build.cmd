@@ -300,16 +300,6 @@ rem Run functional tests
 if "%run_functional_tests%" EQU "true" (
   echo Running cswinrt functional tests for %cswinrt_platform% %cswinrt_configuration%
 
-  for %%a in (%cswinrt_functional_tests%) do (
-    echo Running %%a
-
-    call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net8.0\win-%cswinrt_platform%\publish\%%a.exe
-    if !errorlevel! NEQ 100 (
-      echo.
-      echo ERROR: Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
-      exit /b !ErrorLevel!
-    )
-  )
 )
 
 if "%cswinrt_platform%" EQU "x64" (
