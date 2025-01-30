@@ -741,7 +741,8 @@ namespace Generator
                         genericParameters.Add(new GenericParameter(
                             ToFullyQualifiedString(genericParameter),
                             GeneratorHelper.GetAbiType(genericParameter, mapper),
-                            isNullable ? TypeKind.Interface : genericParameter.TypeKind));
+                            isNullable ? TypeKind.Interface : genericParameter.TypeKind,
+                            ComputeTypeFlags(genericParameter, compilation)));
                     }
 
                     genericInterfacesToAddToVtable.Add(new GenericInterface(
@@ -772,6 +773,25 @@ namespace Generator
                     interfaceToUseForRuntimeClassName = iface;
                 }
             }
+        }
+
+        private static TypeFlags ComputeTypeFlags(ITypeSymbol symbol, Compilation compilation)
+        {
+            TypeFlags typeFlags = TypeFlags.None;
+
+            // Check for exception types
+            if (symbol.TypeKind is TypeKind.Class)
+            {
+                var exceptionType = compilation.GetTypeByMetadataName("System.Exception")!;
+
+                if (SymbolEqualityComparer.Default.Equals(symbol, exceptionType) ||
+                    symbol.InheritsFromType(exceptionType))
+                {
+                    typeFlags |= TypeFlags.Exception;
+                }
+            }
+
+            return typeFlags;
         }
 
         private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, TypeMapper mapper, Stack<INamedTypeSymbol> typeStack, Func<ISymbol, TypeMapper, bool> isWinRTType, INamedTypeSymbol objectType, out IList<INamedTypeSymbol> compatibleTypes)
@@ -1919,7 +1939,8 @@ namespace Generator
     internal readonly record struct GenericParameter(
         string ProjectedType,
         string AbiType,
-        TypeKind TypeKind);
+        TypeKind TypeKind,
+        TypeFlags TypeFlags);
 
     internal readonly record struct GenericInterface(
         string Interface,
@@ -1968,6 +1989,20 @@ namespace Generator
         bool IsCsWinRTComponent,
         bool IsCsWinRTCcwLookupTableGeneratorEnabled,
         bool IsCsWinRTAotOptimizerInAutoMode);
+
+    /// <summary>
+    /// Additional flags for discovered types.
+    /// </summary>
+    [Flags]
+    internal enum TypeFlags
+    {
+        None = 0x0,
+
+        /// <summary>
+        /// The type derives from <see cref="System.Exception"/>.
+        /// </summary>
+        Exception = 0x1 << 0
+    }
 
     /// <summary>
     /// A model describing a type info in a type hierarchy.

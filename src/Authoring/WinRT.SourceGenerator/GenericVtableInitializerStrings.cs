@@ -18,11 +18,19 @@ namespace Generator
             }
             else if (genericInterface == "System.Collections.Generic.IList`1")
             {
-                return GetIListInstantiation(genericParameters[0].ProjectedType, genericParameters[0].AbiType, genericParameters[0].TypeKind);
+                return GetIListInstantiation(
+                    genericParameters[0].ProjectedType,
+                    genericParameters[0].AbiType,
+                    genericParameters[0].TypeKind,
+                    genericParameters[0].TypeFlags);
             }
             else if (genericInterface == "System.Collections.Generic.IReadOnlyList`1")
             {
-                return GetIReadOnlyListInstantiation(genericParameters[0].ProjectedType, genericParameters[0].AbiType, genericParameters[0].TypeKind);
+                return GetIReadOnlyListInstantiation(
+                    genericParameters[0].ProjectedType,
+                    genericParameters[0].AbiType,
+                    genericParameters[0].TypeKind,
+                    genericParameters[0].TypeFlags);
             }
             else if (genericInterface == "System.Collections.Generic.IDictionary`2")
             {
@@ -46,7 +54,11 @@ namespace Generator
             }
             else if (genericInterface == "System.Collections.Generic.IEnumerator`1")
             {
-                return GetIEnumeratorInstantiation(genericParameters[0].ProjectedType, genericParameters[0].AbiType, genericParameters[0].TypeKind);
+                return GetIEnumeratorInstantiation(
+                    genericParameters[0].ProjectedType,
+                    genericParameters[0].AbiType,
+                    genericParameters[0].TypeKind,
+                    genericParameters[0].TypeFlags);
             }
             else if (genericInterface == "System.Collections.Generic.KeyValuePair`2")
             {
@@ -222,7 +234,7 @@ namespace Generator
             return iEnumerableInstantiation;
         }
 
-        private static string GetIEnumeratorInstantiation(string genericType, string abiType, TypeKind typeKind)
+        private static string GetIEnumeratorInstantiation(string genericType, string abiType, TypeKind typeKind, TypeFlags typeFlags)
         {
             string iEnumeratorInstantiation = $$"""
              internal static class IEnumerator_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericType)}}
@@ -271,7 +283,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = global::ABI.System.Collections.Generic.IEnumeratorMethods<{{genericType}}>.Abi_GetMany_3(thisPtr, ref __items);
-                         {{GeneratorHelper.GetCopyManagedArrayMarshaler(genericType, abiType, typeKind)}}.CopyManagedArray(__items, items);
+                         {{GeneratorHelper.GetCopyManagedArrayMarshaler(genericType, abiType, typeKind, typeFlags)}}.CopyManagedArray(__items, items);
                          *__return_value__ = ____return_value__;
                      }
                      catch (global::System.Exception __exception__)
@@ -326,7 +338,7 @@ namespace Generator
             return iEnumeratorInstantiation;
         }
 
-        private static string GetIListInstantiation(string genericType, string abiType, TypeKind typeKind)
+        private static string GetIListInstantiation(string genericType, string abiType, TypeKind typeKind, TypeFlags typeFlags)
         {
             string iListInstantiation = $$"""
              internal static class IList_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericType)}}
@@ -513,7 +525,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_GetMany_10(thisPtr, startIndex, ref __items);
-                         {{GeneratorHelper.GetCopyManagedArrayMarshaler(genericType, abiType, typeKind)}}.CopyManagedArray(__items, items);
+                         {{GeneratorHelper.GetCopyManagedArrayMarshaler(genericType, abiType, typeKind, typeFlags)}}.CopyManagedArray(__items, items);
                          *__return_value__ = ____return_value__;
                      }
                      catch (global::System.Exception __exception__)
@@ -563,7 +575,7 @@ namespace Generator
             return iListInstantiation;
         }
 
-        private static string GetIReadOnlyListInstantiation(string genericType, string abiType, TypeKind typeKind)
+        private static string GetIReadOnlyListInstantiation(string genericType, string abiType, TypeKind typeKind, TypeFlags typeFlags)
         {
             string iReadOnlylistInstantiation = $$"""
              internal static class IReadOnlyList_{{GeneratorHelper.EscapeTypeNameForIdentifier(genericType)}}
@@ -633,7 +645,7 @@ namespace Generator
                      try
                      {
                          ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyListMethods<{{genericType}}>.Abi_GetMany_3(thisPtr, startIndex, ref __items);
-                         {{GeneratorHelper.GetCopyManagedArrayMarshaler(genericType, abiType, typeKind)}}.CopyManagedArray(__items, items);
+                         {{GeneratorHelper.GetCopyManagedArrayMarshaler(genericType, abiType, typeKind, typeFlags)}}.CopyManagedArray(__items, items);
                          *__return_value__ = ____return_value__;
                      }
                      catch (global::System.Exception __exception__)
