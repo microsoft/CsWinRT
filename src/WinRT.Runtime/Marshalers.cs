@@ -555,6 +555,15 @@ namespace WinRT
 
         static MarshalGeneric()
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"'MarshalGeneric<T>' is not supported in AOT environments, and is only supported for backwards compatibility in JIT environments. " +
+                    $"The type '{typeof(T)}' cannot be marshalled using it. Consider using the appropriate, more specific marshaller type instead.");
+            }
+#endif
+
             // Special case some well known projected types that are blittable.
             // For these, we directly load the ABI type and leave everything else
             // set to default (null). That is, we have no special marshallers.
@@ -1020,6 +1029,15 @@ namespace WinRT
 
         private static Type GetAbiType()
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"'MarshalNonBlittable<T>' is not supported in AOT environments, and is only supported for backwards compatibility in JIT environments. " +
+                    $"The type '{typeof(T)}' cannot be marshalled using it. Consider using the appropriate, more specific marshaller type instead.");
+            }
+#endif
+
             if (typeof(T).IsEnum)
             {
                 return Enum.GetUnderlyingType(typeof(T));
