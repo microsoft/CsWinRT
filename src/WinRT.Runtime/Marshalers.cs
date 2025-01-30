@@ -991,7 +991,17 @@ namespace WinRT
         }
     }
 
-    internal static class MarshalGenericHelper<T>
+    /// <summary>
+    /// This type is only meant to be used by generated marshalling stubs. Its API surface might change in the future.
+    /// </summary>
+    /// <typeparam name="T">The managed type to marshal.</typeparam>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class MarshalGenericHelper<T>
     {
         private static unsafe void CopyManagedFallback(T value, IntPtr dest)
         {
@@ -1007,7 +1017,7 @@ namespace WinRT
             }
         }
 
-        internal static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, MarshalGeneric<T>.CopyManaged ?? CopyManagedFallback);
+        public static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, MarshalGeneric<T>.CopyManaged ?? CopyManagedFallback);
     }
 
 #if EMBED
