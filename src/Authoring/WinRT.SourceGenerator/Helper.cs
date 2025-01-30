@@ -1066,19 +1066,19 @@ namespace Generator
 
         public static string GetCopyManagedArrayMarshaler(string type, string abiType, TypeKind kind, TypeFlags typeFlags)
         {
-            if (type is "System.String") return "global::WinRT.MarshalString";
-            if (type is "System.Type") return "global::ABI.System.Type";
-            if (type is "System.Object") return "global::WinRT.MarshalInspectable<object>";
-
-            if (typeFlags.HasFlag(TypeFlags.Exception))
-            {
-                return "global::WinRT.MarshalNonBlittable<Exception>.CopyManagedArray";
-            }
-
             if (kind == TypeKind.Class || kind == TypeKind.Delegate)
             {
-                // TODO: Classes and delegates are missing CopyManagedArray.
-                return $$"""Marshaler<{{type}}>""";
+                if (type is "System.String") return "global::WinRT.MarshalString";
+                if (type is "System.Type") return "global::ABI.System.Type";
+                if (type is "System.Object") return "global::WinRT.MarshalInspectable<object>";
+
+                if (typeFlags.HasFlag(TypeFlags.Exception))
+                {
+                    return "global::WinRT.MarshalNonBlittable<Exception>";
+                }
+
+                // Handles all other classes and delegate types
+                return $"global::WinRT.MarshalGenericHelper<{type}>";
             }
             else
             {
