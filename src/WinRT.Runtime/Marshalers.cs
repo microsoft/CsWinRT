@@ -75,7 +75,7 @@ namespace WinRT
 
 #if EMBED
     internal
-#else 
+#else
     public
 #endif
     class MarshalString
@@ -107,7 +107,7 @@ namespace WinRT
                 _header = default;
 #if DEBUG
                 _pinned = false;
-#endif            
+#endif
             }
 
             public ref readonly char GetPinnableReference()
@@ -2028,6 +2028,7 @@ namespace WinRT
         }
     }
 
+    [Obsolete("This type should only be used internally by 'Marshaler<T>'.")]
     internal static class Marshaler
     {
         internal static readonly Func<object, object> ReturnParameterFunc = ReturnParameter;
