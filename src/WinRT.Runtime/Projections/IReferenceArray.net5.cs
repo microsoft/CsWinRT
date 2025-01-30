@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
@@ -107,6 +108,10 @@ namespace ABI.Windows.Foundation
         }
     }
 
+    // This type is only used in JIT scenarios, as all well known types supported for AOT use specialized 'IReferenceArray<T>' implementations
+#if NET
+    [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
+#endif
     [Guid("61C17707-2D65-11E0-9AE8-D48564015472")]
     internal sealed class IReferenceArray<T> : global::Windows.Foundation.IReferenceArray<T>
     {
