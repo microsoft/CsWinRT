@@ -9,4 +9,5 @@ CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableAttri
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableContextAttribute' exists on 'WinRT.EventRegistrationTokenTable<T>.AddEventHandler(T)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.Marshaler<T>' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute' exists on 'WinRT.Marshaler<T>' in the implementation but not the reference.
-Total Issues: 10
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.MarshalNonBlittable<T>.MarshalerArray.Dispose()' in the implementation but not the reference.
+Total Issues: 11

@@ -1072,6 +1072,9 @@ namespace WinRT
 
         public struct MarshalerArray
         {
+#if NET
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "'MarshalerArray' is only initialized from 'CreateMarshalerArray', which is not supported on AOT.")]
+#endif
             public void Dispose()
             {
                 if (_marshalers != null)
@@ -1115,7 +1118,6 @@ namespace WinRT
 #else
                     Marshal.SizeOf(AbiType);
 #endif
-#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 m._array = Marshal.AllocCoTaskMem(byte_length);
                 m._marshalers = new object[length];
@@ -1126,6 +1128,7 @@ namespace WinRT
                     Marshaler<T>.CopyAbi(m._marshalers[i], (IntPtr)element);
                     element += abi_element_size;
                 }
+#pragma warning restore IL3050
                 success = true;
                 return m;
             }
@@ -1178,10 +1181,10 @@ namespace WinRT
 #else
                     Marshal.PtrToStructure((IntPtr)data, AbiType);
 #endif
-#pragma warning restore IL3050
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
+#pragma warning restore IL3050
             return array;
         }
 
@@ -1214,10 +1217,10 @@ namespace WinRT
 #else
                     Marshal.PtrToStructure((IntPtr)data, AbiType);
 #endif
-#pragma warning restore IL3050
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
+#pragma warning restore IL3050
         }
 
         public static new unsafe (int length, IntPtr data) FromManagedArray(T[] array)
@@ -1245,7 +1248,6 @@ namespace WinRT
 #else
                     Marshal.SizeOf(AbiType);
 #endif
-#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 data = Marshal.AllocCoTaskMem(byte_length);
                 var bytes = (byte*)data.ToPointer();
@@ -1254,6 +1256,7 @@ namespace WinRT
                     Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+#pragma warning restore IL3050
                 success = true;
                 return (i, data);
             }
@@ -1291,14 +1294,13 @@ namespace WinRT
 #else
                     Marshal.SizeOf(AbiType);
 #endif
-#pragma warning restore IL3050
-                var byte_length = length * abi_element_size;
                 var bytes = (byte*)data.ToPointer();
                 for (i = 0; i < length; i++)
                 {
                     Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+#pragma warning restore IL3050
                 success = true;
             }
             finally
@@ -1336,10 +1338,9 @@ namespace WinRT
 #else
                     Marshal.PtrToStructure((IntPtr)data, AbiType);
 #endif
-#pragma warning restore IL3050
-                Marshaler<T>.DisposeAbi(abi_element);
                 data += abi_element_size;
             }
+#pragma warning restore IL3050
         }
 
         public static new unsafe void DisposeAbiArray(object box)
