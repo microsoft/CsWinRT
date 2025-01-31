@@ -108,10 +108,9 @@ namespace ABI.Windows.Foundation
         }
     }
 
-    // This type is only used in JIT scenarios, as all well known types supported for AOT use specialized 'IReferenceArray<T>' implementations
-#if NET
-    [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
-#endif
+    // This type is only used in JIT scenarios, as all well known types supported for AOT use specialized 'IReferenceArray<T>' implementations.
+    // We can't add '[RequiresDynamicCode]' on this type, as it's indirectly rooted by the interface type. Because it's never actually used
+    // on AOT, we can just guard each AOT-unsafe code path with a feature check, and throw if on AOT. That avoids ILC warnings.
     [Guid("61C17707-2D65-11E0-9AE8-D48564015472")]
     internal sealed class IReferenceArray<T> : global::Windows.Foundation.IReferenceArray<T>
     {
@@ -127,6 +126,14 @@ namespace ABI.Windows.Foundation
 
         public static object FromAbi(IntPtr ptr)
         {
+#if NET
+            // This path is unreachable on AOT, but this helps ILC
+            if (!RuntimeFeature.IsDynamicCodeSupported)
+            {
+                throw new NotSupportedException("'IReferenceArray<T>' is not supported in AOT environments.");
+            }
+#endif
+
             if (ptr == IntPtr.Zero)
             {
                 return null;
@@ -138,9 +145,18 @@ namespace ABI.Windows.Foundation
 
         public static unsafe object GetValue(IInspectable inspectable)
         {
+#if NET
+            // This path is unreachable on AOT, but this fixes some ILC warnings
+            if (!RuntimeFeature.IsDynamicCodeSupported)
+            {
+                throw new NotSupportedException("'IReferenceArray<T>' is not supported in AOT environments.");
+            }
+#endif
+
             IntPtr referenceArrayPtr = IntPtr.Zero;
             int __retval_length = default;
             IntPtr __retval_data = default;
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
             try
             {
                 ExceptionHelpers.ThrowExceptionForHR(
@@ -159,6 +175,7 @@ namespace ABI.Windows.Foundation
                 Marshaler<T>.DisposeAbiArray((__retval_length, __retval_data));
                 MarshalExtensions.ReleaseIfNotNull(referenceArrayPtr);
             }
+#pragma warning disable IL3050
         }
 
         public static unsafe void CopyManaged(object o, IntPtr dest)
@@ -194,8 +211,17 @@ namespace ABI.Windows.Foundation
         {
             get
             {
+#if NET
+                // This path is unreachable on AOT, but this fixes some ILC warnings
+                if (!RuntimeFeature.IsDynamicCodeSupported)
+                {
+                    throw new NotSupportedException("'IReferenceArray<T>' is not supported in AOT environments.");
+                }
+#endif
+
                 int __retval_length = default;
                 IntPtr __retval_data = default;
+#pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 try
                 {
                     ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)ThisPtr)[6](ThisPtr, &__retval_length, &__retval_data));
@@ -206,6 +232,7 @@ namespace ABI.Windows.Foundation
                 {
                     Marshaler<T>.DisposeAbiArray((__retval_length, __retval_data));
                 }
+#pragma warning restore IL3050
             }
         }
     }
