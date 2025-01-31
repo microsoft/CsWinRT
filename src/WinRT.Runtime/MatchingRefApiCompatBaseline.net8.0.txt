@@ -3,4 +3,5 @@ TypesMustExist : Type 'WinRT.GeneratedWinRTExposedExternalTypeAttribute' does no
 TypesMustExist : Type 'WinRT.GeneratedWinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
 CannotChangeAttribute : Attribute 'System.AttributeUsageAttribute' on 'WinRT.GeneratedBindableCustomPropertyAttribute' changed from '[AttributeUsageAttribute(AttributeTargets.Class | AttributeTargets.Struct, Inherited=false, AllowMultiple=false)]' in the implementation to '[AttributeUsageAttribute(AttributeTargets.Class, Inherited=false, AllowMultiple=false)]' in the reference.
 TypesMustExist : Type 'WinRT.WinRTManagedOnlyTypeDetails' does not exist in the reference but it does exist in the implementation.
-Total Issues: 4
+TypesMustExist : Type 'WinRT.MarshalGenericHelper<T>' does not exist in the reference but it does exist in the implementation.
+Total Issues: 5
