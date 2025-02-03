@@ -8,7 +8,6 @@ CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableConte
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableAttribute' exists on 'WinRT.ActivationFactory.ActivationHandler' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableContextAttribute' exists on 'WinRT.EventRegistrationTokenTable<T>.AddEventHandler(T)' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.Marshaler<T>' in the implementation but not the reference.
-CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute' exists on 'WinRT.Marshaler<T>' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute' exists on 'WinRT.MarshalNonBlittable<T>.MarshalerArray.Dispose()' in the implementation but not the reference.
 TypesMustExist : Type 'WinRT.MarshalGenericHelper<T>' does not exist in the reference but it does exist in the implementation.
-Total Issues: 12
+Total Issues: 11
