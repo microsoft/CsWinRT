@@ -2050,7 +2050,6 @@ namespace WinRT
 
 #if NET
     [EditorBrowsable(EditorBrowsableState.Never)]
-    [RequiresDynamicCode(AttributeMessages.NotSupportedIfDynamicCodeIsNotAvailable)]
 #endif
 #if EMBED
     internal
