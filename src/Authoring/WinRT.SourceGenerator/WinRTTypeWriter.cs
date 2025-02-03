@@ -1621,6 +1621,7 @@ namespace Generator
         private void AddGuidAttribute(EntityHandle parentHandle, string name)
         {
             Guid guid;
+            // CodeQL [SM02196] WinRT uses UUID v5 SHA1 to generate Guids for parameterized types. Not used for authentication and must not change.
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {
                 var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(name));
