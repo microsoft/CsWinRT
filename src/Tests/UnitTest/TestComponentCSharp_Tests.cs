@@ -965,6 +965,10 @@ namespace UnitTest
             TestObject.StringPairPropertyChanged +=
                 (object sender, KeyValuePair<string, string> value) => Assert.Equal(expected, value);
             TestObject.RaiseStringPairChanged();
+
+            var expected2 = new KeyValuePair<EnumValue, EnumStruct>(EnumValue.Two, new EnumStruct() { value = EnumValue.One });
+            TestObject.EnumPairProperty = expected2;
+            Assert.Equal(expected2, TestObject.EnumPairProperty);
         }
 
         [Fact]

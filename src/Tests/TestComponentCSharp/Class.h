@@ -59,6 +59,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Uri>> _uriChanged;
         Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> _stringPair;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>>> _stringPairChanged;
+        Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> _enumPair;
         ComposedBlittableStruct _blittableStruct{};
         ComposedNonBlittableStruct _nonBlittableStruct{};
         std::vector<int32_t> _ints{ 1, 2, 3 };
@@ -233,6 +234,8 @@ namespace winrt::TestComponentCSharp::implementation
         void CallForStringPair(TestComponentCSharp::ProvideStringPair const& provideStringPair);
         winrt::event_token StringPairPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>> const& handler);
         void StringPairPropertyChanged(winrt::event_token const& token) noexcept;
+        Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> EnumPairProperty();
+        void EnumPairProperty(Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> const& value);
         TestComponentCSharp::ProvideUri GetUriDelegate() noexcept;
         BlittableStruct BlittableStructProperty();
         void BlittableStructProperty(BlittableStruct const& value);

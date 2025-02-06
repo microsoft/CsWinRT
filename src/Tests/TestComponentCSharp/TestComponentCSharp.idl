@@ -275,6 +275,8 @@ namespace TestComponentCSharp
         void CallForStringPair(ProvideStringPair provideStringPair);
         event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IKeyValuePair<String, String> > StringPairPropertyChanged;
 
+        Windows.Foundation.Collections.IKeyValuePair<EnumValue, EnumStruct> EnumPairProperty;
+
         Windows.Foundation.Collections.IVector<IInspectable> GetUriVectorAsIInspectableVector();
         ProvideUri GetUriDelegate();
         void AddUriHandler(IUriHandler uriHandler);

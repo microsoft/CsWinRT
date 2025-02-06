@@ -10472,8 +10472,8 @@ bind<write_event_invoke_args>(invokeMethodSig));
                     abiDelegateEntries.insert(generic_abi_delegate
                         {
                             w.write_temp("_get_Key_%", escapedAbiType),
-                            w.write_temp("internal unsafe delegate int _get_Key_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
-                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                            w.write_temp("internal unsafe delegate int _get_Key_%(IntPtr thisPtr, %* __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(IntPtr), typeof(%*), typeof(int) }", abiType)
                         });
                 }
 
@@ -10485,8 +10485,8 @@ bind<write_event_invoke_args>(invokeMethodSig));
                     abiDelegateEntries.insert(generic_abi_delegate
                         {
                             w.write_temp("_get_Value_%", escapedAbiType),
-                            w.write_temp("internal unsafe delegate int _get_Value_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
-                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                            w.write_temp("internal unsafe delegate int _get_Value_%(IntPtr thisPtr, %* __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(IntPtr), typeof(%*), typeof(int) }", abiType)
                         });
                 }
             }
