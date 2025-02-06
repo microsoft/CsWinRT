@@ -270,6 +270,7 @@ namespace UnitTest
             Assert.True(stream.Length == 2);
         }
 
+#if !NET47
         [Fact]
         public void TestBufferAsStreamUsingAsBufferWithOffset()
         {
@@ -304,6 +305,7 @@ namespace UnitTest
             Assert.Equal((byte)0x06, arr[2]);
             Assert.Equal((byte)0x07, arr[3]);
         }
+#endif
 
         [Fact]
         public void TestBufferAsStreamWithEmptyBuffer()
@@ -1457,6 +1459,7 @@ namespace UnitTest
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
         }
 
+#if !NET47
         [Fact]
         public unsafe void TestMarshalString_FromAbiUnsafe()
         {
@@ -1488,6 +1491,7 @@ namespace UnitTest
             Assert.True(Unsafe.Add(ref MemoryMarshal.GetReference(span), span.Length) == '\0');
             MarshalString.DisposeAbi(hstr);
         }
+#endif
 
         [Fact]
         public void TestFundamentalGeneric()

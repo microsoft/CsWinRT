@@ -268,5 +268,7 @@ namespace WinRT.Interop
     internal unsafe delegate int _invoke_IntPtr_Type(void* thisPtr, IntPtr sender, ABI.System.Type args);
     internal unsafe delegate int _invoke_Type_IntPtr(void* thisPtr, ABI.System.Type sender, IntPtr args);
     internal unsafe delegate int _invoke_Type_Type(void* thisPtr, ABI.System.Type sender, ABI.System.Type args);
+
+    internal unsafe delegate int _get_Key_IntPtr(IntPtr thisPtr, IntPtr* __return_value__);
 #endif
 }
