@@ -26,6 +26,7 @@ namespace WinRT
         private const int COR_E_ARGUMENTOUTOFRANGE = unchecked((int)0x80131502);
         private const int COR_E_INDEXOUTOFRANGE = unchecked((int)0x80131508);
         private const int COR_E_TIMEOUT = unchecked((int)0x80131505);
+        private const int COR_E_INVALIDOPERATION = unchecked((int)0x80131509);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
         internal const int E_BOUNDS = unchecked((int)0x8000000b);
         internal const int E_CHANGED_STATE = unchecked((int)0x8000000c);
@@ -232,6 +233,7 @@ namespace WinRT
                 case E_ILLEGAL_METHOD_CALL:
                 case E_ILLEGAL_DELEGATE_ASSIGNMENT:
                 case APPMODEL_ERROR_NO_PACKAGE:
+                case COR_E_INVALIDOPERATION:
                     ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException();
                     break;
                 case E_XAMLPARSEFAILED:
