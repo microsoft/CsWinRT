@@ -25,6 +25,7 @@
     <ClCompile Include="ClassWithExplicitIUnknown.cpp" />
     <ClCompile Include="NonUniqueClass.cpp" />
     <ClCompile Include="CustomIterableTest.cpp" />
+    <ClCompile Include="CastMetadata.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -43,6 +44,7 @@
     <ClInclude Include="ClassWithExplicitIUnknown.h" />
     <ClInclude Include="NonUniqueClass.h" />
     <ClInclude Include="CustomIterableTest.h" />
+    <ClInclude Include="CastMetadata.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />
