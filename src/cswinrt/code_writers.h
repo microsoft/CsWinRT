@@ -1206,9 +1206,14 @@ namespace cswinrt
         auto access_spec = is_protected || is_overridable ? "protected " : "public ";
         std::string method_spec = "";
 
+        if (settings.abstract_class && !class_type.Flags().Sealed())
+        {
+            method_spec = "virtual ";
+        }
+
         // If this interface is overridable but the type is sealed, don't mark the member as virtual.
         // The C# compiler errors out about declaring a virtual member in a sealed class.
-        if (is_overridable && !class_type.Flags().Sealed() || settings.abstract_class)
+        if (is_overridable && !class_type.Flags().Sealed())
         {
             // All overridable methods in the WinRT type system have protected visibility.
             access_spec = "protected ";
@@ -1532,12 +1537,21 @@ remove => %;
     {
         auto visibility = "public ";
 
+        if (settings.abstract_class && !class_type.Flags().Sealed())
+        {
+            visibility = "public virtual ";
+        }
+
         if (is_protected)
         {
             visibility = "protected ";
+            if (settings.abstract_class && !class_type.Flags().Sealed())
+            {
+				visibility = "protected virtual ";
+            }
         }
 
-        if (is_overridable || settings.abstract_class)
+        if (is_overridable)
         {
             visibility = "protected virtual ";
         }
@@ -3458,8 +3472,8 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         {
             auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, is_private, getter_prop, setter_prop] = prop_data;
             if (is_private) continue;
-            std::string_view access_spec = (is_public && !settings.abstract_class) ? "public "sv : "protected "sv;
-            std::string_view method_spec = (is_overridable || settings.abstract_class)? "virtual "sv : ""sv;
+            std::string_view access_spec = is_public ? "public "sv : "protected "sv;
+            std::string_view method_spec = (is_overridable || (settings.abstract_class && !type.Flags().Sealed()))? "virtual "sv : ""sv;
             write_property(w, prop_name, prop_name, prop_type, 
                 getter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(getter_prop.value().first)) : getter_target,
                 setter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(setter_prop.value().first)) : setter_target,
@@ -8631,6 +8645,168 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
             bind<write_custom_query_interface_impl>(type));
     }
 
+    void write_abstract_class_event(writer& w, Event const& event, bool is_overridable, bool is_protected, std::string_view platform_attribute)
+    {
+		auto external_event_name = event.Name();
+        auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
+
+        auto visibility = "public";
+
+        if (is_protected || is_overridable)
+        {
+            visibility = "protected";
+        }
+
+        w.write(R"(
+%% % event % %;
+)",
+platform_attribute,
+visibility,
+"abstract override",
+event_type,
+external_event_name
+);
+        
+    }
+
+    void write_abstract_class_property(writer& w, Property const& prop, std::string_view platform_attribute)
+    {
+        auto [getter, setter] = get_property_methods(prop);
+        auto prop_type = write_prop_type(w, prop);
+		auto external_prop_name = prop.Name();
+
+        w.write(R"(
+%% % % % {)",
+platform_attribute,
+"public",
+"abstract override",
+prop_type,
+external_prop_name);
+        if (getter)
+        {
+            w.write(R"( get; )");
+        }
+
+        if (setter)
+        {
+            w.write(R"( set;)");
+        }
+
+		w.write(R"( }
+)");
+    }
+
+    void write_abstract_class_method(writer& w, MethodDef const& method, bool is_overridable, bool is_protected, std::string_view platform_attribute)
+    {
+        if (is_special(method))
+        {
+            return;
+        }
+
+
+        auto method_name = method.Name();
+        method_signature signature{ method };
+
+        auto visibility = "public";
+
+        if (is_protected || is_overridable)
+        {
+            visibility = "protected";
+        }
+
+        w.write(R"(
+%% % % %(%);
+)",
+platform_attribute,
+visibility,
+"abstract override",
+bind<write_projection_return_type>(signature),
+method_name,
+bind_list<write_projection_parameter>(", ", signature.params()));
+    }
+
+    void write_abstract_class(writer& w, TypeDef const& type)
+    {
+        auto type_namespace = type.TypeNamespace();
+        auto type_name = write_type_name_temp(w, type);
+        auto abstract_type_name = "Abstract" + type_name;
+        w.write(R"(
+%% % class % : % {
+)",
+bind<write_type_custom_attributes>(type, true),
+"public",
+"abstract",
+abstract_type_name,
+type_name);
+
+        auto platform_attribute = write_platform_attribute_temp(w, type);
+        bool hasEmptyConstructor = false;
+        for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+        {
+            if (factory.composable)
+            {
+                for (auto&& method : factory.type.MethodList())
+                {
+                    method_signature signature{ method };
+                    if (signature.params().size() == 0)
+                    {
+                        hasEmptyConstructor = true;
+                    }
+                }
+            }
+        }
+
+        if (!hasEmptyConstructor) {
+            w.write(R"(
+public %() : base(WinRT.DerivedComposed.Instance)
+{
+}
+)",
+abstract_type_name
+);
+        }
+                
+
+        for (auto&& ii : type.InterfaceImpl()) 
+        {
+            auto is_overridable = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
+            auto is_protected = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
+
+            auto semantics = get_type_semantics(ii.Interface());
+
+            for_typedef(w, semantics, [&](auto&& type)
+            {
+                for (auto&& method : type.MethodList())
+                {
+                    if (!is_static(method))
+                    {
+                        write_abstract_class_method(w, method, is_overridable, is_protected, platform_attribute);
+                    }
+                }
+
+                for (auto&& event : type.EventList())
+                {
+
+                    if (!is_static(event.Parent()))
+                    {
+                        write_abstract_class_event(w, event, is_overridable, is_protected, platform_attribute);
+                    }
+                }
+
+                for (auto&& prop : type.PropertyList())
+                {
+                    if (!is_static(prop.Parent()))
+                    {
+                        write_abstract_class_property(w, prop, platform_attribute);
+                    }
+                }
+            });
+        }
+
+        w.write(R"(}
+
+)");
+    }
     
     void write_class(writer& w, TypeDef const& type)
     {
