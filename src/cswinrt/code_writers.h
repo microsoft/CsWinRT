@@ -8645,16 +8645,23 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
             bind<write_custom_query_interface_impl>(type));
     }
 
-    void write_abstract_class_event(writer& w, Event const& event, std::string_view platform_attribute)
+    void write_abstract_class_event(writer& w, Event const& event, bool is_overridable, bool is_protected, std::string_view platform_attribute)
     {
 		auto external_event_name = event.Name();
         auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
+
+        auto visibility = "public";
+
+        if (is_protected || is_overridable)
+        {
+            visibility = "protected";
+        }
 
         w.write(R"(
 %% % event % %;
 )",
 platform_attribute,
-"public",
+visibility,
 "abstract override",
 event_type,
 external_event_name
@@ -8689,21 +8696,29 @@ external_prop_name);
 )");
     }
 
-    void write_abstract_class_method(writer& w, MethodDef const& method, std::string_view platform_attribute)
+    void write_abstract_class_method(writer& w, MethodDef const& method, bool is_overridable, bool is_protected, std::string_view platform_attribute)
     {
         if (is_special(method))
         {
             return;
         }
 
+
         auto method_name = method.Name();
         method_signature signature{ method };
+
+        auto visibility = "public";
+
+        if (is_protected || is_overridable)
+        {
+            visibility = "protected";
+        }
 
         w.write(R"(
 %% % % %(%);
 )",
 platform_attribute,
-"public",
+visibility,
 "abstract override",
 bind<write_projection_return_type>(signature),
 method_name,
@@ -8725,21 +8740,68 @@ abstract_type_name,
 type_name);
 
         auto platform_attribute = write_platform_attribute_temp(w, type);
+        bool hasEmptyConstructor = false;
+        for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+        {
+            if (factory.composable)
+            {
+                for (auto&& method : factory.type.MethodList())
+                {
+                    method_signature signature{ method };
+                    if (signature.params().size() == 0)
+                    {
+                        hasEmptyConstructor = true;
+                    }
+                }
+            }
+        }
 
-		for (auto&& method : type.MethodList())
-		{
-			write_abstract_class_method(w, method, platform_attribute);
-		}
+        if (!hasEmptyConstructor) {
+            w.write(R"(
+public %() : base(WinRT.DerivedComposed.Instance)
+{
+}
+)",
+abstract_type_name
+);
+        }
+                
 
-		for (auto&& event : type.EventList())
-		{
-			write_abstract_class_event(w, event, platform_attribute);
-		}
+        for (auto&& ii : type.InterfaceImpl()) 
+        {
+            auto is_overridable = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
+            auto is_protected = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
-		for (auto&& prop : type.PropertyList())
-		{
-			write_abstract_class_property(w, prop, platform_attribute);
-		}
+            auto semantics = get_type_semantics(ii.Interface());
+
+            for_typedef(w, semantics, [&](auto&& type)
+            {
+                for (auto&& method : type.MethodList())
+                {
+                    if (!is_static(method))
+                    {
+                        write_abstract_class_method(w, method, is_overridable, is_protected, platform_attribute);
+                    }
+                }
+
+                for (auto&& event : type.EventList())
+                {
+
+                    if (!is_static(event.Parent()))
+                    {
+                        write_abstract_class_event(w, event, is_overridable, is_protected, platform_attribute);
+                    }
+                }
+
+                for (auto&& prop : type.PropertyList())
+                {
+                    if (!is_static(prop.Parent()))
+                    {
+                        write_abstract_class_property(w, prop, platform_attribute);
+                    }
+                }
+            });
+        }
 
         w.write(R"(}
 
