@@ -8731,8 +8731,10 @@ bind_list<write_projection_parameter>(", ", signature.params()));
         auto type_name = write_type_name_temp(w, type);
         auto abstract_type_name = "Abstract" + type_name;
         w.write(R"(
-%% % class % : % {
+%%
+% % class % : % {
 )",
+"[global::WinRT.WindowsRuntimeType]",
 bind<write_type_custom_attributes>(type, true),
 "public",
 "abstract",

@@ -240,6 +240,14 @@ namespace Generator
         {
             var isManagedOnlyType = GeneratorHelper.IsManagedOnlyType(compilation);
             var isWinRTTypeFunc = GeneratorHelper.IsWinRTType(compilation, checkForComponentTypes);
+            var isAbstractType = GeneratorHelper.IsAbstractType(compilation);
+
+            //This conditional will need to go somewhere else, but it is here for now to show the logic
+            if (isAbstractType(symbol) && isWinRTTypeFunc(symbol, typeMapper))
+            {
+                Console.WriteLine($"HelloWorld: Abstract type {symbol} is correctly labeled as detected as abstract");
+            }
+
             var vtableAttribute = GetVtableAttributeToAdd(symbol, isManagedOnlyType, isWinRTTypeFunc, typeMapper, compilation, false);
             if (vtableAttribute != default)
             {
