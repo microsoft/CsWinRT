@@ -45,6 +45,7 @@ namespace WinRT
         internal const int E_INVALIDARG = unchecked((int)0x80070057);
         internal const int E_NOINTERFACE = unchecked((int)0x80004002);
         private const int E_OUTOFMEMORY = unchecked((int)0x8007000e);
+        private const int E_NOTSUPPORTED = unchecked((int)0x80070032);
         private const int ERROR_ARITHMETIC_OVERFLOW = unchecked((int)0x80070216);
         private const int ERROR_FILENAME_EXCED_RANGE = unchecked((int)0x800700ce);
         private const int ERROR_FILE_NOT_FOUND = unchecked((int)0x80070002);
@@ -314,6 +315,9 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     break;
                 case E_BOUNDS:
                     ex = !string.IsNullOrEmpty(errorMessage) ? new ArgumentOutOfRangeException(errorMessage) : new ArgumentOutOfRangeException();
+                    break;
+                case E_NOTSUPPORTED:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new NotSupportedException(errorMessage) : new NotSupportedException();
                     break;
                 case ERROR_ARITHMETIC_OVERFLOW:
                     ex = !string.IsNullOrEmpty(errorMessage) ? new ArithmeticException(errorMessage) : new ArithmeticException();
