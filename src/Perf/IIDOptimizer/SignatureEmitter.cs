@@ -121,9 +121,12 @@ namespace GuidPatch
             var numBytes = Encoding.UTF8.GetBytes(stringStep.StaticSignatureString, data[Unsafe.SizeOf<Guid>()..]);
             data = data[..(Unsafe.SizeOf<Guid>() + numBytes)];
 
+            // CodeQL [SM02196] WinRT uses UUID v5 SHA1 to generate Guids for parameterized types. Not used for authentication and must not change.
             Debug.Assert(SHA1.Create().HashSize == 160);
 
             Span<byte> hash = stackalloc byte[160];
+
+            // CodeQL [SM02196] WinRT uses UUID v5 SHA1 to generate Guids for parameterized types. Not used for authentication and must not change.
             SHA1.HashData(data, hash);
 
             if (BitConverter.IsLittleEndian)
