@@ -835,6 +835,18 @@ namespace winrt::TestComponentCSharp::implementation
         _stringPairChanged.remove(token);
     }
 
+    Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> Class::EnumPairProperty()
+    {
+        return _enumPair;
+    }
+
+    void Class::EnumPairProperty(Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> const& value)
+    {
+        _enumPair = value;
+        _enumPair.Key();
+        _enumPair.Value();
+    }
+
     TestComponentCSharp::ProvideUri Class::GetUriDelegate() noexcept
     {
         TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://microsoft.com"); };

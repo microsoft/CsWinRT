@@ -26,6 +26,7 @@ namespace WinRT
         private const int COR_E_ARGUMENTOUTOFRANGE = unchecked((int)0x80131502);
         private const int COR_E_INDEXOUTOFRANGE = unchecked((int)0x80131508);
         private const int COR_E_TIMEOUT = unchecked((int)0x80131505);
+        private const int COR_E_INVALIDOPERATION = unchecked((int)0x80131509);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
         internal const int E_BOUNDS = unchecked((int)0x8000000b);
         internal const int E_CHANGED_STATE = unchecked((int)0x8000000c);
@@ -44,6 +45,7 @@ namespace WinRT
         internal const int E_INVALIDARG = unchecked((int)0x80070057);
         internal const int E_NOINTERFACE = unchecked((int)0x80004002);
         private const int E_OUTOFMEMORY = unchecked((int)0x8007000e);
+        private const int E_NOTSUPPORTED = unchecked((int)0x80070032);
         private const int ERROR_ARITHMETIC_OVERFLOW = unchecked((int)0x80070216);
         private const int ERROR_FILENAME_EXCED_RANGE = unchecked((int)0x800700ce);
         private const int ERROR_FILE_NOT_FOUND = unchecked((int)0x80070002);
@@ -233,6 +235,7 @@ namespace WinRT
                 case E_ILLEGAL_METHOD_CALL:
                 case E_ILLEGAL_DELEGATE_ASSIGNMENT:
                 case APPMODEL_ERROR_NO_PACKAGE:
+                case COR_E_INVALIDOPERATION:
                     ex = !string.IsNullOrEmpty(errorMessage) ? new InvalidOperationException(errorMessage) : new InvalidOperationException();
                     break;
                 case E_XAMLPARSEFAILED:
@@ -313,6 +316,9 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     break;
                 case E_BOUNDS:
                     ex = !string.IsNullOrEmpty(errorMessage) ? new ArgumentOutOfRangeException(errorMessage) : new ArgumentOutOfRangeException();
+                    break;
+                case E_NOTSUPPORTED:
+                    ex = !string.IsNullOrEmpty(errorMessage) ? new NotSupportedException(errorMessage) : new NotSupportedException();
                     break;
                 case ERROR_ARITHMETIC_OVERFLOW:
                     ex = !string.IsNullOrEmpty(errorMessage) ? new ArithmeticException(errorMessage) : new ArithmeticException();
@@ -572,6 +578,33 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             }
         }
 
+#if !NET
+        //
+        // Exception requires anything to be added into Data dictionary is serializable
+        // This wrapper is made serializable to satisfy this requirement but does NOT serialize
+        // the object and simply ignores it during serialization, because we only need
+        // the exception instance in the app to hold the error object alive.
+        //
+        [Serializable]
+        internal sealed class __RestrictedErrorObject
+        {
+            // Hold the error object instance but don't serialize/deserialize it
+            [NonSerialized]
+            private readonly ObjectReference<IUnknownVftbl> _realErrorObject;
+            internal __RestrictedErrorObject(ObjectReference<IUnknownVftbl> errorObject)
+            {
+                _realErrorObject = errorObject;
+            }
+            public ObjectReference<IUnknownVftbl> RealErrorObject
+            {
+                get
+                {
+                    return _realErrorObject;
+                }
+            }
+        }
+#endif
+
         internal static void AddExceptionDataForRestrictedErrorInfo(
             this Exception ex,
             string description,
@@ -592,7 +625,11 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
 
                 // Keep the error object alive so that user could retrieve error information
                 // using Data["RestrictedErrorReference"]
+#if NET
                 dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
+#else
+                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject);
+#endif
                 dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
 
                 if (internalGetGlobalErrorStateException != null)
@@ -612,7 +649,11 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             {
                 // Keep the error object alive so that user could retrieve error information
                 // using Data["RestrictedErrorReference"]
+#if NET
                 dict["__RestrictedErrorObjectReference"] = restrictedErrorObject;
+#else
+                dict["__RestrictedErrorObjectReference"] = restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject);
+#endif
                 dict["__HasRestrictedLanguageErrorObject"] = hasRestrictedLanguageErrorObject;
             }
         }
@@ -630,7 +671,11 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             {
                 if (dict.Contains("__RestrictedErrorObjectReference"))
                 {
+#if NET
                     restrictedErrorObject = (ObjectReference<IUnknownVftbl>)dict["__RestrictedErrorObjectReference"];
+#else
+                    restrictedErrorObject = ((__RestrictedErrorObject)dict["__RestrictedErrorObjectReference"])?.RealErrorObject;
+#endif
                 }
 
                 if (dict.Contains("__HasRestrictedLanguageErrorObject"))

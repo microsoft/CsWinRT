@@ -735,6 +735,8 @@ namespace WinRT
             [new Type[] { typeof(void*), typeof(IntPtr), typeof(ABI.System.Type), typeof(int) }] = typeof(Interop._invoke_IntPtr_Type),
             [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(IntPtr), typeof(int) }] = typeof(Interop._invoke_Type_IntPtr),
             [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(ABI.System.Type), typeof(int) }] = typeof(Interop._invoke_Type_Type),
+            // IKeyValuePair
+            [new Type[] { typeof(IntPtr), typeof(IntPtr*), typeof(int) }] = typeof(Interop._get_Key_IntPtr),
         };
 
         public static void RegisterAbiDelegate(Type[] delegateSignature, Type delegateType)

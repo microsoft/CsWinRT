@@ -341,6 +341,7 @@ namespace WinRT
 #if !NET
             var data = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(wrt_pinterface_namespace.ToByteArray(), Encoding.UTF8.GetBytes(signature)));
 
+            // CodeQL [SM02196] WinRT uses UUID v5 SHA1 to generate Guids for parameterized types. Not used for authentication and must not change.
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {
                 return encode_guid(sha.ComputeHash(data));
