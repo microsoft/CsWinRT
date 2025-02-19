@@ -219,7 +219,7 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "2"), ("PublishAot", "true")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "2"), ("EnableAotAnalyzer", "true")]);
     }
 
     [TestMethod]
@@ -258,7 +258,7 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "2"), ("PublishAot", "false")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "2"), ("EnableAotAnalyzer", "false")]);
     }
 
     [TestMethod]
@@ -297,7 +297,7 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "0"), ("PublishAot", "true")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "0"), ("EnableAotAnalyzer", "true")]);
     }
 
     [TestMethod]
@@ -336,6 +336,6 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "2"), ("PublishAot", "true")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "2"), ("EnableAotAnalyzer", "true")]);
     }
 }

@@ -221,11 +221,11 @@ namespace Generator
             return false;
         }
 
-        public static bool GetPublishAot(this AnalyzerConfigOptionsProvider provider)
+        public static bool GetEnableAotAnalyzer(this AnalyzerConfigOptionsProvider provider)
         {
-            if (provider.GlobalOptions.TryGetValue("build_property.PublishAot", out var publishAot))
+            if (provider.GlobalOptions.TryGetValue("build_property.EnableAotAnalyzer", out var enableAotAnalyzer))
             {
-                return bool.TryParse(publishAot, out var isPublishAot) && isPublishAot;
+                return bool.TryParse(enableAotAnalyzer, out var isAotAnalyzerEnabled) && isAotAnalyzerEnabled;
             }
 
             return false;

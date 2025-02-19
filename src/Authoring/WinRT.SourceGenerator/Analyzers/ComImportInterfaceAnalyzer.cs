@@ -30,9 +30,9 @@ public sealed class ComImportInterfaceAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(static context =>
         {
-            // This analyzer is only enabled when setting 'PublishAot' and when the AOT warning level is not set to 0 (ie. disabled)
+            // This analyzer is only enabled when 'EnableAotAnalyzer' is set and when the AOT warning level is not set to 0 (ie. disabled)
             if (GeneratorExecutionContextHelper.GetCsWinRTAotWarningLevel(context.Options.AnalyzerConfigOptionsProvider) == 0 ||
-                !GeneratorExecutionContextHelper.GetPublishAot(context.Options.AnalyzerConfigOptionsProvider))
+                !GeneratorExecutionContextHelper.GetEnableAotAnalyzer(context.Options.AnalyzerConfigOptionsProvider))
             {
                 return;
             }
