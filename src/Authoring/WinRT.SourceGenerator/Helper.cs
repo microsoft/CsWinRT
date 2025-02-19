@@ -221,6 +221,16 @@ namespace Generator
             return false;
         }
 
+        public static bool GetPublishAot(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.PublishAot", out var publishAot))
+            {
+                return bool.TryParse(publishAot, out var isPublishAot) && isPublishAot;
+            }
+
+            return false;
+        }
+
         public static int GetCsWinRTAotWarningLevel(this AnalyzerConfigOptionsProvider provider)
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotWarningLevel", out var csWinRTAotWarningLevelStr) &&
