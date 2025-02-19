@@ -70,7 +70,7 @@ public sealed class ComImportInterfaceAnalyzer : DiagnosticAnalyzer
 
             // This handles the following cases:
             //
-            // if (obj is IC is)
+            // if (obj is IC ic)
             // {
             // }
             //
@@ -83,9 +83,14 @@ public sealed class ComImportInterfaceAnalyzer : DiagnosticAnalyzer
             {
                 if (context.Operation is IDeclarationPatternOperation { MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Interface, IsComImport: true } interfaceType })
                 {
+                    // Adjust the location for 'obj is IC ic' patterns, to include the 'is' expression as well
+                    Location location = context.Operation.Parent is IIsPatternOperation isPatternOperation
+                        ? isPatternOperation.Syntax.GetLocation()
+                        : context.Operation.Syntax.GetLocation();
+
                     context.ReportDiagnostic(Diagnostic.Create(
                         WinRTRules.ComImportInterfaceCast,
-                        context.Operation.Syntax.GetLocation(),
+                        location,
                         interfaceType));
                 }
             }, OperationKind.DeclarationPattern);

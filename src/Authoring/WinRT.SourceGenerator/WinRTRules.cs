@@ -253,8 +253,8 @@ namespace WinRT.SourceGenerator
 
         public static DiagnosticDescriptor ComImportInterfaceCast = MakeRule(
             "CsWinRT1033",
-            CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Brief,
-            CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text,
+            CsWinRTDiagnosticStrings.ComImportInterfaceCast_Brief,
+            CsWinRTDiagnosticStrings.ComImportInterfaceCast_Text,
             false,
             true);
     }
