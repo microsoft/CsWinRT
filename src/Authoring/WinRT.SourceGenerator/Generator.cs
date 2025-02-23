@@ -66,15 +66,17 @@ namespace Generator
             string windowsMetadata = context.GetCsWinRTWindowsMetadata();
             string winmds = context.GetCsWinRTDependentMetadata();
             string csWinRTExeTFM = context.GetCsWinRTExeTFM();
+            string overridedClassNameActivationFactory = context.GetCsWinRTGenerateOverridedClassNameActivationFactory() ? "-partial_factory" : "";
 
             string arguments = string.Format(
-                "-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -input {4} -target {5} -verbose",
+                "-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -input {4} -target {5} {6} -verbose",
                 winmdFile,
                 windowsMetadata,
                 assemblyName,
                 outputDir,
                 winmds,
-                csWinRTExeTFM);
+                csWinRTExeTFM,
+                overridedClassNameActivationFactory);
             Logger.Log("Running " + cswinrtExe + " " + arguments);
 
             var processInfo = new ProcessStartInfo
@@ -183,6 +185,7 @@ namespace Generator
                 {
                     GenerateSources();
                     writer.GenerateWinRTExposedClassAttributes(context);
+                    writer.GenerateOverridedClassNameActivationFactory(context);
                 }
             }
             catch (Exception e)

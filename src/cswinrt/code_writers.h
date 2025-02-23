@@ -10204,9 +10204,10 @@ switch (runtimeClassId)
 {
 %
 default:
-    return IntPtr.Zero;
+    return %;
 }
 }
+%
 %
 }
 }
@@ -10233,6 +10234,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
     },
     types
         ),
+    settings.partial_factory ? "GetActivationFactoryPartial(runtimeClassId)" : "IntPtr.Zero",
     settings.net7_0_or_greater ? R"(
 public static IntPtr GetActivationFactory(string runtimeClassId)
 {
@@ -10243,7 +10245,21 @@ public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
 {
     return GetActivationFactory(runtimeClassId.ToString());
 }
-)");
+)",
+bind([&](writer& w) {
+        if (settings.partial_factory)
+        {
+            if (settings.net7_0_or_greater)
+            {
+                w.write("private static partial IntPtr GetActivationFactoryPartial(ReadOnlySpan<char> runtimeClassId);");
+            }
+            else
+            {
+                w.write("private static partial IntPtr GetActivationFactoryPartial(string runtimeClassId);");
+            }
+        }
+    })
+);
     }
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)
