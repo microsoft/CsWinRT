@@ -385,15 +385,9 @@ namespace WinRT
                 }
 
                 DisposeTrackerSource();
-#if NET
-                // Disable on AOT for now until dotnet runtime #104583 is addressed to avoid making the issue happen more often.
-                if (RuntimeFeature.IsDynamicCodeCompiled)
-                {
-                    GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-                }
-#else
+
+                // Remove the same memory pressure added in the constructor (see notes there)
                 GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-#endif
 
                 Volatile.Write(ref _disposedFlags, DISPOSE_COMPLETED);
             }
