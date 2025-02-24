@@ -219,11 +219,14 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "2"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
     }
 
     [TestMethod]
-    public async Task ComImportInterfaceCast_InvalidCast_NotPublishAot_DoesNotWarn()
+    [DataRow("true")]
+    [DataRow("false")]
+    [DataRow("OptIn")]
+    public async Task ComImportInterfaceCast_InvalidCast_NotAutoMode_DoesNotWarn(string propertyValue)
     {
         const string source = """
             using System.Runtime.InteropServices;
@@ -258,11 +261,11 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "2"), ("EnableAotAnalyzer", "false")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", propertyValue)]);
     }
 
     [TestMethod]
-    public async Task ComImportInterfaceCast_InvalidCast_AotWarningLevel0_DoesNotWarn()
+    public async Task ComImportInterfaceCast_InvalidCast_NoProperty_DoesNotWarn()
     {
         const string source = """
             using System.Runtime.InteropServices;
@@ -297,7 +300,7 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "0"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source);
     }
 
     [TestMethod]
@@ -336,6 +339,6 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "2"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
     }
 }
