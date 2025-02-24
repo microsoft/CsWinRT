@@ -30,9 +30,8 @@ public sealed class ComImportInterfaceAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(static context =>
         {
-            // This analyzer is only enabled when 'EnableAotAnalyzer' is set and when the AOT warning level is not set to 0 (ie. disabled)
-            if (GeneratorExecutionContextHelper.GetCsWinRTAotWarningLevel(context.Options.AnalyzerConfigOptionsProvider) == 0 ||
-                !GeneratorExecutionContextHelper.GetEnableAotAnalyzer(context.Options.AnalyzerConfigOptionsProvider))
+            // We only need to emit warnings if CsWinRT is in 'auto' mode (same as the collection expressions analyzer)
+            if (!GeneratorExecutionContextHelper.IsCsWinRTAotOptimizerInAutoMode(context.Options.AnalyzerConfigOptionsProvider, context.Compilation))
             {
                 return;
             }
