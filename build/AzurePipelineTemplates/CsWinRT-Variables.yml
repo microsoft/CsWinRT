@@ -5,7 +5,7 @@ variables:
 - name: MinorVersion
   value: 2
 - name: PatchVersion
-  value: 0
+  value: 1
 - name: WinRT.Runtime.AssemblyVersion
   value: '2.2.0.0'
 - name: Net5.SDK.Feed
