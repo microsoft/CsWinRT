@@ -65,10 +65,10 @@ namespace WinRT
         /// <param name="handler">The handler to add to the table.</param>
         /// <returns>The <see cref="EventRegistrationToken"/> value for the new handler.</returns>
         /// <remarks>
-        /// Handler can be registered multiple times, and they will use a different token each time.
-        /// If the input handler is <see langword="null"/>, the resulting token will be 0.
+        /// <para>Handler can be registered multiple times, and they will use a different token each time.</para>
+        /// <para>If the input handler is <see langword="null"/>, the resulting token will be 0.</para>
         /// </remarks>
-        public EventRegistrationToken AddEventHandler(T handler)
+        public EventRegistrationToken AddEventHandler(T? handler)
         {
             // Windows Runtime allows null handlers. Assign those the default token (token value 0) for simplicity
             if (handler is null)

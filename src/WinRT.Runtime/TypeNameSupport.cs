@@ -60,9 +60,9 @@ namespace WinRT
                         int count = projectionTypeNameToBaseTypeNameMappings.Count;
                         for (int i = 0; i < count; i++)
                         {
-                            if (projectionTypeNameToBaseTypeNameMappings[i].ContainsKey(runtimeClassName))
+                            if (projectionTypeNameToBaseTypeNameMappings[i].TryGetValue(runtimeClassName, out string value))
                             {
-                                return FindRcwTypeByNameCached(projectionTypeNameToBaseTypeNameMappings[i][runtimeClassName]);
+                                return FindRcwTypeByNameCached(value);
                             }
                         }
 
