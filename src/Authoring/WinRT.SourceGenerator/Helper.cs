@@ -221,6 +221,16 @@ namespace Generator
             return false;
         }
 
+        public static bool GetEnableAotAnalyzer(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.EnableAotAnalyzer", out var enableAotAnalyzer))
+            {
+                return bool.TryParse(enableAotAnalyzer, out var isAotAnalyzerEnabled) && isAotAnalyzerEnabled;
+            }
+
+            return false;
+        }
+
         public static int GetCsWinRTAotWarningLevel(this AnalyzerConfigOptionsProvider provider)
         {
             if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotWarningLevel", out var csWinRTAotWarningLevelStr) &&

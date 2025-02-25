@@ -219,7 +219,7 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
     }
 
     [TestMethod]
@@ -261,7 +261,46 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", propertyValue)]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", propertyValue), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
+    public async Task ComImportInterfaceCast_InvalidCast_NoEnableAotAnalyzer_DoesNotWarn()
+    {
+        const string source = """
+            using System.Runtime.InteropServices;
+
+            class Test
+            {
+                void M(object obj)
+                {
+                    IC c1 = (IC)obj;
+                    IC c2 = obj as IC;
+
+                    if (obj is IC)
+                    {
+                    }
+
+                    if (obj is IC c3)
+                    {
+                    }
+
+                    if ((object[])obj is [IC c4])
+                    {
+                    }
+
+                    if ((object[])obj is [IC])
+                    {
+                    }
+                }
+            }
+
+            [Guid("8FA8A526-F93B-4891-97D2-E1CC83D1C463")]
+            [ComImport]
+            interface IC;
+            """;
+
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "false")]);
     }
 
     [TestMethod]
@@ -339,6 +378,6 @@ public class DiagnosticAnalyzerTests
             interface IC;
             """;
 
-        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
     }
 }

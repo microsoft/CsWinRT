@@ -30,8 +30,10 @@ public sealed class ComImportInterfaceAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(static context =>
         {
-            // We only need to emit warnings if CsWinRT is in 'auto' mode (same as the collection expressions analyzer)
-            if (!GeneratorExecutionContextHelper.IsCsWinRTAotOptimizerInAutoMode(context.Options.AnalyzerConfigOptionsProvider, context.Compilation))
+            // We only need to emit warnings if CsWinRT is in 'auto' mode (same as the collection expressions analyzer), and if the AOT analyzer is enabled.
+            // This is because built-in COM is supported just fine when that is not the case, so no need to warn unless we need to be AOT compatible.
+            if (!GeneratorExecutionContextHelper.IsCsWinRTAotOptimizerInAutoMode(context.Options.AnalyzerConfigOptionsProvider, context.Compilation) ||
+                !GeneratorExecutionContextHelper.GetEnableAotAnalyzer(context.Options.AnalyzerConfigOptionsProvider))
             {
                 return;
             }
