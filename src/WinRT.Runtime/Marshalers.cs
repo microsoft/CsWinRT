@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -74,7 +75,7 @@ namespace WinRT
 
 #if EMBED
     internal
-#else 
+#else
     public
 #endif
     class MarshalString
@@ -106,7 +107,7 @@ namespace WinRT
                 _header = default;
 #if DEBUG
                 _pinned = false;
-#endif            
+#endif
             }
 
             public ref readonly char GetPinnableReference()
@@ -990,7 +991,17 @@ namespace WinRT
         }
     }
 
-    internal static class MarshalGenericHelper<T>
+    /// <summary>
+    /// This type is only meant to be used by generated marshalling stubs. Its API surface might change in the future.
+    /// </summary>
+    /// <typeparam name="T">The managed type to marshal.</typeparam>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class MarshalGenericHelper<T>
     {
         private static unsafe void CopyManagedFallback(T value, IntPtr dest)
         {
@@ -1006,7 +1017,7 @@ namespace WinRT
             }
         }
 
-        internal static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, MarshalGeneric<T>.CopyManaged ?? CopyManagedFallback);
+        public static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, MarshalGeneric<T>.CopyManaged ?? CopyManagedFallback);
     }
 
 #if EMBED
@@ -1071,6 +1082,9 @@ namespace WinRT
 
         public struct MarshalerArray
         {
+#if NET
+            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "'MarshalerArray' is only initialized from 'CreateMarshalerArray', which is not supported on AOT.")]
+#endif
             public void Dispose()
             {
                 if (_marshalers != null)
@@ -1109,7 +1123,6 @@ namespace WinRT
                 int length = array.Length;
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var abi_element_size = Marshal.SizeOf(AbiType);
-#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 m._array = Marshal.AllocCoTaskMem(byte_length);
                 m._marshalers = new object[length];
@@ -1120,6 +1133,7 @@ namespace WinRT
                     Marshaler<T>.CopyAbi(m._marshalers[i], (IntPtr)element);
                     element += abi_element_size;
                 }
+#pragma warning restore IL3050
                 success = true;
                 return m;
             }
@@ -1162,10 +1176,10 @@ namespace WinRT
             for (int i = 0; i < abi.length; i++)
             {
                 var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
-#pragma warning restore IL3050
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
+#pragma warning restore IL3050
             return array;
         }
 
@@ -1188,10 +1202,10 @@ namespace WinRT
             for (int i = 0; i < abi.length; i++)
             {
                 var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
-#pragma warning restore IL3050
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
+#pragma warning restore IL3050
         }
 
         public static new unsafe (int length, IntPtr data) FromManagedArray(T[] array)
@@ -1214,7 +1228,6 @@ namespace WinRT
                 int length = array.Length;
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var abi_element_size = Marshal.SizeOf(AbiType);
-#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 data = Marshal.AllocCoTaskMem(byte_length);
                 var bytes = (byte*)data.ToPointer();
@@ -1223,6 +1236,7 @@ namespace WinRT
                     Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+#pragma warning restore IL3050
                 success = true;
                 return (i, data);
             }
@@ -1255,7 +1269,6 @@ namespace WinRT
                 int length = array.Length;
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
                 var abi_element_size = Marshal.SizeOf(AbiType);
-#pragma warning restore IL3050
                 var byte_length = length * abi_element_size;
                 var bytes = (byte*)data.ToPointer();
                 for (i = 0; i < length; i++)
@@ -1263,6 +1276,7 @@ namespace WinRT
                     Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+#pragma warning restore IL3050
                 success = true;
             }
             finally
@@ -1290,10 +1304,10 @@ namespace WinRT
             for (int i = 0; i < abi.length; i++)
             {
                 var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
-#pragma warning restore IL3050
                 Marshaler<T>.DisposeAbi(abi_element);
                 data += abi_element_size;
             }
+#pragma warning restore IL3050
         }
 
         public static new unsafe void DisposeAbiArray(object box)
@@ -1990,6 +2004,9 @@ namespace WinRT
         private static unsafe void CopyUIntEnumDirect(object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)value;
     }
 
+#if NET
+    [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
 #if EMBED
     internal
 #else
@@ -1999,6 +2016,15 @@ namespace WinRT
     {
         static Marshaler()
         {
+#if NET
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                throw new NotSupportedException(
+                    $"'Marshaler<T>' is not supported in AOT environments, and is only supported for backwards compatibility in JIT environments. " +
+                    $"The type '{typeof(T)}' cannot be marshalled using it. Consider using the appropriate, more specific marshaller type instead.");
+            }    
+#endif
+
             // Structs cannot contain arrays, and arrays may only ever appear as parameters
             if (typeof(T).IsArray)
             {
