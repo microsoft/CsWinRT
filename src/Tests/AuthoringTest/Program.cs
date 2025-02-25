@@ -623,6 +623,7 @@ namespace AuthoringTest
         }
     }
 
+    [WinRTRuntimeClassName("AuthoringTest.DisposableClassImpl")]
     public sealed class DisposableClass : IDisposable
     {
         public bool IsDisposed { get; set; }
@@ -738,6 +739,7 @@ namespace AuthoringTest
         }
     }
 
+    [WinRTRuntimeClassName("AuthoringTest.CustomReadOnlyDictionaryImpl")]
     public sealed class CustomReadOnlyDictionary : IReadOnlyDictionary<string, BasicStruct>
     {
         private readonly CustomDictionary _dictionary;
@@ -986,6 +988,7 @@ namespace AuthoringTest
         }
     }
 
+    [WinRTRuntimeClassName("AuthoringTest.StaticClassImpl")]
     public static class StaticClass
     {
         public static int GetNumber()
@@ -1980,6 +1983,7 @@ namespace AuthoringTest
         }
     }
 
+    [WinRTRuntimeClassName("AuthoringTest.NonActivatableFactoryImpl")]
     public static class NonActivatableFactory
     {
         public static NonActivatableType Create()

@@ -19,6 +19,7 @@ namespace cswinrt
         bool public_enums{};
         bool public_exclusiveto{};
         bool idic_exclusiveto{};
+        bool partial_factory{};
     };
 
     extern settings_type settings;
