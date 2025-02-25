@@ -1985,7 +1985,6 @@ namespace WinRT
         }
     }
 
-    [Obsolete("This type should only be used internally by 'Marshaler<T>'.")]
     internal static class Marshaler
     {
         internal static readonly Func<object, object> ReturnParameterFunc = ReturnParameter;
