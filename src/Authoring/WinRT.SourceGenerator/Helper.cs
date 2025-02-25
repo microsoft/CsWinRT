@@ -85,6 +85,12 @@ namespace Generator
             return csWinRTExeTFM;
         }
 
+        public static bool IsNet7OrGreater(this GeneratorExecutionContext context)
+        {
+            string tfm = context.GetCsWinRTExeTFM();
+            return tfm.StartsWith("net7.0") || tfm.StartsWith("net8.0") || tfm.StartsWith("net9.0");
+        }
+
         public static bool IsCsWinRTComponent(this GeneratorExecutionContext context)
         {
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTComponent", out var isCsWinRTComponentStr))
@@ -296,6 +302,16 @@ namespace Generator
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTMergeReferencedActivationFactories", out var csWinRTMergeReferencedActivationFactories))
             {
                 return bool.TryParse(csWinRTMergeReferencedActivationFactories, out var isCsWinRTMergeReferencedActivationFactories) && isCsWinRTMergeReferencedActivationFactories;
+            }
+
+            return false;
+        }
+
+        public static bool GetCsWinRTGenerateOverridedClassNameActivationFactory(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateOverridedClassNameActivationFactory", out var csWinRTGenerateOverridedClassNameActivationFactory))
+            {
+                return bool.TryParse(csWinRTGenerateOverridedClassNameActivationFactory, out var isCsWinRTGenerateOverridedClassNameActivationFactory) && isCsWinRTGenerateOverridedClassNameActivationFactory;
             }
 
             return false;

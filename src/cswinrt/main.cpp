@@ -42,6 +42,7 @@ namespace cswinrt
         { "public_enums", 0, 0, {}, "Used with embedded option to generate enums as public"},
         { "public_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces public in the projection (default is internal)"},
         { "idic_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces support IDynamicInterfaceCastable (IDIC) for RCW scenarios (default is false)"},
+        { "partial_factory", 0, 0, {}, "Allows to provide an additional component activation factory (default is false)"},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
@@ -110,6 +111,7 @@ Where <spec> is one or more of:
         settings.public_enums = args.exists("public_enums");
         settings.public_exclusiveto = args.exists("public_exclusiveto");
         settings.idic_exclusiveto = args.exists("idic_exclusiveto");
+        settings.partial_factory = args.exists("partial_factory");
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))

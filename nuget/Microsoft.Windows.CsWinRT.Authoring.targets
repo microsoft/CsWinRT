@@ -14,6 +14,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTDetectDependentAuthoringWinMDs Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'==''">true</CsWinRTDetectDependentAuthoringWinMDs>
     <GetCopyToOutputDirectoryItemsDependsOn>$(GetCopyToOutputDirectoryItemsDependsOn);CsWinRTAuthoring_AddManagedDependencies</GetCopyToOutputDirectoryItemsDependsOn>
     <CsWinRTEnableLogging>$(CsWinRTEnableLogging)</CsWinRTEnableLogging>
+
+    <!-- Set the additional activation factory generation based on WinRTRuntimeClassName attribute to not be opt-in by default -->
+    <CsWinRTGenerateOverridedClassNameActivationFactory Condition="'$(CsWinRTGenerateOverridedClassNameActivationFactory)' != 'true'">false</CsWinRTGenerateOverridedClassNameActivationFactory>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -33,6 +36,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
     <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
     <CompilerVisibleProperty Include="CsWinRTAuthoringInputs" />
+    <CompilerVisibleProperty Include="CsWinRTGenerateOverridedClassNameActivationFactory" />
   </ItemGroup>
 
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
