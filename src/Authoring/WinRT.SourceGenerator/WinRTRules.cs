@@ -250,5 +250,12 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text,
             false,
             true);
+
+        public static DiagnosticDescriptor ComImportInterfaceCast = MakeRule(
+            "CsWinRT1033",
+            CsWinRTDiagnosticStrings.ComImportInterfaceCast_Brief,
+            CsWinRTDiagnosticStrings.ComImportInterfaceCast_Text,
+            false,
+            true);
     }
 } 

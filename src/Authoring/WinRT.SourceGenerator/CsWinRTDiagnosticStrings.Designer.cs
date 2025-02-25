@@ -248,7 +248,29 @@ namespace WinRT.SourceGenerator {
                 return ResourceManager.GetString("ClassOldProjectionMultipleInstances_Text", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cast to [ComImport] type not supported.
+        /// </summary>
+        internal static string ComImportInterfaceCast_Brief
+        {
+            get
+            {
+                return ResourceManager.GetString("ComImportInterfaceCast_Brief", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The type '{0}' used in a cast operation is a [ComImport] interface, which is not compatible with CsWinRT objects in AOT scenarios. Consider using the COM generators to define the interface, or manually handling the interface query on the underlying native object..
+        /// </summary>
+        internal static string ComImportInterfaceCast_Text
+        {
+            get
+            {
+                return ResourceManager.GetString("ComImportInterfaceCast_Text", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Namespace is disjoint from main (winmd) namespace.
         /// </summary>

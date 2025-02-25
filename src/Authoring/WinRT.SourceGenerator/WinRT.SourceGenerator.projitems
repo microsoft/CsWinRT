@@ -14,7 +14,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AotOptimizer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)CollectionExpressions\CollectionExpressionAnalyzer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Analyzers\CollectionExpressionAnalyzer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Analyzers\ComImportInterfaceAnalyzer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CsWinRTDiagnosticStrings.Designer.cs">
       <DependentUpon>CsWinRTDiagnosticStrings.resx</DependentUpon>
       <DesignTime>True</DesignTime>

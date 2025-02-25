@@ -186,4 +186,198 @@ public class DiagnosticAnalyzerTests
 
         await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
     }
+
+    [TestMethod]
+    public async Task ComImportInterfaceCast_ValidCast_DoesNotWarn()
+    {
+        const string source = """
+            class Test
+            {
+                void M(object obj)
+                {
+                    IC c1 = (IC)obj;
+                    IC c2 = obj as IC;
+
+                    if (obj is IC)
+                    {
+                    }
+
+                    if (obj is IC c3)
+                    {
+                    }
+
+                    if ((object[])obj is [IC c4])
+                    {
+                    }
+
+                    if ((object[])obj is [IC])
+                    {
+                    }
+                }
+            }
+
+            interface IC;
+            """;
+
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
+    [DataRow("true")]
+    [DataRow("false")]
+    [DataRow("OptIn")]
+    public async Task ComImportInterfaceCast_InvalidCast_NotAutoMode_DoesNotWarn(string propertyValue)
+    {
+        const string source = """
+            using System.Runtime.InteropServices;
+
+            class Test
+            {
+                void M(object obj)
+                {
+                    IC c1 = (IC)obj;
+                    IC c2 = obj as IC;
+
+                    if (obj is IC)
+                    {
+                    }
+
+                    if (obj is IC c3)
+                    {
+                    }
+
+                    if ((object[])obj is [IC c4])
+                    {
+                    }
+
+                    if ((object[])obj is [IC])
+                    {
+                    }
+                }
+            }
+
+            [Guid("8FA8A526-F93B-4891-97D2-E1CC83D1C463")]
+            [ComImport]
+            interface IC;
+            """;
+
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", propertyValue), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
+    public async Task ComImportInterfaceCast_InvalidCast_NoEnableAotAnalyzer_DoesNotWarn()
+    {
+        const string source = """
+            using System.Runtime.InteropServices;
+
+            class Test
+            {
+                void M(object obj)
+                {
+                    IC c1 = (IC)obj;
+                    IC c2 = obj as IC;
+
+                    if (obj is IC)
+                    {
+                    }
+
+                    if (obj is IC c3)
+                    {
+                    }
+
+                    if ((object[])obj is [IC c4])
+                    {
+                    }
+
+                    if ((object[])obj is [IC])
+                    {
+                    }
+                }
+            }
+
+            [Guid("8FA8A526-F93B-4891-97D2-E1CC83D1C463")]
+            [ComImport]
+            interface IC;
+            """;
+
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "false")]);
+    }
+
+    [TestMethod]
+    public async Task ComImportInterfaceCast_InvalidCast_NoProperty_DoesNotWarn()
+    {
+        const string source = """
+            using System.Runtime.InteropServices;
+
+            class Test
+            {
+                void M(object obj)
+                {
+                    IC c1 = (IC)obj;
+                    IC c2 = obj as IC;
+
+                    if (obj is IC)
+                    {
+                    }
+
+                    if (obj is IC c3)
+                    {
+                    }
+
+                    if ((object[])obj is [IC c4])
+                    {
+                    }
+
+                    if ((object[])obj is [IC])
+                    {
+                    }
+                }
+            }
+
+            [Guid("8FA8A526-F93B-4891-97D2-E1CC83D1C463")]
+            [ComImport]
+            interface IC;
+            """;
+
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task ComImportInterfaceCast_InvalidCast_Warns()
+    {
+        const string source = """
+            using System.Runtime.InteropServices;
+
+            class Test
+            {
+                void M(object obj)
+                {
+                    IC c1 = {|CsWinRT1033:(IC)obj|};
+                    IC c2 = {|CsWinRT1033:obj as IC|};
+
+                    if ({|CsWinRT1033:obj is IC|})
+                    {
+                    }
+
+                    if ({|CsWinRT1033:obj is IC c3|})
+                    {
+                    }
+
+                    if ((object[])obj is [{|CsWinRT1033:IC c4|}])
+                    {
+                    }
+
+                    if ((object[])obj is [{|CsWinRT1033:IC|}])
+                    {
+                    }
+                }
+            }
+
+            [Guid("8FA8A526-F93B-4891-97D2-E1CC83D1C463")]
+            [ComImport]
+            interface IC;
+            """;
+
+        await CSharpAnalyzerTest<ComImportInterfaceAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+    }
 }
