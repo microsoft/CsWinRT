@@ -54,4 +54,9 @@
     -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <!-- Global usings for type aliases used within the library -->
+  <ItemGroup>
+    <Using Include="System.Int32" Alias="HRESULT" />
+  </ItemGroup>
 </Project>
