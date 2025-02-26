@@ -10,7 +10,7 @@ namespace WindowsRuntime;
 /// It is used in either of the following scenarios:
 /// <list type="bullet">
 ///   <item>Projected types (either RCWs, or boxed value types).</item>
-///   <item>Managed types (in which case, the attribute is on their associated proxy type).</item>
+///   <item>Managed types (in which case, the attribute is on their associated proxy types).</item>
 /// </list>
 /// </summary>
 [AttributeUsage(
