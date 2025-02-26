@@ -3,13 +3,55 @@
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
-    <RootNamespace>WindowsRuntime</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsAotCompatible>true</IsAotCompatible>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+      
+    <!-- 'WindowsRuntime' is the root namespace, with the name being consistent with eg. 'System.Runtime.InteropServices.WindowsRuntime' -->
+    <RootNamespace>WindowsRuntime</RootNamespace>
       
     <!--
       The assembly name must always be 'WinRT.Runtime', as other components have a dependency on
       the exact .dll name. For instance, the UWP XAML compiler special cases 'WinRT.Runtime.dll'.
     -->
     <AssemblyName>WinRT.Runtime</AssemblyName>
+    
+
+    <!--
+      Treat all warnings as errors, only in release configurations. This allows the dev inner loop to remain
+      convenient, without errors while testing things out and prototyping things, while still ensuring that
+      all CI runs and official builds (including from PRs) will fail if any warnings are not addressed.
+    -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
+
+    <!--
+      Enable the latest warning wave, which shows additional warnings for invalid language features that are disabled by default.
+      For additional info, see https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/warning-waves.
+    -->
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!-- Import the global configs from the CodeStyle package (enables all IDExxxx warnings)-->
+    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
+
+    <!-- Enforce all code style rules during build (this replaces referencing Microsoft.CodeAnalysis.CSharp.CodeStyle) -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!--
+      Enable the compiler strict mode (see https://www.meziantou.net/csharp-compiler-strict-mode.htm).
+      This (poorly documented) mode enables additional warnings for incorrect usages of some features.
+      For instance, this will warn when using the == operator to compare a struct with a null literal.
+    -->
+    <Features>strict</Features>
+
+    <!--
+      Generate documentation files. In theory this should only be abled for published, non source generator projects.
+      However, this is always enabled to work around https://github.com/dotnet/roslyn/issues/41640. Until that's fixed,
+      source generators will also produce an .xml file with their documentation. Note that this doesn't really impact
+      NuGet packages, since the analyzer binaries are packed manually after build, so the .xml files aren't included.
+      When this workaround is no longer needed, the same property should also removed for the \samples directory.
+      Once that issue is fixed, this should be moved down to the src\ specific .props file again, and otherwise disabled.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 </Project>
