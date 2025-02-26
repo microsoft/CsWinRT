@@ -55,8 +55,26 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <!-- Import all .tt files with their generated .g.cs files (the T4 service is imported in the .props file) -->
+  <ItemGroup>
+    <None Update="**\*.tt">
+      <LastGenOutput>%(Filename).g.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <Compile Update="**\*.g.cs">
+      <DependentUpon>$([System.IO.Path]::GetFileNameWithoutExtension('%(Filename)')).tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
   <!-- Global usings for type aliases used within the library -->
   <ItemGroup>
     <Using Include="System.Int32" Alias="HRESULT" />
+  </ItemGroup>
+  
+  <!-- T4 template generation service (the .tt/.g.cs files are resolved in the .targets file) -->
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 </Project>
