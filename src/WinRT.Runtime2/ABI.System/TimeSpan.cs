@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#pragma warning disable CS1591
-
 using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
@@ -71,7 +69,7 @@ file sealed class TimeSpanVtableProviderAttribute : WindowsRuntimeVtableProvider
         bufferWriter.Write([new ComInterfaceEntry
         {
             IID = WellKnownInterfaceIds.IID_IReferenceOfTimeSpan,
-            Vtable = NonBlittableReference<TimeSpan, TimeSpanReferenceValueVtableEntry>.AbiToProjectionVftablePtr
+            Vtable = TimeSpanReference.AbiToProjectionVftablePtr
         }]);
     }
 }
@@ -79,14 +77,18 @@ file sealed class TimeSpanVtableProviderAttribute : WindowsRuntimeVtableProvider
 /// <summary>
 /// The <c>IReference`1</c> implementation for <see cref="global::System.TimeSpan"/>.
 /// </summary>
-file abstract unsafe class TimeSpanReferenceValueVtableEntry : IReferenceVtableEntry<TimeSpan>
+file static unsafe class TimeSpanReference
 {
-    /// <inheritdoc/>
-    public static unsafe delegate* unmanaged[MemberFunction]<void*, TimeSpan*, int> Value => &GetValue;
+    /// <summary>
+    /// The vtable for the <c>IReference`1</c> implementation.
+    /// </summary>
+    public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedReferenceVtable(
+        type: typeof(global::System.TimeSpan),
+        (delegate* unmanaged[MemberFunction]<void*, TimeSpan*, HRESULT>)&Value);
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT GetValue(void* thisPtr, TimeSpan* result)
+    private static HRESULT Value(void* thisPtr, TimeSpan* result)
     {
         if (result is null)
         {
