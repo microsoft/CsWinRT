@@ -96,11 +96,10 @@ public static class TypeMapping
     /// Call sites are treated as an intrinsic by the Trimmer and implemented inline.
     /// </remarks>
     [RequiresUnreferencedCode("Interop types may be removed by trimming")]
-    public static bool TryGetExternalTypeMapping<TTypeUniverse>([NotNullWhen(returnValue: true)] out IReadOnlyDictionary<string, Type>? map)
+    public static IReadOnlyDictionary<string, Type> GetExternalTypeMapping<TTypeUniverse>()
         where TTypeUniverse : ITypeMapUniverse
     {
-        map = null;
-        return false;
+        return null!;
     }
 
     /// <summary>
@@ -113,10 +112,9 @@ public static class TypeMapping
     /// Call sites are treated as an intrinsic by the Trimmer and implemented inline.
     /// </remarks>
     [RequiresUnreferencedCode("Interop types may be removed by trimming")]
-    public static bool TryGetTypeProxyMapping<TTypeUniverse>([NotNullWhen(returnValue: true)] out IReadOnlyDictionary<Type, Type>? map)
+    public static IReadOnlyDictionary<Type, Type> GetTypeProxyMapping<TTypeUniverse>()
         where TTypeUniverse : ITypeMapUniverse
     {
-        map = null;
-        return false;
+        return null!;
     }
 }
