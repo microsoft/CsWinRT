@@ -8,6 +8,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 
+#pragma warning disable
+
 namespace Windows.Foundation
 {
     internal enum PropertyType : uint
@@ -261,43 +263,6 @@ namespace ABI.Windows.Foundation
             if (value is global::Windows.Foundation.IPropertyValue ipv)
             {
                 throw new NotSupportedException("...How did we even end up here?");
-
-                if (typeof(T) == typeof(byte))
-                {
-                    return (T)(object)ipv.GetUInt8();
-                }
-                if (typeof(T) == typeof(short))
-                {
-                    return (T)(object)ipv.GetInt16();
-                }
-                if (typeof(T) == typeof(ushort))
-                {
-                    return (T)(object)ipv.GetUInt16();
-                }
-                if (typeof(T) == typeof(int))
-                {
-                    return (T)(object)ipv.GetInt32();
-                }
-                if (typeof(T) == typeof(uint))
-                {
-                    return (T)(object)ipv.GetUInt32();
-                }
-                if (typeof(T) == typeof(long))
-                {
-                    return (T)(object)ipv.GetInt64();
-                }
-                if (typeof(T) == typeof(ulong))
-                {
-                    return (T)(object)ipv.GetUInt64();
-                }
-                if (typeof(T) == typeof(float))
-                {
-                    return (T)(object)ipv.GetSingle();
-                }
-                if (typeof(T) == typeof(double))
-                {
-                    return (T)(object)ipv.GetDouble();
-                }
             }
 
             if (!IsCoercable(value))
