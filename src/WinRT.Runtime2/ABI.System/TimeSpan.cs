@@ -63,7 +63,7 @@ public static class TimeSpanMarshaller
 /// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.TimeSpan"/>.
 /// </summary>
-public sealed class TimeSpanVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
+file sealed class TimeSpanVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
 {
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
@@ -71,7 +71,7 @@ public sealed class TimeSpanVtableProviderAttribute : WindowsRuntimeVtableProvid
         bufferWriter.Write([new ComInterfaceEntry
         {
             IID = WellKnownInterfaceIds.IID_IReferenceOfTimeSpan,
-            Vtable = TimeSpanReference.AbiToProjectionVftablePtr
+            Vtable = NonBlittableReference<TimeSpan, TimeSpanReferenceValueVtableEntry>.AbiToProjectionVftablePtr
         }]);
     }
 }
@@ -79,30 +79,14 @@ public sealed class TimeSpanVtableProviderAttribute : WindowsRuntimeVtableProvid
 /// <summary>
 /// The <c>IReference`1</c> implementation for <see cref="global::System.TimeSpan"/>.
 /// </summary>
-public static unsafe class TimeSpanReference
+file abstract unsafe class TimeSpanReferenceValueVtableEntry : IReferenceVtableEntry<TimeSpan>
 {
-    /// <summary>
-    /// The vtable for the <c>IReference`1</c> implementation.
-    /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
-
-    /// <summary>
-    /// Computes the <c>IReference`1</c> implementation vtable.
-    /// </summary>
-    private static nint GetAbiToProjectionVftablePtr()
-    {
-        void** vftbl = (void**)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(global::System.TimeSpan), sizeof(void*) * 7);
-
-        // TODO: initialize 'IInspectable' vtable
-
-        vftbl[6] = (delegate* unmanaged[MemberFunction]<void*, TimeSpan*, HRESULT>)&Value;
-
-        return (nint)vftbl;
-    }
+    /// <inheritdoc/>
+    public static unsafe delegate* unmanaged[MemberFunction]<void*, TimeSpan*, int> Value => &GetValue;
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT Value(void* thisPtr, TimeSpan* result)
+    private static HRESULT GetValue(void* thisPtr, TimeSpan* result)
     {
         if (result is null)
         {
