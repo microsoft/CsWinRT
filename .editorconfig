@@ -80,6 +80,9 @@ dotnet_style_readonly_field = true
 # Namespace preferences
 dotnet_style_namespace_match_folder = false
 
+# Primary constructor preference
+csharp_style_prefer_primary_constructors = false;
+
 # Parameter preferences
 dotnet_code_quality_unused_parameters = all
 

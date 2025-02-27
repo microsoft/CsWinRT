@@ -15,11 +15,12 @@ namespace WindowsRuntime;
 /// </summary>
 [AttributeUsage(
     AttributeTargets.Class |
-    AttributeTargets.Interface |
-    AttributeTargets.Enum |
     AttributeTargets.Struct |
+    AttributeTargets.Enum |
+    AttributeTargets.Interface |
     AttributeTargets.Delegate,
-    AllowMultiple = false)]
+    AllowMultiple = false,
+    Inherited = false)]
 public abstract unsafe class WindowsRuntimeMarshallerAttribute : Attribute
 {
     /// <summary>

@@ -21,7 +21,8 @@ namespace WindowsRuntime;
     AttributeTargets.Enum |
     AttributeTargets.Struct |
     AttributeTargets.Delegate,
-    AllowMultiple = false)]
+    AllowMultiple = false,
+    Inherited = false)]
 public abstract class WindowsRuntimeVtableProviderAttribute : Attribute
 {
     /// <summary>
