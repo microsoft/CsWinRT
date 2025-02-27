@@ -3,6 +3,8 @@
 
 using System.Runtime.CompilerServices;
 
+namespace WindowsRuntime.InteropServices;
+
 /// <summary>
 /// The <c>IReference`1</c> implementation for a given non blittable type.
 /// </summary>

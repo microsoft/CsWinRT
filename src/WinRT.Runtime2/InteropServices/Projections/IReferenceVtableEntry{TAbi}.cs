@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+namespace WindowsRuntime.InteropServices;
+
 /// <summary>
 /// An interface for <c>IReference`1</c> implementations.
 /// </summary>
