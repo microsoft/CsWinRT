@@ -4,9 +4,12 @@
 #pragma warning disable CS1591
 
 using System;
+using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
+using static System.Runtime.InteropServices.ComWrappers;
 
 [assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
     value: "Windows.Foundation.IReference<Windows.Foundation.TimeSpan>",
@@ -21,7 +24,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.TimeSpan"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
-[TimeSpanMarshaller]
+[TimeSpanVtableProvider]
 public struct TimeSpan
 {
     /// <summary>
@@ -36,11 +39,21 @@ public struct TimeSpan
 /// </summary>
 public static class TimeSpanMarshaller
 {
+    /// <summary>
+    /// Converts a managed <see cref="global::System.TimeSpan"/> to an unmanaged <see cref="TimeSpan"/>.
+    /// </summary>
+    /// <param name="value">The managed <see cref="global::System.TimeSpan"/> value.</param>
+    /// <returns>The unmanaged <see cref="TimeSpan"/> value.</returns>
     public static TimeSpan ConvertToUnmanaged(global::System.TimeSpan value)
     {
         return new() { Duration = (ulong)value.Ticks };
     }
 
+    /// <summary>
+    /// Converts an unmanaged <see cref="TimeSpan"/> to a managed <see cref="global::System.TimeSpan"/>.
+    /// </summary>
+    /// <param name="value">The unmanaged <see cref="TimeSpan"/> value.</param>
+    /// <returns>The managed <see cref="global::System.TimeSpan"/> value</returns>
     public static global::System.TimeSpan ConvertToManaged(TimeSpan value)
     {
         return global::System.TimeSpan.FromTicks((long)value.Duration);
@@ -48,13 +61,69 @@ public static class TimeSpanMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeMarshallerAttribute"/> implementation for <see cref="global::System.TimeSpan"/>.
+/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.TimeSpan"/>.
 /// </summary>
-public sealed class TimeSpanMarshallerAttribute : WindowsRuntimeMarshallerAttribute
+public sealed class TimeSpanVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
 {
     /// <inheritdoc/>
-    public override unsafe void* ConvertToUnmanaged(object? value)
+    public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
     {
-        throw null!;
+        bufferWriter.Write([new ComInterfaceEntry
+        {
+            IID = WellKnownInterfaceIds.IID_IReferenceOfTimeSpan,
+            Vtable = TimeSpanReference.AbiToProjectionVftablePtr
+        }]);
+    }
+}
+
+/// <summary>
+/// The <c>IReference`1</c> implementation for <see cref="global::System.TimeSpan"/>.
+/// </summary>
+public static unsafe class TimeSpanReference
+{
+    /// <summary>
+    /// The vtable for the <c>IReference`1</c> implementation.
+    /// </summary>
+    public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
+
+    /// <summary>
+    /// Computes the <c>IReference`1</c> implementation vtable.
+    /// </summary>
+    private static nint GetAbiToProjectionVftablePtr()
+    {
+        void** vftbl = (void**)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(global::System.TimeSpan), sizeof(void*) * 7);
+
+        // TODO: initialize 'IInspectable' vtable
+
+        vftbl[6] = (delegate* unmanaged[MemberFunction]<void*, TimeSpan*, HRESULT>)&Value;
+
+        return (nint)vftbl;
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT Value(void* thisPtr, TimeSpan* result)
+    {
+        if (result is null)
+        {
+            return unchecked((int)0x80004003);
+        }
+
+        try
+        {
+            global::System.TimeSpan unboxedValue = (global::System.TimeSpan)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            Unsafe.WriteUnaligned(result, TimeSpanMarshaller.ConvertToUnmanaged(unboxedValue));
+
+            return 0;
+        }
+        catch (Exception e)
+        {
+            Unsafe.WriteUnaligned(result, default(TimeSpan));
+
+            // TODO: error info
+
+            return 0;
+        }
     }
 }
