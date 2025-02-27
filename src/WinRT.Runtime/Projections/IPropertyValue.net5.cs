@@ -260,6 +260,8 @@ namespace ABI.Windows.Foundation
 
             if (value is global::Windows.Foundation.IPropertyValue ipv)
             {
+                throw new NotSupportedException("...How did we even end up here?");
+
                 if (typeof(T) == typeof(byte))
                 {
                     return (T)(object)ipv.GetUInt8();
