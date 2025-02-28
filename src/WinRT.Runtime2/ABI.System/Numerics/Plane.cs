@@ -52,9 +52,9 @@ file static unsafe class PlaneReference
     /// <summary>
     /// The vtable for the <c>IReference`1</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedReferenceVtable(
+    public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedInspectableVtableUnsafe(
         type: typeof(global::System.Numerics.Plane),
-        fpValue: (delegate* unmanaged[MemberFunction]<void*, global::System.Numerics.Plane*, HRESULT>)&Value);
+        fpEntry6: (delegate* unmanaged[MemberFunction]<void*, global::System.Numerics.Plane*, HRESULT>)&Value);
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]

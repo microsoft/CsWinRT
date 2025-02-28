@@ -52,9 +52,9 @@ file static unsafe class Vector2Reference
     /// <summary>
     /// The vtable for the <c>IReference`1</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedReferenceVtable(
+    public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedInspectableVtableUnsafe(
         type: typeof(global::System.Numerics.Vector2),
-        fpValue: (delegate* unmanaged[MemberFunction]<void*, global::System.Numerics.Vector2*, HRESULT>)&Value);
+        fpEntry6: (delegate* unmanaged[MemberFunction]<void*, global::System.Numerics.Vector2*, HRESULT>)&Value);
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]

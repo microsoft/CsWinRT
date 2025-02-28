@@ -95,9 +95,9 @@ file static unsafe class DateTimeOffsetReference
     /// <summary>
     /// The vtable for the <c>IReference`1</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedReferenceVtable(
+    public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedInspectableVtableUnsafe(
         type: typeof(global::System.DateTimeOffset),
-        fpValue: (delegate* unmanaged[MemberFunction]<void*, DateTimeOffset*, HRESULT>)&Value);
+        fpEntry6: (delegate* unmanaged[MemberFunction]<void*, DateTimeOffset*, HRESULT>)&Value);
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
