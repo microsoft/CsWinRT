@@ -2,10 +2,23 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
+
+/// <summary>
+/// Represents the backing header for an <c>HSTRING</c> value passed by reference (without copying).
+/// </summary>
+/// <see href="https://learn.microsoft.com/windows/win32/api/hstring/ns-hstring-hstring_header"/>
+public ref struct HStringHeader
+{
+    /// <summary>
+    /// The underlying header for the <c>HSTRING</c> reference.
+    /// </summary>
+    internal HSTRING_HEADER _header;
+}
 
 /// <summary>
 /// A marshaller for the Windows Runtime <c>HSTRING</c> type.
@@ -14,13 +27,13 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 public static unsafe class HStringMarshaller
 {
     /// <summary>
-    /// Converts a <see cref="string"/> value to an unmanaged <c>HSTRING</c>.
+    /// Converts a <see cref="ReadOnlySpan{T}"/> value to an unmanaged <c>HSTRING</c>.
     /// </summary>
-    /// <param name="value">The <see cref="string"/> value to convert.</param>
+    /// <param name="value">The <see cref="ReadOnlySpan{T}"/> value to convert.</param>
     /// <returns>The resulting <c>HSTRING</c>.</returns>
-    public static HSTRING ConvertToUnmanaged(string? value)
+    public static HSTRING ConvertToUnmanaged(ReadOnlySpan<char> value)
     {
-        if (value is null)
+        if (value.IsEmpty)
         {
             return (HSTRING)null;
         }
@@ -32,6 +45,48 @@ public static unsafe class HStringMarshaller
             Marshal.ThrowExceptionForHR(WindowsRuntimeImports.WindowsCreateString(valuePtr, (uint)value.Length, &handle));
 
             return handle;
+        }
+    }
+
+    /// <summary>
+    /// Converts a text buffer (eg. a pinned <see cref="string"/>) to a fast-pass <c>HSTRING</c> value.
+    /// </summary>
+    /// <param name="value">The input text buffer to wrap with the resulting <c>HSTRING</c> value.</param>
+    /// <param name="length">
+    /// The length of the input text buffer. It should be <see langword="null"/>
+    /// if and only if <paramref name="value"/> is <see langword="null"/>.
+    /// </param>
+    /// <param name="header">
+    /// The resulting <see cref="HStringHeader"/> instance. This must be kept in scope as long
+    /// as the returned <c>HSTRING</c> value is being used. It is not valid to escape that value,
+    /// as the header is required to exist for the fast-pass <c>HSTRING</c> to be valid.
+    /// </param>
+    /// <returns>The resulting fast-pass <c>HSTRING</c>.</returns>
+    /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/winstring/nf-winstring-windowscreatestringreference#remarks"/>
+    public static HSTRING ConvertToUnmanagedUnsafe(char* value, int? length, out HStringHeader header)
+    {
+        // If the value is 'null', just return an empty 'HSTRING'. We don't need
+        // to validate the length, as that is always expected to be 'null' as well
+        // in this case. It's the caller's responsibility to keep it in sync.
+        if (value is null)
+        {
+            Unsafe.SkipInit(out header);
+
+            return (HSTRING)null;
+        }
+
+        fixed (HSTRING_HEADER* headerPtr = &header._header)
+        {
+            HSTRING result;
+            HRESULT hr = WindowsRuntimeImports.WindowsCreateStringReference(
+                sourceString: value,
+                length: (uint)length.GetValueOrDefault(),
+                hstringHeader: headerPtr,
+                @string: &result);
+
+            Marshal.ThrowExceptionForHR(hr);
+
+            return result;
         }
     }
 
