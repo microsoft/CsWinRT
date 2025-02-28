@@ -4,13 +4,15 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// The <c>IInspectable</c> implementation for managed types.
 /// </summary>
-internal static unsafe class Inspectable
+/// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/nn-inspectable-iinspectable"/>
+internal static unsafe class IInspectable
 {
     /// <summary>
     /// The vtable for the <c>IInspectable</c> implementation.
@@ -22,7 +24,7 @@ internal static unsafe class Inspectable
     /// </summary>
     private static nint GetAbiToProjectionVftablePtr()
     {
-        IInspectableVftbl* vftbl = (IInspectableVftbl*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(Inspectable), sizeof(IInspectableVftbl));
+        IInspectableVftbl* vftbl = (IInspectableVftbl*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IInspectable), sizeof(IInspectableVftbl));
 
         // Get the 'IUnknown' implementation from the runtime. This is implemented in native code,
         // so that it can work correctly even when used from native code during a GC (eg. from XAML).
@@ -49,13 +51,13 @@ internal static unsafe class Inspectable
         try
         {
             // TODO
-        }
-        catch (Exception ex)
-        {
-            return ex.HResult;
-        }
 
-        return 0;
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/nf-inspectable-iinspectable-getruntimeclassname"/>
@@ -67,13 +69,13 @@ internal static unsafe class Inspectable
         try
         {
             // TODO
-        }
-        catch (Exception ex)
-        {
-            return ex.HResult;
-        }
 
-        return 0;
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/nf-inspectable-iinspectable-gettrustlevel"/>
@@ -82,6 +84,6 @@ internal static unsafe class Inspectable
     {
         *trustLevel = TrustLevel.BaseTrust;
 
-        return 0;
+        return WellKnownErrorCodes.S_OK;
     }
 }

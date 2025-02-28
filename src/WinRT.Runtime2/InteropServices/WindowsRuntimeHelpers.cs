@@ -25,7 +25,7 @@ public static unsafe class WindowsRuntimeHelpers
 
         void** vftbl = (void**)RuntimeHelpers.AllocateTypeAssociatedMemory(type, sizeof(void*) * count);
 
-        Unsafe.Copy(vftbl, in *(IInspectableVftbl*)Inspectable.AbiToProjectionVftablePtr);
+        Unsafe.Copy(vftbl, in *(IInspectableVftbl*)IInspectable.AbiToProjectionVftablePtr);
 
         return vftbl;
     }
