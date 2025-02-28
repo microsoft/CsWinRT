@@ -8,15 +8,27 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
-/// Represents the backing header for an <c>HSTRING</c> value passed by reference (without copying).
+/// Represents a reference to a fast-pass <c>HSTRING</c> value (passed without copying).
 /// </summary>
-/// <see href="https://learn.microsoft.com/windows/win32/api/hstring/ns-hstring-hstring_header"/>
-public ref struct HStringHeader
+public ref struct HStringReference
 {
     /// <summary>
     /// The underlying header for the <c>HSTRING</c> reference.
     /// </summary>
     internal HSTRING_HEADER _header;
+
+    /// <summary>
+    /// The fast-pass <c>HSTRING</c> value.
+    /// </summary>
+    internal HSTRING _hstring;
+
+    /// <summary>
+    /// Gets the fast-pass <c>HSTRING</c> value for this reference.
+    /// </summary>
+    /// <remarks>
+    /// It is not valid to escape this value outside of the scope of the current <see cref="HStringReference"/> instance.
+    /// </remarks>
+    public readonly HSTRING HString => _hstring;
 }
 
 /// <summary>
@@ -54,40 +66,48 @@ public static unsafe class HStringMarshaller
     /// The length of the input text buffer. It should be <see langword="null"/>
     /// if and only if <paramref name="value"/> is <see langword="null"/>.
     /// </param>
-    /// <param name="header">
-    /// The resulting <see cref="HStringHeader"/> instance. This must be kept in scope as long
-    /// as the returned <c>HSTRING</c> value is being used. It is not valid to escape that value,
-    /// as the header is required to exist for the fast-pass <c>HSTRING</c> to be valid.
+    /// <param name="reference">
+    /// <para>
+    /// The resulting <see cref="HStringReference"/> instance. This must be kept in scope as long
+    /// as the <c>HSTRING</c> value retrieved from it is being used. It is not valid to escape that
+    /// value, as the reference is required to exist for the fast-pass <c>HSTRING</c> to be valid.
+    /// </para>
+    /// <para>
+    /// This value is returned by <see langword="out"/> and not directly, for performance reasons. The size of this
+    /// value is not small, as it contains the backing header for the resulting <c>HSTRING</c> value. Returning it
+    /// by <see langword="out"/> allows avoiding unnecessary copies when constructing and returning it.
+    /// </para>
     /// </param>
-    /// <returns>The resulting fast-pass <c>HSTRING</c>.</returns>
     /// <remarks>
     /// Because the resulting <c>HSTRING</c> is fast-pass, it is not necessary to call <see cref="Free"/> on it.
     /// </remarks>
     /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/winstring/nf-winstring-windowscreatestringreference#remarks"/>
-    public static HSTRING ConvertToUnmanagedUnsafe(char* value, int? length, out HStringHeader header)
+    public static void ConvertToUnmanagedUnsafe(char* value, int? length, out HStringReference reference)
     {
         // If the value is 'null', just return an empty 'HSTRING'. We don't need
         // to validate the length, as that is always expected to be 'null' as well
         // in this case. It's the caller's responsibility to keep it in sync.
         if (value is null)
         {
-            Unsafe.SkipInit(out header);
+            Unsafe.SkipInit(out reference._header);
 
-            return (HSTRING)null;
+            // We explicitly want to make sure the resulting 'HSTRING' is 'null'.
+            // The header doesn't need to be initialized, as it won't be used.
+            reference._hstring = (HSTRING)null;
+
+            return;
         }
 
-        fixed (HSTRING_HEADER* headerPtr = &header._header)
+        fixed (HSTRING_HEADER* headerPtr = &reference._header)
+        fixed (HSTRING* hstringPtr = &reference._hstring)
         {
-            HSTRING result;
             HRESULT hr = WindowsRuntimeImports.WindowsCreateStringReference(
                 sourceString: value,
                 length: (uint)length.GetValueOrDefault(),
                 hstringHeader: headerPtr,
-                @string: &result);
+                @string: hstringPtr);
 
             Marshal.ThrowExceptionForHR(hr);
-
-            return result;
         }
     }
 
