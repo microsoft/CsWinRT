@@ -104,7 +104,7 @@ file static unsafe class TimeSpanReference
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (Exception e)
+        catch (global::System.Exception e)
         {
             Unsafe.WriteUnaligned(result, default(TimeSpan));
 
