@@ -64,7 +64,7 @@ public sealed class TypeMapAssemblyTargetAttribute<TTypeUniverse> : Attribute
 /// Create a type association between a type and its proxy.
 /// </summary>
 /// <typeparam name="TTypeUniverse">Type universe</typeparam>
-[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
 public sealed class TypeMapAssociationAttribute<TTypeUniverse> : Attribute
     where TTypeUniverse : ITypeMapUniverse
 {
