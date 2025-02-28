@@ -5,13 +5,27 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
 
 /// <inheritdoc cref="WindowsRuntimeImports"/>
 internal partial class WindowsRuntimeImports
 {
-    // Handcrafted P/Invoke with TFM-specific handling, or thin high-level abstractions (eg. 'TryGetProcAddress'/'GetProcAddress')
+    // Thin high-level abstractions (eg. 'TryGetProcAddress'/'GetProcAddress')
+
+    /// <inheritdoc cref="CoGetContextToken(nuint*)"/>
+    /// <exception cref="Exception">Thrown if getting the context token fails.</exception>
+    public static unsafe nuint CoGetContextToken()
+    {
+        nuint contextToken;
+
+        HRESULT hresult = CoGetContextToken(&contextToken);
+
+        Marshal.ThrowExceptionForHR(hresult);
+
+        return contextToken;
+    }
 
     /// <inheritdoc cref="GetProcAddress(nint, sbyte*)"/>
     /// <remarks>The <paramref name="lpProcNameUtf8"/> parameter is meant to be an UTF8 literal with only ASCII characters.</remarks>
