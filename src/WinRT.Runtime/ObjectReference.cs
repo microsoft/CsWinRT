@@ -542,6 +542,27 @@ namespace WinRT
             }
         }
 
+        /// <summary>
+        /// Creates an <see cref="ObjectReference{T}"/> instance for a COM pointer to an agile object, without validation.
+        /// </summary>
+        /// <param name="thisPtr">The COM pointer to wrap.</param>
+        /// <returns>The resulting <see cref="ObjectReference{T}"/> instance.</returns>
+        /// <remarks>
+        /// This method will not validate that the target COM object is actually free-threaded.
+        /// It is the responsibility of callers to ensure only free-threaded objects are used.
+        /// </remarks>
+        internal static ObjectReference<T> AttachFreeThreadedUnsafe(ref IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            var obj = new ObjectReference<T>(thisPtr);
+            thisPtr = IntPtr.Zero;
+            return obj;
+        }
+
         public static ObjectReference<T> Attach(ref IntPtr thisPtr, Guid iid)
         {
             if (thisPtr == IntPtr.Zero)
