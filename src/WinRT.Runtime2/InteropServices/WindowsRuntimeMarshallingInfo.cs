@@ -67,13 +67,12 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
     private readonly Type _metadataProviderType = metadataProviderType;
 
     /// <summary>
-    /// The cached <see cref="WindowsRuntimeMarshallerAttribute"/> instance, if available.
+    /// The cached <see cref="WindowsRuntimeMarshallerAttribute"/> instance (possibly a placeholder).
     /// </summary>
-    /// <remarks>This will not be present for eg. types not implementing no Windows Runtime interface, which are also not projected.</remarks>
     private volatile WindowsRuntimeMarshallerAttribute? _marshaller;
 
     /// <summary>
-    /// The cached <see cref="WindowsRuntimeVtableProviderAttribute"/> instance, if available.
+    /// The cached <see cref="WindowsRuntimeVtableProviderAttribute"/> instance (possibly a placeholder).
     /// </summary>
     private volatile WindowsRuntimeVtableProviderAttribute? _vtableProvider;
 
@@ -148,6 +147,7 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
     /// </summary>
     /// <param name="marshaller">The resulting <see cref="WindowsRuntimeMarshallerAttribute"/> instance, if available.</param>
     /// <returns>Whether <paramref name="marshaller"/> was retrieved successfully.</returns>
+    /// <remarks>This will not be present for eg. types not implementing any Windows Runtime interfaces, which are also not projected.</remarks>
     public bool TryGetMarshaller([NotNullWhen(true)] out WindowsRuntimeMarshallerAttribute? marshaller)
     {
         // Initializes the 'WindowsRuntimeMarshallerAttribute' instance, if present
@@ -175,8 +175,15 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
         WindowsRuntimeMarshallerAttribute? value = _marshaller;
 
         // We have a cached marshaller, so return it immediately
-        if (value is not (null or PlaceholderWindowsRuntimeMarshallerAttribute))
+        if (value is not null)
         {
+            if (value is PlaceholderWindowsRuntimeMarshallerAttribute)
+            {
+                marshaller = null;
+
+                return false;
+            }
+
             marshaller = value;
 
             return true;
@@ -190,6 +197,7 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
     /// </summary>
     /// <param name="vtableProvider">The resulting <see cref="WindowsRuntimeVtableProviderAttribute"/> instance, if available.</param>
     /// <returns>Whether <paramref name="vtableProvider"/> was retrieved successfully.</returns>
+    /// <remarks>This will not be present for eg. projected Windows Runtime types, as their vtable will be implemented in native code.</remarks>
     public bool TryGetVtableProvider([NotNullWhen(true)] out WindowsRuntimeVtableProviderAttribute? vtableProvider)
     {
         // Initializes the 'WindowsRuntimeVtableProviderAttribute' instance, if present
@@ -217,8 +225,15 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
         WindowsRuntimeVtableProviderAttribute? value = _vtableProvider;
 
         // We have a cached marshaller, so return it immediately just like above
-        if (value is not (null or PlaceholderWindowsRuntimeVtableProviderAttribute))
+        if (value is not null)
         {
+            if (value is PlaceholderWindowsRuntimeVtableProviderAttribute)
+            {
+                vtableProvider = null;
+
+                return false;
+            }
+
             vtableProvider = value;
 
             return true;
