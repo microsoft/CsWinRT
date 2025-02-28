@@ -24,7 +24,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector3"/>
 [Vector3VtableProvider]
-public struct Vector3;
+public static class Vector3;
 
 /// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Vector3"/>.

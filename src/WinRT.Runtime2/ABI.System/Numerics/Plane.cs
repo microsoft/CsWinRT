@@ -24,7 +24,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.plane"/>
 [PlaneVtableProvider]
-public struct Plane;
+public static class Plane;
 
 /// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Plane"/>.

@@ -24,7 +24,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix4x4"/>
 [Matrix4x4VtableProvider]
-public struct Matrix4x4;
+public static class Matrix4x4;
 
 /// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Matrix4x4"/>.
