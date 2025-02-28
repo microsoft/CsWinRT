@@ -26,12 +26,8 @@ internal static unsafe class IInspectable
     {
         IInspectableVftbl* vftbl = (IInspectableVftbl*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IInspectable), sizeof(IInspectableVftbl));
 
-        // Get the 'IUnknown' implementation from the runtime. This is implemented in native code,
-        // so that it can work correctly even when used from native code during a GC (eg. from XAML).
-        ComWrappers.GetIUnknownImpl(
-            fpQueryInterface: out *(nint*)&vftbl->QueryInterface,
-            fpAddRef: out *(nint*)&vftbl->AddRef,
-            fpRelease: out *(nint*)&vftbl->Release);
+        // The 'IUnknown' implementation is the same one we already retrieved from the runtime
+        *(IUnknownVftbl*)vftbl = *(IUnknownVftbl*)IUnknown.AbiToProjectionVftablePtr;
 
         // Populate the rest of the 'IInspectable' methods
         vftbl->GetIids = &GetIids;
