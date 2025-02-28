@@ -3,6 +3,7 @@
 
 using System;
 using System.Buffers;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
@@ -23,6 +24,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Exception"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.hresult"/>
+[EditorBrowsable(EditorBrowsableState.Never)]
 [ExceptionVtableProvider]
 public struct Exception
 {
@@ -37,6 +39,7 @@ public struct Exception
 /// Marshaller for <see cref="global::System.Exception"/>.
 /// </summary>
 /// <remarks>This marshaller is backed by the infrastructure provided by <see cref="RestrictedErrorInfo"/>.</remarks>
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static class ExceptionMarshaller
 {
     /// <summary>

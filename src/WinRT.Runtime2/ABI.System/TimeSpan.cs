@@ -3,6 +3,7 @@
 
 using System;
 using System.Buffers;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
@@ -23,6 +24,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.TimeSpan"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
+[EditorBrowsable(EditorBrowsableState.Never)]
 [TimeSpanVtableProvider]
 public struct TimeSpan
 {
@@ -36,6 +38,7 @@ public struct TimeSpan
 /// <summary>
 /// Marshaller for <see cref="global::System.TimeSpan"/>.
 /// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static class TimeSpanMarshaller
 {
     /// <summary>

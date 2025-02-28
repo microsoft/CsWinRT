@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
+using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -23,6 +24,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Matrix3x2"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix3x2"/>
+[EditorBrowsable(EditorBrowsableState.Never)]
 [Matrix3x2VtableProvider]
 public static class Matrix3x2;
 
