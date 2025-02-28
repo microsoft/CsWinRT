@@ -60,6 +60,9 @@ public static unsafe class HStringMarshaller
     /// as the header is required to exist for the fast-pass <c>HSTRING</c> to be valid.
     /// </param>
     /// <returns>The resulting fast-pass <c>HSTRING</c>.</returns>
+    /// <remarks>
+    /// Because the resulting <c>HSTRING</c> is fast-pass, it is not necessary to call <see cref="Free"/> on it.
+    /// </remarks>
     /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/winstring/nf-winstring-windowscreatestringreference#remarks"/>
     public static HSTRING ConvertToUnmanagedUnsafe(char* value, int? length, out HStringHeader header)
     {
