@@ -9,11 +9,11 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace WindowsRuntime.InteropServices
+namespace WindowsRuntime.InteropServices;
+
+/// <summary>IIDs for common COM/WinRT interfaces.</summary>
+public static class WellKnownInterfaceIds
 {
-    /// <summary>IIDs for common COM/WinRT interfaces.</summary>
-    public static class WellKnownInterfaceIds
-    {
 <#
 var entries = new (string Name, string IID, bool IsPublic)[]
 {
@@ -134,32 +134,31 @@ for (int i = 0; i < entries.Length; i++)
     var hex = bytes.Select(b => $"0x{b.ToString("X2").ToUpperInvariant()}").ToArray();
     var modifier = entries[i].IsPublic ? "public" : "internal";
 #>
-        /// <summary>The IID for <c><#=entries[i].Name#></c> (<#=entries[i].IID#>).</summary>
-        <#=modifier#> static ref readonly Guid IID_<#=entries[i].Name#>
+    /// <summary>The IID for <c><#=entries[i].Name#></c> (<#=entries[i].IID#>).</summary>
+    <#=modifier#> static ref readonly Guid IID_<#=entries[i].Name#>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-            get
+            ReadOnlySpan<byte> data = new byte[]
             {
-                ReadOnlySpan<byte> data = new byte[]
-                {
-                    <#=hex[0]#>, <#=hex[1]#>, <#=hex[2]#>, <#=hex[3]#>,
-                    <#=hex[4]#>, <#=hex[5]#>,
-                    <#=hex[6]#>, <#=hex[7]#>,
-                    <#=hex[8]#>,
-                    <#=hex[9]#>,
-                    <#=hex[10]#>,
-                    <#=hex[11]#>,
-                    <#=hex[12]#>,
-                    <#=hex[13]#>,
-                    <#=hex[14]#>,
-                    <#=hex[15]#>
-                };
+                <#=hex[0]#>, <#=hex[1]#>, <#=hex[2]#>, <#=hex[3]#>,
+                <#=hex[4]#>, <#=hex[5]#>,
+                <#=hex[6]#>, <#=hex[7]#>,
+                <#=hex[8]#>,
+                <#=hex[9]#>,
+                <#=hex[10]#>,
+                <#=hex[11]#>,
+                <#=hex[12]#>,
+                <#=hex[13]#>,
+                <#=hex[14]#>,
+                <#=hex[15]#>
+            };
 
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
+    }
 <#
 }
 #>
-    }
 }
