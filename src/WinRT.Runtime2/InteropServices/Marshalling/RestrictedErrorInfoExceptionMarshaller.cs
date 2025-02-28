@@ -22,23 +22,23 @@ public static class RestrictedErrorInfoExceptionMarshaller
     /// <summary>
     /// Converts an <see cref="Exception"/> to an unmanaged version.
     /// </summary>
-    /// <param name="managed">The managed exception to convert.</param>
+    /// <param name="value">The managed exception to convert.</param>
     /// <returns>The <c>HRESULT</c> for the exception.</returns>
     /// <remarks>This method also sets up <c>IErrorInfo</c> and <c>IRestrictedErrorInfo</c> for the input exception.</remarks>
-    public static HRESULT ConvertToUnmanaged(Exception managed)
+    public static HRESULT ConvertToUnmanaged(Exception value)
     {
-        RestrictedErrorInfo.SetErrorInfo(managed);
+        RestrictedErrorInfo.SetErrorInfo(value);
 
-        return RestrictedErrorInfo.GetHRForException(managed);
+        return RestrictedErrorInfo.GetHRForException(value);
     }
 
     /// <summary>
     /// Converts an unmanaged <c>HRESULT</c> to a managed exception.
     /// </summary>
-    /// <param name="unmanaged">The <c>HRESULT</c> to convert.</param>
+    /// <param name="value">The <c>HRESULT</c> to convert.</param>
     /// <returns>A managed exception.</returns>
-    public static Exception? ConvertToManaged(HRESULT unmanaged)
+    public static Exception? ConvertToManaged(HRESULT value)
     {
-        return RestrictedErrorInfo.GetExceptionForHR(unmanaged);
+        return RestrictedErrorInfo.GetExceptionForHR(value);
     }
 }
