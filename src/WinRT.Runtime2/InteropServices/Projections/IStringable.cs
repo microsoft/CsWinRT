@@ -32,7 +32,7 @@ internal static unsafe class IStringable
         {
             object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            // TODO
+            *value = HStringMarshaller.ConvertToUnmanaged(instance.ToString());
 
             return WellKnownErrorCodes.S_OK;
         }

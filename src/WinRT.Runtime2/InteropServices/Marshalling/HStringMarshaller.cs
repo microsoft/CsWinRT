@@ -4,7 +4,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
@@ -23,7 +22,6 @@ public ref struct HStringHeader
 /// <summary>
 /// A marshaller for the Windows Runtime <c>HSTRING</c> type.
 /// </summary>
-[SupportedOSPlatform("windows6.2")]
 public static unsafe class HStringMarshaller
 {
     /// <summary>

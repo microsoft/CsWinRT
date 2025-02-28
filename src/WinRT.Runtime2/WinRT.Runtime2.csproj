@@ -54,6 +54,16 @@
     -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+    
+  <!--
+    Emit the [SupportedOSVersion] attribute if needed. Note that the .NET SDK already emits this attribute
+    automatically, but only when targeting the Windows TFM. So here we're manually including it instead.
+  -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute">
+      <_Parameter1>windows6.2</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
   <!-- Import all .tt files with their generated .g.cs files (the T4 service is imported in the .props file) -->
   <ItemGroup>
