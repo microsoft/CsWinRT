@@ -8,12 +8,7 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices
 {
     /// <summary>IIDs for common COM/WinRT interfaces.</summary>
-#if EMBED
-    internal
-#else 
-    public
-#endif
-    static class WellKnownInterfaceIds
+    public static class WellKnownInterfaceIds
     {
         /// <summary>The IID for <c>IUnknown</c> (00000000-0000-0000-C000-000000000046).</summary>
         public static ref readonly Guid IID_IUnknown

@@ -12,12 +12,7 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices
 {
     /// <summary>IIDs for common COM/WinRT interfaces.</summary>
-#if EMBED
-    internal
-#else 
-    public
-#endif
-    static class WellKnownInterfaceIds
+    public static class WellKnownInterfaceIds
     {
 <#
 var entries = new (string Name, string IID, bool IsPublic)[]

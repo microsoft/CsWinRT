@@ -1,0 +1,28 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ output extension=".g.cs"#>
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace WindowsRuntime.InteropServices
+{
+    /// <summary><c>HRESULT</c>-s for common scenarios.</summary>
+    internal static class WellKnownErrorCodes
+    {
+<#
+var entries = new (string Name, uint Value)[]
+{
+    ("S_OK", 0x0),
+    ("E_POINTER", 0x80004003)
+};
+
+for (int i = 0; i < entries.Length; i++)
+{
+#>
+        public const HRESULT <#=entries[i].Name#> = unchecked((int)0x<#=entries[i].Value.ToString("X4")#>);
+<#
+}
+#>
+    }
+}

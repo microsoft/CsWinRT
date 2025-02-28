@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
 [assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
@@ -84,7 +85,7 @@ file static unsafe class TimeSpanReference
     /// </summary>
     public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedReferenceVtable(
         type: typeof(global::System.TimeSpan),
-        (delegate* unmanaged[MemberFunction]<void*, TimeSpan*, HRESULT>)&Value);
+        fpValue: (delegate* unmanaged[MemberFunction]<void*, TimeSpan*, HRESULT>)&Value);
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
@@ -92,7 +93,7 @@ file static unsafe class TimeSpanReference
     {
         if (result is null)
         {
-            return unchecked((int)0x80004003);
+            return WellKnownErrorCodes.E_POINTER;
         }
 
         try
@@ -101,15 +102,13 @@ file static unsafe class TimeSpanReference
 
             Unsafe.WriteUnaligned(result, TimeSpanMarshaller.ConvertToUnmanaged(unboxedValue));
 
-            return 0;
+            return WellKnownErrorCodes.S_OK;
         }
         catch (Exception e)
         {
             Unsafe.WriteUnaligned(result, default(TimeSpan));
 
-            // TODO: error info
-
-            return 0;
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }
 }
