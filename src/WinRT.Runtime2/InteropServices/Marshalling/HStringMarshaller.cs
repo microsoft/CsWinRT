@@ -60,13 +60,13 @@ public static unsafe class HStringMarshaller
     /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/winstring/nf-winstring-windowscreatestringreference#remarks"/>
     public static void ConvertToUnmanagedUnsafe(char* value, int? length, out HStringReference reference)
     {
+        Unsafe.SkipInit(out reference);
+
         // If the value is 'null', just return an empty 'HSTRING'. We don't need
         // to validate the length, as that is always expected to be 'null' as well
         // in this case. It's the caller's responsibility to keep it in sync.
         if (value is null)
         {
-            Unsafe.SkipInit(out reference._header);
-
             // We explicitly want to make sure the resulting 'HSTRING' is 'null'.
             // The header doesn't need to be initialized, as it won't be used.
             reference._hstring = (HSTRING)null;
@@ -74,17 +74,21 @@ public static unsafe class HStringMarshaller
             return;
         }
 
-        fixed (HSTRING_HEADER* headerPtr = &reference._header)
-        fixed (HSTRING* hstringPtr = &reference._hstring)
-        {
-            HRESULT hr = WindowsRuntimeImports.WindowsCreateStringReference(
-                sourceString: value,
-                length: (uint)length.GetValueOrDefault(),
-                hstringHeader: headerPtr,
-                @string: hstringPtr);
+        // We can avoid pinning here, as 'HStringReference' is a 'ref struct', which means
+        // it's guaranteed to be on the stack, and therefore pinned (as in, it can't move).
+        // This means that just taking the address is safe, and slightly more efficient.
+        HSTRING_HEADER* headerPtr = (HSTRING_HEADER*)Unsafe.AsPointer(ref reference._header);
+        HSTRING* hstringPtr = (HSTRING*)Unsafe.AsPointer(ref reference._hstring);
 
-            Marshal.ThrowExceptionForHR(hr);
-        }
+        // Create the fast-pass 'HSTRING' on the target location. The fact the resulting
+        // 'HSTRING' instance points to the header is why it should never be copied too.
+        HRESULT hr = WindowsRuntimeImports.WindowsCreateStringReference(
+            sourceString: value,
+            length: (uint)length.GetValueOrDefault(),
+            hstringHeader: headerPtr,
+            @string: hstringPtr);
+
+        Marshal.ThrowExceptionForHR(hr);
     }
 
     /// <summary>
