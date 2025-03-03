@@ -53,7 +53,7 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
         void* thisPtr,
         void* referenceTrackerPtr,
         in Guid iid,
-        CreateObjectReferenceFlags flags)
+        CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
         : base(thisPtr, referenceTrackerPtr, flags)
     {
         _contextCallbackPtr = WindowsRuntimeImports.CoGetObjectContext(in WellKnownInterfaceIds.IID_IContextCallback);
@@ -76,7 +76,7 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
         void* contextCallbackPtr,
         nuint contextToken,
         in Guid iid,
-        CreateObjectReferenceFlags flags)
+        CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
         : base(thisPtr, referenceTrackerPtr, flags)
     {
         _contextCallbackPtr = contextCallbackPtr;

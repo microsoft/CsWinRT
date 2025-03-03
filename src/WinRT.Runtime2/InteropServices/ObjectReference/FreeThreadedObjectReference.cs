@@ -12,7 +12,7 @@ internal sealed unsafe class FreeThreadedObjectReference : WindowsRuntimeObjectR
     public FreeThreadedObjectReference(
         void* thisPtr,
         void* referenceTrackerPtr,
-        CreateObjectReferenceFlags flags)
+        CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
         : base(thisPtr, referenceTrackerPtr, flags)
     {
     }

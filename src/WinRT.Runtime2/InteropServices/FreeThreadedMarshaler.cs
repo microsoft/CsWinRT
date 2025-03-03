@@ -106,7 +106,7 @@ internal sealed unsafe class FreeThreadedMarshaler
 
                 // The returned marshaler is documented to be free-threaded, so we can instantiate 'FreeThreadedObjectReference'
                 // directly. This also should allow inlining all virtual calls to the object in this class, in the stubs below.
-                FreeThreadedObjectReference objectReference = new(marshalerPtr, referenceTrackerPtr: null, CreateObjectReferenceFlags.None);
+                FreeThreadedObjectReference objectReference = new(marshalerPtr, referenceTrackerPtr: null);
 
                 return instanceForCurrentThread = new FreeThreadedMarshaler(objectReference);
             }

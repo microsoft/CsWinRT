@@ -43,7 +43,8 @@ internal static unsafe class AgileObjectReferenceExtensions
             return null;
         }
 
-        // We know the object is agile, so we can construct 'FreeThreadedObjectReference' directly
+        // We know the object is agile, so we can construct 'FreeThreadedObjectReference' directly.
+        // The interface is also 'IUnknown', as we asked for it, so no 'QueryInterface' is needed.
         return new FreeThreadedObjectReference(
             thisPtr: pAgileReference,
             referenceTrackerPtr: null,

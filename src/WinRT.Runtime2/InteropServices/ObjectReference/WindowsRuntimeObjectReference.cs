@@ -57,7 +57,7 @@ public abstract unsafe partial class WindowsRuntimeObjectReference : IDisposable
     private protected WindowsRuntimeObjectReference(
         void* thisPtr,
         void* referenceTrackerPtr,
-        CreateObjectReferenceFlags flags)
+        CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
     {
         ArgumentNullException.ThrowIfNull(thisPtr);
 
