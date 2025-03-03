@@ -3,4 +3,6 @@ CannotChangeAttribute : Attribute 'System.AttributeUsageAttribute' on 'WinRT.Gen
 CannotRemoveAttribute : Attribute 'System.ComponentModel.EditorBrowsableAttribute' exists on 'WinRT.WinRTExposedTypeAttribute' in the contract but not the implementation.
 ParameterNamesCannotChange : Parameter name on member 'WinRT.ActivationFactory.Get(System.String)' is 'activatableClassId' in the implementation but 'typeName' in the contract.
 ParameterNamesCannotChange : Parameter name on member 'WinRT.ActivationFactory.Get(System.String, System.Guid)' is 'activatableClassId' in the implementation but 'typeName' in the contract.
-Total Issues: 4
+CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableAttribute' exists on 'WinRT.EventRegistrationTokenTable<T>' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableContextAttribute' exists on 'WinRT.EventRegistrationTokenTable<T>' in the contract but not the implementation.
+Total Issues: 6
