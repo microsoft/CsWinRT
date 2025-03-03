@@ -36,6 +36,14 @@
 
     <!-- Enforce all code style rules during build (this replaces referencing Microsoft.CodeAnalysis.CSharp.CodeStyle) -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+      
+    <!--
+      Suppress ref safety warnings in unsafe contexts (see https://github.com/dotnet/csharplang/issues/6476).
+      This is used eg. to replace Unsafe.SizeOf<T>() calls with just sizeof(T), or to just use raw pointers to
+      reinterpret references to managed objects when it is safe to do so. The warnings are not necessary in this
+      context, since in order to use these APIs the caller already has to be in an unsafe context.
+    -->
+    <NoWarn>$(NoWarn);CS8500</NoWarn>
 
     <!--
       Enable the compiler strict mode (see https://www.meziantou.net/csharp-compiler-strict-mode.htm).
@@ -61,7 +69,7 @@
   -->
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute">
-      <_Parameter1>windows6.2</_Parameter1>
+      <_Parameter1>windows6.3</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 
