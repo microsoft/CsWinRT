@@ -14,6 +14,25 @@ internal partial class WindowsRuntimeImports
 {
     // Thin high-level abstractions (eg. 'TryGetProcAddress'/'GetProcAddress')
 
+    /// <inheritdoc cref="CoGetObjectContext(Guid*, void**)"/>
+    /// <param name="iid">The IID of an interface that is implemented on the context object.</param>
+    /// <returns>The pointer to the interface specified by <paramref name="iid"/> on the context object.</returns>
+    /// <exception cref="Exception">Thrown if getting the object context fails.</exception>
+    public static unsafe void* CoGetObjectContext(in Guid iid)
+    {
+        void* objectContext;
+        HRESULT hresult;
+
+        fixed (Guid* piid = &iid)
+        {
+            hresult = CoGetObjectContext(piid, &objectContext);
+        }
+
+        Marshal.ThrowExceptionForHR(hresult);
+
+        return objectContext;
+    }
+
     /// <inheritdoc cref="CoGetContextToken(nuint*)"/>
     /// <exception cref="Exception">Thrown if getting the context token fails.</exception>
     public static unsafe nuint CoGetContextToken()
