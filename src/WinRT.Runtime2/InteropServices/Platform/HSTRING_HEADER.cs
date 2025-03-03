@@ -4,7 +4,7 @@
 // Ported from https://github.com/terrafx/terrafx.interop.windows.
 // Defined in 'winrt/hstring.h' in the Windows SDK for Windows 10.0.26100.0.
 
-#pragma warning disable IDE1006
+#pragma warning disable CS0649, IDE1006
 
 namespace WindowsRuntime.InteropServices;
 
