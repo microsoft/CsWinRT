@@ -38,7 +38,12 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
     /// The lazy-initialized agile reference for the current object.
     /// </summary>
     /// <remarks>
-    /// Note: this object can be
+    /// Note: this object can be one of the following:
+    /// <list type="bullet">
+    ///   <item>If we haven't initialized this field yet, <see langword="null"/>.</item>
+    ///   <item>If we couldn't retrieved an agile reference, a dummy placeholder object to detect initialization.</item>
+    ///   <item>Otherwise, a <see cref="FreeThreadedObjectReference"/> instance.</item>
+    /// </list>
     /// </remarks>
     private volatile object? _agileReference;
 
@@ -190,6 +195,32 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
         return cachedReference is null
             ? GetThisPtrWithoutContextUnsafe()
             : cachedReference.GetThisPtrUnsafe();
+    }
+
+    /// <inheritdoc/>
+    private protected override void NativeReleaseWithContextUnsafe()
+    {
+        // Stub to do the native release without context (as this is invoked on the original context).
+        // This avoids the overhead of going through 'GetThisPtrWithContextUnsafe()' unnecessarily.
+        static void NativeReleaseWithoutContextUnsafe(object state)
+        {
+            ContextAwareObjectReference @this = Unsafe.As<ContextAwareObjectReference>(state);
+
+            @this.NativeReleaseWithoutContextUnsafe();
+        }
+
+        // Marshal the native release call to the original context
+        HRESULT hresult = ContextCallback.CallInContextUnsafe(
+            contextCallbackPtr: _contextCallbackPtr,
+            contextToken: _contextToken,
+            callback: &NativeReleaseWithoutContextUnsafe,
+            state: this);
+
+        // If the operation fails, just release without context as a best effort
+        if (hresult < 0)
+        {
+            base.NativeReleaseWithoutContextUnsafe();
+        }
     }
 
     /// <summary>

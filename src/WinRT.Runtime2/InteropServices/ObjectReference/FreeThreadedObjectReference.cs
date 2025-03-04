@@ -29,4 +29,10 @@ internal sealed unsafe class FreeThreadedObjectReference : WindowsRuntimeObjectR
         // This method is never called for free-threaded objects
         return null;
     }
+
+    /// <inheritdoc/>
+    private protected override void NativeReleaseWithContextUnsafe()
+    {
+        // This method is also never called
+    }
 }

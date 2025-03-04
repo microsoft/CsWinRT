@@ -309,7 +309,15 @@ public unsafe partial class WindowsRuntimeObjectReference
     {
         if (!_flags.HasFlag(CreateObjectReferenceFlags.PreventReleaseOnDispose))
         {
-            NativeReleaseUnsafe();
+            // Perform the appropriate optimized release, depending on whether we have context
+            if (GetType() == typeof(FreeThreadedObjectReference))
+            {
+                NativeReleaseWithoutContextUnsafe();
+            }
+            else
+            {
+                NativeReleaseWithContextUnsafe();
+            }
         }
 
         NativeReleaseTrackerSourceUnsafe();
@@ -318,23 +326,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     }
 
     /// <summary>
-    /// Releases the current object (both the original object and the reference tracker source).
-    /// </summary>
-    /// <remarks>
-    /// This method does not check for disposal before releasing the reference.
-    /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
-    /// </remarks>
-    private protected virtual void NativeReleaseUnsafe()
-    {
-        NativeReleaseFromTrackerSourceUnsafe();
-
-        void* thisPtr = GetThisPtrUnsafe();
-
-        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
-    }
-
-    /// <summary>
-    /// Releases the current object (both the original object and the reference tracker source), with no context.
+    /// Releases the current object (both the original object and the reference tracker source), without context.
     /// </summary>
     /// <remarks>
     /// This method does not check for disposal before releasing the reference.
@@ -350,13 +342,19 @@ public unsafe partial class WindowsRuntimeObjectReference
     }
 
     /// <summary>
+    /// Releases the current object (both the original object and the reference tracker source), with its associated context, if needed.
+    /// </summary>
+    /// <remarks><inheritdoc cref="NativeReleaseWithoutContextUnsafe" path="/summary/node()"/></remarks>
+    private protected abstract void NativeReleaseWithContextUnsafe();
+
+    /// <summary>
     /// Releases the reference from the tracker source.
     /// </summary>
     /// <remarks>
     /// This method does not check for disposal before releasing the reference.
     /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
     /// </remarks>
-    internal void NativeReleaseFromTrackerSourceUnsafe()
+    private void NativeReleaseFromTrackerSourceUnsafe()
     {
         void* referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
 
@@ -380,6 +378,12 @@ public unsafe partial class WindowsRuntimeObjectReference
 
         if (referenceTrackerPtr != null)
         {
+            // Unless we want to prevent the release from the tracker source (used in some XAML scenarios),
+            // here we're releasing the reference from the tracker source for a second time, other than the
+            // one in 'NativeReleaseFromTrackerSourceUnsafe()'. This is intentional, and not an oversight.
+            // The reason is that there can be up to two 'QueryInterface' calls done on the wrapped objects:
+            // one for 'thisPtr', and one for 'referenceTrackerPtr'. Each of those needs to have an associated
+            // 'AddRefFromTrackerSource' call on the reference tracker, so that's up to two in total.
             if (!_flags.HasFlag(CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose))
             {
                 _ = IReferenceTrackerVftbl.ReleaseFromTrackerSourceUnsafe(referenceTrackerPtr);
