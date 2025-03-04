@@ -2454,12 +2454,9 @@ namespace Generator
                 }
 
                 AddDefaultVersionAttribute(typeDefinitionHandle, GetVersion(classSymbol, true));
-                // bookmarking
-                Logger.Log("HelloWorld: the interfaceName is " + interfaceName);
-                Logger.Log("HelloWorld: Class Symbol is " + classSymbol.ToString());
+
                 if (!GetProjectionsDefaultInterfaceGuid(classSymbol, typeDefinitionHandle, classDeclaration))
                 {
-                    Logger.Log("adding a new guid attribute");
                     AddGuidAttribute(typeDefinitionHandle, interfaceName);
                 }
 
@@ -2726,40 +2723,26 @@ namespace Generator
 
         public bool GetProjectionsDefaultInterfaceGuid(INamedTypeSymbol symbol, TypeDefinitionHandle handle, TypeDeclaration classDeclaration)
         {
-            Logger.Log("HelloWorld: Start of our logic");
-            Logger.Log("handle is " + handle.ToString());
             Guid guid = new Guid();
 
             var baseAbstractClass = symbol.BaseType;
             if (baseAbstractClass != null && baseAbstractClass.IsAbstract && GeneratorHelper.IsWinRTType(baseAbstractClass, mapper))
             {
-                Logger.Log("HelloWorld: Inside the flag condition");
-                Logger.Log("The abstract base class is " + baseAbstractClass);
-
                 if (classDeclaration.DefaultInterface != null)
                 {
-                    Logger.Log("HelloWorld: There is a default class class " + classDeclaration.DefaultInterface);
-
                     // Get the guid of the projections class 
                     var projectedAttr = baseAbstractClass.BaseType.GetAttributes().FirstOrDefault(attr => attr.AttributeClass?.Name == "ProjectedRuntimeClassAttribute");
 
                     if (projectedAttr != null && projectedAttr.ConstructorArguments.Length == 1 && projectedAttr.ConstructorArguments[0].Value is INamedTypeSymbol projectedType)
                     {
-                        Logger.Log("HelloWorld: There is an attribute named ProjectRuntimeClass");
                         projectedType.TryGetAttributeWithType(Model.Compilation.GetTypeByMetadataName("System.Runtime.InteropServices.GuidAttribute"), out AttributeData guidAttr);
                         if (guidAttr != null && guidAttr.ConstructorArguments.Length == 1)
                         {
-                            Logger.Log("HelloWorld: There is an attribute named GUID. Just added the GUID.");
                             string guidString = guidAttr.ConstructorArguments[0].Value as string;
-                            Logger.Log("The guid is " + guidString);
                             if (!string.IsNullOrEmpty(guidString) && Guid.TryParse(guidString, out Guid parsedGuid))
                             {
-                                Logger.Log("The guid is parsed");
                                 guid = parsedGuid;
-
                                 AddGuidAttribute(handle, guid);
-                                Logger.Log("The guid is added");
-
                                 return true;
                             }
                         }
