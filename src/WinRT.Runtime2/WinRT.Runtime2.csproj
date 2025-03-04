@@ -86,6 +86,13 @@
     </Compile>
   </ItemGroup>
 
+  <!-- Group all 'WellKnownErrorCodes' files -->
+  <ItemGroup>
+    <Compile Update="InteropServices\WellKnownErrorCodes.cs">
+      <DependentUpon>InteropServices\WellKnownErrorCodes.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
   <!-- Global usings for type aliases used within the library -->
   <ItemGroup>
     <Using Include="System.Int32" Alias="HRESULT" />
