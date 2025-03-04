@@ -20,5 +20,5 @@ public interface IWeakReference
     /// <param name="interfaceId">A reference to the interface identifier (IID) of the object.</param>
     /// <returns>A strong reference to the object.</returns>
     /// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nf-weakreference-iweakreference-resolve(refiid_iinspectable)"/>
-    WindowsRuntimeObjectReference Resolve(in Guid interfaceId);
+    WindowsRuntimeObjectReference? Resolve(in Guid interfaceId);
 }
