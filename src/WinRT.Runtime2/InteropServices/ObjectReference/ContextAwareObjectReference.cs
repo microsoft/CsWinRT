@@ -223,6 +223,41 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
         }
     }
 
+    /// <inheritdoc/>
+    private protected override int DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference)
+    {
+        objectReference = null;
+
+        AddRefUnsafe();
+
+        try
+        {
+            HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(GetThisPtrUnsafe(), in iid, out void* targetObject);
+
+            if (WellKnownErrorCodes.Succeeded(hresult))
+            {
+                if (IsAggregated)
+                {
+                    _ = IUnknownVftbl.ReleaseUnsafe(targetObject);
+                }
+
+                NativeAddRefFromTrackerSourceUnsafe();
+
+                objectReference = new ContextAwareObjectReference(
+                    thisPtr: targetObject,
+                    referenceTrackerPtr: GetReferenceTrackerPtrUnsafe(),
+                    iid: in iid,
+                    flags: CopyFlags(CreateObjectReferenceFlags.IsAggregated | CreateObjectReferenceFlags.PreventReleaseOnDispose));
+            }
+
+            return hresult;
+        }
+        finally
+        {
+            ReleaseUnsafe();
+        }
+    }
+
     /// <summary>
     /// A factory for creating context-specific object references.
     /// </summary>

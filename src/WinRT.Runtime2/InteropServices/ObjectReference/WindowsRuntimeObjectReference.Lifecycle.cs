@@ -307,7 +307,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </remarks>
     private void NativeDisposeUnsafe()
     {
-        if (!_flags.HasFlag(CreateObjectReferenceFlags.PreventReleaseOnDispose))
+        if (!PreventReleaseOnDispose)
         {
             // Perform the appropriate optimized release, depending on whether we have context
             if (GetType() == typeof(FreeThreadedObjectReference))
@@ -384,7 +384,7 @@ public unsafe partial class WindowsRuntimeObjectReference
             // The reason is that there can be up to two 'QueryInterface' calls done on the wrapped objects:
             // one for 'thisPtr', and one for 'referenceTrackerPtr'. Each of those needs to have an associated
             // 'AddRefFromTrackerSource' call on the reference tracker, so that's up to two in total.
-            if (!_flags.HasFlag(CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose))
+            if (!PreventReleaseFromTrackerSourceOnDispose)
             {
                 _ = IReferenceTrackerVftbl.ReleaseFromTrackerSourceUnsafe(referenceTrackerPtr);
             }

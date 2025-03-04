@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -21,6 +23,40 @@ internal sealed unsafe class FreeThreadedObjectReference : WindowsRuntimeObjectR
     private protected override bool DerivedIsInCurrentContext()
     {
         return true;
+    }
+
+    /// <inheritdoc/>
+    private protected override int DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference)
+    {
+        objectReference = null;
+
+        AddRefUnsafe();
+
+        try
+        {
+            HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(GetThisPtrUnsafe(), in iid, out void* targetObject);
+
+            if (WellKnownErrorCodes.Succeeded(hresult))
+            {
+                if (IsAggregated)
+                {
+                    _ = IUnknownVftbl.ReleaseUnsafe(targetObject);
+                }
+
+                NativeAddRefFromTrackerSourceUnsafe();
+
+                objectReference = new FreeThreadedObjectReference(
+                    thisPtr: targetObject,
+                    referenceTrackerPtr: GetReferenceTrackerPtrUnsafe(),
+                    flags: CopyFlags(CreateObjectReferenceFlags.IsAggregated | CreateObjectReferenceFlags.PreventReleaseOnDispose));
+            }
+
+            return hresult;
+        }
+        finally
+        {
+            ReleaseUnsafe();
+        }
     }
 
     /// <inheritdoc/>

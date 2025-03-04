@@ -56,7 +56,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </para>
     /// </remarks>
     /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> operation fails.</exception>
-    public static WindowsRuntimeObjectReference? As(void* thisPtr, in Guid iid)
+    public static WindowsRuntimeObjectReference? AsUnsafe(void* thisPtr, in Guid iid)
     {
         if (thisPtr is null)
         {
