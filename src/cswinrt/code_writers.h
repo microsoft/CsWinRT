@@ -8732,7 +8732,7 @@ bind_list<write_projection_parameter>(", ", signature.params()));
         auto abstract_type_name = "Abstract" + type_name;
         w.write(R"(
 %%
-% % class % : % {
+% % class % : %, ICustomQueryInterface {
 )",
 "[global::WinRT.WindowsRuntimeType]",
 bind<write_type_custom_attributes>(type, true),
@@ -8767,8 +8767,15 @@ public %() : base(WinRT.DerivedComposed.Instance)
 abstract_type_name
 );
         }
-                
 
+        w.write(R"(
+global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
+{
+    ppv = IntPtr.Zero;
+    return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
+}
+)");
+                
         for (auto&& ii : type.InterfaceImpl()) 
         {
             auto is_overridable = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");

@@ -2726,36 +2726,12 @@ namespace Generator
 
         public bool GetProjectionsDefaultInterfaceGuid(INamedTypeSymbol symbol, TypeDefinitionHandle handle, TypeDeclaration classDeclaration)
         {
-            bool IsWinRTType(ISymbol symbol, TypeMapper mapper)
-            {
-                if (symbol is INamedTypeSymbol namedType)
-                {
-                    if (namedType.TypeKind == TypeKind.Interface)
-                    {
-                        // Interfaces which are allowed to be implemented on authored types but
-                        // aren't WinRT interfaces.
-                        return !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(namedType));
-                    }
-
-                    return namedType.SpecialType != SpecialType.System_Object &&
-                           namedType.SpecialType != SpecialType.System_Enum &&
-                           namedType.SpecialType != SpecialType.System_ValueType &&
-                           namedType.SpecialType != SpecialType.System_Delegate &&
-                           namedType.SpecialType != SpecialType.System_MulticastDelegate;
-                }
-
-                // In an authoring component, diagnostics prevents you from using non-WinRT types
-                // by the time we get to here.
-                return true;
-            }
-
-            
             Logger.Log("HelloWorld: Start of our logic");
             Logger.Log("handle is " + handle.ToString());
             Guid guid = new Guid();
 
             var baseAbstractClass = symbol.BaseType;
-            if (baseAbstractClass != null && baseAbstractClass.IsAbstract && IsWinRTType(baseAbstractClass, mapper))
+            if (baseAbstractClass != null && baseAbstractClass.IsAbstract && GeneratorHelper.IsWinRTType(baseAbstractClass, mapper))
             {
                 Logger.Log("HelloWorld: Inside the flag condition");
                 Logger.Log("The abstract base class is " + baseAbstractClass);
