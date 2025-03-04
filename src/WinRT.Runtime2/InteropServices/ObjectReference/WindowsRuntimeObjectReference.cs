@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -101,6 +102,44 @@ public abstract unsafe partial class WindowsRuntimeObjectReference : IDisposable
         // This also allows us to do the same optimization we do for 'IsFreeThreaded'
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => GetType() == typeof(FreeThreadedObjectReference) || DerivedIsInCurrentContext();
+    }
+
+    /// <summary>
+    /// Gets whether <see cref="CreateObjectReferenceFlags.IsAggregated"/> is set for the current object reference.
+    /// </summary>
+    internal bool IsAggregated
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _flags.HasFlag(CreateObjectReferenceFlags.IsAggregated);
+    }
+
+    /// <summary>
+    /// Gets whether <see cref="CreateObjectReferenceFlags.PreventReleaseOnDispose"/> is set for the current object reference.
+    /// </summary>
+    internal bool PreventReleaseOnDispose
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _flags.HasFlag(CreateObjectReferenceFlags.PreventReleaseOnDispose);
+    }
+
+    /// <summary>
+    /// Gets whether <see cref="CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose"/> is set for the current object reference.
+    /// </summary>
+    internal bool PreventReleaseFromTrackerSourceOnDispose
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _flags.HasFlag(CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose);
+    }
+
+    /// <summary>
+    /// Copies a selection of flags from the current instance.
+    /// </summary>
+    /// <param name="requestedFlags">The flags to copy.</param>
+    /// <returns>The requested flags.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal CreateObjectReferenceFlags CopyFlags(CreateObjectReferenceFlags requestedFlags)
+    {
+        return _flags & requestedFlags;
     }
 
     /// <summary>
