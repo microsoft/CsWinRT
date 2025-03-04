@@ -11,6 +11,14 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 internal static unsafe class AgileObjectReferenceExtensions
 {
+    /// <summary>
+    /// Tries to create an agile reference from an input <see cref="WindowsRuntimeObjectReference"/> instance.
+    /// </summary>
+    /// <param name="objectReference">The input <see cref="WindowsRuntimeObjectReference"/> instance.</param>
+    /// <returns>An agile reference for <paramref name="objectReference"/>.</returns>
+    /// <remarks>
+    /// This method will always use <c>IUnknown</c> as the IID to create the returned agile reference.
+    /// </remarks>
     public static WindowsRuntimeObjectReference? AsAgileUnsafe(this WindowsRuntimeObjectReference objectReference)
     {
         void* pAgileReference;
@@ -51,7 +59,13 @@ internal static unsafe class AgileObjectReferenceExtensions
             flags: CreateObjectReferenceFlags.None);
     }
 
-    public static WindowsRuntimeObjectReference FromAgileUnsafe(this WindowsRuntimeObjectReference objectReference)
+    /// <summary>
+    /// Creates a non-agile reference with a specified IID from an agile reference.
+    /// </summary>
+    /// <param name="objectReference">The source agile reference (this is expected to be from <see cref="AsAgileUnsafe"/>).</param>
+    /// <param name="iid">The IID to use to create the resulting non-agile reference.</param>
+    /// <returns>The resulting non-agile reference resolved from <paramref name="objectReference"/>.</returns>
+    public static WindowsRuntimeObjectReference FromAgileUnsafe(this WindowsRuntimeObjectReference objectReference, in Guid iid)
     {
         void* pObjectReference;
         HRESULT hresult;
@@ -61,7 +75,7 @@ internal static unsafe class AgileObjectReferenceExtensions
         try
         {
             // Resolve the original object from the agile reference
-            fixed (Guid* riid = &WellKnownInterfaceIds.IID_IUnknown)
+            fixed (Guid* riid = &iid)
             {
                 hresult = IAgileReferenceVftbl.ResolveUnsafe(
                     thisPtr: objectReference.GetThisPtrUnsafe(),
@@ -76,11 +90,7 @@ internal static unsafe class AgileObjectReferenceExtensions
 
         Marshal.ThrowExceptionForHR(hresult);
 
-        // If 'Resolve' succeeded, the resulting object is guaranteed to be not 'null'.
-        // Increment its reference count before wrapping it in a managed object reference.
-        _ = IUnknownVftbl.AddRefUnsafe(pObjectReference);
-
-        // TODO
-        return null!;
+        // If 'Resolve' succeeded, the resulting object is guaranteed to be not 'null'
+        return WindowsRuntimeObjectReference.CreateUnsafe(pObjectReference, in iid)!;
     }
 }

@@ -158,6 +158,13 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
         }
     }
 
+    /// <summary>
+    /// Gets the <see cref="WindowsRuntimeObjectReference"/> instance for the current context.
+    /// </summary>
+    /// <returns>Tthe <see cref="WindowsRuntimeObjectReference"/> instance for the current context.</returns>
+    /// <remarks>
+    /// The resulting object reference will be <see langword="null"/> if the current context is the same as the original context.
+    /// </remarks>
     private WindowsRuntimeObjectReference? GetObjectReferenceForCurrentContext()
     {
         nuint currentContext = WindowsRuntimeImports.CoGetContextToken();
@@ -204,9 +211,6 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
         /// <summary>
         /// A stub to create a new object reference for a given context.
         /// </summary>
-        /// <param name="_"></param>
-        /// <param name="state"></param>
-        /// <returns></returns>
         private static WindowsRuntimeObjectReference? CreateForCurrentContext(nuint _, ContextAwareObjectReference state)
         {
             WindowsRuntimeObjectReference? agileReference = state.AgileReference;
@@ -218,10 +222,10 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
                 return null;
             }
 
+            // Try to resolve an object reference for the current context, from the retrieved agile reference
             try
             {
-                // TODO
-                return null;
+                return agileReference.FromAgileUnsafe(in state._iid);
             }
             catch
             {
