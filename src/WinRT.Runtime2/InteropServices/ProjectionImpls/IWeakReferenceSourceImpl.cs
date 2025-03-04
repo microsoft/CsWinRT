@@ -9,40 +9,40 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// The <c>IWeakReference</c> implementation for managed types.
+/// The <c>IWeakReferenceSource</c> implementation for managed types.
 /// </summary>
-/// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreference"/>
-internal static unsafe class IWeakReference
+/// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreferencesource"/>
+internal static unsafe class IWeakReferenceSourceImpl
 {
     /// <summary>
-    /// The vtable for the <c>IWeakReference</c> implementation.
+    /// The vtable for the <c>IWeakReferenceSource</c> implementation.
     /// </summary>
     public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
 
     /// <summary>
-    /// Computes the <c>IWeakReference</c> implementation vtable.
+    /// Computes the <c>IWeakReferenceSource</c> implementation vtable.
     /// </summary>
     private static nint GetAbiToProjectionVftablePtr()
     {
-        IWeakReferenceVftbl* vftbl = (IWeakReferenceVftbl*)WindowsRuntimeHelpers.AllocateTypeAssociatedUnknownVtable(typeof(IWeakReference), 4);
+        IWeakReferenceSourceVftbl* vftbl = (IWeakReferenceSourceVftbl*)WindowsRuntimeHelpers.AllocateTypeAssociatedUnknownVtable(typeof(IWeakReferenceSourceImpl), 4);
 
-        vftbl->Resolve = &Resolve;
+        vftbl->GetWeakReference = &GetWeakReference;
 
         return (nint)vftbl;
     }
 
-    /// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nf-weakreference-iweakreference-resolve(refiid_iinspectable)"/>
+    /// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nf-weakreference-iweakreferencesource-getweakreference"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT Resolve(void* thisPtr, Guid* riid, void** objectReference)
+    private static HRESULT GetWeakReference(void* thisPtr, void** weakReference)
     {
-        *objectReference = null;
+        *weakReference = null;
 
         try
         {
             object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             // TODO
-            *objectReference = null;
+            *weakReference = null;
 
             return WellKnownErrorCodes.S_OK;
         }

@@ -13,13 +13,13 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IStringable</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/windows.foundation/nn-windows-foundation-istringable"/>
-internal static unsafe class IStringable
+internal static unsafe class IStringableImpl
 {
     /// <summary>
     /// The vtable for the <c>IStringable</c> implementation.
     /// </summary>
     public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedInspectableVtableUnsafe(
-        type: typeof(IStringable),
+        type: typeof(IStringableImpl),
         fpEntry6: (delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT>)&ToString);
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/windows.foundation/nf-windows-foundation-istringable-tostring"/>

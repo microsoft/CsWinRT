@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IInspectable</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/nn-inspectable-iinspectable"/>
-internal static unsafe class IInspectable
+internal static unsafe class IInspectableImpl
 {
     /// <summary>
     /// The vtable for the <c>IInspectable</c> implementation.
@@ -24,10 +24,10 @@ internal static unsafe class IInspectable
     /// </summary>
     private static nint GetAbiToProjectionVftablePtr()
     {
-        IInspectableVftbl* vftbl = (IInspectableVftbl*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IInspectable), sizeof(IInspectableVftbl));
+        IInspectableVftbl* vftbl = (IInspectableVftbl*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IInspectableImpl), sizeof(IInspectableVftbl));
 
         // The 'IUnknown' implementation is the same one we already retrieved from the runtime
-        *(IUnknownVftbl*)vftbl = *(IUnknownVftbl*)IUnknown.AbiToProjectionVftablePtr;
+        *(IUnknownVftbl*)vftbl = *(IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
 
         // Populate the rest of the 'IInspectable' methods
         vftbl->GetIids = &GetIids;

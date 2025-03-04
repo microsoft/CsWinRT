@@ -11,7 +11,7 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IMarshal</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-imarshal"/>
-internal static unsafe class IMarshal
+internal static unsafe class IMarshalImpl
 {
     /// <summary>
     /// The vtable for the <c>IUnknown</c> implementation.
@@ -23,7 +23,7 @@ internal static unsafe class IMarshal
     /// </summary>
     private static nint GetAbiToProjectionVftablePtr()
     {
-        IMarshalVftbl* vftbl = (IMarshalVftbl*)WindowsRuntimeHelpers.AllocateTypeAssociatedUnknownVtable(typeof(IMarshal), 9);
+        IMarshalVftbl* vftbl = (IMarshalVftbl*)WindowsRuntimeHelpers.AllocateTypeAssociatedUnknownVtable(typeof(IMarshalImpl), 9);
 
         vftbl->GetUnmarshalClass = &GetUnmarshalClass;
         vftbl->GetMarshalSizeMax = &GetMarshalSizeMax;

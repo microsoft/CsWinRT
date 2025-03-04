@@ -27,7 +27,7 @@ public static unsafe class WindowsRuntimeHelpers
 
         void** vftbl = (void**)RuntimeHelpers.AllocateTypeAssociatedMemory(type, sizeof(void*) * count);
 
-        Unsafe.Copy(vftbl, in *(IUnknownVftbl*)IUnknown.AbiToProjectionVftablePtr);
+        Unsafe.Copy(vftbl, in *(IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr);
 
         return vftbl;
     }
@@ -46,7 +46,7 @@ public static unsafe class WindowsRuntimeHelpers
 
         void** vftbl = (void**)RuntimeHelpers.AllocateTypeAssociatedMemory(type, sizeof(void*) * count);
 
-        Unsafe.Copy(vftbl, in *(IInspectableVftbl*)IInspectable.AbiToProjectionVftablePtr);
+        Unsafe.Copy(vftbl, in *(IInspectableVftbl*)IInspectableImpl.AbiToProjectionVftablePtr);
 
         return vftbl;
     }
@@ -81,7 +81,7 @@ public static unsafe class WindowsRuntimeHelpers
     public static bool IsReferenceToManagedObject(void* unknown)
     {
         IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)(void**)unknown;
-        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknown.AbiToProjectionVftablePtr;
+        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
 
         return
             unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface &&

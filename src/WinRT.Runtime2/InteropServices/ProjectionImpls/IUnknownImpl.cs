@@ -10,7 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IUnknown</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/unknwn/nn-unknwn-iunknown"/>
-internal static unsafe class IUnknown
+internal static unsafe class IUnknownImpl
 {
     /// <summary>
     /// The vtable for the <c>IUnknown</c> implementation.
@@ -22,7 +22,7 @@ internal static unsafe class IUnknown
     /// </summary>
     private static nint GetAbiToProjectionVftablePtr()
     {
-        IUnknownVftbl* vftbl = (IUnknownVftbl*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IUnknown), sizeof(IUnknownVftbl));
+        IUnknownVftbl* vftbl = (IUnknownVftbl*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IUnknownImpl), sizeof(IUnknownVftbl));
 
         // Get the 'IUnknown' implementation from the runtime. This is implemented in native code,
         // so that it can work correctly even when used from native code during a GC (eg. from XAML).
