@@ -9,9 +9,9 @@ using System.Threading;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// A <see cref="WindowsRuntimeObjectReference"/> implementation tied to a specific context.
+/// A base <see cref="WindowsRuntimeObjectReference"/> implementation tied to a specific context.
 /// </summary>
-internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectReference
+internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjectReference
 {
     /// <summary>
     /// The context callback instance used to marshal the target COM object across different contexts.
@@ -23,11 +23,6 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
     /// The object context instance for the current context.
     /// </summary>
     private readonly nuint _contextToken;
-
-    /// <summary>
-    /// The interface id for the wrapped native object (also used to resolve agile references).
-    /// </summary>
-    private readonly Guid _iid;
 
     /// <summary>
     /// The lazy-initialized cache of context-specific object references.
@@ -53,17 +48,12 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
     /// <param name="thisPtr"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='thisPtr']/node()"/></param>
     /// <param name="referenceTrackerPtr"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='referenceTrackerPtr']/node()"/></param>
     /// <param name="flags"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='flags']/node()"/></param>
-    /// <param name="iid"><inheritdoc cref="_iid" path="/summary/node()"/></param>
-    public ContextAwareObjectReference(
+    protected ContextAwareObjectReference(
         void* thisPtr,
         void* referenceTrackerPtr,
-        in Guid iid,
         CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
         : base(thisPtr, referenceTrackerPtr, flags)
     {
-        _contextCallbackPtr = WindowsRuntimeImports.CoGetObjectContext(in WellKnownInterfaceIds.IID_IContextCallback);
-        _contextToken = WindowsRuntimeImports.CoGetContextToken();
-        _iid = iid;
     }
 
     /// <summary>
@@ -74,19 +64,16 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
     /// <param name="flags"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='flags']/node()"/></param>
     /// <param name="contextCallbackPtr"><inheritdoc cref="_contextCallbackPtr" path="/summary/node()"/></param>
     /// <param name="contextToken"><inheritdoc cref="_contextToken" path="/summary/node()"/></param>
-    /// <param name="iid"><inheritdoc cref="_iid" path="/summary/node()"/></param>
-    public ContextAwareObjectReference(
+    protected ContextAwareObjectReference(
         void* thisPtr,
         void* referenceTrackerPtr,
         void* contextCallbackPtr,
         nuint contextToken,
-        in Guid iid,
         CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
         : base(thisPtr, referenceTrackerPtr, flags)
     {
         _contextCallbackPtr = contextCallbackPtr;
         _contextToken = contextToken;
-        _iid = iid;
     }
 
     /// <summary>
@@ -180,13 +167,13 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
     }
 
     /// <inheritdoc/>
-    private protected override bool DerivedIsInCurrentContext()
+    private protected sealed override bool DerivedIsInCurrentContext()
     {
         return _contextToken == 0 || _contextToken == WindowsRuntimeImports.CoGetContextToken();
     }
 
     /// <inheritdoc/>
-    private protected override unsafe void* GetThisPtrWithContextUnsafe()
+    private protected sealed override void* GetThisPtrWithContextUnsafe()
     {
         WindowsRuntimeObjectReference? cachedReference = GetObjectReferenceForCurrentContext();
 
@@ -198,7 +185,7 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
     }
 
     /// <inheritdoc/>
-    private protected override void NativeReleaseWithContextUnsafe()
+    private protected sealed override void NativeReleaseWithContextUnsafe()
     {
         // Stub to do the native release without context (as this is invoked on the original context).
         // This avoids the overhead of going through 'GetThisPtrWithContextUnsafe()' unnecessarily.
@@ -224,7 +211,7 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
     }
 
     /// <inheritdoc/>
-    private protected override int DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference)
+    private protected sealed override int DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference)
     {
         objectReference = null;
 
@@ -243,11 +230,17 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
 
                 NativeAddRefFromTrackerSourceUnsafe();
 
-                objectReference = new ContextAwareObjectReference(
-                    thisPtr: targetObject,
-                    referenceTrackerPtr: GetReferenceTrackerPtrUnsafe(),
-                    iid: in iid,
-                    flags: CopyFlags(CreateObjectReferenceFlags.IsAggregated | CreateObjectReferenceFlags.PreventReleaseOnDispose));
+                // Create the specialized object reference if the target interface is 'IInspectable'
+                objectReference = iid == WellKnownInterfaceIds.IID_IInspectable
+                    ? new ContextAwareInspectableObjectReference(
+                        thisPtr: targetObject,
+                        referenceTrackerPtr: GetReferenceTrackerPtrUnsafe(),
+                        flags: CopyFlags(CreateObjectReferenceFlags.IsAggregated | CreateObjectReferenceFlags.PreventReleaseOnDispose))
+                    : new ContextAwareInterfaceObjectReference(
+                        thisPtr: targetObject,
+                        referenceTrackerPtr: GetReferenceTrackerPtrUnsafe(),
+                        iid: in iid,
+                        flags: CopyFlags(CreateObjectReferenceFlags.IsAggregated | CreateObjectReferenceFlags.PreventReleaseOnDispose));
             }
 
             return hresult;
@@ -291,7 +284,14 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
             // Try to resolve an object reference for the current context, from the retrieved agile reference
             try
             {
-                return agileReference.FromAgileUnsafe(in state._iid);
+                // Check if we have a 'ContextAwareInspectableObjectReference' instance, in which case the IID should
+                // be hardcoded to 'Inspectable'. Otherwise, we must have a 'ContextAwareInterfaceObjectReference'
+                // instance, which means it is safe to do a fast cast to it to retrieve the interface id to use.
+                ref readonly Guid iid = ref state.GetType() == typeof(ContextAwareInspectableObjectReference)
+                    ? ref WellKnownInterfaceIds.IID_IInspectable
+                    : ref Unsafe.As<ContextAwareInterfaceObjectReference>(state).Iid;
+
+                return agileReference.FromAgileUnsafe(in iid);
             }
             catch
             {
@@ -305,7 +305,7 @@ internal sealed unsafe class ContextAwareObjectReference : WindowsRuntimeObjectR
 /// <summary>
 /// A placeholder object for <see cref="ContextAwareObjectReference.AgileReference"/>.
 /// </summary>
-file static unsafe class PlaceholderNullAgileReference
+file static class PlaceholderNullAgileReference
 {
     /// <summary>
     /// The shared placeholder instance.

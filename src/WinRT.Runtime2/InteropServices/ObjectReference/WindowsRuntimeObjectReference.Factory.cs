@@ -35,10 +35,15 @@ public unsafe partial class WindowsRuntimeObjectReference
         _ = IUnknownVftbl.AddRefUnsafe(thisPtr);
 
         // If the object is agile, avoid all the context tracking overhead.
-        // Otherwise, use a context aware object reference to track it.
-        return ComObjectHelpers.IsFreeThreadedUnsafe(thisPtr)
-            ? new FreeThreadedObjectReference(thisPtr, referenceTrackerPtr: null)
-            : new ContextAwareObjectReference(thisPtr, referenceTrackerPtr: null, iid: in iid);
+        if (ComObjectHelpers.IsFreeThreadedUnsafe(thisPtr))
+        {
+            return new FreeThreadedObjectReference(thisPtr, referenceTrackerPtr: null);
+        }
+
+        // Otherwise, use a context aware object reference to track it, with the specialized instance
+        return iid == WellKnownInterfaceIds.IID_IInspectable
+            ? new ContextAwareInspectableObjectReference(thisPtr, referenceTrackerPtr: null)
+            : new ContextAwareInterfaceObjectReference(thisPtr, referenceTrackerPtr: null, iid: in iid);
     }
 
     /// <summary>
@@ -69,9 +74,15 @@ public unsafe partial class WindowsRuntimeObjectReference
         Marshal.ThrowExceptionForHR(hresult);
 
         // Now we can safely wrap it (no need to increment its reference count here)
-        return ComObjectHelpers.IsFreeThreadedUnsafe(thisPtr)
-            ? new FreeThreadedObjectReference(qiObject, referenceTrackerPtr: null)
-            : new ContextAwareObjectReference(qiObject, referenceTrackerPtr: null, iid: in iid);
+        if (ComObjectHelpers.IsFreeThreadedUnsafe(qiObject))
+        {
+            return new FreeThreadedObjectReference(qiObject, referenceTrackerPtr: null);
+        }
+
+        // Same optimization as above for context aware object references
+        return iid == WellKnownInterfaceIds.IID_IInspectable
+            ? new ContextAwareInspectableObjectReference(qiObject, referenceTrackerPtr: null)
+            : new ContextAwareInterfaceObjectReference(qiObject, referenceTrackerPtr: null, iid: in iid);
     }
 
     /// <summary>
@@ -96,10 +107,20 @@ public unsafe partial class WindowsRuntimeObjectReference
             return null;
         }
 
-        // Create the appropriate wrapping object reference (see notes above)
-        WindowsRuntimeObjectReference objectReference = ComObjectHelpers.IsFreeThreadedUnsafe(thisPtr)
-            ? new FreeThreadedObjectReference(thisPtr, referenceTrackerPtr: null)
-            : new ContextAwareObjectReference(thisPtr, referenceTrackerPtr: null, iid: in iid);
+        WindowsRuntimeObjectReference objectReference;
+
+        // Special case for free-threaded object references (see notes above)
+        if (ComObjectHelpers.IsFreeThreadedUnsafe(thisPtr))
+        {
+            objectReference = new FreeThreadedObjectReference(thisPtr, referenceTrackerPtr: null);
+        }
+        else
+        {
+            // Once again, same optimization as above for context aware object references
+            objectReference = iid == WellKnownInterfaceIds.IID_IInspectable
+                ? new ContextAwareInspectableObjectReference(thisPtr, referenceTrackerPtr: null)
+                : new ContextAwareInterfaceObjectReference(thisPtr, referenceTrackerPtr: null, iid: in iid);
+        }
 
         // We transferred ownership of the input pointer, so clear it to avoid double-free issues
         thisPtr = null;
