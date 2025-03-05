@@ -29,20 +29,69 @@ public abstract class WindowsRuntimeObject :
     private volatile ConcurrentDictionary<RuntimeTypeHandle, object>? _typeHandleCache;
 
     /// <summary>
+    /// The lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
+    /// </summary>
+    /// <remarks>
+    /// This is used when marshalling projected types as 'object'. Having a dedicated field to be able
+    /// to do this efficiently is worth it, as in some important scenarios (eg. XAML) it is extremely
+    /// common to have Windows Runtime APIs just taking 'object' as a parameter. We would not want
+    /// to constantly have to do 'QueryInterface' calls in those cases in each marshalling stub.
+    /// </remarks>
+    private volatile WindowsRuntimeObjectReference? _inspectableObjectReference;
+
+    /// <summary>
     /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="nativeObject">The inner Windows Runtime object to wrap in the current instance.</param>
-    protected WindowsRuntimeObject(WindowsRuntimeObjectReference nativeObject)
+    /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
+    protected WindowsRuntimeObject(WindowsRuntimeObjectReference nativeObjectReference)
     {
-        ArgumentNullException.ThrowIfNull(nativeObject);
+        ArgumentNullException.ThrowIfNull(nativeObjectReference);
 
-        NativeObject = nativeObject;
+        NativeObjectReference = nativeObjectReference;
+    }
+
+    /// <summary>
+    /// Gets the inner Windows Runtime object reference for the current instance.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected internal WindowsRuntimeObjectReference NativeObjectReference { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the current instance has an unwrappable native object reference.
+    /// </summary>
+    /// <remarks>
+    /// This value is <see langword="false"/> in aggregation scenarios, as the instance that should be marshalled
+    /// to native is the derived managed type for the projected class, and not the inner object for the base type.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected internal abstract bool HasUnwrappableNativeObjectReference { get; }
+
+    /// <summary>
+    /// Gets the lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
+    /// </summary>
+    internal WindowsRuntimeObjectReference InspectableObjectReference
+    {
+        get
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            WindowsRuntimeObjectReference InitializeInspectableObjectReference()
+            {
+                _ = Interlocked.CompareExchange(
+                    location1: ref _inspectableObjectReference,
+                    value: NativeObjectReference.As(in WellKnownInterfaceIds.IID_IInspectable),
+                    comparand: null);
+
+                return _inspectableObjectReference;
+            }
+
+            return _inspectableObjectReference ?? InitializeInspectableObjectReference();
+        }
     }
 
     /// <summary>
     /// Gets the lazy-loaded cache of additional data associated to type handles.
     /// </summary>
-    private protected ConcurrentDictionary<RuntimeTypeHandle, object> TypeHandleCache
+    private ConcurrentDictionary<RuntimeTypeHandle, object> TypeHandleCache
     {
         get
         {
@@ -60,22 +109,6 @@ public abstract class WindowsRuntimeObject :
             return _typeHandleCache ?? InitializeTypeHandleCache();
         }
     }
-
-    /// <summary>
-    /// Gets the inner Windows Runtime object for the current instance.
-    /// </summary>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    protected internal WindowsRuntimeObjectReference NativeObject { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether the current instance has an unwrappable native object.
-    /// </summary>
-    /// <remarks>
-    /// This value is <see langword="false"/> in aggregation scenarios, as the instance that should be marshalled
-    /// to native is the derived managed type for the projected class, and not the inner object for the base type.
-    /// </remarks>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    protected internal bool HasUnwrappableNativeObject { get; }
 
     /// <summary>
     /// Determines whether a given interface is an overridable interface for the current type.
@@ -105,6 +138,8 @@ public abstract class WindowsRuntimeObject :
     /// <inheritdoc/>
     bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
     {
+        _ = TypeHandleCache;
+
         return false;
     }
 
@@ -126,7 +161,7 @@ public abstract class WindowsRuntimeObject :
         }
 
         // Delegate the 'QueryInterface' call to the inner object reference
-        return NativeObject.TryAsUnsafe(in iid, out ppv)
+        return NativeObjectReference.TryAsUnsafe(in iid, out ppv)
             ? CustomQueryInterfaceResult.Handled
             : CustomQueryInterfaceResult.NotHandled;
     }
