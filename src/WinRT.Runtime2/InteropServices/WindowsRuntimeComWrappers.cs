@@ -12,6 +12,14 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 public sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 {
+    /// <summary>
+    /// Gets the shared default instance of <see cref="WindowsRuntimeComWrappers"/>.
+    /// </summary>
+    /// <remarks>
+    /// This instance is the one that CsWinRT will use to marshall all Windows Runtime objects.
+    /// </remarks>
+    public static WindowsRuntimeComWrappers Default { get; } = new();
+
     /// <inheritdoc/>
     protected override ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
     {

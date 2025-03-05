@@ -33,6 +33,22 @@ public static unsafe class RestrictedErrorInfo
     }
 
     /// <summary>
+    /// Throws the appropriate exception for an <c>HRESULT</c> error code, if it represents a failure.
+    /// </summary>
+    /// <param name="errorCode">The <c>HRESULT</c> to check.</param>
+    /// <remarks>
+    /// This method differs from <see cref="Marshal.ThrowExceptionForHR(int)"/> in that it leverages
+    /// the <c>IRestrictedErrorInfo</c> infrastructure to flow <see cref="Exception"/> objects through
+    /// calls (both in managed and native code). This improves the debugging experience.
+    /// </remarks>
+    /// <exception cref="Exception">Thrown if <paramref name="errorCode"/> represents a failure.</exception>
+    /// <seealso cref="Marshal.ThrowExceptionForHR(int)"/>
+    public static void ThrowExceptionForHR(HRESULT errorCode)
+    {
+        // TODO
+    }
+
+    /// <summary>
     /// Converts the specified <see cref="Exception"/> instance to an <c>HRESULT</c>.
     /// </summary>
     /// <param name="exception">The <see cref="Exception"/> instance to convert to an <c>HRESULT</c>.</param>
