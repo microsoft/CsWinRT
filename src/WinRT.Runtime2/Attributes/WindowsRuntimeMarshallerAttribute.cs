@@ -28,5 +28,5 @@ public abstract unsafe class WindowsRuntimeMarshallerAttribute : Attribute
     /// </summary>
     /// <param name="value">The input managed object to marshal.</param>
     /// <returns>A pointer to the resulting <c>IInspectable</c> CCW.</returns>
-    public abstract void* ConvertToUnmanaged(object? value);
+    public abstract void* ConvertToUnmanagedUnsafe(object? value);
 }

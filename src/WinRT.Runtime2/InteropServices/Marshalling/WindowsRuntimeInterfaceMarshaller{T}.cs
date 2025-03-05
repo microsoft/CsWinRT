@@ -49,7 +49,10 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
 
         // If we got here, it means that 'value' is a managed, user-defined type implementing the Windows Runtime interface.
         // We can then get or create the CCW for it. The interface should be present in the generated vtable for the type.
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        // This logic is the same as in 'WindowsRuntimeObjectMarshaller.ConvertToUnmanagedUnsafe', see notes there.
+        void* thisPtr = WindowsRuntimeMarshallingInfo.TryGet(value.GetType(), out WindowsRuntimeMarshallingInfo? info)
+            ? info.GetMarshaller().ConvertToUnmanagedUnsafe(value)
+            : (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
 
         // We need an interface pointer, so in this scenario we can't really avoid a 'QueryInterface' call.
         // The local cache for object references only applies to projected runtime classes, not managed types.

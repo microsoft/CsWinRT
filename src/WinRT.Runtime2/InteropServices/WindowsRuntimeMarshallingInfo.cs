@@ -143,6 +143,36 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
     }
 
     /// <summary>
+    /// Gets the <see cref="WindowsRuntimeMarshallerAttribute"/> instance associated with the current metadata provider type.
+    /// </summary>
+    /// <returns>The resulting <see cref="WindowsRuntimeMarshallerAttribute"/> instance.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeMarshallerAttribute"/> instance could be resolved.</exception>
+    /// <remarks>
+    /// This method is meant to be used when marshalling user-defined types to native. In this case, the marshalling info should point to
+    /// the generated (or built-in) proxy types, which will always have a marshaller attribute on them. Other scenarios are not supported.
+    /// </remarks>
+    public WindowsRuntimeMarshallerAttribute GetMarshaller()
+    {
+        if (!TryGetMarshaller(out WindowsRuntimeMarshallerAttribute? marshaller))
+        {
+            // All projected types will have an associated marshaller, so this could only
+            // happen with some proxy types that were not configured correctly. In practice,
+            // this failure case should never happen for valid invocations of this method.
+            [DoesNotReturn]
+            void ThrowNotSupportedException()
+            {
+                throw new NotSupportedException(
+                    $"The ABI type '{_metadataProviderType}' does not have any associated marshalling logic. " +
+                    $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
+            }
+
+            ThrowNotSupportedException();
+        }
+
+        return marshaller;
+    }
+
+    /// <summary>
     /// Tries to get the <see cref="WindowsRuntimeMarshallerAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
     /// <param name="marshaller">The resulting <see cref="WindowsRuntimeMarshallerAttribute"/> instance, if available.</param>
@@ -287,7 +317,7 @@ file sealed unsafe class PlaceholderWindowsRuntimeMarshallerAttribute : WindowsR
     public static PlaceholderWindowsRuntimeMarshallerAttribute Instance = new();
 
     /// <inheritdoc/>
-    public override unsafe void* ConvertToUnmanaged(object? value)
+    public override unsafe void* ConvertToUnmanagedUnsafe(object? value)
     {
         return null;
     }
