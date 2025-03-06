@@ -455,13 +455,9 @@ namespace WinRT
                         // object are followed by an immediately release of the returned
                         // pointer - see below for details.
                         Marshal.Release(referenceTracker);
+                    }
 
-                        ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, inner, createObjectFlags);
-                    }
-                    else
-                    {
-                        ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, createObjectFlags);
-                    }
+                    ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, inner, createObjectFlags);
                 }
                 else
                 {
