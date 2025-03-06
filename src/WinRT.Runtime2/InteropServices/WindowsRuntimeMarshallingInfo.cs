@@ -5,6 +5,7 @@ using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -159,6 +160,7 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
             // happen with some proxy types that were not configured correctly. In practice,
             // this failure case should never happen for valid invocations of this method.
             [DoesNotReturn]
+            [StackTraceHidden]
             void ThrowNotSupportedException()
             {
                 throw new NotSupportedException(

@@ -115,8 +115,8 @@ internal sealed unsafe class FreeThreadedMarshaler
         }
     }
 
-    /// <inheritdoc cref="IMarshalVftbl.GetUnmarshalClassUnsafe"/>
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.GetUnmarshalClassUnsafe"/> call fails.</exception>
+    /// <inheritdoc cref="IMarshalVftbl.GetUnmarshalClassUnsafe"/>
     public void GetUnmarshalClass(
         Guid* riid,
         void* pv,
@@ -148,8 +148,8 @@ internal sealed unsafe class FreeThreadedMarshaler
         Marshal.ThrowExceptionForHR(hresult);
     }
 
-    /// <inheritdoc cref="IMarshalVftbl.GetMarshalSizeMaxUnsafe"/>
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.GetMarshalSizeMaxUnsafe"/> call fails.</exception>
+    /// <inheritdoc cref="IMarshalVftbl.GetMarshalSizeMaxUnsafe"/>
     public void GetMarshalSizeMax(
         Guid* riid,
         void* pv,
@@ -181,8 +181,8 @@ internal sealed unsafe class FreeThreadedMarshaler
         Marshal.ThrowExceptionForHR(hresult);
     }
 
-    /// <inheritdoc cref="IMarshalVftbl.MarshalInterfaceUnsafe"/>
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.MarshalInterfaceUnsafe"/> call fails.</exception>
+    /// <inheritdoc cref="IMarshalVftbl.MarshalInterfaceUnsafe"/>
     public void MarshalInterface(
         void* pStm,
         Guid* riid,
@@ -214,8 +214,8 @@ internal sealed unsafe class FreeThreadedMarshaler
         Marshal.ThrowExceptionForHR(hresult);
     }
 
-    /// <inheritdoc cref="IMarshalVftbl.UnmarshalInterfaceUnsafe"/>
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.UnmarshalInterfaceUnsafe"/> call fails.</exception>
+    /// <inheritdoc cref="IMarshalVftbl.UnmarshalInterfaceUnsafe"/>
     public void UnmarshalInterface(
         void* pStm,
         Guid* riid,
@@ -241,8 +241,8 @@ internal sealed unsafe class FreeThreadedMarshaler
         Marshal.ThrowExceptionForHR(hresult);
     }
 
-    /// <inheritdoc cref="IMarshalVftbl.ReleaseMarshalDataUnsafe"/>
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.ReleaseMarshalDataUnsafe"/> call fails.</exception>
+    /// <inheritdoc cref="IMarshalVftbl.ReleaseMarshalDataUnsafe"/>
     public void ReleaseMarshalData(void* pStm)
     {
         HRESULT hresult;
@@ -261,8 +261,8 @@ internal sealed unsafe class FreeThreadedMarshaler
         Marshal.ThrowExceptionForHR(hresult);
     }
 
-    /// <inheritdoc cref="IMarshalVftbl.DisconnectObjectUnsafe"/>
     /// <exception cref="Exception">Thrown if the <see cref="IMarshalVftbl.DisconnectObjectUnsafe"/> call fails.</exception>
+    /// <inheritdoc cref="IMarshalVftbl.DisconnectObjectUnsafe"/>
     public void DisconnectObject(uint dwReserved)
     {
         HRESULT hresult;

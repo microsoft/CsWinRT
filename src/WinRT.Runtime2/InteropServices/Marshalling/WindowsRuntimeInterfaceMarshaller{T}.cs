@@ -81,6 +81,7 @@ file static class WindowsRuntimeInterfaceMarshaller
     /// <param name="iid">The IID for the interface being marshalled.</param>
     /// <param name="hresult">The <c>QueryInterface</c> result.</param>
     /// <exception cref="Exception">Thrown if <paramref name="hresult"/> represents a failure.</exception>
+    [StackTraceHidden]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowExceptionForHR(object value, in Guid iid, HRESULT hresult)
     {

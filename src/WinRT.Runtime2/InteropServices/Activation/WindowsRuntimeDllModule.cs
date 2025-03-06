@@ -160,8 +160,8 @@ internal sealed unsafe class WindowsRuntimeDllModule
         }
     }
 
-    /// <inheritdoc cref="TryLoad"/>
     /// <remarks>This method doesn't use <see cref="LoadedModuleCache"/>.</remarks>
+    /// <inheritdoc cref="TryLoad"/>
     private static bool TryCreate(string fileName, [NotNullWhen(true)] out WindowsRuntimeDllModule? module)
     {
         HANDLE moduleHandle;

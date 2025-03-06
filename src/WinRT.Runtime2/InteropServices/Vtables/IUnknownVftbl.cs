@@ -31,10 +31,10 @@ internal unsafe struct IUnknownVftbl
         return ((IUnknownVftbl*)thisPtr)->QueryInterface(thisPtr, riid, ppvObject);
     }
 
-    /// <inheritdoc cref="QueryInterfaceUnsafe(void*, Guid*, void**)"/>
     /// <param name="thisPtr">The target COM object.</param>
     /// <param name="iid">The interface identifier (IID) of the interface being queried for.</param>
     /// <param name="pvObject">The pointer to an interface with the IID specified in the <paramref name="iid"/> parameter.</param>
+    /// <inheritdoc cref="QueryInterfaceUnsafe(void*, Guid*, void**)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT QueryInterfaceUnsafe(void* thisPtr, in Guid iid, out void* pvObject)
     {

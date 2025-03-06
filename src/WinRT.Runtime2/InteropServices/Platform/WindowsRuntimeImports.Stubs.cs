@@ -14,10 +14,10 @@ internal partial class WindowsRuntimeImports
 {
     // Thin high-level abstractions (eg. 'TryGetProcAddress'/'GetProcAddress')
 
-    /// <inheritdoc cref="CoGetObjectContext(Guid*, void**)"/>
     /// <param name="iid">The IID of an interface that is implemented on the context object.</param>
     /// <returns>The pointer to the interface specified by <paramref name="iid"/> on the context object.</returns>
     /// <exception cref="Exception">Thrown if getting the object context fails.</exception>
+    /// <inheritdoc cref="CoGetObjectContext(Guid*, void**)"/>
     public static unsafe void* CoGetObjectContext(in Guid iid)
     {
         void* objectContext;
@@ -33,8 +33,8 @@ internal partial class WindowsRuntimeImports
         return objectContext;
     }
 
-    /// <inheritdoc cref="CoGetContextToken(nuint*)"/>
     /// <exception cref="Exception">Thrown if getting the context token fails.</exception>
+    /// <inheritdoc cref="CoGetContextToken(nuint*)"/>
     public static unsafe nuint CoGetContextToken()
     {
         nuint contextToken;
@@ -46,8 +46,8 @@ internal partial class WindowsRuntimeImports
         return contextToken;
     }
 
-    /// <inheritdoc cref="GetProcAddress(nint, sbyte*)"/>
     /// <remarks>The <paramref name="lpProcNameUtf8"/> parameter is meant to be an UTF8 literal with only ASCII characters.</remarks>
+    /// <inheritdoc cref="GetProcAddress(nint, sbyte*)"/>
     public static unsafe void* TryGetProcAddress(HMODULE hModule, ReadOnlySpan<byte> lpProcNameUtf8)
     {
         fixed (byte* lpProcName = lpProcNameUtf8)
@@ -56,9 +56,9 @@ internal partial class WindowsRuntimeImports
         }
     }
 
-    /// <inheritdoc cref="GetProcAddress(nint, sbyte*)"/>
     /// <remarks>The <paramref name="lpProcNameUtf8"/> parameter is meant to be an UTF8 literal with only ASCII characters.</remarks>
     /// <exception cref="Win32Exception">Thrown if loading the target function fails.</exception>
+    /// <inheritdoc cref="GetProcAddress(nint, sbyte*)"/>
     public static unsafe void* GetProcAddress(HMODULE hModule, ReadOnlySpan<byte> lpProcNameUtf8)
     {
         void* functionPtr = TryGetProcAddress(hModule, lpProcNameUtf8);

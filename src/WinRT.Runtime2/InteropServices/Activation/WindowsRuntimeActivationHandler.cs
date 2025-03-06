@@ -13,7 +13,11 @@ namespace WindowsRuntime.InteropServices;
 /// <param name="activationFactory">The resulting activation factory instance.</param>
 /// <returns>The <c>HRESULT</c> for the operation.</returns>
 /// <remarks>
-/// Instances of this type can be assigned to <see cref="WindowsRuntimeActivationFactory.ActivationHandler"/>.
+/// <para>
+/// Instances of this type can be used with <see cref="WindowsRuntimeActivationFactory.SetWindowsRuntimeActivationHandler"/>.
+/// </para>
+/// <para>
+/// Instances are assumed to behave like <c>DllGetActivationFactory</c>, return <c>HRESULT</c>-s for failures, without throwing exceptions.
+/// </para>
 /// </remarks>
 public unsafe delegate HRESULT WindowsRuntimeActivationHandler(string runtimeClassName, in Guid iid, out void* activationFactory);
-
