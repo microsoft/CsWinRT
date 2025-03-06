@@ -14,4 +14,7 @@ internal partial class WellKnownErrorCodes
 
     /// <summary>Pointer that is not valid.</summary>
     public const HRESULT E_POINTER = unchecked((int)0x80004003);
+
+    /// <summary>Class not registered.</summary>
+    public const HRESULT REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
 }

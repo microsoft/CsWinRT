@@ -127,12 +127,12 @@ internal sealed unsafe class WindowsRuntimeDllModule
     /// <summary>
     /// Tries to activate a Windows Runtime type from the current module.
     /// </summary>
-    /// <param name="runtimeClassId">The runtime class name for the type to activate.</param>
+    /// <param name="runtimeClassName">The runtime class name for the type to activate.</param>
     /// <param name="activationFactory">The resulting <see cref="WindowsRuntimeObjectReference"/> instance.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
-    public HRESULT GetActivationFactory(string runtimeClassId, out WindowsRuntimeObjectReference? activationFactory)
+    public HRESULT GetActivationFactory(string runtimeClassName, out WindowsRuntimeObjectReference? activationFactory)
     {
-        HRESULT hresult = GetActivationFactoryUnsafe(runtimeClassId, out void* activationFactoryPtr);
+        HRESULT hresult = GetActivationFactoryUnsafe(runtimeClassName, out void* activationFactoryPtr);
 
         // If the operation succeeded, wrap the activation factory into a managed reference
         activationFactory = WellKnownErrorCodes.Succeeded(hresult)
@@ -145,16 +145,16 @@ internal sealed unsafe class WindowsRuntimeDllModule
     /// <summary>
     /// Tries to activate a Windows Runtime type from the current module.
     /// </summary>
-    /// <param name="runtimeClassId">The runtime class name for the type to activate.</param>
+    /// <param name="runtimeClassName">The runtime class name for the type to activate.</param>
     /// <param name="activationFactory">The resulting activation factory instance.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
-    public HRESULT GetActivationFactoryUnsafe(string runtimeClassId, out void* activationFactory)
+    public HRESULT GetActivationFactoryUnsafe(string runtimeClassName, out void* activationFactory)
     {
         // Use a fast-pass 'HSTRING' and invoke the export to get the activation factory for the class
-        fixed (char* runtimeClassIdPtr = runtimeClassId)
+        fixed (char* runtimeClassIdPtr = runtimeClassName)
         fixed (void** activationFactoryPtr = &activationFactory)
         {
-            HStringMarshaller.ConvertToUnmanagedUnsafe(runtimeClassIdPtr, runtimeClassId.Length, out HStringReference reference);
+            HStringMarshaller.ConvertToUnmanagedUnsafe(runtimeClassIdPtr, runtimeClassName.Length, out HStringReference reference);
 
             return _dllGetActivationFactory(reference.HString, activationFactoryPtr);
         }

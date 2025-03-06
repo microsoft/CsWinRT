@@ -77,13 +77,13 @@ internal sealed unsafe class WindowsRuntimePlatformModule
     /// <summary>
     /// Tries to activate a Windows Runtime type from the current module.
     /// </summary>
-    /// <param name="runtimeClassId">The runtime class name for the type to activate.</param>
+    /// <param name="runtimeClassName">The runtime class name for the type to activate.</param>
     /// <param name="iid">The IID of the interface to retrieve for the given class.</param>
     /// <param name="activationFactory">The resulting <see cref="WindowsRuntimeObjectReference"/> instance.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
-    public static HRESULT GetActivationFactory(string runtimeClassId, in Guid iid, out WindowsRuntimeObjectReference? activationFactory)
+    public static HRESULT GetActivationFactory(string runtimeClassName, in Guid iid, out WindowsRuntimeObjectReference? activationFactory)
     {
-        HRESULT hresult = GetActivationFactoryUnsafe(runtimeClassId, in iid, out void* activationFactoryPtr);
+        HRESULT hresult = GetActivationFactoryUnsafe(runtimeClassName, in iid, out void* activationFactoryPtr);
 
         // If the operation succeeded, wrap the activation factory into a managed reference
         activationFactory = WellKnownErrorCodes.Succeeded(hresult)
@@ -96,21 +96,21 @@ internal sealed unsafe class WindowsRuntimePlatformModule
     /// <summary>
     /// Tries to activate a Windows Runtime type from the current module.
     /// </summary>
-    /// <param name="runtimeClassId">The runtime class name for the type to activate.</param>
+    /// <param name="runtimeClassName">The runtime class name for the type to activate.</param>
     /// <param name="iid">The IID of the interface to retrieve for the given class.</param>
     /// <param name="activationFactory">The resulting activation factory instance.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
-    public static HRESULT GetActivationFactoryUnsafe(string runtimeClassId, in Guid iid, out void* activationFactory)
+    public static HRESULT GetActivationFactoryUnsafe(string runtimeClassName, in Guid iid, out void* activationFactory)
     {
         // Ensure COM is initialized
         WindowsRuntimePlatformModule module = Instance;
 
         // Just delegate to the platform to handle manifest-based activation
-        fixed (char* runtimeClassIdPtr = runtimeClassId)
+        fixed (char* runtimeClassIdPtr = runtimeClassName)
         fixed (Guid* riid = &iid)
         fixed (void** activationFactoryPtr = &activationFactory)
         {
-            HStringMarshaller.ConvertToUnmanagedUnsafe(runtimeClassIdPtr, runtimeClassId.Length, out HStringReference reference);
+            HStringMarshaller.ConvertToUnmanagedUnsafe(runtimeClassIdPtr, runtimeClassName.Length, out HStringReference reference);
 
             return WindowsRuntimeImports.RoGetActivationFactory(reference.HString, riid, activationFactoryPtr);
         }
