@@ -150,8 +150,6 @@ internal sealed unsafe class WindowsRuntimeDllModule
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     public HRESULT GetActivationFactoryUnsafe(string runtimeClassId, out void* activationFactory)
     {
-        activationFactory = null;
-
         // Use a fast-pass 'HSTRING' and invoke the export to get the activation factory for the class
         fixed (char* runtimeClassIdPtr = runtimeClassId)
         fixed (void** activationFactoryPtr = &activationFactory)
