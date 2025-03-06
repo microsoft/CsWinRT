@@ -54,6 +54,8 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
         CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
         : base(thisPtr, referenceTrackerPtr, flags)
     {
+        _contextCallbackPtr = WindowsRuntimeImports.CoGetObjectContext(in WellKnownInterfaceIds.IID_IContextCallback);
+        _contextToken = WindowsRuntimeImports.CoGetContextToken();
     }
 
     /// <summary>
