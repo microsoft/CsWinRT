@@ -37,13 +37,13 @@ public unsafe partial class WindowsRuntimeObjectReference
         // If the object is agile, avoid all the context tracking overhead
         HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(thisPtr);
 
+        Marshal.ThrowExceptionForHR(isFreeThreaded);
+
         // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
         if (isFreeThreaded == WellKnownErrorCodes.S_OK)
         {
             return new FreeThreadedObjectReference(thisPtr, referenceTrackerPtr: null);
         }
-
-        Marshal.ThrowExceptionForHR(isFreeThreaded);
 
         // Otherwise, use a context aware object reference to track it, with the specialized instance
         return iid == WellKnownInterfaceIds.IID_IInspectable
@@ -80,14 +80,14 @@ public unsafe partial class WindowsRuntimeObjectReference
 
         HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(qiObject);
 
+        Marshal.ThrowExceptionForHR(isFreeThreaded);
+
         // Now we can safely wrap it (no need to increment its reference count here)
         // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
         if (isFreeThreaded == WellKnownErrorCodes.S_OK)
         {
             return new FreeThreadedObjectReference(qiObject, referenceTrackerPtr: null);
         }
-
-        Marshal.ThrowExceptionForHR(isFreeThreaded);
 
         // Same optimization as above for context aware object references
         return iid == WellKnownInterfaceIds.IID_IInspectable

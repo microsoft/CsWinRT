@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
@@ -23,10 +24,28 @@ public abstract class WindowsRuntimeObject :
     IUnmanagedVirtualMethodTableProvider,
     ICustomQueryInterface
 {
-    /// <summary>
-    /// The lazy-loaded cache of additional data associated to type handles.
-    /// </summary>
-    private volatile ConcurrentDictionary<RuntimeTypeHandle, object>? _typeHandleCache;
+    private static class _IApplicationFactoryMethods
+    {
+        public unsafe static nint CreateInstance(IObjectReference _obj, object baseInterface, out nint innerInterface)
+        {
+            nint thisPtr = _obj.ThisPtr;
+            ObjectReferenceValue value = default(ObjectReferenceValue);
+            nint num = 0;
+            nint result = 0;
+            try
+            {
+                value = MarshalInspectable<object>.CreateMarshaler2(baseInterface);
+                ExceptionHelpers.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<nint, nint, nint*, nint*, int>)(*(IntPtr*)((nint)(*(IntPtr*)thisPtr) + (nint)6 * (nint)sizeof(delegate* unmanaged[Stdcall]<nint, nint, nint*, nint*, int>))))(thisPtr, MarshalInspectable<object>.GetAbi(value), &num, &result));
+                GC.KeepAlive(_obj);
+                innerInterface = num;
+                return result;
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeMarshaler(value);
+            }
+        }
+    }
 
     /// <summary>
     /// The lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
@@ -40,6 +59,11 @@ public abstract class WindowsRuntimeObject :
     private volatile WindowsRuntimeObjectReference? _inspectableObjectReference;
 
     /// <summary>
+    /// The lazy-loaded cache of additional data associated to type handles.
+    /// </summary>
+    private volatile ConcurrentDictionary<RuntimeTypeHandle, object>? _typeHandleCache;
+
+    /// <summary>
     /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
@@ -48,6 +72,23 @@ public abstract class WindowsRuntimeObject :
         ArgumentNullException.ThrowIfNull(nativeObjectReference);
 
         NativeObjectReference = nativeObjectReference;
+    }
+
+    protected WindowsRuntimeObject(WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid)
+    {
+        bool hasUnwrappableNativeObjectReference = HasUnwrappableNativeObjectReference;
+
+        bool flag = GetType() != typeof(Windows.UI.Xaml.Application);
+        nint innerInterface;
+        nint newInstance = _IApplicationFactoryMethods.CreateInstance(_objRef_global__Windows_UI_Xaml_IApplicationFactory, flag ? this : null, out innerInterface);
+        try
+        {
+            ComWrappersHelper.Init(flag, this, newInstance, innerInterface, IApplicationMethods.IID, out _inner);
+        }
+        finally
+        {
+            Marshal.Release(innerInterface);
+        }
     }
 
     /// <summary>
