@@ -18,7 +18,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> call fails for any reason.</exception>
     public WindowsRuntimeObjectReference As(in Guid iid)
     {
-        HRESULT hresult = TryAsNative(in iid, out WindowsRuntimeObjectReference? objectReference);
+        HRESULT hresult = DerivedTryAsNative(in iid, out WindowsRuntimeObjectReference? objectReference);
 
         Marshal.ThrowExceptionForHR(hresult);
 
@@ -46,13 +46,17 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> call fails for any reason.</exception>
     public void AsUnsafe(in Guid iid, out void* ppv)
     {
-        Marshal.ThrowExceptionForHR(TryAsNative(in iid, out ppv));
+        HRESULT hresult = TryAsNative(in iid, out ppv);
+
+        Marshal.ThrowExceptionForHR(hresult);
     }
 
     /// <inheritdoc cref="AsUnsafe(in Guid, out void*)"/>
     public void AsUnsafe(in Guid iid, out nint ppv)
     {
-        Marshal.ThrowExceptionForHR(TryAsNative(in iid, out ppv));
+        HRESULT hresult = TryAsNative(in iid, out ppv);
+
+        Marshal.ThrowExceptionForHR(hresult);
     }
 
     /// <summary>
@@ -63,7 +67,9 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <returns>Whether the requested interface was retrieved successfully.</returns>
     public bool TryAs(in Guid iid, [NotNullWhen(true)] out WindowsRuntimeObjectReference? objectReference)
     {
-        return WellKnownErrorCodes.Succeeded(TryAsNative(in iid, out objectReference));
+        HRESULT hresult = DerivedTryAsNative(in iid, out objectReference);
+
+        return WellKnownErrorCodes.Succeeded(hresult);
     }
 
     /// <summary>
@@ -74,13 +80,17 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <returns>Whether the requested interface was retrieved successfully.</returns>
     public bool TryAsUnsafe(in Guid iid, out void* ppv)
     {
-        return WellKnownErrorCodes.Succeeded(TryAsNative(in iid, out ppv));
+        HRESULT hresult = TryAsNative(in iid, out ppv);
+
+        return WellKnownErrorCodes.Succeeded(hresult);
     }
 
     /// <inheritdoc cref="TryAsUnsafe(in Guid, out void*)"/>
     public bool TryAsUnsafe(in Guid iid, out nint ppv)
     {
-        return WellKnownErrorCodes.Succeeded(TryAsNative(in iid, out ppv));
+        HRESULT hresult = TryAsNative(in iid, out ppv);
+
+        return WellKnownErrorCodes.Succeeded(hresult);
     }
 
     /// <summary>
@@ -89,12 +99,6 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="iid">The IID of the interface to query for.</param>
     /// <param name="objectReference">The resulting <see cref="WindowsRuntimeObjectReference"/> instance for the requested interface.</param>
     /// <returns>The <c>HRESULT</c> value for the <c>QueryInterface</c> call</returns>
-    public HRESULT TryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference)
-    {
-        return DerivedTryAsNative(in iid, out objectReference);
-    }
-
-    /// <inheritdoc cref="TryAsNative(in Guid, out WindowsRuntimeObjectReference?)"/>
     private protected abstract HRESULT DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference);
 
     /// <summary>
@@ -103,7 +107,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="iid">The IID of the interface to query for.</param>
     /// <param name="ppv">The resulting COM pointer for the requested interface.</param>
     /// <returns>The <c>HRESULT</c> value for the <c>QueryInterface</c> call</returns>
-    public HRESULT TryAsNative(in Guid iid, out void* ppv)
+    private HRESULT TryAsNative(in Guid iid, out void* ppv)
     {
         ppv = null;
 
@@ -120,7 +124,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     }
 
     /// <inheritdoc cref="TryAsNative(in Guid, out void*)"/>
-    public HRESULT TryAsNative(in Guid iid, out nint ppv)
+    private HRESULT TryAsNative(in Guid iid, out nint ppv)
     {
         ppv = (nint)null;
 
