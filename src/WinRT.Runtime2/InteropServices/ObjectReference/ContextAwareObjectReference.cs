@@ -213,7 +213,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
     }
 
     /// <inheritdoc/>
-    private protected sealed override int DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference)
+    private protected sealed override HRESULT DerivedTryAsNative(in Guid iid, out WindowsRuntimeObjectReference? objectReference)
     {
         objectReference = null;
 
