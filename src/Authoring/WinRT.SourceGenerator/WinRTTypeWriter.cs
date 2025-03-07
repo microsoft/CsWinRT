@@ -2375,20 +2375,9 @@ namespace Generator
                    symbol.Kind == memberNode.Kind;
         }
 
-        void AddSynthesizedInterface(
-            TypeDeclaration classDeclaration,
-            SynthesizedInterfaceType interfaceType,
-            HashSet<ISymbol> classMembersFromInterfaces)
+        Dictionary<ISymbol, List<MethodDefinitionHandle>> GetOrderedMethods(INamedTypeSymbol classSymbol, TypeDeclaration classDeclaration)
         {
-            var typeDeclaration = new TypeDeclaration();
-            currentTypeDeclaration = typeDeclaration;
-
-            bool hasTypes = false;
-            INamedTypeSymbol classSymbol = classDeclaration.Node as INamedTypeSymbol;
-
-            // If it is the case of our special abstract class, we will order the methods per the order in the projections.
             var methodDefs = classDeclaration.MethodDefinitions;
-
             var baseAbstractClass = classSymbol.BaseType;
             if (baseAbstractClass != null && baseAbstractClass.IsAbstract && GeneratorHelper.IsWinRTType(baseAbstractClass, mapper))
             {
@@ -2398,7 +2387,7 @@ namespace Generator
                 {
                     var orderedMembers = projectedType.GetMembers().ToList();
                     var orderedMethodDefinitions = classDeclaration.MethodDefinitions
-                        .Where(def => orderedMembers.Any(member => IsMatchingMember(def.Key, member))) 
+                        .Where(def => orderedMembers.Any(member => IsMatchingMember(def.Key, member)))
                         .OrderBy(def => orderedMembers.FindIndex(member => IsMatchingMember(def.Key, member)))
                         .ToList();
 
@@ -2411,6 +2400,22 @@ namespace Generator
                     methodDefs = orderedMethodDefinitions.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, SymbolEqualityComparer.Default);
                 }
             }
+            return methodDefs;
+        }
+
+        void AddSynthesizedInterface(
+            TypeDeclaration classDeclaration,
+            SynthesizedInterfaceType interfaceType,
+            HashSet<ISymbol> classMembersFromInterfaces)
+        {
+            var typeDeclaration = new TypeDeclaration();
+            currentTypeDeclaration = typeDeclaration;
+
+            bool hasTypes = false;
+            INamedTypeSymbol classSymbol = classDeclaration.Node as INamedTypeSymbol;
+
+            // If it is the case of our special abstract class, we will order the methods per the order in the projections.
+            var methodDefs = GetOrderedMethods(classSymbol, classDeclaration);
 
             // Each class member results in some form of method definition,
             // so using that to our advantage to get public members.
