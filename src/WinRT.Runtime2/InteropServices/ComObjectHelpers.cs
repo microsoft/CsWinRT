@@ -19,7 +19,7 @@ internal unsafe partial class ComObjectHelpers
     /// <list type="bullet">
     ///   <item><c>S_OK</c>: if <paramref name="thisPtr"/> represents a free-threaded object.</item>
     ///   <item><c>S_FALSE</c>: if <paramref name="thisPtr"/> doesn't represent a free-threaded object.</item>
-    ///   <item>A faulure <c>HRESULT</c> otherwise.</item>
+    ///   <item>A failure <c>HRESULT</c> otherwise.</item>
     /// </list>
     /// </returns>
     /// <remarks>
@@ -29,7 +29,7 @@ internal unsafe partial class ComObjectHelpers
     ///   <item>The object implements <c>IMarshal</c>, and the unmarshal class is the free-threaded in-proc marshaler.</item>
     /// </list>
     /// </remarks>
-    /// <exception cref="Exception">Thrown if the fallback attempt to query for <c>IMarshal</c> succeds, but then fails to call <c>GetUnmarshalClass</c>.</exception>
+    /// <exception cref="Exception">Thrown if the fallback attempt to query for <c>IMarshal</c> succeeds, but then fails to call <c>GetUnmarshalClass</c>.</exception>
     public static HRESULT IsFreeThreadedUnsafe(void* thisPtr)
     {
         // Check whether the object is free-threaded by querying for 'IAgileObject'

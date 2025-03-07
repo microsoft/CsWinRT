@@ -35,6 +35,12 @@ public unsafe partial class WindowsRuntimeObjectReference
         ref void* innerInstanceUnknown,
         in Guid newInstanceIid)
     {
+        void* acquiredNewInstanceUnknown = newInstanceUnknown;
+        void* acquiredInnerInstanceUnknown = innerInstanceUnknown;
+
+        newInstanceUnknown = null;
+        innerInstanceUnknown = null;
+
         // First we need to determine what's the actual target COM object that we're going to wrap
         // by the returned 'WindowsRuntimeObjectReference' instance. That depends on whether this
         // is a COM aggregation scenario or not. That is, this method is used in one of these cases:
@@ -50,7 +56,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // In the non aggregation case, that would just be the normal native object we just instantiated.
         //
         // Also see: https://learn.microsoft.com/en-us/windows/win32/com/aggregation.
-        void* externalComObject = isAggregation ? innerInstanceUnknown : newInstanceUnknown;
+        void* externalComObject = isAggregation ? innerInstanceUnknown : acquiredNewInstanceUnknown;
 
         // We need to check whether the target COM object is free-threaded or not, as that will
         // influence how we'll create the resulting 'WindowsRuntimeObjectReference' instance.
@@ -84,10 +90,7 @@ public unsafe partial class WindowsRuntimeObjectReference
             // transfer the ownership to the returned object reference, which would handle releases later on.
             // This applies to both when doing aggregation or not. That is, regardless of how the lifetime of
             // the inner instance would've been extended, if we fail, we just need to ensure we release that object.
-            _ = IUnknownVftbl.ReleaseUnsafe(innerInstanceUnknown);
-
-            newInstanceUnknown = null;
-            innerInstanceUnknown = null;
+            _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
 
             Marshal.ThrowExceptionForHR(isFreeThreaded);
         }
@@ -153,21 +156,15 @@ public unsafe partial class WindowsRuntimeObjectReference
             // Indicate the scenario is COM aggregation
             createObjectFlags |= CreateObjectFlags.Aggregation;
 
-            // Special case the RCW creation and registration in 'IReferenceTracker' scenarios. If we are doing
-            // COM aggregation, then the reference tracking support is not actually needed. This is because
-            // all the 'QueryInterface' calls on an object will be immediately followed by a 'Release' call on
-            // the returned COM object pointer (see below for additional details). We will release the reference
-            // tracker reference later. Here we just need to pass the inner object to 'ComWrappers' in this case.
+            // Create the RCW by Here we just need to pass the inner object to 'ComWrappers' in this case.
             // The reason why we only do so in this case is that if we don't have a reference tracker, it means
             // that we're not in a XAML scenario where we need the .NET runtime to manage the inner lifetime.
-            _ = referenceTracker != null
-                ? WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance((nint)newInstanceUnknown, createObjectFlags, thisInstance, (nint)innerInstanceUnknown)
-                : WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance((nint)newInstanceUnknown, createObjectFlags, thisInstance);
+            _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance((nint)acquiredNewInstanceUnknown, createObjectFlags, thisInstance, (nint)acquiredInnerInstanceUnknown);
         }
         else
         {
             // Same registration as for COM aggregation without reference tracker support (see above)
-            _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance((nint)newInstanceUnknown, createObjectFlags, thisInstance);
+            _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance((nint)acquiredNewInstanceUnknown, createObjectFlags, thisInstance);
         }
 
         // This value is the reference tracker pointer we will wrap in the returned object reference.
@@ -183,7 +180,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // The rest of the logic handles the reference tracker setup, after the 'ComWrappers' registration above
         if (isAggregation)
         {
-            // Aggregation scenarios should avoid calling 'AddRef' on the 'newInstanceUnknown' object.
+            // Aggregation scenarios should avoid calling 'AddRef' on the 'acquiredNewInstanceUnknown' object.
             // This is due to the semantics of COM aggregation, and the fact that calling an 'AddRef'
             // on that instance will increment the reference count on the CCW, which in turn will make
             // it so that it cannot be cleaned up. However, note that calling 'AddRef' on the instance when
@@ -208,7 +205,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         else if (referenceTracker != null)
         {
             // Special handling in case we have a reference tracker. Like mentioned, this object is used to tell
-            // the reference tracker runtime whenever 'AddRef' and 'Release' are performed on 'newInstanceUnknown'.
+            // the reference tracker runtime whenever 'AddRef' and 'Release' are performed on 'acquiredNewInstanceUnknown'.
             // The non-aggregation case is the only one where we actually need to carry the reference tracker along.
             externalReferenceTracker = referenceTracker;
 
@@ -221,16 +218,13 @@ public unsafe partial class WindowsRuntimeObjectReference
             // We can only avoid this in the aggregation scenario, because we balance it out with the initial 'AddRef'
             // that we can skip. But when not aggregating, that 'AddRef' is on the new instance, so the inner instance
             // would have an extra reference count by the end of this method. We can fix that here to balance it again.
-            _ = IUnknownVftbl.ReleaseUnsafe(innerInstanceUnknown);
+            _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
 
             // If we're not in a COM aggregation scenario, we can release the reference tracker object. This is because
             // it is already considered kept alive, even if we don't hold a reference to it, due to the fact that its
             // implementation lives in the same object as the target COM object (it will be a native object).
             _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
         }
-
-        newInstanceUnknown = null;
-        innerInstanceUnknown = null;
 
         // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
         if (isFreeThreaded == WellKnownErrorCodes.S_OK)
@@ -248,8 +242,56 @@ public unsafe partial class WindowsRuntimeObjectReference
             : new ContextAwareInterfaceObjectReference(externalComObject, externalReferenceTracker, iid: in newInstanceIid, createObjectReferenceFlags);
     }
 
-    internal static WindowsRuntimeObjectReference InitializeForNativeObject()
+    /// <summary>
+    /// Initializes a <see cref="WindowsRuntimeObjectReference"/> object for a given COM pointer to <c>IInspectable</c>.
+    /// </summary>
+    /// <param name="externalComObject">The external COM object to wrap in a managed object reference.</param>
+    /// <returns>A <see cref="WindowsRuntimeObjectReference"/> wrapping <paramref name="externalComObject"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method is only meant to be used when creating a managed object reference around native objects. It should not
+    /// be used when dealing with Windows Runtime types instantiated from C# (which includes COM aggregation scenarios too).
+    /// </para>
+    /// <para>
+    /// This method takes ownership of <paramref name="externalComObject"/>.
+    /// </para>
+    /// </remarks>
+    internal static WindowsRuntimeObjectReference InitializeFromNativeInspectable(ref void* externalComObject)
     {
-        return null!;
+        void* acquiredComObject = externalComObject;
+
+        externalComObject = null;
+
+        // Early free-threaded check, to handle failure cases too (see notes above)
+        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(acquiredComObject);
+
+        // If we are about to throw, release the external COM object first, to avoid leaks
+        if (!WellKnownErrorCodes.Succeeded(isFreeThreaded))
+        {
+            _ = IUnknownVftbl.ReleaseUnsafe(acquiredComObject);
+
+            Marshal.ThrowExceptionForHR(isFreeThreaded);
+        }
+
+        // Try to resolve an 'IReferenceTracker' pointer (see detailed notes above)
+        _ = IUnknownVftbl.QueryInterfaceUnsafe(acquiredComObject, in WellKnownInterfaceIds.IID_IReferenceTracker, out void* referenceTracker);
+
+        if (referenceTracker != null)
+        {
+            // If we have a reference tracker, we should report an 'AddRef' on it,
+            // as we're wrapping the native object in a managed object reference.
+            _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTracker);
+
+            // We can release the reference tracker, as it's implemented on the same native object,
+            // meaning it will remain alive anyway as long as the main object is also kept alive.
+            // This matches the handling of non aggregation scenarios above.
+            _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
+        }
+
+        // Create the right object reference. Because this method requires the input COM object
+        // to be an 'IInspectable' interface pointer, we can also optimize for that case.
+        return isFreeThreaded == WellKnownErrorCodes.S_OK
+            ? new FreeThreadedObjectReference(acquiredComObject, referenceTracker)
+            : new ContextAwareInspectableObjectReference(acquiredComObject, referenceTracker);
     }
 }
