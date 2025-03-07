@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
@@ -19,34 +18,11 @@ namespace WindowsRuntime;
 /// <remarks>
 /// This type should only be used as a base type by generated projected types.
 /// </remarks>
-public abstract class WindowsRuntimeObject :
+public abstract unsafe class WindowsRuntimeObject :
     IDynamicInterfaceCastable,
     IUnmanagedVirtualMethodTableProvider,
     ICustomQueryInterface
 {
-    private static class _IApplicationFactoryMethods
-    {
-        public unsafe static nint CreateInstance(IObjectReference _obj, object baseInterface, out nint innerInterface)
-        {
-            nint thisPtr = _obj.ThisPtr;
-            ObjectReferenceValue value = default(ObjectReferenceValue);
-            nint num = 0;
-            nint result = 0;
-            try
-            {
-                value = MarshalInspectable<object>.CreateMarshaler2(baseInterface);
-                ExceptionHelpers.ThrowExceptionForHR(((delegate* unmanaged[Stdcall]<nint, nint, nint*, nint*, int>)(*(IntPtr*)((nint)(*(IntPtr*)thisPtr) + (nint)6 * (nint)sizeof(delegate* unmanaged[Stdcall]<nint, nint, nint*, nint*, int>))))(thisPtr, MarshalInspectable<object>.GetAbi(value), &num, &result));
-                GC.KeepAlive(_obj);
-                innerInterface = num;
-                return result;
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeMarshaler(value);
-            }
-        }
-    }
-
     /// <summary>
     /// The lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
     /// </summary>
@@ -67,6 +43,7 @@ public abstract class WindowsRuntimeObject :
     /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
     protected WindowsRuntimeObject(WindowsRuntimeObjectReference nativeObjectReference)
     {
         ArgumentNullException.ThrowIfNull(nativeObjectReference);
@@ -74,20 +51,69 @@ public abstract class WindowsRuntimeObject :
         NativeObjectReference = nativeObjectReference;
     }
 
+    /// <summary>
+    /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>
+    /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryObjectReference"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ObjectDisposedException">Thrown if <paramref name="activationFactoryObjectReference"/> has been disposed.</exception>
+    /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
+    /// <remarks>
+    /// This constructor should only be used when activating composable types (both projected and user-defined types).
+    /// </remarks>
     protected WindowsRuntimeObject(WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid)
     {
+        ArgumentNullException.ThrowIfNull(activationFactoryObjectReference);
+
         bool hasUnwrappableNativeObjectReference = HasUnwrappableNativeObjectReference;
 
-        bool flag = GetType() != typeof(Windows.UI.Xaml.Application);
-        nint innerInterface;
-        nint newInstance = _IApplicationFactoryMethods.CreateInstance(_objRef_global__Windows_UI_Xaml_IApplicationFactory, flag ? this : null, out innerInterface);
-        try
+        // Activate the instance for the composition scenario. This constructor is only used when instantiating
+        // Windows Runtime composable types (either projected types, or user-defined types deriving from one).
+        // However, depending on which case it is, the activation is executed slightly differently:
+        //
+        //   1) Activation for composition: this happens when activating a user-defined type that derives from a
+        //      projected composable Windows Runtime type. In this case, the managed object being constructed will
+        //      be the controlling 'IInspectable' instance, which is passed as the 'baseInterface' parameter.
+        //      The returned 'innerInterface' will be used to invoke methods on the base interfaces.
+        //   2) Standalone activation: this happens when activating a composable type directly (eg. 'Button'). In
+        //      this case, 'baseInterface' will be 'null', as there is no explicit controlling 'IInspectable' object
+        //      that needs to be passed (the controlling instance is the same one as the object being constructed).
+        //      Callers will ignore the returned 'innerInterface' as well in this example.
+        //
+        // For additional info, see: https://learn.microsoft.com/en-us/uwp/winrt-cref/winrt-type-system#composable-activation.
+        WindowsRuntimeActivationHelper.ActivateInstanceUnsafe(
+            activationFactoryObjectReference: activationFactoryObjectReference,
+            baseInterface: hasUnwrappableNativeObjectReference ? null : this,
+            out void* innerInterface,
+            out void* defaultInterface);
+
+        // Initialize a 'WindowsRuntimeObjectReference' for the current native objects and the managed instance we're
+        // constructing. This will also take care of registering things with 'ComWrappers', and setting up all the
+        // reference tracker infrastructure, in case the native object implements the 'IReferenceTracker' interface.
+        NativeObjectReference = WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
+            isAggregation: !hasUnwrappableNativeObjectReference,
+            thisInstance: this,
+            newInstanceUnknown: ref defaultInterface,
+            innerInstanceUnknown: ref innerInterface,
+            newInstanceIid: in iid);
+
+        // Optimization: if we are activating the current type for composition, then the returned object reference
+        // will wrap the 'IInspectable' pointer for the controlling instance (ie. 'innerInterface'). In this case,
+        // we can assign it to the cached 'IInspectable' object reference as well, since that would represent the
+        // exact same interface pointer. This entirley skips allocating that object reference in the future, if
+        // the instance being constructed were to be marshalled as 'IInspectable' (ie. as 'object') to native. We
+        // can assign the field directly rather than the property, to avoid doing a 'cmpxchg' operation here. That
+        // is not needed at this point anyway, as we're constructing the object, so no other thread can access it.
+        //
+        // We can also perform a similar optimization when activating types in standalone mode. If we are activating
+        // not for composition, then 'NativeObjectReference' would be wrapping the default interface pointer for the
+        // current type, meaning that it can be copied to the field caching that interface as well. We just can't do
+        // that in this base constructor though, as all the default interface fields are generated in each derived
+        // projected types. That optimization can be done right after the call to the base constructor, in each type.
+        if (!hasUnwrappableNativeObjectReference)
         {
-            ComWrappersHelper.Init(flag, this, newInstance, innerInterface, IApplicationMethods.IID, out _inner);
-        }
-        finally
-        {
-            Marshal.Release(innerInterface);
+            _inspectableObjectReference = NativeObjectReference;
         }
     }
 
@@ -127,6 +153,7 @@ public abstract class WindowsRuntimeObject :
 
             return _inspectableObjectReference ?? InitializeInspectableObjectReference();
         }
+        set => Interlocked.CompareExchange(ref _inspectableObjectReference, value, comparand: null);
     }
 
     /// <summary>

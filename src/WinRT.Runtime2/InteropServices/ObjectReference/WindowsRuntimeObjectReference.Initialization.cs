@@ -28,7 +28,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// This method takes ownership of both <paramref name="newInstanceUnknown"/> and <paramref name="innerInstanceUnknown"/>.
     /// </para>
     /// </remarks>
-    internal static WindowsRuntimeObjectReference InitializeFromManagedType(
+    internal static WindowsRuntimeObjectReference InitializeFromManagedTypeUnsafe(
         bool isAggregation,
         WindowsRuntimeObject thisInstance,
         ref void* newInstanceUnknown,
@@ -256,7 +256,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// This method takes ownership of <paramref name="externalComObject"/>.
     /// </para>
     /// </remarks>
-    internal static WindowsRuntimeObjectReference InitializeFromNativeInspectable(ref void* externalComObject)
+    internal static WindowsRuntimeObjectReference InitializeFromNativeInspectableUnsafe(ref void* externalComObject)
     {
         void* acquiredComObject = externalComObject;
 
