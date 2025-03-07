@@ -13,7 +13,7 @@ using System.Threading;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Provides support for activating Windows Runtime types.
+/// Provides support for retrieving activation factories for Windows Runtime types.
 /// </summary>
 public static unsafe class WindowsRuntimeActivationFactory
 {

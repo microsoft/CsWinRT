@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649, CS1573
 
 namespace WindowsRuntime.InteropServices;
 
@@ -32,5 +32,25 @@ internal unsafe struct IActivationFactoryVftbl
     public static HRESULT ActivateInstanceUnsafe(void* thisPtr, void** instance)
     {
         return ((IActivationFactoryVftbl*)thisPtr)->ActivateInstance(thisPtr, instance);
+    }
+
+    /// <param name="baseInterface">The controlling <c>IInspectable</c> object.</param>
+    /// <param name="innerInterface">The resulting non-delegating <c>IInspectable</c> object.</param>
+    /// <inheritdoc cref="ActivateInstanceUnsafe(void*, void**)"/>"/>
+    /// <remarks>
+    /// This overload should only be used to activate composable types (both when aggregating or not).
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HRESULT ActivateInstanceUnsafe(
+        void* thisPtr,
+        void* baseInterface,
+        void** innerInterface,
+        void** instance)
+    {
+        return ((delegate* unmanaged[MemberFunction]<void*, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)thisPtr)->ActivateInstance)(
+            thisPtr,
+            baseInterface,
+            innerInterface,
+            instance);
     }
 }
