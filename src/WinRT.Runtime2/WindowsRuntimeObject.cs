@@ -85,8 +85,8 @@ public abstract unsafe class WindowsRuntimeObject :
         WindowsRuntimeActivationHelper.ActivateInstanceUnsafe(
             activationFactoryObjectReference: activationFactoryObjectReference,
             baseInterface: hasUnwrappableNativeObjectReference ? null : this,
-            out void* innerInterface,
-            out void* defaultInterface);
+            innerInterface: out void* innerInterface,
+            defaultInterface: out void* defaultInterface);
 
         // Initialize a 'WindowsRuntimeObjectReference' for the current native objects and the managed instance we're
         // constructing. This will also take care of registering things with 'ComWrappers', and setting up all the
@@ -111,6 +111,55 @@ public abstract unsafe class WindowsRuntimeObject :
         // current type, meaning that it can be copied to the field caching that interface as well. We just can't do
         // that in this base constructor though, as all the default interface fields are generated in each derived
         // projected types. That optimization can be done right after the call to the base constructor, in each type.
+        if (!hasUnwrappableNativeObjectReference)
+        {
+            _inspectableObjectReference = NativeObjectReference;
+        }
+    }
+
+    /// <summary>
+    /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="activationFactoryCallback">The <see cref="WindowsRuntimeActivationFactoryCallback"/> instance to delegate activation to.</param>
+    /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="additionalParameters">The additional parameters to provide to <paramref name="activationFactoryCallback"/>.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryCallback"/> is <see langword="null"/>.</exception>
+    /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
+    /// <remarks>
+    /// <para>
+    /// This constructor should only be used when activating composable types (both projected and user-defined types).
+    /// </para>
+    /// <para>
+    /// Additionally, this constructor is only meant to be used when additional custom parameters are required to invoke the target factory
+    /// method. If no additional parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeObjectReference, in Guid)"/> overload
+    /// should be used instead, as that is more efficient in case the default signature is sufficient.
+    /// </para>
+    /// </remarks>
+    protected WindowsRuntimeObject(
+        WindowsRuntimeActivationFactoryCallback activationFactoryCallback,
+        in Guid iid,
+        params ReadOnlySpan<object?> additionalParameters)
+    {
+        ArgumentNullException.ThrowIfNull(activationFactoryCallback);
+
+        bool hasUnwrappableNativeObjectReference = HasUnwrappableNativeObjectReference;
+
+        // Delegate to the activation factory callback (see detailed explanation above)
+        activationFactoryCallback(
+            additionalParameters: additionalParameters,
+            baseInterface: hasUnwrappableNativeObjectReference ? null : this,
+            innerInterface: out void* innerInterface,
+            defaultInterface: out void* defaultInterface);
+
+        // Initialize a 'WindowsRuntimeObjectReference' object (see detailed explanation above)
+        NativeObjectReference = WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
+            isAggregation: !hasUnwrappableNativeObjectReference,
+            thisInstance: this,
+            newInstanceUnknown: ref defaultInterface,
+            innerInstanceUnknown: ref innerInterface,
+            newInstanceIid: in iid);
+
+        // Optimization: pre-cache the inspectable object reference if possible (see detailed explanation above)
         if (!hasUnwrappableNativeObjectReference)
         {
             _inspectableObjectReference = NativeObjectReference;
