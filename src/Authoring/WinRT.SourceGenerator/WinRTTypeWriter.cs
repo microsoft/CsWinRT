@@ -1612,7 +1612,7 @@ namespace Generator
                 byteArray[12],
                 byteArray[13],
                 byteArray[14],
-                byteArray[15] 
+                byteArray[15]
             };
 
             AddCustomAttributes("Windows.Foundation.Metadata.GuidAttribute", types, arguments, parentHandle);
@@ -2369,6 +2369,11 @@ namespace Generator
                 currentTypeDeclaration.SymbolsWithAttributes.Add(symbol);
             }
         }
+        bool IsMatchingMember(ISymbol symbol, ISymbol memberNode)
+        {
+            return symbol.Name == memberNode.Name &&
+                   symbol.Kind == memberNode.Kind;
+        }
 
         void AddSynthesizedInterface(
             TypeDeclaration classDeclaration,
@@ -2381,9 +2386,36 @@ namespace Generator
             bool hasTypes = false;
             INamedTypeSymbol classSymbol = classDeclaration.Node as INamedTypeSymbol;
 
+            // If it is the case of our special abstract class, we will order the methods per the order in the projections.
+            var methodDefs = classDeclaration.MethodDefinitions;
+
+            var baseAbstractClass = classSymbol.BaseType;
+            if (baseAbstractClass != null && baseAbstractClass.IsAbstract && GeneratorHelper.IsWinRTType(baseAbstractClass, mapper))
+            {
+                var projectedAttr = baseAbstractClass.BaseType.GetAttributes().FirstOrDefault(attr => attr.AttributeClass?.Name == "ProjectedRuntimeClassAttribute");
+
+                if (projectedAttr != null && projectedAttr.ConstructorArguments.Length == 1 && projectedAttr.ConstructorArguments[0].Value is INamedTypeSymbol projectedType)
+                {
+                    var orderedMembers = projectedType.GetMembers().ToList();
+                    var orderedMethodDefinitions = classDeclaration.MethodDefinitions
+                        .Where(def => orderedMembers.Any(member => IsMatchingMember(def.Key, member))) 
+                        .OrderBy(def => orderedMembers.FindIndex(member => IsMatchingMember(def.Key, member)))
+                        .ToList();
+
+                    var extraMethodDefinitions = classDeclaration.MethodDefinitions
+                        .Where(def => !orderedMembers.Any(member => IsMatchingMember(def.Key, member)))
+                        .ToList();
+
+                    orderedMethodDefinitions.AddRange(extraMethodDefinitions);
+
+                    methodDefs = orderedMethodDefinitions.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, SymbolEqualityComparer.Default);
+                }
+            }
+
             // Each class member results in some form of method definition,
             // so using that to our advantage to get public members.
-            foreach (var classMember in classDeclaration.MethodDefinitions)
+
+            foreach (var classMember in methodDefs)
             {
                 if (interfaceType == SynthesizedInterfaceType.Factory &&
                     classMember.Key is IMethodSymbol constructorMethod &&
@@ -2735,6 +2767,7 @@ namespace Generator
 
                     if (projectedAttr != null && projectedAttr.ConstructorArguments.Length == 1 && projectedAttr.ConstructorArguments[0].Value is INamedTypeSymbol projectedType)
                     {
+                        projectedType.DeclaringSyntaxReferences.FirstOrDefault();
                         projectedType.TryGetAttributeWithType(Model.Compilation.GetTypeByMetadataName("System.Runtime.InteropServices.GuidAttribute"), out AttributeData guidAttr);
                         if (guidAttr != null && guidAttr.ConstructorArguments.Length == 1)
                         {
