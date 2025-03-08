@@ -197,6 +197,35 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
+    /// Gets a <see cref="WindowsRuntimeMarshallingInfo"/> instance for a given managed type.
+    /// </summary>
+    /// <param name="managedType">The input managed type to use for lookups.</param>
+    /// <returns>The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance.</returns>
+    /// <remarks>
+    /// This can be used to support type-specific marshalling for managed types passed to native.
+    /// </remarks>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeMarshallingInfo"/> instance could be resolved.</exception>
+    public static WindowsRuntimeMarshallingInfo GetInfo(Type managedType)
+    {
+        if (!TryGetInfo(managedType, out WindowsRuntimeMarshallingInfo? info))
+        {
+            // Analogous validation as for when retrieving the marshaller attribute
+            [DoesNotReturn]
+            [StackTraceHidden]
+            void ThrowNotSupportedException()
+            {
+                throw new NotSupportedException(
+                    $"The managed type '{managedType}' does not have any associated marshalling info. " +
+                    $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
+            }
+
+            ThrowNotSupportedException();
+        }
+
+        return info;
+    }
+
+    /// <summary>
     /// Tries to get a <see cref="WindowsRuntimeMarshallingInfo"/> instance for a given managed type.
     /// </summary>
     /// <param name="managedType">The input managed type to use for lookups.</param>
