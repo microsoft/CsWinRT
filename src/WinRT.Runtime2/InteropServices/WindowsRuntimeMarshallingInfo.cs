@@ -18,8 +18,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// A type providing cached information on a Windows Runtime type, either projected or managed only.
 /// </summary>
-/// <param name="metadataProviderType">The metadata provider type to wrap.</param>
-internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
+internal sealed class WindowsRuntimeMarshallingInfo
 {
     /// <summary>
     /// The external types mapping for Windows Runtime types.
@@ -63,9 +62,30 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
     private static readonly ConditionalWeakTable<Type, WindowsRuntimeMarshallingInfo?>.CreateValueCallback GetMetadataProviderTypeCallback = new(GetMetadataProviderType);
 
     /// <summary>
+    /// The public type associated with the current instance (ie. the type that would be used directly by developers).
+    /// </summary>
+    private readonly Type _publicType;
+
+    /// <summary>
     /// The metadata provider type associated with the current instance (ie. the mapped type to use to resolve attributes).
     /// </summary>
-    private readonly Type _metadataProviderType = metadataProviderType;
+    /// <remarks>
+    /// Here's some examples of how this type would relate to <see cref="_publicType"/> in different scenarios:
+    /// <list type="bullet">
+    ///   <item>
+    ///     For a Windows Runtime projected type, this would be the same as <see cref="_publicType"/>.
+    ///     This is because for generated types, the necessary attributes to provide additional metadata
+    ///     can be applied directly on the types themselves, making additional lookups not needed.
+    ///   </item>
+    ///   <item>For user-defined managed types, this would be the generated proxy type.</item>
+    ///   <item>
+    ///     For other generated associations (eg. generic type instantiations), this would also
+    ///     be the generated proxy type. This is because there would be no other way to link the
+    ///     additional metadata required for marshalling to the original types otherwise.
+    ///   </item>
+    /// </list>
+    /// </remarks>
+    private readonly Type _metadataProviderType;
 
     /// <summary>
     /// The cached <see cref="WindowsRuntimeMarshallerAttribute"/> instance (possibly a placeholder).
@@ -76,6 +96,17 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
     /// The cached <see cref="WindowsRuntimeVtableProviderAttribute"/> instance (possibly a placeholder).
     /// </summary>
     private volatile WindowsRuntimeVtableProviderAttribute? _vtableProvider;
+
+    /// <summary>
+    /// Creates a new <see cref="WindowsRuntimeMarshallingInfo"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="publicType"><inheritdoc cref="_publicType" path="/summary/node()"/></param>
+    /// <param name="metadataProviderType"><inheritdoc cref="_metadataProviderType" path="/summary/node()"/></param>
+    private WindowsRuntimeMarshallingInfo(Type publicType, Type metadataProviderType)
+    {
+        _publicType = publicType;
+        _metadataProviderType = metadataProviderType;
+    }
 
     /// <summary>
     /// Tries to get a <see cref="WindowsRuntimeMarshallingInfo"/> instance for a given runtime class name.
@@ -281,7 +312,19 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
     /// <returns>The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance.</returns>
     private static WindowsRuntimeMarshallingInfo CreateMarshallingInfo(Type metadataProviderType)
     {
-        return new(metadataProviderType);
+        // If '[WindowsRuntimeType]' is defined, this is a projected type, so it's the public type too
+        if (metadataProviderType.IsDefined(typeof(WindowsRuntimeTypeAttribute), inherit: false))
+        {
+            return new(metadataProviderType, metadataProviderType);
+        }
+
+        // Otherwise, the type is a proxy type, so we expect to find '[WindowsRuntimeMappedType]'
+        WindowsRuntimeMappedTypeAttribute mappedTypeAttribute = metadataProviderType.GetCustomAttribute<WindowsRuntimeMappedTypeAttribute>()!;
+
+        // This attribute should always be present here, or it would imply an authoring error
+        Debug.Assert(mappedTypeAttribute is not null);
+
+        return new(mappedTypeAttribute.PublicType, metadataProviderType);
     }
 
     /// <summary>
@@ -294,13 +337,21 @@ internal sealed class WindowsRuntimeMarshallingInfo(Type metadataProviderType)
         // If the type is a projected type, then it is also used as the metadata source
         if (managedType.IsDefined(typeof(WindowsRuntimeTypeAttribute), inherit: false))
         {
-            return new(managedType);
+            return new(managedType, managedType);
         }
 
         // Check if we have a mapped proxy type for this managed type
         if (WindowsRuntimeProxyTypes.TryGetValue(managedType, out Type? proxyType))
         {
-            return new(proxyType);
+            // For all proxy types, we expect to have '[WindowsRuntimeMappedType]' applied to them,
+            // pointing to the public mapped type they provide metadata for. We can lookup that here,
+            // so we can cache it for future use. For instance, it's used to associate vtable memory.
+            WindowsRuntimeMappedTypeAttribute mappedTypeAttribute = managedType.GetCustomAttribute<WindowsRuntimeMappedTypeAttribute>()!;
+
+            // This attribute should always be present here, or it would imply an authoring error
+            Debug.Assert(mappedTypeAttribute is not null);
+
+            return new(mappedTypeAttribute.PublicType, proxyType);
         }
 
         // We don't have a metadata provider for the type (we'll just marshal it as a generic 'IInspectable')
