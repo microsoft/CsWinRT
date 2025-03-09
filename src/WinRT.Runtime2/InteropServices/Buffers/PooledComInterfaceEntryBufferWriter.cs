@@ -13,7 +13,7 @@ namespace WindowsRuntime.InteropServices;
 /// A pooled <see cref="IBufferWriter{T}"/> implementation for <see cref="ComWrappers.ComInterfaceEntry"/> values,
 /// which can be used to efficiently prepare vtables for types to marshal to Windows Runtime APIs.
 /// </summary>
-internal sealed class PooledComInterfaceEntryBufferWriter : IBufferWriter<ComWrappers.ComInterfaceEntry>
+internal sealed class PooledComInterfaceEntryBufferWriter : IBufferWriter<ComWrappers.ComInterfaceEntry>, IDisposable
 {
     /// <summary>
     /// The default buffer size to use to expand empty arrays.
@@ -54,6 +54,20 @@ internal sealed class PooledComInterfaceEntryBufferWriter : IBufferWriter<ComWra
             ObjectDisposedException.ThrowIf(array is null, this);
 
             return array.AsSpan(0, _index);
+        }
+    }
+
+    /// <summary>
+    /// Gets the count of elements currently written to this buffer writer.
+    /// </summary>
+    public int Count
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            ObjectDisposedException.ThrowIf(_array is null, this);
+
+            return _index;
         }
     }
 
