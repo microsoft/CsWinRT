@@ -92,15 +92,6 @@
       <DependentUpon>InteropServices\WellKnownErrorCodes.tt</DependentUpon>
     </Compile>
   </ItemGroup>
-
-  <!-- Global usings for type aliases used within the library -->
-  <ItemGroup>
-    <Using Include="System.Int32" Alias="HRESULT" />
-    <Using Include="System.IntPtr" Alias="HSTRING" />
-    <Using Include="System.IntPtr" Alias="HMODULE" />
-    <Using Include="System.IntPtr" Alias="HANDLE" />
-    <Using Include="System.IntPtr" Alias="CO_MTA_USAGE_COOKIE" />
-  </ItemGroup>
   
   <!-- T4 template generation service (the .tt/.g.cs files are resolved in the .targets file) -->
   <ItemGroup>

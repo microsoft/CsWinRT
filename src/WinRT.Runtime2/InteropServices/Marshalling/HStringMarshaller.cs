@@ -69,7 +69,7 @@ public static unsafe class HStringMarshaller
         {
             // We explicitly want to make sure the resulting 'HSTRING' is 'null'.
             // The header doesn't need to be initialized, as it won't be used.
-            reference._hstring = (HSTRING)null;
+            reference._hstring = null;
 
             return;
         }
@@ -77,8 +77,8 @@ public static unsafe class HStringMarshaller
         // We can avoid pinning here, as 'HStringReference' is a 'ref struct', which means
         // it's guaranteed to be on the stack, and therefore pinned (as in, it can't move).
         // This means that just taking the address is safe, and slightly more efficient.
-        HSTRING_HEADER* headerPtr = (HSTRING_HEADER*)Unsafe.AsPointer(ref reference._header);
-        HSTRING* hstringPtr = (HSTRING*)Unsafe.AsPointer(ref reference._hstring);
+        HSTRING_HEADER* headerPtr = &((HStringReference*)Unsafe.AsPointer(ref reference))->_header;
+        HSTRING* hstringPtr = &((HStringReference*)Unsafe.AsPointer(ref reference))->_hstring;
 
         // Create the fast-pass 'HSTRING' on the target location. The fact the resulting
         // 'HSTRING' instance points to the header is why it should never be copied too.

@@ -6,7 +6,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// Represents a reference to a fast-pass <c>HSTRING</c> value (passed without copying).
 /// </summary>
-public ref struct HStringReference
+public unsafe ref struct HStringReference
 {
     /// <summary>
     /// The underlying header for the <c>HSTRING</c> reference.

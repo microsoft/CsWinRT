@@ -26,7 +26,7 @@ internal static unsafe class IStringableImpl
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT ToString(void* thisPtr, HSTRING* value)
     {
-        *value = (HANDLE)null;
+        *value = null;
 
         try
         {
