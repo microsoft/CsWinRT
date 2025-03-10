@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
-using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -24,9 +23,8 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Vector4"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector4"/>
-[EditorBrowsable(EditorBrowsableState.Never)]
 [Vector4VtableProvider]
-public static class Vector4;
+file static class Vector4;
 
 /// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Vector4"/>.
