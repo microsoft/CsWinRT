@@ -5,6 +5,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+using static System.Runtime.InteropServices.ComWrappers;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -46,7 +47,22 @@ internal static unsafe class IInspectableImpl
 
         try
         {
-            // TODO
+            object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            // Get the managed CCW vtable entries to gather the IIDs. This method should only be used with
+            // managed objects that were produced by 'WindowsRuntimeComWrappers', so this should never fail.
+            WindowsRuntimeVtableInfo vtableInfo = WindowsRuntimeMarshallingInfo.GetInfo(instance.GetType()).GetVtableInfo();
+
+            Guid* pIids = (Guid*)Marshal.AllocCoTaskMem(sizeof(Guid) * vtableInfo.Count);
+
+            // Copy the IIDs manually, as we need to select from 'ComInterfaceEntry' to just 'Guid'
+            for (int i = 0; i < vtableInfo.Count; i++)
+            {
+                pIids[i] = vtableInfo.VtableEntries[i].IID;
+            }
+
+            *iidCount = (uint)vtableInfo.Count;
+            *iids = pIids;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -64,7 +80,12 @@ internal static unsafe class IInspectableImpl
 
         try
         {
-            // TODO
+            object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            // Like for 'GetIids', this method should only be called on managed types, and it should never fail
+            string runtimeClassName = WindowsRuntimeMarshallingInfo.GetInfo(instance.GetType()).GetRuntimeClassName();
+
+            *className = HStringMarshaller.ConvertToUnmanaged(runtimeClassName);
 
             return WellKnownErrorCodes.S_OK;
         }

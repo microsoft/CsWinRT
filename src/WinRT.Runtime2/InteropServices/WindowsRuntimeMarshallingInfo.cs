@@ -104,6 +104,15 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private volatile WindowsRuntimeVtableInfo? _vtableInfo;
 
     /// <summary>
+    /// The cached runtime class name for the type.
+    /// </summary>
+    /// <remarks>
+    /// This is only used for managed types that are marshalled to native. For RCWs (ie. for Windows
+    /// Runtime projected types), the runtime class name would just be provided by the native object.
+    /// </remarks>
+    private string? _runtimeClassName;
+
+    /// <summary>
     /// A lazy-loaded <see cref="Lock"/> object to synchronize expensive work being performed.
     /// </summary>
     private volatile Lock? _lock;
@@ -212,14 +221,14 @@ internal sealed class WindowsRuntimeMarshallingInfo
             // Analogous validation as for when retrieving the marshaller attribute
             [DoesNotReturn]
             [StackTraceHidden]
-            void ThrowNotSupportedException()
+            static void ThrowNotSupportedException(Type managedType)
             {
                 throw new NotSupportedException(
                     $"The managed type '{managedType}' does not have any associated marshalling info. " +
                     $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
             }
 
-            ThrowNotSupportedException();
+            ThrowNotSupportedException(managedType);
         }
 
         return info;
@@ -425,6 +434,42 @@ internal sealed class WindowsRuntimeMarshallingInfo
         }
 
         return _vtableInfo ?? InitializeVtableInfo();
+    }
+
+    /// <summary>
+    /// Gets the runtime class name for the public type associated with the current metadata provider type.
+    /// </summary>
+    /// <returns>The resulting runtime class name.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no runtime class name could be resolved.</exception>
+    /// <remarks>This method is only meant to be used on managed types passed to native.</remarks>
+    public string GetRuntimeClassName()
+    {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        string InitializeRuntimeClassName()
+        {
+            WindowsRuntimeClassNameAttribute? runtimeClassNameAttribute =
+                _metadataProviderType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>()
+                ?? PublicType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>();
+
+            if (runtimeClassNameAttribute is null)
+            {
+                // Analogous validation as for when retrieving the marshaller attribute
+                [DoesNotReturn]
+                [StackTraceHidden]
+                void ThrowNotSupportedException()
+                {
+                    throw new NotSupportedException(
+                        $"The metadata provider type '{_metadataProviderType}' does not have any runtime class name info. " +
+                        $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
+                }
+
+                ThrowNotSupportedException();
+            }
+
+            return _runtimeClassName = runtimeClassNameAttribute.RuntimeClassName;
+        }
+
+        return _runtimeClassName ?? InitializeRuntimeClassName();
     }
 
     /// <summary>
