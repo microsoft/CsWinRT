@@ -25,6 +25,7 @@ namespace ABI.System;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
 [EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.TimeSpan>")]
 [TimeSpanVtableProvider]
 public struct TimeSpan
 {

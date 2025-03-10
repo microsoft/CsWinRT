@@ -23,6 +23,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Quaternion"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.quaternion"/>
+[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Quaternion>")]
 [QuaternionVtableProvider]
 file static class Quaternion;
 

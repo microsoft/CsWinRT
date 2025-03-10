@@ -25,6 +25,7 @@ namespace ABI.System;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.hresult"/>
 [EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.HResult>")]
 [ExceptionVtableProvider]
 public struct Exception
 {

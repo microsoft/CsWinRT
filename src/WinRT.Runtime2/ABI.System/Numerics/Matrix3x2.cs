@@ -23,6 +23,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Matrix3x2"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix3x2"/>
+[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix3x2>")]
 [Matrix3x2VtableProvider]
 file static class Matrix3x2;
 

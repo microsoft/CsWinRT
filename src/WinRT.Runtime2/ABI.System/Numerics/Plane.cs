@@ -23,6 +23,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Plane"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.plane"/>
+[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Plane>")]
 [PlaneVtableProvider]
 file static class Plane;
 

@@ -25,6 +25,7 @@ namespace ABI.System;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.datetime"/>
 [EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.DateTime>")]
 [DateTimeOffsetVtableProvider]
 public struct DateTimeOffset
 {
