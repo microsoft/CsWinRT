@@ -34,7 +34,15 @@ public sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
     {
-        WindowsRuntimeVtableInfo vtableInfo = WindowsRuntimeMarshallingInfo.GetInfo(obj.GetType()).GetVtableInfo();
+        // Try to get the marshallinf info for the input type. If we can't find it, we fallback to the marshalling info
+        // for 'object'. This is the shared marshalling mode for all unknown objects, ie. just an opaque 'IInspectable'.
+        if (!WindowsRuntimeMarshallingInfo.TryGetInfo(obj.GetType(), out WindowsRuntimeMarshallingInfo? marshallingInfo))
+        {
+            marshallingInfo = WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
+        }
+
+        // Get the vtable from the current marshalling info (it will get cached in that instance)
+        WindowsRuntimeVtableInfo vtableInfo = marshallingInfo.GetVtableInfo();
 
         count = vtableInfo.Count;
 
