@@ -41,7 +41,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         // get the proxy type for the constructed object. If we have a result, then we can use the marshaller
         // on the proxy type to marshal the object to native. This will cover all cases such as custom mapped
         // types, generic type instantiations, and user-defined types implementing projected interfaces.
-        if (WindowsRuntimeMarshallingInfo.TryGet(value.GetType(), out WindowsRuntimeMarshallingInfo? info))
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info))
         {
             thisPtr = info.GetMarshaller().ConvertToUnmanagedUnsafe(value);
         }

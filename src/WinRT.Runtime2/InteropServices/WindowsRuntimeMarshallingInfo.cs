@@ -10,6 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 #pragma warning disable IDE0008
 
@@ -97,7 +98,15 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// </summary>
     private volatile WindowsRuntimeVtableProviderAttribute? _vtableProvider;
 
-    private volatile VtableInfo? VtableInfo;
+    /// <summary>
+    /// The cached <see cref="WindowsRuntimeVtableInfo"/> instance.
+    /// </summary>
+    private volatile WindowsRuntimeVtableInfo? _vtableInfo;
+
+    /// <summary>
+    /// A lazy-loaded <see cref="Lock"/> object to synchronize expensive work being performed.
+    /// </summary>
+    private volatile Lock? _lock;
 
     /// <summary>
     /// Creates a new <see cref="WindowsRuntimeMarshallingInfo"/> instance with the specified parameters.
@@ -132,9 +141,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
 
                 // Cache the public type for later. We don't need a compare exchange here, as even if we did concurrent
                 // queries for this value, the result would always be the same. So we can skip that small overhead here.
-                _publicType = mappedTypeAttribute.PublicType;
-
-                return mappedTypeAttribute.PublicType;
+                return _publicType = mappedTypeAttribute.PublicType;
             }
 
             return _publicType ?? InitializePublicType();
@@ -150,7 +157,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <remarks>
     /// This can be used to support runtime type checks for objects marshalled from native to managed.
     /// </remarks>
-    public static bool TryGet(ReadOnlySpan<char> runtimeClassName, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
+    public static bool TryGetInfo(ReadOnlySpan<char> runtimeClassName, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
     {
         // Tries to get the external type for the input runtime class name
         static Type? TryGetExternalType(ReadOnlySpan<char> runtimeClassName)
@@ -198,7 +205,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <remarks>
     /// This can be used to support type-specific marshalling for managed types passed to native.
     /// </remarks>
-    public static bool TryGet(Type managedType, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
+    public static bool TryGetInfo(Type managedType, [NotNullWhen(true)] out WindowsRuntimeMarshallingInfo? info)
     {
         WindowsRuntimeMarshallingInfo? result = TypeToMetadataProviderTypes.GetValue(managedType, GetMetadataProviderTypeCallback);
 
@@ -228,7 +235,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
             void ThrowNotSupportedException()
             {
                 throw new NotSupportedException(
-                    $"The ABI type '{_metadataProviderType}' does not have any associated marshalling logic. " +
+                    $"The metadata provider type '{_metadataProviderType}' does not have any associated marshalling logic. " +
                     $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
             }
 
@@ -289,6 +296,32 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
+    /// Gets the <see cref="WindowsRuntimeVtableProviderAttribute"/> instance associated with the current metadata provider type.
+    /// </summary>
+    /// <returns>The resulting <see cref="WindowsRuntimeVtableProviderAttribute"/> instance.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeVtableProviderAttribute"/> instance could be resolved.</exception>
+    /// <remarks>This method is meant to be used when preparing CCW vtables for managed types.</remarks>
+    public WindowsRuntimeVtableProviderAttribute GetVtableProvider()
+    {
+        if (!TryGetVtableProvider(out WindowsRuntimeVtableProviderAttribute? vtableProvider))
+        {
+            // Analogous validation as for when retrieving the marshaller attribute
+            [DoesNotReturn]
+            [StackTraceHidden]
+            void ThrowNotSupportedException()
+            {
+                throw new NotSupportedException(
+                    $"The metadata provider type '{_metadataProviderType}' does not have any associated vtable provider logic. " +
+                    $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
+            }
+
+            ThrowNotSupportedException();
+        }
+
+        return vtableProvider;
+    }
+
+    /// <summary>
     /// Tries to get the <see cref="WindowsRuntimeVtableProviderAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
     /// <param name="vtableProvider">The resulting <see cref="WindowsRuntimeVtableProviderAttribute"/> instance, if available.</param>
@@ -336,6 +369,33 @@ internal sealed class WindowsRuntimeMarshallingInfo
         }
 
         return Load(out vtableProvider);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="WindowsRuntimeVtableProviderAttribute"/> instance associated with the current metadata provider type.
+    /// </summary>
+    /// <returns>The resulting <see cref="WindowsRuntimeVtableProviderAttribute"/> instance.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeVtableProviderAttribute"/> instance could be resolved.</exception>
+    /// <remarks>This method is meant to be used when preparing CCW vtables for managed types.</remarks>
+    public WindowsRuntimeVtableInfo GetVtableInfo()
+    {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        WindowsRuntimeVtableInfo InitializeVtableInfo()
+        {
+            // Initialize the lock if it hasn't been done yet
+            _ = Interlocked.CompareExchange(
+                location1: ref _lock,
+                value: new Lock(),
+                comparand: null);
+
+            // Lock and initialize the vtable if still not available
+            lock (_lock)
+            {
+                return _vtableInfo ??= WindowsRuntimeVtableInfo.CreateUnsafe(this);
+            }
+        }
+
+        return _vtableInfo ?? InitializeVtableInfo();
     }
 
     /// <summary>

@@ -3,7 +3,6 @@
 
 using System;
 using System.Buffers;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static System.Runtime.InteropServices.ComWrappers;
 
@@ -41,19 +40,24 @@ internal sealed unsafe class WindowsRuntimeVtableInfo
     /// <param name="info">The type info to compute the vtable for.</param>
     /// <returns>A new <see cref="WindowsRuntimeVtableInfo"/> instance for <paramref name="info"/>.</returns>
     /// <remarks>
+    /// <para>
     /// This method should only be called on types that do support being marshalled from a managed CCW.
+    /// </para>
+    /// <para>
+    /// It is responsibility of callers to avoid calling this method concurrently on the same type.
+    /// Doing so would result in multiple native vtables being allocated and kept alive indefinitely.
+    /// </para>
     /// </remarks>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeVtableProviderAttribute"/> instance could be resolved.</exception>
     public static WindowsRuntimeVtableInfo CreateUnsafe(WindowsRuntimeMarshallingInfo info)
     {
-        // Get the '[WindowsRuntimeVtableProvider]' attribute from the type, to get custom vtable entries
-        _ = info.TryGetVtableProvider(out WindowsRuntimeVtableProviderAttribute? vtableProvider);
-
+        // Get the '[WindowsRuntimeVtableProvider]' attribute from the type, to get custom vtable entries.
         // This should always find the attribute. The attribute not being present would mean that somehow
         // our 'ComWrappers' instance tried creating a CCW for a type that had an associated marshalling
         // info, but not a vtable provider. That is, it could only mean the type is a projected type,
         // which should never hit this path, or that the generator somehow didn't generate the attribute.
         // That would be a bug, and it should never happen in practice (and we'd want to crash if it did).
-        Debug.Assert(vtableProvider is not null);
+        WindowsRuntimeVtableProviderAttribute vtableProvider = info.GetVtableProvider();
 
         using PooledComInterfaceEntryBufferWriter writer = new();
 
