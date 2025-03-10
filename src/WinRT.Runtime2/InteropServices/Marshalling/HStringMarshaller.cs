@@ -17,6 +17,7 @@ public static unsafe class HStringMarshaller
     /// </summary>
     /// <param name="value">The <see cref="ReadOnlySpan{T}"/> value to convert.</param>
     /// <returns>The resulting <c>HSTRING</c>.</returns>
+    /// <remarks>It is responsibility of callers to free the returned <c>HSTRING</c> value.</remarks>
     public static HSTRING ConvertToUnmanaged(ReadOnlySpan<char> value)
     {
         if (value.IsEmpty)
@@ -144,6 +145,7 @@ public static unsafe class HStringMarshaller
     /// Release a given <c>HSTRING</c> value.
     /// </summary>
     /// <param name="value">The <c>HSTRING</c> to free.</param>
+    /// <remarks>It is responsibility of callers to ensure this method is only called once per <c>HSTRING</c> value.</remarks>
     public static void Free(HSTRING value)
     {
         // We technically don't need this check, since 'WindowsDeleteString' can handle 'null' values

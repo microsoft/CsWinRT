@@ -26,6 +26,19 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// Performs a <c>QueryInterface</c> call on the underlying COM object to retrieve the requested interface pointer.
     /// </summary>
     /// <param name="iid">The IID of the interface to query for.</param>
+    /// <returns>The resulting <see cref="WindowsRuntimeObjectReferenceValue"/> instance for the requested interface.</returns>
+    /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
+    /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> call fails for any reason.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public WindowsRuntimeObjectReferenceValue AsValue(in Guid iid)
+    {
+        return new(AsUnsafe(in iid));
+    }
+
+    /// <summary>
+    /// Performs a <c>QueryInterface</c> call on the underlying COM object to retrieve the requested interface pointer.
+    /// </summary>
+    /// <param name="iid">The IID of the interface to query for.</param>
     /// <returns>A <see cref="WindowsRuntimeObjectReference"/> instance for the requested interface.</returns>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
     /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> call fails for any reason.</exception>

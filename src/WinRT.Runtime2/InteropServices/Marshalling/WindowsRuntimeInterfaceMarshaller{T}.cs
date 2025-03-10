@@ -61,7 +61,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
         // Regardless of the 'QueryInterface' result, we should always release the original CCW pointer
         _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
 
-        // It is very inlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
+        // It is very unlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
         // or something else happened that is not really supported). Still, we can produce a nice error message for it.
         WindowsRuntimeInterfaceMarshaller.ThrowExceptionForHR(value, in iid, hresult);
 
