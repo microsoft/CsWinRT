@@ -53,7 +53,7 @@ public static unsafe class PropertyChangedEventHandlerMarshaller
     /// <returns>The unmanaged object.</returns>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.PropertyChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in PropertyChangedEventHandlerImpl.IID);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged<PropertyChangedEventHandlerNativeDelegate>(value);
     }
 
     /// <summary>
@@ -105,7 +105,7 @@ file sealed class PropertyChangedEventHandlerDelegateMarshallerAttribute : Windo
     /// <inheritdoc/>
     public override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(Delegate value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in PropertyChangedEventHandlerImpl.IID);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged<PropertyChangedEventHandlerNativeDelegate>(value);
     }
 
     /// <inheritdoc/>

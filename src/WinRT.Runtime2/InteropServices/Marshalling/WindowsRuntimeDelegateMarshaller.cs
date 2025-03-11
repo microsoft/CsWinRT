@@ -14,8 +14,8 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// <summary>
     /// Marshals a Windows Runtime delegate to a native COM object interface pointer.
     /// </summary>
+    /// <typeparam name="T">The type of Windows Runtime delegate that the associated marshalling logic would use.</typeparam>
     /// <param name="value">The input delegate to marshal.</param>
-    /// <param name="iid">The IID of the delegate type.</param>
     /// <returns>The resulting marshalled object for <paramref name="value"/>.</returns>
     /// <remarks>
     /// The returned <see cref="WindowsRuntimeObjectReferenceValue"/> value will own an additional
@@ -23,7 +23,8 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// a runtime-provided CCW for the managed object instance). It is responsibility of the caller to always
     /// make sure that the returned <see cref="WindowsRuntimeObjectReferenceValue"/> instance is disposed.
     /// </remarks>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(Delegate? value, in Guid iid)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged<T>(Delegate? value)
+        where T : WindowsRuntimeDelegate
     {
         if (value is null)
         {
@@ -34,8 +35,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         // which has a method implementing the ABI function, which the returned 'Delegate' instance closes
         // over. So to check for that case, we get the target of the delegate and check if we can unwrap it.
         // We don't need to do a 'QueryInterface', as that native object will always be the delegate interface.
-        // The assumption is that there's only ever a single target type mapped to a given delegate type.
-        if (value.Target is WindowsRuntimeDelegate windowsRuntimeDelegate)
+        if (value.Target is T windowsRuntimeDelegate)
         {
             return windowsRuntimeDelegate.NativeObjectReference.AsValue();
         }
