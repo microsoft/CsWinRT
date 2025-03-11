@@ -141,7 +141,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
                 // If we don't yet have a public type, it means that we have some metadata provider type
                 // which is not a Windows Runtime projected type, for which we haven't loaded the mapped
                 // public type yet. We can do that here.
-                WindowsRuntimeMappedTypeAttribute mappedTypeAttribute = _metadataProviderType.GetCustomAttribute<WindowsRuntimeMappedTypeAttribute>()!;
+                WindowsRuntimeMappedTypeAttribute mappedTypeAttribute = _metadataProviderType.GetCustomAttribute<WindowsRuntimeMappedTypeAttribute>(inherit: false)!;
 
                 // In this scenario, it is guaranteed that the '[WindowsRuntimeMappedType]' attribute will be present on the
                 // metadata provider type, as we would not have any way to go back to the associated public type otherwise,
@@ -295,7 +295,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         [MethodImpl(MethodImplOptions.NoInlining)]
         bool Load([NotNullWhen(true)] out WindowsRuntimeObjectMarshallerAttribute? marshaller)
         {
-            WindowsRuntimeObjectMarshallerAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeObjectMarshallerAttribute>();
+            WindowsRuntimeObjectMarshallerAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeObjectMarshallerAttribute>(inherit: false);
 
             value ??= PlaceholderWindowsRuntimeMarshallerAttribute.Instance;
 
@@ -371,7 +371,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         [MethodImpl(MethodImplOptions.NoInlining)]
         bool Load([NotNullWhen(true)] out WindowsRuntimeVtableProviderAttribute? vtableProvider)
         {
-            WindowsRuntimeVtableProviderAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeVtableProviderAttribute>();
+            WindowsRuntimeVtableProviderAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeVtableProviderAttribute>(inherit: false);
 
             value ??= PlaceholderWindowsRuntimeVtableProviderAttribute.Instance;
 
@@ -448,8 +448,8 @@ internal sealed class WindowsRuntimeMarshallingInfo
         string InitializeRuntimeClassName()
         {
             WindowsRuntimeClassNameAttribute? runtimeClassNameAttribute =
-                _metadataProviderType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>()
-                ?? PublicType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>();
+                _metadataProviderType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>(inherit: false)
+                ?? PublicType.GetCustomAttribute<WindowsRuntimeClassNameAttribute>(inherit: false);
 
             if (runtimeClassNameAttribute is null)
             {
