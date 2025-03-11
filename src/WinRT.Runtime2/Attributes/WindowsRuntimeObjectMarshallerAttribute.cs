@@ -6,13 +6,20 @@ using System;
 namespace WindowsRuntime;
 
 /// <summary>
-/// An attribute containing the untyped marshalling logic for objects being passed to native code.
-/// It is used in either of the following scenarios:
+/// An attribute containing the untyped marshalling logic for Windows Runtime objects being passed to native code.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This attribute is used in either of the following scenarios:
 /// <list type="bullet">
 ///   <item>Projected types (either RCWs, or boxed value types).</item>
 ///   <item>Managed types (in which case, the attribute is on their associated proxy types).</item>
 /// </list>
-/// </summary>
+/// </para>
+/// <para>
+/// This attribute is only meant to be used to marshal objects which implement the <c>IInspectable</c> interface.
+/// </para>
+/// </remarks>
 [AttributeUsage(
     AttributeTargets.Class |
     AttributeTargets.Struct |
@@ -21,7 +28,7 @@ namespace WindowsRuntime;
     AttributeTargets.Delegate,
     AllowMultiple = false,
     Inherited = false)]
-public abstract unsafe class WindowsRuntimeMarshallerAttribute : Attribute
+public abstract unsafe class WindowsRuntimeObjectMarshallerAttribute : Attribute
 {
     /// <summary>
     /// Marshals a boxed object (RCW, boxed projected value type, or boxed managed type), to the right CCW.

@@ -10,7 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// The <see cref="ComWrappers"/> implementation for Windows Runtime interop.
 /// </summary>
-public sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
+internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 {
     /// <summary>
     /// The statically-visible delegate type that should be used by <see cref="CreateObject"/>, if available.

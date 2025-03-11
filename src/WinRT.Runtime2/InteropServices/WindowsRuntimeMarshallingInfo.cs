@@ -89,9 +89,9 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private volatile Type? _publicType;
 
     /// <summary>
-    /// The cached <see cref="WindowsRuntimeMarshallerAttribute"/> instance (possibly a placeholder).
+    /// The cached <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance (possibly a placeholder).
     /// </summary>
-    private volatile WindowsRuntimeMarshallerAttribute? _marshaller;
+    private volatile WindowsRuntimeObjectMarshallerAttribute? _marshaller;
 
     /// <summary>
     /// The cached <see cref="WindowsRuntimeVtableProviderAttribute"/> instance (possibly a placeholder).
@@ -253,17 +253,17 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Gets the <see cref="WindowsRuntimeMarshallerAttribute"/> instance associated with the current metadata provider type.
+    /// Gets the <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
-    /// <returns>The resulting <see cref="WindowsRuntimeMarshallerAttribute"/> instance.</returns>
-    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeMarshallerAttribute"/> instance could be resolved.</exception>
+    /// <returns>The resulting <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance could be resolved.</exception>
     /// <remarks>
     /// This method is meant to be used when marshalling user-defined types to native. In this case, the marshalling info should point to
     /// the generated (or built-in) proxy types, which will always have a marshaller attribute on them. Other scenarios are not supported.
     /// </remarks>
-    public WindowsRuntimeMarshallerAttribute GetMarshaller()
+    public WindowsRuntimeObjectMarshallerAttribute GetMarshaller()
     {
-        if (!TryGetMarshaller(out WindowsRuntimeMarshallerAttribute? marshaller))
+        if (!TryGetMarshaller(out WindowsRuntimeObjectMarshallerAttribute? marshaller))
         {
             // All projected types will have an associated marshaller, so this could only
             // happen with some proxy types that were not configured correctly. In practice,
@@ -284,18 +284,18 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Tries to get the <see cref="WindowsRuntimeMarshallerAttribute"/> instance associated with the current metadata provider type.
+    /// Tries to get the <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
-    /// <param name="marshaller">The resulting <see cref="WindowsRuntimeMarshallerAttribute"/> instance, if available.</param>
+    /// <param name="marshaller">The resulting <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance, if available.</param>
     /// <returns>Whether <paramref name="marshaller"/> was retrieved successfully.</returns>
     /// <remarks>This will not be present for eg. types not implementing any Windows Runtime interfaces, which are also not projected.</remarks>
-    public bool TryGetMarshaller([NotNullWhen(true)] out WindowsRuntimeMarshallerAttribute? marshaller)
+    public bool TryGetMarshaller([NotNullWhen(true)] out WindowsRuntimeObjectMarshallerAttribute? marshaller)
     {
         // Initializes the 'WindowsRuntimeMarshallerAttribute' instance, if present
         [MethodImpl(MethodImplOptions.NoInlining)]
-        bool Load([NotNullWhen(true)] out WindowsRuntimeMarshallerAttribute? marshaller)
+        bool Load([NotNullWhen(true)] out WindowsRuntimeObjectMarshallerAttribute? marshaller)
         {
-            WindowsRuntimeMarshallerAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeMarshallerAttribute>();
+            WindowsRuntimeObjectMarshallerAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeObjectMarshallerAttribute>();
 
             value ??= PlaceholderWindowsRuntimeMarshallerAttribute.Instance;
 
@@ -313,7 +313,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
             return false;
         }
 
-        WindowsRuntimeMarshallerAttribute? value = _marshaller;
+        WindowsRuntimeObjectMarshallerAttribute? value = _marshaller;
 
         // We have a cached marshaller, so return it immediately
         if (value is not null)
@@ -515,9 +515,9 @@ internal sealed class WindowsRuntimeMarshallingInfo
 }
 
 /// <summary>
-/// A placeholder <see cref="WindowsRuntimeMarshallerAttribute"/> type.
+/// A placeholder <see cref="WindowsRuntimeObjectMarshallerAttribute"/> type.
 /// </summary>
-file sealed unsafe class PlaceholderWindowsRuntimeMarshallerAttribute : WindowsRuntimeMarshallerAttribute
+file sealed unsafe class PlaceholderWindowsRuntimeMarshallerAttribute : WindowsRuntimeObjectMarshallerAttribute
 {
     /// <summary>
     /// The shared placeholder instance.

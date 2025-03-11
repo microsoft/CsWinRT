@@ -8,7 +8,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for managed objects going through the normal <see cref="WindowsRuntimeComWrappers"/> CCW creation path.
 /// </summary>
-public sealed unsafe class WindowsRuntimeComWrappersMarshallerAttribute : WindowsRuntimeMarshallerAttribute
+public sealed unsafe class WindowsRuntimeComWrappersMarshallerAttribute : WindowsRuntimeObjectMarshallerAttribute
 {
     /// <inheritdoc/>
     public override unsafe void* ConvertToUnmanagedUnsafe(object value)

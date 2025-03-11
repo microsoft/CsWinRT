@@ -48,6 +48,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// <summary>
     /// Converts an unmanaged pointer to a Windows Runtime delegate to its managed <typeparamref name="T"/> object.
     /// </summary>
+    /// <typeparam name="T">The type of delegate to product (it cannot be <see cref="Delegate"/>).</typeparam>
     /// <param name="value">The input delegate to convert to managed.</param>
     /// <returns>The resulting managed <typeparamref name="T"/> value.</returns>
     public static T? ConvertToManagedUnsafe<T>(void* value)
