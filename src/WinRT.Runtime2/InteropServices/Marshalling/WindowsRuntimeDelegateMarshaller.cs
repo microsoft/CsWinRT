@@ -30,12 +30,14 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
             return default;
         }
 
-        // Delegates coming from native code are projected with a type deriving from 'WindowsRuntimeObject',
+        // Delegates coming from native code are projected with a type deriving from 'WindowsRuntimeDelegate',
         // which has a method implementing the ABI function, which the returned 'Delegate' instance closes
         // over. So to check for that case, we get the target of the delegate and check if we can unwrap it.
-        if (value.Target is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject)
+        // We don't need to do a 'QueryInterface', as that native object will always be the delegate interface.
+        // The assumption is that there's only ever a single target type mapped to a given delegate type.
+        if (value.Target is WindowsRuntimeDelegate windowsRuntimeDelegate)
         {
-            return windowsRuntimeObject.NativeObjectReference.AsValue(in iid);
+            return windowsRuntimeDelegate.NativeObjectReference.AsValue();
         }
 
         // The input delegate is a managed one, so we need to find the proxy type to marshal it.
