@@ -1745,6 +1745,68 @@ namespace winrt::TestComponentCSharp::implementation
         return obj.as<IReferenceArray<hstring>>().Value();
     }
 
+    int32_t Class::UnboxInt32UsingPropertyValue(IInspectable const& obj)
+    {
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            return ipv.GetInt32();
+        }
+        return -1;
+    }
+
+    hstring Class::UnboxStringUsingPropertyValue(IInspectable const& obj)
+    {
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            return ipv.GetString();
+        }
+
+        return L"";
+    }
+
+    Rect Class::UnboxRectUsingPropertyValue(IInspectable const& obj)
+    {
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            return ipv.GetRect();
+        }
+
+        return Rect(-1, -1, -1, -1);
+    }
+
+    com_array<int32_t> Class::UnboxInt32ArrayUsingPropertyValue(IInspectable const& obj)
+    {
+        com_array<int32_t> arr;
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            ipv.GetInt32Array(arr);
+        }
+
+        return arr;
+    }
+
+    com_array<bool> Class::UnboxBooleanArrayUsingPropertyValue(IInspectable const& obj)
+    {
+        com_array<bool> arr;
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            ipv.GetBooleanArray(arr);
+        }
+
+        return arr;
+    }
+
+    com_array<Point> Class::UnboxPointArrayUsingPropertyValue(IInspectable const& obj)
+    {
+        com_array<Point> arr;
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            ipv.GetPointArray(arr);
+        }
+
+        return arr;
+    }
+
     int32_t Class::GetPropertyType(IInspectable const& obj)
     {
         if (auto ipv = obj.try_as<IPropertyValue>())
