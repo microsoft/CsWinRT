@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -33,6 +35,21 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         if (value is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject)
         {
             return new(windowsRuntimeObject.InspectableObjectReference);
+        }
+
+        // If 'value' is a managed wrapper for a native delegate, we can't marshal it to 'IInspectable'
+        if (value is Delegate { Target: WindowsRuntimeDelegate })
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException(object value)
+            {
+                throw new NotSupportedException(
+                    $"This delegate instance of type '{value.GetType()}' cannot be marshalled as a Windows Runtime object, because it is wrapping a native " +
+                    $"Windows Runtime delegate object, which does not implement 'IInspectable'. Only managed delegate instances can be marshalled as objects.");
+            }
+
+            ThrowArgumentException(value);
         }
 
         using WindowsRuntimeObjectReferenceValue unmanagedValue = default;
