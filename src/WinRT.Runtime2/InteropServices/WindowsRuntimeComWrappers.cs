@@ -67,7 +67,41 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override object? CreateObject(nint externalComObject, CreateObjectFlags flags)
     {
-        throw new NotImplementedException();
+        // If we have a target delegate type, it means that we are creating an RCW for a statically visible
+        // Windows Runtime delegate type (eg. a return type, or a parameter type). In this case, we can look
+        // up the mapped type for it, and use its delegate marshaller. In this scenario, the marshalling logic
+        // must exist, and there's no support for marshalling "some opaque object". That is, if we fail to get
+        // the mapped type, or if we can't find the marshalling logic on the mapped type, we just throw.
+        if (CreateDelegateTargetType is Type delegateType)
+        {
+            return WindowsRuntimeMarshallingInfo.GetInfo(delegateType).GeDelegateMarshaller().ConvertToManaged((void*)externalComObject);
+        }
+
+        // For all other supported objects (ie. Windows Runtime objects), we expect to have an input 'IInspectable' object.
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe((void*)externalComObject, in WellKnownInterfaceIds.IID_IInspectable, out void* inspectablePtr);
+
+        // The input object is not some 'IInspectable', so we can't handle it in this 'ComWrappers' implementation.
+        // We return 'null' so that the runtime can still do its logic as a fallback for 'IUnknown' and 'IDispatch'.
+        if (!WellKnownErrorCodes.Succeeded(hresult))
+        {
+            return null;
+        }
+
+        try
+        {
+            if (CreateObjectTargetType is Type { IsSealed: true } objectType)
+            {
+                return WindowsRuntimeMarshallingInfo.GetInfo(objectType).GetObjectMarshaller().ConvertToManaged(inspectablePtr);
+            }
+        }
+        finally
+        {
+            // Make sure not to leak the object, if someone else hasn't taken ownership of it just yet
+            if (inspectablePtr != null)
+            {
+                _ = IUnknownVftbl.ReleaseUnsafe(inspectablePtr);
+            }
+        }
     }
 
     /// <inheritdoc/>
