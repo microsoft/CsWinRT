@@ -13,7 +13,8 @@ variables:
 - name: Net8.SDK.Version
   value: '8.0.303'
 - name: Net9.SDK.Version
-  value: '9.0.100'
+  value: '9.0.201'
+
 - name: NoSamples
   value: 'false'
   
@@ -29,7 +30,8 @@ variables:
 - name: _DotNetRuntimeVersion
   value: $[coalesce(variables.DotNetRuntimeVersion, '8.0.303')]  
 - name: _DotNet9RuntimeVersion
-  value: $[coalesce(variables.DotNet9RuntimeVersion, '9.0.100')]  
+  value: $[coalesce(variables.DotNet9RuntimeVersion, '9.0.201')]  
+
 - name: _WindowsSdkVersionSuffix
   value: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  
 - name: _PublishCsWinMD
