@@ -125,12 +125,12 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <summary>
     /// Creates a new <see cref="WindowsRuntimeMarshallingInfo"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="publicType"><inheritdoc cref="_publicType" path="/summary/node()"/></param>
     /// <param name="metadataProviderType"><inheritdoc cref="_metadataProviderType" path="/summary/node()"/></param>
-    private WindowsRuntimeMarshallingInfo(Type? publicType, Type metadataProviderType)
+    /// <param name="publicType"><inheritdoc cref="_publicType" path="/summary/node()"/></param>
+    private WindowsRuntimeMarshallingInfo(Type metadataProviderType, Type? publicType)
     {
-        _publicType = publicType;
         _metadataProviderType = metadataProviderType;
+        _publicType = publicType;
     }
 
     /// <summary>
@@ -565,7 +565,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // overhead at startup. That value is only needed eg. when associating native memory for vtables.
         return metadataProviderType.IsDefined(typeof(WindowsRuntimeTypeAttribute), inherit: false)
             ? new(metadataProviderType, metadataProviderType)
-            : new(publicType: null, metadataProviderType);
+            : new(metadataProviderType, publicType: null);
     }
 
     /// <summary>
@@ -578,7 +578,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // Same as above: if the type is a projected type, then it is also used as the metadata source
         if (managedType.IsDefined(typeof(WindowsRuntimeTypeAttribute), inherit: false))
         {
-            return new(managedType, managedType);
+            return new(managedType, publicType: managedType);
         }
 
         // Check if we have a mapped proxy type for this managed type. If we do, that type
@@ -586,7 +586,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
         // type. In this case, we don't need to query for '[WindowsRuntimeMappedType]'.
         if (WindowsRuntimeProxyTypes.TryGetValue(managedType, out Type? proxyType))
         {
-            return new(managedType, proxyType);
+            return new(proxyType, publicType: managedType);
         }
 
         // We don't have a metadata provider for the type (we'll just marshal it as a generic 'IInspectable')
