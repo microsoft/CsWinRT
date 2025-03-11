@@ -31,9 +31,9 @@ namespace WindowsRuntime;
     Inherited = false)]
 public abstract unsafe class WindowsRuntimeObjectMarshallerAttribute : Attribute
 {
-    /// <inheritdoc cref="InteropServices.Marshalling.WindowsRuntimeObjectMarshaller.ConvertToUnmanagedUnsafe"/>
-    public abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanagedUnsafe(object value);
+    /// <inheritdoc cref="InteropServices.Marshalling.WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
+    public abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(object value);
 
     /// <inheritdoc cref="InteropServices.Marshalling.WindowsRuntimeObjectMarshaller.ConvertToManaged"/>
-    public abstract object ConvertToManaged(in WindowsRuntimeObjectReferenceValue value);
+    public abstract object ConvertToManaged(void* value);
 }

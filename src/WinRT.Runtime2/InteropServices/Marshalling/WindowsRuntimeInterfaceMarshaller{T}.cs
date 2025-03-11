@@ -33,7 +33,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
     /// make sure that the returned <see cref="WindowsRuntimeObjectReferenceValue"/> instance is disposed.
     /// </para>
     /// </remarks>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanagedUnsafe(T? value, in Guid iid)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(T? value, in Guid iid)
     {
         if (value is null)
         {
@@ -53,7 +53,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
         // We can then get or create the CCW for it. The interface should be present in the generated vtable for the type.
         if (WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info))
         {
-            *&unmanagedValue = info.GetMarshaller().ConvertToUnmanagedUnsafe(value);
+            *&unmanagedValue = info.GetMarshaller().ConvertToUnmanaged(value);
         }
         else
         {

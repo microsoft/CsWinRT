@@ -33,6 +33,25 @@ public static unsafe class WindowsRuntimeHelpers
     }
 
     /// <summary>
+    /// Allocates an initializes an <c>IUnknown</c> vtable that's associated with a given type, with additional vtable entries.
+    /// </summary>
+    /// <param name="type">The type associated with the allocated memory.</param>
+    /// <param name="fpEntry3">The function pointer at index <c>3</c> in the vtable.</param>
+    /// <returns>The resulting <c>IUnknown</c> vtable.</returns>
+    /// <remarks>
+    /// It is the caller's responsibility to ensure the additional vtable entry is valid and has the correct signature for the resulting vtable.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="type"/> is <see langword="null"/>.</exception>
+    public static void** AllocateTypeAssociatedUnknownVtableUnsafe(Type type, void* fpEntry3)
+    {
+        void** vftbl = AllocateTypeAssociatedInspectableVtable(type, 4);
+
+        vftbl[3] = fpEntry3;
+
+        return vftbl;
+    }
+
+    /// <summary>
     /// Allocates an initializes an <c>IInspectable</c> vtable that's associated with a given type.
     /// </summary>
     /// <param name="type">The type associated with the allocated memory.</param>

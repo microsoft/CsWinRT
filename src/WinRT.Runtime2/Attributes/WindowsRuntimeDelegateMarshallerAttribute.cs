@@ -15,9 +15,9 @@ namespace WindowsRuntime;
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 public abstract unsafe class WindowsRuntimeDelegateMarshallerAttribute : Attribute
 {
-    /// <inheritdoc cref="InteropServices.Marshalling.WindowsRuntimeDelegateMarshaller.ConvertToUnmanagedUnsafe"/>
+    /// <inheritdoc cref="InteropServices.Marshalling.WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
     public abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(Delegate value);
 
-    /// <inheritdoc cref="InteropServices.Marshalling.WindowsRuntimeDelegateMarshaller.ConvertToManagedUnsafe"/>
-    public abstract Delegate ConvertToManagedUnsafe(in WindowsRuntimeObjectReferenceValue value);
+    /// <inheritdoc cref="InteropServices.Marshalling.WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public abstract Delegate ConvertToManaged(void* value);
 }

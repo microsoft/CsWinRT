@@ -169,6 +169,9 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <summary>
     /// Gets the inner Windows Runtime object reference for the current instance.
     /// </summary>
+    /// <remarks>
+    /// This object reference should point to an <c>IInspectable</c> native object.
+    /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal WindowsRuntimeObjectReference NativeObjectReference { get; }
 

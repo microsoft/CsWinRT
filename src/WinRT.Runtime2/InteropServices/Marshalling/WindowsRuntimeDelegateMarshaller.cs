@@ -23,7 +23,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// a runtime-provided CCW for the managed object instance). It is responsibility of the caller to always
     /// make sure that the returned <see cref="WindowsRuntimeObjectReferenceValue"/> instance is disposed.
     /// </remarks>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanagedUnsafe(Delegate? value, in Guid iid)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(Delegate? value, in Guid iid)
     {
         if (value is null)
         {
@@ -42,22 +42,19 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         // Contrary to when normal objects are marshalled, delegates can't be marshalled if no
         // associated marshalling info is available, as otherwise we wouldn't be able to have
         // the necessary marshalling stub to dispatch delegate invocations from native code.
-        return WindowsRuntimeMarshallingInfo.GetInfo(value.GetType()).GetMarshaller().ConvertToUnmanagedUnsafe(value);
+        return WindowsRuntimeMarshallingInfo.GetInfo(value.GetType()).GetMarshaller().ConvertToUnmanaged(value);
     }
 
     /// <summary>
-    /// Converts a <see cref="WindowsRuntimeObjectReferenceValue"/> to its managed <typeparamref name="T"/> delegate instance.
+    /// Converts an unmanaged pointer to a Windows Runtime delegate to its managed <typeparamref name="T"/> object.
     /// </summary>
     /// <typeparam name="T">The type of delegate to marshal values to (it cannot be <see cref="Delegate"/>).</typeparam>
-    /// <param name="value">The <see cref="WindowsRuntimeObjectReferenceValue"/> to marshal to a delegate instance.</param>
+    /// <param name="value">The input delegate to convert to managed.</param>
     /// <returns>The resulting managed <typeparamref name="T"/> value.</returns>
-    /// <remarks>
-    /// The <paramref name="value"/> parameter is owned by callers, and it should not be disposed by this method.
-    /// </remarks>
-    public static T? ConvertToManagedUnsafe<T>(in WindowsRuntimeObjectReferenceValue value)
+    public static T? ConvertToManaged<T>(void* value)
         where T : Delegate
     {
-        if (value.IsNull)
+        if (value is null)
         {
             return null;
         }
@@ -65,9 +62,9 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         WindowsRuntimeComWrappers.CreateDelegateTargetType = typeof(T);
         WindowsRuntimeComWrappers.CreateObjectTargetType = null;
 
-        object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value.GetThisPtrUnsafe(), CreateObjectFlags.TrackerObject);
+        object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.TrackerObject);
 
-        WindowsRuntimeComWrappers.CreateObjectTargetType = null;
+        WindowsRuntimeComWrappers.CreateDelegateTargetType = null;
 
         return (T?)managedDelegate;
     }

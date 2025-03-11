@@ -31,7 +31,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
         out void* defaultInterface)
     {
         using WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue();
-        using WindowsRuntimeObjectReferenceValue baseInterfaceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanagedUnsafe(baseInterface);
+        using WindowsRuntimeObjectReferenceValue baseInterfaceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
 
         fixed (void** innerInterfacePtr = &innerInterface)
         fixed (void** defaultInterfacePtr = &defaultInterface)
