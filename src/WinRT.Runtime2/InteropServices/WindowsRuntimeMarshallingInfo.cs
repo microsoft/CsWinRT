@@ -525,9 +525,15 @@ file sealed unsafe class PlaceholderWindowsRuntimeMarshallerAttribute : WindowsR
     public static PlaceholderWindowsRuntimeMarshallerAttribute Instance = new();
 
     /// <inheritdoc/>
-    public override unsafe void* ConvertToUnmanagedUnsafe(object? value)
+    public override WindowsRuntimeObjectReferenceValue ConvertToUnmanagedUnsafe(object? value)
     {
-        return null;
+        return default;
+    }
+
+    /// <inheritdoc/>
+    public override object ConvertToManaged(in WindowsRuntimeObjectReferenceValue value)
+    {
+        return null!;
     }
 }
 

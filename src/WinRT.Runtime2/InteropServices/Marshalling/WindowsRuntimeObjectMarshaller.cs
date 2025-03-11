@@ -35,7 +35,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             return new(windowsRuntimeObject.InspectableObjectReference);
         }
 
-        void* thisPtr;
+        using WindowsRuntimeObjectReferenceValue unmanagedValue = default;
 
         // If 'value' is not a projected Windows Runtime class, we need to consult the type map and try to
         // get the proxy type for the constructed object. If we have a result, then we can use the marshaller
@@ -43,25 +43,38 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         // types, generic type instantiations, and user-defined types implementing projected interfaces.
         if (WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info))
         {
-            thisPtr = info.GetMarshaller().ConvertToUnmanagedUnsafe(value);
+            *&unmanagedValue = info.GetMarshaller().ConvertToUnmanagedUnsafe(value);
         }
         else
         {
             // If we got here, we need to marshal the object ourselves, like we do for interfaces. This applies
             // to both normal user-defined types, and managed types derived from Windows Runtime classes. This
             // will cover cases where we're just marshalling an opaque object as just 'IInspectable'.
-            thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+            void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+
+            *&unmanagedValue = new WindowsRuntimeObjectReferenceValue(thisPtr);
         }
 
         // 'ComWrappers' returns an 'IUnknown' pointer, so we can't avoid an additional 'QueryInterface' for 'IInspectable'
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownInterfaceIds.IID_IInspectable, out void* interfacePtr);
-
-        // Regardless of the 'QueryInterface' result, we should always release the original CCW pointer
-        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(unmanagedValue.GetThisPtrUnsafe(), in WellKnownInterfaceIds.IID_IInspectable, out void* interfacePtr);
 
         // All CCWs produced by our 'ComWrappers' implementation will always implement 'IInspectable'
         Debug.Assert(WellKnownErrorCodes.Succeeded(hresult));
 
         return new(interfacePtr);
+    }
+
+    /// <summary>
+    /// Marshals a <see cref="WindowsRuntimeObjectReferenceValue"/> to a managed object.
+    /// </summary>
+    /// <param name="value">The <see cref="WindowsRuntimeObjectReferenceValue"/> to marshal.</param>
+    /// <returns>The resulting marshalled managed object.</returns>
+    /// <remarks>
+    /// The <paramref name="value"/> parameter is owned by callers, and it should not be disposed by this method.
+    /// </remarks>
+    public static object? ConvertToManaged(in WindowsRuntimeObjectReferenceValue value)
+    {
+        // TODO
+        return null;
     }
 }

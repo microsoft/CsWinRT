@@ -47,19 +47,25 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
             return new(windowsRuntimeInterface.GetInterface());
         }
 
+        using WindowsRuntimeObjectReferenceValue unmanagedValue = default;
+
         // If we got here, it means that 'value' is a managed, user-defined type implementing the Windows Runtime interface.
         // We can then get or create the CCW for it. The interface should be present in the generated vtable for the type.
-        // This logic is the same as in 'WindowsRuntimeObjectMarshaller.ConvertToUnmanagedUnsafe', see notes there.
-        void* thisPtr = WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info)
-            ? info.GetMarshaller().ConvertToUnmanagedUnsafe(value)
-            : (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info))
+        {
+            *&unmanagedValue = info.GetMarshaller().ConvertToUnmanagedUnsafe(value);
+        }
+        else
+        {
+            // This logic is the same as in 'WindowsRuntimeObjectMarshaller.ConvertToUnmanagedUnsafe', see notes there.
+            void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+
+            *&unmanagedValue = new WindowsRuntimeObjectReferenceValue(thisPtr);
+        }
 
         // We need an interface pointer, so in this scenario we can't really avoid a 'QueryInterface' call.
         // The local cache for object references only applies to projected runtime classes, not managed types.
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
-
-        // Regardless of the 'QueryInterface' result, we should always release the original CCW pointer
-        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(unmanagedValue.GetThisPtrUnsafe(), in iid, out void* interfacePtr);
 
         // It is very unlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
         // or something else happened that is not really supported). Still, we can produce a nice error message for it.

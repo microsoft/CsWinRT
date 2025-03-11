@@ -42,19 +42,22 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         // Contrary to when normal objects are marshalled, delegates can't be marshalled if no
         // associated marshalling info is available, as otherwise we wouldn't be able to have
         // the necessary marshalling stub to dispatch delegate invocations from native code.
-        return new(WindowsRuntimeMarshallingInfo.GetInfo(value.GetType()).GetMarshaller().ConvertToUnmanagedUnsafe(value));
+        return WindowsRuntimeMarshallingInfo.GetInfo(value.GetType()).GetMarshaller().ConvertToUnmanagedUnsafe(value);
     }
 
     /// <summary>
-    /// Converts an unmanaged pointer to a Windows Runtime delegate to its managed <typeparamref name="T"/> object.
+    /// Converts a <see cref="WindowsRuntimeObjectReferenceValue"/> to its managed <typeparamref name="T"/> delegate instance.
     /// </summary>
-    /// <typeparam name="T">The type of delegate to product (it cannot be <see cref="Delegate"/>).</typeparam>
-    /// <param name="value">The input delegate to convert to managed.</param>
+    /// <typeparam name="T">The type of delegate to marshal values to (it cannot be <see cref="Delegate"/>).</typeparam>
+    /// <param name="value">The <see cref="WindowsRuntimeObjectReferenceValue"/> to marshal to a delegate instance.</param>
     /// <returns>The resulting managed <typeparamref name="T"/> value.</returns>
-    public static T? ConvertToManagedUnsafe<T>(void* value)
+    /// <remarks>
+    /// The <paramref name="value"/> parameter is owned by callers, and it should not be disposed by this method.
+    /// </remarks>
+    public static T? ConvertToManagedUnsafe<T>(in WindowsRuntimeObjectReferenceValue value)
         where T : Delegate
     {
-        if (value is null)
+        if (value.IsNull)
         {
             return null;
         }
@@ -62,7 +65,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         WindowsRuntimeComWrappers.CreateDelegateTargetType = typeof(T);
         WindowsRuntimeComWrappers.CreateObjectTargetType = null;
 
-        object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.TrackerObject);
+        object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value.GetThisPtrUnsafe(), CreateObjectFlags.TrackerObject);
 
         WindowsRuntimeComWrappers.CreateObjectTargetType = null;
 

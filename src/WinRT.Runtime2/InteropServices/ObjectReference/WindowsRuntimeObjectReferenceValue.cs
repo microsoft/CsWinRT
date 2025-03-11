@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.CompilerServices;
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -38,6 +40,15 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     {
         _objectReference = null;
         _thisPtr = thisPtr;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the current instance represents <see langword="null"/>.
+    /// </summary>
+    public bool IsNull
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _objectReference is null && _thisPtr is null;
     }
 
     /// <summary>

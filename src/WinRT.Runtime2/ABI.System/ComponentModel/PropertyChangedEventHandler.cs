@@ -68,9 +68,9 @@ public static unsafe class PropertyChangedEventHandlerMarshaller
     /// </summary>
     /// <param name="value">The unmanaged object.</param>
     /// <returns>The managed <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> value</returns>
-    public static global::System.ComponentModel.PropertyChangedEventHandler? ConvertToManaged(void* value)
+    public static global::System.ComponentModel.PropertyChangedEventHandler? ConvertToManaged(in WindowsRuntimeObjectReferenceValue value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToManagedUnsafe<global::System.ComponentModel.PropertyChangedEventHandler>(value);
+        return WindowsRuntimeDelegateMarshaller.ConvertToManagedUnsafe<global::System.ComponentModel.PropertyChangedEventHandler>(in value);
     }
 }
 

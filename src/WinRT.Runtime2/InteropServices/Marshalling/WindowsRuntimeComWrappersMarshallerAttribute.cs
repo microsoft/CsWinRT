@@ -11,8 +11,16 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 public sealed unsafe class WindowsRuntimeComWrappersMarshallerAttribute : WindowsRuntimeObjectMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override unsafe void* ConvertToUnmanagedUnsafe(object value)
+    public override WindowsRuntimeObjectReferenceValue ConvertToUnmanagedUnsafe(object value)
     {
-        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+
+        return new(thisPtr);
+    }
+
+    /// <inheritdoc/>
+    public override object ConvertToManaged(in WindowsRuntimeObjectReferenceValue value)
+    {
+        return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value.GetThisPtrUnsafe(), CreateObjectFlags.TrackerObject);
     }
 }
