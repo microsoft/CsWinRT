@@ -131,7 +131,7 @@ file sealed class PropertyChangedEventHandlerObjectMarshallerAttribute : Windows
     /// <inheritdoc/>
     public override unsafe object ConvertToManaged(void* value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToManaged<global::System.ComponentModel.PropertyChangedEventHandler>(value)!;
+        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<global::System.ComponentModel.PropertyChangedEventHandler>(value, in PropertyChangedEventHandlerReference.IID)!;
     }
 }
 

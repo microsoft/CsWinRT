@@ -68,4 +68,41 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
 
         return (T?)managedDelegate;
     }
+
+    /// <summary>
+    /// Unboxes and converts an unmanaged pointer to a Windows Runtime object to its managed <typeparamref name="T"/> object.
+    /// </summary>
+    /// <typeparam name="T">The type of delegate to marshal values to (it cannot be <see cref="Delegate"/>).</typeparam>
+    /// <param name="value">The input object to unbox and convert to managed.</param>
+    /// <param name="iid">The IID of the <c>IReference`1</c> generic instantiation for boxed <typeparamref name="T"/> native delegates.</param>
+    /// <returns>The resulting managed <typeparamref name="T"/> value.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method should only be used to unbox <c>IReference`1</c> objects to their underlying Windows Runtime delegate type.
+    /// </para>
+    /// <para>
+    /// Unlike <see cref="ConvertToManaged"/>, the <paramref name="value"/> parameter is expected to be an <c>IInspectable</c> pointer.
+    /// </para>
+    /// </remarks>
+    public static T? UnboxToManaged<T>(void* value, in Guid iid)
+        where T : Delegate
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        // First, make sure we have the right 'IReference<T>' interface on 'value'
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr);
+
+        Marshal.ThrowExceptionForHR(hresult);
+
+        // Now that we have the 'IReference<T>' interface, we can unbox the native delegate
+        hresult = IReferenceVftbl.ValueUnsafe(referencePtr, out void* delegatePtr);
+
+        Marshal.ThrowExceptionForHR(hresult);
+
+        // At this point, we just convert the native delegate to a 'T' instance normally
+        return ConvertToManaged<T>(delegatePtr);
+    }
 }
