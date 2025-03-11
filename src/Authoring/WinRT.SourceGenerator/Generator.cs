@@ -263,6 +263,18 @@ namespace Generator
                         [UnmanagedCallersOnly(EntryPoint = nameof(DllGetActivationFactory), CallConvs = new[] { typeof(CallConvStdcall) })]
                         public static int DllGetActivationFactory(void* activatableClassId, void** factory)
                         {
+                            return DllGetActivationFactoryImpl(activatableClassId, factory);
+                        }
+                                
+                        /// <summary>
+                        /// Retrieves the activation factory from a DLL that contains activatable Windows Runtime classes.
+                        /// </summary>
+                        /// <param name="activatableClassId">The class identifier that is associated with an activatable runtime class.</param>
+                        /// <param name="factory">A pointer to the activation factory that corresponds with the class specified by <paramref name="activatableClassId"/>.</param>
+                        /// <returns>The <c>HRESULT</c> for the operation.</returns>
+                        /// <seealso href="https://learn.microsoft.com/en-us/previous-versions/br205771(v=vs.85)"/>
+                        public static int DllGetActivationFactoryImpl(void* activatableClassId, void** factory)
+                        {
                             const int E_INVALIDARG = unchecked((int)0x80070057);
                             const int CLASS_E_CLASSNOTAVAILABLE = unchecked((int)(0x80040111));
                             const int S_OK = 0;
