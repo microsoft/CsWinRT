@@ -43,7 +43,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         // types, generic type instantiations, and user-defined types implementing projected interfaces.
         if (WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info))
         {
-            *&unmanagedValue = info.GetMarshaller().ConvertToUnmanaged(value);
+            *&unmanagedValue = info.GetObjectMarshaller().ConvertToUnmanaged(value);
         }
         else
         {

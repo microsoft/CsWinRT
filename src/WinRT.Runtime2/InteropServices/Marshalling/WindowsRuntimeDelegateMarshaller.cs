@@ -42,7 +42,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         // Contrary to when normal objects are marshalled, delegates can't be marshalled if no
         // associated marshalling info is available, as otherwise we wouldn't be able to have
         // the necessary marshalling stub to dispatch delegate invocations from native code.
-        return WindowsRuntimeMarshallingInfo.GetInfo(value.GetType()).GetMarshaller().ConvertToUnmanaged(value);
+        return WindowsRuntimeMarshallingInfo.GetInfo(value.GetType()).GetObjectMarshaller().ConvertToUnmanaged(value);
     }
 
     /// <summary>

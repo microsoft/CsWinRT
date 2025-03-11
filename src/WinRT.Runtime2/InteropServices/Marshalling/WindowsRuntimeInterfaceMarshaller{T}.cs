@@ -53,7 +53,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
         // We can then get or create the CCW for it. The interface should be present in the generated vtable for the type.
         if (WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info))
         {
-            *&unmanagedValue = info.GetMarshaller().ConvertToUnmanaged(value);
+            *&unmanagedValue = info.GetObjectMarshaller().ConvertToUnmanaged(value);
         }
         else
         {
