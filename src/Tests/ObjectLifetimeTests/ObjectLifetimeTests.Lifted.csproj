@@ -36,6 +36,8 @@
     </ItemGroup>
     <ItemGroup>
         <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
+        <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Windows" />
+        <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Xaml" />
         <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
     </ItemGroup>
     <ItemGroup>

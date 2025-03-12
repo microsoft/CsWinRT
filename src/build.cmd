@@ -2,7 +2,8 @@
 if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTBuildNetSDKVersion=8.0.303
-set CsWinRTBuildNet8SDKVersion=8.0.303
+set CsWinRTBuildNet9SDKVersion=9.0.201
+
 set this_dir=%~dp0
 
 :dotnet
@@ -23,16 +24,16 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
 -Version '%CsWinRTBuildNetSDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
-rem Install .NET 8 used to build projection
+rem Install .NET 9 used to build projection
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTBuildNet8SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
+-Version '%CsWinRTBuildNet9SDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTBuildNet8SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
+-Version '%CsWinRTBuildNet9SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson
@@ -40,7 +41,7 @@ rem Create global.json for current .NET SDK, and with allowPrerelease=true
 set global_json=%this_dir%global.json
 echo { > %global_json%
 echo   "sdk": { >> %global_json%
-echo     "version": "%CsWinRTBuildNet8SDKVersion%", >> %global_json%
+echo     "version": "%CsWinRTBuildNet9SDKVersion%", >> %global_json%
 echo     "allowPrerelease": true >> %global_json%
 echo   } >> %global_json%
 echo } >> %global_json%
@@ -339,6 +340,7 @@ set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
 set interop_winmd=%cswinrt_bin_dir%WinRT.Interop.winmd
 set netstandard2_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
 set net8_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net8.0\WinRT.Runtime.dll
+set net9_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net9.0\WinRT.Runtime.dll
 set source_generator_roslyn4080=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4080\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set source_generator_roslyn4120=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4120\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
@@ -348,7 +350,7 @@ set guid_patch=%this_dir%Perf\IIDOptimizer\bin\%cswinrt_configuration%\net8.0\*.
 set cswinmd_outpath=%this_dir%Authoring\cswinmd\bin\%cswinrt_configuration%\net8.0
 rem Now call pack
 echo Creating nuget package
-call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;netstandard2_runtime=%netstandard2_runtime%;net8_runtime=%net8_runtime%;source_generator_roslyn4080=%source_generator_roslyn4080%;source_generator_roslyn4120=%source_generator_roslyn4120%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;guid_patch=%guid_patch% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;netstandard2_runtime=%netstandard2_runtime%;net8_runtime=%net8_runtime%;net9_runtime=%net9_runtime%;source_generator_roslyn4080=%source_generator_roslyn4080%;source_generator_roslyn4120=%source_generator_roslyn4120%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;guid_patch=%guid_patch% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinMD.nuspec -Properties cswinmd_outpath=%cswinmd_outpath%;source_generator_roslyn4080=%source_generator_roslyn4080%;cswinmd_nuget_version=%cswinrt_version_string%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
 
