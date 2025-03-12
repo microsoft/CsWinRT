@@ -15,6 +15,7 @@ namespace WindowsRuntime;
 /// which is used as target instance to produce managed objects for native Windows Runtime delegates. It should never be used directly by
 /// application code. For this same reason, it also doesn't implement any additional interface, unlike <see cref="WindowsRuntimeObject"/>.
 /// </remarks>
+[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract unsafe class WindowsRuntimeDelegate
 {
     /// <summary>
