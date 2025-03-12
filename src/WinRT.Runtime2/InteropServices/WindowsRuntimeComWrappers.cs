@@ -74,7 +74,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // the mapped type, or if we can't find the marshalling logic on the mapped type, we just throw.
         if (CreateDelegateTargetType is Type delegateType)
         {
-            return WindowsRuntimeMarshallingInfo.GetInfo(delegateType).GeDelegateMarshaller().ConvertToManaged((void*)externalComObject);
+            return WindowsRuntimeMarshallingInfo.GetInfo(delegateType).GetDelegateMarshaller().ConvertToManaged((void*)externalComObject);
         }
 
         // For all other supported objects (ie. Windows Runtime objects), we expect to have an input 'IInspectable' object.

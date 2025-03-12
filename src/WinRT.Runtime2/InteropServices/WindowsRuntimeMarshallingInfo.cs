@@ -343,9 +343,9 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// </summary>
     /// <returns>The resulting <see cref="WindowsRuntimeDelegateMarshallerAttribute"/> instance.</returns>
     /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeDelegateMarshallerAttribute"/> instance could be resolved.</exception>
-    public WindowsRuntimeObjectMarshallerAttribute GeDelegateMarshaller()
+    public WindowsRuntimeDelegateMarshallerAttribute GetDelegateMarshaller()
     {
-        if (!TryGetObjectMarshaller(out WindowsRuntimeObjectMarshallerAttribute? marshaller))
+        if (!TryGetDelegateMarshaller(out WindowsRuntimeDelegateMarshallerAttribute? marshaller))
         {
             // This method should only be called for delegates which is valid to marshal
             [DoesNotReturn]
