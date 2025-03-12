@@ -55,7 +55,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 
         // The computed vtable will unconditionally include 'IUnknown' as the last vtable entry.
         // However, this entry should only be included if the 'CallerDefinedIUnknown' flag is set.
-        // To achieve this, we can just decrement the coutn by 1 in case the flag is not set.
+        // To achieve this, we can just decrement the count by 1 in case the flag is not set.
         if (count != 0 && !flags.HasFlag(CreateComInterfaceFlags.CallerDefinedIUnknown))
         {
             count--;
