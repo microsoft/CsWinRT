@@ -7708,6 +7708,7 @@ if (RuntimeFeature.IsDynamicCodeCompiled)
     [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
 #endif
     [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2081", Justification = "ABI types never have constructors.")]
     [MethodImpl(MethodImplOptions.NoInlining)]
     static void @MethodsFallback()
     {
@@ -7917,6 +7918,9 @@ return true;
 
 private static global::System.Delegate[] DelegateCache;
 
+#if NET8_0_OR_GREATER
+[RequiresDynamicCode("The necessary marshalling code or generic instantiations might not be available.")]
+#endif
 internal static unsafe void InitFallbackCCWVtable()
 {
 %
@@ -8185,6 +8189,7 @@ if (RuntimeFeature.IsDynamicCodeCompiled)
     [RequiresDynamicCode("Generic instantiations might not be available in AOT scenarios.")]
 #endif
     [UnconditionalSuppressMessage("Trimming", "IL2080", Justification = "ABI types never have constructors.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2081", Justification = "ABI types never have constructors.")]
     [MethodImpl(MethodImplOptions.NoInlining)]
     static void @Fallback()
     {

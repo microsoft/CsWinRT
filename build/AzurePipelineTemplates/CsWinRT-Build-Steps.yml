@@ -62,9 +62,22 @@ steps:
      
      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
      
-     dotnet new globaljson --sdk-version "$($env:NET8_SDK_VERSION)" 
-     
      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET8_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
+
+# Install .NET 9 SDK 
+- task: PowerShell@2
+  displayName: Install .NET 9 SDK
+  inputs:
+    targetType: inline
+    failOnStderr: true
+    script: |
+     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
+     
+     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
+     
+     dotnet new globaljson --sdk-version "$($env:NET9_SDK_VERSION)" 
+     
+     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET9_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 # Verify .NET SDK
 - task: CmdLine@2
@@ -297,6 +310,17 @@ steps:
       WinRT.Runtime.dll
       WinRT.Runtime.pdb
     TargetFolder: $(Build.ArtifactStagingDirectory)\release_net8.0
+
+# Stage Net9.0
+- task: CopyFiles@2
+  displayName: Stage Net9.0
+  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net9.0
+    Contents: |
+      WinRT.Runtime.dll
+      WinRT.Runtime.pdb
+    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net9.0
 
 # Stage WinRT.Host.Shim
 - task: CopyFiles@2 
