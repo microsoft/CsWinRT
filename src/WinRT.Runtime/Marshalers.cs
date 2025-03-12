@@ -1082,9 +1082,6 @@ namespace WinRT
 
         public struct MarshalerArray
         {
-#if NET
-            [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "'MarshalerArray' is only initialized from 'CreateMarshalerArray', which is not supported on AOT.")]
-#endif
             public void Dispose()
             {
                 if (_marshalers != null)
@@ -1106,7 +1103,7 @@ namespace WinRT
 
         public static new unsafe MarshalerArray CreateMarshalerArray(T[] array)
         {
-#if NET && !NET9_0_OR_GREATER
+#if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1159,7 +1156,7 @@ namespace WinRT
 
         public static new unsafe T[] FromAbiArray(object box)
         {
-#if NET && !NET9_0_OR_GREATER
+#if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1200,7 +1197,7 @@ namespace WinRT
 
         public static unsafe void CopyAbiArray(T[] array, object box)
         {
-#if NET && !NET9_0_OR_GREATER
+#if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1235,7 +1232,7 @@ namespace WinRT
 
         public static new unsafe (int length, IntPtr data) FromManagedArray(T[] array)
         {
-#if NET && !NET9_0_OR_GREATER
+#if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
@@ -1281,7 +1278,7 @@ namespace WinRT
 
         public static unsafe void CopyManagedArray(T[] array, IntPtr data)
         {
-#if NET && !NET9_0_OR_GREATER
+#if NET
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException($"Cannot handle array marshalling for non blittable type '{typeof(T)}'.");
