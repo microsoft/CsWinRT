@@ -20,7 +20,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <summary>
     /// The registered hook into activation to hook/mock activation of Windows Runtime types.
     /// </summary>
-    private static volatile WindowsRuntimeActivationHandler? activationHandler;
+    private static WindowsRuntimeActivationHandler? activationHandler;
 
     /// <summary>
     /// Set the <see cref="WindowsRuntimeActivationHandler"/> callback for activating Windows Runtime types.
