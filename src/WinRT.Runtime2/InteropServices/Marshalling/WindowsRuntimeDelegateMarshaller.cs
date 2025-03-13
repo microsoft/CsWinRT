@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -18,33 +20,42 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// <param name="value">The input delegate to marshal.</param>
     /// <returns>The resulting marshalled object for <paramref name="value"/>.</returns>
     /// <remarks>
+    /// <para>
+    /// This method assumes that <paramref name="value"/> will only ever have a <see cref="WindowsRuntimeObjectReference"/>
+    /// instance as target if produced by generated projection code. It is not valid to manually create a delegate of type
+    /// <typeparamref name="T"/> around an incompatible <see cref="WindowsRuntimeObjectReference"/> instance and pass it
+    /// to this method. Doing so is undefined behavior (and will likely lead to memory corruption and/or runtime crashes).
+    /// </para>
+    /// <para>
     /// The returned <see cref="WindowsRuntimeObjectReferenceValue"/> value will own an additional
     /// reference for the marshalled <paramref name="value"/> instance (either its underlying native object, or
     /// a runtime-provided CCW for the managed object instance). It is responsibility of the caller to always
     /// make sure that the returned <see cref="WindowsRuntimeObjectReferenceValue"/> instance is disposed.
+    /// </para>
     /// </remarks>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged<T>(Delegate? value)
-        where T : WindowsRuntimeDelegate
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged<T>(T? value)
+        where T : Delegate
     {
         if (value is null)
         {
             return default;
         }
 
-        // Delegates coming from native code are projected with a type deriving from 'WindowsRuntimeDelegate',
-        // which has a method implementing the ABI function, which the returned 'Delegate' instance closes
-        // over. So to check for that case, we get the target of the delegate and check if we can unwrap it.
-        // We don't need to do a 'QueryInterface', as that native object will always be the delegate interface.
-        if (value.Target is T windowsRuntimeDelegate)
+        // Delegates coming from native code are projected with an extension implementation that creates a
+        // delegate instance with the inner 'WindowsRuntimeObjectReference' as delegate target. Such deleate
+        // instances are only produced by generated code, so we can rely on them wrapping the exact interface
+        // pointer for the delegate type. So if we get such a delegate, we can just unwrap it and return it.
+        // Note that doing this also means that we can completely avoid any 'AddRef' or 'QueryInterface' calls.
+        if (value.Target is WindowsRuntimeObjectReference objectReference)
         {
-            return windowsRuntimeDelegate.NativeObjectReference.AsValue();
+            return objectReference.AsValue();
         }
 
         // The input delegate is a managed one, so we need to find the proxy type to marshal it.
         // Contrary to when normal objects are marshalled, delegates can't be marshalled if no
         // associated marshalling info is available, as otherwise we wouldn't be able to have
         // the necessary marshalling stub to dispatch delegate invocations from native code.
-        return WindowsRuntimeMarshallingInfo.GetInfo(value.GetType()).GetObjectMarshaller().ConvertToUnmanaged(value);
+        return WindowsRuntimeMarshallingInfo.GetInfo(typeof(T)).GetObjectMarshaller().ConvertToUnmanaged(value);
     }
 
     /// <summary>
@@ -68,7 +79,9 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
 
         WindowsRuntimeComWrappers.CreateDelegateTargetType = null;
 
-        return (T?)managedDelegate;
+        Debug.Assert(managedDelegate is T);
+
+        return Unsafe.As<T>(managedDelegate);
     }
 
     /// <summary>

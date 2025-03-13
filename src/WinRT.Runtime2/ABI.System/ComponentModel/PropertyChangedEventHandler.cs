@@ -53,7 +53,7 @@ public static unsafe class PropertyChangedEventHandlerMarshaller
     /// <returns>The unmanaged object.</returns>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.PropertyChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged<PropertyChangedEventHandlerNativeDelegate>(value);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value);
     }
 
     /// <summary>
@@ -70,21 +70,12 @@ public static unsafe class PropertyChangedEventHandlerMarshaller
 /// <summary>
 /// The <see cref="WindowsRuntimeObject"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
 /// </summary>
-file sealed unsafe class PropertyChangedEventHandlerNativeDelegate : WindowsRuntimeDelegate
+file static unsafe class PropertyChangedEventHandlerNativeDelegate
 {
-    /// <summary>
-    /// Creates a new <see cref="PropertyChangedEventHandlerNativeDelegate"/> instance with the specified parameters.
-    /// </summary>
-    /// <param name="objectReference">The <see cref="WindowsRuntimeObjectReference"/> for the delegate instance.</param>
-    public PropertyChangedEventHandlerNativeDelegate(WindowsRuntimeObjectReference objectReference)
-        : base(objectReference)
-    {
-    }
-
     /// <inheritdoc cref="global::System.ComponentModel.PropertyChangedEventHandler"/>
-    public void Invoke(object? sender, global::System.ComponentModel.PropertyChangedEventHandler e)
+    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, PropertyChangedEventArgs e)
     {
-        using WindowsRuntimeObjectReferenceValue thisValue = NativeObjectReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue thisValue = objectReference.AsValue();
         using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
         using WindowsRuntimeObjectReferenceValue eValue = default; // TODO
 
@@ -105,7 +96,7 @@ file sealed class PropertyChangedEventHandlerDelegateMarshallerAttribute : Windo
     /// <inheritdoc/>
     public override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(Delegate value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged<PropertyChangedEventHandlerNativeDelegate>(value);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(Unsafe.As<global::System.ComponentModel.PropertyChangedEventHandler>(value));
     }
 
     /// <inheritdoc/>
@@ -113,7 +104,7 @@ file sealed class PropertyChangedEventHandlerDelegateMarshallerAttribute : Windo
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeObjectReference.AsUnsafe(value, in PropertyChangedEventHandlerImpl.IID)!;
 
-        return new PropertyChangedEventHandlerNativeDelegate(valueReference).Invoke;
+        return new global::System.ComponentModel.PropertyChangedEventHandler(valueReference.Invoke);
     }
 }
 
