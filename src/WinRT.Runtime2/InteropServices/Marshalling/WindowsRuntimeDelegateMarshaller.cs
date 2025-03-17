@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
@@ -16,15 +17,15 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// <summary>
     /// Marshals a Windows Runtime delegate to a native COM object interface pointer.
     /// </summary>
-    /// <typeparam name="T">The type of Windows Runtime delegate that the associated marshalling logic would use.</typeparam>
     /// <param name="value">The input delegate to marshal.</param>
+    /// <param name="iid">The IID of the Windows Runtime delegate.</param>
     /// <returns>The resulting marshalled object for <paramref name="value"/>.</returns>
     /// <remarks>
     /// <para>
     /// This method assumes that <paramref name="value"/> will only ever have a <see cref="WindowsRuntimeObjectReference"/>
-    /// instance as target if produced by generated projection code. It is not valid to manually create a delegate of type
-    /// <typeparamref name="T"/> around an incompatible <see cref="WindowsRuntimeObjectReference"/> instance and pass it
-    /// to this method. Doing so is undefined behavior (and will likely lead to memory corruption and/or runtime crashes).
+    /// instance as target if produced by generated projection code. It is not valid to manually create a delegate around
+    /// an incompatible <see cref="WindowsRuntimeObjectReference"/> instance and pass it to this method. Doing so is
+    /// undefined behavior, and it will likely lead to memory corruption and/or runtime crashes.
     /// </para>
     /// <para>
     /// The returned <see cref="WindowsRuntimeObjectReferenceValue"/> value will own an additional
@@ -33,8 +34,8 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// make sure that the returned <see cref="WindowsRuntimeObjectReferenceValue"/> instance is disposed.
     /// </para>
     /// </remarks>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged<T>(T? value)
-        where T : Delegate
+    /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(Delegate? value, in Guid iid)
     {
         if (value is null)
         {
@@ -51,46 +52,140 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
             return objectReference.AsValue();
         }
 
-        // The input delegate is a managed one, so we need to find the proxy type to marshal it.
-        // Contrary to when normal objects are marshalled, delegates can't be marshalled if no
-        // associated marshalling info is available, as otherwise we wouldn't be able to have
-        // the necessary marshalling stub to dispatch delegate invocations from native code.
-        return WindowsRuntimeMarshallingInfo.GetInfo(typeof(T)).GetObjectMarshaller().ConvertToUnmanaged(value);
+        // Marshal the delegate ('ComWrappers.ComputeVtables' will lookup the proxy type to resolve the right vtable for it)
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+
+        // 'ComWrappers' returns an 'IUnknown' pointer, so we need to do an actual 'QueryInterface' for the delegate IID
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* delegatePtr);
+
+        // We can release the 'IUnknown' reference now, it's no longer needed
+        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+
+        // Ensure the 'QueryInterface' succeeded (if it doesn't, it's some kind of authoring error)
+        Marshal.ThrowExceptionForHR(hresult);
+
+        return new(delegatePtr);
     }
 
     /// <summary>
-    /// Converts an unmanaged pointer to a Windows Runtime delegate to its managed <typeparamref name="T"/> object.
+    /// Converts an unmanaged pointer to a Windows Runtime delegate to its managed representation.
     /// </summary>
-    /// <typeparam name="T">The type of delegate to marshal values to (it cannot be <see cref="Delegate"/>).</typeparam>
+    /// <typeparam name="TCallback">The type of static callback for <see cref="ComWrappers"/> to marshal the delegate.</typeparam>
     /// <param name="value">The input delegate to convert to managed.</param>
-    /// <returns>The resulting managed <typeparamref name="T"/> value.</returns>
-    public static T? ConvertToManaged<T>(void* value)
-        where T : Delegate
+    /// <returns>The resulting managed Windows Runtime delegate object.</returns>
+    /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
+    public static Delegate? ConvertToManaged<TCallback>(void* value)
+        where TCallback : IWindowsRuntimeComWrappersCallback, allows ref struct
     {
         if (value is null)
         {
             return null;
         }
 
-        WindowsRuntimeComWrappers.CreateDelegateTargetType = typeof(T);
+        WindowsRuntimeComWrappers.CreateObjectCallback = WindowsRuntimeComWrappersCallback.GetInstance<TCallback>();
         WindowsRuntimeComWrappers.CreateObjectTargetType = null;
+        WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
 
         object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.TrackerObject);
 
-        WindowsRuntimeComWrappers.CreateDelegateTargetType = null;
+        WindowsRuntimeComWrappers.CreateObjectCallback = null;
+        WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = null;
 
-        Debug.Assert(managedDelegate is T);
+        Debug.Assert(managedDelegate is Delegate);
 
-        return Unsafe.As<T>(managedDelegate);
+        return Unsafe.As<Delegate>(managedDelegate);
     }
 
     /// <summary>
-    /// Unboxes and converts an unmanaged pointer to a Windows Runtime object to its managed <typeparamref name="T"/> object.
+    /// Marshals a Windows Runtime delegate to a native COM object interface pointer for a boxed value.
     /// </summary>
-    /// <typeparam name="T">The type of delegate to marshal values to (it cannot be <see cref="Delegate"/>).</typeparam>
+    /// <param name="value">The input delegate to marshal.</param>
+    /// <param name="iid">The IID of the <c>IReference`1</c> interface for the Windows Runtime delegate type.</param>
+    /// <returns>The resulting marshalled object for <paramref name="value"/>, as a boxed <c>IReference`1</c> interface pointer.</returns>
+    /// <exception cref="NotSupportedException">Thrown if <paramref name="value"/> is a native delegate object that can't be boxed.</exception>
+    /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(Delegate? value, in Guid iid)
+    {
+        if (value is null)
+        {
+            return default;
+        }
+
+        // If we have a native delegate, chances are we can't marshal it as an 'IReference<T>' object
+        if (value.Target is WindowsRuntimeObjectReference objectReference)
+        {
+            // Try to do a 'QueryInterface' just in case, and throw if it fails (which is very likely)
+            if (!objectReference.TryAsUnsafe(in iid, out void* interfacePtr))
+            {
+                [DoesNotReturn]
+                [StackTraceHidden]
+                static void ThrowArgumentException(object value)
+                {
+                    throw new NotSupportedException(
+                        $"This delegate instance of type '{value.GetType()}' cannot be marshalled as a Windows Runtime 'IReference`1<T>' object, because it is wrapping a native " +
+                        $"Windows Runtime delegate object, which does not implement the 'IReference`1<T>' interface. Only managed delegate instances can be marshalled this way.");
+                }
+
+                ThrowArgumentException(value);
+            }
+
+            return new(interfacePtr);
+        }
+
+        // Marshal the delegate like in 'ConvertToUnmanaged'
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+
+        // Do the 'QueryInterface' for the 'IReference<T>' interface (this should always succeed)
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* boxPtr);
+
+        // We can release the 'IUnknown' reference now
+        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+
+        // Ensure the 'QueryInterface' succeeded (same as above)
+        Marshal.ThrowExceptionForHR(hresult);
+
+        return new(boxPtr);
+    }
+
+    /// <summary>
+    /// Unboxes and converts an unmanaged pointer to a Windows Runtime object to its managed representation.
+    /// </summary>
+    /// <typeparam name="TCallback">The type of delegate to marshal values to (it cannot be <see cref="Delegate"/>).</typeparam>
     /// <param name="value">The input object to unbox and convert to managed.</param>
-    /// <param name="iid">The IID of the <c>IReference`1</c> generic instantiation for boxed <typeparamref name="T"/> native delegates.</param>
-    /// <returns>The resulting managed <typeparamref name="T"/> value.</returns>
+    /// <returns>The resulting managed Windows Runtime delegate object.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method should only be used to unbox <c>IReference`1</c> objects to their underlying Windows Runtime delegate type.
+    /// </para>
+    /// <para>
+    /// Unlike <see cref="ConvertToManaged"/>, the <paramref name="value"/> parameter is expected to be an <c>IReference`1</c> pointer.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
+    public static Delegate? UnboxToManaged<TCallback>(void* value)
+        where TCallback : IWindowsRuntimeComWrappersCallback, allows ref struct
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        // Unbox the native delegate (we always just discard the outer reference)
+        HRESULT hresult = IReferenceVftbl.ValueUnsafe(value, out void* delegatePtr);
+
+        Marshal.ThrowExceptionForHR(hresult);
+
+        // At this point, we just convert the native delegate to a 'T' instance normally
+        return ConvertToManaged<TCallback>(delegatePtr);
+    }
+
+    /// <summary>
+    /// Unboxes and converts an unmanaged pointer to a Windows Runtime object to its managed representation.
+    /// </summary>
+    /// <typeparam name="TCallback">The type of delegate to marshal values to (it cannot be <see cref="Delegate"/>).</typeparam>
+    /// <param name="value">The input object to unbox and convert to managed.</param>
+    /// <param name="iid">The IID of the <c>IReference`1</c> interface for the Windows Runtime delegate type.</param>
+    /// <returns>The resulting managed Windows Runtime delegate object.</returns>
     /// <remarks>
     /// <para>
     /// This method should only be used to unbox <c>IReference`1</c> objects to their underlying Windows Runtime delegate type.
@@ -99,8 +194,9 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// Unlike <see cref="ConvertToManaged"/>, the <paramref name="value"/> parameter is expected to be an <c>IInspectable</c> pointer.
     /// </para>
     /// </remarks>
-    public static T? UnboxToManaged<T>(void* value, in Guid iid)
-        where T : Delegate
+    /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
+    public static Delegate? UnboxToManaged<TCallback>(void* value, in Guid iid)
+        where TCallback : IWindowsRuntimeComWrappersCallback, allows ref struct
     {
         if (value is null)
         {
@@ -112,12 +208,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
 
         Marshal.ThrowExceptionForHR(hresult);
 
-        // Now that we have the 'IReference<T>' interface, we can unbox the native delegate
-        hresult = IReferenceVftbl.ValueUnsafe(referencePtr, out void* delegatePtr);
-
-        Marshal.ThrowExceptionForHR(hresult);
-
-        // At this point, we just convert the native delegate to a 'T' instance normally
-        return ConvertToManaged<T>(delegatePtr);
+        // Now that we have the 'IReference<T>' pointer, unbox it normally
+        return UnboxToManaged<TCallback>(referencePtr);
     }
 }

@@ -21,14 +21,20 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// immediately afterwards, to ensure following calls won't accidentally see the wrong type.
     /// </remarks>
     [ThreadStatic]
-    internal static Type? CreateDelegateTargetType;
+    internal static WindowsRuntimeComWrappersCallback? CreateObjectCallback;
 
     /// <summary>
     /// The statically-visible object type that should be used by <see cref="CreateObject"/>, if available.
     /// </summary>
-    /// <remarks><inheritdoc cref="CreateDelegateTargetType" path="/remarks/node()"/></remarks>
+    /// <remarks><inheritdoc cref="CreateObjectCallback" path="/remarks/node()"/></remarks>
     [ThreadStatic]
     internal static Type? CreateObjectTargetType;
+
+    /// <summary>
+    /// The derived interface pointer to use for marshalling, if available.
+    /// </summary>
+    [ThreadStatic]
+    internal static void* CreateObjectTargetInterfacePointer;
 
     /// <summary>
     /// Gets the shared default instance of <see cref="WindowsRuntimeComWrappers"/>.
@@ -67,14 +73,19 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override object? CreateObject(nint externalComObject, CreateObjectFlags flags)
     {
-        // If we have a target delegate type, it means that we are creating an RCW for a statically visible
-        // Windows Runtime delegate type (eg. a return type, or a parameter type). In this case, we can look
-        // up the mapped type for it, and use its delegate marshaller. In this scenario, the marshalling logic
-        // must exist, and there's no support for marshalling "some opaque object". That is, if we fail to get
-        // the mapped type, or if we can't find the marshalling logic on the mapped type, we just throw.
-        if (CreateDelegateTargetType is Type delegateType)
+        // If we have a callback instance, it means this invocation was for a statically visible type that can
+        // always be marshalled directly (eg. a delegate type, or a sealed type). In that case, just use it.
+        if (CreateObjectCallback is { } createObjectCallback)
         {
-            return WindowsRuntimeMarshallingInfo.GetInfo(delegateType).GetDelegateMarshaller().ConvertToManaged((void*)externalComObject);
+            void* interfacePointer = CreateObjectTargetInterfacePointer;
+
+            // In some cases, callers might have provided a derived interfcae pointer, if statically visible.
+            // For instance, if a native API returned an instance of a delegate type, we can reuse that, rather
+            // than doing a 'QueryInterface' call again from here (because 'CreateObject' only ever gets an
+            // 'IUnknown' object as input. So, just select the best available input argument here.
+            return interfacePointer != null
+                ? createObjectCallback.CreateObject(interfacePointer)
+                : createObjectCallback.CreateObject((void*)externalComObject);
         }
 
         // For all other supported objects (ie. Windows Runtime objects), we expect to have an input 'IInspectable' object.
@@ -102,6 +113,8 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
                 _ = IUnknownVftbl.ReleaseUnsafe(inspectablePtr);
             }
         }
+
+        return null;
     }
 
     /// <inheritdoc/>

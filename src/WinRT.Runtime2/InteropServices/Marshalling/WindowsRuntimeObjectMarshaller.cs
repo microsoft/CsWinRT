@@ -37,19 +37,25 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             return new(windowsRuntimeObject.InspectableObjectReference);
         }
 
-        // If 'value' is a managed wrapper for a native delegate, we can't marshal it to 'IInspectable'
-        if (value is Delegate { Target: WindowsRuntimeDelegate })
+        // If 'value' is a managed wrapper for a native delegate, it probably can't be marshalled
+        if (value is WindowsRuntimeObjectReference windowsRuntimeDelegate)
         {
-            [DoesNotReturn]
-            [StackTraceHidden]
-            static void ThrowArgumentException(object value)
+            // Try to do a 'QueryInterface' just in case, and throw if it fails (which is very likely)
+            if (!windowsRuntimeDelegate.TryAsUnsafe(in WellKnownInterfaceIds.IID_IInspectable, out void* inspectablePtr))
             {
-                throw new NotSupportedException(
-                    $"This delegate instance of type '{value.GetType()}' cannot be marshalled as a Windows Runtime object, because it is wrapping a native " +
-                    $"Windows Runtime delegate object, which does not implement 'IInspectable'. Only managed delegate instances can be marshalled as objects.");
+                [DoesNotReturn]
+                [StackTraceHidden]
+                static void ThrowArgumentException(object value)
+                {
+                    throw new NotSupportedException(
+                        $"This delegate instance of type '{value.GetType()}' cannot be marshalled as a Windows Runtime 'IInspectable' object, because it is wrapping a native " +
+                        $"Windows Runtime delegate object, which does not implement the 'IInspectable' interface. Only managed delegate instances can be marshalled this way.");
+                }
+
+                ThrowArgumentException(value);
             }
 
-            ThrowArgumentException(value);
+            return new(inspectablePtr);
         }
 
         using WindowsRuntimeObjectReferenceValue unmanagedValue = default;
