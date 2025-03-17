@@ -99,8 +99,9 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             return null;
         }
 
-        WindowsRuntimeComWrappers.CreateDelegateTargetType = null;
+        WindowsRuntimeComWrappers.CreateObjectCallback = null;
         WindowsRuntimeComWrappers.CreateObjectTargetType = null;
+        WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
 
         return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.TrackerObject);
     }
@@ -119,8 +120,9 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             return null;
         }
 
-        WindowsRuntimeComWrappers.CreateDelegateTargetType = null;
+        WindowsRuntimeComWrappers.CreateObjectCallback = null;
         WindowsRuntimeComWrappers.CreateObjectTargetType = typeof(T);
+        WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
 
         object? managedObject = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.TrackerObject);
 

@@ -88,22 +88,32 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
                 : createObjectCallback.CreateObject((void*)externalComObject);
         }
 
-        // For all other supported objects (ie. Windows Runtime objects), we expect to have an input 'IInspectable' object.
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe((void*)externalComObject, in WellKnownInterfaceIds.IID_IInspectable, out void* inspectablePtr);
+        // Store the type so we do a single read from TLS
+        Type? objectType = CreateObjectTargetType;
 
-        // The input object is not some 'IInspectable', so we can't handle it in this 'ComWrappers' implementation.
-        // We return 'null' so that the runtime can still do its logic as a fallback for 'IUnknown' and 'IDispatch'.
-        if (!WellKnownErrorCodes.Succeeded(hresult))
+        // If we don't have an available callback, and also no statically visible type at all, the only possible
+        // scenario is that the statically visible type was 'IInspectable'. In that case, we can opportunistically
+        // skip the 'QueryInterface' call for it, as that interface pointer can be set by callers instead.
+        void* inspectablePtr = null;
+
+        // This optimization is only valid for 'IInspectable' object, not for specific types
+        if (objectType is null)
         {
-            return null;
+            inspectablePtr = CreateObjectTargetInterfacePointer;
+        }
+        else
+        {
+            // For all other supported objects (ie. Windows Runtime objects), we expect to have an input 'IInspectable' object.
+            HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe((void*)externalComObject, in WellKnownInterfaceIds.IID_IInspectable, out inspectablePtr);
+
+            // The input object is not some 'IInspectable', so we can't handle it in this 'ComWrappers' implementation.
+            // We return 'null' so that the runtime can still do its logic as a fallback for 'IUnknown' and 'IDispatch'.
+            Marshal.ThrowExceptionForHR(hresult);
         }
 
         try
         {
-            if (CreateObjectTargetType is Type { IsSealed: true } objectType)
-            {
-                return WindowsRuntimeMarshallingInfo.GetInfo(objectType).GetObjectMarshaller().ConvertToManaged(inspectablePtr);
-            }
+            // TODO
         }
         finally
         {
