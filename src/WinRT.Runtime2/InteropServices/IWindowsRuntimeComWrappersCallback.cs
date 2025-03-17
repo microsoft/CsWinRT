@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace WindowsRuntime.InteropServices.Marshalling;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// An interface for callbacks for <see cref="System.Runtime.InteropServices.ComWrappers.CreateObject"/>, for Windows Runtime objects.
