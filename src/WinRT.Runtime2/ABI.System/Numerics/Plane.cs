@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
+using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -28,6 +29,25 @@ namespace ABI.System.Numerics;
 file static class Plane;
 
 /// <summary>
+/// Marshaller for <see cref="global::System.Numerics.Plane"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class PlaneMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Plane? value)
+    {
+        return WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferencePlane);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.UnboxToManaged(void*)"/>
+    public static global::System.Numerics.Plane? UnboxToManaged(void* value)
+    {
+        return WindowsRuntimeBlittableStructMarshaller.UnboxToManaged<global::System.Numerics.Plane>(value);
+    }
+}
+
+/// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Plane"/>.
 /// </summary>
 file sealed class PlaneVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
@@ -37,7 +57,7 @@ file sealed class PlaneVtableProviderAttribute : WindowsRuntimeVtableProviderAtt
     {
         bufferWriter.Write([new ComInterfaceEntry
         {
-            IID = WellKnownInterfaceIds.IID_IReferenceArrayOfPlane,
+            IID = WellKnownInterfaceIds.IID_IReferencePlane,
             Vtable = PlaneReference.AbiToProjectionVftablePtr
         }]);
     }

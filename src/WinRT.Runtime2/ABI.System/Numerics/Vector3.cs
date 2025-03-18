@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
+using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -28,6 +29,25 @@ namespace ABI.System.Numerics;
 file static class Vector3;
 
 /// <summary>
+/// Marshaller for <see cref="global::System.Numerics.Vector3"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class Vector3Marshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Vector3? value)
+    {
+        return WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceVector3);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.UnboxToManaged(void*)"/>
+    public static global::System.Numerics.Vector3? UnboxToManaged(void* value)
+    {
+        return WindowsRuntimeBlittableStructMarshaller.UnboxToManaged<global::System.Numerics.Vector3>(value);
+    }
+}
+
+/// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Vector3"/>.
 /// </summary>
 file sealed class Vector3VtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
@@ -37,7 +57,7 @@ file sealed class Vector3VtableProviderAttribute : WindowsRuntimeVtableProviderA
     {
         bufferWriter.Write([new ComInterfaceEntry
         {
-            IID = WellKnownInterfaceIds.IID_IReferenceArrayOfVector3,
+            IID = WellKnownInterfaceIds.IID_IReferenceVector3,
             Vtable = Vector3Reference.AbiToProjectionVftablePtr
         }]);
     }

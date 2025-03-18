@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
+using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -28,6 +29,25 @@ namespace ABI.System.Numerics;
 file static class Matrix3x2;
 
 /// <summary>
+/// Marshaller for <see cref="global::System.Numerics.Matrix3x2"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class Matrix3x2Marshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Matrix3x2? value)
+    {
+        return WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceMatrix3x2);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.UnboxToManaged(void*)"/>
+    public static global::System.Numerics.Matrix3x2? UnboxToManaged(void* value)
+    {
+        return WindowsRuntimeBlittableStructMarshaller.UnboxToManaged<global::System.Numerics.Matrix3x2>(value);
+    }
+}
+
+/// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Matrix3x2"/>.
 /// </summary>
 file sealed class Matrix3x2VtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
@@ -37,7 +57,7 @@ file sealed class Matrix3x2VtableProviderAttribute : WindowsRuntimeVtableProvide
     {
         bufferWriter.Write([new ComInterfaceEntry
         {
-            IID = WellKnownInterfaceIds.IID_IReferenceArrayOfMatrix3x2,
+            IID = WellKnownInterfaceIds.IID_IReferenceMatrix3x2,
             Vtable = Matrix3x2Reference.AbiToProjectionVftablePtr
         }]);
     }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
+using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -28,6 +29,25 @@ namespace ABI.System.Numerics;
 file static class Quaternion;
 
 /// <summary>
+/// Marshaller for <see cref="global::System.Numerics.Quaternion"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class QuaternionMarshaller
+{
+    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Quaternion? value)
+    {
+        return WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceQuaternion);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.UnboxToManaged(void*)"/>
+    public static global::System.Numerics.Quaternion? UnboxToManaged(void* value)
+    {
+        return WindowsRuntimeBlittableStructMarshaller.UnboxToManaged<global::System.Numerics.Quaternion>(value);
+    }
+}
+
+/// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Quaternion"/>.
 /// </summary>
 file sealed class QuaternionVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
@@ -37,7 +57,7 @@ file sealed class QuaternionVtableProviderAttribute : WindowsRuntimeVtableProvid
     {
         bufferWriter.Write([new ComInterfaceEntry
         {
-            IID = WellKnownInterfaceIds.IID_IReferenceArrayOfQuaternion,
+            IID = WellKnownInterfaceIds.IID_IReferenceQuaternion,
             Vtable = QuaternionReference.AbiToProjectionVftablePtr
         }]);
     }
