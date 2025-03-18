@@ -45,24 +45,30 @@ file static class PropertyChangedEventHandler;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class PropertyChangedEventHandlerMarshaller
 {
-    /// <summary>
-    /// Converts a managed <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> to an unmanaged object.
-    /// </summary>
-    /// <param name="value">The managed <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> value.</param>
-    /// <returns>The unmanaged object.</returns>
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.ComponentModel.PropertyChangedEventHandler? value)
     {
-        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, PropertyChangedEventHandlerImpl.IID);
+        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in PropertyChangedEventHandlerImpl.IID);
     }
 
-    /// <summary>
-    /// Converts an unmanaged object to a managed <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
-    /// </summary>
-    /// <param name="value">The unmanaged object.</param>
-    /// <returns>The managed <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/> value</returns>
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static global::System.ComponentModel.PropertyChangedEventHandler? ConvertToManaged(void* value)
     {
         object? result = WindowsRuntimeDelegateMarshaller.ConvertToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
+
+        return Unsafe.As<global::System.ComponentModel.PropertyChangedEventHandler?>(result);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.BoxToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.ComponentModel.PropertyChangedEventHandler? value)
+    {
+        return WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(value, in PropertyChangedEventHandlerReference.IID);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.UnboxToManaged(void*)"/>
+    public static global::System.ComponentModel.PropertyChangedEventHandler? UnboxToManaged(void* value)
+    {
+        object? result = WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value);
 
         return Unsafe.As<global::System.ComponentModel.PropertyChangedEventHandler?>(result);
     }
