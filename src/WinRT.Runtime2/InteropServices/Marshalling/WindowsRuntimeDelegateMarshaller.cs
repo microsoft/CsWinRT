@@ -170,8 +170,10 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
             return null;
         }
 
+        void* delegatePtr;
+
         // Unbox the native delegate (we always just discard the outer reference)
-        HRESULT hresult = IReferenceVftbl.ValueUnsafe(value, out void* delegatePtr);
+        HRESULT hresult = IReferenceVftbl.ValueUnsafe(value, &delegatePtr);
 
         Marshal.ThrowExceptionForHR(hresult);
 

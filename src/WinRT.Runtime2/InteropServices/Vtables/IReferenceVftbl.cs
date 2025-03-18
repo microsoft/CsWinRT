@@ -28,15 +28,9 @@ internal unsafe struct IReferenceVftbl
     /// <param name="thisPtr">The target COM object.</param>
     /// <param name="value">The resulting value.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
-    /// <remarks>
-    /// This method is only meant to be used for <c>IReference`1</c> instantiations of delegate types.
-    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT ValueUnsafe(void* thisPtr, out void* value)
+    public static HRESULT ValueUnsafe(void* thisPtr, void* value)
     {
-        fixed (void** valuePtr = &value)
-        {
-            return ((IReferenceVftbl*)thisPtr)->Value(thisPtr, valuePtr);
-        }
+        return ((IReferenceVftbl*)thisPtr)->Value(thisPtr, &value);
     }
 }
