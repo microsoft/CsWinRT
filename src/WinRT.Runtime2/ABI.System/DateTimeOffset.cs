@@ -40,7 +40,7 @@ public struct DateTimeOffset
 /// Marshaller for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class DateTimeOffsetMarshaller
+public static unsafe class DateTimeOffsetMarshaller
 {
     /// <summary>
     /// The number of ticks counted between <c>0001-01-01, 00:00:00</c> and <c>1601-01-01, 00:00:00</c>.
@@ -69,6 +69,20 @@ public static class DateTimeOffsetMarshaller
     public static global::System.DateTimeOffset ConvertToManaged(DateTimeOffset value)
     {
         return new global::System.DateTimeOffset(unchecked((long)value.UniversalTime + ManagedUtcTicksAtNativeZero), global::System.TimeSpan.Zero);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.DateTimeOffset? value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfDateTimeOffset);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
+    public static global::System.DateTimeOffset? UnboxToManaged(void* value)
+    {
+        DateTimeOffset? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<DateTimeOffset>(value);
+
+        return abi.HasValue ? ConvertToManaged(abi.Value) : null;
     }
 }
 

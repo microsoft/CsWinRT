@@ -34,16 +34,16 @@ file static class Vector3;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class Vector3Marshaller
 {
-    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged"/>
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Vector3? value)
     {
-        return WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceVector3);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceVector3);
     }
 
-    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.UnboxToManaged(void*)"/>
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
     public static global::System.Numerics.Vector3? UnboxToManaged(void* value)
     {
-        return WindowsRuntimeBlittableStructMarshaller.UnboxToManaged<global::System.Numerics.Vector3>(value);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Vector3>(value);
     }
 }
 

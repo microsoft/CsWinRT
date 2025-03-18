@@ -34,16 +34,16 @@ file static class Plane;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class PlaneMarshaller
 {
-    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged"/>
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Plane? value)
     {
-        return WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferencePlane);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferencePlane);
     }
 
-    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.UnboxToManaged(void*)"/>
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
     public static global::System.Numerics.Plane? UnboxToManaged(void* value)
     {
-        return WindowsRuntimeBlittableStructMarshaller.UnboxToManaged<global::System.Numerics.Plane>(value);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Plane>(value);
     }
 }
 

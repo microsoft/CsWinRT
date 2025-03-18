@@ -34,16 +34,16 @@ file static class Quaternion;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class QuaternionMarshaller
 {
-    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged"/>
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Quaternion? value)
     {
-        return WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceQuaternion);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceQuaternion);
     }
 
-    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.UnboxToManaged(void*)"/>
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
     public static global::System.Numerics.Quaternion? UnboxToManaged(void* value)
     {
-        return WindowsRuntimeBlittableStructMarshaller.UnboxToManaged<global::System.Numerics.Quaternion>(value);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Quaternion>(value);
     }
 }
 

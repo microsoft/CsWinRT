@@ -2,33 +2,40 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
-/// A marshaller for Windows Runtime blittable struct types.
+/// A marshaller for Windows Runtime value types.
 /// </summary>
-public static unsafe class WindowsRuntimeBlittableStructMarshaller
+public static unsafe class WindowsRuntimeValueTypeMarshaller
 {
     /// <summary>
-    /// Marshals a Windows Runtime blittable struct value to a native COM object interface pointer for a boxed value.
+    /// Marshals a Windows Runtime value type value to a native COM object interface pointer for a boxed value.
     /// </summary>
-    /// <typeparam name="T">The blittable struct type to marshal.</typeparam>
-    /// <param name="value">The input blittable struct value to marshal.</param>
-    /// <param name="iid">The IID of the <c>IReference`1</c> interface for the Windows Runtime blittable struct type.</param>
+    /// <typeparam name="T">The value type to marshal.</typeparam>
+    /// <param name="value">The input value to marshal.</param>
+    /// <param name="iid">The IID of the <c>IReference`1</c> interface for the Windows Runtime value type.</param>
     /// <returns>The resulting marshalled object for <paramref name="value"/>, as a boxed <c>IReference`1</c> interface pointer.</returns>
     /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged<T>(T? value, in Guid iid)
-        where T : unmanaged
+        where T : struct
     {
         if (value is null)
         {
             return default;
         }
 
-        // Box the value type (we don't need reference tracking support here, it's just a 
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
+        // Optimize the flags: the 'T' value might contain managed values, but we only want to enable
+        // tracker support if that's actually the case. We can check that and pick the best flags.
+        CreateComInterfaceFlags flags = RuntimeHelpers.IsReferenceOrContainsReferences<T>()
+            ? CreateComInterfaceFlags.TrackerSupport
+            : CreateComInterfaceFlags.None;
+
+        // Box the value type (we don't need reference tracking support here, it's just a blittable struct)
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, flags);
 
         // Do the 'QueryInterface' for the 'IReference<T>' interface (this should always succeed)
         HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* boxPtr);

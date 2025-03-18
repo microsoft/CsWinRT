@@ -34,16 +34,16 @@ file static class Matrix3x2;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class Matrix3x2Marshaller
 {
-    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged"/>
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Matrix3x2? value)
     {
-        return WindowsRuntimeBlittableStructMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceMatrix3x2);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceMatrix3x2);
     }
 
-    /// <inheritdoc cref="WindowsRuntimeBlittableStructMarshaller.UnboxToManaged(void*)"/>
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
     public static global::System.Numerics.Matrix3x2? UnboxToManaged(void* value)
     {
-        return WindowsRuntimeBlittableStructMarshaller.UnboxToManaged<global::System.Numerics.Matrix3x2>(value);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Matrix3x2>(value);
     }
 }
 

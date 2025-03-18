@@ -40,7 +40,7 @@ public struct TimeSpan
 /// Marshaller for <see cref="global::System.TimeSpan"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class TimeSpanMarshaller
+public static unsafe class TimeSpanMarshaller
 {
     /// <summary>
     /// Converts a managed <see cref="global::System.TimeSpan"/> to an unmanaged <see cref="TimeSpan"/>.
@@ -60,6 +60,20 @@ public static class TimeSpanMarshaller
     public static global::System.TimeSpan ConvertToManaged(TimeSpan value)
     {
         return global::System.TimeSpan.FromTicks((long)value.Duration);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.TimeSpan? value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfTimeSpan);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
+    public static global::System.TimeSpan? UnboxToManaged(void* value)
+    {
+        TimeSpan? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<TimeSpan>(value);
+
+        return abi.HasValue ? ConvertToManaged(abi.Value) : null;
     }
 }
 
