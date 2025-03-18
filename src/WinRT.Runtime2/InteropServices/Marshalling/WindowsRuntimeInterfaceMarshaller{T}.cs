@@ -44,7 +44,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
         // This is a critical optimization that avoids 'QueryInterface' for interface method parameters.
         if (value is IWindowsRuntimeInterface<T> windowsRuntimeInterface)
         {
-            return new(windowsRuntimeInterface.GetInterface());
+            return windowsRuntimeInterface.GetInterface();
         }
 
         using WindowsRuntimeObjectReferenceValue unmanagedValue = default;

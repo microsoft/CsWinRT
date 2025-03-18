@@ -19,8 +19,8 @@ public interface IWindowsRuntimeInterface<T>
     where T : class
 {
     /// <summary>
-    /// Gets the cached <see cref="WindowsRuntimeObjectReference"/> instance for the interface <typeparamref name="T"/>.
+    /// Gets the cached <see cref="WindowsRuntimeObjectReferenceValue"/> instance for the interface <typeparamref name="T"/>.
     /// </summary>
-    /// <returns>The cached <see cref="WindowsRuntimeObjectReference"/> instance for the interface <typeparamref name="T"/>.</returns>
-    WindowsRuntimeObjectReference GetInterface();
+    /// <returns>The cached <see cref="WindowsRuntimeObjectReferenceValue"/> instance for the interface <typeparamref name="T"/>.</returns>
+    WindowsRuntimeObjectReferenceValue GetInterface();
 }
