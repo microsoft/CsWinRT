@@ -13,44 +13,34 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 [assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Point>",
-    target: typeof(ABI.Windows.Foundation.Point),
+    target: typeof(Point),
     trimTarget: typeof(Point))]
-
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(typeof(Point), typeof(ABI.Windows.Foundation.Point))]
 
 namespace ABI.Windows.Foundation;
 
 /// <summary>
-/// ABI type for <see cref="global::Windows.Foundation.Point"/>.
-/// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.point"/>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Point>")]
-[PointVtableProvider]
-file static class Point;
-
-/// <summary>
-/// Marshaller for <see cref="global::Windows.Foundation.Point"/>.
+/// Marshaller for <see cref="Point"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class PointMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::Windows.Foundation.Point? value)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(Point? value)
     {
         return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfPoint);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
-    public static global::Windows.Foundation.Point? UnboxToManaged(void* value)
+    public static Point? UnboxToManaged(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::Windows.Foundation.Point>(value);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<Point>(value);
     }
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::Windows.Foundation.Point"/>.
+/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="Point"/>.
 /// </summary>
-file sealed class PointVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
+internal sealed class PointVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
 {
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
@@ -64,7 +54,7 @@ file sealed class PointVtableProviderAttribute : WindowsRuntimeVtableProviderAtt
 }
 
 /// <summary>
-/// The <c>IReference`1</c> implementation for <see cref="global::Windows.Foundation.Point"/>.
+/// The <c>IReference`1</c> implementation for <see cref="Point"/>.
 /// </summary>
 file static unsafe class PointReference
 {
@@ -72,12 +62,12 @@ file static unsafe class PointReference
     /// The vtable for the <c>IReference`1</c> implementation.
     /// </summary>
     public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedInspectableVtableUnsafe(
-        type: typeof(global::Windows.Foundation.Point),
-        fpEntry6: (delegate* unmanaged[MemberFunction]<void*, global::Windows.Foundation.Point*, HRESULT>)&Value);
+        type: typeof(Point),
+        fpEntry6: (delegate* unmanaged[MemberFunction]<void*, Point*, HRESULT>)&Value);
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT Value(void* thisPtr, global::Windows.Foundation.Point* result)
+    private static HRESULT Value(void* thisPtr, Point* result)
     {
         if (result is null)
         {
@@ -86,7 +76,7 @@ file static unsafe class PointReference
 
         try
         {
-            global::Windows.Foundation.Point unboxedValue = (global::Windows.Foundation.Point)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            Point unboxedValue = (Point)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             Unsafe.WriteUnaligned(result, unboxedValue);
 
@@ -94,7 +84,7 @@ file static unsafe class PointReference
         }
         catch (global::System.Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(global::Windows.Foundation.Point));
+            Unsafe.WriteUnaligned(result, default(Point));
 
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
