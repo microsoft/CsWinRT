@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
-using WindowsRuntime.InteropServices;
 
 namespace WindowsRuntime;
 
 /// <summary>
-/// An attribute containing the untyped marshalling logic for Windows Runtime objects being passed to native code.
+/// An attribute for callbacks for <see cref="System.Runtime.InteropServices.ComWrappers.CreateObject"/>, for Windows Runtime objects.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -29,11 +28,16 @@ namespace WindowsRuntime;
     AttributeTargets.Delegate,
     AllowMultiple = false,
     Inherited = false)]
-public abstract unsafe class WindowsRuntimeObjectMarshallerAttribute : Attribute
+public abstract unsafe class WindowsRuntimeComWrappersCallbackAttribute : Attribute
 {
-    /// <inheritdoc cref="InteropServices.Marshalling.WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
-    public abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(object value);
-
-    /// <inheritdoc cref="InteropServices.Marshalling.WindowsRuntimeObjectMarshaller.ConvertToManaged"/>
-    public abstract object ConvertToManaged(void* value);
+    /// <summary>
+    /// Creates a managed Windows Runtime object for a given native object.
+    /// </summary>
+    /// <param name="value">The input native object to marshal.</param>
+    /// <returns>The resulting managed Windows Runtime object.</returns>
+    /// <remarks>
+    /// The <paramref name="value"/> parameter will be some <c>IInspectable</c> interface pointer, and
+    /// implementations of this attribute are required to call <c>QueryInterface</c> for the right IID.
+    /// </remarks>
+    public abstract object CreateObject(void* value);
 }

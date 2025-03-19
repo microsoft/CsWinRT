@@ -35,7 +35,7 @@ namespace ABI.System.ComponentModel;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventhandler"/>
 /// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventhandler"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Data.PropertyChangedEventHandler>")]
-[PropertyChangedEventHandlerObjectMarshaller]
+[PropertyChangedEventHandlerComWrappersCallback]
 [PropertyChangedEventHandlerVtableProvider]
 file static class PropertyChangedEventHandler;
 
@@ -110,18 +110,12 @@ file abstract unsafe class PropertyChangedEventHandlerComWrappersCallback : IWin
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeObjectMarshallerAttribute"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
 /// </summary>
-file sealed unsafe class PropertyChangedEventHandlerObjectMarshallerAttribute : WindowsRuntimeObjectMarshallerAttribute
+file sealed unsafe class PropertyChangedEventHandlerComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
 {
     /// <inheritdoc/>
-    public override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(object value)
-    {
-        return WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
-    }
-
-    /// <inheritdoc/>
-    public override object ConvertToManaged(void* value)
+    public override object CreateObject(void* value)
     {
         return WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value, in PropertyChangedEventHandlerReference.IID)!;
     }

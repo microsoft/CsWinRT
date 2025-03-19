@@ -19,7 +19,7 @@ public unsafe interface IWindowsRuntimeComWrappersCallback
     /// use of each <see cref="IWindowsRuntimeComWrappersCallback"/> implementation, as defined by the
     /// invoked method in one of the available marshaller types for CsWinRT. It is guaranteed to be some
     /// <c>IUnknown</c> pointer, but it won't always be just <c>IUnknown</c>, unlike the actual input value
-    /// for <see cref="System.Runtime.InteropServices.ComWrappers.CreateObject"/>. This allows implemtations
+    /// for <see cref="System.Runtime.InteropServices.ComWrappers.CreateObject"/>. This allows implementations
     /// to avoid redundant <c>QueryInterface</c> calls, if the exact interface is statically visible.
     /// </para>
     /// <para>

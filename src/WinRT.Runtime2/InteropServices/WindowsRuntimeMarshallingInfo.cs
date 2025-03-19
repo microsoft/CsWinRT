@@ -89,9 +89,9 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private volatile Type? _publicType;
 
     /// <summary>
-    /// The cached <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance (possibly a placeholder).
+    /// The cached <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance (possibly a placeholder).
     /// </summary>
-    private volatile WindowsRuntimeObjectMarshallerAttribute? _objectMarshaller;
+    private volatile WindowsRuntimeComWrappersCallbackAttribute? _objectMarshaller;
 
     /// <summary>
     /// The cached <see cref="WindowsRuntimeVtableProviderAttribute"/> instance (possibly a placeholder).
@@ -253,17 +253,17 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Gets the <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance associated with the current metadata provider type.
+    /// Gets the <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
-    /// <returns>The resulting <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance.</returns>
-    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance could be resolved.</exception>
+    /// <returns>The resulting <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance could be resolved.</exception>
     /// <remarks>
     /// This method is meant to be used when marshalling user-defined types to native. In this case, the marshalling info should point to
     /// the generated (or built-in) proxy types, which will always have a marshaller attribute on them. Other scenarios are not supported.
     /// </remarks>
-    public WindowsRuntimeObjectMarshallerAttribute GetObjectMarshaller()
+    public WindowsRuntimeComWrappersCallbackAttribute GetObjectMarshaller()
     {
-        if (!TryGetObjectMarshaller(out WindowsRuntimeObjectMarshallerAttribute? marshaller))
+        if (!TryGetObjectMarshaller(out WindowsRuntimeComWrappersCallbackAttribute? marshaller))
         {
             // All projected types will have an associated marshaller, so this could only
             // happen with some proxy types that were not configured correctly. In practice,
@@ -284,24 +284,24 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Tries to get the <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance associated with the current metadata provider type.
+    /// Tries to get the <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
-    /// <param name="marshaller">The resulting <see cref="WindowsRuntimeObjectMarshallerAttribute"/> instance, if available.</param>
+    /// <param name="marshaller">The resulting <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance, if available.</param>
     /// <returns>Whether <paramref name="marshaller"/> was retrieved successfully.</returns>
     /// <remarks>This will not be present for eg. types not implementing any Windows Runtime interfaces, which are also not projected.</remarks>
-    public bool TryGetObjectMarshaller([NotNullWhen(true)] out WindowsRuntimeObjectMarshallerAttribute? marshaller)
+    public bool TryGetObjectMarshaller([NotNullWhen(true)] out WindowsRuntimeComWrappersCallbackAttribute? marshaller)
     {
         // Initializes the 'WindowsRuntimeObjectMarshallerAttribute' instance, if present
         [MethodImpl(MethodImplOptions.NoInlining)]
-        bool Load([NotNullWhen(true)] out WindowsRuntimeObjectMarshallerAttribute? marshaller)
+        bool Load([NotNullWhen(true)] out WindowsRuntimeComWrappersCallbackAttribute? marshaller)
         {
-            WindowsRuntimeObjectMarshallerAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeObjectMarshallerAttribute>(inherit: false);
+            WindowsRuntimeComWrappersCallbackAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeComWrappersCallbackAttribute>(inherit: false);
 
-            value ??= PlaceholderWindowsRuntimeObjectMarshallerAttribute.Instance;
+            value ??= PlaceholderWindowsRuntimeComWrappersCallbackAttribute.Instance;
 
             _objectMarshaller = value;
 
-            if (value is not (null or PlaceholderWindowsRuntimeObjectMarshallerAttribute))
+            if (value is not (null or PlaceholderWindowsRuntimeComWrappersCallbackAttribute))
             {
                 marshaller = value;
 
@@ -313,12 +313,12 @@ internal sealed class WindowsRuntimeMarshallingInfo
             return false;
         }
 
-        WindowsRuntimeObjectMarshallerAttribute? value = _objectMarshaller;
+        WindowsRuntimeComWrappersCallbackAttribute? value = _objectMarshaller;
 
         // We have a cached marshaller, so return it immediately
         if (value is not null)
         {
-            if (value is PlaceholderWindowsRuntimeObjectMarshallerAttribute)
+            if (value is PlaceholderWindowsRuntimeComWrappersCallbackAttribute)
             {
                 marshaller = null;
 
@@ -515,23 +515,17 @@ internal sealed class WindowsRuntimeMarshallingInfo
 }
 
 /// <summary>
-/// A placeholder <see cref="WindowsRuntimeObjectMarshallerAttribute"/> type.
+/// A placeholder <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> type.
 /// </summary>
-file sealed unsafe class PlaceholderWindowsRuntimeObjectMarshallerAttribute : WindowsRuntimeObjectMarshallerAttribute
+file sealed unsafe class PlaceholderWindowsRuntimeComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
 {
     /// <summary>
     /// The shared placeholder instance.
     /// </summary>
-    public static PlaceholderWindowsRuntimeObjectMarshallerAttribute Instance = new();
+    public static PlaceholderWindowsRuntimeComWrappersCallbackAttribute Instance = new();
 
     /// <inheritdoc/>
-    public override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(object? value)
-    {
-        return default;
-    }
-
-    /// <inheritdoc/>
-    public override object ConvertToManaged(void* value)
+    public override object CreateObject(void* value)
     {
         return null!;
     }
