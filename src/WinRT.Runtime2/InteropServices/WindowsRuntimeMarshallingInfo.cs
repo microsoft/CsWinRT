@@ -94,11 +94,6 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private volatile WindowsRuntimeObjectMarshallerAttribute? _objectMarshaller;
 
     /// <summary>
-    /// The cached <see cref="WindowsRuntimeDelegateMarshallerAttribute"/> instance (possibly a placeholder).
-    /// </summary>
-    private volatile WindowsRuntimeDelegateMarshallerAttribute? _delegateMarshaller;
-
-    /// <summary>
     /// The cached <see cref="WindowsRuntimeVtableProviderAttribute"/> instance (possibly a placeholder).
     /// </summary>
     private volatile WindowsRuntimeVtableProviderAttribute? _vtableProvider;
@@ -339,81 +334,6 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Gets the <see cref="WindowsRuntimeDelegateMarshallerAttribute"/> instance associated with the current metadata provider type.
-    /// </summary>
-    /// <returns>The resulting <see cref="WindowsRuntimeDelegateMarshallerAttribute"/> instance.</returns>
-    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeDelegateMarshallerAttribute"/> instance could be resolved.</exception>
-    public WindowsRuntimeDelegateMarshallerAttribute GetDelegateMarshaller()
-    {
-        if (!TryGetDelegateMarshaller(out WindowsRuntimeDelegateMarshallerAttribute? marshaller))
-        {
-            // This method should only be called for delegates which is valid to marshal
-            [DoesNotReturn]
-            [StackTraceHidden]
-            void ThrowNotSupportedException()
-            {
-                throw new NotSupportedException(
-                    $"The metadata provider type '{_metadataProviderType}' does not have any associated delegate marshalling logic. " +
-                    $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
-            }
-
-            ThrowNotSupportedException();
-        }
-
-        return marshaller;
-    }
-
-    /// <summary>
-    /// Tries to get the <see cref="WindowsRuntimeDelegateMarshallerAttribute"/> instance associated with the current metadata provider type.
-    /// </summary>
-    /// <param name="marshaller">The resulting <see cref="WindowsRuntimeDelegateMarshallerAttribute"/> instance, if available.</param>
-    /// <returns>Whether <paramref name="marshaller"/> was retrieved successfully.</returns>
-    /// <remarks>This will not be present for eg. types not implementing any Windows Runtime interfaces, which are also not projected.</remarks>
-    public bool TryGetDelegateMarshaller([NotNullWhen(true)] out WindowsRuntimeDelegateMarshallerAttribute? marshaller)
-    {
-        // Initializes the 'WindowsRuntimeDelegateMarshallerAttribute' instance, if present
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        bool Load([NotNullWhen(true)] out WindowsRuntimeDelegateMarshallerAttribute? marshaller)
-        {
-            WindowsRuntimeDelegateMarshallerAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeDelegateMarshallerAttribute>(inherit: false);
-
-            value ??= PlaceholderWindowsRuntimeDelegateMarshallerAttribute.Instance;
-
-            _delegateMarshaller = value;
-
-            if (value is not (null or PlaceholderWindowsRuntimeDelegateMarshallerAttribute))
-            {
-                marshaller = value;
-
-                return true;
-            }
-
-            marshaller = null;
-
-            return false;
-        }
-
-        WindowsRuntimeDelegateMarshallerAttribute? value = _delegateMarshaller;
-
-        // We have a cached marshaller, so return it immediately
-        if (value is not null)
-        {
-            if (value is PlaceholderWindowsRuntimeDelegateMarshallerAttribute)
-            {
-                marshaller = null;
-
-                return false;
-            }
-
-            marshaller = value;
-
-            return true;
-        }
-
-        return Load(out marshaller);
-    }
-
-    /// <summary>
     /// Gets the <see cref="WindowsRuntimeVtableProviderAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
     /// <returns>The resulting <see cref="WindowsRuntimeVtableProviderAttribute"/> instance.</returns>
@@ -612,29 +532,6 @@ file sealed unsafe class PlaceholderWindowsRuntimeObjectMarshallerAttribute : Wi
 
     /// <inheritdoc/>
     public override object ConvertToManaged(void* value)
-    {
-        return null!;
-    }
-}
-
-/// <summary>
-/// A placeholder <see cref="WindowsRuntimeDelegateMarshallerAttribute"/> type.
-/// </summary>
-file sealed unsafe class PlaceholderWindowsRuntimeDelegateMarshallerAttribute : WindowsRuntimeDelegateMarshallerAttribute
-{
-    /// <summary>
-    /// The shared placeholder instance.
-    /// </summary>
-    public static PlaceholderWindowsRuntimeDelegateMarshallerAttribute Instance = new();
-
-    /// <inheritdoc/>
-    public override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(Delegate value)
-    {
-        return default;
-    }
-
-    /// <inheritdoc/>
-    public override unsafe Delegate ConvertToManaged(void* value)
     {
         return null!;
     }
