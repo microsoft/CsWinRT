@@ -38,7 +38,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         }
 
         // If 'value' is a managed wrapper for a native delegate, it probably can't be marshalled
-        if (value is WindowsRuntimeObjectReference windowsRuntimeDelegate)
+        if (value is Delegate { Target: WindowsRuntimeObjectReference windowsRuntimeDelegate })
         {
             // Try to do a 'QueryInterface' just in case, and throw if it fails (which is very likely)
             if (!windowsRuntimeDelegate.TryAsUnsafe(in WellKnownInterfaceIds.IID_IInspectable, out void* inspectablePtr))

@@ -31,6 +31,10 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller
     /// a runtime-provided CCW for the managed object instance). It is responsibility of the caller to always
     /// make sure that the returned <see cref="WindowsRuntimeObjectReferenceValue"/> instance is disposed.
     /// </para>
+    /// <para>
+    /// This method is only meant to be used for interface types. For other types, use the appropriate marshaller.
+    /// Calling this method with <typeparamref name="T"/> being a non-interface type results in undefined behavior.
+    /// </para>
     /// </remarks>
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged<T>(T? value, in Guid iid)
         where T : class
@@ -47,25 +51,13 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller
             return windowsRuntimeInterface.GetInterface();
         }
 
-        using WindowsRuntimeObjectReferenceValue unmanagedValue = default;
-
         // If we got here, it means that 'value' is a managed, user-defined type implementing the Windows Runtime interface.
         // We can then get or create the CCW for it. The interface should be present in the generated vtable for the type.
-        if (WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info))
-        {
-            *&unmanagedValue = info.GetObjectMarshaller().ConvertToUnmanaged(value);
-        }
-        else
-        {
-            // This logic is the same as in 'WindowsRuntimeObjectMarshaller.ConvertToUnmanagedUnsafe', see notes there.
-            void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
-
-            *&unmanagedValue = new WindowsRuntimeObjectReferenceValue(thisPtr);
-        }
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
 
         // We need an interface pointer, so in this scenario we can't really avoid a 'QueryInterface' call.
         // The local cache for object references only applies to projected runtime classes, not managed types.
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(unmanagedValue.GetThisPtrUnsafe(), in iid, out void* interfacePtr);
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
 
         // It is very unlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
         // or something else happened that is not really supported). Still, we can produce a nice error message for it.
