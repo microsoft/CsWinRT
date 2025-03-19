@@ -479,11 +479,11 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <returns>The resulting <see cref="WindowsRuntimeMarshallingInfo"/> instance.</returns>
     private static WindowsRuntimeMarshallingInfo CreateMarshallingInfo(Type metadataProviderType)
     {
-        // If '[WindowsRuntimeType]' is defined, this is a projected type, so it's the public type too.
+        // If '[WindowsRuntimeMetadata]' is defined, this is a projected type, so it's the public type too.
         // Otherwise, we don't know what the public type is at this point. We could look it up now, but
         // since we don't need that information right away, we can delay this to later to reduce the
         // overhead at startup. That value is only needed eg. when associating native memory for vtables.
-        return metadataProviderType.IsDefined(typeof(WindowsRuntimeTypeAttribute), inherit: false)
+        return metadataProviderType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false)
             ? new(metadataProviderType, metadataProviderType)
             : new(metadataProviderType, publicType: null);
     }
@@ -496,7 +496,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private static WindowsRuntimeMarshallingInfo? GetMetadataProviderType(Type managedType)
     {
         // Same as above: if the type is a projected type, then it is also used as the metadata source
-        if (managedType.IsDefined(typeof(WindowsRuntimeTypeAttribute), inherit: false))
+        if (managedType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false))
         {
             return new(managedType, publicType: managedType);
         }
