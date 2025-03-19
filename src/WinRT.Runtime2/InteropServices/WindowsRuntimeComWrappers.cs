@@ -44,6 +44,32 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// </remarks>
     public static WindowsRuntimeComWrappers Default { get; } = new();
 
+    /// <summary>
+    /// Calls <see cref="ComWrappers.GetOrCreateComInterfaceForObject"/> and then <c>QueryInterface</c> on the result.
+    /// </summary>
+    /// <param name="instance">The managed object to expose outside the .NET runtime.</param>
+    /// <param name="flags">Flags used to configure the generated interface.</param>
+    /// <param name="iid">The IID of the interface to query after creating the object wrapper.</param>
+    /// <returns>The generated COM interface that can be passed outside the .NET runtime.</returns>
+    /// <exception cref="Exception">Thrown if <paramref name="instance"/> cannot be marshalled.</exception>
+    /// <seealso cref="ComWrappers.GetOrCreateComInterfaceForObject"/>
+    public nint GetOrCreateComInterfaceForObject(object instance, CreateComInterfaceFlags flags, in Guid iid)
+    {
+        // Marshal the object ('ComputeVtables' will lookup the proxy type to resolve the right vtable for it)
+        void* thisPtr = (void*)GetOrCreateComInterfaceForObject(instance, flags);
+
+        // 'ComWrappers' returns an 'IUnknown' pointer, so we need to do an actual 'QueryInterface' for the interface IID
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
+
+        // We can release the 'IUnknown' reference now, it's no longer needed
+        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+
+        // Ensure the 'QueryInterface' succeeded (if it doesn't, it's some kind of authoring error)
+        Marshal.ThrowExceptionForHR(hresult);
+
+        return (nint)interfacePtr;
+    }
+
     /// <inheritdoc/>
     protected override ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
     {

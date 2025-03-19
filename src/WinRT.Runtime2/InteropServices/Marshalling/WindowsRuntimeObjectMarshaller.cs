@@ -58,33 +58,10 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             return new(inspectablePtr);
         }
 
-        using WindowsRuntimeObjectReferenceValue unmanagedValue = default;
-
-        // If 'value' is not a projected Windows Runtime class, we need to consult the type map and try to
-        // get the proxy type for the constructed object. If we have a result, then we can use the marshaller
-        // on the proxy type to marshal the object to native. This will cover all cases such as custom mapped
-        // types, generic type instantiations, and user-defined types implementing projected interfaces.
-        if (WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info))
-        {
-            *&unmanagedValue = info.GetObjectMarshaller().ConvertToUnmanaged(value);
-        }
-        else
-        {
-            // If we got here, we need to marshal the object ourselves, like we do for interfaces. This applies
-            // to both normal user-defined types, and managed types derived from Windows Runtime classes. This
-            // will cover cases where we're just marshalling an opaque object as just 'IInspectable'.
-            void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
-
-            *&unmanagedValue = new WindowsRuntimeObjectReferenceValue(thisPtr);
-        }
-
-        // 'ComWrappers' returns an 'IUnknown' pointer, so we can't avoid an additional 'QueryInterface' for 'IInspectable'
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(unmanagedValue.GetThisPtrUnsafe(), in WellKnownInterfaceIds.IID_IInspectable, out void* interfacePtr);
-
-        // All CCWs produced by our 'ComWrappers' implementation will always implement 'IInspectable'
-        Debug.Assert(WellKnownErrorCodes.Succeeded(hresult));
-
-        return new(interfacePtr);
+        // If 'value' is not a projected Windows Runtime class, just marshal it via 'ComWrappers'. This will rely on 'ComputeVtables' to
+        // lookup the proxy type for the object, which will allow scenarios such as custom mapped types, generic type instantiations, and
+        // user-defined types implementing projected interfaces, to also work. If that's missing, we'll just get an opaque 'IInspectable'.
+        return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport, in WellKnownInterfaceIds.IID_IInspectable));
     }
 
     /// <summary>

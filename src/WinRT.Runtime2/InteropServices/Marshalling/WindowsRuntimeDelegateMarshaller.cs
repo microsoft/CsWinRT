@@ -42,29 +42,14 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
             return default;
         }
 
-        // Delegates coming from native code are projected with an extension implementation that creates a
-        // delegate instance with the inner 'WindowsRuntimeObjectReference' as delegate target. Such deleate
-        // instances are only produced by generated code, so we can rely on them wrapping the exact interface
-        // pointer for the delegate type. So if we get such a delegate, we can just unwrap it and return it.
-        // Note that doing this also means that we can completely avoid any 'AddRef' or 'QueryInterface' calls.
-        if (value.Target is WindowsRuntimeObjectReference objectReference)
-        {
-            return objectReference.AsValue();
-        }
-
-        // Marshal the delegate ('ComWrappers.ComputeVtables' will lookup the proxy type to resolve the right vtable for it)
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
-
-        // 'ComWrappers' returns an 'IUnknown' pointer, so we need to do an actual 'QueryInterface' for the delegate IID
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* delegatePtr);
-
-        // We can release the 'IUnknown' reference now, it's no longer needed
-        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
-
-        // Ensure the 'QueryInterface' succeeded (if it doesn't, it's some kind of authoring error)
-        Marshal.ThrowExceptionForHR(hresult);
-
-        return new(delegatePtr);
+        // Delegates coming from native code are projected with an extension implementation that creates a delegate instance
+        // with the inner 'WindowsRuntimeObjectReference' as delegate target. Such delegate instances are only produced by
+        // generated code, so we can rely on them wrapping the exact interface pointer for the delegate type. So if we get
+        // such a delegate, we can just unwrap it and return it. Note that doing this also means that we can completely avoid
+        // any 'AddRef' or 'QueryInterface' calls. If that's not the case, just marshal the managed delegate object normally.
+        return value.Target is WindowsRuntimeObjectReference objectReference
+            ? objectReference.AsValue()
+            : new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport, in iid));
     }
 
     /// <summary>
@@ -132,19 +117,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
             return new(interfacePtr);
         }
 
-        // Marshal the delegate like in 'ConvertToUnmanaged'
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
-
-        // Do the 'QueryInterface' for the 'IReference<T>' interface (this should always succeed)
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* boxPtr);
-
-        // We can release the 'IUnknown' reference now
-        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
-
-        // Ensure the 'QueryInterface' succeeded (same as above)
-        Marshal.ThrowExceptionForHR(hresult);
-
-        return new(boxPtr);
+        return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport, in iid));
     }
 
     /// <summary>
