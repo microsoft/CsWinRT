@@ -11,21 +11,11 @@ using System.Runtime.CompilerServices;
 namespace Windows.Foundation;
 
 /// <summary>
-/// epresents x- and y-coordinate values that define a point in a two-dimensional plane.
+/// Represents X and Y coordinate values that define a point in a two-dimensional plane.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.point"/>
 public struct Point : IEquatable<Point>, IFormattable
 {
-    /// <summary>
-    /// The horizontal position of the point.
-    /// </summary>
-    public float X;
-
-    /// <summary>
-    /// The vertical position of the point.
-    /// </summary>
-    public float Y;
-
     /// <summary>
     /// Creates a new <see cref="Point"/> value with the specified parameters.
     /// </summary>
@@ -36,6 +26,16 @@ public struct Point : IEquatable<Point>, IFormattable
         X = x;
         Y = y;
     }
+
+    /// <summary>
+    /// Gets or sets the horizontal position of the point.
+    /// </summary>
+    public float X { readonly get; set; }
+
+    /// <summary>
+    /// Gets or sets the vertical position of the point.
+    /// </summary>
+    public float Y { readonly get; set; }
 
     /// <summary>
     /// Deconstructs the current <see cref="Point"/> value into its components.
