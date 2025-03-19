@@ -11,13 +11,12 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for Windows Runtime interfaces.
 /// </summary>
-/// <typeparam name="T">The type of the interface being marshalled.</typeparam>
-public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
-    where T : class
+public static unsafe class WindowsRuntimeInterfaceMarshaller
 {
     /// <summary>
     /// Marshals a Windows Runtime interface to a <see cref="WindowsRuntimeObjectReferenceValue"/> instance.
     /// </summary>
+    /// <typeparam name="T">The type of the interface being marshalled.</typeparam>
     /// <param name="value">The input <typeparamref name="T"/> object to marshal.</param>
     /// <param name="iid">The IID for the interface being marshalled.</param>
     /// <returns>A <see cref="WindowsRuntimeObjectReferenceValue"/> instance for the requested interface.</returns>
@@ -33,7 +32,8 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
     /// make sure that the returned <see cref="WindowsRuntimeObjectReferenceValue"/> instance is disposed.
     /// </para>
     /// </remarks>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(T? value, in Guid iid)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged<T>(T? value, in Guid iid)
+        where T : class
     {
         if (value is null)
         {
@@ -69,28 +69,6 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
 
         // It is very unlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
         // or something else happened that is not really supported). Still, we can produce a nice error message for it.
-        WindowsRuntimeInterfaceMarshaller.ThrowExceptionForHR(value, in iid, hresult);
-
-        return new(interfacePtr);
-    }
-}
-
-/// <summary>
-/// Shared, non-generic helpers for <see cref="WindowsRuntimeInterfaceMarshaller{T}"/>.
-/// </summary>
-file static class WindowsRuntimeInterfaceMarshaller
-{
-    /// <summary>
-    /// Throws an exception for a given <c>HRESULT</c> value, if it represents a failure.
-    /// </summary>
-    /// <param name="value">The object being marshalled.</param>
-    /// <param name="iid">The IID for the interface being marshalled.</param>
-    /// <param name="hresult">The <c>QueryInterface</c> result.</param>
-    /// <exception cref="Exception">Thrown if <paramref name="hresult"/> represents a failure.</exception>
-    [StackTraceHidden]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowExceptionForHR(object value, in Guid iid, HRESULT hresult)
-    {
         if (!WellKnownErrorCodes.Succeeded(hresult))
         {
             // Helper to throw the exception without increasing the codegen in the fast path.
@@ -116,5 +94,7 @@ file static class WindowsRuntimeInterfaceMarshaller
 
             ThrowException(value, in iid, hresult);
         }
+
+        return new(interfacePtr);
     }
 }
