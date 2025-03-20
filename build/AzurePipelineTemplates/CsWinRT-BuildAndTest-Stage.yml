@@ -1,3 +1,11 @@
+parameters: 
+  - name: "BuildConfiguration"
+    type: string
+    default: "release"
+  - name: "BuildPlatform"
+    type: string
+    default: "x86"
+    
 stages:
 - stage: BuildAndTest
   displayName: Build/Test Stage
