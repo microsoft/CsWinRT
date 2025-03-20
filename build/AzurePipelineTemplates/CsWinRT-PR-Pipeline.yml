@@ -45,7 +45,7 @@ extends:
     stages:
       - stage: buildandtest
         jobs: 
-        - template: build/AzurePipelineTemplates/CsWinRT-BuildAndTest-Stage-OneBranch.yml@self
+        - template: build/AzurePipelineTemplates/CsWinRT-BuildAndTest-Stage.yml@self
           parameters:
             BuildConfiguration: $(BuildConfiguration)
             BuildVersion: $(BuildVersion)
