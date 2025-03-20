@@ -6,13 +6,16 @@ parameters:
     type: string
     default: "x86"
     
-stages:
-- stage: BuildAndTest
-  displayName: Build/Test Stage
-  jobs: 
+
+jobs: 
   - job: BuildAndTest
+    displayName: Build/Test Stage
+    pool:
+      type: windows
+      
     timeoutInMinutes: 270
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
+
     strategy:
       maxParallel: 10
       matrix:
@@ -34,6 +37,11 @@ stages:
         arm64_Release:
           BuildPlatform: 'arm64'
           BuildConfiguration: 'release' 
+          
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+      ob_artifactSuffix: ${{ parameters.BuildConfiguration }}_${{ parameters.BuildPlatform }}
+      StagingFolder: $(ob_outputDirectory)
     steps:
     - checkout: self
       clean: true
