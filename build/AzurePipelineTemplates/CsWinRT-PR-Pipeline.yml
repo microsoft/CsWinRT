@@ -48,7 +48,7 @@ extends:
         - template: build/AzurePipelineTemplates/CsWinRT-BuildAndTest-Stage.yml@self
           parameters:
             BuildConfiguration: $(BuildConfiguration)
-            BuildVersion: $(BuildVersion)
+            BuildPlatform: $(BuildPlatform)
             
       - stage: Nuget
         dependsOn: buildandtest
@@ -56,4 +56,4 @@ extends:
         - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuget-Stage.yml@self
           parameters:
             BuildConfiguration: $(BuildConfiguration)
-            BuildVersion: $(BuildVersion) 
+            BuildPlatform: $(BuildPlatform) 
