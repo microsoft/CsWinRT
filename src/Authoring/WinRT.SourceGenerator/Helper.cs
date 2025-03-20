@@ -326,6 +326,16 @@ namespace Generator
 
             return false;
         }
+
+        public static bool GetCsWinRTGenerateManagedDllGetActivationFactory(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateManagedDllGetActivationFactory", out var csWinRTGenerateManagedDllGetActivationFactory))
+            {
+                return bool.TryParse(csWinRTGenerateManagedDllGetActivationFactory, out var isCsWinRTGenerateManagedDllGetActivationFactory) && isCsWinRTGenerateManagedDllGetActivationFactory;
+            }
+
+            return false;
+        }
     }
 
     static class GeneratorHelper
@@ -1293,6 +1303,27 @@ namespace Generator
         public static string TrimGlobalFromTypeName(string typeName)
         {
             return typeName.StartsWith("global::") ? typeName[8..] : typeName;
+        }
+
+        public static string GetEscapedAssemblyName(string assemblyName)
+        {
+            // Make sure to escape invalid characters for namespace names.
+            // See ECMA 335, II.6.2 and II.5.2/3.
+            if (assemblyName.AsSpan().IndexOfAny("$@`?".AsSpan()) != -1)
+            {
+                char[] buffer = new char[assemblyName.Length];
+
+                for (int i = 0; i < assemblyName.Length; i++)
+                {
+                    buffer[i] = assemblyName[i] is '$' or '@' or '`' or '?'
+                        ? '_'
+                        : assemblyName[i];
+                }
+
+                assemblyName = new string(buffer);
+            }
+
+            return assemblyName;
         }
     }
 }

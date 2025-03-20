@@ -11,7 +11,9 @@
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
 	  
     <!-- Using x86 to test compilation of this option -->
-    <CsWinRTGenerateOverridedClassNameActivationFactory Condition="'$(Platform)' == 'x86'">true</CsWinRTGenerateOverridedClassNameActivationFactory>  
+    <CsWinRTGenerateOverridedClassNameActivationFactory Condition="'$(Platform)' == 'x86'">true</CsWinRTGenerateOverridedClassNameActivationFactory>
+
+    <CsWinRTGenerateManagedDllGetActivationFactory>true</CsWinRTGenerateManagedDllGetActivationFactory>
 	  
     <!--
       Don't fail builds for well known warnings in the authoring tests that are expected:
