@@ -18,6 +18,7 @@ namespace Windows.Foundation;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.point"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Point>")]
+[PointComWrappersCallback]
 [PointVtableProvider]
 public struct Point : IEquatable<Point>, IFormattable
 {

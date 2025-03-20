@@ -38,6 +38,18 @@ public static unsafe class PointMarshaller
 }
 
 /// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="Point"/>.
+/// </summary>
+internal sealed unsafe class PointComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<Point>(value, in WellKnownInterfaceIds.IID_IReferenceOfPoint).GetValueOrDefault();
+    }
+}
+
+/// <summary>
 /// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="Point"/>.
 /// </summary>
 internal sealed class PointVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute

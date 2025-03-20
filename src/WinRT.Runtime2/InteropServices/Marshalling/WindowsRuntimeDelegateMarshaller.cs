@@ -166,7 +166,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// This method should only be used to unbox <c>IReference`1</c> objects to their underlying Windows Runtime delegate type.
     /// </para>
     /// <para>
-    /// Unlike <see cref="ConvertToManaged"/>, the <paramref name="value"/> parameter is expected to be an <c>IInspectable</c> pointer.
+    /// Unlike <see cref="UnboxToManaged(void*)"/>, the <paramref name="value"/> parameter is expected to be an <c>IInspectable</c> pointer.
     /// </para>
     /// </remarks>
     /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>

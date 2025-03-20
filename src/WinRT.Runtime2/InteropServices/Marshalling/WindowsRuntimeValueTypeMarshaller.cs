@@ -81,4 +81,37 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
 
         return result;
     }
+
+    /// <summary>
+    /// Unboxes and converts an unmanaged pointer to a Windows Runtime object to its managed representation.
+    /// </summary>
+    /// <typeparam name="T">The blittable struct type to marshal.</typeparam>
+    /// <param name="value">The input object to unbox and convert to managed.</param>
+    /// <param name="iid">The IID of the <c>IReference`1</c> interface for the struct type.</param>
+    /// <returns>The resulting managed Windows Runtime blittable struct value.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method should only be used to unbox <c>IReference`1</c> objects to their underlying Windows Runtime blittable struct type.
+    /// </para>
+    /// <para>
+    /// Unlike <see cref="UnboxToManaged(void*)"/>, the <paramref name="value"/> parameter is expected to be an <c>IInspectable</c> pointer.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
+    public static T? UnboxToManaged<T>(void* value, in Guid iid)
+        where T : unmanaged
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        // First, make sure we have the right 'IReference<T>' interface on 'value'
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr);
+
+        Marshal.ThrowExceptionForHR(hresult);
+
+        // Now that we have the 'IReference<T>' pointer, unbox it normally
+        return UnboxToManaged<T>(referencePtr);
+    }
 }
