@@ -9,7 +9,9 @@ parameters:
 jobs:
   - job: PublishTo_CsWinRT_InternalFeed
     displayName: Publish To Internal Nuget Feed Stage
-
+    pool:
+      type: windows
+      
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
 
