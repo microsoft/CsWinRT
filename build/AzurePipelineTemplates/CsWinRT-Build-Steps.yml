@@ -6,11 +6,7 @@ parameters:
     type: string
     default: "x86"
     
-jobs:
--job: 
-  pool:
-      type: windows
-  steps:
+steps:
   # Clone TestWinRT
   - task: CmdLine@2
     displayName: Clone TestWinRT
