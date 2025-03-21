@@ -49,6 +49,9 @@ jobs:
     
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
 
 # Set Dotnet paths
     - task: PowerShell@2
