@@ -2649,6 +2649,8 @@ namespace UnitTest
             TestObject.HResultProperty = null;
 
             Assert.Null(TestObject.HResultProperty);
+
+            Assert.Null(TestObject.GetHResultProperty());
         }
 
         [Fact]

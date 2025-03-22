@@ -401,6 +401,7 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IReference<Windows::Foundation::DateTime> GetDateTimeProperty();
         winrt::hresult HResultProperty();
         void HResultProperty(winrt::hresult const& value);
+        IInspectable GetHResultProperty();
 
         static int32_t UnboxInt32(IInspectable const& obj);
         static bool UnboxBoolean(IInspectable const& obj);

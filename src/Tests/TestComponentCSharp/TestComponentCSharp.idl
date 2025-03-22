@@ -427,6 +427,7 @@ namespace TestComponentCSharp
         Windows.Foundation.IReference<Windows.Foundation.DateTime> GetDateTimeProperty();
         // HResult->Exception type mapping
         Windows.Foundation.HResult HResultProperty;
+        Object GetHResultProperty();
 
         Double Calculate(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Double> > values);
         Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Int32> > GetNullableIntList();

@@ -1480,6 +1480,11 @@ namespace winrt::TestComponentCSharp::implementation
         _hr = hr;
     }
 
+    WF::IInspectable Class::GetHResultProperty()
+    {
+        return winrt::box_value(_hr);
+    }
+
     // IStringable
     hstring Class::ToString()
     {
