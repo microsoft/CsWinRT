@@ -40,9 +40,22 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// Gets the shared default instance of <see cref="WindowsRuntimeComWrappers"/>.
     /// </summary>
     /// <remarks>
-    /// This instance is the one that CsWinRT will use to marshall all Windows Runtime objects.
+    /// This instance is the one that CsWinRT will use to marshal all Windows Runtime objects.
     /// </remarks>
-    public static WindowsRuntimeComWrappers Default { get; } = new();
+    public static WindowsRuntimeComWrappers Default { get; } = CreateAndRegisterDefault();
+
+    /// <summary>
+    /// Creates and registers the default instance of <see cref="WindowsRuntimeComWrappers"/>.
+    /// </summary>
+    /// <returns>The default instance of <see cref="WindowsRuntimeComWrappers"/>.</returns>
+    private static WindowsRuntimeComWrappers CreateAndRegisterDefault()
+    {
+        WindowsRuntimeComWrappers instance = new();
+
+        RegisterForTrackerSupport(instance);
+
+        return instance;
+    }
 
     /// <summary>
     /// Calls <see cref="ComWrappers.GetOrCreateComInterfaceForObject"/> and then <c>QueryInterface</c> on the result.
