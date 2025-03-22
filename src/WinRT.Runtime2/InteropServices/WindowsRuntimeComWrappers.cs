@@ -90,7 +90,11 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // for 'object'. This is the shared marshalling mode for all unknown objects, ie. just an opaque 'IInspectable'.
         if (!WindowsRuntimeMarshallingInfo.TryGetInfo(obj.GetType(), out WindowsRuntimeMarshallingInfo? marshallingInfo))
         {
-            marshallingInfo = WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
+            // Special case for exception types, which won't have their own type map entry, but should all map to the
+            // same marshalling info for 'Exception'. Since we have an instance here, we can just check directly.
+            marshallingInfo = obj is Exception
+                ? WindowsRuntimeMarshallingInfo.GetInfo(typeof(Exception))
+                : WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
         }
 
         // Get the vtable from the current marshalling info (it will get cached in that instance)
