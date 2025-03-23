@@ -114,4 +114,41 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
         // Now that we have the 'IReference<T>' pointer, unbox it normally
         return UnboxToManaged<T>(referencePtr);
     }
+
+    /// <summary>
+    /// Unboxes and converts an unmanaged pointer to a Windows Runtime object to its managed representation.
+    /// </summary>
+    /// <typeparam name="T">The blittable struct type to marshal.</typeparam>
+    /// <param name="value">The input object to unbox and convert to managed.</param>
+    /// <param name="iid">The IID of the <c>IReference`1</c> interface for the struct type.</param>
+    /// <returns>The resulting managed Windows Runtime blittable struct value.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method should only be used to unbox <c>IReference`1</c> objects to their underlying Windows Runtime blittable struct type.
+    /// </para>
+    /// <para>
+    /// Unlike <see cref="UnboxToManaged(void*)"/>, the <paramref name="value"/> parameter is expected to be an <c>IInspectable</c> pointer.
+    /// </para>
+    /// <para>
+    /// Additionally, unlike <see cref="UnboxToManaged(void*, in Guid)"/>, <paramref name="value"/> is assumed to not be <see langword="null"/>.
+    /// This method will not check that, and it will always return a non-nullable <typeparamref name="T"/> value as the result.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="NullReferenceException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
+    public static T UnboxToManagedUnsafe<T>(void* value, in Guid iid)
+        where T : unmanaged
+    {
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr);
+
+        Marshal.ThrowExceptionForHR(hresult);
+
+        T result;
+
+        hresult = IReferenceVftbl.ValueUnsafe(referencePtr, &result);
+
+        Marshal.ThrowExceptionForHR(hresult);
+
+        return result;
+    }
 }
