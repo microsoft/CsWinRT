@@ -26,6 +26,7 @@ namespace ABI.System;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
 [EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.TimeSpan>")]
+[TimeSpanComWrappersCallback]
 [TimeSpanVtableProvider]
 public struct TimeSpan
 {
@@ -74,6 +75,20 @@ public static unsafe class TimeSpanMarshaller
         TimeSpan? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<TimeSpan>(value);
 
         return abi.HasValue ? ConvertToManaged(abi.Value) : null;
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.TimeSpan"/>.
+/// </summary>
+internal sealed unsafe class TimeSpanComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        TimeSpan abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<TimeSpan>(value, in WellKnownInterfaceIds.IID_IReferenceOfTimeSpan);
+
+        return TimeSpanMarshaller.ConvertToManaged(abi);
     }
 }
 

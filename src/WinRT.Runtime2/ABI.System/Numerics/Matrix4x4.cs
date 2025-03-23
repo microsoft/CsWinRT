@@ -25,6 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix4x4"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix4x4>")]
+[Matrix4x4ComWrappersCallback]
 [Matrix4x4VtableProvider]
 file static class Matrix4x4;
 
@@ -44,6 +45,18 @@ public static unsafe class Matrix4x4Marshaller
     public static global::System.Numerics.Matrix4x4? UnboxToManaged(void* value)
     {
         return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Matrix4x4>(value);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Matrix4x4"/>.
+/// </summary>
+internal sealed unsafe class Matrix4x4ComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix4x4>(value, in WellKnownInterfaceIds.IID_IReferenceMatrix4x4);
     }
 }
 

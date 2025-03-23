@@ -26,6 +26,7 @@ namespace ABI.System;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.datetime"/>
 [EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.DateTime>")]
+[DateTimeOffsetComWrappersCallback]
 [DateTimeOffsetVtableProvider]
 public struct DateTimeOffset
 {
@@ -83,6 +84,20 @@ public static unsafe class DateTimeOffsetMarshaller
         DateTimeOffset? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<DateTimeOffset>(value);
 
         return abi.HasValue ? ConvertToManaged(abi.Value) : null;
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.DateTimeOffset"/>.
+/// </summary>
+file sealed unsafe class DateTimeOffsetComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        DateTimeOffset abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<DateTimeOffset>(value, in WellKnownInterfaceIds.IID_IReferenceOfDateTimeOffset);
+
+        return DateTimeOffsetMarshaller.ConvertToManaged(abi);
     }
 }
 

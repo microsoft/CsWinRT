@@ -25,6 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix3x2"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix3x2>")]
+[Matrix3x2ComWrappersCallback]
 [Matrix3x2VtableProvider]
 file static class Matrix3x2;
 
@@ -44,6 +45,18 @@ public static unsafe class Matrix3x2Marshaller
     public static global::System.Numerics.Matrix3x2? UnboxToManaged(void* value)
     {
         return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Matrix3x2>(value);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Matrix3x2"/>.
+/// </summary>
+internal sealed unsafe class Matrix3x2ComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix3x2>(value, in WellKnownInterfaceIds.IID_IReferenceMatrix3x2);
     }
 }
 

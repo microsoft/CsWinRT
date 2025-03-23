@@ -45,7 +45,7 @@ internal sealed unsafe class PointComWrappersCallbackAttribute : WindowsRuntimeC
     /// <inheritdoc/>
     public override object CreateObject(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<Point>(value, in WellKnownInterfaceIds.IID_IReferenceOfPoint).GetValueOrDefault();
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Point>(value, in WellKnownInterfaceIds.IID_IReferenceOfPoint);
     }
 }
 

@@ -25,6 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector4"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector4>")]
+[Vector4ComWrappersCallback]
 [Vector4VtableProvider]
 file static class Vector4;
 
@@ -44,6 +45,18 @@ public static unsafe class Vector4Marshaller
     public static global::System.Numerics.Vector4? UnboxToManaged(void* value)
     {
         return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Vector4>(value);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Vector4"/>.
+/// </summary>
+internal sealed unsafe class Vector4ComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Vector4>(value, in WellKnownInterfaceIds.IID_IReferenceVector4);
     }
 }
 

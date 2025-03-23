@@ -25,6 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector3"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector3>")]
+[Vector3ComWrappersCallback]
 [Vector3VtableProvider]
 file static class Vector3;
 
@@ -44,6 +45,18 @@ public static unsafe class Vector3Marshaller
     public static global::System.Numerics.Vector3? UnboxToManaged(void* value)
     {
         return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Vector3>(value);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Vector3"/>.
+/// </summary>
+internal sealed unsafe class Vector3ComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Vector3>(value, in WellKnownInterfaceIds.IID_IReferenceVector3);
     }
 }
 

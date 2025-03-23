@@ -25,6 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.plane"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Plane>")]
+[PlaneComWrappersCallback]
 [PlaneVtableProvider]
 file static class Plane;
 
@@ -44,6 +45,18 @@ public static unsafe class PlaneMarshaller
     public static global::System.Numerics.Plane? UnboxToManaged(void* value)
     {
         return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Plane>(value);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Plane"/>.
+/// </summary>
+internal sealed unsafe class PlaneComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Plane>(value, in WellKnownInterfaceIds.IID_IReferencePlane);
     }
 }
 

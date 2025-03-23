@@ -25,6 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.quaternion"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Quaternion>")]
+[QuaternionComWrappersCallback]
 [QuaternionVtableProvider]
 file static class Quaternion;
 
@@ -44,6 +45,18 @@ public static unsafe class QuaternionMarshaller
     public static global::System.Numerics.Quaternion? UnboxToManaged(void* value)
     {
         return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Quaternion>(value);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Quaternion"/>.
+/// </summary>
+internal sealed unsafe class QuaternionComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+{
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Quaternion>(value, in WellKnownInterfaceIds.IID_IReferenceQuaternion);
     }
 }
 
