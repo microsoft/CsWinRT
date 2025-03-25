@@ -33,6 +33,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 #endif
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe ObjectReferenceValue CreateInstanceWithAllParameters(global::System.Collections.Specialized.NotifyCollectionChangedAction action, global::System.Collections.IList newItems, global::System.Collections.IList oldItems, int newIndex, int oldIndex)
         {
             ObjectReferenceValue __newItems = default;

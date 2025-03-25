@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -24,6 +25,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 #endif
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public IObjectReference CreateInstance(string name, object baseInterface, out IObjectReference innerInterface)
         {
             IObjectReference __baseInterface = default;
@@ -56,6 +58,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public ObjectReferenceValue CreateInstance(string name)
         {
             IntPtr __innerInterface = default;

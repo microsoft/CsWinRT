@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace WinRT.Interop
@@ -34,6 +35,7 @@ namespace ABI.WinRT.Interop
 
     internal static class IAgileReferenceMethods
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static unsafe IObjectReference Resolve(IObjectReference _obj, Guid riid)
         {
             if (_obj == null) return null;
@@ -53,6 +55,7 @@ namespace ABI.WinRT.Interop
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static unsafe ObjectReference<T> Resolve<T>(IObjectReference _obj, Guid riid)
         {
             if (_obj == null) return null;
@@ -136,6 +139,7 @@ namespace ABI.WinRT.Interop
             _obj = ObjectReference<global::WinRT.Interop.IUnknownVftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IGlobalInterfaceTable);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid)
         {
             IntPtr thisPtr = ThisPtr;
@@ -146,6 +150,7 @@ namespace ABI.WinRT.Interop
 
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public void TryRevokeInterfaceFromGlobal(IntPtr cookie)
         {
             IntPtr thisPtr = ThisPtr;
@@ -163,6 +168,7 @@ namespace ABI.WinRT.Interop
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid)
         {
             IntPtr thisPtr = ThisPtr;

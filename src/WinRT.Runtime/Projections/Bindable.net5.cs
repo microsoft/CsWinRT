@@ -160,6 +160,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
         internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IUnknown);
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe bool global::Microsoft.UI.Xaml.Interop.IBindableIterator.MoveNext()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
@@ -178,6 +179,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
         unsafe object global::Microsoft.UI.Xaml.Interop.IBindableIterator.Current
         {
+            [MethodImpl(MethodImplOptions.NoInlining)]
             get
             {
                 var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
@@ -198,6 +200,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
         unsafe bool global::Microsoft.UI.Xaml.Interop.IBindableIterator.HasCurrent
         {
+            [MethodImpl(MethodImplOptions.NoInlining)]
             get
             {
                 var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
@@ -302,6 +305,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
         private static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, ABI.System.Collections.IEnumerable.FromAbiHelper> _helperTable = new();
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe object global::Microsoft.UI.Xaml.Interop.IBindableVectorView.GetAt(uint index)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
@@ -319,6 +323,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe bool global::Microsoft.UI.Xaml.Interop.IBindableVectorView.IndexOf(object value, out uint index)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
@@ -346,6 +351,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
         unsafe uint global::Microsoft.UI.Xaml.Interop.IBindableVectorView.Size
         {
+            [MethodImpl(MethodImplOptions.NoInlining)]
             get
             {
                 var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle);
@@ -586,6 +592,7 @@ namespace ABI.System.Collections
                 static (_, _this) => new FromAbiHelper((global::System.Collections.IEnumerable)_this), _this);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe global::Microsoft.UI.Xaml.Interop.IBindableIterator global::Microsoft.UI.Xaml.Interop.IBindableIterable.First()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IEnumerable).TypeHandle);
@@ -1295,6 +1302,7 @@ namespace ABI.System.Collections
                 static (_, _this) => new FromAbiHelper((global::Microsoft.UI.Xaml.Interop.IBindableVector)_this), _this);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe object global::Microsoft.UI.Xaml.Interop.IBindableVector.GetAt(uint index)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
@@ -1312,6 +1320,7 @@ namespace ABI.System.Collections
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe global::Microsoft.UI.Xaml.Interop.IBindableVectorView global::Microsoft.UI.Xaml.Interop.IBindableVector.GetView()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
@@ -1329,6 +1338,7 @@ namespace ABI.System.Collections
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe bool global::Microsoft.UI.Xaml.Interop.IBindableVector.IndexOf(object value, out uint index)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
@@ -1350,6 +1360,7 @@ namespace ABI.System.Collections
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.SetAt(uint index, object value)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
@@ -1367,6 +1378,7 @@ namespace ABI.System.Collections
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.InsertAt(uint index, object value)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
@@ -1384,6 +1396,7 @@ namespace ABI.System.Collections
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.RemoveAt(uint index)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
@@ -1392,6 +1405,7 @@ namespace ABI.System.Collections
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.Append(object value)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
@@ -1409,6 +1423,7 @@ namespace ABI.System.Collections
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.RemoveAtEnd()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
@@ -1417,6 +1432,7 @@ namespace ABI.System.Collections
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe void global::Microsoft.UI.Xaml.Interop.IBindableVector.Clear()
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
@@ -1427,6 +1443,7 @@ namespace ABI.System.Collections
 
         unsafe uint global::Microsoft.UI.Xaml.Interop.IBindableVector.Size
         {
+            [MethodImpl(MethodImplOptions.NoInlining)]
             get
             {
                 var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle);
