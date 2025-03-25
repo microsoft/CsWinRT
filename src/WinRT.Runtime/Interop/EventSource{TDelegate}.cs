@@ -88,6 +88,7 @@ namespace ABI.WinRT.Interop
         /// Subscribes a given handler to the target event.
         /// </summary>
         /// <param name="handler">The handler to subscribe to the target event.</param>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public void Subscribe(TDelegate handler)
         {
             lock (this)
@@ -155,6 +156,7 @@ namespace ABI.WinRT.Interop
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private void UnsubscribeFromNative(EventSourceState<TDelegate> state)
         {
             ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_objectReference.ThisPtr, state.token));
