@@ -83,7 +83,7 @@ file static unsafe class PropertyChangedEventHandlerNativeDelegate
     {
         using WindowsRuntimeObjectReferenceValue thisValue = objectReference.AsValue();
         using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
-        using WindowsRuntimeObjectReferenceValue eValue = default; // TODO
+        using WindowsRuntimeObjectReferenceValue eValue = PropertyChangedEventArgsMarshaller.ConvertToUnmanaged(e);
 
         HRESULT hresult = ((delegate* unmanaged[MemberFunction]<void*, void*, void*, HRESULT>)(*(void***)thisValue.GetThisPtrUnsafe())[3])(
             thisValue.GetThisPtrUnsafe(),
@@ -167,7 +167,7 @@ file static unsafe class PropertyChangedEventHandlerImpl
 
             unboxedValue(
                 WindowsRuntimeObjectMarshaller.ConvertToManaged(sender),
-                null!);
+                PropertyChangedEventArgsMarshaller.ConvertToManaged(e)!);
 
             return WellKnownErrorCodes.S_OK;
         }

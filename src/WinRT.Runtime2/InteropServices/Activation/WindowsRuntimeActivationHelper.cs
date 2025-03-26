@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable CS1573
@@ -26,6 +27,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// If additional parameters are needed, separate factory stubs should be used, to marshal them and update the signature.
     /// </remarks>
     /// <see href="https://learn.microsoft.com/en-us/uwp/winrt-cref/winrt-type-system#composable-activation"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static unsafe void ActivateInstanceUnsafe(
         WindowsRuntimeObjectReference activationFactoryObjectReference,
         WindowsRuntimeObject? baseInterface,
@@ -53,6 +55,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// This shared factory helper can be used to activate Windows Runtime composable types that have an additional <see cref="string"/> parameter.
     /// </remarks>
     /// <inheritdoc cref="ActivateInstanceUnsafe(WindowsRuntimeObjectReference, WindowsRuntimeObject?, out void*, out void*)"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static unsafe void ActivateInstanceUnsafe(
         WindowsRuntimeObjectReference activationFactoryObjectReference,
         WindowsRuntimeObject? baseInterface,
