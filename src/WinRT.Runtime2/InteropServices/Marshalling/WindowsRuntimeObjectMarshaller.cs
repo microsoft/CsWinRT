@@ -82,29 +82,4 @@ public static unsafe class WindowsRuntimeObjectMarshaller
 
         return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.TrackerObject);
     }
-
-    /// <summary>
-    /// Converts an unmanaged pointer to a Windows Runtime object to its managed <typeparamref name="T"/> object.
-    /// </summary>
-    /// <typeparam name="T">The type of object to marshal values to (it cannot be <see cref="object"/>).</typeparam>
-    /// <param name="value">The input object to convert to managed.</param>
-    /// <returns>The resulting managed <typeparamref name="T"/> value.</returns>
-    public static T? ConvertToManaged<T>(void* value)
-        where T : class
-    {
-        if (value is null)
-        {
-            return null;
-        }
-
-        WindowsRuntimeComWrappers.CreateObjectCallback = null;
-        WindowsRuntimeComWrappers.CreateObjectTargetType = typeof(T);
-        WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
-
-        object? managedObject = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.TrackerObject);
-
-        WindowsRuntimeComWrappers.CreateObjectTargetType = null;
-
-        return (T?)managedObject;
-    }
 }
