@@ -1,8 +1,4 @@
 parameters: 
-  - name: "BuildConfiguration"
-    type: string
-  - name: "BuildPlatform"
-    type: string
   - name: OfficialBuild
     type: boolean
     default: false

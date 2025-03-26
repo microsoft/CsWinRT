@@ -286,7 +286,7 @@ steps:
       Contents: |
         WinRT.Runtime.dll
         WinRT.Runtime.pdb
-      TargetFolder: $(StagingFolder)\release_netstandard2.0\
+      TargetFolder: $(StagingFolder)\netstandard2.0\
 
   # Stage Source Generator
   - task: CopyFiles@2
@@ -297,7 +297,7 @@ steps:
       Contents: |
         WinRT.SourceGenerator.dll
         WinRT.SourceGenerator.pdb
-      TargetFolder: $(StagingFolder)\release_netstandard2.0\
+      TargetFolder: $(StagingFolder)\netstandard2.0\
 
   # Stage Net6.0
   - task: CopyFiles@2
@@ -308,7 +308,7 @@ steps:
       Contents: |
         WinRT.Runtime.dll
         WinRT.Runtime.pdb
-      TargetFolder: $(StagingFolder)\release_net6.0
+      TargetFolder: $(StagingFolder)\net6.0
 
   # Stage Net8.0
   - task: CopyFiles@2
@@ -319,7 +319,7 @@ steps:
       Contents: |
         WinRT.Runtime.dll
         WinRT.Runtime.pdb
-      TargetFolder: $(StagingFolder)\release_net8.0
+      TargetFolder: $(StagingFolder)\net8.0
 
   # Stage WinRT.Host.Shim
   - task: CopyFiles@2 
@@ -331,7 +331,7 @@ steps:
       Contents: |
         WinRT.Host.Shim.dll
         WinRT.Host.Shim.pdb
-      TargetFolder: $(StagingFolder)\release_net6.0
+      TargetFolder: $(StagingFolder)\net6.0
 
   # Stage IID Optimizer
   - task: CopyFiles@2
@@ -363,7 +363,7 @@ steps:
         tr/System.CommandLine.resources.dll
         zh-Hans/System.CommandLine.resources.dll
         zh-Hant/System.CommandLine.resources.dll 
-      TargetFolder: $(StagingFolder)\release_net6.0\IIDOptimizer
+      TargetFolder: $(StagingFolder)\net6.0\IIDOptimizer
 
   # Stage WinRT.Runtime ResX
   - task: CopyFiles@2
@@ -399,4 +399,4 @@ steps:
         CsWinMD.runtimeconfig.json
         Microsoft.CodeAnalysis.CSharp.dll
         Microsoft.CodeAnalysis.dll
-      TargetFolder: $(StagingFolder)\release_net6.0\CsWinMD
+      TargetFolder: $(StagingFolder)\net6.0\CsWinMD

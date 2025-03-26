@@ -44,6 +44,10 @@ extends:
       binskim:
         scanOutputDirectoryOnly: true
 
+    nugetPublishing:
+      feeds:
+      - name: CsWinRT
+
     customTags: ES365AIMigrationTooling
 
     stages:

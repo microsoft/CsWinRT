@@ -1,8 +1,4 @@
 parameters: 
-  - name: "BuildConfiguration"
-    type: string
-  - name: "BuildPlatform"
-    type: string
   - name: OfficialBuild
     type: boolean
     default: false
@@ -15,7 +11,9 @@ jobs:
       
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
-
+      ob_nugetPublishing_enabled: true
+      ob_symbolsPublishing_enabled: true
+      ob_symbolsPublishing_indexSources: true
       ob_sdl_prefast_enabled: true
       ob_sdl_prefast_runDuring: 'Build'
       ob_sdl_checkCompliantCompilerWarnings: true
@@ -46,7 +44,7 @@ jobs:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download x86 '
       inputs:
-        artifactName: release_x86
+        artifactName: drop_BuildAndTest_release_x86
         itemPattern: ''
         targetPath: $(Build.SourcesDirectory)\release_x86
 
@@ -54,7 +52,7 @@ jobs:
     - task: DownloadPipelineArtifact@2
       displayName: Download x64
       inputs:
-        artifactName: release_x64
+        artifactName: drop_BuildAndTest_release_x64
         itemPattern: ''
         targetPath: $(Build.SourcesDirectory)\release_x64
 
@@ -62,33 +60,9 @@ jobs:
     - task: DownloadPipelineArtifact@2
       displayName: Download arm64
       inputs:
-        artifactName: release_arm64
+        artifactName: drop_BuildAndTest_release_arm64
         itemPattern: ''
         targetPath: $(Build.SourcesDirectory)\release_arm64
-
-# Download NetStandard2.0 
-    - task: DownloadPipelineArtifact@2
-      displayName: Download NetStandard 2.0
-      inputs:
-        artifactName: netstandard2.0
-        itemPattern: ''
-        targetPath: $(Build.SourcesDirectory)\netstandard2.0
-
-# Download Net6.0
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download Net6.0'
-      inputs:
-        artifactName: net6.0
-        itemPattern: ''
-        targetPath: $(Build.SourcesDirectory)\net6.0
-
-# Download Net8.0
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download Net8.0'
-      inputs:
-        artifactName: net8.0
-        itemPattern: ''
-        targetPath: $(Build.SourcesDirectory)\net8.0
 
 # Stage Binaries
     - task: CmdLine@2
@@ -96,116 +70,48 @@ jobs:
       inputs:
         workingDirectory: $(Build.SourcesDirectory)
         script: |
-          copy release_x86\cswinrt.exe cswinrt.exe
-          copy release_x86\WinRT.Interop.winmd WinRT.Interop.winmd
+          copy release_x86\native\cswinrt.exe cswinrt.exe
+          copy release_x86\native\WinRT.Interop.winmd WinRT.Interop.winmd
 
-# ESRP Codesigning
-    - task: EsrpCodeSigning@5
-      displayName: ESRP CodeSigning
+# Signing
+    - task: onebranch.pipeline.signing@1
+      displayName: '🔒 Onebranch Signing for cswinrt binaries'
       inputs:
-        ConnectedServiceName: $(SigningServiceName)
-        AppRegistrationClientId: $(SigningAppId)
-        AppRegistrationTenantId: $(SigningTenantId)
-        AuthAKVName: $(SigningAKVName)
-        AuthCertName: $(SigningAuthCertName)
-        AuthSignCertName: $(SigningSignCertName)
-        FolderPath: $(Build.SourcesDirectory)
-        Pattern: |
+        command: sign
+        signing_profile: external_distribution
+        files_to_sign: |
           cswinrt.exe
           WinRT.Interop.winmd
-          netstandard2.0\WinRT.Runtime.dll
-          netstandard2.0\WinRT.Host.Shim.dll
-          netstandard2.0\WinRT.SourceGenerator.dll
-          net6.0\WinRT.Host.Shim.dll
-          net6.0\WinRT.Runtime.dll
-          net8.0\WinRT.Runtime.dll
-          release_x64\WinRT.Host.dll
-          release_x64\WinRT.Host.dll.mui
-          release_x86\WinRT.Host.dll
-          release_x86\WinRT.Host.dll.mui
-          release_arm64\WinRT.Host.dll
-          release_arm64\WinRT.Host.dll.mui
-          net6.0\IIDOptimizer\IIDOptimizer.exe
-          net6.0\IIDOptimizer\IIDOptimizer.dll
-          net6.0\CsWinMD\CsWinMD.exe
-          net6.0\CsWinMD\CsWinMD.dll
-        UseMinimatch: true
-        signConfigType: inlineSignParams
-        inlineOperation: |
-          [
-            {
-              "keyCode": "CP-230012",
-              "operationSetCode": "SigntoolSign",
-                "parameters": [
-                {
-                  "parameterName": "OpusName",
-                  "parameterValue": "Microsoft"
-                },
-                {
-                  "parameterName": "OpusInfo",
-                  "parameterValue": "http://www.microsoft.com"
-                },
-                {
-                  "parameterName": "PageHash",
-                  "parameterValue": "/NPH"
-                },
-                {
-                  "parameterName": "FileDigest",
-                  "parameterValue": "/fd sha256"
-                },
-                {
-                  "parameterName": "TimeStamp",
-                  "parameterValue": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
-                }
-              ],
-              "toolName": "signtool.exe",
-              "toolVersion": "6.2.9304.0"
-            }
-          ]
+          release_x86\netstandard2.0\WinRT.Runtime.dll
+          release_x86\netstandard2.0\WinRT.Host.Shim.dll
+          release_x86\netstandard2.0\WinRT.SourceGenerator.dll
+          release_x86\net6.0\WinRT.Host.Shim.dll
+          release_x86\net6.0\WinRT.Runtime.dll
+          release_x86\net8.0\WinRT.Runtime.dll
+          release_x64\native\WinRT.Host.dll
+          release_x64\native\WinRT.Host.dll.mui
+          release_x86\native\WinRT.Host.dll
+          release_x86\native\WinRT.Host.dll.mui
+          release_arm64\native\WinRT.Host.dll
+          release_arm64\native\WinRT.Host.dll.mui
+          release_x86\net6.0\IIDOptimizer\IIDOptimizer.exe
+          release_x86\net6.0\IIDOptimizer\IIDOptimizer.dll
+          release_x86\net6.0\CsWinMD\CsWinMD.exe
+          release_x86\net6.0\CsWinMD\CsWinMD.dll
+        search_root: $(Build.SourcesDirectory)
 
-# ESRP CodeSigning 3rd Party
-    - task: EsrpCodeSigning@5
-      displayName: ESRP CodeSigning 3rd party
-      continueOnError: True
+# Signing 3rd Party
+    - task: onebranch.pipeline.signing@1
+      displayName: '🔒 Onebranch Signing for 3rd party binaries'
       inputs:
-        ConnectedServiceName: $(SigningServiceName)
-        AppRegistrationClientId: $(SigningAppId)
-        AppRegistrationTenantId: $(SigningTenantId)
-        AuthAKVName: $(SigningAKVName)
-        AuthCertName: $(SigningAuthCertName)
-        AuthSignCertName: $(SigningSignCertName)
-        FolderPath: $(Build.SourcesDirectory)
-        Pattern: |
-          net6.0\IIDOptimizer\Mono.Cecil.dll
-          net6.0\IIDOptimizer\Mono.Cecil.Mdb.dll
-          net6.0\IIDOptimizer\Mono.Cecil.Pdb.dll
-          net6.0\IIDOptimizer\Mono.Cecil.Rocks.dll
-        UseMinimatch: true
-        signConfigType: inlineSignParams
-        inlineOperation: |
-          [
-            {
-                "KeyCode" : "CP-231522",
-                "OperationCode" : "SigntoolSign",
-                "Parameters" : {
-                    "OpusName" : "Microsoft",
-                    "OpusInfo" : "http://www.microsoft.com",
-                    "Append" : "/as",
-                    "FileDigest" : "/fd \"SHA256\"",
-                    "PageHash" : "/NPH",
-                    "TimeStamp" : "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
-                },
-                "ToolName" : "sign",
-                "ToolVersion" : "1.0"
-            },
-            {
-                "KeyCode" : "CP-231522",
-                "OperationCode" : "SigntoolVerify",
-                "Parameters" : {},
-                "ToolName" : "sign",
-                "ToolVersion" : "1.0"
-            }
-          ]
+        command: sign
+        signing_profile: 135020002
+        files_to_sign: |
+          release_x86\net6.0\IIDOptimizer\Mono.Cecil.dll
+          release_x86\net6.0\IIDOptimizer\Mono.Cecil.Mdb.dll
+          release_x86\net6.0\IIDOptimizer\Mono.Cecil.Pdb.dll
+          release_x86\net6.0\IIDOptimizer\Mono.Cecil.Rocks.dll
+        search_root: $(Build.SourcesDirectory)
 
 # Parse Versions
     - task: CmdLine@2
@@ -247,7 +153,8 @@ jobs:
         command: pack
         searchPatternPack: nuget/Microsoft.Windows.CsWinRT.nuspec
         configurationToPack: Release
-        buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\WinRT.Interop.winmd;netstandard2_runtime=$(Build.SourcesDirectory)\netstandard2.0\WinRT.Runtime.dll;net6_runtime=$(Build.SourcesDirectory)\net6.0\WinRT.Runtime.dll;net8_runtime=$(Build.SourcesDirectory)\net8.0\WinRT.Runtime.dll;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\net6.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll.mui;guid_patch=$(Build.SourcesDirectory)\net6.0\IIDOptimizer\*.*
+        buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\WinRT.Interop.winmd;netstandard2_runtime=$(Build.SourcesDirectory)\release_x86\netstandard2.0\WinRT.Runtime.dll;net6_runtime=$(Build.SourcesDirectory)\release_x86\net6.0\WinRT.Runtime.dll;net8_runtime=$(Build.SourcesDirectory)\release_x86\net8.0\WinRT.Runtime.dll;source_generator=$(Build.SourcesDirectory)\release_x86\netstandard2.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\release_x86\net6.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll.mui;guid_patch=$(Build.SourcesDirectory)\release_x86\net6.0\IIDOptimizer\*.*
+        packDestination: $(ob_outputDirectory)\packages
 
     - task: NuGetCommand@2
       displayName: NuGet pack
@@ -256,58 +163,16 @@ jobs:
         command: pack
         searchPatternPack: nuget/Microsoft.Windows.CsWinMD.nuspec
         configurationToPack: Release
-        buildProperties: cswinmd_nuget_version=$(NugetVersion);cswinmd_outpath=$(Build.SourcesDirectory)\net6.0\CsWinMD;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll
+        buildProperties: cswinmd_nuget_version=$(NugetVersion);cswinmd_outpath=$(Build.SourcesDirectory)\release_x86\net6.0\CsWinMD;source_generator=$(Build.SourcesDirectory)\release_x86\netstandard2.0\WinRT.SourceGenerator.dll
+        packDestination: $(ob_outputDirectory)\packages
 
-# ESRP CodeSigning 
-    - task: EsrpCodeSigning@5
-      displayName: ESRP CodeSigning
+# NuGet signing
+    - task: onebranch.pipeline.signing@1
+      displayName: '🔒 Onebranch Signing for NuGet'
       inputs:
-        ConnectedServiceName: $(SigningServiceName)
-        AppRegistrationClientId: $(SigningAppId)
-        AppRegistrationTenantId: $(SigningTenantId)
-        AuthAKVName: $(SigningAKVName)
-        AuthCertName: $(SigningAuthCertName)
-        AuthSignCertName: $(SigningSignCertName)
-        FolderPath: $(Build.ArtifactStagingDirectory)
-        Pattern: '*.nupkg'
-        signConfigType: inlineSignParams
-        inlineOperation: |
-          [
-            {
-              "KeyCode" : "CP-401405",
-              "OperationCode" : "NuGetSign",
-              "Parameters" : {},
-              "ToolName" : "sign",
-              "ToolVersion" : "1.0"
-            },
-            {
-              "KeyCode" : "CP-401405",
-              "OperationCode" : "NuGetVerify",
-              "Parameters" : {},
-              "ToolName" : "sign",
-              "ToolVersion" : "1.0"
-            }
-          ]
-
-# Publish Symbols
-    - task: PublishSymbols@2
-      displayName: Publish Symbols
-      inputs:
-        SearchPattern: '**/*.pdb'
-        IndexSources: false
-        SymbolServerType: TeamServices
-        SymbolsProduct: C#/WinRT
-
-# NuGet push and publish
-    templateContext:
-      outputs:
-      - output: nuget
-        displayName: 'NuGet push'
-        packagesToPush: $(Build.ArtifactStagingDirectory)/**/*.nupkg
-        packageParentPath: '$(Build.ArtifactStagingDirectory)'
-        publishVstsFeed: CsWinRT
-        nuGetFeedType: internal
-      - output: pipelineArtifact
-        displayName: 'NuGet publish'
-        targetPath: $(Build.ArtifactStagingDirectory)
-        artifactName: Publish        
+        command: sign
+        cp_code: 'CP-401405'
+        files_to_sign: |
+          Microsoft.Windows.CsWinRT.*.nupkg
+          Microsoft.Windows.CsWinMD.*.nupkg
+        search_root: $(ob_outputDirectory)\packages
