@@ -45,7 +45,7 @@ jobs:
       ob_sdl_prefast_enabled: true
       ob_sdl_prefast_runDuring: 'Build'
       ob_sdl_checkCompliantCompilerWarnings: true
-      
+
     steps:
     - checkout: self
       clean: true
@@ -159,67 +159,31 @@ jobs:
         script: |
           Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0x0"
 
-    templateContext:
-      outputs:
-      - output: pipelineArtifact
-        displayName: 'Publish Test Log'
-        condition: and(failed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-        targetPath: $(Build.ArtifactStagingDirectory)\unittest
-        artifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTest
-      - output: pipelineArtifact
-        displayName: 'Publish Embedded Test Log'
-        condition: and(failed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-        targetPath: $(Build.ArtifactStagingDirectory)\unittestembedded
-        artifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTestEmbedded
-      - output: pipelineArtifact
-        displayName: 'Publish BinLog'
-        condition: failed()
-        targetPath: $(Build.ArtifactStagingDirectory)\binlog
-        artifactName: $(BuildConfiguration)_$(BuildPlatform)_binlog
-      - output: pipelineArtifact
-        displayName: 'Publish Windows projection'
-        condition: and(succeeded(), eq(variables['PublishGeneratedFiles'], 'true'))
-        targetPath: $(Build.ArtifactStagingDirectory)\Windows
-        artifactName: $(BuildConfiguration)_$(BuildPlatform)_Windows
-      - output: pipelineArtifact
-        displayName: 'Publish Native'
-        condition: or(failed(), eq(variables['BuildConfiguration'], 'release'))
-        targetPath: $(Build.ArtifactStagingDirectory)\native
-        artifactName: $(BuildConfiguration)_$(BuildPlatform)
-      - output: pipelineArtifact
-        displayName: 'Publish NetStandard 2.0'
-        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-        targetPath: $(Build.ArtifactStagingDirectory)\release_netstandard2.0
-        artifactName: netstandard2.0
-      - output: pipelineArtifact
-        displayName: 'Publish ResX files'
-        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-        targetPath: $(Build.ArtifactStagingDirectory)\resx
-        artifactName: ResX
-      - output: pipelineArtifact
-        displayName: 'Publish Net6.0'
-        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-        targetPath: $(Build.ArtifactStagingDirectory)\release_net6.0
-        artifactName: net6.0
-      - output: pipelineArtifact
-        displayName: 'Publish Net8.0'
-        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-        targetPath: $(Build.ArtifactStagingDirectory)\release_net8.0
-        artifactName: net8.0
+    - task: CopyFiles@2
+      displayName: Publish Test Log
+      condition: and(failed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        SourceFolder: $(Build.ArtifactStagingDirectory)\unittest
+        Contents: |
+          test.log
+        TargetFolder: $(StagingFolder)\UnitTest
+
+    - task: CopyFiles@2
+      displayName: Publish Embedded Test Log
+      condition: and(failed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        SourceFolder: $(Build.ArtifactStagingDirectory)\unittestembedded
+        Contents: |
+          test.log
+        TargetFolder: $(StagingFolder)\UnitTestEmbedded
 
   - job: Benchmarks
     displayName: Run Benchmarks
     condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
     dependsOn: []
     timeoutInMinutes: 120
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+      StagingFolder: $(ob_outputDirectory)
     steps:
     - template: CsWinRT-Benchmarks-Steps.yml@self
-
-    templateContext:
-      outputs:
-      - output: pipelineArtifact
-        displayName: 'Publish Results'
-        condition: always()
-        targetPath: $(Build.ArtifactStagingDirectory)\benchmarks
-        artifactName: benchmarks
-

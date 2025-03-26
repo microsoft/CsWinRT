@@ -91,4 +91,4 @@ steps:
   inputs:
     SourceFolder: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
     Contents: '*'
-    TargetFolder: $(Build.ArtifactStagingDirectory)\benchmarks
+    TargetFolder: $(StagingFolder)\benchmarks
