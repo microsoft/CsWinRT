@@ -23,6 +23,7 @@ steps:
       targetType: 'inline'
       script: |
         git remote add github "https://github.com/microsoft/cswinrt.git"
+      workingDirectory: $(Build.SourcesDirectory)
 
   # Download procdump
   - task: PowerShell@2
