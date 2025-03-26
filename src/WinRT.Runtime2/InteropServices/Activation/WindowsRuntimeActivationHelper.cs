@@ -4,6 +4,8 @@
 using System;
 using WindowsRuntime.InteropServices.Marshalling;
 
+#pragma warning disable CS1573
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -38,6 +40,38 @@ internal static unsafe class WindowsRuntimeActivationHelper
         {
             HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
                 thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
+                baseInterface: baseInterfaceValue.GetThisPtrUnsafe(),
+                innerInterface: innerInterfacePtr,
+                instance: defaultInterfacePtr);
+
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+        }
+    }
+
+    /// <param name="param0">The additional <see cref="string"/> parameter for the constructor.</param>
+    /// <remarks>
+    /// This shared factory helper can be used to activate Windows Runtime composable types that have an additional <see cref="string"/> parameter.
+    /// </remarks>
+    /// <inheritdoc cref="ActivateInstanceUnsafe(WindowsRuntimeObjectReference, WindowsRuntimeObject?, out void*, out void*)"/>
+    public static unsafe void ActivateInstanceUnsafe(
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        WindowsRuntimeObject? baseInterface,
+        string? param0,
+        out void* innerInterface,
+        out void* defaultInterface)
+    {
+        using WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue baseInterfaceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
+
+        fixed (char* param0Ptr = param0)
+        fixed (void** innerInterfacePtr = &innerInterface)
+        fixed (void** defaultInterfacePtr = &defaultInterface)
+        {
+            HStringMarshaller.ConvertToUnmanagedUnsafe(param0Ptr, param0?.Length, out HStringReference param0Reference);
+
+            HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
+                thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
+                param0: param0Reference.HString,
                 baseInterface: baseInterfaceValue.GetThisPtrUnsafe(),
                 innerInterface: innerInterfacePtr,
                 instance: defaultInterfacePtr);
