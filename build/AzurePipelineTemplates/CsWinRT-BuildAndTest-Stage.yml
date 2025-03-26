@@ -177,7 +177,9 @@ jobs:
     displayName: Run Benchmarks
     condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
     dependsOn: []
-    timeoutInMinutes: 120
+    pool:
+      type: windows
+    timeoutInMinutes: 120    
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
       StagingFolder: $(ob_outputDirectory)
