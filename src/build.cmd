@@ -123,7 +123,7 @@ if exist %nuget_dir%\nuget.exe (
   )
 )
 if not exist %nuget_dir% md %nuget_dir%
-if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.8.0-preview.2/nuget.exe -OutFile %nuget_dir%\nuget.exe"
+if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile %nuget_dir%\nuget.exe"
 %nuget_dir%\nuget update -self
 rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
 call %this_dir%get_testwinrt.cmd
