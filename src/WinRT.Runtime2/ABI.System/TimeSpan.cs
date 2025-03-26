@@ -26,8 +26,7 @@ namespace ABI.System;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.timespan"/>
 [EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.TimeSpan>")]
-[TimeSpanComWrappersCallback]
-[TimeSpanVtableProvider]
+[TimeSpanComWrappersMarshaller]
 public struct TimeSpan
 {
     /// <summary>
@@ -79,24 +78,16 @@ public static unsafe class TimeSpanMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.TimeSpan"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.TimeSpan"/>.
 /// </summary>
-internal sealed unsafe class TimeSpanComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+internal sealed unsafe class TimeSpanComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
     {
-        TimeSpan abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<TimeSpan>(value, in WellKnownInterfaceIds.IID_IReferenceOfTimeSpan);
-
-        return TimeSpanMarshaller.ConvertToManaged(abi);
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
-}
 
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.TimeSpan"/>.
-/// </summary>
-file sealed class TimeSpanVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
-{
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
     {
@@ -105,6 +96,14 @@ file sealed class TimeSpanVtableProviderAttribute : WindowsRuntimeVtableProvider
             IID = WellKnownInterfaceIds.IID_IReferenceOfTimeSpan,
             Vtable = TimeSpanReference.AbiToProjectionVftablePtr
         }]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        TimeSpan abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<TimeSpan>(value, in WellKnownInterfaceIds.IID_IReferenceOfTimeSpan);
+
+        return TimeSpanMarshaller.ConvertToManaged(abi);
     }
 }
 

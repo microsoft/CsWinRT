@@ -26,8 +26,7 @@ namespace ABI.System;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.hresult"/>
 [EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.HResult>")]
-[ExceptionComWrappersCallback]
-[ExceptionVtableProvider]
+[ExceptionComWrappersMarshaller]
 public struct Exception
 {
     /// <summary>
@@ -66,26 +65,9 @@ public static class ExceptionMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Exception"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Exception"/>.
 /// </summary>
-file sealed unsafe class ExceptionComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
-{
-    /// <inheritdoc/>
-    public override object CreateObject(void* value)
-    {
-        Exception abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Exception>(value, in WellKnownInterfaceIds.IID_IReferenceOfException);
-
-        // Exceptions are marshalled as 'null' if the 'HRESULT' does not represent an error. However, 'ComWrappers' does not allow 'null'
-        // to be returned. So in that case, we use a 'NullPlaceholder' instance, and then check that after marshalling is done, so that
-        // we just return 'null' to external code if we hit that code path. See more notes about this in 'NullPlaceholder'.
-        return (object?)ExceptionMarshaller.ConvertToManaged(abi) ?? NullPlaceholder.Instance;
-    }
-}
-
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Exception"/>.
-/// </summary>
-file sealed class ExceptionVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
+file sealed unsafe class ExceptionComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
@@ -95,6 +77,17 @@ file sealed class ExceptionVtableProviderAttribute : WindowsRuntimeVtableProvide
             IID = WellKnownInterfaceIds.IID_IReferenceOfException,
             Vtable = ExceptionReference.AbiToProjectionVftablePtr
         }]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        Exception abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Exception>(value, in WellKnownInterfaceIds.IID_IReferenceOfException);
+
+        // Exceptions are marshalled as 'null' if the 'HRESULT' does not represent an error. However, 'ComWrappers' does not allow 'null'
+        // to be returned. So in that case, we use a 'NullPlaceholder' instance, and then check that after marshalling is done, so that
+        // we just return 'null' to external code if we hit that code path. See more notes about this in 'NullPlaceholder'.
+        return (object?)ExceptionMarshaller.ConvertToManaged(abi) ?? NullPlaceholder.Instance;
     }
 }
 

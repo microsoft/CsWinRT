@@ -25,8 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.plane"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Plane>")]
-[PlaneComWrappersCallback]
-[PlaneVtableProvider]
+[PlaneComWrappersMarshaller]
 file static class Plane;
 
 /// <summary>
@@ -49,22 +48,16 @@ public static unsafe class PlaneMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Plane"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Numerics.Plane"/>.
 /// </summary>
-internal sealed unsafe class PlaneComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+internal sealed unsafe class PlaneComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Plane>(value, in WellKnownInterfaceIds.IID_IReferencePlane);
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
-}
 
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Plane"/>.
-/// </summary>
-file sealed class PlaneVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
-{
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
     {
@@ -73,6 +66,12 @@ file sealed class PlaneVtableProviderAttribute : WindowsRuntimeVtableProviderAtt
             IID = WellKnownInterfaceIds.IID_IReferencePlane,
             Vtable = PlaneReference.AbiToProjectionVftablePtr
         }]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Plane>(value, in WellKnownInterfaceIds.IID_IReferencePlane);
     }
 }
 

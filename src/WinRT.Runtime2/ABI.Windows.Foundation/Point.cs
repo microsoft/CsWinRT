@@ -38,22 +38,16 @@ public static unsafe class PointMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="Point"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="Point"/>.
 /// </summary>
-internal sealed unsafe class PointComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+internal sealed unsafe class PointComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Point>(value, in WellKnownInterfaceIds.IID_IReferenceOfPoint);
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
-}
 
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="Point"/>.
-/// </summary>
-internal sealed class PointVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
-{
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
     {
@@ -62,6 +56,12 @@ internal sealed class PointVtableProviderAttribute : WindowsRuntimeVtableProvide
             IID = WellKnownInterfaceIds.IID_IReferenceOfPoint,
             Vtable = PointReference.AbiToProjectionVftablePtr
         }]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Point>(value, in WellKnownInterfaceIds.IID_IReferenceOfPoint);
     }
 }
 

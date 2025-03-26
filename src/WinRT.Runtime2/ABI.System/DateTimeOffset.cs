@@ -26,8 +26,7 @@ namespace ABI.System;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.datetime"/>
 [EditorBrowsable(EditorBrowsableState.Never)]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.DateTime>")]
-[DateTimeOffsetComWrappersCallback]
-[DateTimeOffsetVtableProvider]
+[DateTimeOffsetComWrappersMarshaller]
 public struct DateTimeOffset
 {
     /// <summary>
@@ -88,24 +87,16 @@ public static unsafe class DateTimeOffsetMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.DateTimeOffset"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
-file sealed unsafe class DateTimeOffsetComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+file sealed unsafe class DateTimeOffsetComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
     {
-        DateTimeOffset abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<DateTimeOffset>(value, in WellKnownInterfaceIds.IID_IReferenceOfDateTimeOffset);
-
-        return DateTimeOffsetMarshaller.ConvertToManaged(abi);
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
-}
 
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.DateTimeOffset"/>.
-/// </summary>
-file sealed class DateTimeOffsetVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
-{
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
     {
@@ -114,6 +105,14 @@ file sealed class DateTimeOffsetVtableProviderAttribute : WindowsRuntimeVtablePr
             IID = WellKnownInterfaceIds.IID_IReferenceArrayOfDateTimeOffset,
             Vtable = DateTimeOffsetReference.AbiToProjectionVftablePtr
         }]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        DateTimeOffset abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<DateTimeOffset>(value, in WellKnownInterfaceIds.IID_IReferenceOfDateTimeOffset);
+
+        return DateTimeOffsetMarshaller.ConvertToManaged(abi);
     }
 }
 

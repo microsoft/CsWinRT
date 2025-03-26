@@ -35,8 +35,7 @@ namespace ABI.System.ComponentModel;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.propertychangedeventhandler"/>
 /// <seealso href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.propertychangedeventhandler"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Microsoft.UI.Xaml.Data.PropertyChangedEventHandler>")]
-[PropertyChangedEventHandlerComWrappersCallback]
-[PropertyChangedEventHandlerVtableProvider]
+[PropertyChangedEventHandlerComWrappersMarshaller]
 file static class PropertyChangedEventHandler;
 
 /// <summary>
@@ -110,21 +109,9 @@ file abstract unsafe class PropertyChangedEventHandlerComWrappersCallback : IWin
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
 /// </summary>
-file sealed unsafe class PropertyChangedEventHandlerComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
-{
-    /// <inheritdoc/>
-    public override object CreateObject(void* value)
-    {
-        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value, in PropertyChangedEventHandlerReference.IID)!;
-    }
-}
-
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
-/// </summary>
-file sealed class PropertyChangedEventHandlerVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
+file sealed unsafe class PropertyChangedEventHandlerComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
@@ -142,6 +129,12 @@ file sealed class PropertyChangedEventHandlerVtableProviderAttribute : WindowsRu
                 Vtable = PropertyChangedEventHandlerReference.AbiToProjectionVftablePtr
             }
         ]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<PropertyChangedEventHandlerComWrappersCallback>(value, in PropertyChangedEventHandlerReference.IID)!;
     }
 }
 
@@ -174,7 +167,7 @@ file static unsafe class PropertyChangedEventHandlerImpl
 
             unboxedValue(
                 WindowsRuntimeObjectMarshaller.ConvertToManaged(sender),
-                WindowsRuntimeObjectMarshaller.ConvertToManaged<PropertyChangedEventArgs>(e)!);
+                null!);
 
             return WellKnownErrorCodes.S_OK;
         }

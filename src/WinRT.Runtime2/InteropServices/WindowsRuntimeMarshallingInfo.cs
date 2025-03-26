@@ -89,14 +89,9 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private volatile Type? _publicType;
 
     /// <summary>
-    /// The cached <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance (possibly a placeholder).
+    /// The cached <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance (possibly a placeholder).
     /// </summary>
-    private volatile WindowsRuntimeComWrappersCallbackAttribute? _objectMarshaller;
-
-    /// <summary>
-    /// The cached <see cref="WindowsRuntimeVtableProviderAttribute"/> instance (possibly a placeholder).
-    /// </summary>
-    private volatile WindowsRuntimeVtableProviderAttribute? _vtableProvider;
+    private volatile WindowsRuntimeComWrappersMarshallerAttribute? _comWrappersMarshaller;
 
     /// <summary>
     /// The cached <see cref="WindowsRuntimeVtableInfo"/> instance.
@@ -253,17 +248,17 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Gets the <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance associated with the current metadata provider type.
+    /// Gets the <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
-    /// <returns>The resulting <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance.</returns>
-    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance could be resolved.</exception>
+    /// <returns>The resulting <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance could be resolved.</exception>
     /// <remarks>
     /// This method is meant to be used when marshalling user-defined types to native. In this case, the marshalling info should point to
     /// the generated (or built-in) proxy types, which will always have a marshaller attribute on them. Other scenarios are not supported.
     /// </remarks>
-    public WindowsRuntimeComWrappersCallbackAttribute GetObjectMarshaller()
+    public WindowsRuntimeComWrappersMarshallerAttribute GetComWrappersMarshaller()
     {
-        if (!TryGetObjectMarshaller(out WindowsRuntimeComWrappersCallbackAttribute? marshaller))
+        if (!TryGetComWrappersMarshaller(out WindowsRuntimeComWrappersMarshallerAttribute? marshaller))
         {
             // All projected types will have an associated marshaller, so this could only
             // happen with some proxy types that were not configured correctly. In practice,
@@ -273,7 +268,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
             void ThrowNotSupportedException()
             {
                 throw new NotSupportedException(
-                    $"The metadata provider type '{_metadataProviderType}' does not have any associated object marshalling logic. " +
+                    $"The metadata provider type '{_metadataProviderType}' does not have any associated marshalling logic. " +
                     $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
             }
 
@@ -284,24 +279,24 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Tries to get the <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance associated with the current metadata provider type.
+    /// Tries to get the <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
-    /// <param name="marshaller">The resulting <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> instance, if available.</param>
+    /// <param name="marshaller">The resulting <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance, if available.</param>
     /// <returns>Whether <paramref name="marshaller"/> was retrieved successfully.</returns>
     /// <remarks>This will not be present for eg. types not implementing any Windows Runtime interfaces, which are also not projected.</remarks>
-    public bool TryGetObjectMarshaller([NotNullWhen(true)] out WindowsRuntimeComWrappersCallbackAttribute? marshaller)
+    public bool TryGetComWrappersMarshaller([NotNullWhen(true)] out WindowsRuntimeComWrappersMarshallerAttribute? marshaller)
     {
-        // Initializes the 'WindowsRuntimeObjectMarshallerAttribute' instance, if present
+        // Initializes the 'WindowsRuntimeComWrappersMarshallerAttribute' instance, if present
         [MethodImpl(MethodImplOptions.NoInlining)]
-        bool Load([NotNullWhen(true)] out WindowsRuntimeComWrappersCallbackAttribute? marshaller)
+        bool Load([NotNullWhen(true)] out WindowsRuntimeComWrappersMarshallerAttribute? marshaller)
         {
-            WindowsRuntimeComWrappersCallbackAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeComWrappersCallbackAttribute>(inherit: false);
+            WindowsRuntimeComWrappersMarshallerAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeComWrappersMarshallerAttribute>(inherit: false);
 
-            value ??= PlaceholderWindowsRuntimeComWrappersCallbackAttribute.Instance;
+            value ??= PlaceholderWindowsRuntimeComWrappersMarshallerAttribute.Instance;
 
-            _objectMarshaller = value;
+            _comWrappersMarshaller = value;
 
-            if (value is not (null or PlaceholderWindowsRuntimeComWrappersCallbackAttribute))
+            if (value is not (null or PlaceholderWindowsRuntimeComWrappersMarshallerAttribute))
             {
                 marshaller = value;
 
@@ -313,12 +308,12 @@ internal sealed class WindowsRuntimeMarshallingInfo
             return false;
         }
 
-        WindowsRuntimeComWrappersCallbackAttribute? value = _objectMarshaller;
+        WindowsRuntimeComWrappersMarshallerAttribute? value = _comWrappersMarshaller;
 
         // We have a cached marshaller, so return it immediately
         if (value is not null)
         {
-            if (value is PlaceholderWindowsRuntimeComWrappersCallbackAttribute)
+            if (value is PlaceholderWindowsRuntimeComWrappersMarshallerAttribute)
             {
                 marshaller = null;
 
@@ -334,86 +329,10 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Gets the <see cref="WindowsRuntimeVtableProviderAttribute"/> instance associated with the current metadata provider type.
+    /// Gets the <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance associated with the current metadata provider type.
     /// </summary>
-    /// <returns>The resulting <see cref="WindowsRuntimeVtableProviderAttribute"/> instance.</returns>
-    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeVtableProviderAttribute"/> instance could be resolved.</exception>
-    /// <remarks>This method is meant to be used when preparing CCW vtables for managed types.</remarks>
-    public WindowsRuntimeVtableProviderAttribute GetVtableProvider()
-    {
-        if (!TryGetVtableProvider(out WindowsRuntimeVtableProviderAttribute? vtableProvider))
-        {
-            // Analogous validation as for when retrieving the marshaller attribute
-            [DoesNotReturn]
-            [StackTraceHidden]
-            void ThrowNotSupportedException()
-            {
-                throw new NotSupportedException(
-                    $"The metadata provider type '{_metadataProviderType}' does not have any associated vtable provider logic. " +
-                    $"This should never be the case. Please file an issue at https://github.com/microsoft/CsWinRT.");
-            }
-
-            ThrowNotSupportedException();
-        }
-
-        return vtableProvider;
-    }
-
-    /// <summary>
-    /// Tries to get the <see cref="WindowsRuntimeVtableProviderAttribute"/> instance associated with the current metadata provider type.
-    /// </summary>
-    /// <param name="vtableProvider">The resulting <see cref="WindowsRuntimeVtableProviderAttribute"/> instance, if available.</param>
-    /// <returns>Whether <paramref name="vtableProvider"/> was retrieved successfully.</returns>
-    /// <remarks>This will not be present for eg. projected Windows Runtime types, as their vtable will be implemented in native code.</remarks>
-    public bool TryGetVtableProvider([NotNullWhen(true)] out WindowsRuntimeVtableProviderAttribute? vtableProvider)
-    {
-        // Initializes the 'WindowsRuntimeVtableProviderAttribute' instance, if present
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        bool Load([NotNullWhen(true)] out WindowsRuntimeVtableProviderAttribute? vtableProvider)
-        {
-            WindowsRuntimeVtableProviderAttribute? value = _metadataProviderType.GetCustomAttribute<WindowsRuntimeVtableProviderAttribute>(inherit: false);
-
-            value ??= PlaceholderWindowsRuntimeVtableProviderAttribute.Instance;
-
-            _vtableProvider = value;
-
-            if (value is not (null or PlaceholderWindowsRuntimeVtableProviderAttribute))
-            {
-                vtableProvider = value;
-
-                return true;
-            }
-
-            vtableProvider = null;
-
-            return false;
-        }
-
-        WindowsRuntimeVtableProviderAttribute? value = _vtableProvider;
-
-        // We have a cached marshaller, so return it immediately just like above
-        if (value is not null)
-        {
-            if (value is PlaceholderWindowsRuntimeVtableProviderAttribute)
-            {
-                vtableProvider = null;
-
-                return false;
-            }
-
-            vtableProvider = value;
-
-            return true;
-        }
-
-        return Load(out vtableProvider);
-    }
-
-    /// <summary>
-    /// Gets the <see cref="WindowsRuntimeVtableProviderAttribute"/> instance associated with the current metadata provider type.
-    /// </summary>
-    /// <returns>The resulting <see cref="WindowsRuntimeVtableProviderAttribute"/> instance.</returns>
-    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeVtableProviderAttribute"/> instance could be resolved.</exception>
+    /// <returns>The resulting <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance.</returns>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance could be resolved.</exception>
     /// <remarks>This method is meant to be used when preparing CCW vtables for managed types.</remarks>
     public WindowsRuntimeVtableInfo GetVtableInfo()
     {
@@ -515,34 +434,29 @@ internal sealed class WindowsRuntimeMarshallingInfo
 }
 
 /// <summary>
-/// A placeholder <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> type.
+/// A placeholder <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> type.
 /// </summary>
-file sealed unsafe class PlaceholderWindowsRuntimeComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+file sealed unsafe class PlaceholderWindowsRuntimeComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <summary>
     /// The shared placeholder instance.
     /// </summary>
-    public static PlaceholderWindowsRuntimeComWrappersCallbackAttribute Instance = new();
+    public static PlaceholderWindowsRuntimeComWrappersMarshallerAttribute Instance = new();
+
+    /// <inheritdoc/>
+    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
+    {
+        return null;
+    }
+
+    /// <inheritdoc/>
+    public override void ComputeVtables(IBufferWriter<ComWrappers.ComInterfaceEntry> bufferWriter)
+    {
+    }
 
     /// <inheritdoc/>
     public override object CreateObject(void* value)
     {
         return null!;
-    }
-}
-
-/// <summary>
-/// A placeholder <see cref="WindowsRuntimeVtableProviderAttribute"/> type.
-/// </summary>
-file sealed class PlaceholderWindowsRuntimeVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
-{
-    /// <summary>
-    /// The shared placeholder instance.
-    /// </summary>
-    public static PlaceholderWindowsRuntimeVtableProviderAttribute Instance = new();
-
-    /// <inheritdoc/>
-    public override void ComputeVtables(IBufferWriter<ComWrappers.ComInterfaceEntry> bufferWriter)
-    {
     }
 }

@@ -25,8 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.quaternion"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Quaternion>")]
-[QuaternionComWrappersCallback]
-[QuaternionVtableProvider]
+[QuaternionComWrappersMarshaller]
 file static class Quaternion;
 
 /// <summary>
@@ -49,22 +48,16 @@ public static unsafe class QuaternionMarshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Quaternion"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Numerics.Quaternion"/>.
 /// </summary>
-internal sealed unsafe class QuaternionComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+internal sealed unsafe class QuaternionComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Quaternion>(value, in WellKnownInterfaceIds.IID_IReferenceQuaternion);
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
-}
 
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Quaternion"/>.
-/// </summary>
-file sealed class QuaternionVtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
-{
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
     {
@@ -73,6 +66,12 @@ file sealed class QuaternionVtableProviderAttribute : WindowsRuntimeVtableProvid
             IID = WellKnownInterfaceIds.IID_IReferenceQuaternion,
             Vtable = QuaternionReference.AbiToProjectionVftablePtr
         }]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Quaternion>(value, in WellKnownInterfaceIds.IID_IReferenceQuaternion);
     }
 }
 

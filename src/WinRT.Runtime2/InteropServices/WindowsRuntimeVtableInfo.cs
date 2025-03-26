@@ -48,22 +48,22 @@ internal sealed unsafe class WindowsRuntimeVtableInfo
     /// Doing so would result in multiple native vtables being allocated and kept alive indefinitely.
     /// </para>
     /// </remarks>
-    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeVtableProviderAttribute"/> instance could be resolved.</exception>
+    /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance could be resolved.</exception>
     public static WindowsRuntimeVtableInfo CreateUnsafe(WindowsRuntimeMarshallingInfo info)
     {
-        // Get the '[WindowsRuntimeVtableProvider]' attribute from the type, to get custom vtable entries.
+        // Get the '[WindowsRuntimeComWrappersMarshaller]' attribute from the type, to get custom vtable entries.
         // This should always find the attribute. The attribute not being present would mean that somehow
         // our 'ComWrappers' instance tried creating a CCW for a type that had an associated marshalling
         // info, but not a vtable provider. That is, it could only mean the type is a projected type,
         // which should never hit this path, or that the generator somehow didn't generate the attribute.
         // That would be a bug, and it should never happen in practice (and we'd want to crash if it did).
-        WindowsRuntimeVtableProviderAttribute vtableProvider = info.GetVtableProvider();
+        WindowsRuntimeComWrappersMarshallerAttribute comWrappersMarshaller = info.GetComWrappersMarshaller();
 
         using PooledComInterfaceEntryBufferWriter writer = new();
 
         // Delegate to the vtable provider to produce the first vtable entries.
         // Any additional "built-in" vtable entries are appended at the end.
-        vtableProvider.ComputeVtables(writer);
+        comWrappersMarshaller.ComputeVtables(writer);
 
         // Check for additional user defined interfaces (so we know which ones we should omit)
         CheckForUserImplementedInterfaces(

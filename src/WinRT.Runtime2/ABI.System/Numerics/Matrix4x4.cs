@@ -25,8 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix4x4"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix4x4>")]
-[Matrix4x4ComWrappersCallback]
-[Matrix4x4VtableProvider]
+[Matrix4x4ComWrappersMarshaller]
 file static class Matrix4x4;
 
 /// <summary>
@@ -49,22 +48,16 @@ public static unsafe class Matrix4x4Marshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Matrix4x4"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Numerics.Matrix4x4"/>.
 /// </summary>
-internal sealed unsafe class Matrix4x4ComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+internal sealed unsafe class Matrix4x4ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix4x4>(value, in WellKnownInterfaceIds.IID_IReferenceMatrix4x4);
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
-}
 
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Matrix4x4"/>.
-/// </summary>
-file sealed class Matrix4x4VtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
-{
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
     {
@@ -73,6 +66,12 @@ file sealed class Matrix4x4VtableProviderAttribute : WindowsRuntimeVtableProvide
             IID = WellKnownInterfaceIds.IID_IReferenceMatrix4x4,
             Vtable = Matrix4x4Reference.AbiToProjectionVftablePtr
         }]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix4x4>(value, in WellKnownInterfaceIds.IID_IReferenceMatrix4x4);
     }
 }
 

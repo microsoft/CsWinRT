@@ -25,8 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector4"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Vector4>")]
-[Vector4ComWrappersCallback]
-[Vector4VtableProvider]
+[Vector4ComWrappersMarshaller]
 file static class Vector4;
 
 /// <summary>
@@ -49,22 +48,16 @@ public static unsafe class Vector4Marshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Vector4"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Numerics.Vector4"/>.
 /// </summary>
-internal sealed unsafe class Vector4ComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+internal sealed unsafe class Vector4ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Vector4>(value, in WellKnownInterfaceIds.IID_IReferenceVector4);
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
-}
 
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Vector4"/>.
-/// </summary>
-file sealed class Vector4VtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
-{
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
     {
@@ -73,6 +66,12 @@ file sealed class Vector4VtableProviderAttribute : WindowsRuntimeVtableProviderA
             IID = WellKnownInterfaceIds.IID_IReferenceVector4,
             Vtable = Vector4Reference.AbiToProjectionVftablePtr
         }]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Vector4>(value, in WellKnownInterfaceIds.IID_IReferenceVector4);
     }
 }
 

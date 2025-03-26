@@ -25,8 +25,7 @@ namespace ABI.System.Numerics;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix3x2"/>
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Matrix3x2>")]
-[Matrix3x2ComWrappersCallback]
-[Matrix3x2VtableProvider]
+[Matrix3x2ComWrappersMarshaller]
 file static class Matrix3x2;
 
 /// <summary>
@@ -49,22 +48,16 @@ public static unsafe class Matrix3x2Marshaller
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersCallbackAttribute"/> implementation for <see cref="global::System.Numerics.Matrix3x2"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Numerics.Matrix3x2"/>.
 /// </summary>
-internal sealed unsafe class Matrix3x2ComWrappersCallbackAttribute : WindowsRuntimeComWrappersCallbackAttribute
+internal sealed unsafe class Matrix3x2ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix3x2>(value, in WellKnownInterfaceIds.IID_IReferenceMatrix3x2);
+        return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
-}
 
-/// <summary>
-/// A custom <see cref="WindowsRuntimeVtableProviderAttribute"/> implementation for <see cref="global::System.Numerics.Matrix3x2"/>.
-/// </summary>
-file sealed class Matrix3x2VtableProviderAttribute : WindowsRuntimeVtableProviderAttribute
-{
     /// <inheritdoc/>
     public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
     {
@@ -73,6 +66,12 @@ file sealed class Matrix3x2VtableProviderAttribute : WindowsRuntimeVtableProvide
             IID = WellKnownInterfaceIds.IID_IReferenceMatrix3x2,
             Vtable = Matrix3x2Reference.AbiToProjectionVftablePtr
         }]);
+    }
+
+    /// <inheritdoc/>
+    public override object CreateObject(void* value)
+    {
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix3x2>(value, in WellKnownInterfaceIds.IID_IReferenceMatrix3x2);
     }
 }
 
