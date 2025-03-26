@@ -1,10 +1,11 @@
 parameters: 
   - name: "BuildConfiguration"
     type: string
-    default: "release"
   - name: "BuildPlatform"
     type: string
-    default: "x86"
+  - name: OfficialBuild
+    type: boolean
+    default: false
     
 steps:
   # Clone TestWinRT
