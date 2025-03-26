@@ -43,10 +43,7 @@ jobs:
       ob_sdl_checkCompliantCompilerWarnings: true
 
     steps:
-    - checkout: self
-      clean: true
-      persistCredentials: true
-    
+   
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
       parameters:
