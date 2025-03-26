@@ -1,5 +1,4 @@
 variables:
-- group: XlangSigning
 - name: MajorVersion
   value: 2
 - name: MinorVersion
