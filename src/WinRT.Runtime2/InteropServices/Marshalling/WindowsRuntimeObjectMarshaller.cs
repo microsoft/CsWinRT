@@ -61,7 +61,20 @@ public static unsafe class WindowsRuntimeObjectMarshaller
         // If 'value' is not a projected Windows Runtime class, just marshal it via 'ComWrappers'. This will rely on 'ComputeVtables' to
         // lookup the proxy type for the object, which will allow scenarios such as custom mapped types, generic type instantiations, and
         // user-defined types implementing projected interfaces, to also work. If that's missing, we'll just get an opaque 'IInspectable'.
-        return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport, in WellKnownInterfaceIds.IID_IInspectable));
+        void* thisPtr = WindowsRuntimeMarshallingInfo.TryGetInfo(value.GetType(), out WindowsRuntimeMarshallingInfo? info)
+            ? info.GetComWrappersMarshaller().GetOrCreateComInterfaceForObject(value)
+            : (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+
+        // 'ComWrappers' returns an 'IUnknown' pointer, so we need to do an actual 'QueryInterface' for the interface IID
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in WellKnownInterfaceIds.IID_IInspectable, out void* interfacePtr);
+
+        // We can release the 'IUnknown' reference now, it's no longer needed
+        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+
+        // Ensure the 'QueryInterface' succeeded (if it doesn't, it's some kind of authoring error)
+        Marshal.ThrowExceptionForHR(hresult);
+
+        return new(interfacePtr);
     }
 
     /// <summary>
