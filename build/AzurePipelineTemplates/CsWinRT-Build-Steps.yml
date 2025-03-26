@@ -42,9 +42,9 @@ steps:
 
         Write-Host ##vso[task.setvariable variable=PATH;]${env:Agent_TempDirectory}\procdump;${env:PATH};
 
-  # Use .NET Core SDK 3.1
+  # Use .NET Core runtme 3.1
   - task: UseDotNet@2
-    displayName: Use .NET Core SDK 3.1
+    displayName: Use .NET Core runtime 3.1
     inputs:
       packageType: runtime
       version: 3.1.x
@@ -52,7 +52,8 @@ steps:
       performMultiLevelLookup: true
 
   - task: UseDotNet@2
-    displayName: Use .NET Core SDK 3.1
+    displayName: Use .NET Core runtime 3.1 x86
+    condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
       packageType: runtime
       version: 3.1.x
@@ -61,33 +62,25 @@ steps:
     env:
       PROCESSOR_ARCHITECTURE: x86
 
-  # Install .NET 6 SDK 
-  - task: PowerShell@2
-    displayName: Install .NET 6 SDK
+  # Use .NET Core runtime 6.0
+  - task: UseDotNet@2
+    displayName: Use .NET Core runtime 6.0
     inputs:
-      targetType: inline
-      failOnStderr: true
-      script: |
-        Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
-        
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-        
-        &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
+      packageType: runtime
+      version: 6.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\
+      performMultiLevelLookup: true
 
-  # Install .NET 8 SDK 
-  - task: PowerShell@2
-    displayName: Install .NET 8 SDK
+  - task: UseDotNet@2
+    displayName: Use .NET Core runtime 6.0 x86
+    condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
-      targetType: inline
-      failOnStderr: true
-      script: |
-        Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
-        
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-        
-        dotnet new globaljson --sdk-version "$($env:NET8_SDK_VERSION)" 
-        
-        &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET8_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
+      packageType: runtime
+      version: 6.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
+      performMultiLevelLookup: true
+    env:
+      PROCESSOR_ARCHITECTURE: x86
 
   # Verify .NET SDK
   - task: CmdLine@2
@@ -149,7 +142,6 @@ steps:
         echo   ^</Target^> >> %prerelease_targets% 
         echo ^</Project^> >> %prerelease_targets%
           
-
   # Build Tool
   - task: CmdLine@2
     displayName: Build Tool

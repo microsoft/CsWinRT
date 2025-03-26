@@ -6,6 +6,8 @@ set CsWinRTBuildNet8SDKVersion=8.0.303
 set this_dir=%~dp0
 
 :dotnet
+if "%CIBuildReason%"=="CI" goto :params
+
 rem Install required .NET SDK version and add to environment
 set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
 set DOTNET_ROOT(x86)=%LocalAppData%\Microsoft\dotnet\x86
@@ -34,16 +36,6 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
 -Version '%CsWinRTBuildNet8SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
-
-:globaljson
-rem Create global.json for current .NET SDK, and with allowPrerelease=true
-set global_json=%this_dir%global.json
-echo { > %global_json%
-echo   "sdk": { >> %global_json%
-echo     "version": "%CsWinRTBuildNet8SDKVersion%", >> %global_json%
-echo     "allowPrerelease": true >> %global_json%
-echo   } >> %global_json%
-echo } >> %global_json%
 
 rem Preserve above for Visual Studio launch inheritance
 setlocal ENABLEDELAYEDEXPANSION
