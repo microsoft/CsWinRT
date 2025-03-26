@@ -88,16 +88,6 @@ if "%cswinrt_platform%" EQU "x64" (
   )
 )
 
-rem Generate prerelease targets file to exercise build warnings
-set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
-rem Create default %prerelease_targets%
-echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
-echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
-echo     Condition="'$(NetCoreSdkVersion)' ^!= '%CsWinRTBuildNetSDKVersion%' and '$(Net5SdkVersion)' ^!= '%CsWinRTBuildNetSDKVersion%'"^> >> %prerelease_targets%
-echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTBuildNetSDKVersion%. Other prereleases may be incompatible due to breaking changes." /^> >> %prerelease_targets%
-echo   ^</Target^> >> %prerelease_targets%
-echo ^</Project^> >> %prerelease_targets%
-
 goto :skip_build_tools
 rem VS 16.X BuildTools support (when a prerelease VS is required, until it is deployed to Azure Devops agents) 
 msbuild -ver | findstr 16.X >nul

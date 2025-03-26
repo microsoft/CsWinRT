@@ -125,22 +125,6 @@ steps:
         echo ##vso[task.setvariable variable=NugetVersion;]%NugetVersion%
 
   - task: NuGetAuthenticate@1
-
-  # Build Prerelease Targets
-  - task: CmdLine@2
-    displayName: Build Prerelease Targets
-    inputs:
-      workingDirectory: $(Build.SourcesDirectory)
-      script: |
-        if "$(PrereleaseVersion)"=="" goto :eof
-
-        set prerelease_targets=nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
-        echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
-        echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
-        echo     Condition=" '$(NetCoreSdkVersion)' ^!= '$($env:NET5_SDK_VERSION)' and '$(Net5SdkVersion)' ^!= '$($env:NET5_SDK_VERSION)' "^> >> %prerelease_targets%
-        echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK $($env:NET5_SDK_VERSION). Other versions may be incompatible due to breaking changes." /^> >> %prerelease_targets%
-        echo   ^</Target^> >> %prerelease_targets% 
-        echo ^</Project^> >> %prerelease_targets%
           
   # Build Tool
   - task: CmdLine@2
