@@ -83,8 +83,7 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)
       script: |
         echo %PATH%
-        dir %DOTNET_ROOT%
-        dir /s C:\__t\dotnet
+        dir /s %DOTNET_ROOT%
         where dotnet
         dotnet --info
         dotnet --list-runtimes
