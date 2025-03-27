@@ -76,6 +76,13 @@ steps:
     env:
       PROCESSOR_ARCHITECTURE: x86
 
+  - task: UseDotNet@2
+    displayName: Use .NET Core SDK 8.0
+    inputs:
+      packageType: sdk
+      version: 8.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\
+
   # Verify .NET SDK
   - task: CmdLine@2
     displayName: Verify .NET SDK
