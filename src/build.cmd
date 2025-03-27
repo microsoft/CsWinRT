@@ -276,9 +276,9 @@ if "%run_functional_tests%" EQU "true" (
     echo Running %%a
 
     call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net6.0\win-%cswinrt_platform%\publish\%%a.exe
-    if !errorlevel! NEQ 100 (
+    if ErrorLevel NEQ 100 (
       echo.
-      echo ERROR: Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
+      echo ERROR: Functional test '%%a' failed with !ErrorLevel!, skipping NuGet pack
       exit /b !ErrorLevel!
     )
   )
@@ -292,9 +292,9 @@ if "%cswinrt_platform%" EQU "x64" (
       echo Running %%a
 
       call :exec %this_dir%Tests\FunctionalTests\%%a\bin\%cswinrt_configuration%\net8.0\win-%cswinrt_platform%\publish\%%a.exe
-      if !errorlevel! NEQ 100 (
+      if ErrorLevel NEQ 100 (
         echo.
-        echo ERROR: AOT Functional test '%%a' failed with !errorlevel!, skipping NuGet pack
+        echo ERROR: AOT Functional test '%%a' failed with !ErrorLevel!, skipping NuGet pack
         exit /b !ErrorLevel!
       )
     )
