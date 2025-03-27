@@ -54,6 +54,17 @@ internal static class SymbolExtensions
     }
 
     /// <summary>
+    /// Checks whether a type has an attribute with a specified type.
+    /// </summary>
+    /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
+    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> instance for the attribute type to look for.</param>
+    /// <returns>Whether or not <paramref name="symbol"/> has an attribute with the specified name.</returns>
+    public static bool HasAttributeWithType(this ISymbol symbol, ITypeSymbol typeSymbol)
+    {
+        return TryGetAttributeWithType(symbol, typeSymbol, out _);
+    }
+
+    /// <summary>
     /// Tries to get an attribute with the specified type.
     /// </summary>
     /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>

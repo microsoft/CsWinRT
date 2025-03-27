@@ -612,7 +612,29 @@ namespace WinRT.SourceGenerator {
                 return ResourceManager.GetString("RefParameterFound_Text", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Casts to WinRT runtime class types are not trim-safe.
+        /// </summary>
+        internal static string RuntimeClassCast_Brief
+        {
+            get
+            {
+                return ResourceManager.GetString("RuntimeClassCast_Brief", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Casting to type &apos;{0}&apos; is not trim-safe, as it is a WinRT runtime class type. Consider using the &apos;WinRT.CastExtensions.Cast&lt;T&gt;&apos; extension method instead, which will ensure the necessary metadata is kept. Alternatively, you can use &apos;[DynamicDependency]&apos; to manually root the necessary metadata, and suppress the warning via &apos;[UnconditionalSuppressMessage]&apos;..
+        /// </summary>
+        internal static string RuntimeClassCast_Text
+        {
+            get
+            {
+                return ResourceManager.GetString("RuntimeClassCast_Text", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Source generator failed.
         /// </summary>

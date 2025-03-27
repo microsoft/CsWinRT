@@ -63,3 +63,4 @@ Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 CsWinRT1032 | Usage | Warning | Collection expressions can only be used when statically verifiable for AOT support with WinRT.
 CsWinRT1033 | Usage | Warning | Casts to '[ComImport]' interface types are not supported with WinRT objects in AOT scenarios.
+CsWinRT1034 | Usage | Warning | Casts to WinRT runtime classes are not trim-safe.
