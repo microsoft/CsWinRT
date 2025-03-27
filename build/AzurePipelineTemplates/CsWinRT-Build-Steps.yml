@@ -52,6 +52,7 @@ steps:
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 3.1 x86
+    condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
       packageType: runtime
       version: 3.1.x
@@ -69,6 +70,7 @@ steps:
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 6.0 x86
+    condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
       packageType: runtime
       version: 6.x
@@ -83,6 +85,16 @@ steps:
       version: 8.x
       installationPath: $(LocalAppData)\Microsoft\dotnet\
 
+  - task: UseDotNet@2
+    displayName: Use .NET Core SDK 8.0
+    condition: eq(variables['BuildPlatform'], 'x86')
+    inputs:
+      packageType: sdk
+      version: 8.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
+    env:
+      PROCESSOR_ARCHITECTURE: x86
+
   # Verify .NET SDK
   - task: CmdLine@2
     displayName: Verify .NET SDK
@@ -90,10 +102,8 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)
       script: |
         echo %PATH%
-        dir /s %DOTNET_ROOT%
         where dotnet
         dotnet --info
-        dotnet --list-runtimes
 
   # Parse Version
   - task: CmdLine@2
