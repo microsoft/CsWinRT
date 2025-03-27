@@ -48,14 +48,14 @@ steps:
     inputs:
       packageType: runtime
       version: 3.1.x
-      installationPath: $(DOTNET_ROOT)
+      installationPath: $(LocalAppData)\Microsoft\dotnet\
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 3.1 x86
     inputs:
       packageType: runtime
       version: 3.1.x
-      installationPath: $(DOTNET_ROOT)\x86
+      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
     env:
       PROCESSOR_ARCHITECTURE: x86
 
@@ -65,14 +65,14 @@ steps:
     inputs:
       packageType: runtime
       version: 6.x
-      installationPath: $(DOTNET_ROOT)
+      installationPath: $(LocalAppData)\Microsoft\dotnet\
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 6.0 x86
     inputs:
       packageType: runtime
       version: 6.x
-      installationPath: $(DOTNET_ROOT)\x86
+      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
     env:
       PROCESSOR_ARCHITECTURE: x86
 
@@ -82,10 +82,12 @@ steps:
     inputs:
       workingDirectory: $(Build.SourcesDirectory)
       script: |
+        echo %PATH%
         dir %DOTNET_ROOT%
         dir /s C:\__t\dotnet
         where dotnet
         dotnet --info
+        dotnet --list-runtimes
 
   # Parse Version
   - task: CmdLine@2
