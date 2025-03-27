@@ -81,7 +81,7 @@ public static unsafe class PropertyChangedEventArgsMarshaller
 file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
+    public override void* GetOrCreateComInterfaceForObject(object value)
     {
         return PropertyChangedEventArgsRuntimeClassFactory.CreateInstance(((global::System.ComponentModel.PropertyChangedEventArgs)value).PropertyName);
     }

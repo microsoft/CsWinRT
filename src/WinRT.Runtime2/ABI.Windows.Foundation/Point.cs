@@ -43,7 +43,7 @@ public static unsafe class PointMarshaller
 internal sealed unsafe class PointComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
+    public override void* GetOrCreateComInterfaceForObject(object value)
     {
         return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }

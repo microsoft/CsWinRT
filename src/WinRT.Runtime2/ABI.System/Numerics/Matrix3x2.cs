@@ -53,7 +53,7 @@ public static unsafe class Matrix3x2Marshaller
 internal sealed unsafe class Matrix3x2ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
+    public override void* GetOrCreateComInterfaceForObject(object value)
     {
         return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }

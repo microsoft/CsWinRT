@@ -53,7 +53,7 @@ public static unsafe class Vector4Marshaller
 internal sealed unsafe class Vector4ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
-    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
+    public override void* GetOrCreateComInterfaceForObject(object value)
     {
         return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }

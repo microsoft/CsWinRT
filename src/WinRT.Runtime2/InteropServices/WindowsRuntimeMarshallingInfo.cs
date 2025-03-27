@@ -444,7 +444,7 @@ file sealed unsafe class PlaceholderWindowsRuntimeComWrappersMarshallerAttribute
     public static PlaceholderWindowsRuntimeComWrappersMarshallerAttribute Instance = new();
 
     /// <inheritdoc/>
-    public override unsafe void* GetOrCreateComInterfaceForObject(object value)
+    public override void* GetOrCreateComInterfaceForObject(object value)
     {
         return null;
     }
