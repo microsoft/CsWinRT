@@ -80,13 +80,6 @@ steps:
 
   - task: UseDotNet@2
     displayName: Use .NET Core SDK 8.0
-    inputs:
-      packageType: sdk
-      version: 8.x
-      installationPath: $(LocalAppData)\Microsoft\dotnet\
-
-  - task: UseDotNet@2
-    displayName: Use .NET Core SDK 8.0
     condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
       packageType: sdk
@@ -94,6 +87,13 @@ steps:
       installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
     env:
       PROCESSOR_ARCHITECTURE: x86
+
+  - task: UseDotNet@2
+    displayName: Use .NET Core SDK 8.0
+    inputs:
+      packageType: sdk
+      version: 8.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\
 
   # Verify .NET SDK
   - task: CmdLine@2
