@@ -13,20 +13,31 @@ namespace WindowsRuntime.InteropServices;
 internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 {
     /// <summary>
-    /// The statically-visible delegate type that should be used by <see cref="CreateObject"/>, if available.
+    /// The <see cref="WindowsRuntimeMarshallingInfo"/> instance passed by callers that have already performed a lookup for it, enabling the <see cref="ComputeVtables"/> fast-path, if available.
     /// </summary>
     /// <remarks>
-    /// This can be set by a thread right before calling <see cref="CreateObject"/>, to pass additional
-    /// information to the <see cref="ComWrappers"/> instance. It should be set to <see langword="null"/>
+    /// This can be set by a thread right before calling the <see cref="ComWrappers.GetOrCreateComInterfaceForObject"/> method,
+    /// to pass additional information to the <see cref="ComWrappers"/> instance. It should be set to <see langword="null"/>
     /// immediately afterwards, to ensure following calls won't accidentally see the wrong type.
     /// </remarks>
     [ThreadStatic]
-    internal static WindowsRuntimeComWrappersCallback? CreateObjectCallback;
+    internal static WindowsRuntimeMarshallingInfo? MarshallingInfo;
+
+    /// <summary>
+    /// The <see cref="WindowsRuntimeComWrappersCallback"/> instance passed by callers where the target type was statically-visible, enabling the <see cref="CreateObject"/> fast-path, if available.
+    /// </summary>
+    /// <remarks>
+    /// This can be set by a thread right before calling the <see cref="ComWrappers.GetOrCreateObjectForComInstance"/> method,
+    /// to pass additional information to the <see cref="ComWrappers"/> instance. It should be set to <see langword="null"/>
+    /// immediately afterwards, to ensure following calls won't accidentally see the wrong type.
+    /// </remarks>
+    [ThreadStatic]
+    internal static WindowsRuntimeComWrappersCallback? ComWrappersCallback;
 
     /// <summary>
     /// The statically-visible object type that should be used by <see cref="CreateObject"/>, if available.
     /// </summary>
-    /// <remarks><inheritdoc cref="CreateObjectCallback" path="/remarks/node()"/></remarks>
+    /// <remarks><inheritdoc cref="ComWrappersCallback" path="/remarks/node()"/></remarks>
     [ThreadStatic]
     internal static Type? CreateObjectTargetType;
 
@@ -35,6 +46,13 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// </summary>
     [ThreadStatic]
     internal static void* CreateObjectTargetInterfacePointer;
+
+    /// <summary>
+    /// Creates a new <see cref="WindowsRuntimeComWrappers"/> instance.
+    /// </summary>
+    private WindowsRuntimeComWrappers()
+    {
+    }
 
     /// <summary>
     /// Gets the shared default instance of <see cref="WindowsRuntimeComWrappers"/>.
@@ -55,6 +73,49 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         RegisterForTrackerSupport(instance);
 
         return instance;
+    }
+
+    /// <summary>
+    /// Calls <see cref="ComWrappers.GetOrCreateComInterfaceForObject"/> and then <c>QueryInterface</c> on the result.
+    /// </summary>
+    /// <param name="instance">The managed object to expose outside the .NET runtime.</param>
+    /// <returns>The generated COM interface that can be passed outside the .NET runtime.</returns>
+    /// <remarks>
+    /// This method differs from <see cref="ComWrappers.GetOrCreateComInterfaceForObject"/> in that it will always marshal
+    /// <paramref name="instance"/> as an <c>IInspectable</c> object. It will do so by using the associated marshaller, if
+    /// available. Otherwise, it will fallback to the generalized <see cref="object"/> marshaller for all other types.
+    /// </remarks>
+    /// <exception cref="Exception">Thrown if <paramref name="instance"/> cannot be marshalled.</exception>
+    /// <seealso cref="ComWrappers.GetOrCreateComInterfaceForObject"/>
+    public nint GetOrCreateInspectableInterfaceForObject(object instance)
+    {
+        void* thisPtr;
+
+        // If 'value' is not a projected Windows Runtime class, just marshal it via 'ComWrappers'. This will rely on 'ComputeVtables' to
+        // lookup the proxy type for the object, which will allow scenarios such as custom mapped types, generic type instantiations, and
+        // user-defined types implementing projected interfaces, to also work. If that's missing, we'll just get an opaque 'IInspectable'.
+        if (WindowsRuntimeMarshallingInfo.TryGetInfo(instance.GetType(), out WindowsRuntimeMarshallingInfo? info))
+        {
+            MarshallingInfo = info;
+
+            thisPtr = info.GetComWrappersMarshaller().GetOrCreateComInterfaceForObject(instance);
+
+            MarshallingInfo = null;
+        }
+        else
+        {
+            // Special case 'Exception', see notes in 'ComputeVtables' below for more details. Repeating this here
+            // allows us to still stip the repeated lookup, as we already know we won't find a matching key pair.
+            MarshallingInfo = instance is Exception
+                ? WindowsRuntimeMarshallingInfo.GetInfo(typeof(Exception))
+                : WindowsRuntimeMarshallingInfo.GetInfo(typeof(object));
+
+            thisPtr = (void*)GetOrCreateComInterfaceForObject(instance, CreateComInterfaceFlags.TrackerSupport);
+
+            MarshallingInfo = null;
+        }
+
+        return (nint)thisPtr;
     }
 
     /// <summary>
@@ -86,9 +147,12 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
     {
+        WindowsRuntimeMarshallingInfo? marshallingInfo = MarshallingInfo;
+
         // Try to get the marshalling info for the input type. If we can't find it, we fallback to the marshalling info
         // for 'object'. This is the shared marshalling mode for all unknown objects, ie. just an opaque 'IInspectable'.
-        if (!WindowsRuntimeMarshallingInfo.TryGetInfo(obj.GetType(), out WindowsRuntimeMarshallingInfo? marshallingInfo))
+        // If we already have one available passed by callers up the stack, we can skip the lookup and just use it.
+        if (marshallingInfo is null && !WindowsRuntimeMarshallingInfo.TryGetInfo(obj.GetType(), out marshallingInfo))
         {
             // Special case for exception types, which won't have their own type map entry, but should all map to the
             // same marshalling info for 'Exception'. Since we have an instance here, we can just check directly.
@@ -118,7 +182,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     {
         // If we have a callback instance, it means this invocation was for a statically visible type that can
         // always be marshalled directly (eg. a delegate type, or a sealed type). In that case, just use it.
-        if (CreateObjectCallback is { } createObjectCallback)
+        if (ComWrappersCallback is { } createObjectCallback)
         {
             void* interfacePointer = CreateObjectTargetInterfacePointer;
 
