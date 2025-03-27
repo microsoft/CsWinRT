@@ -50,6 +50,15 @@ jobs:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
 
+# Set Dotnet paths
+    - task: PowerShell@2
+      displayName: Set DotNet paths
+      inputs:
+        targetType: inline
+        script: |
+          Write-Host "##vso[task.setvariable variable=DOTNET_ROOT;]$env:LOCALAPPDATA\Microsoft\dotnet\"
+          Write-Host "##vso[task.setvariable variable=DOTNET_ROOT(x86);]$env:LOCALAPPDATA\Microsoft\dotnet\x86\"
+
 # Enable GC stress
     - task: PowerShell@2
       displayName: Enable GC Stress

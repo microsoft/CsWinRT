@@ -6,13 +6,13 @@ set CsWinRTBuildNet8SDKVersion=8.0.303
 set this_dir=%~dp0
 
 :dotnet
-if "%CIBuildReason%"=="CI" goto :params
-
 rem Install required .NET SDK version and add to environment
 set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
 set DOTNET_ROOT(x86)=%LocalAppData%\Microsoft\dotnet\x86
 set path=%DOTNET_ROOT%;%DOTNET_ROOT(x86)%;%path%
 set DownloadTimeout=1200
+
+if "%CIBuildReason%"=="CI" goto :params
 
 rem Install .NET Version used to build projection
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
