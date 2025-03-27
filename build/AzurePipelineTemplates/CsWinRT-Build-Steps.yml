@@ -48,14 +48,14 @@ steps:
     inputs:
       packageType: runtime
       version: 3.1.x
-      useGlobalJson: false
+      installationPath: $(DOTNET_ROOT)
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 3.1 x86
     inputs:
       packageType: runtime
       version: 3.1.x
-      useGlobalJson: false
+      installationPath: $(DOTNET_ROOT)\x86
     env:
       PROCESSOR_ARCHITECTURE: x86
 
@@ -65,14 +65,14 @@ steps:
     inputs:
       packageType: runtime
       version: 6.x
-      useGlobalJson: false
+      installationPath: $(DOTNET_ROOT)
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 6.0 x86
     inputs:
       packageType: runtime
       version: 6.x
-      useGlobalJson: false
+      installationPath: $(DOTNET_ROOT)\x86
     env:
       PROCESSOR_ARCHITECTURE: x86
 
