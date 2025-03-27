@@ -7,12 +7,12 @@ set this_dir=%~dp0
 
 :dotnet
 rem Install required .NET SDK version and add to environment
+if "%CIBuildReason%"=="CI" goto :params
+
 set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
 set DOTNET_ROOT(x86)=%LocalAppData%\Microsoft\dotnet\x86
 set path=%DOTNET_ROOT%;%DOTNET_ROOT(x86)%;%path%
 set DownloadTimeout=1200
-
-if "%CIBuildReason%"=="CI" goto :params
 
 rem Install .NET Version used to build projection
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^

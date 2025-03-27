@@ -48,16 +48,12 @@ steps:
     inputs:
       packageType: runtime
       version: 3.1.x
-      installationPath: $(LocalAppData)\Microsoft\dotnet\
-      performMultiLevelLookup: true
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 3.1 x86
     inputs:
       packageType: runtime
       version: 3.1.x
-      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
-      performMultiLevelLookup: true
     env:
       PROCESSOR_ARCHITECTURE: x86
 
@@ -67,16 +63,12 @@ steps:
     inputs:
       packageType: runtime
       version: 6.x
-      installationPath: $(LocalAppData)\Microsoft\dotnet\
-      performMultiLevelLookup: true
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 6.0 x86
     inputs:
       packageType: runtime
       version: 6.x
-      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
-      performMultiLevelLookup: true
     env:
       PROCESSOR_ARCHITECTURE: x86
 
