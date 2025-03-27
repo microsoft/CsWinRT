@@ -83,7 +83,7 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)
       script: |
         dir %DOTNET_ROOT%
-        dir /s C:\__t/dotnet
+        dir /s C:\__t\dotnet
         where dotnet
         dotnet --info
 
