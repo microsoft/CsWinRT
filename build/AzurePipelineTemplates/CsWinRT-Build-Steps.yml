@@ -160,7 +160,7 @@ steps:
     displayName: NuGet restore testwinrt.sln
     inputs:
       command: 'restore'
-      restoreSolution: '$(Build.SourcesDirectory)\src\testwinrt\tests.sln'
+      restoreSolution: '$(Build.SourcesDirectory)\src\testwinrt\test.sln'
       feedsToUse: config
       nugetConfigPath: NuGet.config
 
