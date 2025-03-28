@@ -37,6 +37,7 @@ extends:
       isNativeCode: true
       tsa:
         enabled: false
+        useDynamicRouting: true
       sbom:
         enabled: true
       prefast:
