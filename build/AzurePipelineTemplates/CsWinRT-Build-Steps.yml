@@ -80,10 +80,10 @@ steps:
 
 # Install x86 first so that it isn't the first on PATH.
   - task: UseDotNet@2
-    displayName: Use .NET Core runtime 8.0 x86
+    displayName: Use .NET Core SDK 8.0 x86
     condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
-      packageType: runtime
+      packageType: sdk
       version: 8.x
       installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
     env:
