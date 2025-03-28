@@ -148,67 +148,40 @@ steps:
         echo ##vso[task.setvariable variable=NugetVersion;]%NugetVersion%
 
   - task: NuGetAuthenticate@1
-          
-  # Build Tool
-  - task: CmdLine@2
-    displayName: Build Tool
+
+  - task: NuGetCommand@2
+    displayName: NuGet restore cswinrt.sln
     inputs:
-      workingDirectory: $(Build.SourcesDirectory)\src
-      script: |
-        if "%VSCMD_VER%"=="" (
-          pushd c:
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
-          popd
-        )
+      command: 'restore'
+      restoreSolution: '$(Build.SourcesDirectory)\src\cswinrt.sln'
+      feedsToUse: config
+      nugetConfigPath: NuGet.config
 
-        set cswinrt_echo=on
-        set cswinrt_build_only=true
-        set CIBuildReason=CI
-        rem PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
-        set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /p:CIBuildReason=CI
-        build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
-
-  # Build Tool for Embedded Sample
-  - task: CmdLine@2
-    displayName: Build TestEmbedded Sample
+# PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
+  - task: VSBuild@1
+    displayName: Build cswinrt.sln
     inputs:
-      workingDirectory: $(Build.SourcesDirectory)\src\Samples\TestEmbedded
-      script: |
-        if "%VSCMD_VER%"=="" (
-          pushd c:
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
-          popd
-        )
+      solution: $(Build.SourcesDirectory)\src\cswinrt.sln
+      msbuildArgs: /m /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
 
-        set echo_build=on
-        set only_build=true
-        rem PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
-        set embed_build_params=/p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
-        build.cmd $(BuildPlatform) $(BuildConfiguration)
-
-
-  # Mask BuildConfiguration
-  - task: CmdLine@2
-    displayName: Mask BuildConfiguration
-    enabled: False
+  - task: NuGetCommand@2
+    displayName: NuGet restore TestEmbedded.sln
     inputs:
-      script: |
-        @echo off
+      command: 'restore'
+      restoreSolution: '$(Build.SourcesDirectory)\src\Samples\TestEmbedded\TestEmbedded.sln'
+      feedsToUse: config
+      nugetConfigPath: NuGet.config
 
-        rem Although BuildConfiguration is PipelineRelease or PipelineDebug, the build outputs still go to Release or Debug 
-        rem change BuildConfiguration variable so staging succeeds 
-        rem the alternative would be to add configuration property for Pipeline* to every project in cswinrt.sln 
-        
-        if "$(BuildConfiguration)"=="PipelineRelease" ( 
-          set NewBuildConfiguration=Release
-        ) else if "$(BuildConfiguration)"=="PipelineDebug" ( 
-          set NewBuildConfiguration=Debug
-        )
-
-        if "%NewBuildConfiguration%"!="" (
-          echo ##vso[task.setvariable variable=BuildConfiguration;]%NewBuildConfiguration%
-        )
-
+  - task: VSBuild@1
+    displayName: Build TestEmbedded.sln
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\Samples\TestEmbedded\TestEmbedded.sln
+      msbuildArgs: /m /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\embeddedsample.binlog
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+      
   # Component Detection
   - task: ComponentGovernanceComponentDetection@0
     displayName: Component Detection
