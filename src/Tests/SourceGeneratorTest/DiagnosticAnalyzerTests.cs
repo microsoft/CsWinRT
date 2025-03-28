@@ -767,6 +767,104 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_LambdaInDictionaryInitializer_AttributeOnParentMethod_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using System.Collections.Generic;
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                void M1()
+                {
+                    var x = new Dictionary<int, Action<object>>
+                    {
+                        { 42, obj => Console.WriteLine(obj is C) }
+                    };
+                }
+
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                void M2()
+                {
+                    var x = new Dictionary<int, Action<object>>
+                    {
+                        [42] = obj => Console.WriteLine(obj is C)
+                    };
+                }
+
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                void M3()
+                {
+                    var x = new Dictionary<int, (Type, Action<object>)>
+                    {
+                        { 42, (typeof(int), obj => Console.WriteLine(obj is C)) }
+                    };
+                }
+
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                void M4()
+                {
+                    var x = new Dictionary<int, (Type, Action<object>)>
+                    {
+                        [42] = (typeof(int), obj => Console.WriteLine(obj is C))
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_LambdaInDictionaryInitializer_AttributeOnParentField_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using System.Collections.Generic;
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                private static readonly Dictionary<int, Action<object>> F1 = new()
+                {
+                    { 42, obj => Console.WriteLine(obj is C) }
+                };
+
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                private static readonly Dictionary<int, Action<object>> F2 = new()
+                {
+                    [42] = obj => Console.WriteLine(obj is C)
+                };
+
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                private static readonly Dictionary<int, (Type, Action<object>)> F3 = new()
+                {
+                    { 42, (typeof(int), obj => Console.WriteLine(obj is C)) }
+                };
+
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                private static readonly Dictionary<int, (Type, Action<object>)> F4 = new Dictionary<int, (Type, Action<object>)>
+                {
+                    [42] = (typeof(int), obj => Console.WriteLine(obj is C))
+                };
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
     public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Method_WrongType_Warns()
     {
         const string source = """

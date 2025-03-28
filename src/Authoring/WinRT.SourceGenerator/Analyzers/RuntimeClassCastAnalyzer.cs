@@ -4,6 +4,7 @@
 #if ROSLYN_4_12_0_OR_GREATER
 
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -84,6 +85,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                         IsDynamicDependencyPropertyForSymbol(localMethod, classType) ||
                         IsDynamicDependencyPresentForOperation(operation.Parent, classType),
                     IMethodBodyBaseOperation bodyOperation => IsDynamicDependencyPropertyForSymbol(operation.SemanticModel?.GetDeclaredSymbol(operation.Syntax) as IMethodSymbol, classType),
+                    IFieldInitializerOperation fieldInitializer => IsDynamicDependencyPropertyForSymbol(fieldInitializer.InitializedFields.FirstOrDefault(), classType),
                     { } => IsDynamicDependencyPresentForOperation(operation.Parent, classType),
                     null => false
                 };
