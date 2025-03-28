@@ -169,7 +169,7 @@ steps:
     displayName: Build cswinrt.sln
     inputs:
       solution: $(Build.SourcesDirectory)\src\cswinrt.sln
-      msbuildArgs: /m /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
+      msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
 
