@@ -591,6 +591,242 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Method_DoesNotWarn()
+    {
+        const string source = """
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                void M(object obj)
+                {
+                    C c1 = (C)obj;
+                    C c2 = obj as C;
+
+                    if (obj is C)
+                    {
+                    }
+
+                    if (obj is C c3)
+                    {
+                    }
+
+                    if ((object[])obj is [C c4])
+                    {
+                    }
+
+                    if ((object[])obj is [C])
+                    {
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Lambda_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                void M()
+                {
+                    Action<object> l = [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))] (obj) =>
+                    {
+                        C c1 = (C)obj;
+                        C c2 = obj as C;
+
+                        if (obj is C)
+                        {
+                        }
+
+                        if (obj is C c3)
+                        {
+                        }
+
+                        if ((object[])obj is [C c4])
+                        {
+                        }
+
+                        if ((object[])obj is [C])
+                        {
+                        }
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Lambda_AttributeOnParent_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                void M()
+                {
+                    Action<object> l = obj =>
+                    {
+                        C c1 = (C)obj;
+                        C c2 = obj as C;
+
+                        if (obj is C)
+                        {
+                        }
+
+                        if (obj is C c3)
+                        {
+                        }
+
+                        if ((object[])obj is [C c4])
+                        {
+                        }
+
+                        if ((object[])obj is [C])
+                        {
+                        }
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_LocalMethod_DoesNotWarn()
+    {
+        const string source = """
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                void M()
+                {
+                    [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                    void F(object obj)
+                    {
+                        C c1 = (C)obj;
+                        C c2 = obj as C;
+
+                        if (obj is C)
+                        {
+                        }
+
+                        if (obj is C c3)
+                        {
+                        }
+
+                        if ((object[])obj is [C c4])
+                        {
+                        }
+
+                        if ((object[])obj is [C])
+                        {
+                        }
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_LocalMethod_AttributeOnParent_DoesNotWarn()
+    {
+        const string source = """
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                void M()
+                {
+                    void F(object obj)
+                    {
+                        C c1 = (C)obj;
+                        C c2 = obj as C;
+
+                        if (obj is C)
+                        {
+                        }
+
+                        if (obj is C c3)
+                        {
+                        }
+
+                        if ((object[])obj is [C c4])
+                        {
+                        }
+
+                        if ((object[])obj is [C])
+                        {
+                        }
+                    };
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Method_WrongType_Warns()
+    {
+        const string source = """
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(string))]
+                void M(object obj)
+                {
+                    C c1 = {|CsWinRT1034:(C)obj|};
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
     public async Task RuntimeClassCast_InvalidCast_Warns()
     {
         const string source = """
