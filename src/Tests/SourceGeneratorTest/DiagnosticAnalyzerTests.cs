@@ -423,7 +423,6 @@ public class DiagnosticAnalyzerTests
     public async Task RuntimeClassCast_InvalidCast_NotAutoMode_DoesNotWarn(string propertyValue)
     {
         const string source = """
-            using System.Runtime.InteropServices;
             using WinRT;
 
             class Test
@@ -462,7 +461,6 @@ public class DiagnosticAnalyzerTests
     public async Task RuntimeClassCast_InvalidCast_NoEnableAotAnalyzer_DoesNotWarn()
     {
         const string source = """
-            using System.Runtime.InteropServices;
             using WinRT;
 
             class Test
@@ -501,7 +499,6 @@ public class DiagnosticAnalyzerTests
     public async Task RuntimeClassCast_InvalidCast_NoProperty_DoesNotWarn()
     {
         const string source = """
-            using System.Runtime.InteropServices;
             using WinRT;
 
             class Test
@@ -537,10 +534,66 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
+    public async Task RuntimeClassCast_VerifyNoFalsePositives_DoesNotWarn()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                void M(object obj)
+                {
+                    A a1 = null;
+                    A a2 = (A)null;
+                    B b1 = null;
+                    B b2 = (B)null;
+                    B b3 = (B)(A)null;
+
+                    if (a1 is null)
+                    {
+                    }
+
+                    if (a1 is not null)
+                    {
+                    }
+
+                    if (a1 == null)
+                    {
+                    }
+
+                    if (a1 != null)
+                    {
+                    }
+
+                    A a3 = new();
+                    B b4 = new();
+
+                    a3 = b4;
+                    a3 = new B();
+                    a3 = (A)b4;
+
+                    object obj2 = (A)b4;
+
+                    if (a3 == b4)
+                    {
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class A;
+
+            [WindowsRuntimeType("SomeContract")]
+            class B : A;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+    }
+
+    [TestMethod]
     public async Task RuntimeClassCast_InvalidCast_Warns()
     {
         const string source = """
-            using System.Runtime.InteropServices;
             using WinRT;
 
             class Test
@@ -565,11 +618,25 @@ public class DiagnosticAnalyzerTests
                     if ((object[])obj is [{|CsWinRT1034:C|}])
                     {
                     }
+
+                    D d1 = {|CsWinRT1034:(D)c1|};
+                    D d2 = {|CsWinRT1034:c1 as D|};
+
+                    if ({|CsWinRT1034:c1 is D|})
+                    {
+                    }
+
+                    if ({|CsWinRT1034:c1 is D d3|})
+                    {
+                    }
                 }
             }
 
             [WindowsRuntimeType("SomeContract")]
             class C;
+
+            [WindowsRuntimeType("SomeContract")]
+            class D : C;
             """;
 
         await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
