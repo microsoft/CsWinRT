@@ -123,6 +123,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsWinMD", "Authoring\CsWinMD\CsWinMD.csproj", "{B63DC238-AF5B-4790-B038-4F5ABE09F963}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CSWinMDComponent", "Tests\CSWinMDComponent\CSWinMDComponent.vcxproj", "{D10DC47A-DB45-491C-852E-2B2165F25F86}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B63DC238-AF5B-4790-B038-4F5ABE09F963} = {B63DC238-AF5B-4790-B038-4F5ABE09F963}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonValueFunctionCalls", "Tests\FunctionalTests\JsonValueFunctionCalls\JsonValueFunctionCalls.csproj", "{EE5B4B23-5D4B-4DFB-8DC9-4DBB1B735CC8}"
 EndProject
