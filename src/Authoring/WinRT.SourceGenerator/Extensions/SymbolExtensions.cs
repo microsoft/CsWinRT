@@ -89,6 +89,23 @@ internal static class SymbolExtensions
     }
 
     /// <summary>
+    /// Enumerates all attributes with the specified type.
+    /// </summary>
+    /// <param name="symbol">The input <see cref="ISymbol"/> instance to check.</param>
+    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> instance for the attribute type to look for.</param>
+    /// <returns>The matching attributes.</returns>
+    public static IEnumerable<AttributeData> EnumerateAttributesWithType(this ISymbol symbol, ITypeSymbol typeSymbol)
+    {
+        foreach (AttributeData attribute in symbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, typeSymbol))
+            {
+                yield return attribute;
+            }
+        }
+    }
+
+    /// <summary>
     /// Checks whether a given symbol is accessible from the assembly of a given compilation (including eg. through nested types).
     /// </summary>
     /// <param name="symbol">The input <see cref="ISymbol"/> instance.</param>
