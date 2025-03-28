@@ -35,9 +35,8 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(static context =>
         {
-            // Enable the analyzer when in 'auto' mode and with the AOT analyzer enabled (same settings as the '[ComImport]' analyzer)
-            if (!GeneratorExecutionContextHelper.IsCsWinRTAotOptimizerInAutoMode(context.Options.AnalyzerConfigOptionsProvider, context.Compilation) ||
-                !GeneratorExecutionContextHelper.GetEnableAotAnalyzer(context.Options.AnalyzerConfigOptionsProvider))
+            // Enable the analyzer when in the warning level is at least 3, as these warnings can be quite noisy
+            if (GeneratorExecutionContextHelper.GetCsWinRTAotWarningLevel(context.Options.AnalyzerConfigOptionsProvider) < 3)
             {
                 return;
             }

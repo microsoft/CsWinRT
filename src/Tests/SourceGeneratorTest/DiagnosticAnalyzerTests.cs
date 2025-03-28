@@ -413,14 +413,15 @@ public class DiagnosticAnalyzerTests
             class C;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
 
     [TestMethod]
-    [DataRow("true")]
-    [DataRow("false")]
-    [DataRow("OptIn")]
-    public async Task RuntimeClassCast_InvalidCast_NotAutoMode_DoesNotWarn(string propertyValue)
+    [DataRow("")]
+    [DataRow("0")]
+    [DataRow("1")]
+    [DataRow("2")]
+    public async Task RuntimeClassCast_InvalidCast_NotLevel3_DoesNotWarn(string propertyValue)
     {
         const string source = """
             using WinRT;
@@ -454,45 +455,7 @@ public class DiagnosticAnalyzerTests
             class C;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", propertyValue), ("EnableAotAnalyzer", "true")]);
-    }
-
-    [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_NoEnableAotAnalyzer_DoesNotWarn()
-    {
-        const string source = """
-            using WinRT;
-
-            class Test
-            {
-                void M(object obj)
-                {
-                    C c1 = (C)obj;
-                    C c2 = obj as C;
-
-                    if (obj is C)
-                    {
-                    }
-
-                    if (obj is C c3)
-                    {
-                    }
-
-                    if ((object[])obj is [C c4])
-                    {
-                    }
-
-                    if ((object[])obj is [C])
-                    {
-                    }
-                }
-            }
-
-            [WindowsRuntimeType("SomeContract")]
-            class C;
-            """;
-
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "false")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", propertyValue)]);
     }
 
     [TestMethod]
@@ -587,7 +550,7 @@ public class DiagnosticAnalyzerTests
             class B : A;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
 
     [TestMethod]
@@ -627,7 +590,7 @@ public class DiagnosticAnalyzerTests
             class C;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
 
     [TestMethod]
@@ -670,7 +633,7 @@ public class DiagnosticAnalyzerTests
             class C;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
 
     [TestMethod]
@@ -714,7 +677,7 @@ public class DiagnosticAnalyzerTests
             class C;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
 
     [TestMethod]
@@ -757,7 +720,7 @@ public class DiagnosticAnalyzerTests
             class C;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
 
     [TestMethod]
@@ -800,7 +763,7 @@ public class DiagnosticAnalyzerTests
             class C;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
 
     [TestMethod]
@@ -823,7 +786,7 @@ public class DiagnosticAnalyzerTests
             class C;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
 
     [TestMethod]
@@ -875,6 +838,6 @@ public class DiagnosticAnalyzerTests
             class D : C;
             """;
 
-        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("EnableAotAnalyzer", "true")]);
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
 }
