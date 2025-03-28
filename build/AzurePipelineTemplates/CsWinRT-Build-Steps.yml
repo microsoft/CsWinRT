@@ -78,11 +78,12 @@ steps:
     env:
       PROCESSOR_ARCHITECTURE: x86
 
+# Install x86 first so that it isn't the first on PATH.
   - task: UseDotNet@2
-    displayName: Use .NET Core SDK 8.0
+    displayName: Use .NET Core runtime 8.0 x86
     condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
-      packageType: sdk
+      packageType: runtime
       version: 8.x
       installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
     env:
@@ -95,13 +96,21 @@ steps:
       version: 8.x
       installationPath: $(LocalAppData)\Microsoft\dotnet\
 
+# Set Dotnet path for x86.  The normal one already gets set above.
+  - task: PowerShell@2
+    displayName: Set DotNet paths for x86
+    condition: eq(variables['BuildPlatform'], 'x86')
+    inputs:
+      targetType: inline
+      script: |
+        Write-Host "##vso[task.setvariable variable=DOTNET_ROOT(x86);]$env:DOTNET_ROOT\x86\"
+
   # Verify .NET SDK
   - task: CmdLine@2
     displayName: Verify .NET SDK
     inputs:
       workingDirectory: $(Build.SourcesDirectory)
       script: |
-        echo %PATH%
         where dotnet
         dotnet --info
 
