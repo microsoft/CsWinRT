@@ -11,10 +11,9 @@ steps:
   # Clone TestWinRT
   - task: CmdLine@2
     displayName: Clone TestWinRT
-    enabled: false
     inputs: 
       script: get_testwinrt.cmd
-      workingDirectory: $(Build.SourcesDirectory)
+      workingDirectory: $(Build.SourcesDirectory)\src
 
   # Setup remote for source link to pick up
   - task: PowerShell@2
@@ -181,7 +180,7 @@ steps:
       msbuildArgs: /m /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\embeddedsample.binlog
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
-      
+
   # Component Detection
   - task: ComponentGovernanceComponentDetection@0
     displayName: Component Detection
