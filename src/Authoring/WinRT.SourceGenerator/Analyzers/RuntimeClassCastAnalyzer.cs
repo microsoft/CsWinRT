@@ -3,9 +3,9 @@
 
 #if ROSLYN_4_12_0_OR_GREATER
 
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using WinRT.SourceGenerator;
 
@@ -49,7 +49,10 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // C c2 = obj as C;
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IConversionOperation { Type: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } && classType.HasAttributeWithType(windowsRuntimeTypeAttribute))
+                if (context.Operation is IConversionOperation { Type: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } conversion
+                    && classType.HasAttributeWithType(windowsRuntimeTypeAttribute)
+                    && conversion.Operand is not { ConstantValue: { HasValue: true, Value: null } }
+                    && !context.Compilation.HasImplicitConversion(conversion.Operand.Type, classType))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         WinRTRules.RuntimeClassCast,
@@ -65,7 +68,9 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // }
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IIsTypeOperation { TypeOperand: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } && classType.HasAttributeWithType(windowsRuntimeTypeAttribute))
+                if (context.Operation is IIsTypeOperation { TypeOperand: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } typeOperation
+                    && classType.HasAttributeWithType(windowsRuntimeTypeAttribute)
+                    && !context.Compilation.HasImplicitConversion(typeOperation.ValueOperand.Type, classType))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         WinRTRules.RuntimeClassCast,
@@ -87,7 +92,9 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // }
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IDeclarationPatternOperation { MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } && classType.HasAttributeWithType(windowsRuntimeTypeAttribute))
+                if (context.Operation is IDeclarationPatternOperation { MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } patternOperation
+                    && classType.HasAttributeWithType(windowsRuntimeTypeAttribute)
+                    && !context.Compilation.HasImplicitConversion(patternOperation.InputType, classType))
                 {
                     // Adjust the location for 'obj is C ic' patterns, to include the 'is' expression as well
                     Location location = context.Operation.Parent is IIsPatternOperation isPatternOperation
@@ -108,7 +115,9 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // }
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is ITypePatternOperation { MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } && classType.HasAttributeWithType(windowsRuntimeTypeAttribute))
+                if (context.Operation is ITypePatternOperation { MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } patternOperation
+                    && classType.HasAttributeWithType(windowsRuntimeTypeAttribute)
+                    && !context.Compilation.HasImplicitConversion(patternOperation.InputType, classType))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         WinRTRules.RuntimeClassCast,
