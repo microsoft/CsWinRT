@@ -156,6 +156,14 @@ steps:
       feedsToUse: config
       nugetConfigPath: NuGet.config
 
+  - task: NuGetCommand@2
+    displayName: NuGet restore testwinrt.sln
+    inputs:
+      command: 'restore'
+      restoreSolution: '$(Build.SourcesDirectory)\src\testwinrt\tests.sln'
+      feedsToUse: config
+      nugetConfigPath: NuGet.config
+
 # PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
   - task: VSBuild@1
     displayName: Build cswinrt.sln
