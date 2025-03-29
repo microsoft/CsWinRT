@@ -172,6 +172,9 @@ jobs:
     dependsOn: []
     pool:
       type: windows
+      isCustom: true
+      name: 'Azure Pipelines'
+      vmImage: 'windows-2022'
     timeoutInMinutes: 120    
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
