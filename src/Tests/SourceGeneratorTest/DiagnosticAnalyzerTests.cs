@@ -865,6 +865,48 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
+    public async Task RuntimeClassCast_InterpolatedHandlerArgument_DoesNotWarn()
+    {
+        const string source = """
+            using System.Runtime.CompilerServices;
+            using WinRT;
+
+            class Test
+            {
+                public void M()
+                {
+                    D d = null;
+
+                    d.UseC($"");
+                }
+            }
+
+            public static class DExtensions
+            {
+                public static void UseC(this D d, [InterpolatedStringHandlerArgument("d")] ref CHandler handler)
+                {
+                }
+            }
+
+            [InterpolatedStringHandler]
+            public ref struct CHandler
+            {
+                public CHandler(int literalLength, int formattedCount, C arg2)
+                {
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            public class C;
+
+            [WindowsRuntimeType("SomeContract")]
+            public class D : C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
     public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Method_WrongType_Warns()
     {
         const string source = """

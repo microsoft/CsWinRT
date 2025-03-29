@@ -97,7 +97,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // C c2 = obj as C;
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IConversionOperation { Type: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } conversion &&
+                if (context.Operation is IConversionOperation { IsImplicit: false, Type: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } conversion &&
                     classType.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
                     conversion.Operand is not { ConstantValue: { HasValue: true, Value: null } } &&
                     !context.Compilation.HasImplicitConversion(conversion.Operand.Type, classType) &&
@@ -117,7 +117,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // }
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IIsTypeOperation { TypeOperand: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } typeOperation &&
+                if (context.Operation is IIsTypeOperation { IsImplicit: false, TypeOperand: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } typeOperation &&
                     classType.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
                     !context.Compilation.HasImplicitConversion(typeOperation.ValueOperand.Type, classType) &&
                     !IsDynamicDependencyPresentForOperation(context.Operation, classType))
@@ -142,7 +142,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // }
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IDeclarationPatternOperation { MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } patternOperation &&
+                if (context.Operation is IDeclarationPatternOperation { IsImplicit: false, MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } patternOperation &&
                     classType.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
                     !context.Compilation.HasImplicitConversion(patternOperation.InputType, classType) &&
                     !IsDynamicDependencyPresentForOperation(context.Operation, classType))
@@ -166,7 +166,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // }
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is ITypePatternOperation { MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } patternOperation &&
+                if (context.Operation is ITypePatternOperation { IsImplicit: false, MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } patternOperation &&
                     classType.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
                     !context.Compilation.HasImplicitConversion(patternOperation.InputType, classType) &&
                     !IsDynamicDependencyPresentForOperation(context.Operation, classType))
