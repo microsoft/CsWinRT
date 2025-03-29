@@ -80,24 +80,24 @@ jobs:
         command: sign
         signing_profile: external_distribution
         files_to_sign: |
-          cswinrt.exe
-          WinRT.Interop.winmd
-          release_x86\netstandard2.0\WinRT.Runtime.dll
-          release_x86\netstandard2.0\WinRT.Host.Shim.dll
-          release_x86\netstandard2.0\WinRT.SourceGenerator.dll
-          release_x86\net6.0\WinRT.Host.Shim.dll
-          release_x86\net6.0\WinRT.Runtime.dll
-          release_x86\net8.0\WinRT.Runtime.dll
-          release_x64\native\WinRT.Host.dll
-          release_x64\native\WinRT.Host.dll.mui
-          release_x86\native\WinRT.Host.dll
-          release_x86\native\WinRT.Host.dll.mui
-          release_arm64\native\WinRT.Host.dll
-          release_arm64\native\WinRT.Host.dll.mui
-          release_x86\net6.0\IIDOptimizer\IIDOptimizer.exe
-          release_x86\net6.0\IIDOptimizer\IIDOptimizer.dll
-          release_x86\net6.0\CsWinMD\CsWinMD.exe
-          release_x86\net6.0\CsWinMD\CsWinMD.dll
+          cswinrt.exe;
+          WinRT.Interop.winmd;
+          release_x86/netstandard2.0/WinRT.Runtime.dll;
+          release_x86/netstandard2.0/WinRT.Host.Shim.dll;
+          release_x86/netstandard2.0/WinRT.SourceGenerator.dll;
+          release_x86/net6.0/WinRT.Host.Shim.dll;
+          release_x86/net6.0/WinRT.Runtime.dll;
+          release_x86/net8.0/WinRT.Runtime.dll;
+          release_x64/native/WinRT.Host.dll;
+          release_x64/native/WinRT.Host.dll.mui;
+          release_x86/native/WinRT.Host.dll;
+          release_x86/native/WinRT.Host.dll.mui;
+          release_arm64/native/WinRT.Host.dll;
+          release_arm64/native/WinRT.Host.dll.mui;
+          release_x86/net6.0/IIDOptimizer/IIDOptimizer.exe;
+          release_x86/net6.0/IIDOptimizer/IIDOptimizer.dll;
+          release_x86/net6.0/CsWinMD/CsWinMD.exe;
+          release_x86/net6.0/CsWinMD/CsWinMD.dll;
         search_root: $(Build.SourcesDirectory)
 
 # Signing 3rd Party
@@ -107,10 +107,10 @@ jobs:
         command: sign
         signing_profile: 135020002
         files_to_sign: |
-          release_x86\net6.0\IIDOptimizer\Mono.Cecil.dll
-          release_x86\net6.0\IIDOptimizer\Mono.Cecil.Mdb.dll
-          release_x86\net6.0\IIDOptimizer\Mono.Cecil.Pdb.dll
-          release_x86\net6.0\IIDOptimizer\Mono.Cecil.Rocks.dll
+          release_x86/net6.0/IIDOptimizer/Mono.Cecil.dll;
+          release_x86/net6.0/IIDOptimizer/Mono.Cecil.Mdb.dll;
+          release_x86/net6.0/IIDOptimizer/Mono.Cecil.Pdb.dll;
+          release_x86/net6.0/IIDOptimizer/Mono.Cecil.Rocks.dll;
         search_root: $(Build.SourcesDirectory)
 
 # Parse Versions
@@ -173,6 +173,6 @@ jobs:
         command: sign
         cp_code: 'CP-401405'
         files_to_sign: |
-          Microsoft.Windows.CsWinRT.*.nupkg
-          Microsoft.Windows.CsWinMD.*.nupkg
+          Microsoft.Windows.CsWinRT.*.nupkg;
+          Microsoft.Windows.CsWinMD.*.nupkg;
         search_root: $(ob_outputDirectory)\packages
