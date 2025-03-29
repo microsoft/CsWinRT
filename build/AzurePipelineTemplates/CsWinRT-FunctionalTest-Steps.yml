@@ -19,7 +19,7 @@ parameters:
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:
-    - ${{ if eq(parameters.BuildPlatform, 'x86') }}:
+    - ${{ if eq(parameters.BuildPlatform, x86) }}:
       - task: MSBuild@1
         displayName: Publish ${{ functionalTest }} trimmed (net6.0)
         condition: succeeded()
@@ -31,7 +31,7 @@ steps:
 
       - task: CmdLine@2
         displayName: Run ${{ functionalTest }} trimmed (net6.0)
-        condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'))
+        condition: succeeded()
         continueOnError: True
         inputs:
           workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net6.0\win-$(BuildPlatform)\publish
@@ -43,7 +43,7 @@ steps:
             )
             exit /b 0 
 
-    - ${{ if and(eq(parameters.BuildConfiguration, 'Release'), eq(parameters.BuildPlatform, 'x64'))}}:
+    - ${{ if and(eq(parameters.BuildConfiguration, 'release'), eq(parameters.BuildPlatform, 'x64'))}}:
       - task: MSBuild@1
         displayName: Publish ${{ functionalTest }} for AOT (net8.0)
         condition: succeeded()
@@ -55,7 +55,7 @@ steps:
 
       - task: CmdLine@2
         displayName: Run ${{ functionalTest }} for AOT (net8.0)
-        condition: and(succeeded(), and(eq(${{ parameters.BuildConfiguration }}, 'Release'), eq(${{ parameters.BuildPlatform }}, 'x64')))
+        condition: succeeded()
         continueOnError: True
         inputs:
           workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net8.0\win-$(BuildPlatform)\publish
