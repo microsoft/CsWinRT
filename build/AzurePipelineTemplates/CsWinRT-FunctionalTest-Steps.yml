@@ -47,9 +47,9 @@ steps:
         workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net6.0\win-$(BuildPlatform)\publish
         script: |
           dir
-          ${{ functionalTest }}.exe 
-          if !Errorlevel! NEQ 100 (
-            exit /b 0
+          echo Running ${{ functionalTest }}.exe 
+          if %Errorlevel% NEQ 101 (
+            exit /b !ErrorLevel!
           )
           exit /b 0 
 
@@ -70,6 +70,7 @@ steps:
         workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net8.0\win-$(BuildPlatform)\publish
         script: |
           dir
+          echo Running ${{ functionalTest }}.exe 
           ${{ functionalTest }}.exe 
           if %Errorlevel% NEQ 100 (
             exit /b !ErrorLevel!
