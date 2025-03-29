@@ -7,6 +7,8 @@ parameters:
 variables:
 - template: CsWinRT-Variables.yml@self
 - template: CsWinRT-OneBranchVariables.yml
+  parameters:
+    debug: ${{ parameters.debug }}
 
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 

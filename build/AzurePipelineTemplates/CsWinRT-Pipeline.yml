@@ -1,28 +1,70 @@
+parameters:
+- name: 'debug'
+  displayName: 'Enable debug output'
+  type: boolean
+  default: false
+
 variables:
 - template: CsWinRT-Variables.yml@self
+- template: CsWinRT-OneBranchVariables.yml
+  parameters:
+    debug: ${{ parameters.debug }}
 
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 
+trigger: none 
+
+pool:
+  type: windows
+
 resources:
   repositories:
-  - repository: 1ESPipelineTemplates
+  - repository: templates
     type: git
-    name: 1ESPipelineTemplates/1ESPipelineTemplates
-    ref: refs/tags/release
+    name: OneBranch.Pipelines/GovernedTemplates
+    ref: refs/heads/main
+
 extends:
-  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  template: v2/Microsoft.Official.yml@templates
   parameters:
-    pool:
-      name: Azure-Pipelines-1ESPT-ExDShared
-      image: windows-2022
-      os: windows
-    customBuildTags:
-    - ES365AIMigrationTooling
-    sdl:
+    platform:
+      name: 'windows_undocked'
+      product: 'build_tools'
+
+    featureFlags:
+      WindowsHostVersion:
+        Version: 2022
+
+    globalSdl:
+      isNativeCode: true
+      asyncSdl:
+        enabled: true
+      tsa:
+        enabled: true
+        useDynamicRouting: true
+      codeql:
+        compiled: 
+          enabled: true
+        tsaEnabled: true
+      sbom:
+        enabled: true
+      prefast:
+        enabled: true
       binskim:
         scanOutputDirectoryOnly: true
+
+    nugetPublishing:
+      feeds:
+      - name: CsWinRT
+
+    customTags: ES365AIMigrationTooling
+
     stages:
-    - template: CsWinRT-BuildAndTest-Stage.yml@self
-    - template: CsWinRT-PublishToNuget-Stage.yml@self
-    - template: CsWinRT-PublishToMaestro-Stage.yml@self
-    - template: CsWinRT-UpdateWinUIRepo-Stage.yml@self
+      - stage: BuildAndTest
+        jobs: 
+        - template: build/AzurePipelineTemplates/CsWinRT-BuildAndTest-Stage.yml@self
+            
+      - stage: Nuget
+        dependsOn: BuildAndTest
+        jobs:
+        - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuget-Stage.yml@self
