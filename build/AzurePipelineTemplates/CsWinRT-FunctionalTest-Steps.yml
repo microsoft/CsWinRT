@@ -21,7 +21,7 @@ steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:
     - task: MSBuild@1
       displayName: Publish ${{ functionalTest }} trimmed (net6.0)
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
         msbuildArguments: /restore /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net6.0,solutiondir=$(Build.SourcesDirectory)\src,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
@@ -30,7 +30,7 @@ steps:
 
     - task: MSBuild@1
       displayName: Publish ${{ functionalTest }} for AOT (net8.0)
-      condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'Release'), eq(variables['BuildPlatform'], 'x64')))
+      condition: and(succeeded(), and(eq(${{ parameters.BuildConfiguration }}, 'Release'), eq(${{ parameters.BuildPlatform }}, 'x64')))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
         msbuildArguments: /restore /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net8.0,solutiondir=$(Build.SourcesDirectory)\src,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
@@ -39,7 +39,7 @@ steps:
 
     - task: CmdLine@2
       displayName: Run ${{ functionalTest }} trimmed (net6.0)
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'))
       continueOnError: True
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net6.0\win-$(BuildPlatform)\publish
@@ -53,7 +53,7 @@ steps:
 
     - task: CmdLine@2
       displayName: Run ${{ functionalTest }} for AOT (net8.0)
-      condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'Release'), eq(variables['BuildPlatform'], 'x64')))
+      condition: and(succeeded(), and(eq(${{ parameters.BuildConfiguration }}, 'Release'), eq(${{ parameters.BuildPlatform }}, 'x64')))
       continueOnError: True
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net8.0\win-$(BuildPlatform)\publish
