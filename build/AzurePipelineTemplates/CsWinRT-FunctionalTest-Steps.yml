@@ -18,6 +18,15 @@ parameters:
     - CCW
 
 steps:
+  - task: CmdLine@2
+    displayName: Run ${{ parameters.BuildPlatform }} for ${{ parameters.BuildConfiguration }} 
+    condition: succeeded()
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src\
+      script: |
+        dir
+
   - ${{ each functionalTest in parameters.FunctionalTests }}:
     - ${{ if eq(parameters.BuildPlatform, 'x86') }}:
       - task: MSBuild@1
