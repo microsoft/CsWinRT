@@ -19,7 +19,7 @@ parameters:
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:
-    - ${{ if eq(parameters.BuildPlatform, 'x86')}}
+    - ${{ if eq(parameters.BuildPlatform, 'x86') }}:
       - task: MSBuild@1
         displayName: Publish ${{ functionalTest }} trimmed (net6.0)
         condition: succeeded()
@@ -43,7 +43,7 @@ steps:
             )
             exit /b 0 
 
-    - ${{ if and(eq(parameters.BuildConfiguration, 'Release'), eq(parameters.BuildPlatform, 'x64'))}}
+    - ${{ if and(eq(parameters.BuildConfiguration, 'Release'), eq(parameters.BuildPlatform, 'x64'))}}:
       - task: MSBuild@1
         displayName: Publish ${{ functionalTest }} for AOT (net8.0)
         condition: succeeded()
