@@ -48,6 +48,7 @@ steps:
         script: |
           dir
           echo Running ${{ functionalTest }}.exe 
+          ${{ functionalTest }}.exe 
           if %Errorlevel% NEQ 101 (
             exit /b !ErrorLevel!
           )
