@@ -52,11 +52,11 @@ extends:
     customTags: ES365AIMigrationTooling
 
     stages:
-      - stage: buildandtest
+      - stage: BuildAndTest
         jobs: 
         - template: build/AzurePipelineTemplates/CsWinRT-BuildAndTest-Stage.yml@self
             
       - stage: Nuget
-        dependsOn: buildandtest
+        dependsOn: BuildAndTest
         jobs:
         - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuget-Stage.yml@self

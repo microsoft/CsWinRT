@@ -4,7 +4,7 @@ parameters:
     default: false
 
 jobs: 
-  - job: BuildAndTest
+  - job:
     displayName: Build/Test Stage
     pool:
       type: windows

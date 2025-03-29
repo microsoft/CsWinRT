@@ -20,7 +20,7 @@ parameters:
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:
     - task: MSBuild@1
-      displayName: Publish ${{ functionalTest }} ${{ parameters.BuildPlatform }} ${{ eq(parameters.BuildPlatform, 'x86') }} ${{ eq('parameters.BuildPlatform', 'x86') }} trimmed (net6.0)
+      displayName: Publish ${{ functionalTest }} trimmed (net6.0)
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
