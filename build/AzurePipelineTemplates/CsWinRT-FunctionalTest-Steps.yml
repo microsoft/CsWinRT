@@ -18,7 +18,7 @@ parameters:
     - CCW
 
 steps:
-  - ${{ if eq(parameters.BuildPlatform, 'x86') }}:
+  - ${{ if eq(${{ parameters.BuildPlatform }}, 'x86') }}:
     - task: CmdLine@2
       displayName: Run2 ${{ parameters.BuildPlatform }} for ${{ parameters.BuildConfiguration }} 
       condition: succeeded()

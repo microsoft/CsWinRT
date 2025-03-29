@@ -133,16 +133,6 @@ jobs:
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
           exit /b 0 
 
-    - ${{ if eq($(BuildConfiguration), 'x86') }}:
-      - task: CmdLine@2
-        displayName: Run3 
-        condition: succeeded()
-        continueOnError: True
-        inputs:
-          workingDirectory: $(Build.SourcesDirectory)\src\
-          script: |
-            dir
-
 # Run Functional Tests
     - template: CsWinRT-FunctionalTest-Steps.yml@self
       parameters:
