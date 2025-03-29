@@ -79,6 +79,14 @@ jobs:
         arguments: --diag $(Build.ArtifactStagingDirectory)\unittestembedded\test.log --no-build --logger xunit;LogFilePath=EMBEDDEDUNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration) -- RunConfiguration.TreatNoTestsAsError=true
         testRunTitle: Embedded Unit Tests
 
+#Enable developer mode to run object lifetime tests
+    - task: PowerShell@2
+      displayName: Enable Developer Mode
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        targetType: inline
+        script: |
+          reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"
 # Run Object Lifetime Tests
     - task: VSTest@3
       displayName: Run Object Lifetime Tests
