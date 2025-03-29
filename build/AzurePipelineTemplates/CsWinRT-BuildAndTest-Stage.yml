@@ -87,6 +87,7 @@ jobs:
         targetType: inline
         script: |
           reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"
+
 # Run Object Lifetime Tests
     - task: VSTest@3
       displayName: Run Object Lifetime Tests
@@ -132,16 +133,66 @@ jobs:
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
           exit /b 0 
 
-# Run Functional Tests  
-    - task: CmdLine@2
-      displayName: Run Functional Tests
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-      inputs:
-        workingDirectory: $(Build.SourcesDirectory)\src
-        script: |
-          set CIBuildReason=CI
-          set cswinrt_label=functionaltest
-          build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
+# Run Functional Tests
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: JsonValueFunctionCalls
+
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: ClassActivation
+
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: Structs
+
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: Events
+
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: DynamicInterfaceCasting
+
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: Collections
+
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: Async
+
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: DerivedClassActivation
+
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: DerivedClassAsBaseClass
+
+    - template: CsWinRT-FunctionalTest-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        FunctionalTest: CCW
 
 # Disable GC stress
     - task: PowerShell@2

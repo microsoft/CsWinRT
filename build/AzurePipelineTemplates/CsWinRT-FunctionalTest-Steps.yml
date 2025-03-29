@@ -1,0 +1,54 @@
+parameters: 
+  - name: "BuildConfiguration"
+    type: string
+  - name: "BuildPlatform"
+    type: string
+  - name: "FunctionalTest"
+    type: string
+
+steps:
+  - task: MSBuild@1
+    displayName: Publish {{ parameters.FunctionalTest }} trimmed (net6.0)
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\{{ parameters.FunctionalTest }}\{{ parameters.FunctionalTest }}.csproj
+      msbuildArguments: /restore /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net6.0,solutiondir=$(Build.SourcesDirectory)\src,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+
+  - task: MSBuild@1
+    displayName: Publish {{ parameters.FunctionalTest }} for AOT (net8.0)
+    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'Release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\{{ parameters.FunctionalTest }}\{{ parameters.FunctionalTest }}.csproj
+      msbuildArguments: /restore /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net8.0,solutiondir=$(Build.SourcesDirectory)\src,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+
+  - task: CmdLine@2
+    displayName: Run {{ parameters.FunctionalTest }} trimmed (net6.0)
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\{{ parameters.FunctionalTest }}\bin\$(BuildConfiguration)\net6.0\win-$(BuildPlatform)\publish
+      script: |
+        dir
+        {{ parameters.FunctionalTest }}.exe 
+        if !Errorlevel! NEQ 100 (
+          exit /b !ErrorLevel!
+        )
+        exit /b 0 
+
+  - task: CmdLine@2
+    displayName: Run {{ parameters.FunctionalTest }} for AOT (net8.0)
+    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'Release'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\{{ parameters.FunctionalTest }}\bin\$(BuildConfiguration)\net8.0\win-$(BuildPlatform)\publish
+      script: |
+        dir
+        {{ parameters.FunctionalTest }}.exe 
+        if !Errorlevel! NEQ 100 (
+          exit /b !ErrorLevel!
+        )
+        exit /b 0 
