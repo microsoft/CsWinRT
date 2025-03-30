@@ -216,7 +216,7 @@ steps:
     # Stage CsWinRT
     - task: CopyFiles@2
       displayName: Stage CsWinRT
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), and(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release')))
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
         Contents: |
@@ -227,7 +227,7 @@ steps:
     # Stage WinRT.Interop.winmd
     - task: CopyFiles@2
       displayName: Stage WinRT.Interop.winmd
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), and(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release')))
       continueOnError: True
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
@@ -245,17 +245,6 @@ steps:
           WinRT.Host.dll
           WinRT.Host.pdb
           WinRT.Host.dll.mui
-        TargetFolder: $(StagingFolder)\native
-
-    # Stage Unit Test 
-    - task: CopyFiles@2
-      displayName: Stage Unit Test
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')), eq(variables['BuildConfiguration'], 'release'))
-      inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0
-        Contents: |
-          unittest.dll
-          unittest.pdb
         TargetFolder: $(StagingFolder)\native
 
     # Stage NetStandard 2.0

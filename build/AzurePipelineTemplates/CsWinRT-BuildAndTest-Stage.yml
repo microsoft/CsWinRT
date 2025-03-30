@@ -43,6 +43,7 @@ jobs:
       ob_sdl_checkCompliantCompilerWarnings: true
       ob_symbolsPublishing_enabled: true
       ob_symbolsPublishing_indexSources: true
+      ob_symbolsPublishing_searchPattern: '**/*.@(pdb|dll)'
 
     steps:
    
