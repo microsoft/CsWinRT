@@ -66,4 +66,4 @@ steps:
   condition: always()
   inputs:
     targetPath: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
-    artifact: benchmarks
+    artifact: drop_BuildAndTest_Benchmarks
