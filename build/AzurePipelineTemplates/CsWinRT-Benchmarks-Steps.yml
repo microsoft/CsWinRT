@@ -60,11 +60,10 @@ steps:
 - task: ComponentGovernanceComponentDetection@0
   displayName: Component Detection
 
-# Stage Benchmark Results
-- task: CopyFiles@2
-  displayName: Stage Benchmark Results
+# Publish Benchmark Results
+- task: PublishPipelineArtifact@1
+  displayName: Publish Benchmarks Results
   condition: always()
   inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
-    Contents: '*'
-    TargetFolder: $(StagingFolder)\benchmarks
+    targetPath: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
+    artifact: benchmarks

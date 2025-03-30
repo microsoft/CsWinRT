@@ -96,13 +96,6 @@ jobs:
         testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
 
-    - task: VSTest@3
-      displayName: Run Object Lifetime Tests2
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-      inputs:
-        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
-        searchFolder: $(Build.SourcesDirectory)\src
-
 # Run Host Tests
     - task: CmdLine@2
       displayName: Run Host Tests
@@ -187,12 +180,3 @@ jobs:
       StagingFolder: $(ob_outputDirectory)
     steps:
     - template: CsWinRT-Benchmarks-Steps.yml@self
-
-    templateContext:
-      outputs:
-      - output: pipelineArtifact
-        displayName: 'Publish Results'
-        condition: always()
-        targetPath: $(StagingFolder)\benchmarks
-        artifactName: benchmarks
-    
