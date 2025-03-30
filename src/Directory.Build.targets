@@ -17,7 +17,6 @@
 	
   <ItemGroup>
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
-    <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Windows" />
   </ItemGroup>
 
   <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="..\nuget\Microsoft.Windows.CsWinRT.targets" />
