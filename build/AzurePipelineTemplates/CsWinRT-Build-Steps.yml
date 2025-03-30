@@ -176,7 +176,7 @@ steps:
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
 
-  - ${{ if eq(parameters.BuildCsWinRTOnly, 'false') }}:
+  - ${{ if eq(parameters.BuildCsWinRTOnly, false) }}:
 
     - task: NuGetCommand@2
       displayName: NuGet restore TestEmbedded.sln
