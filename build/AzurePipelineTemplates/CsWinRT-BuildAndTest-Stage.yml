@@ -181,3 +181,12 @@ jobs:
       StagingFolder: $(ob_outputDirectory)
     steps:
     - template: CsWinRT-Benchmarks-Steps.yml@self
+
+    templateContext:
+      outputs:
+      - output: pipelineArtifact
+        displayName: 'Publish Results'
+        condition: always()
+        targetPath: $(StagingFolder)\benchmarks
+        artifactName: benchmarks
+    
