@@ -20,6 +20,8 @@ jobs:
       ob_sdl_checkCompliantCompilerWarnings: true
 
     steps:
+    - task: NuGetAuthenticate@1
+    
 # Download x86 
     - task: DownloadPipelineArtifact@2
       displayName: 'Download x86 '
