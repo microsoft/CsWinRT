@@ -54,6 +54,13 @@ steps:
           )
           exit /b 0 
 
+    - task: CopyFiles@2
+      displayName: Copy ${{ functionalTest }} trimmed (net6.0)
+      condition: and(eq(variables['_PublishFunctionalTests'], 'true'), eq(variables['BuildPlatform'], 'x86'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net6.0\win-$(BuildPlatform)\publish
+        TargetFolder: $(StagingFolder)\FunctionalTests\${{ functionalTest }}\
+
     - task: MSBuild@1
       displayName: Publish ${{ functionalTest }} for AOT (net8.0)
       condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
@@ -77,3 +84,10 @@ steps:
             exit /b !ErrorLevel!
           )
           exit /b 0 
+
+    - task: CopyFiles@2
+      displayName: Copy ${{ functionalTest }} for AOT (net8.0)
+      condition: and(eq(variables['_PublishFunctionalTests'], 'true'), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net8.0\win-$(BuildPlatform)\publish
+        TargetFolder: $(StagingFolder)\FunctionalTests\${{ functionalTest }}\

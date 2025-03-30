@@ -31,3 +31,5 @@ variables:
   value: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  
 - name: _PublishCsWinMD
   value: $[coalesce(variables.PublishCsWinMD, 'false')]
+- name: _PublishFunctionalTests
+  value: $[coalesce(variables.PublishFunctionalTests, 'false')]
