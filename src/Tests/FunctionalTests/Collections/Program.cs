@@ -10,12 +10,13 @@ using TestComponentCSharp;
 var instance = new Class();
 
 var expected = new int[] { 0, 1, 2 };
-
+Console.WriteLine("one");
 instance.BindableIterableProperty = expected;
 if (expected != instance.BindableIterableProperty)
 {
     return 101;
 }
+Console.WriteLine("two");
 
 var instance2 = TestComponent.TestRunner.MakeTests();
 var dict = new Dictionary<string, string>()
@@ -24,12 +25,15 @@ var dict = new Dictionary<string, string>()
     ["oranges"] = "2",
     ["pears"] = "3"
 };
+Console.WriteLine("three");
+
 IDictionary<string, string> outDict = null;
 var retDict = instance2.Collection3(dict, out outDict);
 if (!SequencesEqual(dict, outDict, retDict))
 {
     return 101;
 }
+Console.WriteLine("four");
 
 float[] floatArr = new float[] { 1.0f, 2.0f, 3.0f };
 float[] floatArr2 = new float[floatArr.Length];
@@ -39,6 +43,7 @@ if (!AllEqual(floatArr, floatArr2, outFloatArr, retFloatArr))
 {
     return 101;
 }
+Console.WriteLine("five");
 
 var hierarchyDAsObjectList = HierarchyC.CreateDerivedHierarchyDAsObjectList();
 foreach (var hierarchyDAsObject in hierarchyDAsObjectList)
@@ -50,6 +55,7 @@ foreach (var hierarchyDAsObject in hierarchyDAsObjectList)
         return 101;
     }
 }
+Console.WriteLine("six");
 
 var hierarchyDAsHierarchyCList = HierarchyC.CreateDerivedHierarchyDList();
 foreach (var hierarchyDAsHierarchyC in hierarchyDAsHierarchyCList)
@@ -65,6 +71,7 @@ foreach (var hierarchyDAsHierarchyC in hierarchyDAsHierarchyCList)
         return 101;
     }
 }
+Console.WriteLine("seven");
 
 var propertySet = Class.PropertySet;
 if (propertySet["beta"] is not string str || str != "second")
@@ -72,11 +79,14 @@ if (propertySet["beta"] is not string str || str != "second")
     return 101;
 }
 
+Console.WriteLine("eight");
+
 var types = Class.ListOfTypes;
 if (types.Count != 2 || types[0] != typeof(Class))
 {
     return 101;
 }
+Console.WriteLine("nine");
 
 var cancellationDictionary = new Dictionary<string, CancellationTokenSource>();
 instance.BindableIterableProperty = cancellationDictionary;
@@ -84,6 +94,7 @@ if (cancellationDictionary != instance.BindableIterableProperty)
 {
     return 101;
 }
+Console.WriteLine("ten");
 
 var observableCollection = new System.Collections.ObjectModel.ObservableCollection<string>();
 instance.BindableIterableProperty = observableCollection;
@@ -91,6 +102,7 @@ if (observableCollection != instance.BindableIterableProperty)
 {
     return 101;
 }
+Console.WriteLine("eleven");
 
 var profile = Windows.Networking.Connectivity.NetworkInformation.GetInternetConnectionProfile();
 var names = profile.GetNetworkNames();
@@ -105,6 +117,7 @@ if (names is IList<double> networkNamesList)
 {
     return 101;
 }
+Console.WriteLine("twelve");
 
 var exceptionList = new List<Exception>();
 instance.BindableIterableProperty = exceptionList;
@@ -112,6 +125,7 @@ if (exceptionList != instance.BindableIterableProperty)
 {
     return 101;
 }
+Console.WriteLine("thirteen");
 
 var exceptionList2 = new List<ArgumentException>();
 instance.BindableIterableProperty = exceptionList2;
@@ -119,15 +133,19 @@ if (exceptionList2 != instance.BindableIterableProperty)
 {
     return 101;
 }
+Console.WriteLine("fourteen");
 
 instance.BindableIterableProperty = CustomClass.Instances;
 if (CustomClass.Instances != instance.BindableIterableProperty)
 {
     return 101;
 }
+Console.WriteLine("fifteen");
 
 instance.BindableIterableProperty = CustomClass.DictionaryInstance;
 instance.BindableIterableProperty = CustomClass.DictionaryInstance2;
+
+Console.WriteLine("sixteen");
 
 var customObservableCollection = new CustomObservableCollection();
 instance.BindableIterableProperty = customObservableCollection;
@@ -135,6 +153,7 @@ if (customObservableCollection != instance.BindableIterableProperty)
 {
     return 101;
 }
+Console.WriteLine("seventeen");
 
 var customIntObservableCollection = new CustomGenericObservableCollection<int>();
 instance.BindableIterableProperty = customIntObservableCollection;
@@ -142,6 +161,7 @@ if (customIntObservableCollection != instance.BindableIterableProperty)
 {
     return 101;
 }
+Console.WriteLine("eighteen");
 
 var uriList = new List<Uri>();
 instance.BindableIterableProperty = uriList;
@@ -156,6 +176,7 @@ if (dateTimeOffsetList != instance.BindableIterableProperty)
 {
     return 101;
 }
+Console.WriteLine("nineteen");
 
 // Test sccenarios where the actual implementation type of the result or its RCW factory
 // hasn't been initialized and the statically declared type is a derived generic interface.
@@ -287,6 +308,7 @@ if (intToListDict[4].Count != 1 || intToListDict[4].First() != EnumValue.Two)
 {
     return 101;
 }
+Console.WriteLine("twenty");
 
 // Make sure for collections of value types that they don't project IEnumerable<object>
 // as it isn't a covariant interface.
@@ -307,6 +329,7 @@ if (!instance.CheckForBindableObjectInterface(new List<object>()) ||
 {
     return 103;
 }
+Console.WriteLine("twenty-one");
 
 return 100;
 
