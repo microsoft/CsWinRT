@@ -6,6 +6,9 @@ parameters:
   - name: OfficialBuild
     type: boolean
     default: false
+  - name: BuildCsWinRTOnly
+    type: boolean
+    default: false
     
 steps:
   # Clone TestWinRT
@@ -173,6 +176,8 @@ steps:
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
 
+${{ if eq(parameters.BuildCsWinRTOnly, 'false') }}:
+
   - task: NuGetCommand@2
     displayName: NuGet restore TestEmbedded.sln
     inputs:
@@ -188,10 +193,6 @@ steps:
       msbuildArgs: /m /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\embeddedsample.binlog
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
-
-  # Component Detection
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Component Detection
 
   # Stage BinLog
   - task: CopyFiles@2

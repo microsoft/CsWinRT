@@ -190,7 +190,8 @@ jobs:
       parameters:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: x64 
-
+        BuildCsWinRTOnly: true
+        
 # Run Object Lifetime Tests
     - task: VSTest@3
       displayName: Run Object Lifetime Tests
