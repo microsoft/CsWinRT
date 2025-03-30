@@ -184,12 +184,13 @@ jobs:
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
       StagingFolder: $(ob_outputDirectory)
+      BuildPlatform: 'x64' 
     steps:
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
       parameters:
         BuildConfiguration: $(BuildConfiguration)
-        BuildPlatform: x64 
+        BuildPlatform: $(BuildPlatform) 
         BuildCsWinRTOnly: true
         
 # Run Object Lifetime Tests
