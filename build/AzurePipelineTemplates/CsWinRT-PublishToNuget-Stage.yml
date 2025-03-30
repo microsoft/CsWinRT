@@ -19,27 +19,6 @@ jobs:
       ob_sdl_checkCompliantCompilerWarnings: true
 
     steps:
-    - checkout: self
-      clean: True
-      persistCredentials: True
-
-# Use NuGet 5.3 
-    - task: NuGetToolInstaller@1
-      displayName: Use NuGet 5.3
-      continueOnError: True
-      inputs:
-        versionSpec: 5.3
-
-# Use .NET Core SDK 6
-    - task: UseDotNet@2
-      displayName: Use .NET Core SDK 6
-      inputs:
-        version: 6.x
-
-# Component Detection 
-    - task: ComponentGovernanceComponentDetection@0
-      displayName: Component Detection
-
 # Download x86 
     - task: DownloadPipelineArtifact@2
       displayName: 'Download x86 '

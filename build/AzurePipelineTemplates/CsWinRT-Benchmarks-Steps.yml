@@ -10,52 +10,28 @@ steps:
     script: get_testwinrt.cmd
     workingDirectory: $(Build.SourcesDirectory)\src
 
-# Use .NET Core SDK 3.1
+# Use .NET Core runtme 3.1
 - task: UseDotNet@2
-  displayName: Use .NET Core SDK 3.1
+  displayName: Use .NET Core runtime 3.1
   inputs:
     packageType: runtime
     version: 3.1.x
     installationPath: $(LocalAppData)\Microsoft\dotnet\
-    performMultiLevelLookup: true
 
+# Use .NET Core runtime 6.0
 - task: UseDotNet@2
-  displayName: Use .NET Core SDK 3.1
+  displayName: Use .NET Core runtime 6.0
   inputs:
     packageType: runtime
-    version: 3.1.x
-    installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
-    performMultiLevelLookup: true
-  env:
-    PROCESSOR_ARCHITECTURE: x86
+    version: 6.x
+    installationPath: $(LocalAppData)\Microsoft\dotnet\
 
-# Install .NET 6 SDK 
-- task: PowerShell@2
-  displayName: Install .NET 6 SDK
+- task: UseDotNet@2
+  displayName: Use .NET Core SDK 8.0
   inputs:
-    targetType: inline
-    failOnStderr: true
-    script: |
-      Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
-        
-      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-         
-      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
-
-# Install .NET 8 SDK 
-- task: PowerShell@2
-  displayName: Install .NET 8 SDK
-  inputs:
-    targetType: inline
-    failOnStderr: true
-    script: |
-     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
-     
-     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-     
-     dotnet new globaljson --sdk-version "$($env:NET8_SDK_VERSION)" 
-     
-     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET8_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
+    packageType: sdk
+    version: 8.x
+    installationPath: $(LocalAppData)\Microsoft\dotnet\
 
 # Verify .NET SDK
 - task: CmdLine@2
