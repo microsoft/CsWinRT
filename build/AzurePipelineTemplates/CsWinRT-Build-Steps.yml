@@ -54,7 +54,7 @@ steps:
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 3.1 x86
-    condition: eq(variables['BuildPlatform'], 'x86')
+    condition: eq(${{ parameters.BuildPlatform }}, 'x86')
     inputs:
       packageType: runtime
       version: 3.1.x
@@ -72,7 +72,7 @@ steps:
 
   - task: UseDotNet@2
     displayName: Use .NET Core runtime 6.0 x86
-    condition: eq(variables['BuildPlatform'], 'x86')
+    condition: eq(${{ parameters.BuildPlatform }}, 'x86')
     inputs:
       packageType: runtime
       version: 6.x
@@ -83,7 +83,7 @@ steps:
 # Install x86 first so that it isn't the first on PATH.
   - task: UseDotNet@2
     displayName: Use .NET Core SDK 8.0 x86
-    condition: eq(variables['BuildPlatform'], 'x86')
+    condition: eq(${{ parameters.BuildPlatform }}, 'x86')
     inputs:
       packageType: sdk
       version: 8.x
@@ -101,7 +101,7 @@ steps:
 # Set Dotnet path for x86.  The normal one already gets set above.
   - task: PowerShell@2
     displayName: Set DotNet paths for x86
-    condition: eq(variables['BuildPlatform'], 'x86')
+    condition: eq(${{ parameters.BuildPlatform }}, 'x86')
     inputs:
       targetType: inline
       script: |
@@ -173,8 +173,8 @@ steps:
     inputs:
       solution: $(Build.SourcesDirectory)\src\cswinrt.sln
       msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
-      platform: $(BuildPlatform)
-      configuration: $(BuildConfiguration)
+      platform: ${{ parameters.BuildPlatform }}
+      configuration: ${{ parameters.BuildConfiguration }}
 
   - ${{ if eq(parameters.BuildCsWinRTOnly, false) }}:
 
@@ -191,8 +191,8 @@ steps:
       inputs:
         solution: $(Build.SourcesDirectory)\src\Samples\TestEmbedded\TestEmbedded.sln
         msbuildArgs: /m /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\embeddedsample.binlog
-        platform: $(BuildPlatform)
-        configuration: $(BuildConfiguration)
+        platform: ${{ parameters.BuildPlatform }}
+        configuration: ${{ parameters.BuildConfiguration }}
 
     # Stage BinLog
     - task: CopyFiles@2
@@ -216,9 +216,9 @@ steps:
     # Stage CsWinRT
     - task: CopyFiles@2
       displayName: Stage CsWinRT
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), or(eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildPlatform }}, 'x64')), eq(${{ parameters.BuildConfiguration }}, 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
+        SourceFolder: $(Build.SourcesDirectory)\src\_build\${{ parameters.BuildPlatform }}\${{ parameters.BuildConfiguration }}\cswinrt\bin
         Contents: |
           cswinrt.exe
           cswinrt.pdb
@@ -227,20 +227,20 @@ steps:
     # Stage WinRT.Interop.winmd
     - task: CopyFiles@2
       displayName: Stage WinRT.Interop.winmd
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), or(eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildPlatform }}, 'x64')), eq(${{ parameters.BuildConfiguration }}, 'release'))
       continueOnError: True
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
+        SourceFolder: $(Build.SourcesDirectory)\src\_build\${{ parameters.BuildPlatform }}\${{ parameters.BuildConfiguration }}\cswinrt\bin
         Contents: WinRT.Interop.winmd
         TargetFolder: $(StagingFolder)\native
 
     # Stage WinRT.Host
     - task: CopyFiles@2
       displayName: Stage WinRT.Host
-      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildConfiguration }}, 'release'))
       continueOnError: True
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\WinRT.Host\bin
+        SourceFolder: $(Build.SourcesDirectory)\src\_build\${{ parameters.BuildPlatform }}\${{ parameters.BuildConfiguration }}\WinRT.Host\bin
         Contents: |
           WinRT.Host.dll
           WinRT.Host.pdb
@@ -250,9 +250,9 @@ steps:
     # Stage Unit Test 
     - task: CopyFiles@2
       displayName: Stage Unit Test
-      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), or(eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildPlatform }}, 'x64')), eq(${{ parameters.BuildConfiguration }}, 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0
+        SourceFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\${{ parameters.BuildPlatform }}\${{ parameters.BuildConfiguration }}\net6.0
         Contents: |
           unittest.dll
           unittest.pdb
@@ -261,9 +261,9 @@ steps:
     # Stage NetStandard 2.0
     - task: CopyFiles@2
       displayName: Stage NetStandard 2.0
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildConfiguration }}, 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\netstandard2.0
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\${{ parameters.BuildConfiguration }}\netstandard2.0
         Contents: |
           WinRT.Runtime.dll
           WinRT.Runtime.pdb
@@ -272,9 +272,9 @@ steps:
     # Stage Source Generator
     - task: CopyFiles@2
       displayName: Stage Source Generator
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildConfiguration }}, 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator\bin\$(BuildConfiguration)\netstandard2.0
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator\bin\${{ parameters.BuildConfiguration }}\netstandard2.0
         Contents: |
           WinRT.SourceGenerator.dll
           WinRT.SourceGenerator.pdb
@@ -283,9 +283,9 @@ steps:
     # Stage Net6.0
     - task: CopyFiles@2
       displayName: Stage Net6.0
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildConfiguration }}, 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net6.0
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\${{ parameters.BuildConfiguration }}\net6.0
         Contents: |
           WinRT.Runtime.dll
           WinRT.Runtime.pdb
@@ -294,9 +294,9 @@ steps:
     # Stage Net8.0
     - task: CopyFiles@2
       displayName: Stage Net8.0
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildConfiguration }}, 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net8.0
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\${{ parameters.BuildConfiguration }}\net8.0
         Contents: |
           WinRT.Runtime.dll
           WinRT.Runtime.pdb
@@ -305,10 +305,10 @@ steps:
     # Stage WinRT.Host.Shim
     - task: CopyFiles@2 
       displayName: Stage WinRT.Host.Shim
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildConfiguration }}, 'release'))
       continueOnError: True
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net6.0
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\${{ parameters.BuildConfiguration }}\net6.0
         Contents: |
           WinRT.Host.Shim.dll
           WinRT.Host.Shim.pdb
@@ -317,10 +317,10 @@ steps:
     # Stage IID Optimizer
     - task: CopyFiles@2
       displayName: Stage IID Optimizer
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildConfiguration }}, 'release'))
       continueOnError: True
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Perf\IIDOptimizer\bin\$(BuildConfiguration)\net6.0
+        SourceFolder: $(Build.SourcesDirectory)\src\Perf\IIDOptimizer\bin\${{ parameters.BuildConfiguration }}\net6.0
         Contents: |
           IIDOptimizer.exe 
           IIDOptimizer.dll
@@ -349,7 +349,7 @@ steps:
     # Stage WinRT.Runtime ResX
     - task: CopyFiles@2
       displayName: Stage WinRT.Runtime ResX
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildConfiguration }}, 'release'))
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime
         Contents: |
@@ -359,7 +359,7 @@ steps:
     # Stage Authoring Diagnostics ResX
     - task: CopyFiles@2
       displayName: Stage Authoring Diagnostics ResX
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildConfiguration }}, 'release'))
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator
         Contents: |
@@ -369,9 +369,9 @@ steps:
     # Stage CsWinMD
     - task: CopyFiles@2
       displayName: Stage CsWinMD
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(${{ parameters.BuildPlatform }}, 'x86'), eq(${{ parameters.BuildConfiguration }}, 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\$(BuildConfiguration)\net6.0
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\${{ parameters.BuildConfiguration }}\net6.0
         Contents: |
           CsWinMD.dll
           CsWinMD.exe
