@@ -22,6 +22,8 @@ stages:
        x64_Release:
           BuildPlatform: 'x64'
           BuildConfiguration: 'release'
+    variables:
+      StagingFolder: $(Build.ArtifactStagingDirectory)
     steps:
     - checkout: self
       clean: true
@@ -29,3 +31,6 @@ stages:
 
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 

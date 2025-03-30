@@ -12,8 +12,6 @@ jobs:
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
       ob_nugetPublishing_enabled: true
-      ob_symbolsPublishing_enabled: true
-      ob_symbolsPublishing_indexSources: true
       # We only do packaging.
       ob_sdl_prefast_enabled: false
       ob_sdl_prefast_runDuring: 'Build'
