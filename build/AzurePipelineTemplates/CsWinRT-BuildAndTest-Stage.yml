@@ -47,8 +47,8 @@ jobs:
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
       parameters:
-        BuildConfiguration: variables['BuildConfiguration']
-        BuildPlatform: variables['BuildPlatform'] 
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
 
 # Enable GC stress
     - task: PowerShell@2
@@ -188,7 +188,7 @@ jobs:
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
       parameters:
-        BuildConfiguration: variables['BuildConfiguration']
+        BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: 'x64' 
         BuildCsWinRTOnly: true
 
