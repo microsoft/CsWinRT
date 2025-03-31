@@ -25,4 +25,4 @@ extends:
       autoBaseline: false
     stages:
     - template: CsWinRT-BuildAndTest-Stage-GitHub.yml@self 
-    - template: CsWinRT-PublishToNuget-Stage-GitHub.yml@self
+    - template: CsWinRT-PublishToNuGet-Stage-GitHub.yml@self
