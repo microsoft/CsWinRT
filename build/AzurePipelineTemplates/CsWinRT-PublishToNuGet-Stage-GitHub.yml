@@ -11,7 +11,7 @@ stages:
       clean: True
       persistCredentials: True
 
-    - template: CsWinRT-PublishToNuGet-Steps.yml@self
+    - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml@self
       parameters:
         IsGitHub: true
 
