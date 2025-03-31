@@ -50,6 +50,7 @@ stages:
       outputs:
       - output: pipelineArtifact
         displayName: 'Publish pipeline artifacts'
+        condition: or(failed(), eq(variables['BuildConfiguration'], 'release'))
         targetPath: $(StagingFolder)
         artifactName: drop_BuildAndTest_$(ob_artifactSuffix)
 
@@ -67,9 +68,9 @@ stages:
     templateContext:
       outputs:
       - output: pipelineArtifact
-        displayName: 'Publish Results'
+        displayName: Publish Benchmarks Results
         condition: always()
-        targetPath: $(StagingFolder)\benchmarks
+        targetPath: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
         artifactName: benchmarks
 
   # Seperate job to run object lifetime tests given
