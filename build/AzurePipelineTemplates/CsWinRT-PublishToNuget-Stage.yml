@@ -19,6 +19,11 @@ jobs:
       ob_sdl_checkCompliantCompilerWarnings: true
 
     steps:
+    - ${{ if eq(parameters.IsGitHub, true) }}:
+      - checkout: self
+        clean: True
+        persistCredentials: True
+    
     - task: NuGetAuthenticate@1
     
 # Download x86 

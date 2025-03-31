@@ -24,8 +24,11 @@ extends:
     featureFlags:
       autoBaseline: false
     stages:
-    - template: CsWinRT-BuildAndTest-Stage-GitHub.yml@self   
-    - template: CsWinRT-PublishToNuget-Stage.yml@self
-      parameters:
-        IsGitHub: true
+    - template: CsWinRT-BuildAndTest-Stage-GitHub.yml@self 
+    - stage: Publish
+      displayName: Publish To Internal Nuget Feed Stage
+      jobs:
+      - template: CsWinRT-PublishToNuget-Stage.yml@self
+        parameters:
+          IsGitHub: true
     
