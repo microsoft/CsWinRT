@@ -59,11 +59,3 @@ steps:
 # Component Detection
 - task: ComponentGovernanceComponentDetection@0
   displayName: Component Detection
-
-# Publish Benchmark Results
-- task: PublishPipelineArtifact@1
-  displayName: Publish Benchmarks Results
-  condition: always()
-  inputs:
-    targetPath: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
-    artifact: drop_BuildAndTest_Benchmarks
