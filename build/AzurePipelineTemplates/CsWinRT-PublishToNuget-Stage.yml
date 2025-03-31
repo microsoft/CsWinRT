@@ -166,3 +166,11 @@ jobs:
             Microsoft.Windows.CsWinRT.*.nupkg;
             Microsoft.Windows.CsWinMD.*.nupkg;
           search_root: $(ob_outputDirectory)\packages
+
+    - ${{ if eq(parameters.IsGitHub, true) }}:
+      templateContext:
+        outputs:
+        - output: pipelineArtifact
+          displayName: 'Publish NuGet'
+          targetPath: $(ob_outputDirectory)\packages
+          artifactName: drop_Nuget
