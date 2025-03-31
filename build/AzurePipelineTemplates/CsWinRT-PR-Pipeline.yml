@@ -28,7 +28,7 @@ extends:
     - stage: Publish
       displayName: Publish To Internal Nuget Feed Stage
       jobs:
-      - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuget-Stage.yml@self
+      - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuget-Stage-GitHub.yml@self
         parameters:
           IsGitHub: true
     
