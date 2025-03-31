@@ -56,7 +56,7 @@ extends:
     stages:
       - stage: BuildAndTest
         jobs: 
-        - template: build/AzurePipelineTemplates/CsWinRT-BuildAndTest-Stage.yml@self
+        - template: build/AzurePipelineTemplates/CsWinRT-BuildAndTest-Stage-OneBranch.yml@self
             
       - stage: Nuget
         dependsOn: BuildAndTest
