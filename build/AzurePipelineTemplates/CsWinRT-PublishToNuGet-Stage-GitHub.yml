@@ -1,8 +1,8 @@
 stages:
 - stage: Publish
-  displayName: Publish To Internal Nuget Feed Stage
+  displayName: Publish To Artifacts
   jobs:
-  - job: PublishTo_CsWinRT_InternalFeed
+  - job: PublishToArtifacts
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
   
