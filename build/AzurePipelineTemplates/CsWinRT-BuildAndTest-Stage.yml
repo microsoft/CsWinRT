@@ -1,3 +1,9 @@
+parameters:
+- name: 'IsGitHub'
+  displayName: 'GitHub Build'
+  type: boolean
+  default: false
+
 jobs: 
   - job:
     displayName: Build/Test Stage

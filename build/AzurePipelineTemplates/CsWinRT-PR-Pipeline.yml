@@ -1,64 +1,34 @@
-parameters:
-- name: 'debug'
-  displayName: 'Enable debug output'
-  type: boolean
-  default: false
-
 variables:
 - template: CsWinRT-Variables.yml@self
-- template: CsWinRT-OneBranchVariables.yml
-  parameters:
-    debug: ${{ parameters.debug }}
 
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 
-trigger: none 
-
-pool:
-  type: windows
-
 resources:
   repositories:
-  - repository: templates
+  - repository: 1ESPipelineTemplates
     type: git
-    name: OneBranch.Pipelines/GovernedTemplates
-    ref: refs/heads/main
-
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
 extends:
-  template: v2/Microsoft.NonOfficial.yml@templates
+  template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
-    platform:
-      name: 'windows_undocked'
-      product: 'build_tools'
-
-    featureFlags:
-      WindowsHostVersion:
-        Version: 2022
-
-    globalSdl:
-      isNativeCode: true
-      tsa:
-        enabled: false
-        useDynamicRouting: true
-      sbom:
-        enabled: true
-      prefast:
-        enabled: true
+    pool:
+      name: Azure-Pipelines-1ESPT-ExDShared
+      image: windows-2022
+      os: windows
+    customBuildTags:
+    - ES365AIMigrationTooling
+    sdl:
       binskim:
         scanOutputDirectoryOnly: true
-
-    nugetPublishing:
-      feeds:
-      - name: CsWinRT
-
-    customTags: ES365AIMigrationTooling
-
+    featureFlags:
+      autoBaseline: false
     stages:
-      - stage: BuildAndTest
-        jobs: 
-        - template: build/AzurePipelineTemplates/CsWinRT-BuildAndTest-Stage.yml@self
-            
-      - stage: Nuget
-        dependsOn: BuildAndTest
-        jobs:
-        - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuget-Stage.yml@self
+    - template: CsWinRT-BuildAndTest-Stage.yml@self
+      parameters:
+        IsGitHub: true
+    
+    - template: CsWinRT-PublishToNuget-Stage.yml@self
+      parameters:
+        IsGitHub: true
+    
