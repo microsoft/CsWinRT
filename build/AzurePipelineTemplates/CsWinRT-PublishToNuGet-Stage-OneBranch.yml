@@ -13,4 +13,4 @@ jobs:
       ob_sdl_checkCompliantCompilerWarnings: true
 
     steps:
-    - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml@self
+    - template: CsWinRT-PublishToNuGet-Steps.yml@self
