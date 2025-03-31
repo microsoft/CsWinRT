@@ -25,10 +25,4 @@ extends:
       autoBaseline: false
     stages:
     - template: CsWinRT-BuildAndTest-Stage-GitHub.yml@self 
-    - stage: Publish
-      displayName: Publish To Internal Nuget Feed Stage
-      jobs:
-      - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuget-Stage-GitHub.yml@self
-        parameters:
-          IsGitHub: true
-    
+    - template: CsWinRT-PublishToNuget-Stage-GitHub.yml@self
