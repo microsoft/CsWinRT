@@ -1,0 +1,23 @@
+stages:
+- stage: Publish
+  displayName: Publish To Internal Nuget Feed Stage
+  jobs:
+  - job: PublishTo_CsWinRT_InternalFeed
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+  
+    steps:
+    - checkout: self
+      clean: True
+      persistCredentials: True
+
+    - template: CsWinRT-PublishToNuGet-Steps.yml@self
+      parameters:
+        IsGitHub: true
+
+    templateContext:
+      outputs:
+      - output: pipelineArtifact
+        displayName: 'Publish NuGet'
+        targetPath: $(ob_outputDirectory)\packages
+        artifactName: drop_Nuget
