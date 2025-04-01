@@ -26,9 +26,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)DiagnosticHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DiagnosticUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\SymbolExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\TypeSymbolExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Generator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GenericVtableInitializerStrings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ArrayBufferWriter{T}.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ImmutableEquatableArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MergeReferencedActivationFactoriesGenerator.cs" />
