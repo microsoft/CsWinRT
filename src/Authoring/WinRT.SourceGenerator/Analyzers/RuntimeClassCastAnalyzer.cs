@@ -99,7 +99,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             {
                 if (context.Operation is IConversionOperation { IsImplicit: false, Type: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } conversion &&
                     typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
-                    conversion.Operand is not { ConstantValue: { HasValue: true, Value: null } } &&
+                    conversion.Operand is { Type.IsReferenceType: true } and not { ConstantValue: { HasValue: true, Value: null } } &&
                     !context.Compilation.HasImplicitConversion(conversion.Operand.Type, typeSymbol) &&
                     !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
                 {

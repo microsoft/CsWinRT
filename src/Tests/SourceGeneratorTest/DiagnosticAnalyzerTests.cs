@@ -540,6 +540,11 @@ public class DiagnosticAnalyzerTests
                     if (a3 == b4)
                     {
                     }
+
+                    int i = 42;
+                    E e = (E)i;
+                    int i2 = (int)e;
+                    E e2 = (E)(int)obj;
                 }
             }
 
@@ -548,6 +553,13 @@ public class DiagnosticAnalyzerTests
 
             [WindowsRuntimeType("SomeContract")]
             class B : A;
+
+            [WindowsRuntimeType("SomeContract")]
+            enum E
+            {
+                A,
+                B
+            }
             """;
 
         await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
@@ -588,6 +600,49 @@ public class DiagnosticAnalyzerTests
 
             [WindowsRuntimeType("SomeContract")]
             class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_EnumType_WithDynamicDependency_Method_DoesNotWarn()
+    {
+        const string source = """
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                [DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields, typeof(E))]
+                void M(object obj)
+                {
+                    E e1 = (E)obj;
+
+                    if (obj is E)
+                    {
+                    }
+
+                    if (obj is E e2)
+                    {
+                    }
+
+                    if ((object[])obj is [E e3])
+                    {
+                    }
+
+                    if ((object[])obj is [E])
+                    {
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            enum E
+            {
+                A,
+                B
+            }
             """;
 
         await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
@@ -976,6 +1031,47 @@ public class DiagnosticAnalyzerTests
 
             [WindowsRuntimeType("SomeContract")]
             class D : C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_EnumType_Warns()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                void M(object obj)
+                {
+                    E e1 = {|CsWinRT1035:(E)obj|};
+
+                    if ({|CsWinRT1035:obj is E|})
+                    {
+                    }
+
+                    if ({|CsWinRT1035:obj is E e2|})
+                    {
+                    }
+
+                    if ((object[])obj is [{|CsWinRT1035:E e3|}])
+                    {
+                    }
+
+                    if ((object[])obj is [{|CsWinRT1035:E|}])
+                    {
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            enum E
+            {
+                A,
+                B
+            }
             """;
 
         await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
