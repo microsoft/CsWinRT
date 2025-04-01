@@ -333,7 +333,29 @@ namespace WinRT.SourceGenerator {
                 return ResourceManager.GetString("GenericTypeRule_Text", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Casts to WinRT &apos;IReference`1&lt;T&gt;&apos; unboxed values are not trim-safe.
+        /// </summary>
+        internal static string IReferenceTypeCast_Brief
+        {
+            get
+            {
+                return ResourceManager.GetString("IReferenceTypeCast_Brief", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Casting to type &apos;{0}&apos; is not trim-safe, as it is unboxing a WinRT &apos;IReference`1&lt;T&gt;&apos; value type. Consider using the &apos;WinRT.CastExtensions.Cast&lt;T&gt;&apos; extension method instead, which will ensure the necessary metadata is kept. Alternatively, you can use &apos;[DynamicDependency]&apos; to manually root the necessary metadata, and suppress the warning via &apos;[UnconditionalSuppressMessage]&apos;..
+        /// </summary>
+        internal static string IReferenceTypeCast_Text
+        {
+            get
+            {
+                return ResourceManager.GetString("IReferenceTypeCast_Text", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Array signature found with jagged array, which is not a valid WinRT type.
         /// </summary>

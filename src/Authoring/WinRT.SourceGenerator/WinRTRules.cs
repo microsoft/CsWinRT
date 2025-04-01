@@ -264,5 +264,12 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.RuntimeClassCast_Text,
             false,
             true);
+
+        public static DiagnosticDescriptor IReferenceTypeCast = MakeRule(
+            "CsWinRT1035",
+            CsWinRTDiagnosticStrings.IReferenceTypeCast_Brief,
+            CsWinRTDiagnosticStrings.IReferenceTypeCast_Text,
+            false,
+            true);
     }
 } 

@@ -375,4 +375,10 @@
   <data name="RuntimeClassCast_Text" xml:space="preserve">
     <value>Casting to type '{0}' is not trim-safe, as it is a WinRT runtime class type. Consider using the 'WinRT.CastExtensions.Cast&lt;T&gt;' extension method instead, which will ensure the necessary metadata is kept. Alternatively, you can use '[DynamicDependency]' to manually root the necessary metadata, and suppress the warning via '[UnconditionalSuppressMessage]'.</value>
   </data>
+  <data name="IReferenceTypeCast_Brief" xml:space="preserve">
+    <value>Casts to WinRT 'IReference`1&lt;T&gt;' unboxed values are not trim-safe</value>
+  </data>
+  <data name="IReferenceTypeCast_Text" xml:space="preserve">
+    <value>Casting to type '{0}' is not trim-safe, as it is unboxing a WinRT 'IReference`1&lt;T&gt;' value type. Consider using the 'WinRT.CastExtensions.Cast&lt;T&gt;' extension method instead, which will ensure the necessary metadata is kept. Alternatively, you can use '[DynamicDependency]' to manually root the necessary metadata, and suppress the warning via '[UnconditionalSuppressMessage]'.</value>
+  </data>
 </root>

@@ -21,7 +21,7 @@ namespace Generator;
 public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc/>
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [WinRTRules.RuntimeClassCast];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [WinRTRules.RuntimeClassCast, WinRTRules.IReferenceTypeCast];
 
     /// <inheritdoc/>
     public override void Initialize(AnalysisContext context)
@@ -97,16 +97,16 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // C c2 = obj as C;
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IConversionOperation { IsImplicit: false, Type: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } conversion &&
-                    classType.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
+                if (context.Operation is IConversionOperation { IsImplicit: false, Type: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } conversion &&
+                    typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
                     conversion.Operand is not { ConstantValue: { HasValue: true, Value: null } } &&
-                    !context.Compilation.HasImplicitConversion(conversion.Operand.Type, classType) &&
-                    !IsDynamicDependencyPresentForOperation(context.Operation, classType))
+                    !context.Compilation.HasImplicitConversion(conversion.Operand.Type, typeSymbol) &&
+                    !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        WinRTRules.RuntimeClassCast,
+                        typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
-                        classType));
+                        typeSymbol));
                 }
             }, OperationKind.Conversion);
 
@@ -117,15 +117,15 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // }
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IIsTypeOperation { IsImplicit: false, TypeOperand: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } typeOperation &&
-                    classType.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
-                    !context.Compilation.HasImplicitConversion(typeOperation.ValueOperand.Type, classType) &&
-                    !IsDynamicDependencyPresentForOperation(context.Operation, classType))
+                if (context.Operation is IIsTypeOperation { IsImplicit: false, TypeOperand: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } typeOperation &&
+                    typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
+                    !context.Compilation.HasImplicitConversion(typeOperation.ValueOperand.Type, typeSymbol) &&
+                    !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        WinRTRules.RuntimeClassCast,
+                        typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
-                        classType));
+                        typeSymbol));
                 }
             }, OperationKind.IsType);
 
@@ -142,10 +142,10 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // }
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IDeclarationPatternOperation { IsImplicit: false, MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } patternOperation &&
-                    classType.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
-                    !context.Compilation.HasImplicitConversion(patternOperation.InputType, classType) &&
-                    !IsDynamicDependencyPresentForOperation(context.Operation, classType))
+                if (context.Operation is IDeclarationPatternOperation { IsImplicit: false, MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } patternOperation &&
+                    typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
+                    !context.Compilation.HasImplicitConversion(patternOperation.InputType, typeSymbol) &&
+                    !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
                 {
                     // Adjust the location for 'obj is C ic' patterns, to include the 'is' expression as well
                     Location location = context.Operation.Parent is IIsPatternOperation isPatternOperation
@@ -153,9 +153,9 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                         : context.Operation.Syntax.GetLocation();
 
                     context.ReportDiagnostic(Diagnostic.Create(
-                        WinRTRules.RuntimeClassCast,
+                        typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         location,
-                        classType));
+                        typeSymbol));
                 }
             }, OperationKind.DeclarationPattern);
 
@@ -166,15 +166,15 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // }
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is ITypePatternOperation { IsImplicit: false, MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class, IsStatic: false } classType } patternOperation &&
-                    classType.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
-                    !context.Compilation.HasImplicitConversion(patternOperation.InputType, classType) &&
-                    !IsDynamicDependencyPresentForOperation(context.Operation, classType))
+                if (context.Operation is ITypePatternOperation { IsImplicit: false, MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } patternOperation &&
+                    typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
+                    !context.Compilation.HasImplicitConversion(patternOperation.InputType, typeSymbol) &&
+                    !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        WinRTRules.RuntimeClassCast,
+                        typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
-                        classType));
+                        typeSymbol));
                 }
             }, OperationKind.TypePattern);
         });
