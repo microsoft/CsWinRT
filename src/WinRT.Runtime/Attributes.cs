@@ -390,6 +390,33 @@ namespace WinRT
         internal Type Type { get; }
     }
 #endif
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// An attribute that indicates that the annotated member or field (initializer) is performing a dynamic cast to a Windows Runtime type.
+    /// This in turns ensures that the necessary metadata is kept during trimming so that the cast can work correctly in all scenarios.
+    /// </summary>
+    /// <seealso cref="DynamicDependencyAttribute"/>
+    [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Field, AllowMultiple = true, Inherited = false)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class DynamicWindowsRuntimeCastAttribute : Attribute
+    {
+        /// <summary>
+        /// Creates a new <see cref="DynamicWindowsRuntimeCastAttribute"/> instance with the specified parameters.
+        /// </summary>
+        /// <param name="type">The Windows Runtime type being used for the cast.</param>
+        public DynamicWindowsRuntimeCastAttribute([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)] Type type)
+        {
+            Type = type;
+        }
+
+        internal Type Type { get; }
+    }
+#endif
 }
 
 namespace System.Runtime.InteropServices.WindowsRuntime
