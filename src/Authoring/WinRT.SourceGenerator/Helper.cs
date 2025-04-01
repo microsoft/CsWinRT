@@ -147,7 +147,7 @@ namespace Generator
                        // we don't want to change the behavior of those projects who were
                        // relying on it running. If they set the mode, then the mode would
                        // be respected.
-                       provider.GetCsWinRTAotWarningLevel() == 2;
+                       provider.GetCsWinRTAotWarningLevel() >= 2;
             }
 
             // If mode is not the default, check if it is set explicitly to Auto.

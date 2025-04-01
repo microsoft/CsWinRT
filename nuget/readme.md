@@ -52,7 +52,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTManifestFreeActivationReportOriginalException | true \| *false | If 'CsWinRTEnableManifestFreeActivation' is set and activating a type fails, ensures the original exception is thrown, rather than 'NotSupportedException' |
 | CsWinRTUseEnvironmentalTools | *true \| false | Makes the invocation of MSVC to produce a stub .exe (for Native AOT scenarios) rely on environmental tools, rather than looking up the MSVC install path. This is enabled by default when running in a Visual Studio Developer Command Prompt (or PowerShell), and false otherwise. |
 | CsWinRTAotOptimizerEnabled | Auto \| OptIn \| *true \| false | Enables the C#/WinRT AOT optimizer. WinRT types can opt-in to AOT optimization by adding the `[GeneratedWinRTExposedType]` attribute.  More details can be found [here](https://github.com/microsoft/CsWinRT/blob/master/docs/aot-trimming.md#source-generator-modes) |
-| CsWinRTAotWarningLevel | 0 \| *1 \| 2 | Specifies the warning level used by the code fixer for trimming and AOT compat (0 - no warnings, 1 - warnings for scenarios involving non built-in types, 2 - warnings for all scenarios) |
+| CsWinRTAotWarningLevel | 0 \| *1 \| 2 \| 3 | Specifies the warning level used by the code fixer for trimming and AOT compat (0 - no warnings, 1 - warnings for scenarios involving non built-in types, 2 - warnings for all scenarios, 3 - for more extensive warnings for trim/AOT, including noisy ones) |
 \*Default value
 
 **If CsWinRTFilters is not defined, the following effective value is used:
