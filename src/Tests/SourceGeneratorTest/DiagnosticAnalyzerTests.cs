@@ -545,6 +545,25 @@ public class DiagnosticAnalyzerTests
                     E e = (E)i;
                     int i2 = (int)e;
                     E e2 = (E)(int)obj;
+
+                    E? ne1 = (E?)null;
+                    E? ne2 = (E?)E.A;
+
+                    if (ne1 is E)
+                    {
+                    }
+
+                    if (ne1 is E e3)
+                    {
+                    }
+
+                    if ((E?[])obj is [E])
+                    {
+                    }
+
+                    if ((E?[])obj is [E e4])
+                    {
+                    }
                 }
             }
 
@@ -1063,6 +1082,31 @@ public class DiagnosticAnalyzerTests
                     if ((object[])obj is [{|CsWinRT1035:E|}])
                     {
                     }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            enum E
+            {
+                A,
+                B
+            }
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_EnumType_Nullable_Warns()
+    {
+        const string source = """
+            using WinRT;
+
+            class Test
+            {
+                void M(object obj)
+                {
+                    E? e1 = {|CsWinRT1035:(E?)obj|};
                 }
             }
 
