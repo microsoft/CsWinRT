@@ -47,7 +47,7 @@ namespace ABI.System.Collections.Generic
             ComWrappersSupport.RegisterHelperType(typeof(global::System.Collections.Generic.KeyValuePair<K, V>), typeof(global::ABI.System.Collections.Generic.KeyValuePair<K, V>));
         }
 
-        internal static unsafe bool EnsureInitialized()
+        internal static unsafe void EnsureInitialized()
         {
 #if NET
             // Early return to ensure things are trimmed correctly on NAOT.
@@ -55,7 +55,20 @@ namespace ABI.System.Collections.Generic
             // Here we just always return true and rely on the AOT generator doing what's needed.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
-                return true;
+                if (!_RcwHelperInitialized)
+                {
+                    [DoesNotReturn]
+                    static void ThrowNotInitialized()
+                    {
+                        throw new NotImplementedException(
+                            $"Type '{typeof(global::System.Collections.Generic.KeyValuePair<K, V>)}' was called without initializing the RCW methods using 'KeyValuePairMethods.InitRcwHelper'. " +
+                            $"Ensure the 'InitRcwHelper' method is called.");
+                    }
+
+                    ThrowNotInitialized();
+                }
+
+                return;
             }
 #endif
 #pragma warning disable IL3050 // https://github.com/dotnet/runtime/issues/97273
@@ -81,8 +94,6 @@ namespace ABI.System.Collections.Generic
                     initRcwHelperFallback();
                 }
             }
-
-            return true;
         }
 
         internal static unsafe K GetKey(IObjectReference obj)

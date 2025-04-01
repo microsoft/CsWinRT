@@ -326,6 +326,18 @@ if ((int)retrievedValue8 != 4 ||
     return 136;
 }
 
+#if NET8_0_OR_GREATER
+if (RunAndGetException(() => ComWrappersSupport.CreateCCWForObject(new ManagedOnlyClass())) is not NotSupportedException)
+{
+    return 137;
+}
+
+if (RunAndGetException(() => ComWrappersSupport.CreateCCWForObject(new ManagedOnlyStruct())) is not NotSupportedException)
+{
+    return 138;
+}
+#endif
+
 return 100;
 
 
@@ -334,6 +346,22 @@ static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* lengt
 
 [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
 static extern int WindowsDeleteString(IntPtr hstring);
+
+#if NET8_0_OR_GREATER
+static Exception RunAndGetException(Action action)
+{
+    try
+    {
+        action();
+
+        return null;
+    }
+    catch (Exception e)
+    {
+        return e;
+    }
+}
+#endif
 
 unsafe bool CheckRuntimeClassName(IObjectReference objRef, string expected)
 {
@@ -773,3 +801,15 @@ namespace Test
         }
     }
 }
+
+#if NET8_0_OR_GREATER
+[WinRTExposedType(typeof(WinRTManagedOnlyTypeDetails))]
+public sealed partial class ManagedOnlyClass
+{
+}
+
+[WinRTExposedType(typeof(WinRTManagedOnlyTypeDetails))]
+public partial struct ManagedOnlyStruct
+{
+}
+#endif

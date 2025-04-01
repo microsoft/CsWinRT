@@ -23,24 +23,6 @@ namespace WinRT.Interop
         bool InterfaceSupportsErrorInfo(Guid riid);
     }
 
-    [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-    internal interface ILanguageExceptionErrorInfo
-    {
-        IObjectReference GetLanguageException();
-    }
-
-    [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-    internal interface IRestrictedErrorInfo
-    {
-        void GetErrorDetails(
-            out string description,
-            out int error,
-            out string restrictedDescription,
-            out string capabilitySid);
-
-        string GetReference();
-    }
-
     internal sealed class ManagedExceptionErrorInfo : IErrorInfo, ISupportErrorInfo
     {
         private readonly Exception _exception;
@@ -286,50 +268,6 @@ namespace ABI.WinRT.Interop
         }
     }
 
-    [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-    internal unsafe class ILanguageExceptionErrorInfo : global::WinRT.Interop.ILanguageExceptionErrorInfo
-    {
-        [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-        public struct Vftbl
-        {
-            internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            private void* _GetLanguageException_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetLanguageException_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetLanguageException_0;
-        }
-
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        public static implicit operator ILanguageExceptionErrorInfo(IObjectReference obj) => (obj != null) ? new ILanguageExceptionErrorInfo(obj) : null;
-        public static implicit operator ILanguageExceptionErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new ILanguageExceptionErrorInfo(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public ILanguageExceptionErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public ILanguageExceptionErrorInfo(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
-        }
-
-        public IObjectReference GetLanguageException()
-        {
-            IntPtr __return_value__ = IntPtr.Zero;
-
-            try
-            {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetLanguageException_0(ThisPtr, &__return_value__));
-                return ObjectReference<global::WinRT.Interop.IUnknownVftbl>.Attach(ref __return_value__);
-            }
-            finally
-            {
-                if (__return_value__ != IntPtr.Zero)
-                {
-                    (*(global::WinRT.Interop.IUnknownVftbl**)__return_value__)->Release(__return_value__);
-                }
-            }
-        }
-    }
-
     [Guid("DF0B3D60-548F-101B-8E65-08002B2BD119")]
     internal unsafe class ISupportErrorInfo : global::WinRT.Interop.ISupportErrorInfo
     {
@@ -390,75 +328,6 @@ namespace ABI.WinRT.Interop
         public bool InterfaceSupportsErrorInfo(Guid riid)
         {
             return _obj.Vftbl.InterfaceSupportsErrorInfo_0(ThisPtr, &riid) == 0;
-        }
-    }
-
-    [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-    internal unsafe class IRestrictedErrorInfo : global::WinRT.Interop.IRestrictedErrorInfo
-    {
-        [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-        public struct Vftbl
-        {
-            internal global::WinRT.Interop.IUnknownVftbl unknownVftbl;
-            private void* _GetErrorDetails_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int> GetErrorDetails_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)_GetErrorDetails_0;
-            private void* _GetReference_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetReference_1 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetReference_1;
-        }
-
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        public static implicit operator IRestrictedErrorInfo(IObjectReference obj) => (obj != null) ? new IRestrictedErrorInfo(obj) : null;
-        public static implicit operator IRestrictedErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new IRestrictedErrorInfo(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public IRestrictedErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public IRestrictedErrorInfo(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
-        }
-
-        public void GetErrorDetails(
-            out string description,
-            out int error,
-            out string restrictedDescription,
-            out string capabilitySid)
-        {
-            IntPtr _description = IntPtr.Zero;
-            IntPtr _restrictedDescription = IntPtr.Zero;
-            IntPtr _capabilitySid = IntPtr.Zero;
-            try
-            {
-                fixed (int* pError = &error)
-                {
-                    Marshal.ThrowExceptionForHR(_obj.Vftbl.GetErrorDetails_0(ThisPtr, &_description, pError, &_restrictedDescription, &_capabilitySid));
-                }
-                description = _description != IntPtr.Zero ? Marshal.PtrToStringBSTR(_description) : string.Empty;
-                restrictedDescription = _restrictedDescription != IntPtr.Zero ? Marshal.PtrToStringBSTR(_restrictedDescription) : string.Empty;
-                capabilitySid = _capabilitySid != IntPtr.Zero ? Marshal.PtrToStringBSTR(_capabilitySid) : string.Empty;
-            }
-            finally
-            {
-                Marshal.FreeBSTR(_description);
-                Marshal.FreeBSTR(_restrictedDescription);
-                Marshal.FreeBSTR(_capabilitySid);
-            }
-        }
-
-        public string GetReference()
-        {
-            IntPtr __retval = default;
-            try
-            {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetReference_1(ThisPtr, &__retval));
-                return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
-            }
-            finally
-            {
-                Marshal.FreeBSTR(__retval);
-            }
         }
     }
 }

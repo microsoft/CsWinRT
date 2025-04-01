@@ -4,6 +4,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -19,10 +20,14 @@ namespace Generator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var properties = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) => (
-                    provider.IsCsWinRTAotOptimizerEnabled(),
-                    provider.IsCsWinRTComponent(),
-                    provider.IsCsWinRTCcwLookupTableGeneratorEnabled())
+            var properties = context.AnalyzerConfigOptionsProvider
+                .Combine(context.CompilationProvider)
+                .Select(static ((AnalyzerConfigOptionsProvider provider, Compilation compilation) value, CancellationToken _) => 
+                    new CsWinRTAotOptimizerProperties(
+                        value.provider.IsCsWinRTAotOptimizerEnabled(),
+                        value.provider.IsCsWinRTComponent(),
+                        value.provider.IsCsWinRTCcwLookupTableGeneratorEnabled(),
+                        GeneratorExecutionContextHelper.IsCsWinRTAotOptimizerInAutoMode(value.provider, value.compilation))
                 );
 
             var assemblyName = context.CompilationProvider.Select(static (compilation, _) => GeneratorHelper.EscapeAssemblyNameForIdentifier(compilation.AssemblyName));
@@ -34,18 +39,33 @@ namespace Generator
                 .Select(static (mode, ct) => new TypeMapper(mode))
                 .Combine(properties);
 
-            var vtablesToAddFromClassTypes = context.SyntaxProvider.CreateSyntaxProvider(
+            var vtablesToAddFromDetectedClassTypes = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => NeedVtableAttribute(n),
                     static (n, _) => n)
                 .Combine(typeMapperAndProperties)
-                .Select(static ((GeneratorSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, (bool isCsWinRTAotOptimizerEnabled, bool, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties) typeMapperAndProperties) value, CancellationToken _) => 
-                        value.typeMapperAndProperties.properties.isCsWinRTAotOptimizerEnabled ? 
-                            GetVtableAttributeToAdd(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, false, value.typeMapperAndProperties.properties.isCsWinRTCcwLookupTableGeneratorEnabled) : default)
+                .Select(static ((GeneratorSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, CsWinRTAotOptimizerProperties properties) typeMapperAndProperties) value, CancellationToken _) => 
+                        value.typeMapperAndProperties.properties.IsCsWinRTAotOptimizerInAutoMode ? 
+                            GetVtableAttributeToAdd(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, false, value.typeMapperAndProperties.properties.IsCsWinRTCcwLookupTableGeneratorEnabled) : default)
                 .Where(static vtableAttribute => vtableAttribute != default);
 
-            var vtableAttributesToAdd = vtablesToAddFromClassTypes.Select(static (vtable, _) => vtable.Item1);
-            var adapterTypesToAddOnLookupTable = vtablesToAddFromClassTypes.SelectMany(static (vtable, _) => vtable.Item2);
+            var autoDetectedVtableAttributesToAdd = vtablesToAddFromDetectedClassTypes.Select(static (vtable, _) => vtable.Item1);
+            var autoDetectedAdapterTypesToAddOnLookupTable = vtablesToAddFromDetectedClassTypes.SelectMany(static (vtable, _) => vtable.Item2);
 
+            var vtablesToAddFromOptInClassTypes = context.SyntaxProvider.ForAttributeWithMetadataName(
+                    "WinRT.GeneratedWinRTExposedTypeAttribute",
+                    static (n, _) => NeedVtableAttribute(n),
+                    static (n, _) => n)
+                .Combine(typeMapperAndProperties)
+                .Select(static ((GeneratorAttributeSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, CsWinRTAotOptimizerProperties properties) typeMapperAndProperties) value, CancellationToken _) =>
+                        value.typeMapperAndProperties.properties.IsCsWinRTAotOptimizerEnabled ?
+                            GetVtableAttributeToAdd(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, false, value.typeMapperAndProperties.properties.IsCsWinRTCcwLookupTableGeneratorEnabled) : default)
+                .Where(static vtableAttribute => vtableAttribute != default);
+
+            var optinVtableAttributesToAdd = vtablesToAddFromOptInClassTypes.Select(static (vtable, _) => vtable.Item1);
+            var optinAdapterTypesToAddOnLookupTable = vtablesToAddFromOptInClassTypes.SelectMany(static (vtable, _) => vtable.Item2);
+
+            // Merge both auto detected vtables and opt-in vtables.
+            var vtableAttributesToAdd = autoDetectedVtableAttributesToAdd.Collect().Combine(optinVtableAttributesToAdd.Collect()).SelectMany(static (value, _) => value.Left.AddRange(value.Right).Distinct());
             context.RegisterImplementationSourceOutput(vtableAttributesToAdd.Collect().Combine(propertiesAndAssemblyName), GenerateVtableAttributes);
 
             // Get the vtables for component types.  This is used for filtering out generic interfaces
@@ -55,19 +75,32 @@ namespace Generator
                     static (n, _) => n)
                 .Combine(typeMapperAndProperties)
                 // Get component types if only authoring scenario and if aot optimizer enabled.
-                .Select(static ((GeneratorSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool) properties) typeMapperAndProperties) value, CancellationToken _) =>
-                        value.typeMapperAndProperties.properties.isCsWinRTAotOptimizerEnabled && value.typeMapperAndProperties.properties.isCsWinRTComponent ? 
+                .Select(static ((GeneratorSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, CsWinRTAotOptimizerProperties properties) typeMapperAndProperties) value, CancellationToken _) =>
+                        value.typeMapperAndProperties.properties.IsCsWinRTAotOptimizerEnabled && value.typeMapperAndProperties.properties.IsCsWinRTComponent ? 
                             GetVtableAttributeToAdd(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, true, true) : default)
                 .Where(static vtableAttribute => vtableAttribute != default);
 
-            var instantiatedTypesToAddOnLookupTable = context.SyntaxProvider.CreateSyntaxProvider(
+            var autoDetectedInstantiatedTypesToAddOnLookupTable = context.SyntaxProvider.CreateSyntaxProvider(
                     static (n, _) => NeedVtableOnLookupTable(n),
                     static (n, _) => n)
                 .Combine(typeMapperAndProperties)
-                .Select(static ((GeneratorSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties) typeMapperAndProperties) value,
+                .Select(static ((GeneratorSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, CsWinRTAotOptimizerProperties properties) typeMapperAndProperties) value,
                                 CancellationToken _) =>
-                        value.typeMapperAndProperties.properties.isCsWinRTAotOptimizerEnabled && value.typeMapperAndProperties.properties.isCsWinRTCcwLookupTableGeneratorEnabled ? 
-                            GetVtableAttributesToAddOnLookupTable(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, value.typeMapperAndProperties.properties.isCsWinRTComponent) : 
+                        value.typeMapperAndProperties.properties.IsCsWinRTAotOptimizerInAutoMode && value.typeMapperAndProperties.properties.IsCsWinRTCcwLookupTableGeneratorEnabled ? 
+                            GetVtableAttributesToAddOnLookupTable(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, value.typeMapperAndProperties.properties.IsCsWinRTComponent) : 
+                            (EquatableArray<VtableAttribute>)ImmutableArray<VtableAttribute>.Empty)
+                .SelectMany(static (vtable, _) => vtable)
+                .Where(static vtableAttribute => vtableAttribute != null);
+
+            var optinInstantiatedTypesToAddOnLookupTable = context.SyntaxProvider.ForAttributeWithMetadataName(
+                    "WinRT.GeneratedWinRTExposedExternalTypeAttribute",
+                    static (n, _) => true,
+                    static (n, _) => n)
+                .Combine(typeMapperAndProperties)
+                .Select(static ((GeneratorAttributeSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, CsWinRTAotOptimizerProperties properties) typeMapperAndProperties) value,
+                                CancellationToken _) =>
+                        value.typeMapperAndProperties.properties.IsCsWinRTAotOptimizerEnabled && value.typeMapperAndProperties.properties.IsCsWinRTCcwLookupTableGeneratorEnabled ?
+                            GetVtableAttributesToAddOnLookupTable(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, value.typeMapperAndProperties.properties.IsCsWinRTComponent) :
                             (EquatableArray<VtableAttribute>)ImmutableArray<VtableAttribute>.Empty)
                 .SelectMany(static (vtable, _) => vtable)
                 .Where(static vtableAttribute => vtableAttribute != null);
@@ -76,25 +109,34 @@ namespace Generator
                     static (n, _) => IsAsyncOperationMethodCall(n),
                     static (n, _) => n)
                 .Combine(typeMapperAndProperties)
-                .Select(static ((GeneratorSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties) typeMapperAndProperties) value,
+                .Select(static ((GeneratorSyntaxContext generatorSyntaxContext, (TypeMapper typeMapper, CsWinRTAotOptimizerProperties properties) typeMapperAndProperties) value,
                                 CancellationToken _) =>
-                        value.typeMapperAndProperties.properties.isCsWinRTAotOptimizerEnabled && value.typeMapperAndProperties.properties.isCsWinRTCcwLookupTableGeneratorEnabled ?
-                            GetVtableAttributesForTaskAdapters(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, value.typeMapperAndProperties.properties.isCsWinRTComponent) : default)
+                        value.typeMapperAndProperties.properties.IsCsWinRTAotOptimizerInAutoMode && value.typeMapperAndProperties.properties.IsCsWinRTCcwLookupTableGeneratorEnabled ?
+                            GetVtableAttributesForTaskAdapters(value.generatorSyntaxContext, value.typeMapperAndProperties.typeMapper, value.typeMapperAndProperties.properties.IsCsWinRTComponent) : default)
                 .Where(static vtableAttribute => vtableAttribute != default)
                 .Collect();
 
-            // Merge both adapter types list and instantiated types list 
+            // Merge both adapter types lists and instantiated types lists.
             var vtablesToAddOnLookupTable = 
-                instantiatedTypesToAddOnLookupTable.Collect().
-                Combine(adapterTypesToAddOnLookupTable.Collect()).
+                autoDetectedInstantiatedTypesToAddOnLookupTable.Collect().
+                Combine(autoDetectedAdapterTypesToAddOnLookupTable.Collect()).
+                Combine(optinInstantiatedTypesToAddOnLookupTable.Collect()).
+                Combine(optinAdapterTypesToAddOnLookupTable.Collect()).
                 Combine(instantiatedTaskAdapters).
-                SelectMany(static (value, _) => value.Left.Left.AddRange(value.Left.Right).AddRange(value.Right).Distinct());
+                SelectMany(static (value, _) => 
+                    value.Left.Left.Left.Left
+                    .AddRange(value.Left.Left.Left.Right)
+                    .AddRange(value.Left.Left.Right)
+                    .AddRange(value.Left.Right)
+                    .AddRange(value.Right)
+                    .Distinct()
+                );
 
             var genericInterfacesFromVtableAttribute = vtableAttributesToAdd.Combine(properties).SelectMany(
-                static ((VtableAttribute vtableAttribute, (bool, bool isCsWinRTComponent, bool) properties) value, CancellationToken _) =>
+                static ((VtableAttribute vtableAttribute, CsWinRTAotOptimizerProperties properties) value, CancellationToken _) =>
                     // If this is a CsWinRT component, the public types are handled by the component source generator rather than
                     // the AOT source generator.  So we filter those out here.
-                    (!value.properties.isCsWinRTComponent || (value.properties.isCsWinRTComponent && !value.vtableAttribute.IsPublic)) ? 
+                    (!value.properties.IsCsWinRTComponent || (value.properties.IsCsWinRTComponent && !value.vtableAttribute.IsPublic)) ? 
                         value.vtableAttribute.GenericInterfaces : (EquatableArray<GenericInterface>)ImmutableArray<GenericInterface>.Empty).Collect();
             var genericInterfacesFromVtableLookupTable = vtablesToAddOnLookupTable.SelectMany(static (vtable, _) => vtable.GenericInterfaces).Collect();
 
@@ -106,17 +148,21 @@ namespace Generator
                 Collect();
 
             context.RegisterImplementationSourceOutput(
-                genericInterfacesFromVtableAttribute.Combine(genericInterfacesFromVtableLookupTable).Combine(genericInterfacesGeneratedByComponentGenerator).Combine(propertiesAndAssemblyName),
+                genericInterfacesFromVtableAttribute
+                .Combine(genericInterfacesFromVtableLookupTable)
+                .Combine(genericInterfacesGeneratedByComponentGenerator)
+                .Combine(propertiesAndAssemblyName),
                 GenerateCCWForGenericInstantiation);
 
             context.RegisterImplementationSourceOutput(vtablesToAddOnLookupTable.Collect().Combine(propertiesAndAssemblyName), GenerateVtableLookupTable);
 
-            var bindableCustomPropertyAttributes = context.SyntaxProvider.CreateSyntaxProvider(
+            var bindableCustomPropertyAttributes = context.SyntaxProvider.ForAttributeWithMetadataName(
+                    "WinRT.GeneratedBindableCustomPropertyAttribute",
                     static (n, _) => NeedCustomPropertyImplementation(n),
                     static (n, _) => n)
                 .Combine(properties)
-                .Select(static ((GeneratorSyntaxContext generatorSyntaxContext, (bool isCsWinRTAotOptimizerEnabled, bool, bool) properties) value, CancellationToken _) =>
-                        value.properties.isCsWinRTAotOptimizerEnabled ? GetBindableCustomProperties(value.generatorSyntaxContext) : default)
+                .Select(static ((GeneratorAttributeSyntaxContext generatorSyntaxContext, CsWinRTAotOptimizerProperties properties) value, CancellationToken _) =>
+                        value.properties.IsCsWinRTAotOptimizerEnabled ? GetBindableCustomProperties(value.generatorSyntaxContext) : default)
                 .Where(static bindableCustomProperties => bindableCustomProperties != default)
                 .Collect()
                 .Combine(properties);
@@ -151,7 +197,7 @@ namespace Generator
             {
                 TypeDeclarationSyntax typeDeclaration = (TypeDeclarationSyntax)node;
 
-                return GeneratorHelper.IsPartial(typeDeclaration) && GeneratorHelper.HasBindableCustomPropertyAttribute(typeDeclaration);
+                return GeneratorHelper.IsPartial(typeDeclaration);
             }
 
             return false;
@@ -163,11 +209,38 @@ namespace Generator
             bool checkForComponentTypes,
             bool isCsWinRTCcwLookupTableGeneratorEnabled)
         {
-            var isWinRTTypeFunc = checkForComponentTypes ? 
-                GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation) :
-                GeneratorHelper.IsWinRTType;
-            var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node as ClassDeclarationSyntax);
-            var vtableAttribute = GetVtableAttributeToAdd(symbol, isWinRTTypeFunc, typeMapper, context.SemanticModel.Compilation, false);
+            return GetVtableAttributeToAdd(
+                context.SemanticModel.GetDeclaredSymbol(context.Node as ClassDeclarationSyntax),
+                typeMapper,
+                context.SemanticModel.Compilation,
+                checkForComponentTypes,
+                isCsWinRTCcwLookupTableGeneratorEnabled);
+        }
+
+        private static (VtableAttribute, EquatableArray<VtableAttribute>) GetVtableAttributeToAdd(
+            GeneratorAttributeSyntaxContext context,
+            TypeMapper typeMapper,
+            bool checkForComponentTypes,
+            bool isCsWinRTCcwLookupTableGeneratorEnabled)
+        {
+            return GetVtableAttributeToAdd(
+                (ITypeSymbol)context.TargetSymbol,
+                typeMapper,
+                context.SemanticModel.Compilation,
+                checkForComponentTypes,
+                isCsWinRTCcwLookupTableGeneratorEnabled);
+        }
+
+        private static (VtableAttribute, EquatableArray<VtableAttribute>) GetVtableAttributeToAdd(
+            ITypeSymbol symbol,
+            TypeMapper typeMapper,
+            Compilation compilation,
+            bool checkForComponentTypes,
+            bool isCsWinRTCcwLookupTableGeneratorEnabled)
+        {
+            var isManagedOnlyType = GeneratorHelper.IsManagedOnlyType(compilation);
+            var isWinRTTypeFunc = GeneratorHelper.IsWinRTType(compilation, checkForComponentTypes);
+            var vtableAttribute = GetVtableAttributeToAdd(symbol, isManagedOnlyType, isWinRTTypeFunc, typeMapper, compilation, false);
             if (vtableAttribute != default)
             {
                 HashSet<VtableAttribute> vtableAttributesForLookupTable = [];
@@ -175,7 +248,7 @@ namespace Generator
                 // from some known interfaces are called.
                 if (isCsWinRTCcwLookupTableGeneratorEnabled)
                 {
-                    AddVtableAdapterTypeForKnownInterface(symbol, context.SemanticModel.Compilation, isWinRTTypeFunc, typeMapper, vtableAttributesForLookupTable);
+                    AddVtableAdapterTypeForKnownInterface(symbol, compilation, isManagedOnlyType, isWinRTTypeFunc, typeMapper, vtableAttributesForLookupTable);
                 }
                 return (vtableAttribute, vtableAttributesForLookupTable.ToImmutableArray());
             }
@@ -241,7 +314,8 @@ namespace Generator
                         var constructedAdapterType = adpaterType.Construct([.. symbol.TypeArguments]);
                         return GetVtableAttributeToAdd(
                             constructedAdapterType,
-                            !isCsWinRTComponent ? GeneratorHelper.IsWinRTType : GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation),
+                            GeneratorHelper.IsManagedOnlyType(context.SemanticModel.Compilation),
+                            GeneratorHelper.IsWinRTType(context.SemanticModel.Compilation, isCsWinRTComponent),
                             typeMapper,
                             context.SemanticModel.Compilation,
                             false);
@@ -253,16 +327,11 @@ namespace Generator
         }
 
 #nullable enable
-        private static BindableCustomProperties GetBindableCustomProperties(GeneratorSyntaxContext context)
+        private static BindableCustomProperties GetBindableCustomProperties(GeneratorAttributeSyntaxContext context)
         {
-            var symbol = context.SemanticModel.GetDeclaredSymbol((TypeDeclarationSyntax)context.Node)!;
-            INamedTypeSymbol bindableCustomPropertyAttributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName("WinRT.GeneratedBindableCustomPropertyAttribute")!;
-
-            if (bindableCustomPropertyAttributeSymbol is null ||
-                !symbol.TryGetAttributeWithType(bindableCustomPropertyAttributeSymbol, out AttributeData? attributeData))
-            {
-                return default;
-            }
+            // We expect a class with a single attribute.
+            var symbol = (INamedTypeSymbol)context.TargetSymbol;
+            var attributeData = context.Attributes.First();
 
             List<BindableCustomProperty> bindableCustomProperties = new();
 
@@ -499,6 +568,7 @@ namespace Generator
 
         internal static VtableAttribute GetVtableAttributeToAdd(
             ITypeSymbol symbol, 
+            Func<ISymbol, bool> isManagedOnlyType,
             Func<ISymbol, TypeMapper, bool> isWinRTType, 
             TypeMapper mapper,
             Compilation compilation,
@@ -511,6 +581,13 @@ namespace Generator
             }
 
             if (GeneratorHelper.HasNonInstantiatedWinRTGeneric(symbol, mapper))
+            {
+                return default;
+            }
+
+            // Skip all types explicitly blocked for marshalling.
+            // We don't want them to affect the codegen at all.
+            if (isManagedOnlyType(symbol))
             {
                 return default;
             }
@@ -549,7 +626,7 @@ namespace Generator
                     CheckForInterfaceToUseForRuntimeClassName(iface);
                 }
 
-                if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, null, isWinRTType, out var compatibleIfaces))
+                if (iface.IsGenericType && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, null, isWinRTType, compilation.ObjectType, out var compatibleIfaces))
                 {
                     foreach (var compatibleIface in compatibleIfaces)
                     {
@@ -696,14 +773,14 @@ namespace Generator
             }
         }
 
-        private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, TypeMapper mapper, Stack<INamedTypeSymbol> typeStack, Func<ISymbol, TypeMapper, bool> isWinRTType, out IList<INamedTypeSymbol> compatibleTypes)
+        private static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(INamedTypeSymbol type, TypeMapper mapper, Stack<INamedTypeSymbol> typeStack, Func<ISymbol, TypeMapper, bool> isWinRTType, INamedTypeSymbol objectType, out IList<INamedTypeSymbol> compatibleTypes)
         {
             compatibleTypes = null;
 
             // Out of all the C# interfaces which are valid WinRT interfaces and
             // support covariance, they all only have one generic parameter,
             // so scoping to only handle that.
-            if (type is not { IsGenericType: true, TypeParameters: [{ Variance: VarianceKind.Out, IsValueType: false }] })
+            if (type is not { IsGenericType: true, TypeParameters: [{ Variance: VarianceKind.Out }], TypeArguments: [{ IsValueType: false }] })
             {
                 return false;
             }
@@ -742,13 +819,16 @@ namespace Generator
                 }
 
                 if (iface.IsGenericType
-                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, typeStack, isWinRTType, out var compatibleIfaces))
+                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, mapper, typeStack, isWinRTType, objectType, out var compatibleIfaces))
                 {
                     compatibleTypesForGeneric.UnionWith(compatibleIfaces);
                 }
             }
 
-            var baseType = type.TypeArguments[0].BaseType;
+            // BaseType reports null for interfaces, but interfaces still can be passed as an object.
+            // So we handle that separately.
+            var typeArgument = type.TypeArguments[0];
+            var baseType = typeArgument.TypeKind == TypeKind.Interface ? objectType : typeArgument.BaseType;
             while (baseType != null)
             {
                 if (isWinRTType(baseType, mapper))
@@ -771,14 +851,14 @@ namespace Generator
 
         private static void GenerateVtableAttributes(
             SourceProductionContext sourceProductionContext,
-            (ImmutableArray<VtableAttribute> vtableAttributes, ((bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool) properties, string escapedAssemblyName) context) value)
+            (ImmutableArray<VtableAttribute> vtableAttributes, (CsWinRTAotOptimizerProperties properties, string escapedAssemblyName) context) value)
         {
-            if (!value.context.properties.isCsWinRTAotOptimizerEnabled)
+            if (!value.context.properties.IsCsWinRTAotOptimizerEnabled)
             {
                 return;
             }
 
-            GenerateVtableAttributes(sourceProductionContext.AddSource, value.vtableAttributes, value.context.properties.isCsWinRTComponent, value.context.escapedAssemblyName);
+            GenerateVtableAttributes(sourceProductionContext.AddSource, value.vtableAttributes, value.context.properties.IsCsWinRTComponent, value.context.escapedAssemblyName);
         }
 
         internal static string GenerateVtableEntry(VtableEntry vtableEntry, string escapedAssemblyName)
@@ -1028,15 +1108,15 @@ namespace Generator
             SourceProductionContext sourceProductionContext, 
             (((ImmutableArray<GenericInterface> vtableAttributeList, ImmutableArray<GenericInterface> lookupTableList) interfacesToGenerate,
                 ImmutableArray<GenericInterface> componentGeneratorList) genericInterfaces,
-            ((bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties, string escapedAssemblyName) context) value)
+            (CsWinRTAotOptimizerProperties properties, string escapedAssemblyName) context) value)
         {
-            if (!value.context.properties.isCsWinRTAotOptimizerEnabled)
+            if (!value.context.properties.IsCsWinRTAotOptimizerEnabled)
             {
                 return;
             }
 
             HashSet<GenericInterface> genericInterfacesHashSet = new(value.genericInterfaces.interfacesToGenerate.vtableAttributeList);
-            if (value.context.properties.isCsWinRTCcwLookupTableGeneratorEnabled)
+            if (value.context.properties.IsCsWinRTCcwLookupTableGeneratorEnabled)
             {
                 genericInterfacesHashSet.UnionWith(value.genericInterfaces.interfacesToGenerate.lookupTableList);
             }
@@ -1097,18 +1177,21 @@ namespace Generator
             TypeMapper typeMapper,
             bool isCsWinRTComponent)
         {
+            var isWinRTType = GeneratorHelper.IsWinRTType(context.SemanticModel.Compilation, isCsWinRTComponent);
             return GetVtableAttributesToAddOnLookupTable(
                     context,
                     typeMapper,
-                    !isCsWinRTComponent ? GeneratorHelper.IsWinRTType : GeneratorHelper.IsWinRTTypeWithPotentialAuthoringComponentTypesFunc(context.SemanticModel.Compilation),
-                    GeneratorHelper.IsWinRTClass(context.SemanticModel.Compilation));
+                    GeneratorHelper.IsManagedOnlyType(context.SemanticModel.Compilation),
+                    isWinRTType,
+                    GeneratorHelper.IsWinRTClassOrInterface(context.SemanticModel.Compilation, isWinRTType, typeMapper));
         }
 
         private static EquatableArray<VtableAttribute> GetVtableAttributesToAddOnLookupTable(
             GeneratorSyntaxContext context,
             TypeMapper typeMapper,
+            Func<ISymbol, bool> isManagedOnlyType,
             Func<ISymbol, TypeMapper, bool> isWinRTType,
-            Func<ISymbol, bool> isWinRTClass)
+            Func<ISymbol, bool, bool> isWinRTClassOrInterface)
         {
             HashSet<ITypeSymbol> visitedTypes = new(SymbolEqualityComparer.Default);
             HashSet<VtableAttribute> vtableAttributes = new();
@@ -1122,7 +1205,7 @@ namespace Generator
                     // and end up calling a projection function (i.e. ones generated by XAML compiler)
                     // In theory, another library can also be called which can call a projected function
                     // but not handling those scenarios for now.
-                    (isWinRTClass(methodSymbol.ContainingSymbol) ||
+                    (isWinRTClassOrInterface(methodSymbol.ContainingSymbol, true) ||
                      SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
                     // Get the concrete types directly from the argument rather than
@@ -1151,13 +1234,14 @@ namespace Generator
             {
                 var leftSymbol = context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol;
                 if (leftSymbol is IPropertySymbol propertySymbol &&
-                    (isWinRTClass(propertySymbol.ContainingSymbol) ||
+                    (isWinRTClassOrInterface(propertySymbol.ContainingSymbol, true) ||
                      SymbolEqualityComparer.Default.Equals(propertySymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
                     AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), propertySymbol.Type);
                 }
                 else if (leftSymbol is IFieldSymbol fieldSymbol &&
-                    (isWinRTClass(fieldSymbol.ContainingSymbol) || 
+                    // WinRT interfaces don't have fields, so we don't need to check for them.
+                    (isWinRTClassOrInterface(fieldSymbol.ContainingSymbol, false) || 
                      SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
                     AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), fieldSymbol.Type);
@@ -1247,14 +1331,14 @@ namespace Generator
                         }
                         visitedTypes.Add(arrayType);
 
-                        var vtableAtribute = GetVtableAttributeToAdd(arrayType, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
+                        var vtableAtribute = GetVtableAttributeToAdd(arrayType, isManagedOnlyType, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
                         if (vtableAtribute != default)
                         {
                             vtableAttributes.Add(vtableAtribute);
                         }
 
                         // Also add the enumerator type to the lookup table as the native caller can call it.
-                        AddEnumeratorAdapterForType(arrayType.ElementType, typeMapper, context.SemanticModel.Compilation, isWinRTType, vtableAttributes);
+                        AddEnumeratorAdapterForType(arrayType.ElementType, typeMapper, context.SemanticModel.Compilation, isManagedOnlyType, isWinRTType, vtableAttributes);
                     }
                 }
                 else if (instantiatedType.Type is not null || instantiatedType.ConvertedType is not null)
@@ -1280,7 +1364,7 @@ namespace Generator
                         convertedToTypeSymbol.SpecialType == SpecialType.System_Object)
                     {
                         var argumentClassNamedTypeSymbol = instantiatedTypeSymbol as INamedTypeSymbol;
-                        var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
+                        var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isManagedOnlyType, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
                         if (vtableAtribute != default)
                         {
                             vtableAttributes.Add(vtableAtribute);
@@ -1323,58 +1407,127 @@ namespace Generator
 
                         if (addClassOnLookupTable)
                         {
-                            var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
+                            var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isManagedOnlyType, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
                             if (vtableAtribute != default)
                             {
                                 vtableAttributes.Add(vtableAtribute);
                             }
 
-                            AddVtableAdapterTypeForKnownInterface(instantiatedTypeSymbol, context.SemanticModel.Compilation, isWinRTType, typeMapper, vtableAttributes);
+                            AddVtableAdapterTypeForKnownInterface(instantiatedTypeSymbol, context.SemanticModel.Compilation, isManagedOnlyType, isWinRTType, typeMapper, vtableAttributes);
                         }
                     }
                 }
             }
         }
 
+        private static EquatableArray<VtableAttribute> GetVtableAttributesToAddOnLookupTable(
+            GeneratorAttributeSyntaxContext context,
+            TypeMapper typeMapper,
+            bool isCsWinRTComponent)
+        {
+            var isManagedOnlyType = GeneratorHelper.IsManagedOnlyType(context.SemanticModel.Compilation);
+            var isWinRTType = GeneratorHelper.IsWinRTType(context.SemanticModel.Compilation, isCsWinRTComponent);
+            HashSet<VtableAttribute> vtableAttributes = new();
+
+            foreach (var attributeData in context.Attributes)
+            {
+                if (attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value : ITypeSymbol vtableType }])
+                {
+                    if (vtableType is IArrayTypeSymbol arrayType)
+                    {
+                        var vtableAtribute = GetVtableAttributeToAdd(arrayType, isManagedOnlyType, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
+                        if (vtableAtribute != default)
+                        {
+                            vtableAttributes.Add(vtableAtribute);
+                        }
+
+                        // Also add the enumerator type to the lookup table as the native caller can call it.
+                        AddEnumeratorAdapterForType(arrayType.ElementType, typeMapper, context.SemanticModel.Compilation, isManagedOnlyType, isWinRTType, vtableAttributes);
+                    }
+                    else
+                    {
+                        var vtableAtribute = GetVtableAttributeToAdd(vtableType, isManagedOnlyType, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
+                        if (vtableAtribute != default)
+                        {
+                            vtableAttributes.Add(vtableAtribute);
+                        }
+
+                        AddVtableAdapterTypeForKnownInterface(vtableType, context.SemanticModel.Compilation, isManagedOnlyType, isWinRTType, typeMapper, vtableAttributes);
+                    }
+                }
+            }
+
+            return vtableAttributes.ToImmutableArray();
+        }
+
         // Any of the IEnumerable interfaces on the vtable can be used to get the enumerator.  Given IEnumerable is
         // a covariant interface, it means that we can end up getting an instance of the enumerable adapter for any one
         // of those covariant interfaces and thereby need vtable lookup entries for all of them.
-        private static void AddEnumeratorAdapterForType(ITypeSymbol type, TypeMapper mapper, Compilation compilation, Func<ISymbol, TypeMapper, bool> isWinRTType, HashSet<VtableAttribute> vtableAttributes)
+        private static void AddEnumeratorAdapterForType(
+            ITypeSymbol type,
+            TypeMapper mapper,
+            Compilation compilation,
+            Func<ISymbol, bool> isManagedOnlyType,
+            Func<ISymbol, TypeMapper, bool> isWinRTType,
+            HashSet<VtableAttribute> vtableAttributes)
         {
             var enumerableType = compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1");
             if (enumerableType != null)
             {
                 var constructedEnumerableType = enumerableType.Construct(type);
-                if (TryGetCompatibleWindowsRuntimeTypesForVariantType(constructedEnumerableType, mapper, null, isWinRTType, out var compatibleIfaces))
+                if (isWinRTType(constructedEnumerableType, mapper) &&
+                    !GeneratorHelper.IsInternalInterfaceFromReferences(constructedEnumerableType, compilation.Assembly))
+                {
+                    AddEnumeratorAdapter(constructedEnumerableType);
+                }
+
+                if (TryGetCompatibleWindowsRuntimeTypesForVariantType(constructedEnumerableType, mapper, null, isWinRTType, compilation.ObjectType, out var compatibleIfaces))
                 {
                     foreach (var compatibleIface in compatibleIfaces)
                     {
                         if (compatibleIface.MetadataName == "IEnumerable`1" &&
                             !GeneratorHelper.IsInternalInterfaceFromReferences(compatibleIface, compilation.Assembly))
                         {
-                            var enumeratorAdapterType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1");
-                            if (enumeratorAdapterType != null)
-                            {
-                                var constructedEnumeratorAdapterType = enumeratorAdapterType.Construct(compatibleIface.TypeArguments[0]);
-                                var vtableAttribute = GetVtableAttributeToAdd(constructedEnumeratorAdapterType, isWinRTType, mapper, compilation, false);
-                                if (vtableAttribute != default)
-                                {
-                                    vtableAttributes.Add(vtableAttribute);
-                                }
-                            }
+                            AddEnumeratorAdapter(compatibleIface);
                         }
+                    }
+                }
+            }
+
+            void AddEnumeratorAdapter(INamedTypeSymbol iface)
+            {
+                var enumeratorAdapterType = compilation.GetTypeByMetadataName("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1");
+                if (enumeratorAdapterType != null)
+                {
+                    var constructedEnumeratorAdapterType = enumeratorAdapterType.Construct(iface.TypeArguments[0]);
+                    var vtableAttribute = GetVtableAttributeToAdd(constructedEnumeratorAdapterType, isManagedOnlyType, isWinRTType, mapper, compilation, false);
+                    if (vtableAttribute != default)
+                    {
+                        vtableAttributes.Add(vtableAttribute);
                     }
                 }
             }
         }
 
-        internal static void AddVtableAdapterTypeForKnownInterface(ITypeSymbol classType, Compilation compilation, Func<ISymbol, TypeMapper, bool> isWinRTType, TypeMapper mapper, HashSet<VtableAttribute> vtableAttributes)
+        internal static void AddVtableAdapterTypeForKnownInterface(
+            ITypeSymbol classType,
+            Compilation compilation,
+            Func<ISymbol, bool> isManagedOnlyType,
+            Func<ISymbol, TypeMapper, bool> isWinRTType,
+            TypeMapper mapper,
+            HashSet<VtableAttribute> vtableAttributes)
         {
+            // If the type is blocked for marshalling, don't generate any code for any interfaces
+            if (isManagedOnlyType(classType))
+            {
+                return;
+            }
+
             foreach (var iface in classType.AllInterfaces)
             {
                 if (iface.MetadataName == "IEnumerable`1")
                 {
-                    AddEnumeratorAdapterForType(iface.TypeArguments[0], mapper, compilation, isWinRTType, vtableAttributes);
+                    AddEnumeratorAdapterForType(iface.TypeArguments[0], mapper, compilation, isManagedOnlyType, isWinRTType, vtableAttributes);
                 }
                 else if (iface.MetadataName == "IDictionary`2")
                 {
@@ -1433,7 +1586,7 @@ namespace Generator
                 if (genericType != default)
                 {
                     var constructedGenericType = genericType.Construct([.. genericArgs]);
-                    var vtableAttribute = GetVtableAttributeToAdd(constructedGenericType, isWinRTType, mapper, compilation, false);
+                    var vtableAttribute = GetVtableAttributeToAdd(constructedGenericType, isManagedOnlyType, isWinRTType, mapper, compilation, false);
                     if (vtableAttribute != default)
                     {
                         vtableAttributes.Add(vtableAttribute);
@@ -1450,17 +1603,17 @@ namespace Generator
 
         private static void GenerateVtableLookupTable(
             SourceProductionContext sourceProductionContext,
-            (ImmutableArray<VtableAttribute> vtableAttributes, ((bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties, string)) value)
+            (ImmutableArray<VtableAttribute> vtableAttributes, (CsWinRTAotOptimizerProperties properties, string)) value)
         {
             GenerateVtableLookupTable(sourceProductionContext.AddSource, value);
         }
 
         internal static void GenerateVtableLookupTable(
             Action<string, string> addSource, 
-            (ImmutableArray<VtableAttribute> vtableAttributes, ((bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties, string escapedAssemblyName) context) value,
+            (ImmutableArray<VtableAttribute> vtableAttributes, (CsWinRTAotOptimizerProperties properties, string escapedAssemblyName) context) value,
             bool isComponentGenerator = false)
         {
-            if (!value.context.properties.isCsWinRTAotOptimizerEnabled || !value.context.properties.isCsWinRTCcwLookupTableGeneratorEnabled)
+            if (!value.context.properties.IsCsWinRTAotOptimizerEnabled || !value.context.properties.IsCsWinRTCcwLookupTableGeneratorEnabled)
             {
                 return;
             }
@@ -1603,9 +1756,9 @@ namespace Generator
 
         private static void GenerateBindableCustomProperties(
             SourceProductionContext sourceProductionContext,
-            (ImmutableArray<BindableCustomProperties> bindableCustomProperties, (bool isCsWinRTAotOptimizerEnabled, bool isCsWinRTComponent, bool isCsWinRTCcwLookupTableGeneratorEnabled) properties) value)
+            (ImmutableArray<BindableCustomProperties> bindableCustomProperties, CsWinRTAotOptimizerProperties properties) value)
         {
-            if (!value.properties.isCsWinRTAotOptimizerEnabled || value.bindableCustomProperties.Length == 0)
+            if (!value.properties.IsCsWinRTAotOptimizerEnabled || value.bindableCustomProperties.Length == 0)
             {
                 return;
             }
@@ -1763,6 +1916,12 @@ namespace Generator
         EquatableArray<TypeInfo> ClassHierarchy,
         string QualifiedClassName,
         EquatableArray<BindableCustomProperty> Properties);
+
+    internal readonly record struct CsWinRTAotOptimizerProperties(
+        bool IsCsWinRTAotOptimizerEnabled,
+        bool IsCsWinRTComponent,
+        bool IsCsWinRTCcwLookupTableGeneratorEnabled,
+        bool IsCsWinRTAotOptimizerInAutoMode);
 
     /// <summary>
     /// A model describing a type info in a type hierarchy.

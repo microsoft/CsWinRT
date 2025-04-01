@@ -173,15 +173,29 @@ namespace WinRT
         internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
-            try
+
+            int hr = Marshal.QueryInterface(ccw, ref iid, out var iidCcw);
+
+            Marshal.Release(ccw);
+
+            if (hr < 0)
             {
-                Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ccw, ref iid, out var iidCcw));
-                return iidCcw;
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static void ThrowException(object obj, Guid iid, int hr)
+                {
+                    // Special case 'E_NOINTERFACE' to provide a better exception message
+                    if (hr == ExceptionHelpers.E_NOINTERFACE)
+                    {
+                        throw new InvalidCastException($"Failed to create a CCW for object of type '{obj.GetType()}' for interface with IID '{iid.ToString().ToUpperInvariant()}': the specified cast is not valid.");
+                    }
+
+                    ExceptionHelpers.ThrowExceptionForHR(hr);
+                }
+
+                ThrowException(obj, iid, hr);
             }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(ccw);
-            }
+
+            return iidCcw;
         }
 
         public static unsafe T FindObject<T>(IntPtr ptr)

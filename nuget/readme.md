@@ -48,6 +48,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTRcwFactoryFallbackGeneratorForceOptIn | true \| *false | Forces the RCW factory fallback generator to be enabled (it only runs on .exe projects by default)  |
 | CsWinRTRcwFactoryFallbackGeneratorForceOptOut | true \| *false | Forces the RCW factory fallback generator to be disabled (overrides "ForceOptIn" as well)  |
 | CsWinRTMergeReferencedActivationFactories | true \| *false | Makes the native `DllGetActivationFactory` exported function for AOT scenarios also forward the activation call to all referenced WinRT components, allowing them to all be merged into a single executable or shared library |
+| CsWinRTAotOptimizerEnabled | Auto \| OptIn \| *true \| false | Enables the C#/WinRT AOT optimizer. WinRT types can opt-in to AOT optimization by adding the `[GeneratedWinRTExposedType]` attribute.  More details can be found [here](https://github.com/microsoft/CsWinRT/blob/master/docs/aot-trimming.md#source-generator-modes) |
 | CsWinRTAotWarningLevel | 0 \| *1 \| 2 | Specifies the warning level used by the code fixer for trimming and AOT compat (0 - no warnings, 1 - warnings for scenarios involving non built-in types, 2 - warnings for all scenarios) |
 \*Default value
 

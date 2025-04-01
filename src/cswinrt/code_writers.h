@@ -1105,12 +1105,15 @@ namespace cswinrt
     void write_explicitly_implemented_method_for_abi(writer& w, MethodDef const& method,
         std::string_view return_type, TypeDef const& method_interface, std::string_view method_target)
     {
+        // In authoring scenarios, exclusive interfaces don't exist, so use the CCW impl type.
+        bool implement_ccw_interface = does_abi_interface_implement_ccw_interface(method_interface);
+
         method_signature signature{ method };
         w.write(R"(
 % %.%(%) => %.%(%);
 )",
             return_type,
-            bind<write_type_name>(method_interface, typedef_name_type::CCW, false),
+            bind<write_type_name>(method_interface, implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected, false),
             method.Name(),
             bind_list<write_projection_parameter>(", ", signature.params()),
             method_target,
@@ -1451,7 +1454,10 @@ private % Make_%()
 
     std::string write_explicit_name(writer& w, TypeDef const& iface, std::string_view name)
     {
-        return w.write_temp("%.%", write_type_name_temp(w, iface, "%", typedef_name_type::CCW), name);
+        // In authoring scenarios, exclusive interfaces don't exist, so use the CCW impl type.
+        bool implement_ccw_interface = does_abi_interface_implement_ccw_interface(iface);
+
+        return w.write_temp("%.%", write_type_name_temp(w, iface, "%", implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected), name);
     }
 
     std::string write_prop_type(writer& w, Property const& prop)
@@ -5008,6 +5014,9 @@ remove => %.Unsubscribe(value);
             return;
         }
 
+        // In authoring scenarios, exclusive interfaces don't exist, so use the CCW impl type.
+        bool implement_ccw_interface = does_abi_interface_implement_ccw_interface(type);
+
         auto init_call_variables = [&](writer& w)
         {
             if (!settings.netstandard_compat)
@@ -5038,7 +5047,7 @@ remove => %.Unsubscribe(value);
                 {
                     if (!settings.netstandard_compat)
                     {
-                        w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+                        w.write("%.", bind<write_type_name>(type, implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected, false));
                     }
                 }),
                 method.Name(),
@@ -5062,7 +5071,7 @@ bind([&](writer& w)
     {
         if (!settings.netstandard_compat)
         {
-            w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+            w.write("%.", bind<write_type_name>(type, implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected, false));
         }
     }),
                 prop.Name());
@@ -5133,7 +5142,7 @@ remove
                     {
                         if (!settings.netstandard_compat)
                         {
-                            w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+                            w.write("%.", bind<write_type_name>(type, implement_ccw_interface ? typedef_name_type::CCW : typedef_name_type::Projected, false));
                         }
                     }),
                 evt.Name(),
@@ -5193,6 +5202,8 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
         // to make them internal.
         bool isExclusiveInterface = is_exclusive_to(iface);
 
+        bool writeEnsureRcwMethodsInitialized = false;
+
         for (auto&& method : iface.MethodList())
         {
             if (is_special(method))
@@ -5246,6 +5257,8 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
                 bind([&](writer& w) {
                     if (signature_has_only_generic_return && !is_generic_method_instantiation_class)
                     {
+                        writeEnsureRcwMethodsInitialized = true;
+                        w.write("\n_EnsureRcwMethodsInitialized();");
                         w.write("\nreturn _%(_genericObj%%);\n",
                             method.Name(),
                             signature.has_params() ? ", " : "",
@@ -5253,9 +5266,11 @@ internal unsafe volatile static delegate*<IObjectReference, %%%> _%;
                     }
                     else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                     {
+                        writeEnsureRcwMethodsInitialized = true;
                         w.write(R"(
 if (%)
 {
+    _EnsureRcwMethodsInitialized();
     % _%(_genericObj%%);
 }
 else
@@ -5362,9 +5377,11 @@ static % %Fallback(% %%%)
                         }
                         else if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
+                            writeEnsureRcwMethodsInitialized = true;
                             w.write(R"(
 if (!RuntimeFeature.IsDynamicCodeCompiled)
 {
+    _EnsureRcwMethodsInitialized();
     return _%(_genericObj);
 }
 
@@ -5427,9 +5444,11 @@ static % get_%Fallback(IObjectReference _genericObj)
                     bind([&](writer& w) {
                         if (projected_signature_has_generic && !is_generic_method_instantiation_class)
                         {
+                            writeEnsureRcwMethodsInitialized = true;
                             w.write(R"(
 if (!RuntimeFeature.IsDynamicCodeCompiled)
 {
+    _EnsureRcwMethodsInitialized();
     _%(_genericObj, value);
 }
 else
@@ -5469,6 +5488,33 @@ static void set_%Fallback(IObjectReference _genericObj, % value)
                     }));
             }
             w.write("\n");
+        }
+
+        if (writeEnsureRcwMethodsInitialized)
+        {
+            w.write(R"(
+[MethodImpl(MethodImplOptions.AggressiveInlining)]
+internal static unsafe void _EnsureRcwMethodsInitialized()
+{
+if (RuntimeFeature.IsDynamicCodeCompiled)
+{
+return;
+}
+if (!_RcwHelperInitialized)
+{
+static void ThrowNotInitialized()
+{
+throw new NotImplementedException(
+$"Type '{typeof(%)}' was called without initializing the RCW methods using '@Methods.InitRcwHelper'. " +
+$"If using 'IDynamicInterfaceCastable' support to do a dynamic cast to this interface, ensure the 'InitRcwHelper' method is called.");
+}
+
+ThrowNotInitialized();
+}
+}
+)",
+    bind<write_type_name>(iface, typedef_name_type::Projected, true),
+    iface.TypeName());
         }
 
         if (is_generic_method_instantiation_class)
@@ -8116,7 +8162,7 @@ internal unsafe interface % : %
             is_exclusive_to(type) && !settings.idic_exclusiveto ? "" : "[DynamicInterfaceCastableImplementation]",
             bind<write_guid_attribute>(type),
             type_name,
-            bind<write_type_name>(type, typedef_name_type::CCW, false),
+            bind<write_type_name>(type, does_abi_interface_implement_ccw_interface(type) ? typedef_name_type::CCW : typedef_name_type::Projected, false),
             // Vftbl
             bind([&](writer& w)
             {
@@ -10158,9 +10204,10 @@ switch (runtimeClassId)
 {
 %
 default:
-    return IntPtr.Zero;
+    return %;
 }
 }
+%
 %
 }
 }
@@ -10187,6 +10234,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
     },
     types
         ),
+    settings.partial_factory ? "GetActivationFactoryPartial(runtimeClassId)" : "IntPtr.Zero",
     settings.net7_0_or_greater ? R"(
 public static IntPtr GetActivationFactory(string runtimeClassId)
 {
@@ -10197,7 +10245,21 @@ public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
 {
     return GetActivationFactory(runtimeClassId.ToString());
 }
-)");
+)",
+bind([&](writer& w) {
+        if (settings.partial_factory)
+        {
+            if (settings.net7_0_or_greater)
+            {
+                w.write("private static partial IntPtr GetActivationFactoryPartial(ReadOnlySpan<char> runtimeClassId);");
+            }
+            else
+            {
+                w.write("private static partial IntPtr GetActivationFactoryPartial(string runtimeClassId);");
+            }
+        }
+    })
+);
     }
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)
@@ -10426,8 +10488,8 @@ bind<write_event_invoke_args>(invokeMethodSig));
                     abiDelegateEntries.insert(generic_abi_delegate
                         {
                             w.write_temp("_get_Key_%", escapedAbiType),
-                            w.write_temp("internal unsafe delegate int _get_Key_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
-                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                            w.write_temp("internal unsafe delegate int _get_Key_%(IntPtr thisPtr, %* __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(IntPtr), typeof(%*), typeof(int) }", abiType)
                         });
                 }
 
@@ -10439,8 +10501,8 @@ bind<write_event_invoke_args>(invokeMethodSig));
                     abiDelegateEntries.insert(generic_abi_delegate
                         {
                             w.write_temp("_get_Value_%", escapedAbiType),
-                            w.write_temp("internal unsafe delegate int _get_Value_%(void* thisPtr, out % __return_value__);", escapedAbiType, abiType),
-                            w.write_temp("new global::System.Type[] { typeof(void*), typeof(%).MakeByRefType(), typeof(int) }", abiType)
+                            w.write_temp("internal unsafe delegate int _get_Value_%(IntPtr thisPtr, %* __return_value__);", escapedAbiType, abiType),
+                            w.write_temp("new global::System.Type[] { typeof(IntPtr), typeof(%*), typeof(int) }", abiType)
                         });
                 }
             }

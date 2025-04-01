@@ -835,6 +835,18 @@ namespace winrt::TestComponentCSharp::implementation
         _stringPairChanged.remove(token);
     }
 
+    Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> Class::EnumPairProperty()
+    {
+        return _enumPair;
+    }
+
+    void Class::EnumPairProperty(Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> const& value)
+    {
+        _enumPair = value;
+        _enumPair.Key();
+        _enumPair.Value();
+    }
+
     TestComponentCSharp::ProvideUri Class::GetUriDelegate() noexcept
     {
         TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://microsoft.com"); };
@@ -1096,6 +1108,12 @@ namespace winrt::TestComponentCSharp::implementation
             { L"String1", ComposedNonBlittableStruct{ { 1 }, { L"String1" }, { false, true, false, true }, { 1 } } },
             { L"String2", ComposedNonBlittableStruct{ { 2 }, { L"String2" }, { true, false, true, false }, { 2 } } }
         });
+    }
+
+    IMap<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>> Class::GetIntToListDictionary()
+    {
+        auto vector = winrt::single_threaded_vector(std::vector { TestComponentCSharp::EnumValue::One });
+        return single_threaded_map<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>>(std::map<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>>{ {1, vector}});
     }
     
     struct ComposedBlittableStructComparer
@@ -1661,6 +1679,16 @@ namespace winrt::TestComponentCSharp::implementation
         return true;
     }
 
+    bool Class::CheckForBindableObjectInterface(Microsoft::UI::Xaml::Interop::IBindableIterable const& iterable)
+    {
+        if (auto iterableObject = iterable.try_as<WF::Collections::IIterable<WF::IInspectable>>())
+        {
+            return iterableObject.First() != nullptr;
+        }
+
+        return false;
+    }
+
     void Class::CopyProperties(winrt::TestComponentCSharp::IProperties1 const& src)
     {
         ReadWriteProperty(src.ReadWriteProperty());
@@ -1803,6 +1831,30 @@ namespace winrt::TestComponentCSharp::implementation
     {
         // Compile-only test for keyword escaping
         throw hresult_not_implemented();
+    }
+
+    hstring Class::ThrowExceptionWithMessage(hstring message, bool throwNonMappedError)
+    {
+        if (throwNonMappedError)
+        {
+            throw hresult_wrong_thread(message.c_str());
+        }
+        else
+        {
+            throw hresult_invalid_argument(message.c_str());
+        }
+    }
+
+    extern "C" BOOL __stdcall RoOriginateLanguageException(HRESULT error, void* message, void* languageException);
+
+    hstring Class::OriginateAndThrowExceptionWithMessage(hstring message)
+    {
+        struct language_exception : winrt::implements<language_exception, ::IUnknown>
+        {
+        };
+
+        RoOriginateLanguageException(winrt::impl::error_invalid_argument, get_abi(message), get_abi(winrt::make<language_exception>()));
+        throw hresult_invalid_argument(hresult_error::from_abi);
     }
 
     void Class::UnboxAndCallProgressHandler(WF::IInspectable const& httpProgressHandler)

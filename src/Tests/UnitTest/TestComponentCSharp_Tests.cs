@@ -270,6 +270,7 @@ namespace UnitTest
             Assert.True(stream.Length == 2);
         }
 
+#if !NET47
         [Fact]
         public void TestBufferAsStreamUsingAsBufferWithOffset()
         {
@@ -304,6 +305,7 @@ namespace UnitTest
             Assert.Equal((byte)0x06, arr[2]);
             Assert.Equal((byte)0x07, arr[3]);
         }
+#endif
 
         [Fact]
         public void TestBufferAsStreamWithEmptyBuffer()
@@ -963,6 +965,10 @@ namespace UnitTest
             TestObject.StringPairPropertyChanged +=
                 (object sender, KeyValuePair<string, string> value) => Assert.Equal(expected, value);
             TestObject.RaiseStringPairChanged();
+
+            var expected2 = new KeyValuePair<EnumValue, EnumStruct>(EnumValue.Two, new EnumStruct() { value = EnumValue.One });
+            TestObject.EnumPairProperty = expected2;
+            Assert.Equal(expected2, TestObject.EnumPairProperty);
         }
 
         [Fact]
@@ -985,6 +991,15 @@ namespace UnitTest
             TestObject.ObjectProperty = nested;
             var out_nested = (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<string, string>>)TestObject.ObjectProperty;
             Assert.Equal(nested, out_nested);
+
+            // Test projected types in generic of KeyValuePair
+            TestObject.ObjectProperty = new KeyValuePair<string, IProperties1>("one", new Class());
+            TestObject.ObjectProperty = new KeyValuePair<string, Class>("two", new Class());
+            TestObject.ObjectProperty = new KeyValuePair<string, IDisposable>("two", new CustomDisposableTest());
+
+            // Test non-projected types in generic of KeyValuePair
+            TestObject.ObjectProperty = new KeyValuePair<string, PlatformID>("two", PlatformID.Win32NT);
+            TestObject.ObjectProperty = new KeyValuePair<string, Random>("two", new Random());
 
             var strings_in = new[] { "hello", "world" };
             TestObject.StringsProperty = strings_in;
@@ -1448,6 +1463,7 @@ namespace UnitTest
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
         }
 
+#if !NET47
         [Fact]
         public unsafe void TestMarshalString_FromAbiUnsafe()
         {
@@ -1479,6 +1495,7 @@ namespace UnitTest
             Assert.True(Unsafe.Add(ref MemoryMarshal.GetReference(span), span.Length) == '\0');
             MarshalString.DisposeAbi(hstr);
         }
+#endif
 
         [Fact]
         public void TestFundamentalGeneric()
@@ -1866,6 +1883,49 @@ namespace UnitTest
             var exceptionToThrow = new ArgumentNullException("foo");
             var properties = new ThrowingManagedProperties(exceptionToThrow);
             Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties));
+
+            var properties2 = new ThrowingManagedProperties2(TestObject);
+            Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties2));
+        }
+
+        [Fact]
+        public void TestExceptionPropagation()
+        {
+            VerifyException<ArgumentException>(() => TestObject.ThrowExceptionWithMessage("Parameter1", false), "Parameter1");
+            VerifyException<COMException>(() => TestObject.ThrowExceptionWithMessage("Error message", true), "Error message");
+
+            void callProperties()
+            {
+                var properties = new ThrowingManagedProperties(TestObject);
+                TestObject.CopyProperties(properties);
+            }
+            VerifyException<ArgumentException>(callProperties, "Property threw");
+
+            VerifyException<ArgumentException>(() => TestObject.OriginateAndThrowExceptionWithMessage("Parameter3"), "Parameter3");
+
+            void callProperties2()
+            {
+                var properties = new ThrowingManagedProperties(TestObject, true);
+                TestObject.CopyProperties(properties);
+            }
+            VerifyException<ArgumentException>(callProperties2, "Property threw with language exception");
+
+            static void VerifyException<T>(Action action, string expectedMessage) where T : Exception
+            {
+                try
+                {
+                    action();
+                    Assert.True(false);
+                }
+                catch (T ex)
+                {
+                    Assert.Contains(expectedMessage, ex.Message);
+                }
+                catch (Exception)
+                {
+                    Assert.True(false);
+                }
+            }
         }
 
         class ManagedProperties : IProperties1
@@ -1886,10 +1946,62 @@ namespace UnitTest
                 ExceptionToThrow = exceptionToThrow;
             }
 
+            public ThrowingManagedProperties(Class instance, bool includeLanguageException = false)
+            {
+                Instance = instance;
+                IncludeLanguageException = includeLanguageException;
+            }
+
             public Exception ExceptionToThrow { get; }
 
-            public int ReadWriteProperty => throw ExceptionToThrow;
+            public Class Instance { get; }
+
+            public bool IncludeLanguageException { get; }
+
+            public int ReadWriteProperty
+            {
+                get
+                {
+                    if (Instance is not null)
+                    {
+                        if (IncludeLanguageException)
+                        {
+                            return Instance.OriginateAndThrowExceptionWithMessage("Property threw with language exception").Length;
+                        }
+                        else
+                        {
+                            return Instance.ThrowExceptionWithMessage("Property threw", false).Length;
+                        }
+                    }
+                    else
+                    {
+                        throw ExceptionToThrow;
+                    }
+                }
+            }
         }
+
+        class ThrowingManagedProperties2 : IProperties1
+        {
+            public ThrowingManagedProperties2(Class instance)
+            {
+                Instance = instance;
+            }
+
+            public Class Instance { get; }
+
+            public int ReadWriteProperty
+            {
+                get
+                {
+                    var exceptionToThrow = new ArgumentNullException("foo");
+                    var properties = new ThrowingManagedProperties(exceptionToThrow);
+                    Instance.CopyProperties(properties);
+                    return 1;
+                }
+            }
+        }
+
 
         readonly int E_FAIL = -2147467259;
 
@@ -2737,6 +2849,24 @@ namespace UnitTest
         {
             using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
             using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
+        }
+
+        [Fact]
+        public void TestForIterableObject()
+        {
+            // Make sure for collections of value types that they don't project IEnumerable<object>
+            // as it isn't a covariant interface.
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<int>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<EnumValue>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<System.DateTimeOffset>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new Dictionary<string, System.DateTimeOffset>()));
+
+            // Make sure for collections of object types that they do project IEnumerable<object>
+            // as it is an covariant interface.
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<object>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<Class>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<IProperties1>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<ManagedType2>()));
         }
 
         internal class ManagedType2 : List<ManagedType2> { }

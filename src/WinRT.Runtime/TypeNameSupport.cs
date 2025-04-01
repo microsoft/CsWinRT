@@ -473,6 +473,9 @@ namespace WinRT
                 return true;
             }
 
+            // There is no need to check for 'WinRTManagedOnlyTypeDetails' here, because this method can only be reached
+            // from 'GetRuntimeClassName' on some marshalled object, which is impossible to do with those type details.
+
             // AOT source generator should have generated the attribute with the class name.
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {

@@ -126,7 +126,7 @@ namespace cswinrt
         template <typename... Args>
         void write_printf(char const* format, Args const&... args)
         {
-            char buffer[128];
+            char buffer[256];
             size_t const size = sprintf_s(buffer, format, args...);
             write(std::string_view{ buffer, size });
         }
@@ -149,6 +149,14 @@ namespace cswinrt
         {
             printf("%.*s", static_cast<int>(m_first.size()), m_first.data());
             printf("%.*s", static_cast<int>(m_second.size()), m_second.data());
+            m_first.clear();
+            m_second.clear();
+        }
+
+        void flush_to_console_error() noexcept
+        {
+            fprintf(stderr, "%.*s", static_cast<int>(m_first.size()), m_first.data());
+            fprintf(stderr, "%.*s", static_cast<int>(m_second.size()), m_second.data());
             m_first.clear();
             m_second.clear();
         }

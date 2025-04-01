@@ -59,6 +59,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Uri>> _uriChanged;
         Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> _stringPair;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>>> _stringPairChanged;
+        Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> _enumPair;
         ComposedBlittableStruct _blittableStruct{};
         ComposedNonBlittableStruct _nonBlittableStruct{};
         std::vector<int32_t> _ints{ 1, 2, 3 };
@@ -233,6 +234,8 @@ namespace winrt::TestComponentCSharp::implementation
         void CallForStringPair(TestComponentCSharp::ProvideStringPair const& provideStringPair);
         winrt::event_token StringPairPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>> const& handler);
         void StringPairPropertyChanged(winrt::event_token const& token) noexcept;
+        Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> EnumPairProperty();
+        void EnumPairProperty(Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> const& value);
         TestComponentCSharp::ProvideUri GetUriDelegate() noexcept;
         BlittableStruct BlittableStructProperty();
         void BlittableStructProperty(BlittableStruct const& value);
@@ -291,7 +294,8 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedBlittableStruct> GetStringToBlittableDictionary();
         Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedNonBlittableStruct> GetStringToNonBlittableDictionary();
         Windows::Foundation::Collections::IMap<TestComponentCSharp::ComposedBlittableStruct, Windows::Foundation::IInspectable> GetBlittableToObjectDictionary();
-       
+        Windows::Foundation::Collections::IMap<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>> GetIntToListDictionary();
+
         // Test IIDOptimizer -- testing the windows projection covers most code paths, and these two types exercise the rest.
         Windows::Foundation::Collections::IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> GetEventArgsVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ProvideUri> GetNonGenericDelegateVector();
@@ -335,6 +339,8 @@ namespace winrt::TestComponentCSharp::implementation
 
         void CopyProperties(TestComponentCSharp::IProperties1 const& src);
         void CopyPropertiesViaWeakReference(TestComponentCSharp::IProperties1 const& src);
+
+        bool CheckForBindableObjectInterface(Microsoft::UI::Xaml::Interop::IBindableIterable const& iterable);
 
         void CompleteAsync();
         void CompleteAsync(int32_t hr);
@@ -430,6 +436,9 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::Foundation::IInspectable BoxedEventHandler();
 
         hstring Catch(hstring const& params, hstring& locks);
+
+        hstring ThrowExceptionWithMessage(hstring message, bool throwNonMappedError);
+        hstring OriginateAndThrowExceptionWithMessage(hstring message);
 
         static IProperties1 NativeProperties1();
         static Windows::Foundation::IInspectable ServiceProvider();

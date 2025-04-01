@@ -275,6 +275,8 @@ namespace TestComponentCSharp
         void CallForStringPair(ProvideStringPair provideStringPair);
         event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IKeyValuePair<String, String> > StringPairPropertyChanged;
 
+        Windows.Foundation.Collections.IKeyValuePair<EnumValue, EnumStruct> EnumPairProperty;
+
         Windows.Foundation.Collections.IVector<IInspectable> GetUriVectorAsIInspectableVector();
         ProvideUri GetUriDelegate();
         void AddUriHandler(IUriHandler uriHandler);
@@ -338,6 +340,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IMap<String, ComposedBlittableStruct> GetStringToBlittableDictionary();
         Windows.Foundation.Collections.IMap<String, ComposedNonBlittableStruct> GetStringToNonBlittableDictionary();
         Windows.Foundation.Collections.IMap<ComposedBlittableStruct, Object> GetBlittableToObjectDictionary();
+        Windows.Foundation.Collections.IMap<Int32, Windows.Foundation.Collections.IVector<EnumValue> > GetIntToListDictionary();
 
         // Test IIDOptimizer
         Windows.Foundation.Collections.IVectorView<Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs> GetEventArgsVector();
@@ -380,6 +383,8 @@ namespace TestComponentCSharp
 
         void CopyProperties(IProperties1 src);
         void CopyPropertiesViaWeakReference(IProperties1 src);
+
+        Boolean CheckForBindableObjectInterface(Microsoft.UI.Xaml.Interop.IBindableIterable iterable);
 
         // Async
         void CompleteAsync(); // Completes the in-flight async operation successfully
@@ -462,6 +467,9 @@ namespace TestComponentCSharp
 
         // Keyword escapes
         String Catch(String params, out String lock);
+
+        String ThrowExceptionWithMessage(String message, Boolean throwNonMappedError);
+        String OriginateAndThrowExceptionWithMessage(String message);
 
         // Interface projections
         static IProperties1 NativeProperties1{ get; };
