@@ -97,16 +97,40 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             // C c2 = obj as C;
             context.RegisterOperationAction(context =>
             {
-                if (context.Operation is IConversionOperation { IsImplicit: false, Type: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } conversion &&
-                    typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
-                    conversion.Operand is { Type.IsReferenceType: true } and not { ConstantValue: { HasValue: true, Value: null } } &&
-                    !context.Compilation.HasImplicitConversion(conversion.Operand.Type, typeSymbol) &&
-                    !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
+                if (context.Operation is not IConversionOperation { IsImplicit: false, Type: INamedTypeSymbol { IsStatic: false } outerTypeSymbol } conversion)
                 {
+                    return;
+                }
+
+                // Match class, enum types, and also nullable enum types (and unwrap them, if so)
+                INamedTypeSymbol? innerTypeSymbol = outerTypeSymbol switch
+                {
+                    { TypeKind: TypeKind.Class or TypeKind.Enum } => outerTypeSymbol,
+                    {
+                        TypeKind: TypeKind.Struct,
+                        IsGenericType: true,
+                        IsUnboundGenericType: false,
+                        ConstructedFrom.SpecialType: SpecialType.System_Nullable_T,
+                        TypeArguments: [INamedTypeSymbol { TypeKind: TypeKind.Enum } underlyingType]
+                    } => underlyingType,
+                    _ => null
+                };
+
+                if (innerTypeSymbol is null)
+                {
+                    return;
+                }
+
+                if (innerTypeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
+                    conversion.Operand is { Type.IsReferenceType: true } and not { ConstantValue: { HasValue: true, Value: null } } &&
+                    !context.Compilation.HasImplicitConversion(conversion.Operand.Type, innerTypeSymbol) &&
+                    !IsDynamicDependencyPresentForOperation(context.Operation, innerTypeSymbol))
+                {
+                    // We're intentionally passing 'outerTypeSymbol' as argument, so we show the original type name in the message
                     context.ReportDiagnostic(Diagnostic.Create(
-                        typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
+                        innerTypeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
-                        typeSymbol));
+                        outerTypeSymbol));
                 }
             }, OperationKind.Conversion);
 
@@ -119,6 +143,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             {
                 if (context.Operation is IIsTypeOperation { IsImplicit: false, TypeOperand: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } typeOperation &&
                     typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
+                    typeOperation.ValueOperand.Type is { IsReferenceType: true } &&
                     !context.Compilation.HasImplicitConversion(typeOperation.ValueOperand.Type, typeSymbol) &&
                     !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
                 {
@@ -144,6 +169,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             {
                 if (context.Operation is IDeclarationPatternOperation { IsImplicit: false, MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } patternOperation &&
                     typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
+                    patternOperation.InputType.IsReferenceType &&
                     !context.Compilation.HasImplicitConversion(patternOperation.InputType, typeSymbol) &&
                     !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
                 {
@@ -168,6 +194,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             {
                 if (context.Operation is ITypePatternOperation { IsImplicit: false, MatchedType: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } patternOperation &&
                     typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
+                    patternOperation.InputType.IsReferenceType &&
                     !context.Compilation.HasImplicitConversion(patternOperation.InputType, typeSymbol) &&
                     !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
                 {
