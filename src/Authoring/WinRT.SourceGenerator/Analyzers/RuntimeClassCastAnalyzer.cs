@@ -69,9 +69,8 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
 
                 foreach (AttributeData attributeData in symbol.EnumerateAttributesWithType(dynamicWindowsRuntimeCastAttribute))
                 {
-                    // We don't need to validate the other parameters. Using '[DynamicDependency]' is a very advanced scenario.
-                    // As long as the type matches, we assume the developer knows what they're doing here, so we don't warn.
-                    if (attributeData.ConstructorArguments is [_, { Kind: TypedConstantKind.Type, IsNull: false, Value: INamedTypeSymbol typeSymbol }] &&
+                    // Check that the type is actually the one used in this case. Otherwise, ignore the attribute (we might have several on the same symbol)
+                    if (attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, IsNull: false, Value: INamedTypeSymbol typeSymbol }] &&
                         SymbolEqualityComparer.Default.Equals(typeSymbol, classType))
                     {
                         return true;

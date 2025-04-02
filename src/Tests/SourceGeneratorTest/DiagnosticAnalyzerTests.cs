@@ -585,7 +585,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Method_DoesNotWarn()
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicWindowsRuntimeCast_Method_DoesNotWarn()
     {
         const string source = """
             using System.Diagnostics.CodeAnalysis;
@@ -593,7 +593,7 @@ public class DiagnosticAnalyzerTests
 
             class Test
             {
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 void M(object obj)
                 {
                     C c1 = (C)obj;
@@ -625,7 +625,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_EnumType_WithDynamicDependency_Method_DoesNotWarn()
+    public async Task RuntimeClassCast_InvalidCast_EnumType_WithDynamicWindowsRuntimeCast_Method_DoesNotWarn()
     {
         const string source = """
             using System.Diagnostics.CodeAnalysis;
@@ -633,7 +633,7 @@ public class DiagnosticAnalyzerTests
 
             class Test
             {
-                [DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields, typeof(E))]
+                [DynamicWindowsRuntimeCast(typeof(E))]
                 void M(object obj)
                 {
                     E e1 = (E)obj;
@@ -668,7 +668,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Lambda_DoesNotWarn()
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicWindowsRuntimeCast_Lambda_DoesNotWarn()
     {
         const string source = """
             using System;
@@ -679,7 +679,7 @@ public class DiagnosticAnalyzerTests
             {
                 void M()
                 {
-                    Action<object> l = [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))] (obj) =>
+                    Action<object> l = [DynamicWindowsRuntimeCast(typeof(C))] (obj) =>
                     {
                         C c1 = (C)obj;
                         C c2 = obj as C;
@@ -711,7 +711,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Lambda_AttributeOnParent_DoesNotWarn()
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicWindowsRuntimeCast_Lambda_AttributeOnParent_DoesNotWarn()
     {
         const string source = """
             using System;
@@ -720,7 +720,7 @@ public class DiagnosticAnalyzerTests
 
             class Test
             {
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 void M()
                 {
                     Action<object> l = obj =>
@@ -755,7 +755,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_LocalMethod_DoesNotWarn()
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicWindowsRuntimeCast_LocalMethod_DoesNotWarn()
     {
         const string source = """
             using System.Diagnostics.CodeAnalysis;
@@ -765,7 +765,7 @@ public class DiagnosticAnalyzerTests
             {
                 void M()
                 {
-                    [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                    [DynamicWindowsRuntimeCast(typeof(C))]
                     void F(object obj)
                     {
                         C c1 = (C)obj;
@@ -798,7 +798,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_LocalMethod_AttributeOnParent_DoesNotWarn()
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicWindowsRuntimeCast_LocalMethod_AttributeOnParent_DoesNotWarn()
     {
         const string source = """
             using System.Diagnostics.CodeAnalysis;
@@ -806,7 +806,7 @@ public class DiagnosticAnalyzerTests
 
             class Test
             {
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 void M()
                 {
                     void F(object obj)
@@ -841,7 +841,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_LambdaInDictionaryInitializer_AttributeOnParentMethod_DoesNotWarn()
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicWindowsRuntimeCast_LambdaInDictionaryInitializer_AttributeOnParentMethod_DoesNotWarn()
     {
         const string source = """
             using System;
@@ -851,7 +851,7 @@ public class DiagnosticAnalyzerTests
 
             class Test
             {
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 void M1()
                 {
                     var x = new Dictionary<int, Action<object>>
@@ -860,7 +860,7 @@ public class DiagnosticAnalyzerTests
                     };
                 }
 
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 void M2()
                 {
                     var x = new Dictionary<int, Action<object>>
@@ -869,7 +869,7 @@ public class DiagnosticAnalyzerTests
                     };
                 }
 
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 void M3()
                 {
                     var x = new Dictionary<int, (Type, Action<object>)>
@@ -878,7 +878,7 @@ public class DiagnosticAnalyzerTests
                     };
                 }
 
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 void M4()
                 {
                     var x = new Dictionary<int, (Type, Action<object>)>
@@ -896,7 +896,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_LambdaInDictionaryInitializer_AttributeOnParentField_DoesNotWarn()
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicWindowsRuntimeCast_LambdaInDictionaryInitializer_AttributeOnParentField_DoesNotWarn()
     {
         const string source = """
             using System;
@@ -906,25 +906,25 @@ public class DiagnosticAnalyzerTests
 
             class Test
             {
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 private static readonly Dictionary<int, Action<object>> F1 = new()
                 {
                     { 42, obj => Console.WriteLine(obj is C) }
                 };
 
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 private static readonly Dictionary<int, Action<object>> F2 = new()
                 {
                     [42] = obj => Console.WriteLine(obj is C)
                 };
 
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 private static readonly Dictionary<int, (Type, Action<object>)> F3 = new()
                 {
                     { 42, (typeof(int), obj => Console.WriteLine(obj is C)) }
                 };
 
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(C))]
                 private static readonly Dictionary<int, (Type, Action<object>)> F4 = new Dictionary<int, (Type, Action<object>)>
                 {
                     [42] = (typeof(int), obj => Console.WriteLine(obj is C))
@@ -981,7 +981,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task RuntimeClassCast_InvalidCast_WithDynamicDependency_Method_WrongType_Warns()
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicWindowsRuntimeCast_Method_WrongType_Warns()
     {
         const string source = """
             using System.Diagnostics.CodeAnalysis;
@@ -989,7 +989,7 @@ public class DiagnosticAnalyzerTests
 
             class Test
             {
-                [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors, typeof(string))]
+                [DynamicWindowsRuntimeCast(typeof(string))]
                 void M(object obj)
                 {
                     C c1 = {|CsWinRT1034:(C)obj|};
