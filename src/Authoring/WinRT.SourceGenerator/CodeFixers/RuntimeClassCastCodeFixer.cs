@@ -48,9 +48,6 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
 
         SyntaxNode? root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
-        SemanticModel? semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
-        Compilation compilation = semanticModel!.Compilation;
-
         // Retrieve the property passed by the analyzer
         if (!diagnostic.Properties.TryGetValue(RuntimeClassCastAnalyzer.WindowsRuntimeTypeId, out string? windowsRuntimeTypeId))
         {
@@ -64,7 +61,7 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: "Add '[DynamicWindowsRuntimeCast]' attribute",
-                    createChangedDocument: token => Task.FromResult(AddMissingAttribute(context.Document, compilation, root, memberDeclaration, windowsRuntimeTypeId, token)),
+                    createChangedDocument: token => AddMissingAttributeAsync(context.Document, root, memberDeclaration, windowsRuntimeTypeId, token),
                     equivalenceKey: "Add '[DynamicWindowsRuntimeCast]' attribute"),
                 diagnostic);
         }
@@ -79,21 +76,27 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
     /// <param name="windowsRuntimeTypeId">The id of the type symbols to target.</param>
     /// <param name="cancellationToken">The cancellation token for the operation.</param>
     /// <returns>An updated document with the applied code fix, and the return type of the method being <see cref="Task"/>.</returns>
-    private Document AddMissingAttribute(
+    private async Task<Document> AddMissingAttributeAsync(
         Document document,
-        Compilation compilation,
         SyntaxNode root,
         MemberDeclarationSyntax memberDeclaration,
         string? windowsRuntimeTypeId,
         CancellationToken cancellationToken)
     {
+        // Get the compilation (bail if it's not available)
+        if (await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false) is not { Compilation: Compilation compilation })
+        {
+            return document;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Get the new member declaration
         SyntaxNode updatedMemberDeclaration = AddMissingAttribute(
             document,
             compilation,
             memberDeclaration,
-            windowsRuntimeTypeId,
-            cancellationToken);
+            windowsRuntimeTypeId);
 
         // Replace the node in the document tree
         return document.WithSyntaxRoot(root.ReplaceNode(memberDeclaration, updatedMemberDeclaration));
@@ -105,14 +108,12 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
     /// <param name="document">The original document being fixed.</param>
     /// <param name="memberDeclaration">The <see cref="MemberDeclarationSyntax"/> to update.</param>
     /// <param name="windowsRuntimeTypeId">The id of the type symbols to target.</param>
-    /// <param name="cancellationToken">The cancellation token for the operation.</param>
-    /// <returns>An updated document with the applied code fix, and the return type of the method being <see cref="Task"/>.</returns>
+    /// <returns>An updated document with the applied code fix.</returns>
     private SyntaxNode AddMissingAttribute(
         Document document,
         Compilation compilation,
         MemberDeclarationSyntax memberDeclaration,
-        string? windowsRuntimeTypeId,
-        CancellationToken cancellationToken)
+        string? windowsRuntimeTypeId)
     {
         // Bail if we can't resolve the target attribute symbol (this should really never happen)
         if (compilation.GetTypeByMetadataName("WinRT.DynamicWindowsRuntimeCastAttribute") is not INamedTypeSymbol attributeSymbol)
@@ -156,13 +157,22 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
                 return document;
             }
 
-            var semanticModel = await document.GetSemanticModelAsync(fixAllContext.CancellationToken).ConfigureAwait(false);
-            var compilation = semanticModel!.Compilation;
+            fixAllContext.CancellationToken.ThrowIfCancellationRequested();
+
+            // Get the compilation (bail if it's not available)
+            if (await document.GetSemanticModelAsync(fixAllContext.CancellationToken).ConfigureAwait(false) is not { Compilation: Compilation compilation })
+            {
+                return document;
+            }
+
+            fixAllContext.CancellationToken.ThrowIfCancellationRequested();
 
             SyntaxEditor syntaxEditor = new(root, fixAllContext.Solution.Services);
 
             foreach (Diagnostic diagnostic in diagnostics)
             {
+                fixAllContext.CancellationToken.ThrowIfCancellationRequested();
+
                 // Get the current node to annotate
                 if (root.FindNode(diagnostic.Location.SourceSpan).FirstAncestorOrSelf<MemberDeclarationSyntax>(static n => n.IsKind(SyntaxKind.FieldDeclaration) || n.IsKind(SyntaxKind.MethodDeclaration)) is not { } memberDeclaration)
                 {
@@ -175,16 +185,14 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
                     continue;
                 }
 
-                // Replace the node via the editor
+                // Replace the node via the editor (needs a lambda to ensure multiple fixes are combined correctly)
                 syntaxEditor.ReplaceNode(memberDeclaration, (memberDeclaration, _) =>
                 {
-                    // Get the syntax node with the updated declaration
                     return codeFixer.AddMissingAttribute(
                         document,
                         compilation,
                         (MemberDeclarationSyntax)memberDeclaration,
-                        windowsRuntimeTypeId,
-                        fixAllContext.CancellationToken);
+                        windowsRuntimeTypeId);
                 });
             }
 
