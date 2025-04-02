@@ -32,6 +32,8 @@ internal static class TypeSymbolExtensions
     {
         ArrayBufferWriter<char> writer = Writer ??= [];
 
+        writer.Clear();
+
         symbol.AppendFullyQualifiedMetadataName(writer);
 
         return writer.WrittenSpan.ToString();
