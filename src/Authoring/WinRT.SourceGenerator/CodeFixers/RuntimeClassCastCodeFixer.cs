@@ -7,6 +7,7 @@
 
 #if ROSLYN_4_12_0_OR_GREATER
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics.CodeAnalysis;
@@ -190,6 +191,10 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
 
             SyntaxEditor syntaxEditor = new(root, fixAllContext.Solution.Services);
 
+            // We need to deduplicate attributes being added on each target node, in case there's multiple casts to the same type.
+            // If that's the case, we just add an attribute for the first time it appears, and then ignore all duplicate ones.
+            Dictionary<SyntaxNode, HashSet<string>> symbolsPerNodeMap = [];
+
             foreach (Diagnostic diagnostic in diagnostics)
             {
                 fixAllContext.CancellationToken.ThrowIfCancellationRequested();
@@ -201,7 +206,21 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
                 }
 
                 // Retrieve the property passed by the analyzer
-                if (!diagnostic.Properties.TryGetValue(RuntimeClassCastAnalyzer.WindowsRuntimeTypeId, out string? windowsRuntimeTypeId))
+                if (!diagnostic.Properties.TryGetValue(RuntimeClassCastAnalyzer.WindowsRuntimeTypeId, out string? windowsRuntimeTypeId) || windowsRuntimeTypeId is null)
+                {
+                    continue;
+                }
+
+                // Get the map for the current target symbol
+                if (!symbolsPerNodeMap.TryGetValue(targetNode, out HashSet<string>? symbolsSet))
+                {
+                    symbolsSet = [];
+
+                    symbolsPerNodeMap.Add(targetNode, symbolsSet);
+                }
+
+                // If the symbol has already been encountered, skip this diagnostic (it'll be fixed by another iteration)
+                if (!symbolsSet.Add(windowsRuntimeTypeId))
                 {
                     continue;
                 }
