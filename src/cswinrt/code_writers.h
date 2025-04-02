@@ -4810,6 +4810,7 @@ finally
         auto [invoke_target, is_generic] = get_invoke_info(w, method);
         auto objRef = generic_type ? "_genericObj" : "_obj";
         w.write(R"(
+[MethodImpl(MethodImplOptions.NoInlining)]
 public static unsafe % %(% %%%)
 {%%}
 )",
@@ -4892,6 +4893,7 @@ public static unsafe % %(% %%%)
 
         auto objRef = generic_type ? "_genericObj" : "_obj";
         w.write(R"(
+[MethodImpl(MethodImplOptions.NoInlining)]
 public static unsafe % %(% %%%)
 {%%}
 )",

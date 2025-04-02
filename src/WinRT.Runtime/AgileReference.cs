@@ -63,6 +63,7 @@ namespace WinRT
         {
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal unsafe AgileReference(IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero)
@@ -119,6 +120,7 @@ namespace WinRT
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
 #if NET
         private static unsafe ABI.WinRT.Interop.IGlobalInterfaceTable GetGitTable()
 #else
