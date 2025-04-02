@@ -1,0 +1,115 @@
+jobs: 
+  - job:
+    displayName: Build/Test Stage
+    pool:
+      type: windows
+      
+    timeoutInMinutes: 270
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
+
+    strategy:
+      maxParallel: 10
+      matrix:
+        x64_Debug:
+          BuildPlatform: 'x64'
+          BuildConfiguration: 'debug'
+        x86_Debug:
+          BuildPlatform: 'x86'
+          BuildConfiguration: 'debug'
+        arm64_Debug:
+          BuildPlatform: 'arm64'
+          BuildConfiguration: 'debug'
+        x64_Release:
+          BuildPlatform: 'x64'
+          BuildConfiguration: 'release'
+        x86_Release:
+          BuildPlatform: 'x86'
+          BuildConfiguration: 'release'
+        arm64_Release:
+          BuildPlatform: 'arm64'
+          BuildConfiguration: 'release' 
+          
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+      ob_artifactSuffix: $(BuildConfiguration)_$(BuildPlatform)
+      StagingFolder: $(ob_outputDirectory)
+      ob_sdl_prefast_enabled: true
+      ob_sdl_prefast_runDuring: 'Build'
+      ob_sdl_checkCompliantCompilerWarnings: true
+      ob_symbolsPublishing_enabled: true
+      ob_symbolsPublishing_indexSources: true
+      ob_symbolsPublishing_searchPattern: '**/*.@(pdb|dll)'
+
+    steps:
+   
+# Build Steps 
+    - template: CsWinRT-Build-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+
+    - template: CsWinRT-Test-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+
+  - job: Benchmarks
+    displayName: Run Benchmarks
+    condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
+    dependsOn: []
+    pool:
+      type: windows
+      isCustom: true
+      name: 'Azure Pipelines'
+      vmImage: 'windows-2022'
+    timeoutInMinutes: 120    
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+      StagingFolder: $(ob_outputDirectory)
+    steps:
+    - template: CsWinRT-Benchmarks-Steps.yml@self
+
+# Publish Benchmark Results
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Benchmarks Results
+      condition: always()
+      inputs:
+        targetPath: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
+        artifact: drop_BuildAndTest_Benchmarks
+
+  # Seperate job to run object lifetime tests given
+  # they can't run in the other environment.
+  - job: ObjectlifetimeTests
+    displayName: Run Object Lifetime Tests
+    dependsOn: []
+    pool:
+      type: windows
+      isCustom: true
+      name: 'Azure Pipelines'
+      vmImage: 'windows-2022'
+    timeoutInMinutes: 120
+    strategy:
+      matrix:
+        debug:
+          BuildConfiguration: 'debug'
+        release:
+          BuildConfiguration: 'release'
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+      StagingFolder: $(ob_outputDirectory)
+      BuildPlatform: 'x64' 
+    steps:
+# Build Steps 
+    - template: CsWinRT-Build-Steps.yml@self
+      parameters:
+        BuildConfiguration: $(BuildConfiguration)
+        BuildPlatform: $(BuildPlatform) 
+        BuildCsWinRTOnly: true
+        
+# Run Object Lifetime Tests
+    - task: VSTest@3
+      displayName: Run Object Lifetime Tests
+      condition: succeeded()
+      inputs:
+        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net6.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
+        searchFolder: $(Build.SourcesDirectory)\src

@@ -93,7 +93,7 @@ if (observableCollection != instance.BindableIterableProperty)
 }
 
 var profile = Windows.Networking.Connectivity.NetworkInformation.GetInternetConnectionProfile();
-var names = profile.GetNetworkNames();
+var names = profile?.GetNetworkNames();
 
 List<string> networkNames = new();
 if (names?.Count > 0)
