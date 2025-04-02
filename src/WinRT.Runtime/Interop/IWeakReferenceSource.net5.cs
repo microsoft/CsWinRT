@@ -90,6 +90,7 @@ namespace ABI.WinRT.Interop
 #endif
     static class IWeakReferenceSourceMethods
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static unsafe global::WinRT.Interop.IWeakReference GetWeakReference(IObjectReference _obj)
         {
             var ThisPtr = _obj.ThisPtr;
@@ -179,6 +180,7 @@ namespace ABI.WinRT.Interop
             return 0;
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         IObjectReference global::WinRT.Interop.IWeakReference.Resolve(Guid riid)
         {
             var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::WinRT.Interop.IWeakReference).TypeHandle);

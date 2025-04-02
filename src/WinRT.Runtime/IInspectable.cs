@@ -4,6 +4,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 
@@ -152,6 +153,7 @@ namespace WinRT
             _obj = obj;
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe string GetRuntimeClassName(bool noThrow = false)
         {
             IntPtr __retval = default;

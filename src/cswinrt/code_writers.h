@@ -4810,6 +4810,7 @@ finally
         auto [invoke_target, is_generic] = get_invoke_info(w, method);
         auto objRef = generic_type ? "_genericObj" : "_obj";
         w.write(R"(
+[MethodImpl(MethodImplOptions.NoInlining)]
 public static unsafe % %(% %%%)
 {%%}
 )",
@@ -4892,6 +4893,7 @@ public static unsafe % %(% %%%)
 
         auto objRef = generic_type ? "_genericObj" : "_obj";
         w.write(R"(
+[MethodImpl(MethodImplOptions.NoInlining)]
 public static unsafe % %(% %%%)
 {%%}
 )",
@@ -10907,6 +10909,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
 
                 auto invoke_target = get_invoke_info(method, true);
                 w.write(R"(
+[MethodImpl(MethodImplOptions.NoInlining)]
 private static unsafe % %(IObjectReference _obj%%)
 {
 var ThisPtr = _obj.ThisPtr;
@@ -10985,6 +10988,7 @@ private static unsafe int Do_Abi_Invoke(%)
 
                 auto invoke_target = get_invoke_info(method);
                 w.write(R"(
+[MethodImpl(MethodImplOptions.NoInlining)]
 private static unsafe % %(IObjectReference _obj%%)
 {
 var ThisPtr = _obj.ThisPtr;
@@ -11007,7 +11011,8 @@ var ThisPtr = _obj.ThisPtr;
                     auto invoke_target = get_invoke_info(getter);
                     auto signature = method_signature(getter);
                     auto marshalers = get_abi_marshalers(w, signature, false, prop.Name(), false, true);
-                    w.write(R"(private static unsafe % %(IObjectReference _obj)
+                    w.write(R"([MethodImpl(MethodImplOptions.NoInlining)]
+private static unsafe % %(IObjectReference _obj)
 {
 var ThisPtr = _obj.ThisPtr;
 %}
@@ -11022,7 +11027,8 @@ var ThisPtr = _obj.ThisPtr;
                     auto signature = method_signature(setter);
                     auto marshalers = get_abi_marshalers(w, signature, false, prop.Name(), false, true);
                     marshalers[0].param_name = "value";
-                    w.write(R"(private static unsafe void %(IObjectReference _obj, % value)
+                    w.write(R"([MethodImpl(MethodImplOptions.NoInlining)]
+private static unsafe void %(IObjectReference _obj, % value)
 {
 var ThisPtr = _obj.ThisPtr;
 %}

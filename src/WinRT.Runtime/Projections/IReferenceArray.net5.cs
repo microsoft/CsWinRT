@@ -209,6 +209,7 @@ namespace ABI.Windows.Foundation
 
         public unsafe T[] Value
         {
+            [MethodImpl(MethodImplOptions.NoInlining)]
             get
             {
 #if NET

@@ -45,6 +45,7 @@
 #endif
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 using Windows.Security.Credentials;
@@ -521,6 +522,7 @@ namespace Windows.ApplicationModel.DataTransfer
 
     internal static class IDataTransferManagerInteropMethods
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::WinRT.IObjectReference _obj, global::System.IntPtr appWindow, in global::System.Guid riid)
         {
             global::System.IntPtr thisPtr = _obj.ThisPtr;
@@ -541,6 +543,7 @@ namespace Windows.ApplicationModel.DataTransfer
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static unsafe void ShowShareUIForWindow(global::WinRT.IObjectReference _obj, global::System.IntPtr appWindow)
         {
             global::System.IntPtr thisPtr = _obj.ThisPtr;

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -61,6 +62,7 @@ namespace ABI.System
             _obj = obj;
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe IObjectReference CreateUri(string uri)
         {
             IntPtr __retval = default;
@@ -73,6 +75,7 @@ namespace ABI.System
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe ObjectReferenceValue CreateUriForMarshaling(string uri)
         {
             IntPtr __retval = default;

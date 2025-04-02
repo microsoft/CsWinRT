@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -46,6 +47,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
             _obj = obj;
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe IObjectReference CreateInstance(string name)
         {
             IntPtr __retval = default;
@@ -65,6 +67,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe ObjectReferenceValue CreateInstanceForMarshaling(string name)
         {
             IntPtr __retval = default;

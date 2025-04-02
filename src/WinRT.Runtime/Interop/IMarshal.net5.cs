@@ -212,6 +212,7 @@ namespace ABI.WinRT.Interop
             _obj = obj.As<IUnknownVftbl>(IID.IID_IMarshal);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void GetUnmarshalClass(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, Guid* pCid)
         {
             IntPtr thisPtr = ThisPtr;
@@ -219,6 +220,7 @@ namespace ABI.WinRT.Interop
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void GetMarshalSizeMax(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags, uint* pSize)
         {
             IntPtr thisPtr = ThisPtr;
@@ -226,6 +228,7 @@ namespace ABI.WinRT.Interop
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags)
         {
             IntPtr thisPtr = ThisPtr;
@@ -233,6 +236,7 @@ namespace ABI.WinRT.Interop
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv)
         {
             IntPtr thisPtr = ThisPtr;
@@ -240,6 +244,7 @@ namespace ABI.WinRT.Interop
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void ReleaseMarshalData(IntPtr pStm)
         {
             IntPtr thisPtr = ThisPtr;
@@ -247,6 +252,7 @@ namespace ABI.WinRT.Interop
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void DisconnectObject(uint dwReserved)
         {
             IntPtr thisPtr = ThisPtr;

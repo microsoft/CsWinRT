@@ -78,6 +78,7 @@ namespace ABI.Windows.Storage.Streams
 
         public IntPtr Buffer
         {
+            [MethodImpl(MethodImplOptions.NoInlining)]
             get
             {
                 IntPtr __retval = default;
@@ -129,6 +130,7 @@ namespace ABI.Windows.Storage.Streams
 
         IntPtr global::Windows.Storage.Streams.IBufferByteAccess.Buffer
         {
+            [MethodImpl(MethodImplOptions.NoInlining)]
             get
             {
                 var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Storage.Streams.IBufferByteAccess).TypeHandle);

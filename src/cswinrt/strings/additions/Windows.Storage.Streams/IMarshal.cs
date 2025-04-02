@@ -222,6 +222,7 @@ namespace ABI.Com
         }
 #endif
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void GetUnmarshalClass(Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, Guid* pCid)
         {
 #if NET
@@ -233,6 +234,7 @@ namespace ABI.Com
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void GetMarshalSizeMax(Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, uint* pSize)
         {
 #if NET
@@ -244,6 +246,7 @@ namespace ABI.Com
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
         {
 #if NET
@@ -255,6 +258,7 @@ namespace ABI.Com
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv)
         {
 #if NET
@@ -266,6 +270,7 @@ namespace ABI.Com
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void ReleaseMarshalData(IntPtr pStm)
         {
 #if NET
@@ -277,6 +282,7 @@ namespace ABI.Com
             GC.KeepAlive(_obj);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public unsafe void DisconnectObject(uint dwReserved)
         {
 #if NET
