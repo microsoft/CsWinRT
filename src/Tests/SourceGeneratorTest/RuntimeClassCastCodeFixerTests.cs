@@ -134,6 +134,83 @@ public class RuntimeClassCastCodeFixerTests
     }
 
     [TestMethod]
+    public async Task MultipleCasts_Method_WithDuplicateTypes()
+    {
+        const string original = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                public void M(object obj)
+                {
+                    C c1 = {|CsWinRT1034:(C)obj|};
+                    C c2 = {|CsWinRT1034:(C)obj|};
+                    D d = {|CsWinRT1034:(D)obj|};
+                    E e1 = {|CsWinRT1035:(E)obj|};
+                    E e2 = {|CsWinRT1035:(E)obj|};
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+
+            [WindowsRuntimeType("SomeContract")]
+            class D;
+
+            [WindowsRuntimeType("SomeContract")]
+            enum E
+            {
+                A,
+                B
+            }
+            """;
+
+        const string @fixed = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(D))]
+                [DynamicWindowsRuntimeCast(typeof(E))]
+                public void M(object obj)
+                {
+                    C c1 = (C)obj;
+                    C c2 = (C)obj;
+                    D d = (D)obj;
+                    E e1 = (E)obj;
+                    E e2 = (E)obj;
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+
+            [WindowsRuntimeType("SomeContract")]
+            class D;
+
+            [WindowsRuntimeType("SomeContract")]
+            enum E
+            {
+                A,
+                B
+            }
+            """;
+
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
+        {
+            TestCode = original,
+            FixedCode = @fixed
+        };
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task MultipleCasts_Method_WithTriviaAndLeadingAttributes()
     {
         const string original = """
@@ -485,6 +562,149 @@ public class RuntimeClassCastCodeFixerTests
 
             [WindowsRuntimeType("SomeContract")]
             class D : C;
+            """;
+
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
+        {
+            TestCode = original,
+            FixedCode = @fixed
+        };
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task MultipleCasts_MixedMembers_WithDuplicateTypes()
+    {
+        const string original = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                private object _obj;
+
+                public void M(object obj)
+                {
+                    C c1 = {|CsWinRT1034:(C)obj|};
+                    C c2 = {|CsWinRT1034:(C)obj|};
+                    D d = {|CsWinRT1034:(D)obj|};
+                    E e1 = {|CsWinRT1035:(E)obj|};
+                    E e2 = {|CsWinRT1035:(E)obj|};
+                    F f1 = {|CsWinRT1034:(F)obj|};
+                    F f2 = {|CsWinRT1034:(F)obj|};
+                    E e3 = {|CsWinRT1035:(E)obj|};
+                }
+
+                C P1
+                {
+                    get => {|CsWinRT1034:(C)_obj|};
+                }
+
+                C P2
+                {
+                    get => {|CsWinRT1034:(C)_obj|};
+                    set
+                    {
+                        E e = {|CsWinRT1035:(E)_obj|};
+                        F f1 = {|CsWinRT1034:(F)_obj|};
+                        F f2 = {|CsWinRT1034:(F)_obj|};
+                        G g = {|CsWinRT1034:(G)_obj|};
+
+                        _obj = value;
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+
+            [WindowsRuntimeType("SomeContract")]
+            class D;
+
+            [WindowsRuntimeType("SomeContract")]
+            enum E
+            {
+                A,
+                B
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class F : C;
+
+            [WindowsRuntimeType("SomeContract")]
+            class G : F;
+            """;
+
+        const string @fixed = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                private object _obj;
+
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                [DynamicWindowsRuntimeCast(typeof(D))]
+                [DynamicWindowsRuntimeCast(typeof(E))]
+                [DynamicWindowsRuntimeCast(typeof(F))]
+                public void M(object obj)
+                {
+                    C c1 = (C)obj;
+                    C c2 = (C)obj;
+                    D d = (D)obj;
+                    E e1 = (E)obj;
+                    E e2 = (E)obj;
+                    F f1 = (F)obj;
+                    F f2 = (F)obj;
+                    E e3 = (E)obj;
+                }
+
+                C P1
+                {
+                    [DynamicWindowsRuntimeCast(typeof(C))]
+                    get => (C)_obj;
+                }
+
+                C P2
+                {
+                    [DynamicWindowsRuntimeCast(typeof(C))]
+                    get => (C)_obj;
+                    [DynamicWindowsRuntimeCast(typeof(E))]
+                    [DynamicWindowsRuntimeCast(typeof(F))]
+                    [DynamicWindowsRuntimeCast(typeof(G))]
+                    set
+                    {
+                        E e = (E)_obj;
+                        F f1 = (F)_obj;
+                        F f2 = (F)_obj;
+                        G g = (G)_obj;
+
+                        _obj = value;
+                    }
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+
+            [WindowsRuntimeType("SomeContract")]
+            class D;
+
+            [WindowsRuntimeType("SomeContract")]
+            enum E
+            {
+                A,
+                B
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class F : C;
+
+            [WindowsRuntimeType("SomeContract")]
+            class G : F;
             """;
 
         CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
