@@ -158,6 +158,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                     context.ReportDiagnostic(Diagnostic.Create(
                         typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
+                        ImmutableDictionary.Create<string, string?>().Add(WindowsRuntimeTypeId, typeSymbol.GetFullyQualifiedMetadataName()),
                         typeSymbol));
                 }
             }, OperationKind.IsType);
@@ -189,6 +190,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                     context.ReportDiagnostic(Diagnostic.Create(
                         typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         location,
+                        ImmutableDictionary.Create<string, string?>().Add(WindowsRuntimeTypeId, typeSymbol.GetFullyQualifiedMetadataName()),
                         typeSymbol));
                 }
             }, OperationKind.DeclarationPattern);
@@ -209,6 +211,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                     context.ReportDiagnostic(Diagnostic.Create(
                         typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
+                        ImmutableDictionary.Create<string, string?>().Add(WindowsRuntimeTypeId, typeSymbol.GetFullyQualifiedMetadataName()),
                         typeSymbol));
                 }
             }, OperationKind.TypePattern);

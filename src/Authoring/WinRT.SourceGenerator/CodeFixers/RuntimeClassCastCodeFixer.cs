@@ -8,6 +8,7 @@
 #if ROSLYN_4_12_0_OR_GREATER
 
 using System.Collections.Immutable;
+using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -26,7 +27,9 @@ namespace Generator;
 /// <summary>
 /// A code fixer that adds the annotations for <see cref="RuntimeClassCastAnalyzer"/>.
 /// </summary>
-public abstract class RuntimeClassCastCodeFixer : CodeFixProvider
+[ExportCodeFixProvider(LanguageNames.CSharp)]
+[Shared]
+public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
 {
     /// <inheritdoc/>
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; } = ["CsWinRT1034", "CsWinRT1035"];
