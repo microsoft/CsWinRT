@@ -10,11 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Numerics.Vectors" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <PackageReference Include="Microsoft.WinUI" Version="[$(MicrosoftWinUIVersion)]" GeneratePathProperty="true">
+    <PackageReference Include="Microsoft.WinUI" GeneratePathProperty="true">
       <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
