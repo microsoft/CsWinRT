@@ -54,7 +54,7 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
             return;
         }
 
-        // Get the struct declaration from the target diagnostic
+        // Get the member declaration from the target diagnostic
         if (root?.FindNode(diagnosticSpan).FirstAncestorOrSelf<MemberDeclarationSyntax>(static n => n.IsKind(SyntaxKind.FieldDeclaration) || n.IsKind(SyntaxKind.MethodDeclaration)) is { } memberDeclaration)
         {
             // Register the code fix to update the return type to be Task instead
@@ -83,15 +83,15 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
         string? windowsRuntimeTypeId,
         CancellationToken cancellationToken)
     {
-        // Get the new struct declaration
-        SyntaxNode updatedStructDeclaration = await AddMissingAttribute(
+        // Get the new member declaration
+        SyntaxNode updatedMemberDeclaration = await AddMissingAttribute(
             document,
             memberDeclaration,
             windowsRuntimeTypeId,
             cancellationToken);
 
         // Replace the node in the document tree
-        return document.WithSyntaxRoot(root.ReplaceNode(memberDeclaration, updatedStructDeclaration));
+        return document.WithSyntaxRoot(root.ReplaceNode(memberDeclaration, updatedMemberDeclaration));
     }
 
     /// <summary>

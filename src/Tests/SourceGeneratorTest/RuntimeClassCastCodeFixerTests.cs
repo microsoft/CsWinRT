@@ -25,7 +25,7 @@ public class RuntimeClassCastCodeFixerTests
             {
                 public void M(object obj)
                 {
-                    C c = (C)obj;
+                    C c = {|CsWinRT1034:(C)obj|};
                 }
             }
 
@@ -51,7 +51,7 @@ public class RuntimeClassCastCodeFixerTests
             class C;
             """;
 
-        CSharpCodeFixTest test = new(LanguageVersion.Preview)
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
         {
             TestCode = original,
             FixedCode = @fixed
@@ -72,9 +72,9 @@ public class RuntimeClassCastCodeFixerTests
             {
                 public void M(object obj)
                 {
-                    C c = (C)obj;
-                    D d = (D)obj;
-                    E e = (E)obj;
+                    C c = {|CsWinRT1034:(C)obj|};
+                    D d = {|CsWinRT1034:(D)obj|};
+                    E e = {|CsWinRT1035:(E)obj|};
                 }
             }
 
@@ -124,7 +124,7 @@ public class RuntimeClassCastCodeFixerTests
             }
             """;
 
-        CSharpCodeFixTest test = new(LanguageVersion.Preview)
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
         {
             TestCode = original,
             FixedCode = @fixed
@@ -137,6 +137,7 @@ public class RuntimeClassCastCodeFixerTests
     public async Task MultipleCasts_Method_WithTriviaAndLeadingAttributes()
     {
         const string original = """
+            using System;
             using WinRT;
 
             namespace MyApp;
@@ -149,9 +150,9 @@ public class RuntimeClassCastCodeFixerTests
                 [Dummy]
                 public void M(object obj)
                 {
-                    C c = (C)obj;
-                    D d = (D)obj;
-                    E e = (E)obj;
+                    C c = {|CsWinRT1034:(C)obj|};
+                    D d = {|CsWinRT1034:(D)obj|};
+                    E e = {|CsWinRT1035:(E)obj|};
                 }
             }
 
@@ -172,6 +173,7 @@ public class RuntimeClassCastCodeFixerTests
             """;
 
         const string @fixed = """
+            using System;
             using WinRT;
 
             namespace MyApp;
@@ -209,7 +211,7 @@ public class RuntimeClassCastCodeFixerTests
             public class DummyAttribute : Attribute;
             """;
 
-        CSharpCodeFixTest test = new(LanguageVersion.Preview)
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
         {
             TestCode = original,
             FixedCode = @fixed
@@ -232,7 +234,7 @@ public class RuntimeClassCastCodeFixerTests
                 {
                     void N(object obj)
                     {
-                        C c = (C)obj;
+                        C c = {|CsWinRT1034:(C)obj|};
                     }
 
                     N(obj);
@@ -266,7 +268,7 @@ public class RuntimeClassCastCodeFixerTests
             class C;
             """;
 
-        CSharpCodeFixTest test = new(LanguageVersion.Preview)
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
         {
             TestCode = original,
             FixedCode = @fixed
@@ -286,11 +288,11 @@ public class RuntimeClassCastCodeFixerTests
 
             public class Program
             {
-                private static readonly object obj = Register(obj => (C)obj);
+                private static readonly object obj = Register(obj => {|CsWinRT1034:(C)obj|});
 
-                private static object Register(Action<object> action)
+                private static object Register(Func<object, C> action)
                 {
-                    return new();
+                    return action(new object());
                 }
             }
 
@@ -309,9 +311,9 @@ public class RuntimeClassCastCodeFixerTests
                 [DynamicWindowsRuntimeCast(typeof(C))]
                 private static readonly object obj = Register(obj => (C)obj);
 
-                private static object Register(Action<object> action)
+                private static object Register(Func<object, C> action)
                 {
-                    return new();
+                    return action(new object());
                 }
             }
 
@@ -319,7 +321,7 @@ public class RuntimeClassCastCodeFixerTests
             class C;
             """;
 
-        CSharpCodeFixTest test = new(LanguageVersion.Preview)
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
         {
             TestCode = original,
             FixedCode = @fixed

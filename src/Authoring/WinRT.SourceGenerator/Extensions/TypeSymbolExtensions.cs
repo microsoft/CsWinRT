@@ -34,7 +34,7 @@ internal static class TypeSymbolExtensions
 
         symbol.AppendFullyQualifiedMetadataName(writer);
 
-        return writer.ToString();
+        return writer.WrittenSpan.ToString();
     }
 
     /// <summary>
