@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// Ported from 'MissingAttributeCodeFixer' in ComputeSharp (https://github.com/Sergio0694/ComputeSharp).
+// Licensed under the MIT License (MIT) (see: https://github.com/Sergio0694/ComputeSharp?tab=MIT-1-ov-file).
+// Source: https://github.com/Sergio0694/ComputeSharp/blob/main/src/ComputeSharp.CodeFixing/MissingAttributeCodeFixer.cs.
+
 #if ROSLYN_4_12_0_OR_GREATER
 
 using System.Collections.Immutable;
@@ -41,6 +45,12 @@ public abstract class RuntimeClassCastCodeFixer : CodeFixProvider
 
         SyntaxNode? root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
+        // Retrieve the property passed by the analyzer
+        if (!diagnostic.Properties.TryGetValue(RuntimeClassCastAnalyzer.WindowsRuntimeTypeId, out string? windowsRuntimeTypeId))
+        {
+            return;
+        }
+
         // Get the struct declaration from the target diagnostic
         if (root?.FindNode(diagnosticSpan).FirstAncestorOrSelf<MemberDeclarationSyntax>(static n => n.IsKind(SyntaxKind.FieldDeclaration) || n.IsKind(SyntaxKind.MethodDeclaration)) is { } memberDeclaration)
         {
@@ -48,7 +58,7 @@ public abstract class RuntimeClassCastCodeFixer : CodeFixProvider
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: "Add '[DynamicWindowsRuntimeCast]' attribute",
-                    createChangedDocument: token => AddMissingAttribute(context.Document, root, memberDeclaration, token),
+                    createChangedDocument: token => AddMissingAttribute(context.Document, root, memberDeclaration, windowsRuntimeTypeId, token),
                     equivalenceKey: "Add '[DynamicWindowsRuntimeCast]' attribute"),
                 diagnostic);
         }
@@ -60,18 +70,21 @@ public abstract class RuntimeClassCastCodeFixer : CodeFixProvider
     /// <param name="document">The original document being fixed.</param>
     /// <param name="root">The original tree root belonging to the current document.</param>
     /// <param name="memberDeclaration">The <see cref="MemberDeclarationSyntax"/> to update.</param>
+    /// <param name="windowsRuntimeTypeId">The id of the type symbols to target.</param>
     /// <param name="cancellationToken">The cancellation token for the operation.</param>
     /// <returns>An updated document with the applied code fix, and the return type of the method being <see cref="Task"/>.</returns>
     private async Task<Document> AddMissingAttribute(
         Document document,
         SyntaxNode root,
         MemberDeclarationSyntax memberDeclaration,
+        string? windowsRuntimeTypeId,
         CancellationToken cancellationToken)
     {
         // Get the new struct declaration
         SyntaxNode updatedStructDeclaration = await AddMissingAttribute(
             document,
             memberDeclaration,
+            windowsRuntimeTypeId,
             cancellationToken);
 
         // Replace the node in the document tree
@@ -83,11 +96,13 @@ public abstract class RuntimeClassCastCodeFixer : CodeFixProvider
     /// </summary>
     /// <param name="document">The original document being fixed.</param>
     /// <param name="memberDeclaration">The <see cref="MemberDeclarationSyntax"/> to update.</param>
+    /// <param name="windowsRuntimeTypeId">The id of the type symbols to target.</param>
     /// <param name="cancellationToken">The cancellation token for the operation.</param>
     /// <returns>An updated document with the applied code fix, and the return type of the method being <see cref="Task"/>.</returns>
     private async Task<SyntaxNode> AddMissingAttribute(
         Document document,
         MemberDeclarationSyntax memberDeclaration,
+        string? windowsRuntimeTypeId,
         CancellationToken cancellationToken)
     {
         // Get the semantic model (bail if it's not available)
@@ -102,13 +117,21 @@ public abstract class RuntimeClassCastCodeFixer : CodeFixProvider
             return memberDeclaration;
         }
 
+        // Also bail if we can't resolve the target type symbol
+        if (windowsRuntimeTypeId is null || semanticModel.Compilation.GetTypeByMetadataName(windowsRuntimeTypeId) is not INamedTypeSymbol windowsRuntimeTypeSymbol)
+        {
+            return memberDeclaration;
+        }
+
         SyntaxGenerator syntaxGenerator = SyntaxGenerator.GetGenerator(document);
 
         // Create the attribute syntax for the new attribute. Also annotate it
         // to automatically add using directives to the document, if needed.
         // Then create the attribute syntax and insert it at the right position.
         SyntaxNode attributeTypeSyntax = syntaxGenerator.TypeExpression(attributeSymbol).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation);
-        SyntaxNode attributeSyntax = syntaxGenerator.Attribute(attributeTypeSyntax);
+        SyntaxNode targetTypeSyntax = syntaxGenerator.TypeExpression(windowsRuntimeTypeSymbol).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation);
+        SyntaxNode attributeArgumentSyntax = syntaxGenerator.AttributeArgument(targetTypeSyntax);
+        SyntaxNode attributeSyntax = syntaxGenerator.Attribute(attributeTypeSyntax, [attributeArgumentSyntax]);
         SyntaxNode updatedMemberDeclarationSyntax = syntaxGenerator.AddAttributes(memberDeclaration, attributeSyntax);
 
         // Replace the node in the syntax tree
@@ -140,10 +163,17 @@ public abstract class RuntimeClassCastCodeFixer : CodeFixProvider
                     continue;
                 }
 
+                // Retrieve the property passed by the analyzer
+                if (!diagnostic.Properties.TryGetValue(RuntimeClassCastAnalyzer.WindowsRuntimeTypeId, out string? windowsRuntimeTypeId))
+                {
+                    continue;
+                }
+
                 // Get the syntax node with the updated declaration
                 SyntaxNode updatedMemberDeclaration = await codeFixer.AddMissingAttribute(
                     document,
                     memberDeclaration,
+                    windowsRuntimeTypeId,
                     fixAllContext.CancellationToken);
 
                 // Replace the node via the editor

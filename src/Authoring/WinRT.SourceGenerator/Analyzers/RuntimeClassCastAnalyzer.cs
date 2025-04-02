@@ -20,6 +20,11 @@ namespace Generator;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
 {
+    /// <summary>
+    /// The id of the parameter for the target type.
+    /// </summary>
+    public const string WindowsRuntimeTypeId = "WindowsRuntimeType";
+
     /// <inheritdoc/>
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [WinRTRules.RuntimeClassCast, WinRTRules.IReferenceTypeCast];
 
@@ -133,6 +138,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                     context.ReportDiagnostic(Diagnostic.Create(
                         innerTypeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
+                        ImmutableDictionary.Create<string, string?>().Add(WindowsRuntimeTypeId, innerTypeSymbol.GetFullyQualifiedMetadataName()),
                         outerTypeSymbol));
                 }
             }, OperationKind.Conversion);

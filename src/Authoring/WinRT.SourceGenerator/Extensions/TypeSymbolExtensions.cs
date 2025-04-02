@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// Ported from 'ITypeSymbolExtensions' in ComputeSharp (https://github.com/Sergio0694/ComputeSharp).
+// Licensed under the MIT License (MIT) (see: https://github.com/Sergio0694/ComputeSharp?tab=MIT-1-ov-file).
+// Source: https://github.com/Sergio0694/ComputeSharp/blob/main/src/ComputeSharp.SourceGeneration/Extensions/ITypeSymbolExtensions.cs.
+
+using System;
 using Microsoft.CodeAnalysis;
 
 #nullable enable

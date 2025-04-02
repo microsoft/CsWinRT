@@ -1,12 +1,17 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// Ported from 'ImmutableArrayBuilder<T>' in ComputeSharp (https://github.com/Sergio0694/ComputeSharp).
+// Licensed under the MIT License (MIT) (see: https://github.com/Sergio0694/ComputeSharp?tab=MIT-1-ov-file).
+// Source: https://github.com/Sergio0694/ComputeSharp/blob/main/src/ComputeSharp.SourceGeneration/Helpers/ImmutableArrayBuilder%7BT%7D.cs.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+
+#nullable enable
 
 namespace Generator;
 
