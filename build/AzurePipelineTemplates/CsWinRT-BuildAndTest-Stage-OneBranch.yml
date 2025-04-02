@@ -80,7 +80,7 @@ jobs:
 # Signing 3rd Party
     - task: onebranch.pipeline.signing@1
       displayName: '🔒 Onebranch Signing for 3rd party binaries'
-      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
         command: sign
         signing_profile: 135020002
