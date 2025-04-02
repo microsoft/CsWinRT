@@ -53,6 +53,44 @@ jobs:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
 
+# Signing
+    - task: onebranch.pipeline.signing@1
+      displayName: '🔒 Onebranch Signing for cswinrt binaries'
+      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        command: sign
+        signing_profile: external_distribution
+        files_to_sign: |
+          native/cswinrt.exe;
+          native/WinRT.Interop.winmd;
+          netstandard2.0/WinRT.Runtime.dll;
+          netstandard2.0/WinRT.Host.Shim.dll;
+          netstandard2.0/WinRT.SourceGenerator.dll;
+          net6.0/WinRT.Host.Shim.dll;
+          net6.0/WinRT.Runtime.dll;
+          net8.0/WinRT.Runtime.dll;
+          native/WinRT.Host.dll;
+          native/WinRT.Host.dll.mui;
+          net6.0/IIDOptimizer/IIDOptimizer.exe;
+          net6.0/IIDOptimizer/IIDOptimizer.dll;
+          net6.0/CsWinMD/CsWinMD.exe;
+          net6.0/CsWinMD/CsWinMD.dll;
+        search_root: $(StagingFolder)
+
+# Signing 3rd Party
+    - task: onebranch.pipeline.signing@1
+      displayName: '🔒 Onebranch Signing for 3rd party binaries'
+      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        command: sign
+        signing_profile: 135020002
+        files_to_sign: |
+          net6.0/IIDOptimizer/Mono.Cecil.dll;
+          net6.0/IIDOptimizer/Mono.Cecil.Mdb.dll;
+          net6.0/IIDOptimizer/Mono.Cecil.Pdb.dll;
+          net6.0/IIDOptimizer/Mono.Cecil.Rocks.dll;
+        search_root: $(StagingFolder)
+
   - job: Benchmarks
     displayName: Run Benchmarks
     condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
