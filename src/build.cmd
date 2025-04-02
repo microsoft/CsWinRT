@@ -35,16 +35,6 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 -Version '%CsWinRTBuildNet8SDKVersion%' -InstallDir '%DOTNET_ROOT(x86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
-:globaljson
-rem Create global.json for current .NET SDK, and with allowPrerelease=true
-set global_json=%this_dir%global.json
-echo { > %global_json%
-echo   "sdk": { >> %global_json%
-echo     "version": "%CsWinRTBuildNet8SDKVersion%", >> %global_json%
-echo     "allowPrerelease": true >> %global_json%
-echo   } >> %global_json%
-echo } >> %global_json%
-
 rem Preserve above for Visual Studio launch inheritance
 setlocal ENABLEDELAYEDEXPANSION
 
@@ -96,16 +86,6 @@ if "%cswinrt_platform%" EQU "x64" (
   )
 )
 
-rem Generate prerelease targets file to exercise build warnings
-set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
-rem Create default %prerelease_targets%
-echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
-echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
-echo     Condition="'$(NetCoreSdkVersion)' ^!= '%CsWinRTBuildNetSDKVersion%' and '$(Net5SdkVersion)' ^!= '%CsWinRTBuildNetSDKVersion%'"^> >> %prerelease_targets%
-echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTBuildNetSDKVersion%. Other prereleases may be incompatible due to breaking changes." /^> >> %prerelease_targets%
-echo   ^</Target^> >> %prerelease_targets%
-echo ^</Project^> >> %prerelease_targets%
-
 goto :skip_build_tools
 rem VS 16.X BuildTools support (when a prerelease VS is required, until it is deployed to Azure Devops agents) 
 msbuild -ver | findstr 16.X >nul
@@ -141,7 +121,7 @@ if exist %nuget_dir%\nuget.exe (
   )
 )
 if not exist %nuget_dir% md %nuget_dir%
-if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.8.0-preview.2/nuget.exe -OutFile %nuget_dir%\nuget.exe"
+if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile %nuget_dir%\nuget.exe"
 %nuget_dir%\nuget update -self
 rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
 call %this_dir%get_testwinrt.cmd
