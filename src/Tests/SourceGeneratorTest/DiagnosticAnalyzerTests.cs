@@ -939,6 +939,43 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
+    public async Task RuntimeClassCast_InvalidCast_WithDynamicWindowsRuntimeCast_PropertyAccessors_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using System.Collections.Generic;
+            using System.Diagnostics.CodeAnalysis;
+            using WinRT;
+
+            class Test
+            {
+                private object _obj;
+                private C _c;
+
+                public C P1
+                {
+                    [DynamicWindowsRuntimeCast(typeof(C))]
+                    get => (C)_obj;
+                }
+
+                public C P2
+                {
+                    [DynamicWindowsRuntimeCast(typeof(C))]
+                    get => (C)_obj;
+
+                    [DynamicWindowsRuntimeCast(typeof(C))]
+                    set => _c = (C)_obj;
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
+    }
+
+    [TestMethod]
     public async Task RuntimeClassCast_InterpolatedHandlerArgument_DoesNotWarn()
     {
         const string source = """
@@ -1011,6 +1048,17 @@ public class DiagnosticAnalyzerTests
 
             class Test
             {
+                private object _obj;
+                private C _c;
+
+                public C P1 => {|CsWinRT1034:(C)_obj|};
+
+                public C P2
+                {
+                    get => {|CsWinRT1034:(C)_obj|};
+                    set => _c = {|CsWinRT1034:(C)_obj|};
+                }
+
                 void M(object obj)
                 {
                     C c1 = {|CsWinRT1034:(C)obj|};

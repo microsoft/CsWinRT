@@ -329,4 +329,170 @@ public class RuntimeClassCastCodeFixerTests
 
         await test.RunAsync();
     }
+
+    [TestMethod]
+    public async Task SingleCast_Property_OneAccessor()
+    {
+        const string original = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                object _obj;
+
+                C P1
+                {
+                    get => {|CsWinRT1034:(C)_obj|};
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        const string @fixed = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                object _obj;
+
+                C P1
+                {
+                    [DynamicWindowsRuntimeCast(typeof(C))]
+                    get => (C)_obj;
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
+        {
+            TestCode = original,
+            FixedCode = @fixed
+        };
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task SingleCast_Property_TwoAccessor_OnlyOneWarns()
+    {
+        const string original = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                object _obj;
+
+                C P1
+                {
+                    get => {|CsWinRT1034:(C)_obj|};
+                    set => _obj = value;
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        const string @fixed = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                object _obj;
+
+                C P1
+                {
+                    [DynamicWindowsRuntimeCast(typeof(C))]
+                    get => (C)_obj;
+                    set => _obj = value;
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
+        {
+            TestCode = original,
+            FixedCode = @fixed
+        };
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task SingleCast_Property_TwoAccessor_BothWarn()
+    {
+        const string original = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                object _obj;
+                D _d;
+
+                C P1
+                {
+                    get => {|CsWinRT1034:(C)_obj|};
+                    set => _d = {|CsWinRT1034:(D)value|};
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+
+            [WindowsRuntimeType("SomeContract")]
+            class D : C;
+            """;
+
+        const string @fixed = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                object _obj;
+                D _d;
+
+                C P1
+                {
+                    [DynamicWindowsRuntimeCast(typeof(C))]
+                    get => (C)_obj;
+                    [DynamicWindowsRuntimeCast(typeof(D))]
+                    set => _d = (D)value;
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+
+            [WindowsRuntimeType("SomeContract")]
+            class D : C;
+            """;
+
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
+        {
+            TestCode = original,
+            FixedCode = @fixed
+        };
+
+        await test.RunAsync();
+    }
 }

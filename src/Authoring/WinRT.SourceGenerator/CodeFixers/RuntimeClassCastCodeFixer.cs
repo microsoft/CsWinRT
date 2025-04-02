@@ -9,13 +9,13 @@
 
 using System.Collections.Immutable;
 using System.Composition;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Simplification;
 using Microsoft.CodeAnalysis.Text;
@@ -55,16 +55,37 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
         }
 
         // Get the member declaration from the target diagnostic
-        if (root?.FindNode(diagnosticSpan).FirstAncestorOrSelf<MemberDeclarationSyntax>(static n => n.IsKind(SyntaxKind.FieldDeclaration) || n.IsKind(SyntaxKind.MethodDeclaration)) is { } memberDeclaration)
+        if (TryGetTargetNode(root, diagnosticSpan, out SyntaxNode? targetNode))
         {
             // Register the code fix to update the return type to be Task instead
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: "Add '[DynamicWindowsRuntimeCast]' attribute",
-                    createChangedDocument: token => AddMissingAttributeAsync(context.Document, root, memberDeclaration, windowsRuntimeTypeId, token),
+                    createChangedDocument: token => AddMissingAttributeAsync(context.Document, root, targetNode, windowsRuntimeTypeId, token),
                     equivalenceKey: "Add '[DynamicWindowsRuntimeCast]' attribute"),
                 diagnostic);
         }
+    }
+
+    /// <summary>
+    /// Tries to resolve the target syntax node to edit.
+    /// </summary>
+    /// <param name="root">The root of the document to edit.</param>
+    /// <param name="span">The target span for the node to retrieve.</param>
+    /// <param name="result">The resulting node to edit, if found.</param>
+    /// <returns>Whether or not <paramref name="result"/> was retrieved correctly.</returns>
+    private static bool TryGetTargetNode([NotNullWhen(true)] SyntaxNode? root, TextSpan span, [NotNullWhen(true)] out SyntaxNode? result)
+    {
+        result = root?.FindNode(span).FirstAncestorOrSelf<SyntaxNode>(static n =>
+            n.IsKind(SyntaxKind.FieldDeclaration) ||
+            n.IsKind(SyntaxKind.MethodDeclaration) ||
+            n.IsKind(SyntaxKind.GetAccessorDeclaration) ||
+            n.IsKind(SyntaxKind.SetAccessorDeclaration) ||
+            n.IsKind(SyntaxKind.InitAccessorDeclaration) ||
+            n.IsKind(SyntaxKind.AddAccessorDeclaration) ||
+            n.IsKind(SyntaxKind.RemoveAccessorDeclaration));
+
+        return result is not null;
     }
 
     /// <summary>
@@ -72,14 +93,14 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
     /// </summary>
     /// <param name="document">The original document being fixed.</param>
     /// <param name="root">The original tree root belonging to the current document.</param>
-    /// <param name="memberDeclaration">The <see cref="MemberDeclarationSyntax"/> to update.</param>
+    /// <param name="targetNode">The <see cref="SyntaxNode"/> to update.</param>
     /// <param name="windowsRuntimeTypeId">The id of the type symbols to target.</param>
     /// <param name="cancellationToken">The cancellation token for the operation.</param>
     /// <returns>An updated document with the applied code fix, and the return type of the method being <see cref="Task"/>.</returns>
     private async Task<Document> AddMissingAttributeAsync(
         Document document,
         SyntaxNode root,
-        MemberDeclarationSyntax memberDeclaration,
+        SyntaxNode targetNode,
         string? windowsRuntimeTypeId,
         CancellationToken cancellationToken)
     {
@@ -95,36 +116,36 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
         SyntaxNode updatedMemberDeclaration = AddMissingAttribute(
             document,
             compilation,
-            memberDeclaration,
+            targetNode,
             windowsRuntimeTypeId);
 
         // Replace the node in the document tree
-        return document.WithSyntaxRoot(root.ReplaceNode(memberDeclaration, updatedMemberDeclaration));
+        return document.WithSyntaxRoot(root.ReplaceNode(targetNode, updatedMemberDeclaration));
     }
 
     /// <summary>
     /// Applies the code fix to add the missing attribute to a target type.
     /// </summary>
     /// <param name="document">The original document being fixed.</param>
-    /// <param name="memberDeclaration">The <see cref="MemberDeclarationSyntax"/> to update.</param>
+    /// <param name="targetNode">The <see cref="SyntaxNode"/> to update.</param>
     /// <param name="windowsRuntimeTypeId">The id of the type symbols to target.</param>
     /// <returns>An updated document with the applied code fix.</returns>
     private SyntaxNode AddMissingAttribute(
         Document document,
         Compilation compilation,
-        MemberDeclarationSyntax memberDeclaration,
+        SyntaxNode targetNode,
         string? windowsRuntimeTypeId)
     {
         // Bail if we can't resolve the target attribute symbol (this should really never happen)
         if (compilation.GetTypeByMetadataName("WinRT.DynamicWindowsRuntimeCastAttribute") is not INamedTypeSymbol attributeSymbol)
         {
-            return memberDeclaration;
+            return targetNode;
         }
 
         // Also bail if we can't resolve the target type symbol
         if (windowsRuntimeTypeId is null || compilation.GetTypeByMetadataName(windowsRuntimeTypeId) is not INamedTypeSymbol windowsRuntimeTypeSymbol)
         {
-            return memberDeclaration;
+            return targetNode;
         }
 
         SyntaxGenerator syntaxGenerator = SyntaxGenerator.GetGenerator(document);
@@ -136,7 +157,7 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
         SyntaxNode targetTypeSyntax = syntaxGenerator.TypeExpression(windowsRuntimeTypeSymbol).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation);
         SyntaxNode attributeArgumentSyntax = syntaxGenerator.AttributeArgument(syntaxGenerator.TypeOfExpression(targetTypeSyntax));
         SyntaxNode attributeSyntax = syntaxGenerator.Attribute(attributeTypeSyntax, [attributeArgumentSyntax]);
-        SyntaxNode updatedMemberDeclarationSyntax = syntaxGenerator.AddAttributes(memberDeclaration, attributeSyntax);
+        SyntaxNode updatedMemberDeclarationSyntax = syntaxGenerator.AddAttributes(targetNode, attributeSyntax);
 
         // Replace the node in the syntax tree
         return updatedMemberDeclarationSyntax;
@@ -174,7 +195,7 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
                 fixAllContext.CancellationToken.ThrowIfCancellationRequested();
 
                 // Get the current node to annotate
-                if (root.FindNode(diagnostic.Location.SourceSpan).FirstAncestorOrSelf<MemberDeclarationSyntax>(static n => n.IsKind(SyntaxKind.FieldDeclaration) || n.IsKind(SyntaxKind.MethodDeclaration)) is not { } memberDeclaration)
+                if (!TryGetTargetNode(root, diagnostic.Location.SourceSpan, out SyntaxNode? targetNode))
                 {
                     continue;
                 }
@@ -186,12 +207,12 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
                 }
 
                 // Replace the node via the editor (needs a lambda to ensure multiple fixes are combined correctly)
-                syntaxEditor.ReplaceNode(memberDeclaration, (memberDeclaration, _) =>
+                syntaxEditor.ReplaceNode(targetNode, (targetNode, _) =>
                 {
                     return codeFixer.AddMissingAttribute(
                         document,
                         compilation,
-                        (MemberDeclarationSyntax)memberDeclaration,
+                        targetNode,
                         windowsRuntimeTypeId);
                 });
             }
