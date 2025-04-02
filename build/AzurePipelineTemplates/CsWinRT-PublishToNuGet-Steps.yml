@@ -31,57 +31,6 @@ steps:
       itemPattern: ''
       targetPath: $(Build.SourcesDirectory)\release_arm64
 
-  # Stage Binaries
-  - task: CmdLine@2
-    displayName: Stage Binaries
-    inputs:
-      workingDirectory: $(Build.SourcesDirectory)
-      script: |
-        copy release_x86\native\cswinrt.exe cswinrt.exe
-        copy release_x86\native\WinRT.Interop.winmd WinRT.Interop.winmd
-
-  - ${{ if eq(parameters.IsGitHub, false) }}:
-
-  # Signing
-    - task: onebranch.pipeline.signing@1
-      displayName: '🔒 Onebranch Signing for cswinrt binaries'
-      inputs:
-        command: sign
-        signing_profile: external_distribution
-        files_to_sign: |
-          cswinrt.exe;
-          WinRT.Interop.winmd;
-          release_x86/netstandard2.0/WinRT.Runtime.dll;
-          release_x86/netstandard2.0/WinRT.Host.Shim.dll;
-          release_x86/netstandard2.0/WinRT.SourceGenerator.dll;
-          release_x86/net6.0/WinRT.Host.Shim.dll;
-          release_x86/net6.0/WinRT.Runtime.dll;
-          release_x86/net8.0/WinRT.Runtime.dll;
-          release_x64/native/WinRT.Host.dll;
-          release_x64/native/WinRT.Host.dll.mui;
-          release_x86/native/WinRT.Host.dll;
-          release_x86/native/WinRT.Host.dll.mui;
-          release_arm64/native/WinRT.Host.dll;
-          release_arm64/native/WinRT.Host.dll.mui;
-          release_x86/net6.0/IIDOptimizer/IIDOptimizer.exe;
-          release_x86/net6.0/IIDOptimizer/IIDOptimizer.dll;
-          release_x86/net6.0/CsWinMD/CsWinMD.exe;
-          release_x86/net6.0/CsWinMD/CsWinMD.dll;
-        search_root: $(Build.SourcesDirectory)
-
-  # Signing 3rd Party
-    - task: onebranch.pipeline.signing@1
-      displayName: '🔒 Onebranch Signing for 3rd party binaries'
-      inputs:
-        command: sign
-        signing_profile: 135020002
-        files_to_sign: |
-          release_x86/net6.0/IIDOptimizer/Mono.Cecil.dll;
-          release_x86/net6.0/IIDOptimizer/Mono.Cecil.Mdb.dll;
-          release_x86/net6.0/IIDOptimizer/Mono.Cecil.Pdb.dll;
-          release_x86/net6.0/IIDOptimizer/Mono.Cecil.Rocks.dll;
-        search_root: $(Build.SourcesDirectory)
-
   # Parse Versions
   - task: CmdLine@2
     displayName: Parse Versions
@@ -122,7 +71,7 @@ steps:
       command: pack
       searchPatternPack: nuget/Microsoft.Windows.CsWinRT.nuspec
       configurationToPack: Release
-      buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\WinRT.Interop.winmd;netstandard2_runtime=$(Build.SourcesDirectory)\release_x86\netstandard2.0\WinRT.Runtime.dll;net6_runtime=$(Build.SourcesDirectory)\release_x86\net6.0\WinRT.Runtime.dll;net8_runtime=$(Build.SourcesDirectory)\release_x86\net8.0\WinRT.Runtime.dll;source_generator=$(Build.SourcesDirectory)\release_x86\netstandard2.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\release_x86\net6.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll.mui;guid_patch=$(Build.SourcesDirectory)\release_x86\net6.0\IIDOptimizer\*.*
+      buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\release_x86\native\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\release_x86\native\WinRT.Interop.winmd;netstandard2_runtime=$(Build.SourcesDirectory)\release_x86\netstandard2.0\WinRT.Runtime.dll;net6_runtime=$(Build.SourcesDirectory)\release_x86\net6.0\WinRT.Runtime.dll;net8_runtime=$(Build.SourcesDirectory)\release_x86\net8.0\WinRT.Runtime.dll;source_generator=$(Build.SourcesDirectory)\release_x86\netstandard2.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\release_x86\net6.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll.mui;guid_patch=$(Build.SourcesDirectory)\release_x86\net6.0\IIDOptimizer\*.*
       packDestination: $(ob_outputDirectory)\packages
 
   - task: NuGetCommand@2
