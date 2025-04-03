@@ -88,7 +88,7 @@ public sealed class DynamicWindowsRuntimeCastGenerator : IIncrementalGenerator
 
             foreach (string typeName in value)
             {
-                builder.Append("        [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields, typeof(global::");
+                builder.Append("        [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields, typeof(");
                 builder.Append(typeName);
                 builder.AppendLine("))]");
             }
