@@ -23,8 +23,8 @@
   
   <!-- Targeting .NET versions older than 5 requires different versions of these packages -->
   <ItemGroup Condition="!($([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) &gt;= 5)">
-    <PackageReference Include="System.Memory" Version="4.5.4" />
-    <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" />
+    <PackageReference Include="System.Memory" />
+    <PackageReference Include="System.Runtime.Extensions" />
   </ItemGroup>
   
   <PropertyGroup>
