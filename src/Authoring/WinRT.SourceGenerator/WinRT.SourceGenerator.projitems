@@ -34,6 +34,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ImmutableEquatableArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MergeReferencedActivationFactoriesGenerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DynamicWindowsRuntimeCastGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RcwReflectionFallbackGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TypeMapper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WinRTAotCodeFixer.cs" />

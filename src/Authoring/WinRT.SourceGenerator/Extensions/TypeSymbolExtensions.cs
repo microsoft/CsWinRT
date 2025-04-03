@@ -21,7 +21,7 @@ internal static class TypeSymbolExtensions
     /// Thread-local writer to build metadata names.
     /// </summary>
     [ThreadStatic]
-    private static ArrayBufferWriter<char>? Writer;
+    private static ArrayBufferWriter<char>? writer;
 
     /// <summary>
     /// Gets the fully qualified metadata name for a given <see cref="ITypeSymbol"/> instance.
@@ -30,7 +30,7 @@ internal static class TypeSymbolExtensions
     /// <returns>The fully qualified metadata name for <paramref name="symbol"/>.</returns>
     public static string GetFullyQualifiedMetadataName(this ITypeSymbol symbol)
     {
-        ArrayBufferWriter<char> writer = Writer ??= [];
+        ArrayBufferWriter<char> writer = TypeSymbolExtensions.writer ??= [];
 
         writer.Clear();
 

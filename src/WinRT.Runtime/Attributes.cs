@@ -409,12 +409,9 @@ namespace WinRT
         /// Creates a new <see cref="DynamicWindowsRuntimeCastAttribute"/> instance with the specified parameters.
         /// </summary>
         /// <param name="type">The Windows Runtime type being used for the cast.</param>
-        public DynamicWindowsRuntimeCastAttribute([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicFields)] Type type)
+        public DynamicWindowsRuntimeCastAttribute(Type type)
         {
-            Type = type;
         }
-
-        internal Type Type { get; }
     }
 #endif
 }
