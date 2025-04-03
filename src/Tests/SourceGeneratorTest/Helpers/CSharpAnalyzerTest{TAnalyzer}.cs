@@ -1,3 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// Ported from 'CSharpAnalyzerTest<TAnalyzer>' in ComputeSharp (https://github.com/Sergio0694/ComputeSharp).
+// Licensed under the MIT License (MIT) (see: https://github.com/Sergio0694/ComputeSharp?tab=MIT-1-ov-file).
+// Source: https://github.com/Sergio0694/ComputeSharp/blob/main/tests/ComputeSharp.Tests.SourceGenerators/Helpers/CSharpAnalyzerTest%7BTAnalyzer%7D.cs.
+
 using System;
 using System.Linq;
 using System.Text;
@@ -17,7 +24,6 @@ namespace SourceGeneratorTest.Helpers;
 /// A custom <see cref="CSharpAnalyzerTest{TAnalyzer, TVerifier}"/> that uses a specific C# language version to parse code.
 /// </summary>
 /// <typeparam name="TAnalyzer">The type of the analyzer to test.</typeparam>
-// Ported from https://github.com/Sergio0694/ComputeSharp
 internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
     where TAnalyzer : DiagnosticAnalyzer, new()
 {

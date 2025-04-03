@@ -20,6 +20,11 @@ namespace Generator;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
 {
+    /// <summary>
+    /// The id of the parameter for the target type.
+    /// </summary>
+    public const string WindowsRuntimeTypeId = "WindowsRuntimeType";
+
     /// <inheritdoc/>
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [WinRTRules.RuntimeClassCast, WinRTRules.IReferenceTypeCast];
 
@@ -48,22 +53,24 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            // Also try to get 'System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute' if present
-            INamedTypeSymbol? dynamicDependencyAttribute = context.Compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute");
+            // Also try to get 'WinRT.DynamicWindowsRuntimeCastAttribute ' which should always be present
+            if (context.Compilation.GetTypeByMetadataName("WinRT.DynamicWindowsRuntimeCastAttribute") is not INamedTypeSymbol dynamicWindowsRuntimeCastAttribute)
+            {
+                return;
+            }
 
             // Helper to check a given method symbol
-            bool IsDynamicDependencyPropertyForSymbol(ISymbol? symbol, INamedTypeSymbol classType)
+            bool IsDynamicCastAttributePresentOnSymbol(ISymbol? symbol, INamedTypeSymbol classType)
             {
-                if (symbol is null || dynamicDependencyAttribute is null)
+                if (symbol is null)
                 {
                     return false;
                 }
 
-                foreach (AttributeData attributeData in symbol.EnumerateAttributesWithType(dynamicDependencyAttribute))
+                foreach (AttributeData attributeData in symbol.EnumerateAttributesWithType(dynamicWindowsRuntimeCastAttribute))
                 {
-                    // We don't need to validate the other parameters. Using '[DynamicDependency]' is a very advanced scenario.
-                    // As long as the type matches, we assume the developer knows what they're doing here, so we don't warn.
-                    if (attributeData.ConstructorArguments is [_, { Kind: TypedConstantKind.Type, IsNull: false, Value: INamedTypeSymbol typeSymbol }] &&
+                    // Check that the type is actually the one used in this case. Otherwise, ignore the attribute (we might have several on the same symbol)
+                    if (attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, IsNull: false, Value: INamedTypeSymbol typeSymbol }] &&
                         SymbolEqualityComparer.Default.Equals(typeSymbol, classType))
                     {
                         return true;
@@ -74,19 +81,19 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
             }
 
             // Helper to check if the containing method for a given operation has the right annotation already
-            bool IsDynamicDependencyPresentForOperation(IOperation? operation, INamedTypeSymbol classType)
+            bool IsDynamicCastAttributePresentOnOperation(IOperation? operation, INamedTypeSymbol classType)
             {
                 return operation switch
                 {
                     IAnonymousFunctionOperation { Symbol: IMethodSymbol lambdaMethod } =>
-                        IsDynamicDependencyPropertyForSymbol(lambdaMethod, classType) ||
-                        IsDynamicDependencyPresentForOperation(operation.Parent, classType),
+                        IsDynamicCastAttributePresentOnSymbol(lambdaMethod, classType) ||
+                        IsDynamicCastAttributePresentOnOperation(operation.Parent, classType),
                     ILocalFunctionOperation { Symbol: IMethodSymbol localMethod } =>
-                        IsDynamicDependencyPropertyForSymbol(localMethod, classType) ||
-                        IsDynamicDependencyPresentForOperation(operation.Parent, classType),
-                    IMethodBodyBaseOperation bodyOperation => IsDynamicDependencyPropertyForSymbol(operation.SemanticModel?.GetDeclaredSymbol(operation.Syntax) as IMethodSymbol, classType),
-                    IFieldInitializerOperation fieldInitializer => IsDynamicDependencyPropertyForSymbol(fieldInitializer.InitializedFields.FirstOrDefault(), classType),
-                    { } => IsDynamicDependencyPresentForOperation(operation.Parent, classType),
+                        IsDynamicCastAttributePresentOnSymbol(localMethod, classType) ||
+                        IsDynamicCastAttributePresentOnOperation(operation.Parent, classType),
+                    IMethodBodyBaseOperation bodyOperation => IsDynamicCastAttributePresentOnSymbol(operation.SemanticModel?.GetDeclaredSymbol(operation.Syntax) as IMethodSymbol, classType),
+                    IFieldInitializerOperation fieldInitializer => IsDynamicCastAttributePresentOnSymbol(fieldInitializer.InitializedFields.FirstOrDefault(), classType),
+                    { } => IsDynamicCastAttributePresentOnOperation(operation.Parent, classType),
                     null => false
                 };
             }
@@ -124,12 +131,13 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                 if (innerTypeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
                     conversion.Operand is { Type.IsReferenceType: true } and not { ConstantValue: { HasValue: true, Value: null } } &&
                     !context.Compilation.HasImplicitConversion(conversion.Operand.Type, innerTypeSymbol) &&
-                    !IsDynamicDependencyPresentForOperation(context.Operation, innerTypeSymbol))
+                    !IsDynamicCastAttributePresentOnOperation(context.Operation, innerTypeSymbol))
                 {
                     // We're intentionally passing 'outerTypeSymbol' as argument, so we show the original type name in the message
                     context.ReportDiagnostic(Diagnostic.Create(
                         innerTypeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
+                        ImmutableDictionary.Create<string, string?>().Add(WindowsRuntimeTypeId, innerTypeSymbol.GetFullyQualifiedMetadataName()),
                         outerTypeSymbol));
                 }
             }, OperationKind.Conversion);
@@ -145,11 +153,12 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                     typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
                     typeOperation.ValueOperand.Type is { IsReferenceType: true } &&
                     !context.Compilation.HasImplicitConversion(typeOperation.ValueOperand.Type, typeSymbol) &&
-                    !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
+                    !IsDynamicCastAttributePresentOnOperation(context.Operation, typeSymbol))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
+                        ImmutableDictionary.Create<string, string?>().Add(WindowsRuntimeTypeId, typeSymbol.GetFullyQualifiedMetadataName()),
                         typeSymbol));
                 }
             }, OperationKind.IsType);
@@ -171,7 +180,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                     typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
                     patternOperation.InputType.IsReferenceType &&
                     !context.Compilation.HasImplicitConversion(patternOperation.InputType, typeSymbol) &&
-                    !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
+                    !IsDynamicCastAttributePresentOnOperation(context.Operation, typeSymbol))
                 {
                     // Adjust the location for 'obj is C ic' patterns, to include the 'is' expression as well
                     Location location = context.Operation.Parent is IIsPatternOperation isPatternOperation
@@ -181,6 +190,7 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                     context.ReportDiagnostic(Diagnostic.Create(
                         typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         location,
+                        ImmutableDictionary.Create<string, string?>().Add(WindowsRuntimeTypeId, typeSymbol.GetFullyQualifiedMetadataName()),
                         typeSymbol));
                 }
             }, OperationKind.DeclarationPattern);
@@ -196,11 +206,12 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                     typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
                     patternOperation.InputType.IsReferenceType &&
                     !context.Compilation.HasImplicitConversion(patternOperation.InputType, typeSymbol) &&
-                    !IsDynamicDependencyPresentForOperation(context.Operation, typeSymbol))
+                    !IsDynamicCastAttributePresentOnOperation(context.Operation, typeSymbol))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
                         context.Operation.Syntax.GetLocation(),
+                        ImmutableDictionary.Create<string, string?>().Add(WindowsRuntimeTypeId, typeSymbol.GetFullyQualifiedMetadataName()),
                         typeSymbol));
                 }
             }, OperationKind.TypePattern);
