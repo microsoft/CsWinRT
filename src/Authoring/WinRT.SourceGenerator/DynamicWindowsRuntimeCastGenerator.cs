@@ -53,7 +53,8 @@ public sealed class DynamicWindowsRuntimeCastGenerator : IIncrementalGenerator
                 return typeNamesWriter.WrittenSpan.ToImmutableArray();
             })
             .SelectMany(static (value, token) => value)
-            .Collect();
+            .Collect()
+            .Select(static (value, token) => value.Distinct().OrderBy(static name => name).ToImmutableArray());
 
         // Generate the [DynamicDependency] attributes
         context.RegisterImplementationSourceOutput(typeNames, static (SourceProductionContext context, ImmutableArray<string> value) =>
