@@ -298,6 +298,53 @@ public class RuntimeClassCastCodeFixerTests
     }
 
     [TestMethod]
+    public async Task SingleCast_Constructor()
+    {
+        const string original = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                public Program(object obj)
+                {
+                    C c = {|CsWinRT1034:(C)obj|};
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        const string @fixed = """
+            using WinRT;
+
+            namespace MyApp;
+
+            public class Program
+            {
+                [DynamicWindowsRuntimeCast(typeof(C))]
+                public Program(object obj)
+                {
+                    C c = (C)obj;
+                }
+            }
+
+            [WindowsRuntimeType("SomeContract")]
+            class C;
+            """;
+
+        CSharpCodeFixTest test = new(LanguageVersion.CSharp13, editorconfig: [("CsWinRTAotWarningLevel", "3")])
+        {
+            TestCode = original,
+            FixedCode = @fixed
+        };
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task SingleCast_LocalMethod()
     {
         const string original = """

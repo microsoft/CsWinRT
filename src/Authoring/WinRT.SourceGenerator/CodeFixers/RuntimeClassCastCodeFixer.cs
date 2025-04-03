@@ -80,6 +80,7 @@ public sealed class RuntimeClassCastCodeFixer : CodeFixProvider
         result = root?.FindNode(span).FirstAncestorOrSelf<SyntaxNode>(static n =>
             n.IsKind(SyntaxKind.FieldDeclaration) ||
             n.IsKind(SyntaxKind.MethodDeclaration) ||
+            n.IsKind(SyntaxKind.ConstructorDeclaration) ||
             n.IsKind(SyntaxKind.GetAccessorDeclaration) ||
             n.IsKind(SyntaxKind.SetAccessorDeclaration) ||
             n.IsKind(SyntaxKind.InitAccessorDeclaration) ||
