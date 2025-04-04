@@ -14,12 +14,12 @@ namespace WindowsRuntime.InteropServices;
 internal static unsafe class IMarshalImpl
 {
     /// <summary>
-    /// The vtable for the <c>IUnknown</c> implementation.
+    /// The vtable for the <c>IMarshal</c> implementation.
     /// </summary>
     public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
 
     /// <summary>
-    /// Computes the <c>IUnknown</c> implementation vtable.
+    /// Computes the <c>IMarshal</c> implementation vtable.
     /// </summary>
     private static nint GetAbiToProjectionVftablePtr()
     {

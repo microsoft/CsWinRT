@@ -18,9 +18,19 @@ internal static unsafe class IStringableImpl
     /// <summary>
     /// The vtable for the <c>IStringable</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedInspectableVtableUnsafe(
-        type: typeof(IStringableImpl),
-        fpEntry6: (delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT>)&ToString);
+    public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
+
+    /// <summary>
+    /// Computes the <c>IStringable</c> implementation vtable.
+    /// </summary>
+    private static nint GetAbiToProjectionVftablePtr()
+    {
+        IStringableVftbl* vftbl = (IStringableVftbl*)WindowsRuntimeHelpers.AllocateTypeAssociatedInspectableVtable(typeof(IStringableImpl), 7);
+
+        vftbl->ToString = &ToString;
+
+        return (nint)vftbl;
+    }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/windows.foundation/nf-windows-foundation-istringable-tostring"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
