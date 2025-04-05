@@ -3,7 +3,7 @@ parameters:
     type: string
   - name: "BuildPlatform"
     type: string
-  - name: BuildCsWinRTOnly
+  - name: SetupForBuildOnly
     type: boolean
     default: false
     
@@ -164,16 +164,16 @@ steps:
       feedsToUse: config
       nugetConfigPath: NuGet.config
 
-# PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
-  - task: VSBuild@1
-    displayName: Build cswinrt.sln
-    inputs:
-      solution: $(Build.SourcesDirectory)\src\cswinrt.sln
-      msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
-      platform: $(BuildPlatform)
-      configuration: $(BuildConfiguration)
+  - ${{ if eq(parameters.SetupForBuildOnly, false) }}:
 
-  - ${{ if eq(parameters.BuildCsWinRTOnly, false) }}:
+# PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
+    - task: VSBuild@1
+      displayName: Build cswinrt.sln
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\cswinrt.sln
+        msbuildArgs: /m /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
+        platform: $(BuildPlatform)
+        configuration: $(BuildConfiguration)
 
     - task: NuGetCommand@2
       displayName: NuGet restore TestEmbedded.sln
