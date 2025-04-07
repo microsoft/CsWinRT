@@ -95,7 +95,16 @@ stages:
       parameters:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
-        BuildCsWinRTOnly: true
+        SetupForBuildOnly: true
+
+    - task: MSBuild@1
+      displayName: Build Object Lifetime Tests
+      condition: succeeded()
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj
+        msbuildArguments: /restore /p:CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+        platform: $(BuildPlatform)
+        configuration: $(BuildConfiguration)
         
 # Run Object Lifetime Tests
     - task: VSTest@3

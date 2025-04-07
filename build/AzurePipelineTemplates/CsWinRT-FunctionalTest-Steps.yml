@@ -26,7 +26,7 @@ steps:
       condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64'))))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-        msbuildArguments: /t:restore /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+        msbuildArguments: /t:restore /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
   
@@ -35,7 +35,7 @@ steps:
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net6.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net6.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
@@ -66,7 +66,7 @@ steps:
       condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net8.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,CleanIntermediateDirs=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net8.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
