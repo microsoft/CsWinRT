@@ -25,9 +25,7 @@ namespace System.Threading.Tasks
             // We ignore it as it just means we weren't able to report
             // the completion and not actually an error in the other process.
             if (exception is COMException comException &&
-                (comException.HResult == RPC_E_DISCONNECTED ||
-                 comException.HResult == RPC_S_SERVER_UNAVAILABLE ||
-                 comException.HResult == JSCRIPT_E_CANTEXECUTE))
+                comException.HResult is RPC_E_DISCONNECTED or RPC_S_SERVER_UNAVAILABLE or JSCRIPT_E_CANTEXECUTE)
             {
                 return;
             }
