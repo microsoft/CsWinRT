@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -1920,6 +1921,51 @@ namespace ABI.System
     }
 
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
+    internal static class Nullable_Delegate
+    {
+        internal static readonly ConcurrentDictionary<global::System.Type, Guid> DelegateGuidMapping = new();
+
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+
+#if !NET
+        private static readonly Nullable_Delegates.GetValueDelegate _Get_Value_0;
+#endif
+
+        unsafe static Nullable_Delegate()
+        {
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Nullable_Delegate), sizeof(IInspectable.Vftbl) + sizeof(IntPtr));
+            *(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+#if !NET
+            ((IntPtr*)AbiToProjectionVftablePtr)[6] = Marshal.GetFunctionPointerForDelegate(_Get_Value_0 = Do_Abi_get_Value_0);
+#else
+            ((delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>*)AbiToProjectionVftablePtr)[6] = &Do_Abi_get_Value_0;
+#endif
+        }
+
+#if NET
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+        private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, IntPtr* __return_value__)
+        {
+            global::System.Delegate ____return_value__ = default;
+
+            *__return_value__ = default;
+
+            try
+            {
+                ____return_value__ = global::WinRT.ComWrappersSupport.FindObject<global::System.Delegate> (thisPtr);
+                *__return_value__ = MarshalDelegate.CreateMarshaler2(____return_value__, DelegateGuidMapping[____return_value__.GetType()]).Detach();
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+    }
+
+    [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
     internal static class Nullable_Delegate<T> where T : global::System.Delegate
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(Nullable<T>));
@@ -2405,6 +2451,13 @@ namespace ABI.System
 
         public static ComWrappers.ComInterfaceEntry[] GetExposedInterfaces(ComWrappers.ComInterfaceEntry delegateInterface)
         {
+            // We are here making note of the delegate IID to use later on as part of our Nullable_Delegate
+            // support. This allows us to make use of the same vtable for all delegates rather than
+            // constructing a new one for each delegate type with GetFunctionPointerForDelegate.
+            // We are not doing our own custom check for whether we have already added this type
+            // because we expect this function to only be called once per type due to vtable caching.
+            ABI.System.Nullable_Delegate.DelegateGuidMapping.TryAdd(typeof(T), delegateInterface.IID);
+
             Span<ComWrappers.ComInterfaceEntry> entries = stackalloc ComWrappers.ComInterfaceEntry[3];
             int count = 0;
 
@@ -2421,7 +2474,7 @@ namespace ABI.System
                 entries[count++] = new ComWrappers.ComInterfaceEntry
                 {
                     IID = PIID,
-                    Vtable = ABI.System.Nullable_Delegate<T>.AbiToProjectionVftablePtr
+                    Vtable = ABI.System.Nullable_Delegate.AbiToProjectionVftablePtr
                 };
             }
 
