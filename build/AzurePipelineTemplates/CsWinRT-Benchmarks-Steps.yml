@@ -26,11 +26,10 @@ steps:
     version: 6.x
     installationPath: $(LocalAppData)\Microsoft\dotnet\
 
-# Use .NET Core runtime 8.0
 - task: UseDotNet@2
-  displayName: Use .NET Core runtime 8.0
+  displayName: Use .NET Core SDK 8.0
   inputs:
-    packageType: runtime
+    packageType: sdk
     version: 8.x
     installationPath: $(LocalAppData)\Microsoft\dotnet\
 
