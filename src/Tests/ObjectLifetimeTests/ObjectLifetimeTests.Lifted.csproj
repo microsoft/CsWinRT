@@ -55,16 +55,11 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.TestPlatform.TestHost">
-            <Version>17.3.2</Version>
             <ExcludeAssets>build</ExcludeAssets>
         </PackageReference>
-        <PackageReference Include="MSTest.TestAdapter">
-            <Version>2.2.10</Version>
-        </PackageReference>
-        <PackageReference Include="MSTest.TestFramework">
-            <Version>2.2.10</Version>
-        </PackageReference>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="MSTest.TestAdapter"/>
+        <PackageReference Include="MSTest.TestFramework"/>
+        <PackageReference Include="Newtonsoft.Json" />
     </ItemGroup>
 
     <ItemGroup>
@@ -73,7 +68,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <PackageReference Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWinAppSDKVersion)" GeneratePathProperty="true">
+        <PackageReference Include="Microsoft.WindowsAppSDK" GeneratePathProperty="true">
             <ExcludeAssets>compile</ExcludeAssets>
         </PackageReference>
     </ItemGroup>

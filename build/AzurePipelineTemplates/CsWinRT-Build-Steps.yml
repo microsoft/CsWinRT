@@ -1,403 +1,380 @@
-steps:
-# Clone TestWinRT
-- task: CmdLine@2
-  displayName: Clone TestWinRT
-  enabled: false
-  inputs: 
-    script: get_testwinrt.cmd
-    workingDirectory: $(Build.SourcesDirectory)
-
-# Setup remote for source link to pick up
-- task: PowerShell@2
-  condition: eq(variables['AdoMirrorBuild'], 'true')
-  inputs:
-    targetType: 'inline'
-    script: |
-      git remote add github "https://github.com/microsoft/cswinrt.git"
-
-# Download procdump
-- task: PowerShell@2
-  displayName: Download procdump
-  enabled: false
-  inputs:
-    targetType: inline
-    script: |
-      mkdir $env:Agent_TempDirectory\procdump
-     
-      Invoke-WebRequest -Uri https://download.sysinternals.com/files/Procdump.zip -OutFile $env:Agent_TempDirectory\procdump\Procdump.zip
-      
-      Expand-Archive -Path $env:Agent_TempDirectory\procdump\Procdump.zip $env:Agent_TempDirectory\procdump\
-
-      set PROCDUMP_PATH=$env:Agent_TempDirectory\procdump\
-
-      Write-Host ##vso[task.setvariable variable=PATH;]${env:Agent_TempDirectory}\procdump;${env:PATH};
-
-# Use .NET Core SDK 3.1
-- task: UseDotNet@2
-  displayName: Use .NET Core SDK 3.1
-  inputs:
-    packageType: runtime
-    version: 3.1.x
-    installationPath: $(LocalAppData)\Microsoft\dotnet\
-    performMultiLevelLookup: true
-
-- task: UseDotNet@2
-  displayName: Use .NET Core SDK 3.1
-  inputs:
-    packageType: runtime
-    version: 3.1.x
-    installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
-    performMultiLevelLookup: true
-  env:
-    PROCESSOR_ARCHITECTURE: x86
-
-# Install .NET 8 SDK 
-- task: PowerShell@2
-  displayName: Install .NET 8 SDK
-  inputs:
-    targetType: inline
-    failOnStderr: true
-    script: |
-     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
-     
-     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-     
-     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET8_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
-
-# Install .NET 9 SDK 
-- task: PowerShell@2
-  displayName: Install .NET 9 SDK
-  inputs:
-    targetType: inline
-    failOnStderr: true
-    script: |
-     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
-     
-     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-     
-     dotnet new globaljson --sdk-version "$($env:NET9_SDK_VERSION)" 
-     
-     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET9_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
-
-# Verify .NET SDK
-- task: CmdLine@2
-  displayName: Verify .NET SDK
-  inputs:
-    workingDirectory: $(Build.SourcesDirectory)
-    script: |
-      where dotnet
-      dotnet --info
-
-# Parse Version
-- task: CmdLine@2
-  displayName: Parse Version
-  inputs:
-    workingDirectory: $(Build.SourcesDirectory)
-    script: |
-      rem Parse the build-generated Build.BuildNumber into components that 
-      rem can be recombined for version resources, nuget packages, etc.
-      @echo off
+parameters: 
+  - name: "BuildConfiguration"
+    type: string
+  - name: "BuildPlatform"
+    type: string
+  - name: SetupForBuildOnly
+    type: boolean
+    default: false
     
-      rem Encode the build date/rev into a 16 bit value for resource versions
-      if "$(PrereleaseVersion)"=="" (
-        set RevisionBase=30000
-      ) else (
-        set RevisionBase=0
-      )
+steps:
+  # Clone TestWinRT
+  - task: CmdLine@2
+    displayName: Clone TestWinRT
+    inputs: 
+      script: get_testwinrt.cmd
+      workingDirectory: $(Build.SourcesDirectory)\src
 
-      for /f "tokens=4,5 delims=." %%i in ("$(Build.BuildNumber)") do set BuildMetadata=%%i.%%j & set /a BuildRevision=%RevisionBase%+(((%%i/10000)-20)*366+((%%i)%%10000)/100*31+((%%i)%%100))*10+%%j
+  # Setup remote for source link to pick up
+  - task: PowerShell@2
+    condition: eq(variables['AdoMirrorBuild'], 'true')
+    inputs:
+      targetType: 'inline'
+      script: |
+        git remote add github "https://github.com/microsoft/cswinrt.git"
+      workingDirectory: $(Build.SourcesDirectory)
 
-      set VersionNumber=$(MajorVersion).$(MinorVersion).$(PatchVersion).%BuildRevision%
-
-      if "$(PrereleaseVersion)"=="" (
-        set NugetVersion=$(MajorVersion).$(MinorVersion).$(PatchVersion)
-      ) else (
-        set NugetVersion=$(Build.BuildNumber)
-      )
-
-      rem Export generated version numbers back for subsequent tasks
-      echo ##vso[task.setvariable variable=BuildMetadata;]%BuildMetadata%
-      echo ##vso[task.setvariable variable=BuildRevision;]%BuildRevision%
-      echo ##vso[task.setvariable variable=VersionNumber;]%VersionNumber%
-      echo ##vso[task.setvariable variable=NugetVersion;]%NugetVersion%
-
-- task: NuGetAuthenticate@1
-
-# Build Prerelease Targets
-- task: CmdLine@2
-  displayName: Build Prerelease Targets
-  inputs:
-    workingDirectory: $(Build.SourcesDirectory)
-    script: |
-      if "$(PrereleaseVersion)"=="" goto :eof
-
-      set prerelease_targets=nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
-      echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
-      echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
-      echo     Condition=" '$(NetCoreSdkVersion)' ^!= '$($env:NET5_SDK_VERSION)' and '$(Net5SdkVersion)' ^!= '$($env:NET5_SDK_VERSION)' "^> >> %prerelease_targets%
-      echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK $($env:NET5_SDK_VERSION). Other versions may be incompatible due to breaking changes." /^> >> %prerelease_targets%
-      echo   ^</Target^> >> %prerelease_targets% 
-      echo ^</Project^> >> %prerelease_targets%
-        
-
-# Build Tool
-- task: CmdLine@2
-  displayName: Build Tool
-  inputs:
-    workingDirectory: $(Build.SourcesDirectory)\src
-    script: |
-      if "%VSCMD_VER%"=="" (
-        pushd c:
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
-        popd
-      )
-
-      set cswinrt_echo=on
-      set cswinrt_build_only=true
-      set CIBuildReason=CI
-      rem PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
-      set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /p:CIBuildReason=CI
-      build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
-
-# Build Tool for Embedded Sample
-- task: CmdLine@2
-  displayName: Build TestEmbedded Sample
-  inputs:
-    workingDirectory: $(Build.SourcesDirectory)\src\Samples\TestEmbedded
-    script: |
-      if "%VSCMD_VER%"=="" (
-        pushd c:
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
-        popd
-      )
-
-      set echo_build=on
-      set only_build=true
-      rem PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
-      set embed_build_params=/p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
-      build.cmd $(BuildPlatform) $(BuildConfiguration)
-
-
-# Mask BuildConfiguration
-- task: CmdLine@2
-  displayName: Mask BuildConfiguration
-  enabled: False
-  inputs:
-    script: |
-      @echo off
-
-      rem Although BuildConfiguration is PipelineRelease or PipelineDebug, the build outputs still go to Release or Debug 
-      rem change BuildConfiguration variable so staging succeeds 
-      rem the alternative would be to add configuration property for Pipeline* to every project in cswinrt.sln 
+  # Download procdump
+  - task: PowerShell@2
+    displayName: Download procdump
+    enabled: false
+    inputs:
+      targetType: inline
+      script: |
+        mkdir $env:Agent_TempDirectory\procdump
       
-      if "$(BuildConfiguration)"=="PipelineRelease" ( 
-        set NewBuildConfiguration=Release
-      ) else if "$(BuildConfiguration)"=="PipelineDebug" ( 
-        set NewBuildConfiguration=Debug
-      )
+        Invoke-WebRequest -Uri https://download.sysinternals.com/files/Procdump.zip -OutFile $env:Agent_TempDirectory\procdump\Procdump.zip
+        
+        Expand-Archive -Path $env:Agent_TempDirectory\procdump\Procdump.zip $env:Agent_TempDirectory\procdump\
 
-      if "%NewBuildConfiguration%"!="" (
-        echo ##vso[task.setvariable variable=BuildConfiguration;]%NewBuildConfiguration%
-      )
+        set PROCDUMP_PATH=$env:Agent_TempDirectory\procdump\
 
-# Component Detection
-- task: ComponentGovernanceComponentDetection@0
-  displayName: Component Detection
+        Write-Host ##vso[task.setvariable variable=PATH;]${env:Agent_TempDirectory}\procdump;${env:PATH};
 
-# Stage BinLog
-- task: CopyFiles@2
-  displayName: Stage BinLog
-  condition: always()
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)
-    Contents: cswinrt.binlog
-    TargetFolder: $(Build.ArtifactStagingDirectory)\binlog
+  # Use .NET Core runtme 3.1
+  - task: UseDotNet@2
+    displayName: Use .NET Core runtime 3.1
+    inputs:
+      packageType: runtime
+      version: 3.1.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\
 
-# Stage Windows projection
-- task: ArchiveFiles@2
-  displayName: Stage Windows projection
-  condition: and(succeeded(), eq(variables['PublishGeneratedFiles'], 'true'))
-  inputs:
-    rootFolderOrFile: $(Build.SourcesDirectory)\Projections\Windows\Generated Files
-    includeRootFolder: false
-    sevenZipCompression: 5
-    archiveFile: $(Build.ArtifactStagingDirectory)\Windows\sources.zip
+  - task: UseDotNet@2
+    displayName: Use .NET Core runtime 3.1 x86
+    condition: eq(variables['BuildPlatform'], 'x86')
+    inputs:
+      packageType: runtime
+      version: 3.1.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
+    env:
+      PROCESSOR_ARCHITECTURE: x86
 
-# Stage CsWinRT
-- task: CopyFiles@2
-  displayName: Stage CsWinRT
-  condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
-    Contents: |
-      cswinrt.exe
-      cswinrt.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\native
+  # Use .NET Core runtime 8.0
+  - task: UseDotNet@2
+    displayName: Use .NET Core runtime 8.0
+    inputs:
+      packageType: runtime
+      version: 8.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\
 
-# Stage WinRT.Interop.winmd
-- task: CopyFiles@2
-  displayName: Stage WinRT.Interop.winmd
-  condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-  continueOnError: True
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
-    Contents: WinRT.Interop.winmd
-    TargetFolder: $(Build.ArtifactStagingDirectory)\native
+  - task: UseDotNet@2
+    displayName: Use .NET Core runtime 8.0 x86
+    condition: eq(variables['BuildPlatform'], 'x86')
+    inputs:
+      packageType: runtime
+      version: 8.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
+    env:
+      PROCESSOR_ARCHITECTURE: x86
 
-# Stage WinRT.Host
-- task: CopyFiles@2
-  displayName: Stage WinRT.Host
-  continueOnError: True
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\WinRT.Host\bin
-    Contents: |
-      WinRT.Host.dll
-      WinRT.Host.pdb
-      WinRT.Host.dll.mui
-    TargetFolder: $(Build.ArtifactStagingDirectory)\native
+# Install x86 first so that it isn't the first on PATH.
+  - task: UseDotNet@2
+    displayName: Use .NET Core SDK 9.0 x86
+    condition: eq(variables['BuildPlatform'], 'x86')
+    inputs:
+      packageType: sdk
+      version: 9.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
+    env:
+      PROCESSOR_ARCHITECTURE: x86
 
-# Stage Unit Test 
-- task: CopyFiles@2
-  displayName: Stage Unit Test
-  condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net8.0
-    Contents: |
-      unittest.dll
-      unittest.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\native
+  - task: UseDotNet@2
+    displayName: Use .NET Core SDK 9.0
+    inputs:
+      packageType: sdk
+      version: 9.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\
 
-# Stage NetStandard 2.0
-- task: CopyFiles@2
-  displayName: Stage NetStandard 2.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\netstandard2.0
-    Contents: |
-      WinRT.Runtime.dll
-      WinRT.Runtime.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_netstandard2.0\
+# Set Dotnet path for x86.  The normal one already gets set above.
+  - task: PowerShell@2
+    displayName: Set DotNet paths for x86
+    condition: eq(variables['BuildPlatform'], 'x86')
+    inputs:
+      targetType: inline
+      script: |
+        Write-Host "##vso[task.setvariable variable=DOTNET_ROOT(x86);]$env:DOTNET_ROOT\x86\"
 
-# Stage Source Generator (Roslyn 4.8)
-- task: CopyFiles@2
-  displayName: Stage Source Generator
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator.Roslyn4080\bin\$(BuildConfiguration)\netstandard2.0
-    Contents: |
-      WinRT.SourceGenerator.dll
-      WinRT.SourceGenerator.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_netstandard2.0\roslyn4080\
+  # Verify .NET SDK
+  - task: CmdLine@2
+    displayName: Verify .NET SDK
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)
+      script: |
+        where dotnet
+        dotnet --info
 
-# Stage Source Generator (Roslyn 4.12)
-- task: CopyFiles@2
-  displayName: Stage Source Generator
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator.Roslyn4120\bin\$(BuildConfiguration)\netstandard2.0
-    Contents: |
-      WinRT.SourceGenerator.dll
-      WinRT.SourceGenerator.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_netstandard2.0\roslyn4120\
+  # Parse Version
+  - task: CmdLine@2
+    displayName: Parse Version
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)
+      script: |
+        rem Parse the build-generated Build.BuildNumber into components that 
+        rem can be recombined for version resources, nuget packages, etc.
+        @echo off
+      
+        rem Encode the build date/rev into a 16 bit value for resource versions
+        if "$(PrereleaseVersion)"=="" (
+          set RevisionBase=30000
+        ) else (
+          set RevisionBase=0
+        )
 
-# Stage Net8.0
-- task: CopyFiles@2
-  displayName: Stage Net8.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net8.0
-    Contents: |
-      WinRT.Runtime.dll
-      WinRT.Runtime.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net8.0
+        for /f "tokens=4,5 delims=." %%i in ("$(Build.BuildNumber)") do set BuildMetadata=%%i.%%j & set /a BuildRevision=%RevisionBase%+(((%%i/10000)-20)*366+((%%i)%%10000)/100*31+((%%i)%%100))*10+%%j
 
-# Stage Net9.0
-- task: CopyFiles@2
-  displayName: Stage Net9.0
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net9.0
-    Contents: |
-      WinRT.Runtime.dll
-      WinRT.Runtime.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net9.0
+        set VersionNumber=$(MajorVersion).$(MinorVersion).$(PatchVersion).%BuildRevision%
 
-# Stage WinRT.Host.Shim
-- task: CopyFiles@2 
-  displayName: Stage WinRT.Host.Shim
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  continueOnError: True
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net8.0
-    Contents: |
-      WinRT.Host.Shim.dll
-      WinRT.Host.Shim.pdb
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net8.0
+        if "$(PrereleaseVersion)"=="" (
+          set NugetVersion=$(MajorVersion).$(MinorVersion).$(PatchVersion)
+        ) else (
+          set NugetVersion=$(Build.BuildNumber)
+        )
 
-# Stage IID Optimizer
-- task: CopyFiles@2
-  displayName: Stage IID Optimizer
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  continueOnError: True
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Perf\IIDOptimizer\bin\$(BuildConfiguration)\net8.0
-    Contents: |
-      IIDOptimizer.exe 
-      IIDOptimizer.dll
-      IIDOptimizer.deps.json
-      IIDOptimizer.runtimeconfig.json
-      Mono.Cecil.dll
-      Mono.Cecil.Mdb.dll
-      Mono.Cecil.Pdb.dll
-      Mono.Cecil.Rocks.dll
-      System.CommandLine.dll
-      cs/System.CommandLine.resources.dll
-      de/System.CommandLine.resources.dll
-      es/System.CommandLine.resources.dll
-      fr/System.CommandLine.resources.dll
-      it/System.CommandLine.resources.dll
-      ja/System.CommandLine.resources.dll
-      ko/System.CommandLine.resources.dll
-      pl/System.CommandLine.resources.dll
-      pt-BR/System.CommandLine.resources.dll
-      ru/System.CommandLine.resources.dll
-      tr/System.CommandLine.resources.dll
-      zh-Hans/System.CommandLine.resources.dll
-      zh-Hant/System.CommandLine.resources.dll 
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net8.0\IIDOptimizer
+        rem Export generated version numbers back for subsequent tasks
+        echo ##vso[task.setvariable variable=BuildMetadata;]%BuildMetadata%
+        echo ##vso[task.setvariable variable=BuildRevision;]%BuildRevision%
+        echo ##vso[task.setvariable variable=VersionNumber;]%VersionNumber%
+        echo ##vso[task.setvariable variable=NugetVersion;]%NugetVersion%
 
-# Stage WinRT.Runtime ResX
-- task: CopyFiles@2
-  displayName: Stage WinRT.Runtime ResX
-  condition: succeeded()
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime
-    Contents: |
-      WinRTRuntimeErrorStrings.resx
-    TargetFolder: $(Build.ArtifactStagingDirectory)\resx\WinRT.Runtime
+  - task: NuGetAuthenticate@1
 
-# Stage Authoring Diagnostics ResX
-- task: CopyFiles@2
-  displayName: Stage Authoring Diagnostics ResX
-  condition: succeeded()
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator
-    Contents: |
-      CsWinRTDiagnosticStrings.resx
-    TargetFolder: $(Build.ArtifactStagingDirectory)\resx\WinRT.SourceGenerator
+  - task: NuGetCommand@2
+    displayName: NuGet restore cswinrt.sln
+    inputs:
+      command: 'restore'
+      restoreSolution: '$(Build.SourcesDirectory)\src\cswinrt.sln'
+      feedsToUse: config
+      nugetConfigPath: NuGet.config
 
-# Stage CsWinMD
-- task: CopyFiles@2
-  displayName: Stage CsWinMD
-  condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-  inputs:
-    SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\$(BuildConfiguration)\net8.0
-    Contents: |
-      CsWinMD.dll
-      CsWinMD.exe
-      CsWinMD.pdb
-      CsWinMD.deps.json
-      CsWinMD.runtimeconfig.json
-      Microsoft.CodeAnalysis.CSharp.dll
-      Microsoft.CodeAnalysis.dll
-    TargetFolder: $(Build.ArtifactStagingDirectory)\release_net8.0\CsWinMD
+  - task: NuGetCommand@2
+    displayName: NuGet restore testwinrt.sln
+    inputs:
+      command: 'restore'
+      restoreSolution: '$(Build.SourcesDirectory)\src\testwinrt\test.sln'
+      feedsToUse: config
+      nugetConfigPath: NuGet.config
+
+  - ${{ if eq(parameters.SetupForBuildOnly, false) }}:
+
+# PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
+    - task: VSBuild@1
+      displayName: Build cswinrt.sln
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\cswinrt.sln
+        msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
+        platform: $(BuildPlatform)
+        configuration: $(BuildConfiguration)
+
+    - task: NuGetCommand@2
+      displayName: NuGet restore TestEmbedded.sln
+      inputs:
+        command: 'restore'
+        restoreSolution: '$(Build.SourcesDirectory)\src\Samples\TestEmbedded\TestEmbedded.sln'
+        feedsToUse: config
+        nugetConfigPath: NuGet.config
+
+    - task: VSBuild@1
+      displayName: Build TestEmbedded.sln
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\Samples\TestEmbedded\TestEmbedded.sln
+        msbuildArgs: /m /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\embeddedsample.binlog
+        platform: $(BuildPlatform)
+        configuration: $(BuildConfiguration)
+
+    # Stage BinLog
+    - task: CopyFiles@2
+      displayName: Stage BinLog
+      condition: failed()
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)
+        Contents: cswinrt.binlog
+        TargetFolder: $(StagingFolder)\binlog
+
+    # Stage Windows projection
+    - task: ArchiveFiles@2
+      displayName: Stage Windows projection
+      condition: and(succeeded(), eq(variables['PublishGeneratedFiles'], 'true'))
+      inputs:
+        rootFolderOrFile: $(Build.SourcesDirectory)\Projections\Windows\Generated Files
+        includeRootFolder: false
+        sevenZipCompression: 5
+        archiveFile: $(StagingFolder)\Windows\sources.zip
+
+    # Stage CsWinRT
+    - task: CopyFiles@2
+      displayName: Stage CsWinRT
+      condition: and(succeeded(), and(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release')))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
+        Contents: |
+          cswinrt.exe
+          cswinrt.pdb
+        TargetFolder: $(StagingFolder)\native
+
+    # Stage WinRT.Interop.winmd
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Interop.winmd
+      condition: and(succeeded(), and(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release')))
+      continueOnError: True
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
+        Contents: WinRT.Interop.winmd
+        TargetFolder: $(StagingFolder)\native
+
+    # Stage WinRT.Host
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Host
+      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      continueOnError: True
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\WinRT.Host\bin
+        Contents: |
+          WinRT.Host.dll
+          WinRT.Host.pdb
+          WinRT.Host.dll.mui
+        TargetFolder: $(StagingFolder)\native
+
+    # Stage NetStandard 2.0
+    - task: CopyFiles@2
+      displayName: Stage NetStandard 2.0
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\netstandard2.0
+        Contents: |
+          WinRT.Runtime.dll
+          WinRT.Runtime.pdb
+        TargetFolder: $(StagingFolder)\netstandard2.0\
+
+    # Stage Source Generator (Roslyn 4.8)
+    - task: CopyFiles@2
+      displayName: Stage Source Generator
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator.Roslyn4080\bin\$(BuildConfiguration)\netstandard2.0
+        Contents: |
+          WinRT.SourceGenerator.dll
+          WinRT.SourceGenerator.pdb
+        TargetFolder: $(StagingFolder)\netstandard2.0\roslyn4080\
+
+    # Stage Source Generator (Roslyn 4.12)
+    - task: CopyFiles@2
+      displayName: Stage Source Generator
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator.Roslyn4120\bin\$(BuildConfiguration)\netstandard2.0
+        Contents: |
+          WinRT.SourceGenerator.dll
+          WinRT.SourceGenerator.pdb
+        TargetFolder: $(StagingFolder)\netstandard2.0\roslyn4120\
+
+    # Stage Net8.0
+    - task: CopyFiles@2
+      displayName: Stage Net8.0
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net8.0
+        Contents: |
+          WinRT.Runtime.dll
+          WinRT.Runtime.pdb
+        TargetFolder: $(StagingFolder)\net8.0
+
+    # Stage Net9.0
+    - task: CopyFiles@2
+      displayName: Stage Net9.0
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net9.0
+        Contents: |
+          WinRT.Runtime.dll
+          WinRT.Runtime.pdb
+        TargetFolder: $(StagingFolder)\net9.0
+
+    # Stage WinRT.Host.Shim
+    - task: CopyFiles@2 
+      displayName: Stage WinRT.Host.Shim
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      continueOnError: True
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net8.0
+        Contents: |
+          WinRT.Host.Shim.dll
+          WinRT.Host.Shim.pdb
+        TargetFolder: $(StagingFolder)\net8.0
+
+    # Stage IID Optimizer
+    - task: CopyFiles@2
+      displayName: Stage IID Optimizer
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      continueOnError: True
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Perf\IIDOptimizer\bin\$(BuildConfiguration)\net8.0
+        Contents: |
+          IIDOptimizer.exe 
+          IIDOptimizer.dll
+          IIDOptimizer.deps.json
+          IIDOptimizer.runtimeconfig.json
+          Mono.Cecil.dll
+          Mono.Cecil.Mdb.dll
+          Mono.Cecil.Pdb.dll
+          Mono.Cecil.Rocks.dll
+          System.CommandLine.dll
+          cs/System.CommandLine.resources.dll
+          de/System.CommandLine.resources.dll
+          es/System.CommandLine.resources.dll
+          fr/System.CommandLine.resources.dll
+          it/System.CommandLine.resources.dll
+          ja/System.CommandLine.resources.dll
+          ko/System.CommandLine.resources.dll
+          pl/System.CommandLine.resources.dll
+          pt-BR/System.CommandLine.resources.dll
+          ru/System.CommandLine.resources.dll
+          tr/System.CommandLine.resources.dll
+          zh-Hans/System.CommandLine.resources.dll
+          zh-Hant/System.CommandLine.resources.dll 
+        TargetFolder: $(StagingFolder)\net8.0\IIDOptimizer
+
+    # Stage WinRT.Runtime ResX
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Runtime ResX
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime
+        Contents: |
+          WinRTRuntimeErrorStrings.resx
+        TargetFolder: $(StagingFolder)\resx\WinRT.Runtime
+
+    # Stage Authoring Diagnostics ResX
+    - task: CopyFiles@2
+      displayName: Stage Authoring Diagnostics ResX
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator
+        Contents: |
+          CsWinRTDiagnosticStrings.resx
+        TargetFolder: $(StagingFolder)\resx\WinRT.SourceGenerator
+
+    # Stage CsWinMD
+    - task: CopyFiles@2
+      displayName: Stage CsWinMD
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\cswinmd\bin\$(BuildConfiguration)\net8.0
+        Contents: |
+          CsWinMD.dll
+          CsWinMD.exe
+          CsWinMD.pdb
+          CsWinMD.deps.json
+          CsWinMD.runtimeconfig.json
+          Microsoft.CodeAnalysis.CSharp.dll
+          Microsoft.CodeAnalysis.dll
+        TargetFolder: $(StagingFolder)\net8.0\CsWinMD

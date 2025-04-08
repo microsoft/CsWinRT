@@ -82,10 +82,10 @@
     <SDKReference Include="Microsoft.VCLibs, Version=14.0" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="[1.1.5]">
+    <PackageReference Include="Microsoft.WindowsAppSDK" VersionOverride="[1.1.5]">
       <IncludeAssets>build</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="[10.0.22000.194]">
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools">
       <IncludeAssets>build</IncludeAssets>
     </PackageReference>
   </ItemGroup>

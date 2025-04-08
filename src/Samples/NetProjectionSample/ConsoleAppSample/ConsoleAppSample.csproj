@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SimpleMathComponent" Version="0.1.0-prerelease" />
+    <PackageReference Include="SimpleMathComponent" />
   </ItemGroup>
   
 </Project>

@@ -25,7 +25,7 @@ resources:
     ref: refs/heads/main
 
 extends:
-  template: v2/Microsoft.Official.yml@templates
+  template: v2/Microsoft.NonOfficial.yml@templates
   parameters:
     platform:
       name: 'windows_undocked'
@@ -37,15 +37,9 @@ extends:
 
     globalSdl:
       isNativeCode: true
-      asyncSdl:
-        enabled: true
       tsa:
-        enabled: true
+        enabled: false
         useDynamicRouting: true
-      codeql:
-        compiled: 
-          enabled: true
-        tsaEnabled: true
       sbom:
         enabled: true
       prefast:
