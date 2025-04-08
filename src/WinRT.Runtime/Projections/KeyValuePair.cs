@@ -152,7 +152,7 @@ namespace ABI.System.Collections.Generic
 #if NET
             ComWrappersSupport.RegisterTypedRcwFactory(
                 typeof(global::System.Collections.Generic.KeyValuePair<K, V>),
-                KeyValuePair<K, V>.CreateRcw);
+                ComWrappersSupport.CreateReferenceCachingFactory(KeyValuePair<K, V>.CreateRcw));
 #endif
             KeyValuePairMethods<K, V>._RcwHelperInitialized = true;
             return true;
