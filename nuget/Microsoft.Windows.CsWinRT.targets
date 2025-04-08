@@ -327,14 +327,6 @@ $(CsWinRTInternalProjection)
     </ItemGroup>
   </Target>
 
-  <!-- Emit a warning when 'CsWinRTMergeReferencedActivationFactories' is used incorrectly -->
-  <Target
-    Name="_CsWinRTErrorForInvalidMergeReferencedActivationFactories"
-    BeforeTargets="BeforeCompile"
-    Condition="'$(CsWinRTMergeReferencedActivationFactories)' == 'true' AND '$(PublishAot)' != 'true'">
-    <Error Text="The 'CsWinRTMergeReferencedActivationFactories' property can only be set when publishing with Native AOT. Make sure to set the 'PublishAot' property to 'true'." />
-  </Target>
-
   <!--
     Produces a stub .exe for the application, if requested. This target is only executed when publishing, and
     it's injected right after Native AOT invokes MSVC to produce the final binary, and before gathering all
