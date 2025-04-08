@@ -18,6 +18,7 @@
     <GenerateTestProjection Condition="'$(GenerateTestProjection)' == ''">false</GenerateTestProjection>
     <CsWinRTGenerateProjection>$(GenerateTestProjection)</CsWinRTGenerateProjection>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">sdk</CsWinRTWindowsMetadata>
     <PlatformToolset>v143</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
@@ -36,6 +37,7 @@
     <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net8.0-windows10.0.19041.0</TestsBuildTFMs>
     <FunctionalTestsBuildTFMs>net8.0</FunctionalTestsBuildTFMs>
     <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
+    <CsWinRTMessageImportance>high</CsWinRTMessageImportance>
   </PropertyGroup>
 
   <PropertyGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">

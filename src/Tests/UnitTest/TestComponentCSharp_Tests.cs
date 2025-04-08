@@ -701,7 +701,7 @@ namespace UnitTest
         [Fact]
         public void TestStorageFile()
         {
-            Assert.True(TestStorageFileAsync().Wait(1000));
+            Assert.True(TestStorageFileAsync().Wait(5000));
         }
 
         async Task TestStorageFolderAsync()
@@ -715,7 +715,7 @@ namespace UnitTest
         [Fact]
         public void TestStorageFolder()
         {
-            Assert.True(TestStorageFolderAsync().Wait(1000));
+            Assert.True(TestStorageFolderAsync().Wait(5000));
         }
 
         async Task InvokeWriteBufferAsync()

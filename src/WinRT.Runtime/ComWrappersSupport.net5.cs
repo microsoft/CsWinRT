@@ -689,10 +689,6 @@ namespace WinRT
                 {
                     objRef.Dispose();
                 }
-                else
-                {
-                    throw new InvalidOperationException("Cannot release objects that are not runtime wrappers of native WinRT objects.");
-                }
             }
         }
 

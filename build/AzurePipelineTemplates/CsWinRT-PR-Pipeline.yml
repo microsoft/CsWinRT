@@ -24,5 +24,5 @@ extends:
     featureFlags:
       autoBaseline: false
     stages:
-    - template: CsWinRT-BuildAndTest-Stage.yml@self
-    - template: CsWinRT-PublishToNuget-Stage.yml@self
+    - template: CsWinRT-BuildAndTest-Stage-GitHub.yml@self 
+    - template: CsWinRT-PublishToNuGet-Stage-GitHub.yml@self
