@@ -4,8 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Basic.Reference.Assemblies.Net80" Version="1.7.9" />
-    <PackageVersion Include="BenchmarkDotNet" Version="0.13.1" />
-    <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.1" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.14.0" />
     <PackageVersion Include="CommandLineParser" Version="2.4.3" />
     <PackageVersion Include="coverlet.collector" Version="1.3.0" />
     <PackageVersion Include="MarkdownLog.NS20" Version="0.10.1" />
