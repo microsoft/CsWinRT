@@ -116,10 +116,10 @@ jobs:
         targetPath: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
         artifact: drop_BuildAndTest_Benchmarks
 
-  # Seperate job to run object lifetime tests given
-  # they can't run in the other environment.
-  - job: ObjectlifetimeTests
-    displayName: Run Object Lifetime Tests
+  # Seperate job to run certain tests
+  # that can't run in the other environment.
+  - job: Tests
+    displayName: Run Tests
     dependsOn: []
     pool:
       type: windows
@@ -161,3 +161,13 @@ jobs:
       inputs:
         testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net8.0-windows10.0.19041.0\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
+
+# Run Source Generator Tests
+    - task: DotNetCoreCLI@2
+      displayName: Run Source Generator Tests
+      condition: succeeded()
+      inputs:
+        command: test
+        projects: 'src/Tests/SourceGeneratorTest/SourceGeneratorTest.csproj'
+        arguments: --diag $(StagingFolder)\unittest\test.log --logger trx;LogFilePath=UNITTEST-$(Build.BuildNumber).trx /nologo /m /p:configuration=$(BuildConfiguration);CIBuildReason=CI;solutiondir=$(Build.SourcesDirectory)\src\;VersionNumber=$(VersionNumber);VersionString=$(Build.BuildNumber);AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion) -- RunConfiguration.TreatNoTestsAsError=true
+        testRunTitle: Unit Tests
