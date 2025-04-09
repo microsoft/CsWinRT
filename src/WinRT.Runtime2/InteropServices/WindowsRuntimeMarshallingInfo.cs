@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,7 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 #pragma warning disable IDE0008
 
@@ -108,11 +106,6 @@ internal sealed class WindowsRuntimeMarshallingInfo
     private string? _runtimeClassName;
 
     /// <summary>
-    /// A lazy-loaded <see cref="Lock"/> object to synchronize expensive work being performed.
-    /// </summary>
-    private volatile Lock? _lock;
-
-    /// <summary>
     /// Creates a new <see cref="WindowsRuntimeMarshallingInfo"/> instance with the specified parameters.
     /// </summary>
     /// <param name="metadataProviderType"><inheritdoc cref="_metadataProviderType" path="/summary/node()"/></param>
@@ -145,7 +138,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
 
                 // Cache the public type for later. We don't need a compare exchange here, as even if we did concurrent
                 // queries for this value, the result would always be the same. So we can skip that small overhead here.
-                return _publicType = mappedTypeAttribute.PublicType;
+                return _publicType ??= mappedTypeAttribute.PublicType;
             }
 
             return _publicType ?? InitializePublicType();
@@ -336,20 +329,22 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// <remarks>This method is meant to be used when preparing CCW vtables for managed types.</remarks>
     public WindowsRuntimeVtableInfo GetVtableInfo()
     {
+        // Initialize the vtable if not already present (it is safe to do this concurrently)
         [MethodImpl(MethodImplOptions.NoInlining)]
-        WindowsRuntimeVtableInfo InitializeVtableInfo()
+        unsafe WindowsRuntimeVtableInfo InitializeVtableInfo()
         {
-            // Initialize the lock if it hasn't been done yet
-            _ = Interlocked.CompareExchange(
-                location1: ref _lock,
-                value: new Lock(),
-                comparand: null);
+            // Get the '[WindowsRuntimeComWrappersMarshaller]' attribute from the type, to get custom vtable entries.
+            // This should always find the attribute. The attribute not being present would mean that somehow
+            // our 'ComWrappers' instance tried creating a CCW for a type that had an associated marshalling
+            // info, but not a vtable provider. That is, it could only mean the type is a projected type,
+            // which should never hit this path, or that the generator somehow didn't generate the attribute.
+            // That would be a bug, and it should never happen in practice (and we'd want to crash if it did).
+            WindowsRuntimeComWrappersMarshallerAttribute comWrappersMarshaller = GetComWrappersMarshaller();
 
-            // Lock and initialize the vtable if still not available
-            lock (_lock)
-            {
-                return _vtableInfo ??= WindowsRuntimeVtableInfo.CreateUnsafe(this);
-            }
+            // Delegate to the vtable provider to produce the first vtable entries
+            ComWrappers.ComInterfaceEntry* vtableEntries = comWrappersMarshaller.ComputeVtables(out int count);
+
+            return _vtableInfo ??= new(vtableEntries, count);
         }
 
         return _vtableInfo ?? InitializeVtableInfo();
@@ -385,7 +380,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
                 ThrowNotSupportedException();
             }
 
-            return _runtimeClassName = runtimeClassNameAttribute.RuntimeClassName;
+            return _runtimeClassName ??= runtimeClassNameAttribute.RuntimeClassName;
         }
 
         return _runtimeClassName ?? InitializeRuntimeClassName();
@@ -450,8 +445,11 @@ file sealed unsafe class PlaceholderWindowsRuntimeComWrappersMarshallerAttribute
     }
 
     /// <inheritdoc/>
-    public override void ComputeVtables(IBufferWriter<ComWrappers.ComInterfaceEntry> bufferWriter)
+    public override ComWrappers.ComInterfaceEntry* ComputeVtables(out int count)
     {
+        count = 0;
+
+        return null;
     }
 
     /// <inheritdoc/>

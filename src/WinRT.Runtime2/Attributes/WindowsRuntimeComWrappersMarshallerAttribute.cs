@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Buffers;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices;
 
@@ -26,6 +25,11 @@ namespace WindowsRuntime;
 /// <para>
 /// This attribute is primarily meant to be used by types provided by CsWinRT, or generated at compile time by its source generators.
 /// However, it is possible to implement it manually as well, to support advanced scenarios where further customization was needed.
+/// </para>
+/// <para>
+/// Note that all methods in each attribute instance may be called concurrently by the CsWinRT infrastructure. If they require
+/// any kind of synchronization, they should handle it internally. For instance, <see cref="ComputeVtables"/> should make sure
+/// not to perform additional allocations that are not cleaned up correctly in case it's called concurrently by multiple threads.
 /// </para>
 /// </remarks>
 [AttributeUsage(
@@ -68,14 +72,30 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// <summary>
     /// Computes the vtables for the annotated type.
     /// </summary>
-    /// <param name="bufferWriter">The input <see cref="IBufferWriter{T}"/> object to append the compute vtables to.</param>
+    /// <param name="count">The number of elements contained in the returned memory.</param>
+    /// <returns>A <see cref="ComWrappers.ComInterfaceEntry"/> pointer containing memory for all COM interface entries for the annotated type.</returns>
     /// <remarks>
-    /// The retrieved vtables do not represent the full set of vtables on the resulting CCW produced for the managed object
-    /// after marshalling. Rather, they will be added to the default set of vtables provided automatically by CsWinRT. For
-    /// instance, that will include vtables for fundamental interfaces such as <c>IUnknown</c> and <c>IInspectable</c>.
+    /// <para>
+    /// The retrieved vtables represent the full set of vtables on the resulting CCW produced for the managed object after marshalling.
+    /// This means that implementing types are responsible for also adding all fundamental WinRT interfaces to the set, as applicable.
+    /// </para>
+    /// <para>
+    /// These interfaces are as follows:
+    /// <list type="bullet">
+    ///   <item><see href="https://learn.microsoft.com/uwp/api/windows.foundation.istringable"><c>IStringable</c></see></item>
+    ///   <item><see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.icustompropertyprovider"><c>ICustomPropertyProvider</c></see></item>
+    ///   <item><see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreferencesource"><c>IWeakReferenceSource</c></see></item>
+    ///   <item><see href="https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-imarshal"><c>IMarshal</c></see></item>
+    ///   <item><see href="https://learn.microsoft.com/windows/win32/api/objidlbase/nn-objidlbase-iagileobject"><c>IAgileObject</c></see></item>
+    ///   <item><see href="https://learn.microsoft.com/windows/win32/api/inspectable/nn-inspectable-iinspectable"><c>IInspectable</c></see></item>
+    ///   <item><see href="https://learn.microsoft.com/windows/win32/api/unknwn/nn-unknwn-iunknown"><c>IUnknown</c></see></item>
+    /// </list>
+    /// Note that the <c>IUnknown</c> interface must always be the last one in the returned memory. Additionally, the <c>IStringable</c>,
+    /// <c>IWeakReferenceSource</c>, <c>IAgileObject</c>, and <c>IInspectable</c> interfaces must also always be present in the set.
+    /// </para>
     /// </remarks>
     /// <seealso cref="ComWrappers.ComputeVtables"/>
-    public abstract void ComputeVtables(IBufferWriter<ComWrappers.ComInterfaceEntry> bufferWriter);
+    public abstract ComWrappers.ComInterfaceEntry* ComputeVtables(out int count);
 
     /// <summary>
     /// Creates a managed Windows Runtime object for a given native object.
