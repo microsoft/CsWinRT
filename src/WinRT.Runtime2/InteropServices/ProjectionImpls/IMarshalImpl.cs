@@ -14,25 +14,33 @@ namespace WindowsRuntime.InteropServices;
 internal static unsafe class IMarshalImpl
 {
     /// <summary>
-    /// The vtable for the <c>IMarshal</c> implementation.
+    /// The <see cref="IMarshalVftbl"/> value for the managed <c>IMarshal</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
+    [FixedAddressValueType]
+    private static readonly IMarshalVftbl Vftbl;
 
     /// <summary>
-    /// Computes the <c>IMarshal</c> implementation vtable.
+    /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    private static nint GetAbiToProjectionVftablePtr()
+    static IMarshalImpl()
     {
-        IMarshalVftbl* vftbl = (IMarshalVftbl*)WindowsRuntimeHelpers.AllocateTypeAssociatedUnknownVtable(typeof(IMarshalImpl), 9);
+        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
 
-        vftbl->GetUnmarshalClass = &GetUnmarshalClass;
-        vftbl->GetMarshalSizeMax = &GetMarshalSizeMax;
-        vftbl->MarshalInterface = &MarshalInterface;
-        vftbl->UnmarshalInterface = &UnmarshalInterface;
-        vftbl->ReleaseMarshalData = &ReleaseMarshalData;
-        vftbl->DisconnectObject = &DisconnectObject;
+        Vftbl.GetUnmarshalClass = &GetUnmarshalClass;
+        Vftbl.GetMarshalSizeMax = &GetMarshalSizeMax;
+        Vftbl.MarshalInterface = &MarshalInterface;
+        Vftbl.UnmarshalInterface = &UnmarshalInterface;
+        Vftbl.ReleaseMarshalData = &ReleaseMarshalData;
+        Vftbl.DisconnectObject = &DisconnectObject;
+    }
 
-        return (nint)vftbl;
+    /// <summary>
+    /// Gets a pointer to the managed <c>IMarshal</c> implementation.
+    /// </summary>
+    public static nint AbiToProjectionVftablePtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nf-objidl-imarshal-getunmarshalclass"/>

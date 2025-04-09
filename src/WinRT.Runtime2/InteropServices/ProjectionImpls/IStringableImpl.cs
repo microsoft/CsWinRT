@@ -16,20 +16,28 @@ namespace WindowsRuntime.InteropServices;
 internal static unsafe class IStringableImpl
 {
     /// <summary>
-    /// The vtable for the <c>IStringable</c> implementation.
+    /// The <see cref="IStringableVftbl"/> value for the managed <c>IStringable</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
+    [FixedAddressValueType]
+    private static readonly IStringableVftbl Vftbl;
 
     /// <summary>
-    /// Computes the <c>IStringable</c> implementation vtable.
+    /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    private static nint GetAbiToProjectionVftablePtr()
+    static IStringableImpl()
     {
-        IStringableVftbl* vftbl = (IStringableVftbl*)WindowsRuntimeHelpers.AllocateTypeAssociatedInspectableVtable(typeof(IStringableImpl), 7);
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
 
-        vftbl->ToString = &ToString;
+        Vftbl.ToString = &ToString;
+    }
 
-        return (nint)vftbl;
+    /// <summary>
+    /// Gets a pointer to the managed <c>IStringable</c> implementation.
+    /// </summary>
+    public static nint AbiToProjectionVftablePtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/windows.foundation/nf-windows-foundation-istringable-tostring"/>

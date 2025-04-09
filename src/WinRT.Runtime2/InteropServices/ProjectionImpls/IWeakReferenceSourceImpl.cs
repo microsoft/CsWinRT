@@ -15,20 +15,28 @@ namespace WindowsRuntime.InteropServices;
 internal static unsafe class IWeakReferenceSourceImpl
 {
     /// <summary>
-    /// The vtable for the <c>IWeakReferenceSource</c> implementation.
+    /// The <see cref="IWeakReferenceSourceVftbl"/> value for the managed <c>IWeakReferenceSource</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
+    [FixedAddressValueType]
+    private static readonly IWeakReferenceSourceVftbl Vftbl;
 
     /// <summary>
-    /// Computes the <c>IWeakReferenceSource</c> implementation vtable.
+    /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    private static nint GetAbiToProjectionVftablePtr()
+    static IWeakReferenceSourceImpl()
     {
-        IWeakReferenceSourceVftbl* vftbl = (IWeakReferenceSourceVftbl*)WindowsRuntimeHelpers.AllocateTypeAssociatedUnknownVtable(typeof(IWeakReferenceSourceImpl), 4);
+        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
 
-        vftbl->GetWeakReference = &GetWeakReference;
+        Vftbl.GetWeakReference = &GetWeakReference;
+    }
 
-        return (nint)vftbl;
+    /// <summary>
+    /// Gets a pointer to the managed <c>IWeakReferenceSource</c> implementation.
+    /// </summary>
+    public static nint AbiToProjectionVftablePtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nf-weakreference-iweakreferencesource-getweakreference"/>

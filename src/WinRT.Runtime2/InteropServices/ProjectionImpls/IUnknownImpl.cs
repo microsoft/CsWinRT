@@ -13,24 +13,32 @@ namespace WindowsRuntime.InteropServices;
 internal static unsafe class IUnknownImpl
 {
     /// <summary>
-    /// The vtable for the <c>IUnknown</c> implementation.
+    /// The <see cref="IUnknownVftbl"/> value for the managed <c>IUnknown</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
+    [FixedAddressValueType]
+    private static readonly IUnknownVftbl Vftbl;
 
     /// <summary>
-    /// Computes the <c>IUnknown</c> implementation vtable.
+    /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    private static nint GetAbiToProjectionVftablePtr()
+    static IUnknownImpl()
     {
-        IUnknownVftbl* vftbl = (IUnknownVftbl*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IUnknownImpl), sizeof(IUnknownVftbl));
-
         // Get the 'IUnknown' implementation from the runtime. This is implemented in native code,
         // so that it can work correctly even when used from native code during a GC (eg. from XAML).
+        // Note: ILC has special support for this pattern, and can still pre-initialize this type.
+        // The same applies to all other implementation types that also copy this base vtable type.
         ComWrappers.GetIUnknownImpl(
-            fpQueryInterface: out *(nint*)&vftbl->QueryInterface,
-            fpAddRef: out *(nint*)&vftbl->AddRef,
-            fpRelease: out *(nint*)&vftbl->Release);
+            fpQueryInterface: out *(nint*)&((IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl))->QueryInterface,
+            fpAddRef: out *(nint*)&((IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl))->AddRef,
+            fpRelease: out *(nint*)&((IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl))->Release);
+    }
 
-        return (nint)vftbl;
+    /// <summary>
+    /// Gets a pointer to the managed <c>IUnknown</c> implementation.
+    /// </summary>
+    public static nint AbiToProjectionVftablePtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
     }
 }

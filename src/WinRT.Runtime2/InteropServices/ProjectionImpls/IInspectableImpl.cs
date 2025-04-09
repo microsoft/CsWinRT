@@ -16,26 +16,30 @@ namespace WindowsRuntime.InteropServices;
 internal static unsafe class IInspectableImpl
 {
     /// <summary>
-    /// The vtable for the <c>IInspectable</c> implementation.
+    /// The <see cref="IInspectableVftbl"/> value for the managed <c>IInspectable</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = GetAbiToProjectionVftablePtr();
+    [FixedAddressValueType]
+    private static readonly IInspectableVftbl Vftbl;
 
     /// <summary>
-    /// Computes the <c>IInspectable</c> implementation vtable.
+    /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    private static nint GetAbiToProjectionVftablePtr()
+    static IInspectableImpl()
     {
-        IInspectableVftbl* vftbl = (IInspectableVftbl*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IInspectableImpl), sizeof(IInspectableVftbl));
+        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
 
-        // The 'IUnknown' implementation is the same one we already retrieved from the runtime
-        *(IUnknownVftbl*)vftbl = *(IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
+        Vftbl.GetIids = &GetIids;
+        Vftbl.GetRuntimeClassName = &GetRuntimeClassName;
+        Vftbl.GetTrustLevel = &GetTrustLevel;
+    }
 
-        // Populate the rest of the 'IInspectable' methods
-        vftbl->GetIids = &GetIids;
-        vftbl->GetRuntimeClassName = &GetRuntimeClassName;
-        vftbl->GetTrustLevel = &GetTrustLevel;
-
-        return (nint)vftbl;
+    /// <summary>
+    /// Gets a pointer to the managed <c>IInspectable</c> implementation.
+    /// </summary>
+    public static nint AbiToProjectionVftablePtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/nf-inspectable-iinspectable-getiids"/>
