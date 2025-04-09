@@ -121,5 +121,5 @@ stages:
       inputs:
         command: test
         projects: 'src/Tests/SourceGeneratorTest/SourceGeneratorTest.csproj'
-        arguments: --diag $(StagingFolder)\unittest\test.log --logger trx;LogFilePath=UNITTEST-$(Build.BuildNumber).trx /nologo /m /p:configuration=$(BuildConfiguration);CIBuildReason=CI;solutiondir=$(Build.SourcesDirectory)\src\;VersionNumber=$(VersionNumber);VersionString=$(Build.BuildNumber);AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion);GenerateTestProjection=true -- RunConfiguration.TreatNoTestsAsError=true
+        arguments: --diag $(StagingFolder)\unittest\test.log --logger trx;LogFilePath=UNITTEST-$(Build.BuildNumber).trx /nologo /m /p:configuration=$(BuildConfiguration);CIBuildReason=CI;solutiondir=$(Build.SourcesDirectory)\src\;VersionNumber=$(VersionNumber);VersionString=$(Build.BuildNumber);AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion) -- RunConfiguration.TreatNoTestsAsError=true
         testRunTitle: Unit Tests
