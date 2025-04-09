@@ -65,8 +65,8 @@ jobs:
           native/WinRT.Interop.winmd;
           netstandard2.0/WinRT.Runtime.dll;
           netstandard2.0/WinRT.Host.Shim.dll;
-          netstandard2.0/roslyn4080/WinRT.SourceGenerator.dll
-          netstandard2.0/roslyn4120/WinRT.SourceGenerator.dll
+          netstandard2.0/roslyn4080/WinRT.SourceGenerator.dll;
+          netstandard2.0/roslyn4120/WinRT.SourceGenerator.dll;
           net8.0/WinRT.Host.Shim.dll;
           net8.0/WinRT.Runtime.dll;
           net9.0/WinRT.Runtime.dll;
