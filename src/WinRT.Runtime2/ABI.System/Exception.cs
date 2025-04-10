@@ -72,7 +72,6 @@ file struct ExceptionInterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfException;
     public ComInterfaceEntry IStringable;
-    public ComInterfaceEntry ICustomPropertyProvider;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
     public ComInterfaceEntry IAgileObject;
@@ -100,8 +99,6 @@ file static class ExceptionInterfaceEntriesImpl
         Entries.IReferenceOfException.Vtable = ExceptionReferenceImpl.AbiToProjectionVftablePtr;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.AbiToProjectionVftablePtr;
-        Entries.ICustomPropertyProvider.IID = WellKnownInterfaceIds.IID_ICustomPropertyProvider;
-        Entries.ICustomPropertyProvider.Vtable = 0; // TODO
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.AbiToProjectionVftablePtr;
         Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;

@@ -56,7 +56,6 @@ file struct Matrix4x4InterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfMatrix4x4;
     public ComInterfaceEntry IStringable;
-    public ComInterfaceEntry ICustomPropertyProvider;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
     public ComInterfaceEntry IAgileObject;
@@ -84,8 +83,6 @@ file static class Matrix4x4InterfaceEntriesImpl
         Entries.IReferenceOfMatrix4x4.Vtable = Matrix4x4ReferenceImpl.AbiToProjectionVftablePtr;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.AbiToProjectionVftablePtr;
-        Entries.ICustomPropertyProvider.IID = WellKnownInterfaceIds.IID_ICustomPropertyProvider;
-        Entries.ICustomPropertyProvider.Vtable = 0; // TODO
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.AbiToProjectionVftablePtr;
         Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;

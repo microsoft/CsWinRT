@@ -56,7 +56,6 @@ file struct PlaneInterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfPlane;
     public ComInterfaceEntry IStringable;
-    public ComInterfaceEntry ICustomPropertyProvider;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
     public ComInterfaceEntry IAgileObject;
@@ -84,8 +83,6 @@ file static class PlaneInterfaceEntriesImpl
         Entries.IReferenceOfPlane.Vtable = PlaneReferenceImpl.AbiToProjectionVftablePtr;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.AbiToProjectionVftablePtr;
-        Entries.ICustomPropertyProvider.IID = WellKnownInterfaceIds.IID_ICustomPropertyProvider;
-        Entries.ICustomPropertyProvider.Vtable = 0; // TODO
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
         Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.AbiToProjectionVftablePtr;
         Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
