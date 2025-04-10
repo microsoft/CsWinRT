@@ -157,6 +157,10 @@ namespace ABI.WinRT.Interop
         }
 
 #if NET
+        // We're intentionally using a separate type and not a value tuple, because creating generic
+        // type instantiations with this type when delegates are involved results in additional
+        // metadata being preserved after trimming. This can save a few KBs in binary size on Native AOT.
+        // See: https://github.com/dotnet/runtime/pull/111204#issuecomment-2599397292.
         private readonly struct CachesFactoryArgs(
             global::WinRT.Interop.IWeakReference target,
             int index,
