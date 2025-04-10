@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Buffers;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -10,6 +9,7 @@ using System.Runtime.InteropServices;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+using static System.Runtime.InteropServices.ComWrappers;
 
 [assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
     value: "Windows.UI.Xaml.Data.PropertyChangedEventArgs",
@@ -87,7 +87,7 @@ file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute 
     }
 
     /// <inheritdoc/>
-    public override void ComputeVtables(IBufferWriter<ComWrappers.ComInterfaceEntry> bufferWriter)
+    public override ComInterfaceEntry* ComputeVtables(out int count)
     {
         // All managed 'PropertyChangedEventArgs' instances are marshalled as fully native objects
         throw new UnreachableException();

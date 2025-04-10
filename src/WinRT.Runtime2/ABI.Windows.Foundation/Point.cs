@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Buffers;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -10,6 +10,8 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
+
+#pragma warning disable CS0649
 
 [assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Point>",
@@ -38,6 +40,56 @@ public static unsafe class PointMarshaller
 }
 
 /// <summary>
+/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="Point"/>.
+/// </summary>
+file struct PointInterfaceEntries
+{
+    public ComInterfaceEntry IReferenceOfPoint;
+    public ComInterfaceEntry IStringable;
+    public ComInterfaceEntry ICustomPropertyProvider;
+    public ComInterfaceEntry IWeakReferenceSource;
+    public ComInterfaceEntry IMarshal;
+    public ComInterfaceEntry IAgileObject;
+    public ComInterfaceEntry IInspectable;
+    public ComInterfaceEntry IUnknown;
+}
+
+/// <summary>
+/// The implementation of <see cref="PointInterfaceEntries"/>.
+/// </summary>
+file static class PointInterfaceEntriesImpl
+{
+    /// <summary>
+    /// The <see cref="PointInterfaceEntries"/> value for <see cref="Point"/>.
+    /// </summary>
+    [FixedAddressValueType]
+    public static readonly PointInterfaceEntries Entries;
+
+    /// <summary>
+    /// Initializes <see cref="Entries"/>.
+    /// </summary>
+    static PointInterfaceEntriesImpl()
+    {
+        Entries.IReferenceOfPoint.IID = WellKnownInterfaceIds.IID_IReferenceOfPoint;
+        Entries.IReferenceOfPoint.Vtable = PointReferenceImpl.AbiToProjectionVftablePtr;
+        Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
+        Entries.IStringable.Vtable = IStringableImpl.AbiToProjectionVftablePtr;
+        Entries.ICustomPropertyProvider.IID = WellKnownInterfaceIds.IID_ICustomPropertyProvider;
+        Entries.ICustomPropertyProvider.Vtable = 0; // TODO
+        Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
+        Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.AbiToProjectionVftablePtr;
+        Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
+        Entries.IMarshal.Vtable = IMarshalImpl.AbiToProjectionVftablePtr;
+        Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
+        Entries.IAgileObject.Vtable = IUnknownImpl.AbiToProjectionVftablePtr;
+        Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
+        Entries.IInspectable.Vtable = IInspectableImpl.AbiToProjectionVftablePtr;
+        Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
+        Entries.IUnknown.Vtable = IUnknownImpl.AbiToProjectionVftablePtr;
+    }
+}
+
+/// <summary>
 /// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="Point"/>.
 /// </summary>
 internal sealed unsafe class PointComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
@@ -49,13 +101,11 @@ internal sealed unsafe class PointComWrappersMarshallerAttribute : WindowsRuntim
     }
 
     /// <inheritdoc/>
-    public override void ComputeVtables(IBufferWriter<ComInterfaceEntry> bufferWriter)
+    public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        bufferWriter.Write([new ComInterfaceEntry
-        {
-            IID = WellKnownInterfaceIds.IID_IReferenceOfPoint,
-            Vtable = PointReference.AbiToProjectionVftablePtr
-        }]);
+        count = sizeof(PointInterfaceEntries) / sizeof(ComInterfaceEntry);
+
+        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in PointInterfaceEntriesImpl.Entries));
     }
 
     /// <inheritdoc/>
@@ -66,16 +116,48 @@ internal sealed unsafe class PointComWrappersMarshallerAttribute : WindowsRuntim
 }
 
 /// <summary>
+/// Binding type for the <c>IReference`1</c> implementation for <see cref="Point"/>.
+/// </summary>
+file unsafe struct PointReferenceVftbl
+{
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+    public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+    public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+    public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+    public delegate* unmanaged[MemberFunction]<void*, Point*, HRESULT> Value;
+}
+
+/// <summary>
 /// The <c>IReference`1</c> implementation for <see cref="Point"/>.
 /// </summary>
-file static unsafe class PointReference
+file static unsafe class PointReferenceImpl
 {
     /// <summary>
-    /// The vtable for the <c>IReference`1</c> implementation.
+    /// The <see cref="PointReferenceVftbl"/> value for the managed <c>IReference`1</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr { get; } = (nint)WindowsRuntimeHelpers.AllocateTypeAssociatedInspectableVtableUnsafe(
-        type: typeof(Point),
-        fpEntry6: (delegate* unmanaged[MemberFunction]<void*, Point*, HRESULT>)&Value);
+    [FixedAddressValueType]
+    private static readonly PointReferenceVftbl Vftbl;
+
+    /// <summary>
+    /// Initializes <see cref="Vftbl"/>.
+    /// </summary>
+    static PointReferenceImpl()
+    {
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.AbiToProjectionVftablePtr;
+
+        Vftbl.Value = &Value;
+    }
+
+    /// <summary>
+    /// Gets a pointer to the managed <c>IReference`1</c> implementation.
+    /// </summary>
+    public static nint AbiToProjectionVftablePtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+    }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
@@ -94,7 +176,7 @@ file static unsafe class PointReference
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
             Unsafe.WriteUnaligned(result, default(Point));
 
