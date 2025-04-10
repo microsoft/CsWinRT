@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
 namespace WindowsRuntime.InteropServices;
@@ -49,8 +50,12 @@ internal static unsafe class IWeakReferenceSourceImpl
         {
             object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            // TODO
-            *weakReference = null;
+            ManagedWeakReference managedReference = new(instance);
+
+            // We delegate to 'ComInterfaceMarshaller<T>' to marshal the managed weak reference to a
+            // native object. This will use the default 'ComWrappers' instance, not the CsWinRT one.
+            // This allows 'WindowsRuntimeComWrappers' to only ever have to handle Windows Runtime types.
+            *weakReference = ComInterfaceMarshaller<IWeakReference>.ConvertToUnmanaged(managedReference);
 
             return WellKnownErrorCodes.S_OK;
         }
