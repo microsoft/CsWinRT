@@ -98,9 +98,17 @@ namespace ABI.WinRT.Interop
             cachesLock.EnterReadLock();
             try
             {
+#if NET
+                caches.AddOrUpdate(
+                    key: obj.ThisPtr,
+                    addValueFactory: static (IntPtr ThisPtr, CachesFactoryArgs args) => new EventSourceCache(args.Target, args.Index, args.State),
+                    updateValueFactory: static (IntPtr ThisPtr, EventSourceCache cache, CachesFactoryArgs args) => cache.Update(args.Target, args.Index, args.State),
+                    factoryArgument: new CachesFactoryArgs(target, index, state));
+#else
                 caches.AddOrUpdate(obj.ThisPtr,
                     (IntPtr ThisPtr) => new EventSourceCache(target, index, state),
                     (IntPtr ThisPtr, EventSourceCache cache) => cache.Update(target, index, state));
+#endif
             }
             finally
             {
@@ -147,5 +155,21 @@ namespace ABI.WinRT.Interop
                 }
             }
         }
+
+#if NET
+        // We're intentionally using a separate type and not a value tuple, because creating generic
+        // type instantiations with this type when delegates are involved results in additional
+        // metadata being preserved after trimming. This can save a few KBs in binary size on Native AOT.
+        // See: https://github.com/dotnet/runtime/pull/111204#issuecomment-2599397292.
+        private readonly struct CachesFactoryArgs(
+            global::WinRT.Interop.IWeakReference target,
+            int index,
+            global::System.WeakReference<object> state)
+        {
+            public readonly global::WinRT.Interop.IWeakReference Target = target;
+            public readonly int Index = index;
+            public readonly global::System.WeakReference<object> State = state;
+        }
+#endif
     }
 }
