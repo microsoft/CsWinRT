@@ -80,19 +80,19 @@ file static class Matrix3x2InterfaceEntriesImpl
     static Matrix3x2InterfaceEntriesImpl()
     {
         Entries.IReferenceOfMatrix3x2.IID = WellKnownInterfaceIds.IID_IReferenceMatrix3x2;
-        Entries.IReferenceOfMatrix3x2.Vtable = Matrix3x2ReferenceImpl.AbiToProjectionVftablePtr;
+        Entries.IReferenceOfMatrix3x2.Vtable = Matrix3x2ReferenceImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
-        Entries.IStringable.Vtable = IStringableImpl.AbiToProjectionVftablePtr;
+        Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
-        Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.AbiToProjectionVftablePtr;
+        Entries.IWeakReferenceSource.Vtable = IWeakReferenceSourceImpl.Vtable;
         Entries.IMarshal.IID = WellKnownInterfaceIds.IID_IMarshal;
-        Entries.IMarshal.Vtable = IMarshalImpl.AbiToProjectionVftablePtr;
+        Entries.IMarshal.Vtable = IMarshalImpl.Vtable;
         Entries.IAgileObject.IID = WellKnownInterfaceIds.IID_IAgileObject;
-        Entries.IAgileObject.Vtable = IUnknownImpl.AbiToProjectionVftablePtr;
+        Entries.IAgileObject.Vtable = IUnknownImpl.Vtable;
         Entries.IInspectable.IID = WellKnownInterfaceIds.IID_IInspectable;
-        Entries.IInspectable.Vtable = IInspectableImpl.AbiToProjectionVftablePtr;
+        Entries.IInspectable.Vtable = IInspectableImpl.Vtable;
         Entries.IUnknown.IID = WellKnownInterfaceIds.IID_IUnknown;
-        Entries.IUnknown.Vtable = IUnknownImpl.AbiToProjectionVftablePtr;
+        Entries.IUnknown.Vtable = IUnknownImpl.Vtable;
     }
 }
 
@@ -152,7 +152,7 @@ file static unsafe class Matrix3x2ReferenceImpl
     /// </summary>
     static Matrix3x2ReferenceImpl()
     {
-        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.AbiToProjectionVftablePtr;
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.Value = &Value;
     }
@@ -160,7 +160,7 @@ file static unsafe class Matrix3x2ReferenceImpl
     /// <summary>
     /// Gets a pointer to the managed <c>IReference`1</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr
+    public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));

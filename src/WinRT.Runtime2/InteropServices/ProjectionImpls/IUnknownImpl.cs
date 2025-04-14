@@ -36,7 +36,7 @@ internal static unsafe class IUnknownImpl
     /// <summary>
     /// Gets a pointer to the managed <c>IUnknown</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr
+    public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));

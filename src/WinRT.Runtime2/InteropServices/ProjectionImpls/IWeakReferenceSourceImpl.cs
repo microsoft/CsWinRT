@@ -26,7 +26,7 @@ internal static unsafe class IWeakReferenceSourceImpl
     /// </summary>
     static IWeakReferenceSourceImpl()
     {
-        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
+        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
         Vftbl.GetWeakReference = &GetWeakReference;
     }
@@ -34,7 +34,7 @@ internal static unsafe class IWeakReferenceSourceImpl
     /// <summary>
     /// Gets a pointer to the managed <c>IWeakReferenceSource</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr
+    public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));

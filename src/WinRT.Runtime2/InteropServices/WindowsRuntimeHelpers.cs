@@ -21,7 +21,7 @@ public static unsafe class WindowsRuntimeHelpers
     public static bool IsReferenceToManagedObject(void* unknown)
     {
         IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)(void**)unknown;
-        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
+        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
 
         return
             unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface &&

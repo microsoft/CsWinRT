@@ -26,7 +26,7 @@ internal static unsafe class IStringableImpl
     /// </summary>
     static IStringableImpl()
     {
-        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IUnknownImpl.Vtable;
 
         Vftbl.ToString = &ToString;
     }
@@ -34,7 +34,7 @@ internal static unsafe class IStringableImpl
     /// <summary>
     /// Gets a pointer to the managed <c>IStringable</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr
+    public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));

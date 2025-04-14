@@ -44,7 +44,7 @@ public static unsafe class IDisposableImpl
     /// </summary>
     static IDisposableImpl()
     {
-        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.AbiToProjectionVftablePtr;
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.Close = &Close;
     }
@@ -52,7 +52,7 @@ public static unsafe class IDisposableImpl
     /// <summary>
     /// Gets a pointer to the managed <see cref="global::System.IDisposable"/> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr
+    public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));

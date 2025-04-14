@@ -26,7 +26,7 @@ internal static unsafe class IInspectableImpl
     /// </summary>
     static IInspectableImpl()
     {
-        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.AbiToProjectionVftablePtr;
+        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
         Vftbl.GetIids = &GetIids;
         Vftbl.GetRuntimeClassName = &GetRuntimeClassName;
@@ -36,7 +36,7 @@ internal static unsafe class IInspectableImpl
     /// <summary>
     /// Gets a pointer to the managed <c>IInspectable</c> implementation.
     /// </summary>
-    public static nint AbiToProjectionVftablePtr
+    public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
