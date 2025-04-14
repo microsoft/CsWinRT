@@ -1569,6 +1569,10 @@ namespace Generator
                         continue;
                     }
 
+                    bool alreadyHasOverload = method.TryGetAttributeWithType(Model.Compilation.GetTypeByMetadataName("Windows.Foundation.Metadata.OverloadAttribute"), out AttributeData _);
+                    if (alreadyHasOverload)
+                        continue;
+
                     string overloadedMethodName = methodName.Key + (++lastSuffix);
                     while (interfaceTypeDeclaration.MethodsByName.ContainsKey(overloadedMethodName))
                     {
