@@ -4,9 +4,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using WindowsRuntime;
 
-namespace Windows.Foundation;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Represents a reference to a delegate that receives change notifications.
@@ -19,14 +18,14 @@ public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
     /// <summary>
     /// Creates a new <see cref="EventRegistrationToken"/> value with the specified parameters.
     /// </summary>
-    /// <param name="value">The reference to the delegate.</param>
+    /// <param name="value">The reference to the delegate. A valid reference will not have a value of zero.</param>
     public EventRegistrationToken(long value)
     {
         Value = value;
     }
 
     /// <summary>
-    /// Gets the reference to the delegate. A valid reference will not have a value of zero.
+    /// Gets or sets the reference to the delegate. A valid reference will not have a value of zero.
     /// </summary>
     public long Value { readonly get; set; }
 
@@ -56,18 +55,18 @@ public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
     }
 
     /// <summary>
-    /// Returns a value that indicates whether the two <see cref="EventRegistrationToken"/> values are equal.
+    /// Returns a value that indicates whether two <see cref="EventRegistrationToken"/> values are equal.
     /// </summary>
-    /// <param name="left">The first token to compare.</param>
-    /// <param name="right">The second token to compare.</param>
+    /// <param name="left">The first <see cref="EventRegistrationToken"/> value to compare.</param>
+    /// <param name="right">The second <see cref="EventRegistrationToken"/> value to compare.</param>
     /// <returns><see langword="true"/> if <paramref name="left"/> and <paramref name="right"/> are equal, otherwise <see langword="false"/>.</returns>
     public static bool operator ==(EventRegistrationToken left, EventRegistrationToken right) => left.Equals(right);
 
     /// <summary>
-    /// Returns a value that indicates whether the two <see cref="EventRegistrationToken"/> values are not equal.
+    /// Returns a value that indicates whether two <see cref="EventRegistrationToken"/> values are not equal.
     /// </summary>
-    /// <param name="left">The first token to compare.</param>
-    /// <param name="right">The second token to compare.</param>
+    /// <param name="left">The first <see cref="EventRegistrationToken"/> value to compare.</param>
+    /// <param name="right">The second <see cref="EventRegistrationToken"/> value to compare.</param>
     /// <returns><see langword="true"/> if <paramref name="left"/> and <paramref name="right"/> are not equal, otherwise <see langword="false"/>.</returns>
     public static bool operator !=(EventRegistrationToken left, EventRegistrationToken right) => !left.Equals(right);
 }
