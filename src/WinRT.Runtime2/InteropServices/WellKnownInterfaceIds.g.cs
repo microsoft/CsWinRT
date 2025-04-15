@@ -1835,8 +1835,8 @@ public static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IReferenceMatrix3x2</c> (76358CFD-2CBD-525B-A49E-90EE18247B71).</summary>
-    internal static ref readonly Guid IID_IReferenceMatrix3x2
+    /// <summary>The IID for <c>IReferenceOfMatrix3x2</c> (76358CFD-2CBD-525B-A49E-90EE18247B71).</summary>
+    internal static ref readonly Guid IID_IReferenceOfMatrix3x2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1860,8 +1860,8 @@ public static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IReferenceMatrix4x4</c> (DACBFFDC-68EF-5FD0-B657-782D0AC9807E).</summary>
-    internal static ref readonly Guid IID_IReferenceMatrix4x4
+    /// <summary>The IID for <c>IReferenceOfMatrix4x4</c> (DACBFFDC-68EF-5FD0-B657-782D0AC9807E).</summary>
+    internal static ref readonly Guid IID_IReferenceOfMatrix4x4
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1885,8 +1885,8 @@ public static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IReferencePlane</c> (46D542A1-52F7-58E7-ACFC-9A6D364DA022).</summary>
-    internal static ref readonly Guid IID_IReferencePlane
+    /// <summary>The IID for <c>IReferenceOfPlane</c> (46D542A1-52F7-58E7-ACFC-9A6D364DA022).</summary>
+    internal static ref readonly Guid IID_IReferenceOfPlane
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1910,8 +1910,8 @@ public static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IReferenceQuaternion</c> (B27004BB-C014-5DCE-9A21-799C5A3C1461).</summary>
-    internal static ref readonly Guid IID_IReferenceQuaternion
+    /// <summary>The IID for <c>IReferenceOfQuaternion</c> (B27004BB-C014-5DCE-9A21-799C5A3C1461).</summary>
+    internal static ref readonly Guid IID_IReferenceOfQuaternion
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1935,8 +1935,8 @@ public static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IReferenceVector2</c> (48F6A69E-8465-57AE-9400-9764087F65AD).</summary>
-    internal static ref readonly Guid IID_IReferenceVector2
+    /// <summary>The IID for <c>IReferenceOfVector2</c> (48F6A69E-8465-57AE-9400-9764087F65AD).</summary>
+    internal static ref readonly Guid IID_IReferenceOfVector2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1960,8 +1960,8 @@ public static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IReferenceVector3</c> (1EE770FF-C954-59CA-A754-6199A9BE282C).</summary>
-    internal static ref readonly Guid IID_IReferenceVector3
+    /// <summary>The IID for <c>IReferenceOfVector3</c> (1EE770FF-C954-59CA-A754-6199A9BE282C).</summary>
+    internal static ref readonly Guid IID_IReferenceOfVector3
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1985,8 +1985,8 @@ public static class WellKnownInterfaceIds
         }
     }
 
-    /// <summary>The IID for <c>IReferenceVector4</c> (A5E843C9-ED20-5339-8F8D-9FE404CF3654).</summary>
-    internal static ref readonly Guid IID_IReferenceVector4
+    /// <summary>The IID for <c>IReferenceOfVector4</c> (A5E843C9-ED20-5339-8F8D-9FE404CF3654).</summary>
+    internal static ref readonly Guid IID_IReferenceOfVector4
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2004,6 +2004,31 @@ public static class WellKnownInterfaceIds
                 0xCF,
                 0x36,
                 0x54
+            };
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IReferenceOfEventRegistrationToken</c> (A9B18291-CE2A-5DAE-8A23-B7F7388416DB).</summary>
+    internal static ref readonly Guid IID_IReferenceOfEventRegistrationToken
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data = new byte[]
+            {
+                0x91, 0x82, 0xB1, 0xA9,
+                0x2A, 0xCE,
+                0xAE, 0x5D,
+                0x8A,
+                0x23,
+                0xB7,
+                0xF7,
+                0x38,
+                0x84,
+                0x16,
+                0xDB
             };
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
