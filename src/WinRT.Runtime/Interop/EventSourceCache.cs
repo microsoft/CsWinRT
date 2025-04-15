@@ -135,7 +135,14 @@ namespace ABI.WinRT.Interop
                 ((ICollection<KeyValuePair<int, global::System.WeakReference<object>>>)cache.states).Remove(
                     new KeyValuePair<int, global::System.WeakReference<object>>(index, state));
 #else
-                cache.states.TryRemove(new KeyValuePair<int, global::System.WeakReference<object>>(index, state));
+                // If we failed to remove the entry, we can stop here without checking the actual state. Even if there
+                // was a value when we were called, we might've raced against another thread, which removed the item
+                // first. That is still fine: this thread can stop here, and the one that won the race will do the
+                // check below and cleanup the event cache instance in case that was the last remaining cache entry.
+                if (!cache.states.TryRemove(new KeyValuePair<int, global::System.WeakReference<object>>(index, state)))
+                {
+                    return;
+                }
 #endif
                 // using double-checked lock idiom
                 if (cache.states.IsEmpty)
