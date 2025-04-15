@@ -12,7 +12,7 @@ namespace WindowsRuntime;
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreference"/>
 [Guid("00000037-0000-0000-C000-000000000046")]
-[GeneratedComInterface(Options = ComInterfaceOptions.ManagedObjectWrapper)]
+[GeneratedComInterface]
 public unsafe partial interface IWeakReference
 {
     /// <summary>
