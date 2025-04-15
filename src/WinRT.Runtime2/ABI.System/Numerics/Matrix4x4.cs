@@ -39,7 +39,7 @@ public static unsafe class Matrix4x4Marshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Matrix4x4? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceMatrix4x4);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfMatrix4x4);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -79,7 +79,7 @@ file static class Matrix4x4InterfaceEntriesImpl
     /// </summary>
     static Matrix4x4InterfaceEntriesImpl()
     {
-        Entries.IReferenceOfMatrix4x4.IID = WellKnownInterfaceIds.IID_IReferenceMatrix4x4;
+        Entries.IReferenceOfMatrix4x4.IID = WellKnownInterfaceIds.IID_IReferenceOfMatrix4x4;
         Entries.IReferenceOfMatrix4x4.Vtable = Matrix4x4ReferenceImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
@@ -118,7 +118,7 @@ internal sealed unsafe class Matrix4x4ComWrappersMarshallerAttribute : WindowsRu
     /// <inheritdoc/>
     public override object CreateObject(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix4x4>(value, in WellKnownInterfaceIds.IID_IReferenceMatrix4x4);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix4x4>(value, in WellKnownInterfaceIds.IID_IReferenceOfMatrix4x4);
     }
 }
 

@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using ABI.Windows.Foundation;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -13,6 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.eventregistrationtoken"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.EventRegistrationToken>")]
+[EventRegistrationTokenComWrappersMarshaller]
 public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
 {
     /// <summary>

@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
@@ -14,47 +13,37 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable CS0649
 
 [assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
-    value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Quaternion>",
-    target: typeof(ABI.System.Numerics.Quaternion),
-    trimTarget: typeof(Quaternion))]
+    value: "Windows.Foundation.IReference<Windows.Foundation.EventRegistrationToken>",
+    target: typeof(EventRegistrationToken),
+    trimTarget: typeof(EventRegistrationToken))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(typeof(Quaternion), typeof(ABI.System.Numerics.Quaternion))]
-
-namespace ABI.System.Numerics;
+namespace ABI.Windows.Foundation;
 
 /// <summary>
-/// ABI type for <see cref="global::System.Numerics.Quaternion"/>.
-/// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.quaternion"/>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Numerics.Quaternion>")]
-[QuaternionComWrappersMarshaller]
-file static class Quaternion;
-
-/// <summary>
-/// Marshaller for <see cref="global::System.Numerics.Quaternion"/>.
+/// Marshaller for <see cref="EventRegistrationToken"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class QuaternionMarshaller
+public static unsafe class EventRegistrationTokenMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Quaternion? value)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(EventRegistrationToken? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfQuaternion);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfEventRegistrationToken);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
-    public static global::System.Numerics.Quaternion? UnboxToManaged(void* value)
+    public static EventRegistrationToken? UnboxToManaged(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<global::System.Numerics.Quaternion>(value);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<EventRegistrationToken>(value);
     }
 }
 
 /// <summary>
-/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="global::System.Numerics.Quaternion"/>.
+/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="EventRegistrationToken"/>.
 /// </summary>
-file struct QuaternionInterfaceEntries
+file struct EventRegistrationTokenInterfaceEntries
 {
-    public ComInterfaceEntry IReferenceOfQuaternion;
+    public ComInterfaceEntry IReferenceOfEventRegistrationToken;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -64,23 +53,23 @@ file struct QuaternionInterfaceEntries
 }
 
 /// <summary>
-/// The implementation of <see cref="QuaternionInterfaceEntries"/>.
+/// The implementation of <see cref="EventRegistrationTokenInterfaceEntries"/>.
 /// </summary>
-file static class QuaternionInterfaceEntriesImpl
+file static class EventRegistrationTokenInterfaceEntriesImpl
 {
     /// <summary>
-    /// The <see cref="QuaternionInterfaceEntries"/> value for <see cref="global::System.Numerics.Quaternion"/>.
+    /// The <see cref="EventRegistrationTokenInterfaceEntries"/> value for <see cref="EventRegistrationToken"/>.
     /// </summary>
     [FixedAddressValueType]
-    public static readonly QuaternionInterfaceEntries Entries;
+    public static readonly EventRegistrationTokenInterfaceEntries Entries;
 
     /// <summary>
     /// Initializes <see cref="Entries"/>.
     /// </summary>
-    static QuaternionInterfaceEntriesImpl()
+    static EventRegistrationTokenInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfQuaternion.IID = WellKnownInterfaceIds.IID_IReferenceOfQuaternion;
-        Entries.IReferenceOfQuaternion.Vtable = QuaternionReferenceImpl.Vtable;
+        Entries.IReferenceOfEventRegistrationToken.IID = WellKnownInterfaceIds.IID_IReferenceOfEventRegistrationToken;
+        Entries.IReferenceOfEventRegistrationToken.Vtable = EventRegistrationTokenReferenceImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
@@ -97,9 +86,9 @@ file static class QuaternionInterfaceEntriesImpl
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="global::System.Numerics.Quaternion"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="EventRegistrationToken"/>.
 /// </summary>
-internal sealed unsafe class QuaternionComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+internal sealed unsafe class EventRegistrationTokenComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -110,22 +99,22 @@ internal sealed unsafe class QuaternionComWrappersMarshallerAttribute : WindowsR
     /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(QuaternionInterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(EventRegistrationTokenInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in QuaternionInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in EventRegistrationTokenInterfaceEntriesImpl.Entries));
     }
 
     /// <inheritdoc/>
     public override object CreateObject(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Quaternion>(value, in WellKnownInterfaceIds.IID_IReferenceOfQuaternion);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<EventRegistrationToken>(value, in WellKnownInterfaceIds.IID_IReferenceOfEventRegistrationToken);
     }
 }
 
 /// <summary>
-/// Binding type for the <c>IReference`1</c> implementation for <see cref="global::System.Numerics.Quaternion"/>.
+/// Binding type for the <c>IReference`1</c> implementation for <see cref="EventRegistrationToken"/>.
 /// </summary>
-file unsafe struct QuaternionReferenceVftbl
+file unsafe struct EventRegistrationTokenReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -133,24 +122,24 @@ file unsafe struct QuaternionReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, global::System.Numerics.Quaternion*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken*, HRESULT> Value;
 }
 
 /// <summary>
-/// The <c>IReference`1</c> implementation for <see cref="global::System.Numerics.Quaternion"/>.
+/// The <c>IReference`1</c> implementation for <see cref="EventRegistrationToken"/>.
 /// </summary>
-file static unsafe class QuaternionReferenceImpl
+file static unsafe class EventRegistrationTokenReferenceImpl
 {
     /// <summary>
-    /// The <see cref="QuaternionReferenceVftbl"/> value for the managed <c>IReference`1</c> implementation.
+    /// The <see cref="EventRegistrationTokenReferenceVftbl"/> value for the managed <c>IReference`1</c> implementation.
     /// </summary>
     [FixedAddressValueType]
-    private static readonly QuaternionReferenceVftbl Vftbl;
+    private static readonly EventRegistrationTokenReferenceVftbl Vftbl;
 
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static QuaternionReferenceImpl()
+    static EventRegistrationTokenReferenceImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
@@ -168,7 +157,7 @@ file static unsafe class QuaternionReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT Value(void* thisPtr, global::System.Numerics.Quaternion* result)
+    private static HRESULT Value(void* thisPtr, EventRegistrationToken* result)
     {
         if (result is null)
         {
@@ -177,15 +166,15 @@ file static unsafe class QuaternionReferenceImpl
 
         try
         {
-            global::System.Numerics.Quaternion unboxedValue = (global::System.Numerics.Quaternion)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            EventRegistrationToken unboxedValue = (EventRegistrationToken)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             Unsafe.WriteUnaligned(result, unboxedValue);
 
             return WellKnownErrorCodes.S_OK;
         }
-        catch (global::System.Exception e)
+        catch (Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(global::System.Numerics.Quaternion));
+            Unsafe.WriteUnaligned(result, default(EventRegistrationToken));
 
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }

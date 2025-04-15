@@ -39,7 +39,7 @@ public static unsafe class Vector2Marshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Vector2? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceVector2);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfVector2);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -79,7 +79,7 @@ file static class Vector2InterfaceEntriesImpl
     /// </summary>
     static Vector2InterfaceEntriesImpl()
     {
-        Entries.IReferenceOfVector2.IID = WellKnownInterfaceIds.IID_IReferenceVector2;
+        Entries.IReferenceOfVector2.IID = WellKnownInterfaceIds.IID_IReferenceOfVector2;
         Entries.IReferenceOfVector2.Vtable = Vector2ReferenceImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
@@ -118,7 +118,7 @@ internal sealed unsafe class Vector2ComWrappersMarshallerAttribute : WindowsRunt
     /// <inheritdoc/>
     public override object CreateObject(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Vector2>(value, in WellKnownInterfaceIds.IID_IReferenceVector2);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Vector2>(value, in WellKnownInterfaceIds.IID_IReferenceOfVector2);
     }
 }
 

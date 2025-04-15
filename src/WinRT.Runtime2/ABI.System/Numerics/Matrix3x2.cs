@@ -39,7 +39,7 @@ public static unsafe class Matrix3x2Marshaller
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
     public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(global::System.Numerics.Matrix3x2? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceMatrix3x2);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfMatrix3x2);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
@@ -79,7 +79,7 @@ file static class Matrix3x2InterfaceEntriesImpl
     /// </summary>
     static Matrix3x2InterfaceEntriesImpl()
     {
-        Entries.IReferenceOfMatrix3x2.IID = WellKnownInterfaceIds.IID_IReferenceMatrix3x2;
+        Entries.IReferenceOfMatrix3x2.IID = WellKnownInterfaceIds.IID_IReferenceOfMatrix3x2;
         Entries.IReferenceOfMatrix3x2.Vtable = Matrix3x2ReferenceImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
@@ -118,7 +118,7 @@ internal sealed unsafe class Matrix3x2ComWrappersMarshallerAttribute : WindowsRu
     /// <inheritdoc/>
     public override object CreateObject(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix3x2>(value, in WellKnownInterfaceIds.IID_IReferenceMatrix3x2);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Numerics.Matrix3x2>(value, in WellKnownInterfaceIds.IID_IReferenceOfMatrix3x2);
     }
 }
 
