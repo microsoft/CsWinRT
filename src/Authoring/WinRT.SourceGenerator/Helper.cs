@@ -439,6 +439,12 @@ namespace Generator
             if (!isProjectedType & type.ContainingNamespace != null)
             {
                 isProjectedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+
+                // Check if CsWinRT component projected type from another project.
+                if (!isProjectedType)
+                {
+                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName("ABI.Impl." + type.MetadataName) != null;
+                }
             }
 
             // Ensure all generic parameters are WinRT types.
@@ -472,6 +478,12 @@ namespace Generator
             if (!isProjectedType & type.ContainingNamespace != null)
             {
                 isProjectedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+
+                // Check if CsWinRT component projected type from another project.
+                if (!isProjectedType)
+                {
+                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName("ABI.Impl." + type.MetadataName) != null;
+                }
             }
 
             // Ensure all generic parameters are WinRT types.
