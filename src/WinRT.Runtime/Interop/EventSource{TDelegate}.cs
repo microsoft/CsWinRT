@@ -175,7 +175,7 @@ namespace ABI.WinRT.Interop
         {
             if (_state is not null && _state.TryGetTarget(out object? stateObj))
             {
-                state = Unsafe.As<EventSourceState<TDelegate>>(stateObj);
+                state = (EventSourceState<TDelegate>)stateObj;
 
                 return true;
             }
