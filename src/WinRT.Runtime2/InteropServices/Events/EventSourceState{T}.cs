@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -20,7 +21,6 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     private readonly WeakReference<object> _weakReferenceToSelf;
     private void* _eventInvokePtr;
     private void* _referenceTrackerTargetPtr;
-    private EventRegistrationToken _token;
     private T? _targetDelegate;
     private T _eventInvoke;
 
@@ -30,7 +30,7 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     /// <param name="thisPtr">The pointer to the target object owning the associated event.</param>
     /// <param name="index">The index of the event the state is associated to.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="thisPtr"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="index"/> is less than zero.</exception>"
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="index"/> is less than zero.</exception>
     protected EventSourceState(void* thisPtr, int index)
     {
         ArgumentNullException.ThrowIfNull(thisPtr);
@@ -56,7 +56,17 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     /// <summary>
     /// Gets the current <typeparamref name="T"/> value with the active subscriptions for the target event.
     /// </summary>
-    protected T? TargetDelegate => _targetDelegate;
+    protected internal T? TargetDelegate => _targetDelegate;
+
+    /// <summary>
+    /// Gets the current <typeparamref name="T"/> delegate instance with the invoke stub for the target delegate.
+    /// </summary>
+    internal T EventInvoke => _eventInvoke;
+
+    /// <summary>
+    /// Gets or sets the <see cref="EventRegistrationToken"/> for the current event source.
+    /// </summary>
+    internal EventRegistrationToken Token { get; set; }
 
     /// <inheritdoc/>
     public void Dispose()
@@ -85,6 +95,24 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     internal WeakReference<object> GetWeakReferenceToSelf()
     {
         return _weakReferenceToSelf;
+    }
+
+    /// <summary>
+    /// Adds a new handler to the target delegate.
+    /// </summary>
+    /// <param name="handler">The new delegate to add.</param>
+    internal void AddHandler(T handler)
+    {
+        _targetDelegate = Unsafe.As<T>(Delegate.Combine(_targetDelegate, handler));
+    }
+
+    /// <summary>
+    /// Removes a handler to the target delegate.
+    /// </summary>
+    /// <param name="handler">The delegate to remove.</param>
+    internal void RemoveHandler(T handler)
+    {
+        _targetDelegate = Unsafe.As<T>(Delegate.Remove(_targetDelegate, handler));
     }
 
     /// <summary>
