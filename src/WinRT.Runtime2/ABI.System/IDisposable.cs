@@ -79,7 +79,7 @@ public static unsafe class IDisposableImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.IDisposable"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-internal unsafe interface IDisposable : global::System.IDisposable
+internal interface IDisposable : global::System.IDisposable
 {
     /// <inheritdoc/>
     void global::System.IDisposable.Dispose()

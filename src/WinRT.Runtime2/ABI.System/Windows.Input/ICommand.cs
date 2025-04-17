@@ -44,7 +44,7 @@ public static unsafe class ICommandMethods
     }
 
     /// <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>
-    public static unsafe EventHandlerEventSource Get_CanExecuteChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+    public static EventHandlerEventSource Get_CanExecuteChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         // TODO: remove capture in .NET 10
         return CanExecuteChanged.GetValue(thisObject, thisObject => new EventHandlerEventSource(thisReference, 6));
@@ -158,7 +158,7 @@ public static unsafe class ICommandImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.canexecutechanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static unsafe int add_CanExecuteChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
+    private static int add_CanExecuteChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
         *token = default;
 
@@ -183,7 +183,7 @@ public static unsafe class ICommandImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.canexecutechanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static unsafe int remove_CanExecuteChanged(void* thisPtr, EventRegistrationToken token)
+    private static int remove_CanExecuteChanged(void* thisPtr, EventRegistrationToken token)
     {
         try
         {
@@ -211,7 +211,7 @@ public static unsafe class ICommandImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.canexecute"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static unsafe int CanExecute(void* thisPtr, void* parameter, byte* result)
+    private static int CanExecute(void* thisPtr, void* parameter, byte* result)
     {
         *result = 0;
 
@@ -234,7 +234,7 @@ public static unsafe class ICommandImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.execute"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static unsafe int Execute(void* thisPtr, void* parameter)
+    private static int Execute(void* thisPtr, void* parameter)
     {
         try
         {
@@ -255,7 +255,7 @@ public static unsafe class ICommandImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.Windows.Input.ICommand"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file unsafe interface ICommand : global::System.Windows.Input.ICommand
+file interface ICommand : global::System.Windows.Input.ICommand
 {
     /// <inheritdoc/>
     event EventHandler? global::System.Windows.Input.ICommand.CanExecuteChanged
@@ -277,7 +277,7 @@ file unsafe interface ICommand : global::System.Windows.Input.ICommand
     }
 
     /// <inheritdoc/>
-    unsafe bool global::System.Windows.Input.ICommand.CanExecute(object? parameter)
+    bool global::System.Windows.Input.ICommand.CanExecute(object? parameter)
     {
         var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Windows.Input.ICommand).TypeHandle);
 
@@ -285,7 +285,7 @@ file unsafe interface ICommand : global::System.Windows.Input.ICommand
     }
 
     /// <inheritdoc/>
-    unsafe void global::System.Windows.Input.ICommand.Execute(object? parameter)
+    void global::System.Windows.Input.ICommand.Execute(object? parameter)
     {
         var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.Windows.Input.ICommand).TypeHandle);
 

@@ -7,14 +7,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using ABI.System.ComponentModel;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CS0649, IDE0008, IDE1006
 
-namespace ABI.System.Windows.Input;
+namespace ABI.System.ComponentModel;
 
 /// <summary>
 /// Interop methods for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
@@ -44,7 +43,7 @@ public static unsafe class INotifyPropertyChangedMethods
     }
 
     /// <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>
-    public static unsafe PropertyChangedEventSource Get_PropertyChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+    public static PropertyChangedEventSource Get_PropertyChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         // TODO: remove capture in .NET 10
         return PropertyChanged.GetValue(thisObject, thisObject => new PropertyChangedEventSource(thisReference, 6));
@@ -129,7 +128,7 @@ public static unsafe class INotifyPropertyChangedImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.inotifypropertychanged.propertychanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static unsafe int add_PropertyChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
+    private static int add_PropertyChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
         *token = default;
 
@@ -154,7 +153,7 @@ public static unsafe class INotifyPropertyChangedImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.inotifypropertychanged.propertychanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static unsafe int remove_PropertyChanged(void* thisPtr, EventRegistrationToken token)
+    private static int remove_PropertyChanged(void* thisPtr, EventRegistrationToken token)
     {
         try
         {
@@ -178,7 +177,7 @@ public static unsafe class INotifyPropertyChangedImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-file unsafe interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
+file interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
 {
     /// <inheritdoc/>
     event PropertyChangedEventHandler? global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged
