@@ -5,13 +5,32 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649, IDE0008
 
 namespace ABI.System;
+
+/// <summary>
+/// Interop methods for <see cref="global::System.IDisposable"/>.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static unsafe class IDisposableMethods
+{
+    /// <see cref="global::System.IDisposable.Dispose"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void Dispose(WindowsRuntimeObjectReference thisReference)
+    {
+        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+
+        void* thisPtr = thisValue.GetThisPtrUnsafe();
+
+        RestrictedErrorInfo.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, HRESULT>)(*(void***)thisPtr)[6])(thisPtr));
+    }
+}
 
 /// <summary>
 /// Binding type for <see cref="global::System.IDisposable"/>.
@@ -84,6 +103,8 @@ internal interface IDisposable : global::System.IDisposable
     /// <inheritdoc/>
     void global::System.IDisposable.Dispose()
     {
-        // TODO
+        var thisReference = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(global::System.IDisposable).TypeHandle);
+
+        IDisposableMethods.Dispose(thisReference);
     }
 }
