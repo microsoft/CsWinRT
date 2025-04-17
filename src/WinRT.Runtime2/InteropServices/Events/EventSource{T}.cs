@@ -20,16 +20,6 @@ public abstract unsafe class EventSource<T>
     private readonly WindowsRuntimeObjectReference _nativeObjectReference;
 
     /// <summary>
-    /// The function pointer to add a new event handler to the target native object (ie. the <c>add_EventName</c> method in the interface vtable).
-    /// </summary>
-    private readonly delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT> _addHandler;
-
-    /// <summary>
-    /// The function pointer to remove a new event handler to the target native object (ie. the <c>remove_EventName</c> method in the interface vtable).
-    /// </summary>
-    private readonly delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT> _removeHandler;
-
-    /// <summary>
     /// The weak reference to the event source state, for the current event source.
     /// </summary>
     private WeakReference<object>? _weakReferenceToEventSourceState;
@@ -38,27 +28,18 @@ public abstract unsafe class EventSource<T>
     /// Creates a new <see cref="EventSource{T}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The <see cref="WindowsRuntimeObjectReference"/> instance holding the event.</param>
-    /// <param name="addHandler">The native function pointer for the <c>AddHandler</c> method on the target object.</param>
-    /// <param name="removeHandler">The native function pointer for the <c>RemoveHandler</c> method on the target object.</param>
     /// <param name="index">The index of the event being managed.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/>, <paramref name="addHandler"/>, or <paramref name="removeHandler"/> are <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="index"/> is less than zero.</exception>
-    protected EventSource(
-        WindowsRuntimeObjectReference nativeObjectReference,
-        delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT> addHandler,
-        delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT> removeHandler,
-        int index = 0)
+    protected EventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
     {
         ArgumentNullException.ThrowIfNull(nativeObjectReference);
-        ArgumentNullException.ThrowIfNull(addHandler);
-        ArgumentNullException.ThrowIfNull(removeHandler);
         ArgumentOutOfRangeException.ThrowIfNegative(index);
 
         _nativeObjectReference = nativeObjectReference;
-        _addHandler = addHandler;
-        _removeHandler = removeHandler;
-        Index = index;
         _weakReferenceToEventSourceState = EventSourceCache.GetState(nativeObjectReference, index);
+
+        Index = index;
     }
 
     /// <summary>
@@ -113,8 +94,15 @@ public abstract unsafe class EventSource<T>
 
                 EventRegistrationToken token;
 
+                // Get the 'add_EventName' function pointer from the target index in the interface vtable.
+                // This allows us to not have to preload them and store them in two fields in this object.
+                // Additionally, it simplifies all derived types, as they don't need to do the work to
+                // safely get a native pointer from the object reference, to resolve the two vtable slots.
+                void* thisPtr = nativeObjectReferenceValue.GetThisPtrUnsafe();
+                void* addHandler = (*(void***)thisPtr)[Index];
+
                 // Actually register the marshalled event invoke on the native object
-                HRESULT hresult = _addHandler(nativeObjectReferenceValue.GetThisPtrUnsafe(), eventInvokeValue.GetThisPtrUnsafe(), &token);
+                HRESULT hresult = ((delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT>)addHandler)(thisPtr, eventInvokeValue.GetThisPtrUnsafe(), &token);
 
                 RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
@@ -151,8 +139,12 @@ public abstract unsafe class EventSource<T>
             {
                 using WindowsRuntimeObjectReferenceValue nativeObjectReferenceValue = _nativeObjectReference.AsValue();
 
+                // The 'remove_EventName' method is always in the vtable slot following the 'add_EventName' method
+                void* thisPtr = nativeObjectReferenceValue.GetThisPtrUnsafe();
+                void* removeHandler = (*(void***)thisPtr)[Index + 1];
+
                 // Pass the token we got from 'Subscribe' to remove the native event subscription
-                HRESULT hresult = _removeHandler(nativeObjectReferenceValue.GetThisPtrUnsafe(), state.Token);
+                HRESULT hresult = ((delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT>)removeHandler)(nativeObjectReferenceValue.GetThisPtrUnsafe(), state.Token);
 
                 RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 

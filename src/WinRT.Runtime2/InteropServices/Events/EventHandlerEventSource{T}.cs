@@ -12,12 +12,8 @@ namespace WindowsRuntime.InteropServices;
 public abstract unsafe class EventHandlerEventSource<T> : EventSource<EventHandler<T>>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>
-    protected EventHandlerEventSource(
-        WindowsRuntimeObjectReference nativeObjectReference,
-        delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int> addHandler,
-        delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int> removeHandler,
-        int index = 0)
-        : base(nativeObjectReference, addHandler, removeHandler, index)
+    protected EventHandlerEventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
+        : base(nativeObjectReference, index)
     {
     }
 
