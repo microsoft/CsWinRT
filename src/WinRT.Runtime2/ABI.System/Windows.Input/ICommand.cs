@@ -189,6 +189,12 @@ public static unsafe class ICommandImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Windows.Input.ICommand>((ComInterfaceDispatch*)thisPtr);
 
+            // This 'null' check on the unboxed object is intentional, and we're only do this specifically from 'remove_EventName' methods.
+            // The reason is that for tracker objects (ie. in XAML scenarios), the framework will often mark objects as not rooted, and then
+            // perform a cleanup before destruction, which includes also unregistering all registered event handlers. Because the reference
+            // count of the registered handlers is 0 (which is valid for tracked objects), 'ComWrappers' will allow the GC to collect them,
+            // and just keep the CCW alive and in a special "destroyed" state. When that happens, trying to get the original managed object
+            // back will just return 'null', which is why we have this additional check here. In all other ABI methods, it's not needed.
             if (unboxedValue is not null && CanExecuteChanged.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out EventHandler? managedHandler))
             {
                 unboxedValue.CanExecuteChanged -= managedHandler;
