@@ -192,7 +192,7 @@ file static unsafe class ExceptionReferenceImpl
 
         try
         {
-            global::System.Exception unboxedValue = (global::System.Exception)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            global::System.Exception unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Exception>((ComInterfaceDispatch*)thisPtr);
 
             Unsafe.WriteUnaligned(result, ExceptionMarshaller.ConvertToUnmanaged(unboxedValue));
 

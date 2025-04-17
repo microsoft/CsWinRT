@@ -51,10 +51,12 @@ public abstract unsafe class EventSource<T>
     /// Subscribes a given handler to the target event.
     /// </summary>
     /// <param name="handler">The handler to subscribe to the target event.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
-    public void Subscribe(T handler)
+    public void Subscribe(T? handler)
     {
-        ArgumentNullException.ThrowIfNull(handler);
+        if (handler is null)
+        {
+            return;
+        }
 
         lock (this)
         {
@@ -115,10 +117,12 @@ public abstract unsafe class EventSource<T>
     /// Removes a given handler from the target event.
     /// </summary>
     /// <param name="handler">The handler to remove from the target event.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
-    public void Unsubscribe(T handler)
+    public void Unsubscribe(T? handler)
     {
-        ArgumentNullException.ThrowIfNull(handler);
+        if (handler is null)
+        {
+            return;
+        }
 
         // If the event source state has been collected, there's nothing to do
         if (_weakReferenceToEventSourceState is null || !TryGetStateUnsafe(out EventSourceState<T>? state))

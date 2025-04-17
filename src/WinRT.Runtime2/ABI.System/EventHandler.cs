@@ -218,7 +218,7 @@ file static unsafe class EventHandlerImpl
     {
         try
         {
-            var unboxedValue = (global::System.EventHandler)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.EventHandler>((ComInterfaceDispatch*)thisPtr);
 
             unboxedValue(
                 WindowsRuntimeObjectMarshaller.ConvertToManaged(sender),
@@ -288,7 +288,7 @@ file static unsafe class EventHandlerReferenceImpl
 
         try
         {
-            var unboxedValue = (global::System.EventHandler)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.EventHandler>((ComInterfaceDispatch*)thisPtr);
 
             *result = EventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).GetThisPtrUnsafe();
 
