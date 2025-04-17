@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable CS0649, CS1573
@@ -54,7 +55,7 @@ internal unsafe struct IActivationFactoryVftbl
             instance);
     }
 
-    /// <param name="param0">An additional <c>HSTRING</c> paramer.</param>
+    /// <param name="param0">An additional <c>HSTRING</c> parameter.</param>
     /// <inheritdoc cref="ActivateInstanceUnsafe(void*, void*, void**, void**)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HRESULT ActivateInstanceUnsafe(
@@ -64,8 +65,39 @@ internal unsafe struct IActivationFactoryVftbl
         void** innerInterface,
         void** instance)
     {
-        return ((delegate* unmanaged[MemberFunction]<void*, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)thisPtr)->ActivateInstance)(
+        return ((delegate* unmanaged[MemberFunction]<void*, HSTRING, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)thisPtr)->ActivateInstance)(
             thisPtr,
+            param0,
+            baseInterface,
+            innerInterface,
+            instance);
+    }
+
+    /// <param name="param0">An additional <see cref="NotifyCollectionChangedAction"/> parameter.</param>
+    /// <param name="param1">An additional <see cref="object"/> parameter.</param>
+    /// <param name="param2">An additional <see cref="object"/> parameter.</param>
+    /// <param name="param3">An additional <see cref="int"/> parameter.</param>
+    /// <param name="param4">An additional <see cref="int"/> parameter.</param>
+    /// <inheritdoc cref="ActivateInstanceUnsafe(void*, void*, void**, void**)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HRESULT ActivateInstanceUnsafe(
+        void* thisPtr,
+        NotifyCollectionChangedAction param0,
+        void* param1,
+        void* param2,
+        int param3,
+        int param4,
+        void* baseInterface,
+        void** innerInterface,
+        void** instance)
+    {
+        return ((delegate* unmanaged[MemberFunction]<void*, NotifyCollectionChangedAction, void*, void*, int, int, void*, void**, void**, HRESULT>)((IActivationFactoryVftbl*)thisPtr)->ActivateInstance)(
+            thisPtr,
+            param0,
+            param1,
+            param2,
+            param3,
+            param4,
             baseInterface,
             innerInterface,
             instance);

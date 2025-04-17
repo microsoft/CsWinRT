@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections;
+using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -58,8 +60,8 @@ internal static unsafe class WindowsRuntimeActivationHelper
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static unsafe void ActivateInstanceUnsafe(
         WindowsRuntimeObjectReference activationFactoryObjectReference,
-        WindowsRuntimeObject? baseInterface,
         string? param0,
+        WindowsRuntimeObject? baseInterface,
         out void* innerInterface,
         out void* defaultInterface)
     {
@@ -75,6 +77,48 @@ internal static unsafe class WindowsRuntimeActivationHelper
             HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
                 thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
                 param0: param0Reference.HString,
+                baseInterface: baseInterfaceValue.GetThisPtrUnsafe(),
+                innerInterface: innerInterfacePtr,
+                instance: defaultInterfacePtr);
+
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+        }
+    }
+
+    /// <param name="param0">The additional <see cref="NotifyCollectionChangedAction"/> parameter for the constructor.</param>
+    /// <param name="param1">The additional <see cref="IList"/> parameter for the constructor.</param>
+    /// <param name="param2">The additional <see cref="IList"/> parameter for the constructor.</param>
+    /// <param name="param3">The additional <see cref="int"/> parameter for the constructor.</param>
+    /// <param name="param4">The additional <see cref="int"/> parameter for the constructor.</param>
+    /// <remarks>
+    /// This shared factory helper can be used to activate Windows Runtime composable types that have additional parameters.
+    /// </remarks>
+    /// <inheritdoc cref="ActivateInstanceUnsafe(WindowsRuntimeObjectReference, WindowsRuntimeObject?, out void*, out void*)"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static unsafe void ActivateInstanceUnsafe(
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        NotifyCollectionChangedAction param0,
+        IList? param1,
+        IList? param2,
+        int param3,
+        int param4,
+        WindowsRuntimeObject? baseInterface,
+        out void* innerInterface,
+        out void* defaultInterface)
+    {
+        using WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue baseInterfaceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
+
+        fixed (void** innerInterfacePtr = &innerInterface)
+        fixed (void** defaultInterfacePtr = &defaultInterface)
+        {
+            HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
+                thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
+                param0: param0,
+                param1: null, // TODO
+                param2: null, // TODO
+                param3: param3,
+                param4: param4,
                 baseInterface: baseInterfaceValue.GetThisPtrUnsafe(),
                 innerInterface: innerInterfacePtr,
                 instance: defaultInterfacePtr);
