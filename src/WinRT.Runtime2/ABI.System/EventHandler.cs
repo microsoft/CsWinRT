@@ -27,8 +27,10 @@ namespace ABI.System;
 //
 // To fix this, we treat 'EventHandler' as a custom mapped type with special semantics. Specifically:
 //   - We support marshalling 'EventHandler' instances as CCWs, which will implement 'EventHandler<Object>' at the ABI level.
-//   - We don't support creating RCWs at all. All native objects reporting their runtime class name as
-//     'Windows.Foundation.IReference<Windows.Foundation.EventHandler<Object>>' will be marshalled as 'EventHandler<Object>'.
+//   - We don't support creating RCWs in the opaque 'object' scenario, ie. when we don't have statically visible type information.
+//     All native objects reporting their runtime class name as 'Windows.Foundation.IReference<Windows.Foundation.EventHandler<Object>>'
+//     will be marshalled as 'EventHandler<Object>'. We only special case marshalling to managed from an exact pointer to a native
+//     delegate instance. This is mostly just needed to allow implementing 'ICommand.CanExecuteChanged' over native objects.
 //
 // This is also why some ABI methods for 'EventHandler' are either missing or not implemented.
 
@@ -50,6 +52,49 @@ public static unsafe class EventHandlerMarshaller
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(global::System.EventHandler? value)
     {
         return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in WellKnownInterfaceIds.IID_EventHandler);
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
+    public static global::System.EventHandler? ConvertToManaged(void* value)
+    {
+        object? result = WindowsRuntimeDelegateMarshaller.ConvertToManaged<EventHandlerComWrappersCallback>(value);
+
+        return Unsafe.As<global::System.EventHandler?>(result);
+    }
+}
+
+/// <summary>
+/// The <see cref="WindowsRuntimeObject"/> implementation for <see cref="global::System.EventHandler"/>.
+/// </summary>
+file static unsafe class EventHandlerNativeDelegate
+{
+    /// <inheritdoc cref="global::System.EventHandler"/>
+    public static void Invoke(this WindowsRuntimeObjectReference objectReference, object? sender, EventArgs e)
+    {
+        using WindowsRuntimeObjectReferenceValue thisValue = objectReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
+        using WindowsRuntimeObjectReferenceValue eValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(e);
+
+        HRESULT hresult = (*(EventHandlerVftbl**)thisValue.GetThisPtrUnsafe())->Invoke(
+            thisValue.GetThisPtrUnsafe(),
+            senderValue.GetThisPtrUnsafe(),
+            eValue.GetThisPtrUnsafe());
+
+        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="IWindowsRuntimeComWrappersCallback"/> implementation for <see cref="global::System.EventHandler"/>.
+/// </summary>
+file abstract unsafe class EventHandlerComWrappersCallback : IWindowsRuntimeComWrappersCallback
+{
+    /// <inheritdoc/>
+    public static object CreateObject(void* value)
+    {
+        WindowsRuntimeObjectReference valueReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in WellKnownInterfaceIds.IID_EventHandler)!;
+
+        return new global::System.EventHandler(valueReference.Invoke);
     }
 }
 
@@ -121,6 +166,7 @@ file sealed unsafe class EventHandlerComWrappersMarshallerAttribute : WindowsRun
     {
         // Marshalling 'EventHandler' from an opaque object should never happen. If a native method
         // returns a boxed 'EventHandler' delegate, the RCW we create will always be 'EventHandler<T>'.
+        // We support marshalling to managed, but not in the opaque 'object' scenario that needs this.
         throw new UnreachableException();
     }
 }
