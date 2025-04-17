@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649, IDE1006
 
 namespace WindowsRuntime.InteropServices;
 
@@ -20,7 +20,7 @@ internal unsafe struct IPropertyChangedEventArgsVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> PropertyName;
+    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> get_PropertyName;
 
     /// <summary>
     /// Gets the name of the property that changed.
@@ -29,8 +29,8 @@ internal unsafe struct IPropertyChangedEventArgsVftbl
     /// <param name="propertyName">The name of the property that changed.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT PropertyNameUnsafe(void* thisPtr, HSTRING* propertyName)
+    public static HRESULT get_PropertyNameUnsafe(void* thisPtr, HSTRING* propertyName)
     {
-        return ((IPropertyChangedEventArgsVftbl*)thisPtr)->PropertyName(thisPtr, propertyName);
+        return ((IPropertyChangedEventArgsVftbl*)thisPtr)->get_PropertyName(thisPtr, propertyName);
     }
 }

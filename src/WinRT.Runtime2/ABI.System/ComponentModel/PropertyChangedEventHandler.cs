@@ -10,7 +10,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE0008
+#pragma warning disable IDE0008
 
 [assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
     value: "Windows.Foundation.IReference<Windows.UI.Xaml.Data.PropertyChangedEventHandler>",

@@ -14,12 +14,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 [assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
     value: "Windows.UI.Xaml.Data.PropertyChangedEventArgs",
     target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
-    trimTarget: typeof(PropertyChangedEventHandler))]
+    trimTarget: typeof(PropertyChangedEventArgs))]
 
 [assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
     value: "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs",
     target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
-    trimTarget: typeof(PropertyChangedEventHandler))]
+    trimTarget: typeof(PropertyChangedEventArgs))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(
     typeof(PropertyChangedEventArgs),
@@ -59,7 +59,7 @@ public static unsafe class PropertyChangedEventArgsMarshaller
 
         // Extract the property name from the native object
         HSTRING propertyName;
-        HRESULT hresult = IPropertyChangedEventArgsVftbl.PropertyNameUnsafe(value, &propertyName);
+        HRESULT hresult = IPropertyChangedEventArgsVftbl.get_PropertyNameUnsafe(value, &propertyName);
 
         Marshal.ThrowExceptionForHR(hresult);
 
