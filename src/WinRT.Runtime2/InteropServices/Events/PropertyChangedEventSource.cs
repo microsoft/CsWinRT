@@ -9,7 +9,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
-internal sealed unsafe class PropertyChangedEventSource : EventSource<PropertyChangedEventHandler>
+public sealed unsafe class PropertyChangedEventSource : EventSource<PropertyChangedEventHandler>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>
     public PropertyChangedEventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
