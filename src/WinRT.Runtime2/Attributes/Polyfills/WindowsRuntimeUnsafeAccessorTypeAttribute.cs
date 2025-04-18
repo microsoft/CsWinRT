@@ -4,7 +4,7 @@
 using System;
 using System.ComponentModel;
 
-namespace WindowsRuntime.Attributes;
+namespace WindowsRuntime;
 
 /// <summary>
 /// Allows specifying an unaccessible type when using <see cref="System.Runtime.CompilerServices.UnsafeAccessorAttribute"/>.

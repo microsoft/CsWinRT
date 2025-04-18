@@ -25,7 +25,7 @@ public static unsafe class INotifyPropertyChangedMethods
     /// The <see cref="EventSource{T}"/> table for <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>.
     /// </summary>
     [field: MaybeNull]
-    private static ConditionalWeakTable<WindowsRuntimeObject, PropertyChangedEventSource> PropertyChanged
+    private static ConditionalWeakTable<WindowsRuntimeObject, PropertyChangedEventSource> PropertyChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
@@ -43,10 +43,10 @@ public static unsafe class INotifyPropertyChangedMethods
     }
 
     /// <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>
-    public static PropertyChangedEventSource Get_PropertyChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+    public static PropertyChangedEventSource PropertyChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         // TODO: remove capture in .NET 10
-        return PropertyChanged.GetValue(thisObject, thisObject => new PropertyChangedEventSource(thisReference, 6));
+        return PropertyChangedTable.GetValue(thisObject, thisObject => new PropertyChangedEventSource(thisReference, 6));
     }
 }
 
@@ -108,27 +108,27 @@ public static unsafe class INotifyPropertyChangedImpl
     /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/>.
     /// </summary>
     [field: MaybeNull]
-    private static ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, EventRegistrationTokenTable<PropertyChangedEventHandler>> PropertyChanged
+    private static ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, EventRegistrationTokenTable<PropertyChangedEventHandler>> PropertyChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, EventRegistrationTokenTable<PropertyChangedEventHandler>> MakePropertyChanged()
+            static ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, EventRegistrationTokenTable<PropertyChangedEventHandler>> MakePropertyChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
                 return Volatile.Read(in field);
             }
 
-            return Volatile.Read(in field) ?? MakePropertyChanged();
+            return Volatile.Read(in field) ?? MakePropertyChangedTable();
         }
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.inotifypropertychanged.propertychanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static int add_PropertyChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
+    private static HRESULT add_PropertyChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
         *token = default;
 
@@ -138,7 +138,7 @@ public static unsafe class INotifyPropertyChangedImpl
 
             PropertyChangedEventHandler? managedHandler = PropertyChangedEventHandlerMarshaller.ConvertToManaged(handler);
 
-            *token = PropertyChanged.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
+            *token = PropertyChangedTable.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
 
             unboxedValue.PropertyChanged += managedHandler;
 
@@ -153,13 +153,13 @@ public static unsafe class INotifyPropertyChangedImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.inotifypropertychanged.propertychanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static int remove_PropertyChanged(void* thisPtr, EventRegistrationToken token)
+    private static HRESULT remove_PropertyChanged(void* thisPtr, EventRegistrationToken token)
     {
         try
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyPropertyChanged>((ComInterfaceDispatch*)thisPtr);
 
-            if (unboxedValue is not null && PropertyChanged.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out PropertyChangedEventHandler? managedHandler))
+            if (unboxedValue is not null && PropertyChangedTable.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out PropertyChangedEventHandler? managedHandler))
             {
                 unboxedValue.PropertyChanged -= managedHandler;
             }
@@ -187,14 +187,14 @@ file interface INotifyPropertyChanged : global::System.ComponentModel.INotifyPro
             var thisObject = (WindowsRuntimeObject)this;
             var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
 
-            INotifyPropertyChangedMethods.Get_PropertyChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
+            INotifyPropertyChangedMethods.PropertyChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
         }
         remove
         {
             var thisObject = (WindowsRuntimeObject)this;
             var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
 
-            INotifyPropertyChangedMethods.Get_PropertyChanged(thisObject, thisReference).Unsubscribe(value);
+            INotifyPropertyChangedMethods.PropertyChanged(thisObject, thisReference).Unsubscribe(value);
         }
     }
 }

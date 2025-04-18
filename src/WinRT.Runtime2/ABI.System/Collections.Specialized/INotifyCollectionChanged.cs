@@ -26,28 +26,28 @@ public static unsafe class INotifyCollectionChangedMethods
     /// The <see cref="EventSource{T}"/> table for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>.
     /// </summary>
     [field: MaybeNull]
-    private static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> CollectionChanged
+    private static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> CollectionChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> MakeCollectionChanged()
+            static ConditionalWeakTable<WindowsRuntimeObject, NotifyCollectionChangedEventSource> MakeCollectionChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
                 return Volatile.Read(in field);
             }
 
-            return Volatile.Read(in field) ?? MakeCollectionChanged();
+            return Volatile.Read(in field) ?? MakeCollectionChangedTable();
         }
     }
 
     /// <see cref="global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>
-    public static NotifyCollectionChangedEventSource Get_CollectionChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+    public static NotifyCollectionChangedEventSource CollectionChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         // TODO: remove capture in .NET 10
-        return CollectionChanged.GetValue(thisObject, thisObject => new NotifyCollectionChangedEventSource(thisReference, 6));
+        return CollectionChangedTable.GetValue(thisObject, thisObject => new NotifyCollectionChangedEventSource(thisReference, 6));
     }
 }
 
@@ -109,27 +109,27 @@ public static unsafe class INotifyCollectionChangedImpl
     /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.Collections.Specialized.INotifyCollectionChanged.CollectionChanged"/>.
     /// </summary>
     [field: MaybeNull]
-    private static ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, EventRegistrationTokenTable<NotifyCollectionChangedEventHandler>> CollectionChanged
+    private static ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, EventRegistrationTokenTable<NotifyCollectionChangedEventHandler>> CollectionChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, EventRegistrationTokenTable<NotifyCollectionChangedEventHandler>> MakeCollectionChanged()
+            static ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, EventRegistrationTokenTable<NotifyCollectionChangedEventHandler>> MakeCollectionChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
                 return Volatile.Read(in field);
             }
 
-            return Volatile.Read(in field) ?? MakeCollectionChanged();
+            return Volatile.Read(in field) ?? MakeCollectionChangedTable();
         }
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.INotifyCollectionChanged.CollectionChanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static int add_CollectionChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
+    private static HRESULT add_CollectionChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
         *token = default;
 
@@ -139,7 +139,7 @@ public static unsafe class INotifyCollectionChangedImpl
 
             NotifyCollectionChangedEventHandler? managedHandler = NotifyCollectionChangedEventHandlerMarshaller.ConvertToManaged(handler);
 
-            *token = CollectionChanged.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
+            *token = CollectionChangedTable.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
 
             unboxedValue.CollectionChanged += managedHandler;
 
@@ -154,13 +154,13 @@ public static unsafe class INotifyCollectionChangedImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.data.INotifyCollectionChanged.CollectionChanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static int remove_CollectionChanged(void* thisPtr, EventRegistrationToken token)
+    private static HRESULT remove_CollectionChanged(void* thisPtr, EventRegistrationToken token)
     {
         try
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.Specialized.INotifyCollectionChanged>((ComInterfaceDispatch*)thisPtr);
 
-            if (unboxedValue is not null && CollectionChanged.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out NotifyCollectionChangedEventHandler? managedHandler))
+            if (unboxedValue is not null && CollectionChangedTable.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out NotifyCollectionChangedEventHandler? managedHandler))
             {
                 unboxedValue.CollectionChanged -= managedHandler;
             }
@@ -188,14 +188,14 @@ file interface INotifyCollectionChanged : global::System.Collections.Specialized
             var thisObject = (WindowsRuntimeObject)this;
             var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle);
 
-            INotifyCollectionChangedMethods.Get_CollectionChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
+            INotifyCollectionChangedMethods.CollectionChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
         }
         remove
         {
             var thisObject = (WindowsRuntimeObject)this;
             var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle);
 
-            INotifyCollectionChangedMethods.Get_CollectionChanged(thisObject, thisReference).Unsubscribe(value);
+            INotifyCollectionChangedMethods.CollectionChanged(thisObject, thisReference).Unsubscribe(value);
         }
     }
 }

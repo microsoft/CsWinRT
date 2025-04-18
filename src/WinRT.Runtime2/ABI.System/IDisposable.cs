@@ -28,7 +28,7 @@ public static unsafe class IDisposableMethods
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
 
-        RestrictedErrorInfo.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, HRESULT>)(*(void***)thisPtr)[6])(thisPtr));
+        RestrictedErrorInfo.ThrowExceptionForHR(((IDisposableVftbl*)*(void***)thisPtr)->Close(thisPtr));
     }
 }
 

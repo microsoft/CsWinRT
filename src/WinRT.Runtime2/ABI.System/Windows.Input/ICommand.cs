@@ -26,28 +26,28 @@ public static unsafe class ICommandMethods
     /// The <see cref="EventSource{T}"/> table for <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>.
     /// </summary>
     [field: MaybeNull]
-    private static ConditionalWeakTable<WindowsRuntimeObject, EventHandlerEventSource> CanExecuteChanged
+    private static ConditionalWeakTable<WindowsRuntimeObject, EventHandlerEventSource> CanExecuteChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<WindowsRuntimeObject, EventHandlerEventSource> MakeCanExecuteChanged()
+            static ConditionalWeakTable<WindowsRuntimeObject, EventHandlerEventSource> MakeCanExecuteChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
                 return Volatile.Read(in field);
             }
 
-            return Volatile.Read(in field) ?? MakeCanExecuteChanged();
+            return Volatile.Read(in field) ?? MakeCanExecuteChangedTable();
         }
     }
 
     /// <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>
-    public static EventHandlerEventSource Get_CanExecuteChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
+    public static EventHandlerEventSource CanExecuteChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         // TODO: remove capture in .NET 10
-        return CanExecuteChanged.GetValue(thisObject, thisObject => new EventHandlerEventSource(thisReference, 6));
+        return CanExecuteChangedTable.GetValue(thisObject, thisObject => new EventHandlerEventSource(thisReference, 6));
     }
 
     /// <see cref="global::System.Windows.Input.ICommand.CanExecute"/>
@@ -58,11 +58,11 @@ public static unsafe class ICommandMethods
         using WindowsRuntimeObjectReferenceValue parameterValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(parameter);
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
-        byte __retval = default;
+        bool result = false;
 
-        RestrictedErrorInfo.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void*, byte*, HRESULT>)(*(void***)thisPtr)[8])(thisPtr, parameterValue.GetThisPtrUnsafe(), &__retval));
+        RestrictedErrorInfo.ThrowExceptionForHR(((ICommandVftbl*)*(void***)thisPtr)->CanExecute(thisPtr, parameterValue.GetThisPtrUnsafe(), &result));
 
-        return __retval != 0;
+        return Unsafe.BitCast<bool, byte>(result) != 0;
     }
 
     /// <see cref="global::System.Windows.Input.ICommand.Execute"/>
@@ -74,7 +74,7 @@ public static unsafe class ICommandMethods
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
 
-        RestrictedErrorInfo.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void*, HRESULT>)(*(void***)thisPtr)[9])(thisPtr, parameterValue.GetThisPtrUnsafe()));
+        RestrictedErrorInfo.ThrowExceptionForHR(((ICommandVftbl*)*(void***)thisPtr)->Execute(thisPtr, parameterValue.GetThisPtrUnsafe()));
     }
 }
 
@@ -91,7 +91,7 @@ internal unsafe struct ICommandVftbl
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
     public delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT> add_CanExecuteChanged;
     public delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT> remove_CanExecuteChanged;
-    public delegate* unmanaged[MemberFunction]<void*, void*, byte*, HRESULT> CanExecute;
+    public delegate* unmanaged[MemberFunction]<void*, void*, bool*, HRESULT> CanExecute;
     public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> Execute;
 }
 
@@ -138,27 +138,27 @@ public static unsafe class ICommandImpl
     /// The <see cref="EventRegistrationTokenTable{T}"/> table for <see cref="global::System.Windows.Input.ICommand.CanExecuteChanged"/>.
     /// </summary>
     [field: MaybeNull]
-    private static ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<EventHandler>> CanExecuteChanged
+    private static ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<EventHandler>> CanExecuteChangedTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            static ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<EventHandler>> MakeCanExecuteChanged()
+            static ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<EventHandler>> MakeCanExecuteChangedTable()
             {
                 _ = Interlocked.CompareExchange(ref field, [], null);
 
                 return Volatile.Read(in field);
             }
 
-            return Volatile.Read(in field) ?? MakeCanExecuteChanged();
+            return Volatile.Read(in field) ?? MakeCanExecuteChangedTable();
         }
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.canexecutechanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static int add_CanExecuteChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
+    private static HRESULT add_CanExecuteChanged(void* thisPtr, void* handler, EventRegistrationToken* token)
     {
         *token = default;
 
@@ -168,7 +168,7 @@ public static unsafe class ICommandImpl
 
             EventHandler? managedHandler = EventHandlerMarshaller.ConvertToManaged(handler);
 
-            *token = CanExecuteChanged.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
+            *token = CanExecuteChangedTable.GetOrCreateValue(unboxedValue).AddEventHandler(managedHandler);
 
             unboxedValue.CanExecuteChanged += managedHandler;
 
@@ -183,7 +183,7 @@ public static unsafe class ICommandImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.canexecutechanged"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static int remove_CanExecuteChanged(void* thisPtr, EventRegistrationToken token)
+    private static HRESULT remove_CanExecuteChanged(void* thisPtr, EventRegistrationToken token)
     {
         try
         {
@@ -195,7 +195,7 @@ public static unsafe class ICommandImpl
             // count of the registered handlers is 0 (which is valid for tracked objects), 'ComWrappers' will allow the GC to collect them,
             // and just keep the CCW alive and in a special "destroyed" state. When that happens, trying to get the original managed object
             // back will just return 'null', which is why we have this additional check here. In all other ABI methods, it's not needed.
-            if (unboxedValue is not null && CanExecuteChanged.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out EventHandler? managedHandler))
+            if (unboxedValue is not null && CanExecuteChangedTable.TryGetValue(unboxedValue, out var table) && table.RemoveEventHandler(token, out EventHandler? managedHandler))
             {
                 unboxedValue.CanExecuteChanged -= managedHandler;
             }
@@ -211,17 +211,15 @@ public static unsafe class ICommandImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.canexecute"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static int CanExecute(void* thisPtr, void* parameter, byte* result)
+    private static HRESULT CanExecute(void* thisPtr, void* parameter, bool* result)
     {
-        *result = 0;
+        *result = false;
 
         try
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Windows.Input.ICommand>((ComInterfaceDispatch*)thisPtr);
 
-            bool managedResult = unboxedValue.CanExecute(WindowsRuntimeObjectMarshaller.ConvertToManaged(parameter));
-
-            *result = (byte)(managedResult ? 1 : 0);
+            *result = unboxedValue.CanExecute(WindowsRuntimeObjectMarshaller.ConvertToManaged(parameter));
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -234,7 +232,7 @@ public static unsafe class ICommandImpl
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.input.icommand.execute"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static int Execute(void* thisPtr, void* parameter)
+    private static HRESULT Execute(void* thisPtr, void* parameter)
     {
         try
         {
@@ -265,14 +263,14 @@ file interface ICommand : global::System.Windows.Input.ICommand
             var thisObject = (WindowsRuntimeObject)this;
             var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.Windows.Input.ICommand).TypeHandle);
 
-            ICommandMethods.Get_CanExecuteChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
+            ICommandMethods.CanExecuteChanged((WindowsRuntimeObject)this, thisReference).Subscribe(value);
         }
         remove
         {
             var thisObject = (WindowsRuntimeObject)this;
             var thisReference = thisObject.GetObjectReferenceForInterface(typeof(global::System.Windows.Input.ICommand).TypeHandle);
 
-            ICommandMethods.Get_CanExecuteChanged(thisObject, thisReference).Unsubscribe(value);
+            ICommandMethods.CanExecuteChanged(thisObject, thisReference).Unsubscribe(value);
         }
     }
 
