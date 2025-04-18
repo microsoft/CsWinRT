@@ -17,7 +17,7 @@ namespace Windows.Foundation;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.size"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Size>")]
-[PointComWrappersMarshaller]
+[SizeComWrappersMarshaller]
 public struct Size : IEquatable<Size>, IFormattable
 {
     /// <summary>

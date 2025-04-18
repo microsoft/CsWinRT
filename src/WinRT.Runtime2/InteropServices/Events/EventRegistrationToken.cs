@@ -4,7 +4,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using ABI.Windows.Foundation;
+using ABI.WindowsRuntime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
 

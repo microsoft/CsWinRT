@@ -16,7 +16,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     target: typeof(EventRegistrationToken),
     trimTarget: typeof(EventRegistrationToken))]
 
-namespace ABI.Windows.Foundation;
+namespace ABI.WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Marshaller for <see cref="EventRegistrationToken"/>.
