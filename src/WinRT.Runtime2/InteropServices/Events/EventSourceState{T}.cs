@@ -16,13 +16,30 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     // Registration state and delegate are cached separately to survive the 'EventSource<T>' garbage collection,
     // and to prevent the generated event delegate from impacting the lifetime of the event source.
 
+    /// <summary>
+    /// The pointer to the target native object owning the associated event.
+    /// </summary>
     private void* _thisPtr;
+
+    /// <summary>
+    /// The index of the event the state is associated to.
+    /// </summary>
     private readonly int _index;
+
+    /// <summary>
+    /// A weak reference to this <see cref="EventSourceState{T}"/> instance.
+    /// </summary>
     private readonly WeakReference<object> _weakReferenceToSelf;
+
+    /// <summary>
+    /// The pointer to the native CCW for the event invoke delegate (ie. <see cref="EventInvoke"/>).
+    /// </summary>
     private void* _eventInvokePtr;
+
+    /// <summary>
+    /// The pointer to the reference tracker target interface from <see cref="_eventInvokePtr"/>, if available.
+    /// </summary>
     private void* _referenceTrackerTargetPtr;
-    private T? _targetDelegate;
-    private T _eventInvoke;
 
     /// <summary>
     /// Creates a new <see cref="EventSourceState{TDelegate}"/> instance with the specified parameters.
@@ -38,8 +55,9 @@ public abstract unsafe class EventSourceState<T> : IDisposable
 
         _thisPtr = thisPtr;
         _index = index;
-        _eventInvoke = GetEventInvoke();
         _weakReferenceToSelf = new WeakReference<object>(this);
+
+        EventInvoke = GetEventInvoke();
     }
 
     /// <summary>
@@ -56,12 +74,12 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     /// <summary>
     /// Gets the current <typeparamref name="T"/> value with the active subscriptions for the target event.
     /// </summary>
-    protected internal T? TargetDelegate => _targetDelegate;
+    protected internal T? TargetDelegate { get; private set; }
 
     /// <summary>
     /// Gets the current <typeparamref name="T"/> delegate instance with the invoke stub for the target delegate.
     /// </summary>
-    internal T EventInvoke => _eventInvoke;
+    internal T EventInvoke { get; }
 
     /// <summary>
     /// Gets or sets the <see cref="EventRegistrationToken"/> for the current event source.
@@ -103,7 +121,7 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     /// <param name="handler">The new delegate to add.</param>
     internal void AddHandler(T handler)
     {
-        _targetDelegate = Unsafe.As<T>(Delegate.Combine(_targetDelegate, handler));
+        TargetDelegate = Unsafe.As<T>(Delegate.Combine(TargetDelegate, handler));
     }
 
     /// <summary>
@@ -112,13 +130,13 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     /// <param name="handler">The delegate to remove.</param>
     internal void RemoveHandler(T handler)
     {
-        _targetDelegate = Unsafe.As<T>(Delegate.Remove(_targetDelegate, handler));
+        TargetDelegate = Unsafe.As<T>(Delegate.Remove(TargetDelegate, handler));
     }
 
     /// <summary>
     /// Initializes the reference tracking for the current event source, if the target object implements it.
     /// </summary>
-    /// <param name="eventInvokePtr">The pointer to the native CCW for the event invoke delegate (ie. <see cref="_eventInvoke"/>).</param>
+    /// <param name="eventInvokePtr">The pointer to the native CCW for the event invoke delegate (ie. <see cref="EventInvoke"/>).</param>
     internal void InitalizeReferenceTracking(void* eventInvokePtr)
     {
         _eventInvokePtr = eventInvokePtr;
