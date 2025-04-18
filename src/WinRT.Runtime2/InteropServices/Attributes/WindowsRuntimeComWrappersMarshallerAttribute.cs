@@ -3,9 +3,8 @@
 
 using System;
 using System.Runtime.InteropServices;
-using WindowsRuntime.InteropServices;
 
-namespace WindowsRuntime;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// An attribute that allows marshalling managed objects to native via the <see cref="ComWrappers"/> infrastructure.

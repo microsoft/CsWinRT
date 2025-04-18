@@ -3,7 +3,7 @@
 
 using System;
 
-namespace WindowsRuntime;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Indicates a mapped type for a Windows Runtime type projection (ie. a metadata provider type).
