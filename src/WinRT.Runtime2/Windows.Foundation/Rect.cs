@@ -9,6 +9,8 @@ using System.Runtime.CompilerServices;
 using ABI.Windows.Foundation;
 using WindowsRuntime;
 
+#pragma warning disable IDE0046
+
 namespace Windows.Foundation;
 
 /// <summary>
@@ -113,34 +115,22 @@ public struct Rect : IEquatable<Rect>, IFormattable
     /// <summary>
     /// Gets the left x-coordinate of the rectangle.
     /// </summary>
-    /// <remarks>
-    /// This property returns a <see cref="double"/>, for consistency with <see cref="Right"/> and <see cref="Bottom"/>.
-    /// </remarks>
-    public readonly double Left => X;
+    public readonly float Left => X;
 
     /// <summary>
     /// Gets the top y-coordinate of the rectangle.
     /// </summary>
-    /// <remarks>
-    /// This property returns a <see cref="double"/>, for consistency with <see cref="Right"/> and <see cref="Bottom"/>.
-    /// </remarks>
-    public readonly double Top => Y;
+    public readonly float Top => Y;
 
     /// <summary>
     /// Gets the right x-coordinate of the rectangle.
     /// </summary>
-    /// <remarks>
-    /// This property returns a <see cref="double"/>, as the right x-coordinate might exceed the maximum value of a <see cref="float"/> value.
-    /// </remarks>
-    public readonly double Right => IsEmpty ? double.NegativeInfinity : X + Width;
+    public readonly float Right => IsEmpty ? float.NegativeInfinity : X + Width;
 
     /// <summary>
     /// Gets the bottom y-coordinate of the rectangle.
     /// </summary>
-    /// <remarks>
-    /// This property returns a <see cref="double"/>, as the bottom y-coordinate might exceed the maximum value of a <see cref="float"/> value.
-    /// </remarks>
-    public readonly double Bottom => IsEmpty ? double.NegativeInfinity : Y + Height;
+    public readonly float Bottom => IsEmpty ? float.NegativeInfinity : Y + Height;
 
     /// <summary>
     /// Gets a value that indicates whether this <see cref="Rect"/> value is equal to <see cref="Empty"/>.
@@ -177,6 +167,99 @@ public struct Rect : IEquatable<Rect>, IFormattable
         y = Y;
         width = Width;
         height = Height;
+    }
+
+    /// <summary>
+    /// Checks whether a given point falls within the area of the current rectangle.
+    /// </summary>
+    /// <param name="point">The input point to check.</param>
+    /// <returns>Whether <paramref name="point"/> falls within the area of the current rectangle.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool Contains(Point point)
+    {
+        return
+            (point.X >= X) && (point.X - Width <= X) &&
+            (point.Y >= Y) && (point.Y - Height <= Y);
+    }
+
+    /// <summary>
+    /// Finds the intersection of the rectangle represented by the current <see cref="Rect"/> value and the rectangle
+    /// represented by the specified <see cref="Rect"/> value, and stores the result as the current rectangle value.
+    /// </summary>
+    /// <param name="rect">The rectangle to intersect with the current rectangle.</param>
+    public void Intersect(Rect rect)
+    {
+        if (!IntersectsWith(rect))
+        {
+            this = Empty;
+        }
+        else
+        {
+            float left = float.Max(X, rect.X);
+            float top = float.Max(Y, rect.Y);
+
+            // Max with 0 to prevent float weirdness from causing us to be in the (-epsilon, 0) range
+            Width = float.Max(float.Min(X + Width, rect.X + rect.Width) - left, 0);
+            Height = float.Max(float.Min(Y + Height, rect.Y + rect.Height) - top, 0);
+
+            X = left;
+            Y = top;
+        }
+    }
+
+    /// <summary>
+    /// Expands the rectangle represented by the current <see cref="Rect"/> value exactly enough to contain the specified rectangle.
+    /// </summary>
+    /// <param name="rect">The rectangle to include.</param>
+    public void Union(Rect rect)
+    {
+        if (IsEmpty)
+        {
+            this = rect;
+        }
+        else if (!rect.IsEmpty)
+        {
+            float left = float.Min(Left, rect.Left);
+            float top = float.Min(Top, rect.Top);
+
+
+            // We need this check so that the math does not result in 'NaN'
+            if ((rect.Width == float.PositiveInfinity) || (Width == float.PositiveInfinity))
+            {
+                Width = float.PositiveInfinity;
+            }
+            else
+            {
+                // Max with 0 to prevent float weirdness from causing us to be in the (-epsilon, 0) range
+                float maxRight = float.Max(Right, rect.Right);
+
+                Width = float.Max(maxRight - left, 0);
+            }
+
+            // Same as above, but for the height of the rectangle
+            if ((rect.Height == float.PositiveInfinity) || (Height == float.PositiveInfinity))
+            {
+                Height = float.PositiveInfinity;
+            }
+            else
+            {
+                float maxBottom = Math.Max(Bottom, rect.Bottom);
+
+                Height = float.Max(maxBottom - top, 0);
+            }
+
+            X = left;
+            Y = top;
+        }
+    }
+
+    /// <summary>
+    /// Expands the rectangle represented by the current <see cref="Rect"/> value exactly enough to contain the specified point.
+    /// </summary>
+    /// <param name="point">The point to include.</param>
+    public void Union(Point point)
+    {
+        Union(new Rect(point, point));
     }
 
     /// <inheritdoc/>
@@ -239,6 +322,24 @@ public struct Rect : IEquatable<Rect>, IFormattable
         handler.AppendFormatted(Height, format);
 
         return handler.ToStringAndClear();
+    }
+
+    /// <summary>
+    /// Checks whether a given rectangle intersects with the current rectangle.
+    /// </summary>
+    /// <param name="rect">The input rectangle to check.</param>
+    /// <returns>Whether <paramref name="rect"/> intersects with the current rectangle.</returns>
+    private readonly bool IntersectsWith(Rect rect)
+    {
+        if (Width < 0 || rect.Width < 0)
+        {
+            return false;
+        }
+
+        return (rect.X <= X + Width) &&
+               (rect.X + rect.Width >= X) &&
+               (rect.Y <= Y + Height) &&
+               (rect.Y + rect.Height >= Y);
     }
 
     /// <summary>
