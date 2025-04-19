@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ABI.Windows.Foundation;
 using WindowsRuntime;
 
 namespace Windows.Foundation;
@@ -16,6 +17,7 @@ namespace Windows.Foundation;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.rect"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference<Windows.Foundation.Rect>")]
+[RectComWrappersMarshaller]
 public struct Rect : IEquatable<Rect>, IFormattable
 {
     /// <summary>
