@@ -10,10 +10,10 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Using this attribute is only valid with supported projected generic type definitions.
+/// Using this attribute is only valid with supported projected generic type instantiations.
 /// </para>
 /// <para>
-/// This is the full list of supported types that can be used for <see cref="TypeDefinition"/>:
+/// This is the full list of supported types that can be used for <see cref="GenericTypeInstantiation"/>:
 /// <list type="bullet">
 ///   <item><see cref="Array"/></item>
 ///   <item><see cref="Nullable{T}"/></item>
@@ -30,6 +30,9 @@ namespace WindowsRuntime.InteropServices;
 ///   <item><see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperationwithprogress-2"><c>Windows.Foundation.IAsyncOperation&lt;TResult, TProgress&gt;</c></see></item>
 /// </list>
 /// </para>
+/// <para>
+/// All type arguments must be valid Windows Runtime type arguments as well.
+/// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
 public sealed class WindowsRuntimeGenericTypeInstantiationAttribute : Attribute
@@ -37,21 +40,14 @@ public sealed class WindowsRuntimeGenericTypeInstantiationAttribute : Attribute
     /// <summary>
     /// Creates a new <see cref="WindowsRuntimeGenericTypeInstantiationAttribute"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="typeDefinition">The generic type definition for this generic type instantiation.</param>
-    /// <param name="typeArguments">The type arguments for this generic type instantiation.</param>
-    public WindowsRuntimeGenericTypeInstantiationAttribute(Type typeDefinition, params Type[] typeArguments)
+    /// <param name="genericTypeInstantiation">The generic type instantiation for this instance.</param>
+    public WindowsRuntimeGenericTypeInstantiationAttribute(Type genericTypeInstantiation)
     {
-        TypeDefinition = typeDefinition;
-        TypeArguments = typeArguments;
+        GenericTypeInstantiation = genericTypeInstantiation;
     }
 
     /// <summary>
-    /// Gets the generic type definition for this generic type instantiation.
+    /// Gets the generic type instantiation for this instance.
     /// </summary>
-    public Type TypeDefinition { get; }
-
-    /// <summary>
-    /// Gets the type arguments for this generic type instantiation.
-    /// </summary>
-    public Type[] TypeArguments { get; }
+    public Type GenericTypeInstantiation { get; }
 }
