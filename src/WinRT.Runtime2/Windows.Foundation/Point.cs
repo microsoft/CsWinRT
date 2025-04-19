@@ -113,7 +113,7 @@ public struct Point : IEquatable<Point>, IFormattable
     /// </summary>
     /// <param name="provider">The input provider to use for formatting.</param>
     /// <returns>The numeric list separator to use.</returns>
-    private static char GetNumericListSeparator(IFormatProvider? provider)
+    internal static char GetNumericListSeparator(IFormatProvider? provider)
     {
         const char CommaSeparator = ',';
         const char SemicolonSeparator = ';';
