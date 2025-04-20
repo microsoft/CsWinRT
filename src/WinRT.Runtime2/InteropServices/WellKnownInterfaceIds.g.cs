@@ -885,6 +885,31 @@ public static class WellKnownInterfaceIds
         }
     }
 
+    /// <summary>The IID for <c>DataErrorsChangedEventArgs</c> (D026DD64-5F26-5F15-A86A-0DEC8A431796).</summary>
+    internal static ref readonly Guid IID_DataErrorsChangedEventArgs
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data = new byte[]
+            {
+                0x64, 0xDD, 0x26, 0xD0,
+                0x26, 0x5F,
+                0x15, 0x5F,
+                0xA8,
+                0x6A,
+                0x0D,
+                0xEC,
+                0x8A,
+                0x43,
+                0x17,
+                0x96
+            };
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>DataErrorsChangedEventArgsRuntimeClassFactory</c> (62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5).</summary>
     internal static ref readonly Guid IID_DataErrorsChangedEventArgsRuntimeClassFactory
     {
