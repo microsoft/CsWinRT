@@ -124,6 +124,27 @@ public static unsafe class TypeMarshaller
 }
 
 /// <summary>
+/// Exception stubs for marshalling <see cref="global::System.Type"/> objects.
+/// </summary>
+internal static unsafe class TypeExceptions
+{
+    /// <summary>
+    /// Throws an <see cref="ArgumentException"/> when resolving a type fails.
+    /// </summary>
+    /// <param name="type">The type that failed to resolve.</param>
+    [DoesNotReturn]
+    [StackTraceHidden]
+    public static void ThrowArgumentExceptionForNullType(Type type)
+    {
+        throw new ArgumentException(
+            $"The type with name '{HStringMarshaller.ConvertToManaged(type.Name)}' and kind '{type.Kind}' cannot cannot be marshalled to a managed 'Type' instance. " +
+            $"If the application is running with trimming enabled (or on Native AOT), it's possible the issue is caused by trimming causing all metadata for the type " +
+            $"to be removed. To work around the issue, consider using the '[DynamicDependency]' attribute over the method causing this exception to eventually be thrown. " +
+            $"You can see the API docs for this attribute here: https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.dynamicdependencyattribute.");
+    }
+}
+
+/// <summary>
 /// The set of <see cref="ComInterfaceEntry"/> values for <see cref="global::System.Type"/>.
 /// </summary>
 file struct TypeInterfaceEntries
@@ -201,18 +222,7 @@ file sealed unsafe class TypeComWrappersMarshallerAttribute : WindowsRuntimeComW
         // So if we fail to resolve a value entirely, we just throw directy from here instead.
         if (type is null)
         {
-            [DoesNotReturn]
-            [StackTraceHidden]
-            static void ThrowArgumentException(Type abi)
-            {
-                throw new NotSupportedException(
-                    $"The type with name '{HStringMarshaller.ConvertToManaged(abi.Name)}' and kind '{abi.Kind}' cannot cannot be marshalled to a managed 'Type' instance. " +
-                    $"If the application is running with trimming enabled (or on Native AOT), it's possible the issue is caused by trimming causing all metadata for the type " +
-                    $"to be removed. To work around the issue, consider using the '[DynamicDependency]' attribute over the method causing this exception to eventually be thrown. " +
-                    $"You can see the API docs for this attribute here: https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.dynamicdependencyattribute.");
-            }
-
-            ThrowArgumentException(abi);
+            TypeExceptions.ThrowArgumentExceptionForNullType(abi);
         }
 
         return type;
