@@ -54,6 +54,7 @@ var entries = new (string Name, string IID, bool IsPublic)[]
     ("WUX_PropertyChangedEventHandler", "50F19C16-0A22-4D8E-A089-1EA9951657D2", false),
     ("DataErrorsChangedEventArgs", "D026DD64-5F26-5F15-A86A-0DEC8A431796", false),
     ("DataErrorsChangedEventArgsRuntimeClassFactory", "62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5", false),
+    ("UriRuntimeClass", "9E365E57-48B2-4160-956F-C7385120BBFC", false),
     ("UriRuntimeClassFactory", "44A9796F-723E-4FDF-A218-033E75B0C084", false),
     ("INotifyDataErrorInfo", "0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA", false),
     ("ICommand", "E5AF3542-CA67-4081-995B-709DD13792DF", false),

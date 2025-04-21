@@ -35,6 +35,20 @@ internal unsafe struct IActivationFactoryVftbl
         return ((IActivationFactoryVftbl*)thisPtr)->ActivateInstance(thisPtr, instance);
     }
 
+    /// <param name="param0">An additional <c>HSTRING</c> parameter.</param>
+    /// <inheritdoc cref="ActivateInstanceUnsafe(void*, void**)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HRESULT ActivateInstanceUnsafe(
+        void* thisPtr,
+        HSTRING param0,
+        void** instance)
+    {
+        return ((delegate* unmanaged[MemberFunction]<void*, HSTRING, void**, HRESULT>)((IActivationFactoryVftbl*)thisPtr)->ActivateInstance)(
+            thisPtr,
+            param0,
+            instance);
+    }
+
     /// <param name="baseInterface">The controlling <c>IInspectable</c> object.</param>
     /// <param name="innerInterface">The resulting non-delegating <c>IInspectable</c> object.</param>
     /// <inheritdoc cref="ActivateInstanceUnsafe(void*, void**)"/>"/>

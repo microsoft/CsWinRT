@@ -17,6 +17,35 @@ namespace WindowsRuntime.InteropServices;
 internal static unsafe class WindowsRuntimeActivationHelper
 {
     /// <summary>
+    /// Activates a new Windows Runtime instance.
+    /// </summary>
+    /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>
+    /// <param name="param0">The additional <see cref="string"/> parameter for the constructor.</param>
+    /// <param name="defaultInterface">The resulting default interface pointer.</param>
+    /// <exception cref="Exception">Thrown if activating the instance fails.</exception>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static unsafe void ActivateInstanceUnsafe(
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        string? param0,
+        out void* defaultInterface)
+    {
+        using WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue();
+
+        fixed (char* param0Ptr = param0)
+        fixed (void** defaultInterfacePtr = &defaultInterface)
+        {
+            HStringMarshaller.ConvertToUnmanagedUnsafe(param0Ptr, param0?.Length, out HStringReference param0Reference);
+
+            HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
+                thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
+                param0: param0Reference.HString,
+                instance: defaultInterfacePtr);
+
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+        }
+    }
+
+    /// <summary>
     /// Activates a new Windows Runtime composable instance, either standalone or with composition.
     /// </summary>
     /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>

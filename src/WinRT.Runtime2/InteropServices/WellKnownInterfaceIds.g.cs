@@ -935,6 +935,31 @@ public static class WellKnownInterfaceIds
         }
     }
 
+    /// <summary>The IID for <c>UriRuntimeClass</c> (9E365E57-48B2-4160-956F-C7385120BBFC).</summary>
+    internal static ref readonly Guid IID_UriRuntimeClass
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data = new byte[]
+            {
+                0x57, 0x5E, 0x36, 0x9E,
+                0xB2, 0x48,
+                0x60, 0x41,
+                0x95,
+                0x6F,
+                0xC7,
+                0x38,
+                0x51,
+                0x20,
+                0xBB,
+                0xFC
+            };
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>UriRuntimeClassFactory</c> (44A9796F-723E-4FDF-A218-033E75B0C084).</summary>
     internal static ref readonly Guid IID_UriRuntimeClassFactory
     {
