@@ -20,4 +20,9 @@
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ConsoleAppFramework" Version="5.4.1" PrivateAssets="all" />
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="9.0.4" />
+  </ItemGroup>
 </Project>
