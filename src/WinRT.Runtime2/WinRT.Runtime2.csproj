@@ -14,7 +14,7 @@
       The assembly name must always be 'WinRT.Runtime', as other components have a dependency on
       the exact .dll name. For instance, the UWP XAML compiler special cases 'WinRT.Runtime.dll'.
     -->
-    <AssemblyName>WinRT.Runtime</AssemblyName>
+    <AssemblyName>WinRT.Runtime2</AssemblyName>
     
 
     <!--

@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AsmResolver.DotNet" Version="6.0.0-beta.3" />
     <PackageReference Include="ConsoleAppFramework" Version="5.4.1" PrivateAssets="all" />
-    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="9.0.4" />
   </ItemGroup>
 </Project>
