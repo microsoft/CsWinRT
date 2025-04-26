@@ -200,12 +200,14 @@ internal static class InteropTypeDefinitionFactory
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="delegateInterfaceEntriesType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateInterfaceEntriesType"/>.</param>
     /// <param name="delegateImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateImplType"/>.</param>
+    /// <param name="metadataResolver">The <see cref="IMetadataResolver"/> instance to use to resolve external types.</param>
     /// <param name="owningModule">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateInterfaceEntriesImplType(
         TypeSignature typeSignature,
         TypeDefinition delegateInterfaceEntriesType,
         TypeDefinition delegateImplType,
+        IMetadataResolver metadataResolver,
         ModuleDefinition owningModule)
     {
         // We're declaring an 'internal static class' type
@@ -214,8 +216,13 @@ internal static class InteropTypeDefinitionFactory
             name: InteropUtf8NameFactory.TypeName(typeSignature, "InterfaceEntriesImpl"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
 
-        // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        TypeDefinition fixedAddressValueTypeAttributeType = owningModule.DefaultImporter.ImportType(typeof(FixedAddressValueTypeAttribute)).Resolve()!;
+        // Resolve the '[FixedAddressValueType]' attribute type
+        TypeDefinition fixedAddressValueTypeAttributeType =
+            metadataResolver.ResolveType(
+                owningModule.DefaultImporter.ImportType(typeof(FixedAddressValueTypeAttribute)))!;
+
+        // Import the constructor, so we can use it
+        MethodDefinition fixedAddressValueTypeAttributeCtor = owningModule.DefaultImporter.ImportMethod(fixedAddressValueTypeAttributeType.GetConstructor()!).Resolve()!;
 
         // The interface entries field looks like this:
         //
@@ -239,7 +246,11 @@ internal static class InteropTypeDefinitionFactory
         // Resolve 'ComInterfaceEntry', so we can set its fields:
         //   - [0]: Guid IID
         //   - [1]: nint Vtable
-        TypeDefinition comInterfaceEntryType = owningModule.DefaultImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)).Resolve()!;
+        TypeDefinition comInterfaceEntryType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)))!;
+
+        // Import the target fields (they have to be in the module, or the resulting assembly won't be valid)
+        IFieldDescriptor comInterfaceEntryIIDField = owningModule.DefaultImporter.ImportField(comInterfaceEntryType.Fields[0]);
+        IFieldDescriptor comInterfaceEntryVtableField = owningModule.DefaultImporter.ImportField(comInterfaceEntryType.Fields[1]);
 
         CilInstructionCollection instructions = cctor.CilMethodBody.Instructions;
 
@@ -252,7 +263,8 @@ internal static class InteropTypeDefinitionFactory
         _ = instructions.Add(CilOpCodes.Ldsflda, entriesField);
         _ = instructions.Add(CilOpCodes.Ldflda, delegateInterfaceEntriesType.Fields[0]);
         _ = instructions.Add(CilOpCodes.Ldsflda, delegateImplType.Fields[0]);
-        _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryType.Fields[1]);
+        _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryVtableField);
+        _ = instructions.Add(CilOpCodes.Ret);
 
         return implType;
     }
@@ -262,11 +274,13 @@ internal static class InteropTypeDefinitionFactory
     /// </summary>
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="delegateVfbtlType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateVftblType"/>.</param>
+    /// <param name="metadataResolver">The <see cref="IMetadataResolver"/> instance to use to resolve external types.</param>
     /// <param name="owningModule">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateImplType(
         TypeSignature typeSignature,
         TypeDefinition delegateVfbtlType,
+        IMetadataResolver metadataResolver,
         ModuleDefinition owningModule)
     {
         // We're declaring an 'internal static class' type
@@ -275,8 +289,11 @@ internal static class InteropTypeDefinitionFactory
             name: InteropUtf8NameFactory.TypeName(typeSignature, "Impl"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
 
-        // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        // TypeSignature comInterfaceEntryType = referenceImporter.ImportType(typeof(FixedAddressValueTypeAttribute));
+        // Resolve the '[FixedAddressValueType]' attribute type
+        TypeDefinition fixedAddressValueTypeAttributeType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(FixedAddressValueTypeAttribute)))!;
+
+        // Import the constructor, so we can use it
+        MethodDefinition fixedAddressValueTypeAttributeCtor = owningModule.DefaultImporter.ImportMethod(fixedAddressValueTypeAttributeType.GetConstructor()!).Resolve()!;
 
         // The vtable field looks like this:
         //
