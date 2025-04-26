@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -274,14 +275,18 @@ internal static class InteropTypeDefinitionFactory
     /// </summary>
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="delegateVfbtlType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateVftblType"/>.</param>
+    /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
     /// <param name="metadataResolver">The <see cref="IMetadataResolver"/> instance to use to resolve external types.</param>
     /// <param name="owningModule">The module that will contain the type being created.</param>
+    /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateImplType(
         TypeSignature typeSignature,
         TypeDefinition delegateVfbtlType,
+        TypeDefinition iidRvaDataType,
         IMetadataResolver metadataResolver,
-        ModuleDefinition owningModule)
+        ModuleDefinition owningModule,
+        out FieldDefinition iidRvaField)
     {
         // We're declaring an 'internal static class' type
         TypeDefinition implType = new(
@@ -308,21 +313,91 @@ internal static class InteropTypeDefinitionFactory
 
         implType.Fields.Add(entriesField);
 
+        // Create the field for the IID for the delegate type
+        iidRvaField = new FieldDefinition(
+            name: InteropUtf8NameFactory.TypeName(typeSignature, "IID"),
+            attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.HasFieldRva,
+            fieldType: iidRvaDataType.ToTypeSignature())
+        {
+            FieldRva = new DataSegment(Guid.NewGuid().ToByteArray())
+        };
+
         // Create the static constructor to initialize the vtable
         MethodDefinition cctor = implType.GetOrCreateStaticConstructor(owningModule);
 
         // We need to create a new method body bound to this constructor
         cctor.CilMethodBody = new CilMethodBody(cctor);
 
-        CilInstructionCollection instructions = cctor.CilMethodBody.Instructions;
+        CilInstructionCollection cctorInstructions = cctor.CilMethodBody.Instructions;
 
-        // Initialize the COM interface entries:
-        //
-        // 
-        //_ = instructions.Add(CilOpCodes.Ldsflda, implType.Fields[0]);
-        //_ = instructions.Add(CilOpCodes.Ldflda, delegateInterfaceEntriesType.Fields[0]);
+        // Initialize the delegate vtable
+        // TODO
+        _ = cctorInstructions.Add(CilOpCodes.Ret);
 
+        // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
+        CustomModifierTypeSignature iidPropertyType = owningModule.DefaultImporter
+            .ImportType(typeof(Guid))
+            .MakeByReferenceType()
+            .MakeModifierType(owningModule.DefaultImporter.ImportType(typeof(InAttribute)), isRequired: true);
+
+        // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
+        PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
+
+        // Create the 'IID' property
+        PropertyDefinition iidProperty = new("IID"u8, PropertyAttributes.None, iidPropertySignature)
+        {
+            GetMethod = new MethodDefinition(
+                name: "get_IID"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+                signature: new MethodSignature(
+                    attributes: CallingConventionAttributes.Default,
+                    returnType: iidPropertyType,
+                    parameterTypes: []))
+        };
+
+        implType.Properties.Add(iidProperty);
+        implType.Methods.Add(iidProperty.GetMethod!);
+
+        // Create a method body for the 'IID' property
+        iidProperty.GetMethod!.CilMethodBody = new CilMethodBody(iidProperty.GetMethod);
+
+        CilInstructionCollection get_IIDInstructions = iidProperty.GetMethod!.CilMethodBody!.Instructions;
+
+        // The 'get_IID' method directly returns the IID RVA field address
+        _ = get_IIDInstructions.Add(CilOpCodes.Ldsflda, iidRvaField);
+        _ = get_IIDInstructions.Add(CilOpCodes.Ret);
 
         return implType;
+    }
+
+    /// <summary>
+    /// Creates types to use to declare RVA fields.
+    /// </summary>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="rvaFieldsType">The containing type for all RVA fields.</param>
+    /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
+    public static void RvaFieldsTypes(
+        ReferenceImporter referenceImporter,
+        out TypeDefinition rvaFieldsType,
+        out TypeDefinition iidRvaDataType)
+    {
+        // Define the special '<RvaFields>' type, to contain all RVA fields
+        rvaFieldsType = new(
+            ns: null,
+            name: "<RvaFields>"u8,
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
+
+        // Define the data type for IID data
+        iidRvaDataType = new(
+            ns: null,
+            name: "IIDRvaDataSize=16",
+            attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
+            baseType: referenceImporter.ImportType(typeof(ValueType)))
+        {
+            ClassLayout = new ClassLayout(packingSize: 1, classSize: 16)
+        };
+
+        // The IID RVA type is nested under the '<RvaFields>' type
+        rvaFieldsType.NestedTypes.Add(iidRvaDataType);
     }
 }

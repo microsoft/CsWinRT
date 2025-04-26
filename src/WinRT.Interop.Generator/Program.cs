@@ -108,6 +108,14 @@ internal static class InteropGenerator
 
         winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
 
+        // Create the RVA field types
+        InteropTypeDefinitionFactory.RvaFieldsTypes(
+            winRTInteropModule.DefaultImporter,
+            out TypeDefinition rvaFieldsType,
+            out TypeDefinition iidRvaDataType);
+
+        winRTInteropModule.TopLevelTypes.Add(rvaFieldsType);
+
         foreach (GenericInstanceTypeSignature typeSignature in genericTypes)
         {
             try
@@ -118,7 +126,9 @@ internal static class InteropGenerator
                 winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateReferenceVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter));
 
                 var entries = InteropTypeDefinitionFactory.DelegateInterfaceEntriesType(typeSignature, winRTInteropModule.DefaultImporter);
-                var impl = InteropTypeDefinitionFactory.DelegateImplType(typeSignature, vftbl, metadataResolver, winRTInteropModule);
+                var impl = InteropTypeDefinitionFactory.DelegateImplType(typeSignature, vftbl, iidRvaDataType, metadataResolver, winRTInteropModule, out FieldDefinition iidRvaField);
+
+                rvaFieldsType.Fields.Add(iidRvaField);
 
                 winRTInteropModule.TopLevelTypes.Add(entries);
                 winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateInterfaceEntriesImplType(typeSignature, entries, impl, metadataResolver, winRTInteropModule));
