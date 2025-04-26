@@ -224,6 +224,7 @@ internal static class InteropGenerator
             {
                 winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter));
                 winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateReferenceVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter));
+                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateInterfaceEntriesType(typeSignature, winRTInteropModule.DefaultImporter));
             }
             catch
             {

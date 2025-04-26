@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -76,7 +77,6 @@ internal static class InteropTypeDefinitionFactory
         CorLibTypeFactory corLibTypeFactory,
         ReferenceImporter referenceImporter)
     {
-        // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
             name: InteropUtf8NameFactory.TypeName(typeSignature, "ReferenceVftbl"),
@@ -149,6 +149,45 @@ internal static class InteropTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType));
         vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType));
         vftblType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public, valueType));
+
+        return vftblType;
+    }
+
+    /// <summary>
+    /// Creates a new type definition for COM interface entries for an 'IDelegate' interface.
+    /// </summary>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition DelegateInterfaceEntriesType(TypeSignature typeSignature, ReferenceImporter referenceImporter)
+    {
+        TypeDefinition vftblType = new(
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, "InterfaceEntries"),
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: referenceImporter.ImportType(typeof(ValueType)));
+
+        // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
+        TypeSignature comInterfaceEntryType = referenceImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)).ToTypeSignature(isValueType: true);
+
+        // The type layout looks like this:
+        //
+        // public ComInterfaceEntry Delegate;
+        // public ComInterfaceEntry DelegateReference;
+        // public ComInterfaceEntry IStringable;
+        // public ComInterfaceEntry IWeakReferenceSource;
+        // public ComInterfaceEntry IMarshal;
+        // public ComInterfaceEntry IAgileObject;
+        // public ComInterfaceEntry IInspectable;
+        // public ComInterfaceEntry IUnknown;
+        vftblType.Fields.Add(new FieldDefinition("Delegate"u8, FieldAttributes.Public, comInterfaceEntryType));
+        vftblType.Fields.Add(new FieldDefinition("DelegateReference"u8, FieldAttributes.Public, comInterfaceEntryType));
+        vftblType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        vftblType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
+        vftblType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
+        vftblType.Fields.Add(new FieldDefinition("IAgileObject"u8, FieldAttributes.Public, comInterfaceEntryType));
+        vftblType.Fields.Add(new FieldDefinition("IInspectable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        vftblType.Fields.Add(new FieldDefinition("IUnknown"u8, FieldAttributes.Public, comInterfaceEntryType));
 
         return vftblType;
     }
