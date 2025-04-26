@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AsmResolver;
@@ -271,6 +270,39 @@ internal static class InteropTypeDefinitionFactory
         _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryVtableField);
         _ = instructions.Add(CilOpCodes.Ret);
 
+        // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
+        PointerTypeSignature vtablesPropertyType = owningModule.DefaultImporter
+            .ImportType(typeof(ComWrappers.ComInterfaceEntry))
+            .MakePointerType();
+
+        // The 'Vtables' property doesn't have a special signature
+        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, vtablesPropertyType, []);
+
+        // Create the 'Vtables' property
+        PropertyDefinition vtablesProperty = new("Vtables"u8, PropertyAttributes.None, vtablePropertySignature)
+        {
+            GetMethod = new MethodDefinition(
+                name: "get_Vtables"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+                signature: new MethodSignature(
+                    attributes: CallingConventionAttributes.Default,
+                    returnType: vtablesPropertyType,
+                    parameterTypes: []))
+            { IsAggressiveInlining = true }
+        };
+
+        implType.Properties.Add(vtablesProperty);
+        implType.Methods.Add(vtablesProperty.GetMethod!);
+
+        // Create a method body for the 'Vtables' property
+        vtablesProperty.GetMethod!.CilMethodBody = new CilMethodBody(vtablesProperty.GetMethod);
+
+        CilInstructionCollection get_VtablesInstructions = vtablesProperty.GetMethod!.CilMethodBody!.Instructions;
+
+        // The 'get_Vtables' method directly returns the 'Entries' field address
+        _ = get_VtablesInstructions.Add(CilOpCodes.Ldsflda, entriesField);
+        _ = get_VtablesInstructions.Add(CilOpCodes.Ret);
+
         return implType;
     }
 
@@ -379,8 +411,11 @@ internal static class InteropTypeDefinitionFactory
         _ = get_IIDInstructions.Add(CilOpCodes.Ldsflda, iidRvaField);
         _ = get_IIDInstructions.Add(CilOpCodes.Ret);
 
+        // The 'Vtable' property has the signature being just 'nint'
+        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, owningModule.CorLibTypeFactory.IntPtr, []);
+
         // Create the 'Vtable' property
-        PropertyDefinition vtableProperty = new("Vtable"u8, PropertyAttributes.None, iidPropertySignature)
+        PropertyDefinition vtableProperty = new("Vtable"u8, PropertyAttributes.None, vtablePropertySignature)
         {
             GetMethod = new MethodDefinition(
                 name: "get_Vtable"u8,
