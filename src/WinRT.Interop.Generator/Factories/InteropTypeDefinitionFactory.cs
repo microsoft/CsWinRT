@@ -219,12 +219,10 @@ internal static class InteropTypeDefinitionFactory
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
 
         // Resolve the '[FixedAddressValueType]' attribute type
-        TypeDefinition fixedAddressValueTypeAttributeType =
-            metadataResolver.ResolveType(
-                owningModule.DefaultImporter.ImportType(typeof(FixedAddressValueTypeAttribute)))!;
+        TypeDefinition fixedAddressValueTypeAttributeType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(FixedAddressValueTypeAttribute)))!;
 
         // Import the constructor, so we can use it
-        MethodDefinition fixedAddressValueTypeAttributeCtor = owningModule.DefaultImporter.ImportMethod(fixedAddressValueTypeAttributeType.GetConstructor()!).Resolve()!;
+        ICustomAttributeType fixedAddressValueTypeAttributeCtor = (ICustomAttributeType)owningModule.DefaultImporter.ImportMethod(fixedAddressValueTypeAttributeType.GetConstructor()!);
 
         // The interface entries field looks like this:
         //
@@ -234,7 +232,7 @@ internal static class InteropTypeDefinitionFactory
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Public, delegateInterfaceEntriesType.ToTypeSignature(isValueType: true))
         {
-            CustomAttributes = { }
+            CustomAttributes = { new CustomAttribute(fixedAddressValueTypeAttributeCtor) }
         };
 
         implType.Fields.Add(entriesField);
@@ -299,7 +297,7 @@ internal static class InteropTypeDefinitionFactory
         TypeDefinition fixedAddressValueTypeAttributeType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(FixedAddressValueTypeAttribute)))!;
 
         // Import the constructor, so we can use it
-        MethodDefinition fixedAddressValueTypeAttributeCtor = owningModule.DefaultImporter.ImportMethod(fixedAddressValueTypeAttributeType.GetConstructor()!).Resolve()!;
+        ICustomAttributeType fixedAddressValueTypeAttributeCtor = (ICustomAttributeType)owningModule.DefaultImporter.ImportMethod(fixedAddressValueTypeAttributeType.GetConstructor()!);
 
         // The vtable field looks like this:
         //
@@ -309,7 +307,7 @@ internal static class InteropTypeDefinitionFactory
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition entriesField = new("Vftbl"u8, FieldAttributes.Public, delegateVfbtlType.ToTypeSignature())
         {
-            CustomAttributes = { }
+            CustomAttributes = { new CustomAttribute(fixedAddressValueTypeAttributeCtor) }
         };
 
         implType.Fields.Add(entriesField);
