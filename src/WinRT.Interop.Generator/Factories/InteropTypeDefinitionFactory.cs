@@ -227,10 +227,10 @@ internal static class InteropTypeDefinitionFactory
         // The interface entries field looks like this:
         //
         // [FixedAddressValueType]
-        // public static readonly <DELEGATE_TYPE_InterfaceEntries Entries;
+        // private static readonly <DELEGATE_TYPE_InterfaceEntries Entries;
         //
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
-        FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Public, delegateInterfaceEntriesType.ToTypeSignature(isValueType: true))
+        FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private, delegateInterfaceEntriesType.ToTypeSignature(isValueType: true))
         {
             CustomAttributes = { new CustomAttribute(fixedAddressValueTypeAttributeCtor) }
         };
@@ -262,7 +262,12 @@ internal static class InteropTypeDefinitionFactory
         // For the two generated 'Impl' types, we just directly store the address of the RVA vtable data.
         _ = instructions.Add(CilOpCodes.Ldsflda, entriesField);
         _ = instructions.Add(CilOpCodes.Ldflda, delegateInterfaceEntriesType.Fields[0]);
-        _ = instructions.Add(CilOpCodes.Ldsflda, delegateImplType.Fields[0]);
+        _ = instructions.Add(CilOpCodes.Call, delegateImplType.Properties[0].GetMethod!);
+        _ = instructions.Add(CilOpCodes.Ldobj, owningModule.DefaultImporter.ImportType(typeof(Guid)));
+        _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryIIDField);
+        _ = instructions.Add(CilOpCodes.Ldsflda, entriesField);
+        _ = instructions.Add(CilOpCodes.Ldflda, delegateInterfaceEntriesType.Fields[0]);
+        _ = instructions.Add(CilOpCodes.Call, delegateImplType.Properties[1].GetMethod!);
         _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryVtableField);
         _ = instructions.Add(CilOpCodes.Ret);
 
@@ -302,15 +307,15 @@ internal static class InteropTypeDefinitionFactory
         // The vtable field looks like this:
         //
         // [FixedAddressValueType]
-        // public static readonly <DELEGATE_TYPE>Vftbl Vftbl;
+        // private static readonly <DELEGATE_TYPE>Vftbl Vftbl;
         //
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
-        FieldDefinition entriesField = new("Vftbl"u8, FieldAttributes.Public, delegateVfbtlType.ToTypeSignature())
+        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, delegateVfbtlType.ToTypeSignature())
         {
             CustomAttributes = { new CustomAttribute(fixedAddressValueTypeAttributeCtor) }
         };
 
-        implType.Fields.Add(entriesField);
+        implType.Fields.Add(vftblField);
 
         // Create the field for the IID for the delegate type
         iidRvaField = new FieldDefinition(
@@ -359,6 +364,7 @@ internal static class InteropTypeDefinitionFactory
                     attributes: CallingConventionAttributes.Default,
                     returnType: iidPropertyType,
                     parameterTypes: []))
+            { IsAggressiveInlining = true }
         };
 
         implType.Properties.Add(iidProperty);
@@ -372,6 +378,31 @@ internal static class InteropTypeDefinitionFactory
         // The 'get_IID' method directly returns the IID RVA field address
         _ = get_IIDInstructions.Add(CilOpCodes.Ldsflda, iidRvaField);
         _ = get_IIDInstructions.Add(CilOpCodes.Ret);
+
+        // Create the 'Vtable' property
+        PropertyDefinition vtableProperty = new("Vtable"u8, PropertyAttributes.None, iidPropertySignature)
+        {
+            GetMethod = new MethodDefinition(
+                name: "get_Vtable"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+                signature: new MethodSignature(
+                    attributes: CallingConventionAttributes.Default,
+                    returnType: owningModule.CorLibTypeFactory.IntPtr,
+                    parameterTypes: []))
+            { IsAggressiveInlining = true }
+        };
+
+        implType.Properties.Add(vtableProperty);
+        implType.Methods.Add(vtableProperty.GetMethod!);
+
+        // Create a method body for the 'Vtable' property
+        vtableProperty.GetMethod!.CilMethodBody = new CilMethodBody(vtableProperty.GetMethod);
+
+        CilInstructionCollection get_VtableInstructions = vtableProperty.GetMethod!.CilMethodBody!.Instructions;
+
+        // The 'get_Vtable' method directly returns the 'Vftbl' field address
+        _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
+        _ = get_VtableInstructions.Add(CilOpCodes.Ret);
 
         return implType;
     }
