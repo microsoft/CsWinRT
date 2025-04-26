@@ -10,7 +10,9 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Serialized;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using ConsoleAppFramework;
+using WindowsRuntime.InteropGenerator.Factories;
 
 ConsoleApp.Run(args, InteropGenerator.Run);
 
@@ -149,7 +151,7 @@ internal static class InteropGenerator
 
         InteropGeneratorState state = new();
 
-        GenericInstanceTypeSignature? genericType = null;
+        List<GenericInstanceTypeSignature> genericTypes = [];
 
         foreach (string path in referencePath)
         {
@@ -190,10 +192,19 @@ internal static class InteropGenerator
                             {
                                 if (parameter.ParameterType is GenericInstanceTypeSignature sig)
                                 {
-                                    genericType ??= sig;
+                                    //genericType ??= sig;
                                 }
                             }
                         }
+                    }
+                }
+
+                foreach (TypeSpecification typeSpecification in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
+                {
+                    if (typeSpecification.Resolve() is { IsDelegate: true } &&
+                        typeSpecification.Signature is GenericInstanceTypeSignature { GenericType.Name.Value: "TypedEventHandler`2" } typeSignature)
+                    {
+                        genericTypes.Add(typeSignature);
                     }
                 }
             }
@@ -206,6 +217,19 @@ internal static class InteropGenerator
         string winRTInteropAssemblyPath = Path.Combine(outputDirectory, "WinRT.Interop.dll");
         AssemblyDefinition winRTInteropAssembly = new("WinRT.Interop", assemblyModule.Assembly?.Version ?? new Version(1, 0, 0, 0));
         ModuleDefinition winRTInteropModule = new("WinRT.Interop");
+
+        foreach (GenericInstanceTypeSignature typeSignature in genericTypes)
+        {
+            try
+            {
+                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter));
+                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateReferenceVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter));
+            }
+            catch
+            {
+
+            }
+        }
 
         winRTInteropModule.Write(winRTInteropAssemblyPath);
     }

@@ -1,12 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using AsmResolver;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 
-namespace WinRT.Interop.Generator.Factories;
+namespace WindowsRuntime.InteropGenerator.Factories;
 
 /// <summary>
 /// A factory for interop UTF8 type names.
@@ -26,6 +30,62 @@ internal static class InteropUtf8NameFactory
         return typeSignature.Namespace?.Length is not > 0 ? new("ABI"u8) : new($"ABI.{typeSignature.Namespace}");
     }
 
+    public static Utf8String NameOrWellKnownIdentifier(AssemblyDefinition assemblyDefinition)
+    {
+        Utf8String originalAssemblyNameUtf8 = assemblyDefinition.Name!;
+
+        // Replace some assembly names with well known constants, to make the names more compact
+        return originalAssemblyNameUtf8.Value switch
+        {
+            "System.Runtime" or "System.Private.CoreLib" => "#corlib"u8,
+            "Microsoft.Windows.SDK.NET" or "Microsoft.Windows.UI.Xaml" => "#Windows"u8,
+            "Microsoft.UI.Xaml.Projection" => "<>WinUI2"u8,
+            "Microsoft.Graphics.Canvas.Interop" => "<>Win2D"u8,
+            _ => originalAssemblyNameUtf8
+        };
+    }
+
+    [UnconditionalSuppressMessage("Style", "IDE0072", Justification = "We only special case some known primitive types.")]
+    public static Utf8String FullNameOrWellKnownIdentifier(TypeSignature typeSignature)
+    {
+        return TryGetWellKnownIdentifier(typeSignature, out ReadOnlySpan<byte> identifierUtf8)
+            ? identifierUtf8
+            : typeSignature.FullName!;
+    }
+
+    [UnconditionalSuppressMessage("Style", "IDE0072", Justification = "We only special case some known primitive types.")]
+    public static bool TryGetWellKnownIdentifier(TypeSignature typeSignature, out ReadOnlySpan<byte> identifierUtf8)
+    {
+        if (typeSignature is CorLibTypeSignature corLibTypeSignature)
+        {
+            // If the type is a corlib type, we can use the well known identifier
+            identifierUtf8 = corLibTypeSignature.ElementType switch
+            {
+                ElementType.Boolean => "bool"u8,
+                ElementType.Char => "char"u8,
+                ElementType.I1 => "sbyte"u8,
+                ElementType.U1 => "byte"u8,
+                ElementType.I2 => "short"u8,
+                ElementType.U2 => "ushort"u8,
+                ElementType.I4 => "int"u8,
+                ElementType.U4 => "uint"u8,
+                ElementType.I8 => "long"u8,
+                ElementType.U8 => "ulong"u8,
+                ElementType.R4 => "float"u8,
+                ElementType.R8 => "double"u8,
+                ElementType.String => "string"u8,
+                ElementType.Object => "object"u8,
+                _ => null
+            };
+
+            return !identifierUtf8.IsEmpty;
+        }
+
+        identifierUtf8 = [];
+
+        return false;
+    }
+
     /// <summary>
     /// Gets the name for a generated interop type.
     /// </summary>
@@ -38,7 +98,7 @@ internal static class InteropUtf8NameFactory
 
         // Each type name uses this format: '<ASSEMBLY_NAME>TYPE_NAME'
         interpolatedStringHandler.AppendLiteral("<");
-        interpolatedStringHandler.AppendFormatted(typeSignature.Resolve()!.Module!.Assembly!.Name!.Value);
+        interpolatedStringHandler.AppendFormatted(NameOrWellKnownIdentifier(typeSignature.Resolve()!.Module!.Assembly!));
         interpolatedStringHandler.AppendLiteral(">");
 
         // If the type is generic, append the definition name and the type arguments
@@ -55,11 +115,19 @@ internal static class InteropUtf8NameFactory
                     interpolatedStringHandler.AppendLiteral("|");
                 }
 
-                // Append the type argument with the same format as the root type
-                interpolatedStringHandler.AppendLiteral("<");
-                interpolatedStringHandler.AppendFormatted(typeArgumentSignature.Resolve()!.Module!.Assembly!.Name!.Value);
-                interpolatedStringHandler.AppendLiteral(">");
-                interpolatedStringHandler.AppendFormatted(typeArgumentSignature.Name!);
+                // If the type argument has a well known identifier (eg. 'string'), just append it directly
+                if (TryGetWellKnownIdentifier(typeArgumentSignature, out _))
+                {
+                    interpolatedStringHandler.AppendFormatted(FullNameOrWellKnownIdentifier(typeArgumentSignature));
+                }
+                else
+                {
+                    // Otherwise, append the type argument with the same format as the root type
+                    interpolatedStringHandler.AppendLiteral("<");
+                    interpolatedStringHandler.AppendFormatted(NameOrWellKnownIdentifier(typeArgumentSignature.Resolve()!.Module!.Assembly!));
+                    interpolatedStringHandler.AppendLiteral(">");
+                    interpolatedStringHandler.AppendFormatted(FullNameOrWellKnownIdentifier(typeArgumentSignature));
+                }
             }
 
             interpolatedStringHandler.AppendLiteral(">");
@@ -67,7 +135,7 @@ internal static class InteropUtf8NameFactory
         else
         {
             // Otherwise just append the type name directly
-            interpolatedStringHandler.AppendFormatted(typeSignature.Name!);
+            interpolatedStringHandler.AppendFormatted(FullNameOrWellKnownIdentifier(typeSignature));
         }
 
         // Append the suffix, if we have one

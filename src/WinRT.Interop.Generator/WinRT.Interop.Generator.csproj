@@ -7,6 +7,9 @@
     <PublishAot>true</PublishAot>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <InvariantGlobalization>true</InvariantGlobalization>
+      
+    <!-- Set the root namespace to match the runtime -->
+    <RootNamespace>WindowsRuntime.InteropGenerator</RootNamespace>
 
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
     <AssemblyName>cswinrtgen</AssemblyName>
