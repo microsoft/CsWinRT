@@ -178,25 +178,6 @@ internal static class InteropGenerator
                     {
                         state.TrackTypeHierarchyEntry(type.FullName, type.BaseType.FullName);
                     }
-
-                    if (type.HasCustomAttribute("WinRT", "WindowsRuntimeTypeAttribute") && type.GenericParameters.Count > 0)
-                    {
-                    }
-
-                    if (type.Namespace?.AsSpan().StartsWith("System"u8) is false &&
-                        type.Namespace?.AsSpan().StartsWith("ABI."u8) is false)
-                    {
-                        foreach (var method in type.Methods)
-                        {
-                            foreach (var parameter in method.Parameters)
-                            {
-                                if (parameter.ParameterType is GenericInstanceTypeSignature sig)
-                                {
-                                    //genericType ??= sig;
-                                }
-                            }
-                        }
-                    }
                 }
 
                 foreach (TypeSpecification typeSpecification in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
@@ -222,9 +203,17 @@ internal static class InteropGenerator
         {
             try
             {
-                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter));
+                var vftbl = InteropTypeDefinitionFactory.DelegateVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter);
+
+                winRTInteropModule.TopLevelTypes.Add(vftbl);
                 winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateReferenceVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter));
-                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateInterfaceEntriesType(typeSignature, winRTInteropModule.DefaultImporter));
+
+                var entries = InteropTypeDefinitionFactory.DelegateInterfaceEntriesType(typeSignature, winRTInteropModule.DefaultImporter);
+                var impl = InteropTypeDefinitionFactory.DelegateImplType(typeSignature, vftbl, winRTInteropModule);
+
+                winRTInteropModule.TopLevelTypes.Add(entries);
+                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateInterfaceEntriesImplType(typeSignature, entries, impl, winRTInteropModule));
+                winRTInteropModule.TopLevelTypes.Add(impl);
             }
             catch
             {
