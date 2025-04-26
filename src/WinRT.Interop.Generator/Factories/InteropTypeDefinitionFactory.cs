@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AsmResolver;
@@ -343,9 +344,16 @@ internal static class InteropTypeDefinitionFactory
         // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
         PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
 
+        // Resolve the '[IsReadOnly]' attribute type
+        TypeDefinition isReadOnlyAttributeType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(IsReadOnlyAttribute)))!;
+
+        // Import the constructor, so we can use it
+        ICustomAttributeType isReadOnlyAttributeCtor = (ICustomAttributeType)owningModule.DefaultImporter.ImportMethod(isReadOnlyAttributeType.GetConstructor()!);
+
         // Create the 'IID' property
         PropertyDefinition iidProperty = new("IID"u8, PropertyAttributes.None, iidPropertySignature)
         {
+            CustomAttributes = { new CustomAttribute(isReadOnlyAttributeCtor) },
             GetMethod = new MethodDefinition(
                 name: "get_IID"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
