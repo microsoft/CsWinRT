@@ -57,6 +57,7 @@ internal static class InteropTypeDefinitionFactory
             cctor: implType.GetOrCreateStaticConstructor(module),
             entriesField: entriesField,
             entriesFieldType: delegateInterfaceEntriesType,
+            module: module,
             implTypes: [
                 delegateImplType,
                 delegateReferenceImplType]);
@@ -139,46 +140,17 @@ internal static class InteropTypeDefinitionFactory
         _ = cctorInstructions.Add(CilOpCodes.Ret);
 
         // Create the field for the IID for the delegate type
-        iidRvaField = new FieldDefinition(
-            name: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
-            attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.HasFieldRva,
-            fieldType: iidRvaDataType.ToTypeSignature())
-        {
-            FieldRva = new DataSegment(Guid.NewGuid().ToByteArray())
-        };
-
-        // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        CustomModifierTypeSignature iidPropertyType = module.DefaultImporter
-            .ImportType(typeof(Guid))
-            .MakeByReferenceType()
-            .MakeModifierType(module.DefaultImporter.ImportType(typeof(InAttribute)), isRequired: true);
-
-        // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
-        PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
-
-        // Create the 'IID' property
-        PropertyDefinition iidProperty = new("IID"u8, PropertyAttributes.None, iidPropertySignature)
-        {
-            CustomAttributes = { InteropCustomAttributeFactory.IsReadOnly(module) },
-            GetMethod = new MethodDefinition(
-                name: "get_IID"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-                signature: new MethodSignature(
-                    attributes: CallingConventionAttributes.Default,
-                    returnType: iidPropertyType,
-                    parameterTypes: []))
-            { IsAggressiveInlining = true }
-        };
+        WellKnownMemberDefinitionFactory.IID(
+            iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
+            iidRvaDataType: iidRvaDataType,
+            module: module,
+            iid: Guid.NewGuid(),
+            out iidRvaField,
+            out PropertyDefinition iidProperty,
+            out MethodDefinition get_iidMethod);
 
         implType.Properties.Add(iidProperty);
-        implType.Methods.Add(iidProperty.GetMethod!);
-
-        // Create a method body for the 'IID' property
-        CilInstructionCollection get_IIDInstructions = iidProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
-
-        // The 'get_IID' method directly returns the IID RVA field address
-        _ = get_IIDInstructions.Add(CilOpCodes.Ldsflda, iidRvaField);
-        _ = get_IIDInstructions.Add(CilOpCodes.Ret);
+        implType.Methods.Add(get_iidMethod);
 
         // The 'Vtable' property has the signature being just 'nint'
         PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, module.CorLibTypeFactory.IntPtr, []);
@@ -278,47 +250,18 @@ internal static class InteropTypeDefinitionFactory
         // TODO
         _ = cctorInstructions.Add(CilOpCodes.Ret);
 
-        // Create the field for the IID for the delegate type
-        iidRvaField = new FieldDefinition(
-            name: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
-            attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.HasFieldRva,
-            fieldType: iidRvaDataType.ToTypeSignature())
-        {
-            FieldRva = new DataSegment(Guid.NewGuid().ToByteArray())
-        };
-
-        // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        CustomModifierTypeSignature iidPropertyType = module.DefaultImporter
-            .ImportType(typeof(Guid))
-            .MakeByReferenceType()
-            .MakeModifierType(module.DefaultImporter.ImportType(typeof(InAttribute)), isRequired: true);
-
-        // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
-        PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
-
-        // Create the 'IID' property
-        PropertyDefinition iidProperty = new("IID"u8, PropertyAttributes.None, iidPropertySignature)
-        {
-            CustomAttributes = { InteropCustomAttributeFactory.IsReadOnly(module) },
-            GetMethod = new MethodDefinition(
-                name: "get_IID"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-                signature: new MethodSignature(
-                    attributes: CallingConventionAttributes.Default,
-                    returnType: iidPropertyType,
-                    parameterTypes: []))
-            { IsAggressiveInlining = true }
-        };
+        // Create the field for the IID for the boxed delegate type
+        WellKnownMemberDefinitionFactory.IID(
+            iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceIID"),
+            iidRvaDataType: iidRvaDataType,
+            module: module,
+            iid: Guid.NewGuid(),
+            out iidRvaField,
+            out PropertyDefinition iidProperty,
+            out MethodDefinition get_iidMethod);
 
         implType.Properties.Add(iidProperty);
-        implType.Methods.Add(iidProperty.GetMethod!);
-
-        // Create a method body for the 'IID' property
-        CilInstructionCollection get_IIDInstructions = iidProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
-
-        // The 'get_IID' method directly returns the IID RVA field address
-        _ = get_IIDInstructions.Add(CilOpCodes.Ldsflda, iidRvaField);
-        _ = get_IIDInstructions.Add(CilOpCodes.Ret);
+        implType.Methods.Add(get_iidMethod);
 
         // The 'Vtable' property has the signature being just 'nint'
         PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, module.CorLibTypeFactory.IntPtr, []);
