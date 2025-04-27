@@ -90,6 +90,7 @@ internal static class InteropTypeDefinitionFactory
 
         // The 'get_Vtables' method directly returns the 'Entries' field address
         _ = get_VtablesInstructions.Add(CilOpCodes.Ldsflda, entriesField);
+        _ = get_VtablesInstructions.Add(CilOpCodes.Conv_U);
         _ = get_VtablesInstructions.Add(CilOpCodes.Ret);
 
         return implType;
