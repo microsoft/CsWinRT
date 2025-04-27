@@ -69,4 +69,65 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: corLibTypeFactory.UInt32),
             parameterTypes: [corLibTypeFactory.Void.MakePointerType()]).MakeFunctionPointerType();
     }
+
+    /// <summary>
+    /// Creates a type signature for the <c>GetIids</c> vtable entry.
+    /// </summary>
+    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static FunctionPointerTypeSignature GetIidsImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int>'
+        return new MethodSignature(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
+                isRequired: false,
+                baseType: corLibTypeFactory.Int32),
+            parameterTypes: [
+                corLibTypeFactory.Void.MakePointerType(),
+                corLibTypeFactory.UInt32.MakePointerType(),
+                referenceImporter.ImportType(typeof(Guid)).MakePointerType().MakePointerType()]).MakeFunctionPointerType();
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>GetRuntimeClassName</c> vtable entry.
+    /// </summary>
+    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static FunctionPointerTypeSignature GetRuntimeClassNameImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
+        return new MethodSignature(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
+                isRequired: false,
+                baseType: corLibTypeFactory.Int32),
+            parameterTypes: [
+                corLibTypeFactory.Void.MakePointerType(),
+                corLibTypeFactory.Void.MakePointerType().MakePointerType()]).MakeFunctionPointerType();
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>GetTrustLevel</c> vtable entry.
+    /// </summary>
+    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static FunctionPointerTypeSignature GetTrustLevelImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int>'
+        return new MethodSignature(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
+                isRequired: false,
+                baseType: corLibTypeFactory.Int32),
+            parameterTypes: [
+                corLibTypeFactory.Void.MakePointerType(),
+                corLibTypeFactory.Int32.MakePointerType()]).MakeFunctionPointerType();
+    }
 }

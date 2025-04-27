@@ -91,39 +91,10 @@ internal static class InteropTypeDefinitionFactory
         FunctionPointerTypeSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(corLibTypeFactory, referenceImporter);
         FunctionPointerTypeSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(corLibTypeFactory, referenceImporter);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int>'
-        FunctionPointerTypeSignature getIidsType = new MethodSignature(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
-                isRequired: false,
-                baseType: corLibTypeFactory.Int32),
-            parameterTypes: [
-                corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.UInt32.MakePointerType(),
-                referenceImporter.ImportType(typeof(Guid)).MakePointerType().MakePointerType()]).MakeFunctionPointerType();
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
-        FunctionPointerTypeSignature getRuntimeClassNameType = new MethodSignature(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
-                isRequired: false,
-                baseType: corLibTypeFactory.Int32),
-            parameterTypes: [
-                corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Void.MakePointerType().MakePointerType()]).MakeFunctionPointerType();
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int>'
-        FunctionPointerTypeSignature getTrustLevelType = new MethodSignature(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
-                isRequired: false,
-                baseType: corLibTypeFactory.Int32),
-            parameterTypes: [
-                corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Int32.MakePointerType()]).MakeFunctionPointerType();
+        // Get the 'IInspectable' signatures
+        FunctionPointerTypeSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(corLibTypeFactory, referenceImporter);
+        FunctionPointerTypeSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(corLibTypeFactory, referenceImporter);
+        FunctionPointerTypeSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(corLibTypeFactory, referenceImporter);
 
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
         FunctionPointerTypeSignature valueType = new MethodSignature(
@@ -138,12 +109,7 @@ internal static class InteropTypeDefinitionFactory
 
         // The vtable layout for 'IReference`1<T>' looks like this:
         //
-        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
-        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
-        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-        // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
-        // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
-        // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+        // <IINSPECTABLE_VTABLE_SLOTS>
         // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> Value;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType));
