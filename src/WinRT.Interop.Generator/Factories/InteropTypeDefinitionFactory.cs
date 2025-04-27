@@ -3,7 +3,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -152,31 +151,15 @@ internal static class InteropTypeDefinitionFactory
         implType.Properties.Add(iidProperty);
         implType.Methods.Add(get_iidMethod);
 
-        // The 'Vtable' property has the signature being just 'nint'
-        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, module.CorLibTypeFactory.IntPtr, []);
-
         // Create the 'Vtable' property
-        PropertyDefinition vtableProperty = new("Vtable"u8, PropertyAttributes.None, vtablePropertySignature)
-        {
-            GetMethod = new MethodDefinition(
-                name: "get_Vtable"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-                signature: new MethodSignature(
-                    attributes: CallingConventionAttributes.Default,
-                    returnType: module.CorLibTypeFactory.IntPtr,
-                    parameterTypes: []))
-            { IsAggressiveInlining = true }
-        };
+        WellKnownMemberDefinitionFactory.Vtable(
+            vftblField: vftblField,
+            corLibTypeFactory: module.CorLibTypeFactory,
+            out PropertyDefinition vtableProperty,
+            out MethodDefinition get_VtableMethod);
 
         implType.Properties.Add(vtableProperty);
-        implType.Methods.Add(vtableProperty.GetMethod!);
-
-        // Create a method body for the 'Vtable' property
-        CilInstructionCollection get_VtableInstructions = vtableProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
-
-        // The 'get_Vtable' method directly returns the 'Vftbl' field address
-        _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-        _ = get_VtableInstructions.Add(CilOpCodes.Ret);
+        implType.Methods.Add(get_VtableMethod);
 
         // Define the 'Invoke' methods as follows:
         //
@@ -263,31 +246,15 @@ internal static class InteropTypeDefinitionFactory
         implType.Properties.Add(iidProperty);
         implType.Methods.Add(get_iidMethod);
 
-        // The 'Vtable' property has the signature being just 'nint'
-        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, module.CorLibTypeFactory.IntPtr, []);
-
         // Create the 'Vtable' property
-        PropertyDefinition vtableProperty = new("Vtable"u8, PropertyAttributes.None, vtablePropertySignature)
-        {
-            GetMethod = new MethodDefinition(
-                name: "get_Vtable"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-                signature: new MethodSignature(
-                    attributes: CallingConventionAttributes.Default,
-                    returnType: module.CorLibTypeFactory.IntPtr,
-                    parameterTypes: []))
-            { IsAggressiveInlining = true }
-        };
+        WellKnownMemberDefinitionFactory.Vtable(
+            vftblField: vftblField,
+            corLibTypeFactory: module.CorLibTypeFactory,
+            out PropertyDefinition vtableProperty,
+            out MethodDefinition get_VtableMethod);
 
         implType.Properties.Add(vtableProperty);
-        implType.Methods.Add(vtableProperty.GetMethod!);
-
-        // Create a method body for the 'Vtable' property
-        CilInstructionCollection get_VtableInstructions = vtableProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
-
-        // The 'get_Vtable' method directly returns the 'Vftbl' field address
-        _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-        _ = get_VtableInstructions.Add(CilOpCodes.Ret);
+        implType.Methods.Add(get_VtableMethod);
 
         // Define the 'Value' methods as follows:
         //
@@ -315,36 +282,5 @@ internal static class InteropTypeDefinitionFactory
         _ = invokeInstructions.Add(CilOpCodes.Ret);
 
         return implType;
-    }
-
-    /// <summary>
-    /// Creates types to use to declare RVA fields.
-    /// </summary>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
-    /// <param name="rvaFieldsType">The containing type for all RVA fields.</param>
-    /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
-    public static void RvaFieldsTypes(
-        ReferenceImporter referenceImporter,
-        out TypeDefinition rvaFieldsType,
-        out TypeDefinition iidRvaDataType)
-    {
-        // Define the special '<RvaFields>' type, to contain all RVA fields
-        rvaFieldsType = new(
-            ns: null,
-            name: "<RvaFields>"u8,
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
-
-        // Define the data type for IID data
-        iidRvaDataType = new(
-            ns: null,
-            name: "IIDRvaDataSize=16",
-            attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: referenceImporter.ImportType(typeof(ValueType)))
-        {
-            ClassLayout = new ClassLayout(packingSize: 1, classSize: 16)
-        };
-
-        // The IID RVA type is nested under the '<RvaFields>' type
-        rvaFieldsType.NestedTypes.Add(iidRvaDataType);
     }
 }

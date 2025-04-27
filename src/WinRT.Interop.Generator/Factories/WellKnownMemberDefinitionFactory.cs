@@ -26,7 +26,7 @@ internal static class WellKnownMemberDefinitionFactory
     /// <param name="iid">The <see cref="Guid"/> value to use for the RVA field.</param>
     /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
     /// <param name="iidProperty">The resulting 'IID' property.</param>
-    /// <param name="get_iidMethod">The resulting 'IID' getter method.</param>
+    /// <param name="get_IidMethod">The resulting 'IID' getter method.</param>
     public static void IID(
         Utf8String iidRvaFieldName,
         TypeDefinition iidRvaDataType,
@@ -34,7 +34,7 @@ internal static class WellKnownMemberDefinitionFactory
         in Guid iid,
         out FieldDefinition iidRvaField,
         out PropertyDefinition iidProperty,
-        out MethodDefinition get_iidMethod)
+        out MethodDefinition get_IidMethod)
     {
         // Create the field for the IID for the delegate type
         iidRvaField = new FieldDefinition(
@@ -55,7 +55,7 @@ internal static class WellKnownMemberDefinitionFactory
         PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
 
         // Create the 'get_IID' getter method
-        get_iidMethod = new MethodDefinition(
+        get_IidMethod = new MethodDefinition(
             name: "get_IID"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
             signature: new MethodSignature(
@@ -65,17 +65,54 @@ internal static class WellKnownMemberDefinitionFactory
         { IsAggressiveInlining = true };
 
         // Create the 'IID' property
-        iidProperty = new("IID"u8, PropertyAttributes.None, iidPropertySignature)
+        iidProperty = new PropertyDefinition("IID"u8, PropertyAttributes.None, iidPropertySignature)
         {
             CustomAttributes = { InteropCustomAttributeFactory.IsReadOnly(module) },
-            GetMethod = get_iidMethod
+            GetMethod = get_IidMethod
         };
 
         // Create a method body for the 'IID' property
-        CilInstructionCollection get_IIDInstructions = get_iidMethod.CreateAndBindCilMethodBody().Instructions;
+        CilInstructionCollection get_IIDInstructions = get_IidMethod.CreateAndBindCilMethodBody().Instructions;
 
         // The 'get_IID' method directly returns the IID RVA field address
         _ = get_IIDInstructions.Add(CilOpCodes.Ldsflda, iidRvaField);
         _ = get_IIDInstructions.Add(CilOpCodes.Ret);
+    }
+
+    /// <summary>
+    /// Creates the 'Vtable' property with the specified parameters.
+    /// </summary>
+    /// <param name="vftblField">The target vtable field to access.</param>
+    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+    /// <param name="vtableProperty">The resulting 'IID' property.</param>
+    /// <param name="get_VtableMethod">The resulting 'IID' getter method.</param>
+    public static void Vtable(
+        FieldDefinition vftblField,
+        CorLibTypeFactory corLibTypeFactory,
+        out PropertyDefinition vtableProperty,
+        out MethodDefinition get_VtableMethod)
+    {
+        // The 'Vtable' property has the signature being just 'nint'
+        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, corLibTypeFactory.IntPtr, []);
+
+        // Create the 'get_Vtable' getter method
+        get_VtableMethod = new MethodDefinition(
+            name: "get_Vtable"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+            signature: new MethodSignature(
+                attributes: CallingConventionAttributes.Default,
+                returnType: corLibTypeFactory.IntPtr,
+                parameterTypes: []))
+        { IsAggressiveInlining = true };
+
+        // Create the 'Vtable' property
+        vtableProperty = new PropertyDefinition("Vtable"u8, PropertyAttributes.None, vtablePropertySignature) { GetMethod = get_VtableMethod };
+
+        // Create a method body for the 'Vtable' property
+        CilInstructionCollection get_VtableInstructions = vtableProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
+
+        // The 'get_Vtable' method directly returns the 'Vftbl' field address
+        _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
+        _ = get_VtableInstructions.Add(CilOpCodes.Ret);
     }
 }

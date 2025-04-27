@@ -122,7 +122,7 @@ internal static class InteropGenerator
         winRTInteropModule.TopLevelTypes.Add(delegateInterfaceEntriesType);
 
         // Create the RVA field types
-        InteropTypeDefinitionFactory.RvaFieldsTypes(
+        WellKnownTypeDefinitionFactory.RvaFields(
             winRTInteropModule.DefaultImporter,
             out TypeDefinition rvaFieldsType,
             out TypeDefinition iidRvaDataType);

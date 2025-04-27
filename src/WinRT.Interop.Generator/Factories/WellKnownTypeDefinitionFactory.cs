@@ -236,7 +236,7 @@ internal static class WellKnownTypeDefinitionFactory
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <param name="rvaFieldsType">The containing type for all RVA fields.</param>
     /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
-    public static void RvaFieldsTypes(
+    public static void RvaFields(
         ReferenceImporter referenceImporter,
         out TypeDefinition rvaFieldsType,
         out TypeDefinition iidRvaDataType)
