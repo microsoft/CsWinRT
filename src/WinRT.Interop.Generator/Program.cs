@@ -43,7 +43,6 @@ internal static class InteropGenerator
         ArgumentException.ThrowIfNullOrEmpty(outputDirectory);
 
         PathAssemblyResolver pathAssemblyResolver = new(referencePath);
-        DefaultMetadataResolver metadataResolver = new(pathAssemblyResolver);
 
         ModuleDefinition assemblyModule = ModuleDefinition.FromFile(assemblyPath, pathAssemblyResolver.ReaderParameters);
 
@@ -107,6 +106,7 @@ internal static class InteropGenerator
         ModuleDefinition winRTInteropModule = new("WinRT.Interop");
 
         winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
+        winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(pathAssemblyResolver);
 
         // Create the RVA field types
         InteropTypeDefinitionFactory.RvaFieldsTypes(
@@ -126,12 +126,12 @@ internal static class InteropGenerator
                 winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateReferenceVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter));
 
                 var entries = InteropTypeDefinitionFactory.DelegateInterfaceEntriesType(typeSignature, winRTInteropModule.DefaultImporter);
-                var impl = InteropTypeDefinitionFactory.DelegateImplType(typeSignature, vftbl, iidRvaDataType, metadataResolver, winRTInteropModule, out FieldDefinition iidRvaField);
+                var impl = InteropTypeDefinitionFactory.DelegateImplType(typeSignature, vftbl, iidRvaDataType, winRTInteropModule, out FieldDefinition iidRvaField);
 
                 rvaFieldsType.Fields.Add(iidRvaField);
 
                 winRTInteropModule.TopLevelTypes.Add(entries);
-                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateInterfaceEntriesImplType(typeSignature, entries, impl, metadataResolver, winRTInteropModule));
+                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateInterfaceEntriesImplType(typeSignature, entries, impl, winRTInteropModule));
                 winRTInteropModule.TopLevelTypes.Add(impl);
             }
             catch

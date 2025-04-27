@@ -201,14 +201,12 @@ internal static class InteropTypeDefinitionFactory
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="delegateInterfaceEntriesType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateInterfaceEntriesType"/>.</param>
     /// <param name="delegateImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateImplType"/>.</param>
-    /// <param name="metadataResolver">The <see cref="IMetadataResolver"/> instance to use to resolve external types.</param>
     /// <param name="owningModule">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateInterfaceEntriesImplType(
         TypeSignature typeSignature,
         TypeDefinition delegateInterfaceEntriesType,
         TypeDefinition delegateImplType,
-        IMetadataResolver metadataResolver,
         ModuleDefinition owningModule)
     {
         // We're declaring an 'internal static class' type
@@ -216,12 +214,6 @@ internal static class InteropTypeDefinitionFactory
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
             name: InteropUtf8NameFactory.TypeName(typeSignature, "InterfaceEntriesImpl"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
-
-        // Resolve the '[FixedAddressValueType]' attribute type
-        TypeDefinition fixedAddressValueTypeAttributeType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(FixedAddressValueTypeAttribute)))!;
-
-        // Import the constructor, so we can use it
-        ICustomAttributeType fixedAddressValueTypeAttributeCtor = (ICustomAttributeType)owningModule.DefaultImporter.ImportMethod(fixedAddressValueTypeAttributeType.GetConstructor()!);
 
         // The interface entries field looks like this:
         //
@@ -231,7 +223,7 @@ internal static class InteropTypeDefinitionFactory
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private, delegateInterfaceEntriesType.ToTypeSignature(isValueType: true))
         {
-            CustomAttributes = { new CustomAttribute(fixedAddressValueTypeAttributeCtor) }
+            CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(owningModule) }
         };
 
         implType.Fields.Add(entriesField);
@@ -242,7 +234,7 @@ internal static class InteropTypeDefinitionFactory
         // Resolve 'ComInterfaceEntry', so we can set its fields:
         //   - [0]: Guid IID
         //   - [1]: nint Vtable
-        TypeDefinition comInterfaceEntryType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)))!;
+        TypeDefinition comInterfaceEntryType = owningModule.MetadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)))!;
 
         // Import the target fields (they have to be in the module, or the resulting assembly won't be valid)
         IFieldDescriptor comInterfaceEntryIIDField = owningModule.DefaultImporter.ImportField(comInterfaceEntryType.Fields[0]);
@@ -308,7 +300,6 @@ internal static class InteropTypeDefinitionFactory
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="delegateVfbtlType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateVftblType"/>.</param>
     /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
-    /// <param name="metadataResolver">The <see cref="IMetadataResolver"/> instance to use to resolve external types.</param>
     /// <param name="owningModule">The module that will contain the type being created.</param>
     /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
@@ -316,7 +307,6 @@ internal static class InteropTypeDefinitionFactory
         TypeSignature typeSignature,
         TypeDefinition delegateVfbtlType,
         TypeDefinition iidRvaDataType,
-        IMetadataResolver metadataResolver,
         ModuleDefinition owningModule,
         out FieldDefinition iidRvaField)
     {
@@ -326,12 +316,6 @@ internal static class InteropTypeDefinitionFactory
             name: InteropUtf8NameFactory.TypeName(typeSignature, "Impl"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
 
-        // Resolve the '[FixedAddressValueType]' attribute type
-        TypeDefinition fixedAddressValueTypeAttributeType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(FixedAddressValueTypeAttribute)))!;
-
-        // Import the constructor, so we can use it
-        ICustomAttributeType fixedAddressValueTypeAttributeCtor = (ICustomAttributeType)owningModule.DefaultImporter.ImportMethod(fixedAddressValueTypeAttributeType.GetConstructor()!);
-
         // The vtable field looks like this:
         //
         // [FixedAddressValueType]
@@ -340,7 +324,7 @@ internal static class InteropTypeDefinitionFactory
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, delegateVfbtlType.ToTypeSignature())
         {
-            CustomAttributes = { new CustomAttribute(fixedAddressValueTypeAttributeCtor) }
+            CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(owningModule) }
         };
 
         implType.Fields.Add(vftblField);
@@ -373,16 +357,10 @@ internal static class InteropTypeDefinitionFactory
         // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
         PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
 
-        // Resolve the '[IsReadOnly]' attribute type
-        TypeDefinition isReadOnlyAttributeType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(IsReadOnlyAttribute)))!;
-
-        // Import the constructor, so we can use it
-        ICustomAttributeType isReadOnlyAttributeCtor = (ICustomAttributeType)owningModule.DefaultImporter.ImportMethod(isReadOnlyAttributeType.GetConstructor()!);
-
         // Create the 'IID' property
         PropertyDefinition iidProperty = new("IID"u8, PropertyAttributes.None, iidPropertySignature)
         {
-            CustomAttributes = { new CustomAttribute(isReadOnlyAttributeCtor) },
+            CustomAttributes = { InteropCustomAttributeFactory.IsReadOnly(owningModule) },
             GetMethod = new MethodDefinition(
                 name: "get_IID"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
@@ -429,12 +407,6 @@ internal static class InteropTypeDefinitionFactory
         _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
         _ = get_VtableInstructions.Add(CilOpCodes.Ret);
 
-        // Resolve the '[UnmanagedCallersOnly]' attribute type
-        TypeDefinition unmanagedCallersOnlyAttributeType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(UnmanagedCallersOnlyAttribute)))!;
-
-        // Import the constructor, so we can use it
-        ICustomAttributeType unmanagedCallersOnlyAttributeCtor = (ICustomAttributeType)owningModule.DefaultImporter.ImportMethod(unmanagedCallersOnlyAttributeType.GetConstructor()!);
-
         // Define the 'Invoke' methods as follows:
         //
         // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
@@ -450,18 +422,7 @@ internal static class InteropTypeDefinitionFactory
                     owningModule.CorLibTypeFactory.Void.MakePointerType(),
                     owningModule.CorLibTypeFactory.Void.MakePointerType()]))
         {
-            CustomAttributes =
-            {
-                new CustomAttribute(unmanagedCallersOnlyAttributeCtor, new CustomAttributeSignature(
-                    fixedArguments: [],
-                    namedArguments: [new CustomAttributeNamedArgument(
-                        memberType: CustomAttributeArgumentMemberType.Field,
-                        memberName: "CallConvs"u8,
-                        argumentType: owningModule.DefaultImporter.ImportType(typeof(Type[])).ToTypeSignature(),
-                        argument: new CustomAttributeArgument(
-                            argumentType: owningModule.DefaultImporter.ImportType(typeof(Type[])).ToTypeSignature(),
-                            elements: unmanagedCallersOnlyAttributeType.ToTypeSignature()))]))
-            }
+            CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(owningModule) }
         };
 
         implType.Methods.Add(invokeMethod);
