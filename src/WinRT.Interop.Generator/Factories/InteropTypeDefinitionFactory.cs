@@ -129,39 +129,6 @@ internal static class InteropTypeDefinitionFactory
 
         implType.Fields.Add(vftblField);
 
-        // Create the static constructor to initialize the vtable
-        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
-
-        // We need to create a new method body bound to this constructor
-        CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
-
-        // Initialize the delegate vtable
-        // TODO
-        _ = cctorInstructions.Add(CilOpCodes.Ret);
-
-        // Create the field for the IID for the delegate type
-        WellKnownMemberDefinitionFactory.IID(
-            iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
-            iidRvaDataType: iidRvaDataType,
-            module: module,
-            iid: Guid.NewGuid(),
-            out iidRvaField,
-            out PropertyDefinition iidProperty,
-            out MethodDefinition get_iidMethod);
-
-        implType.Properties.Add(iidProperty);
-        implType.Methods.Add(get_iidMethod);
-
-        // Create the 'Vtable' property
-        WellKnownMemberDefinitionFactory.Vtable(
-            vftblField: vftblField,
-            corLibTypeFactory: module.CorLibTypeFactory,
-            out PropertyDefinition vtableProperty,
-            out MethodDefinition get_VtableMethod);
-
-        implType.Properties.Add(vtableProperty);
-        implType.Methods.Add(get_VtableMethod);
-
         // Define the 'Invoke' methods as follows:
         //
         // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
@@ -187,6 +154,41 @@ internal static class InteropTypeDefinitionFactory
 
         _ = invokeInstructions.Add(CilOpCodes.Ldc_I4_0);
         _ = invokeInstructions.Add(CilOpCodes.Ret);
+
+        // Create the static constructor to initialize the vtable
+        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
+
+        // We need to create a new method body bound to this constructor
+        CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
+
+        // Initialize the delegate vtable
+        _ = cctorInstructions.Add(CilOpCodes.Ldsflda, vftblField);
+        _ = cctorInstructions.Add(CilOpCodes.Ldftn, invokeMethod);
+        _ = cctorInstructions.Add(CilOpCodes.Stfld, delegateVftblType.Fields[3]);
+        _ = cctorInstructions.Add(CilOpCodes.Ret);
+
+        // Create the field for the IID for the delegate type
+        WellKnownMemberDefinitionFactory.IID(
+            iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
+            iidRvaDataType: iidRvaDataType,
+            module: module,
+            iid: Guid.NewGuid(),
+            out iidRvaField,
+            out PropertyDefinition iidProperty,
+            out MethodDefinition get_iidMethod);
+
+        implType.Properties.Add(iidProperty);
+        implType.Methods.Add(get_iidMethod);
+
+        // Create the 'Vtable' property
+        WellKnownMemberDefinitionFactory.Vtable(
+            vftblField: vftblField,
+            corLibTypeFactory: module.CorLibTypeFactory,
+            out PropertyDefinition vtableProperty,
+            out MethodDefinition get_VtableMethod);
+
+        implType.Properties.Add(vtableProperty);
+        implType.Methods.Add(get_VtableMethod);
 
         return implType;
     }
@@ -224,39 +226,6 @@ internal static class InteropTypeDefinitionFactory
 
         implType.Fields.Add(vftblField);
 
-        // Create the static constructor to initialize the vtable
-        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
-
-        // We need to create a new method body bound to this constructor
-        CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
-
-        // Initialize the delegate vtable
-        // TODO
-        _ = cctorInstructions.Add(CilOpCodes.Ret);
-
-        // Create the field for the IID for the boxed delegate type
-        WellKnownMemberDefinitionFactory.IID(
-            iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceIID"),
-            iidRvaDataType: iidRvaDataType,
-            module: module,
-            iid: Guid.NewGuid(),
-            out iidRvaField,
-            out PropertyDefinition iidProperty,
-            out MethodDefinition get_iidMethod);
-
-        implType.Properties.Add(iidProperty);
-        implType.Methods.Add(get_iidMethod);
-
-        // Create the 'Vtable' property
-        WellKnownMemberDefinitionFactory.Vtable(
-            vftblField: vftblField,
-            corLibTypeFactory: module.CorLibTypeFactory,
-            out PropertyDefinition vtableProperty,
-            out MethodDefinition get_VtableMethod);
-
-        implType.Properties.Add(vtableProperty);
-        implType.Methods.Add(get_VtableMethod);
-
         // Define the 'Value' methods as follows:
         //
         // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
@@ -281,6 +250,41 @@ internal static class InteropTypeDefinitionFactory
 
         _ = invokeInstructions.Add(CilOpCodes.Ldc_I4_0);
         _ = invokeInstructions.Add(CilOpCodes.Ret);
+
+        // Create the static constructor to initialize the vtable
+        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
+
+        // We need to create a new method body bound to this constructor
+        CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
+
+        // Initialize the delegate vtable
+        _ = cctorInstructions.Add(CilOpCodes.Ldsflda, vftblField);
+        _ = cctorInstructions.Add(CilOpCodes.Ldftn, valueMethod);
+        _ = cctorInstructions.Add(CilOpCodes.Stfld, delegateReferenceVftblType.Fields[6]);
+        _ = cctorInstructions.Add(CilOpCodes.Ret);
+
+        // Create the field for the IID for the boxed delegate type
+        WellKnownMemberDefinitionFactory.IID(
+            iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceIID"),
+            iidRvaDataType: iidRvaDataType,
+            module: module,
+            iid: Guid.NewGuid(),
+            out iidRvaField,
+            out PropertyDefinition iidProperty,
+            out MethodDefinition get_iidMethod);
+
+        implType.Properties.Add(iidProperty);
+        implType.Methods.Add(get_iidMethod);
+
+        // Create the 'Vtable' property
+        WellKnownMemberDefinitionFactory.Vtable(
+            vftblField: vftblField,
+            corLibTypeFactory: module.CorLibTypeFactory,
+            out PropertyDefinition vtableProperty,
+            out MethodDefinition get_VtableMethod);
+
+        implType.Properties.Add(vtableProperty);
+        implType.Methods.Add(get_VtableMethod);
 
         return implType;
     }
