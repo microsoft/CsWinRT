@@ -139,7 +139,15 @@ internal static class InteropGenerator
                     delegateVftblType,
                     iidRvaDataType,
                     winRTInteropModule,
-                    out FieldDefinition iidRvaField);
+                    out FieldDefinition delegateIidRvaField);
+
+                // Define the 'DelegateReferenceImpl' type (with the boxed delegate interface vtable implementation)
+                TypeDefinition delegateReferenceImplType = InteropTypeDefinitionFactory.DelegateReferenceImplType(
+                    typeSignature,
+                    delegateReferenceVftblType,
+                    iidRvaDataType,
+                    winRTInteropModule,
+                    out FieldDefinition delegateReferenceIidRvaField);
 
                 // Define the 'DelegateInterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
                 TypeDefinition delegateInterfaceEntriesImpl = InteropTypeDefinitionFactory.DelegateInterfaceEntriesImplType(
@@ -149,9 +157,11 @@ internal static class InteropGenerator
                     winRTInteropModule);
 
                 winRTInteropModule.TopLevelTypes.Add(delegateImplType);
+                winRTInteropModule.TopLevelTypes.Add(delegateReferenceImplType);
                 winRTInteropModule.TopLevelTypes.Add(delegateInterfaceEntriesImpl);
 
-                rvaFieldsType.Fields.Add(iidRvaField);
+                rvaFieldsType.Fields.Add(delegateIidRvaField);
+                rvaFieldsType.Fields.Add(delegateReferenceIidRvaField);
             }
             catch
             {
