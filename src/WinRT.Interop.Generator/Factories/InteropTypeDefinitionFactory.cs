@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AsmResolver;
 using AsmResolver.DotNet;
@@ -19,172 +18,29 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 internal static class InteropTypeDefinitionFactory
 {
     /// <summary>
-    /// Creates a new type definition for the vtable of an 'IDelegate' interface.
-    /// </summary>
-    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
-    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateVftblType(
-        TypeSignature typeSignature,
-        CorLibTypeFactory corLibTypeFactory,
-        ReferenceImporter referenceImporter)
-    {
-        // We're declaring an 'internal struct' type
-        TypeDefinition vftblType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "Vftbl"),
-            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
-
-        // Get the 'IUnknown' signatures
-        FunctionPointerTypeSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(corLibTypeFactory, referenceImporter);
-        FunctionPointerTypeSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(corLibTypeFactory, referenceImporter);
-        FunctionPointerTypeSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(corLibTypeFactory, referenceImporter);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, void*, int>'
-        FunctionPointerTypeSignature invokeType = new MethodSignature(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
-                isRequired: false,
-                baseType: corLibTypeFactory.Int32),
-            parameterTypes: [
-                corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Void.MakePointerType()]).MakeFunctionPointerType();
-
-        // The vtable layout for 'IDelegate' looks like this:
-        //
-        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
-        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
-        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-        // public delegate* unmanaged[MemberFunction]<void*, void*, void*, int> Invoke;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType));
-        vftblType.Fields.Add(new FieldDefinition("Invoke"u8, FieldAttributes.Public, invokeType));
-
-        return vftblType;
-    }
-
-    /// <summary>
-    /// Creates a new type definition for the vtable of an 'IReference`1&lt;T&gt;' instantiation for some 'IDelegate' type.
-    /// </summary>
-    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
-    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateReferenceVftblType(
-        TypeSignature typeSignature,
-        CorLibTypeFactory corLibTypeFactory,
-        ReferenceImporter referenceImporter)
-    {
-        TypeDefinition vftblType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "ReferenceVftbl"),
-            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
-
-        // Get the 'IUnknown' signatures
-        FunctionPointerTypeSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(corLibTypeFactory, referenceImporter);
-        FunctionPointerTypeSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(corLibTypeFactory, referenceImporter);
-        FunctionPointerTypeSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(corLibTypeFactory, referenceImporter);
-
-        // Get the 'IInspectable' signatures
-        FunctionPointerTypeSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(corLibTypeFactory, referenceImporter);
-        FunctionPointerTypeSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(corLibTypeFactory, referenceImporter);
-        FunctionPointerTypeSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(corLibTypeFactory, referenceImporter);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
-        FunctionPointerTypeSignature valueType = new MethodSignature(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
-                isRequired: false,
-                baseType: corLibTypeFactory.Int32),
-            parameterTypes: [
-                corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Void.MakePointerType().MakePointerType()]).MakeFunctionPointerType();
-
-        // The vtable layout for 'IReference`1<T>' looks like this:
-        //
-        // <IINSPECTABLE_VTABLE_SLOTS>
-        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> Value;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType));
-        vftblType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public, valueType));
-
-        return vftblType;
-    }
-
-    /// <summary>
-    /// Creates a new type definition for COM interface entries for an 'IDelegate' interface.
-    /// </summary>
-    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
-    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateInterfaceEntriesType(TypeSignature typeSignature, ReferenceImporter referenceImporter)
-    {
-        TypeDefinition interfaceEntriesType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "InterfaceEntries"),
-            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
-
-        // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        TypeSignature comInterfaceEntryType = referenceImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)).ToTypeSignature(isValueType: true);
-
-        // The type layout looks like this:
-        //
-        // public ComInterfaceEntry Delegate;
-        // public ComInterfaceEntry DelegateReference;
-        // public ComInterfaceEntry IStringable;
-        // public ComInterfaceEntry IWeakReferenceSource;
-        // public ComInterfaceEntry IMarshal;
-        // public ComInterfaceEntry IAgileObject;
-        // public ComInterfaceEntry IInspectable;
-        // public ComInterfaceEntry IUnknown;
-        interfaceEntriesType.Fields.Add(new FieldDefinition("Delegate"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("DelegateReference"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IAgileObject"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IInspectable"u8, FieldAttributes.Public, comInterfaceEntryType));
-        interfaceEntriesType.Fields.Add(new FieldDefinition("IUnknown"u8, FieldAttributes.Public, comInterfaceEntryType));
-
-        return interfaceEntriesType;
-    }
-
-    /// <summary>
     /// Creates a new type definition for the implementation of the COM interface entries for an 'IDelegate' interface.
     /// </summary>
-    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-    /// <param name="delegateInterfaceEntriesType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateInterfaceEntriesType"/>.</param>
+    /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="delegateInterfaceEntriesType">The <see cref="TypeDefinition"/> instance returned by <see cref="WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType"/>.</param>
     /// <param name="delegateImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateImplType"/>.</param>
     /// <param name="owningModule">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateInterfaceEntriesImplType(
-        TypeSignature typeSignature,
+        TypeSignature delegateType,
         TypeDefinition delegateInterfaceEntriesType,
         TypeDefinition delegateImplType,
         ModuleDefinition owningModule)
     {
         // We're declaring an 'internal static class' type
         TypeDefinition implType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "InterfaceEntriesImpl"),
+            ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+            name: InteropUtf8NameFactory.TypeName(delegateType, "InterfaceEntriesImpl"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
 
         // The interface entries field looks like this:
         //
         // [FixedAddressValueType]
-        // private static readonly <DELEGATE_TYPE_InterfaceEntries Entries;
+        // private static readonly <DelegateInterfaceEntries> Entries;
         //
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private, delegateInterfaceEntriesType.ToTypeSignature(isValueType: true))
@@ -263,14 +119,14 @@ internal static class InteropTypeDefinitionFactory
     /// <summary>
     /// Creates a new type definition for the implementation of the vtable for an 'IDelegate' interface.
     /// </summary>
-    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-    /// <param name="delegateVfbtlType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateVftblType"/>.</param>
+    /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="delegateVfbtlType">The <see cref="TypeDefinition"/> instance returned by <see cref="WellKnownTypeDefinitionFactory.DelegateVftbl"/>.</param>
     /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
     /// <param name="owningModule">The module that will contain the type being created.</param>
     /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateImplType(
-        TypeSignature typeSignature,
+        TypeSignature delegateType,
         TypeDefinition delegateVfbtlType,
         TypeDefinition iidRvaDataType,
         ModuleDefinition owningModule,
@@ -278,14 +134,14 @@ internal static class InteropTypeDefinitionFactory
     {
         // We're declaring an 'internal static class' type
         TypeDefinition implType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "Impl"),
+            ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+            name: InteropUtf8NameFactory.TypeName(delegateType, "Impl"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
 
         // The vtable field looks like this:
         //
         // [FixedAddressValueType]
-        // private static readonly <DELEGATE_TYPE>Vftbl Vftbl;
+        // private static readonly <DelegateVftbl> Vftbl;
         //
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, delegateVfbtlType.ToTypeSignature())
@@ -297,7 +153,7 @@ internal static class InteropTypeDefinitionFactory
 
         // Create the field for the IID for the delegate type
         iidRvaField = new FieldDefinition(
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "IID"),
+            name: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
             attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.HasFieldRva,
             fieldType: iidRvaDataType.ToTypeSignature())
         {

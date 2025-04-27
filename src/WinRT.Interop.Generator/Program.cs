@@ -103,10 +103,23 @@ internal static class InteropGenerator
 
         string winRTInteropAssemblyPath = Path.Combine(outputDirectory, "WinRT.Interop.dll");
         AssemblyDefinition winRTInteropAssembly = new("WinRT.Interop", assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
-        ModuleDefinition winRTInteropModule = new("WinRT.Interop");
+        ModuleDefinition winRTInteropModule = new("WinRT.Interop", assemblyModule.OriginalTargetRuntime.GetDefaultCorLib());
 
         winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
         winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(pathAssemblyResolver);
+
+        // Create the shared vtable types
+        TypeDefinition unknownVftblType = WellKnownTypeDefinitionFactory.IUnknownVftbl(winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter);
+        TypeDefinition inspectableVftblType = WellKnownTypeDefinitionFactory.IInspectableVftbl(winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter);
+        TypeDefinition delegateVftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter);
+        TypeDefinition delegateReferenceVftblType = WellKnownTypeDefinitionFactory.DelegateReferenceVftbl(winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter);
+        TypeDefinition delegateInterfaceEntriesType = WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(winRTInteropModule.DefaultImporter);
+
+        winRTInteropModule.TopLevelTypes.Add(unknownVftblType);
+        winRTInteropModule.TopLevelTypes.Add(inspectableVftblType);
+        winRTInteropModule.TopLevelTypes.Add(delegateVftblType);
+        winRTInteropModule.TopLevelTypes.Add(delegateReferenceVftblType);
+        winRTInteropModule.TopLevelTypes.Add(delegateInterfaceEntriesType);
 
         // Create the RVA field types
         InteropTypeDefinitionFactory.RvaFieldsTypes(
@@ -120,23 +133,28 @@ internal static class InteropGenerator
         {
             try
             {
-                var vftbl = InteropTypeDefinitionFactory.DelegateVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter);
+                // Define the 'DelegateImpl' type (with the delegate interface vtable implementation)
+                TypeDefinition delegateImplType = InteropTypeDefinitionFactory.DelegateImplType(
+                    typeSignature,
+                    delegateVftblType,
+                    iidRvaDataType,
+                    winRTInteropModule,
+                    out FieldDefinition iidRvaField);
 
-                winRTInteropModule.TopLevelTypes.Add(vftbl);
-                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateReferenceVftblType(typeSignature, winRTInteropModule.CorLibTypeFactory, winRTInteropModule.DefaultImporter));
+                // Define the 'DelegateInterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
+                TypeDefinition delegateInterfaceEntriesImpl = InteropTypeDefinitionFactory.DelegateInterfaceEntriesImplType(
+                    typeSignature,
+                    delegateInterfaceEntriesType,
+                    delegateImplType,
+                    winRTInteropModule);
 
-                var entries = InteropTypeDefinitionFactory.DelegateInterfaceEntriesType(typeSignature, winRTInteropModule.DefaultImporter);
-                var impl = InteropTypeDefinitionFactory.DelegateImplType(typeSignature, vftbl, iidRvaDataType, winRTInteropModule, out FieldDefinition iidRvaField);
+                winRTInteropModule.TopLevelTypes.Add(delegateImplType);
+                winRTInteropModule.TopLevelTypes.Add(delegateInterfaceEntriesImpl);
 
                 rvaFieldsType.Fields.Add(iidRvaField);
-
-                winRTInteropModule.TopLevelTypes.Add(entries);
-                winRTInteropModule.TopLevelTypes.Add(InteropTypeDefinitionFactory.DelegateInterfaceEntriesImplType(typeSignature, entries, impl, winRTInteropModule));
-                winRTInteropModule.TopLevelTypes.Add(impl);
             }
             catch
             {
-
             }
         }
 
