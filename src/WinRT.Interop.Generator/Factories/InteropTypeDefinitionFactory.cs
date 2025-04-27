@@ -439,6 +439,51 @@ internal static class InteropTypeDefinitionFactory
         _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
         _ = get_VtableInstructions.Add(CilOpCodes.Ret);
 
+        // Resolve the '[UnmanagedCallersOnly]' attribute type
+        TypeDefinition unmanagedCallersOnlyAttributeType = metadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(UnmanagedCallersOnlyAttribute)))!;
+
+        // Import the constructor, so we can use it
+        ICustomAttributeType unmanagedCallersOnlyAttributeCtor = (ICustomAttributeType)owningModule.DefaultImporter.ImportMethod(unmanagedCallersOnlyAttributeType.GetConstructor()!);
+
+        // Define the 'Invoke' methods as follows:
+        //
+        // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+        // private static int Invoke(void* thisPtr, void* sender, void* e)
+        MethodDefinition invokeMethod = new(
+            name: "Invoke"u8,
+            attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+            signature: new MethodSignature(
+                attributes: CallingConventionAttributes.Default,
+                returnType: owningModule.CorLibTypeFactory.Int32,
+                parameterTypes: [
+                    owningModule.CorLibTypeFactory.Void.MakePointerType(),
+                    owningModule.CorLibTypeFactory.Void.MakePointerType(),
+                    owningModule.CorLibTypeFactory.Void.MakePointerType()]))
+        {
+            CustomAttributes =
+            {
+                new CustomAttribute(unmanagedCallersOnlyAttributeCtor, new CustomAttributeSignature(
+                    fixedArguments: [],
+                    namedArguments: [new CustomAttributeNamedArgument(
+                        memberType: CustomAttributeArgumentMemberType.Field,
+                        memberName: "CallConvs"u8,
+                        argumentType: owningModule.DefaultImporter.ImportType(typeof(Type[])).ToTypeSignature(),
+                        argument: new CustomAttributeArgument(
+                            argumentType: owningModule.DefaultImporter.ImportType(typeof(Type[])).ToTypeSignature(),
+                            elements: unmanagedCallersOnlyAttributeType.ToTypeSignature()))]))
+            }
+        };
+
+        implType.Methods.Add(invokeMethod);
+
+        // Create a method body for the 'Invoke' method
+        invokeMethod.CilMethodBody = new CilMethodBody(invokeMethod);
+
+        CilInstructionCollection invokeInstructions = invokeMethod.CilMethodBody!.Instructions;
+
+        _ = invokeInstructions.Add(CilOpCodes.Ldc_I4_0);
+        _ = invokeInstructions.Add(CilOpCodes.Ret);
+
         return implType;
     }
 
