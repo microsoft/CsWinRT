@@ -239,9 +239,6 @@ internal static class InteropTypeDefinitionFactory
         // Create the static constructor to initialize the interface entries
         MethodDefinition cctor = implType.GetOrCreateStaticConstructor(owningModule);
 
-        // We need to create a new method body bound to this constructor
-        cctor.CilMethodBody = new CilMethodBody(cctor);
-
         // Resolve 'ComInterfaceEntry', so we can set its fields:
         //   - [0]: Guid IID
         //   - [1]: nint Vtable
@@ -251,7 +248,8 @@ internal static class InteropTypeDefinitionFactory
         IFieldDescriptor comInterfaceEntryIIDField = owningModule.DefaultImporter.ImportField(comInterfaceEntryType.Fields[0]);
         IFieldDescriptor comInterfaceEntryVtableField = owningModule.DefaultImporter.ImportField(comInterfaceEntryType.Fields[1]);
 
-        CilInstructionCollection instructions = cctor.CilMethodBody.Instructions;
+        // We need to create a new method body bound to this constructor
+        CilInstructionCollection instructions = cctor.CreateAndBindCilMethodBody().Instructions;
 
         // Initialize the COM interface entries, doing this for each entry:
         //
@@ -295,9 +293,7 @@ internal static class InteropTypeDefinitionFactory
         implType.Methods.Add(vtablesProperty.GetMethod!);
 
         // Create a method body for the 'Vtables' property
-        vtablesProperty.GetMethod!.CilMethodBody = new CilMethodBody(vtablesProperty.GetMethod);
-
-        CilInstructionCollection get_VtablesInstructions = vtablesProperty.GetMethod!.CilMethodBody!.Instructions;
+        CilInstructionCollection get_VtablesInstructions = vtablesProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
 
         // The 'get_Vtables' method directly returns the 'Entries' field address
         _ = get_VtablesInstructions.Add(CilOpCodes.Ldsflda, entriesField);
@@ -362,9 +358,7 @@ internal static class InteropTypeDefinitionFactory
         MethodDefinition cctor = implType.GetOrCreateStaticConstructor(owningModule);
 
         // We need to create a new method body bound to this constructor
-        cctor.CilMethodBody = new CilMethodBody(cctor);
-
-        CilInstructionCollection cctorInstructions = cctor.CilMethodBody.Instructions;
+        CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
 
         // Initialize the delegate vtable
         // TODO
@@ -403,9 +397,7 @@ internal static class InteropTypeDefinitionFactory
         implType.Methods.Add(iidProperty.GetMethod!);
 
         // Create a method body for the 'IID' property
-        iidProperty.GetMethod!.CilMethodBody = new CilMethodBody(iidProperty.GetMethod);
-
-        CilInstructionCollection get_IIDInstructions = iidProperty.GetMethod!.CilMethodBody!.Instructions;
+        CilInstructionCollection get_IIDInstructions = iidProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
 
         // The 'get_IID' method directly returns the IID RVA field address
         _ = get_IIDInstructions.Add(CilOpCodes.Ldsflda, iidRvaField);
@@ -431,9 +423,7 @@ internal static class InteropTypeDefinitionFactory
         implType.Methods.Add(vtableProperty.GetMethod!);
 
         // Create a method body for the 'Vtable' property
-        vtableProperty.GetMethod!.CilMethodBody = new CilMethodBody(vtableProperty.GetMethod);
-
-        CilInstructionCollection get_VtableInstructions = vtableProperty.GetMethod!.CilMethodBody!.Instructions;
+        CilInstructionCollection get_VtableInstructions = vtableProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
 
         // The 'get_Vtable' method directly returns the 'Vftbl' field address
         _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
@@ -477,9 +467,7 @@ internal static class InteropTypeDefinitionFactory
         implType.Methods.Add(invokeMethod);
 
         // Create a method body for the 'Invoke' method
-        invokeMethod.CilMethodBody = new CilMethodBody(invokeMethod);
-
-        CilInstructionCollection invokeInstructions = invokeMethod.CilMethodBody!.Instructions;
+        CilInstructionCollection invokeInstructions = invokeMethod.CreateAndBindCilMethodBody().Instructions;
 
         _ = invokeInstructions.Add(CilOpCodes.Ldc_I4_0);
         _ = invokeInstructions.Add(CilOpCodes.Ret);
