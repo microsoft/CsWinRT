@@ -23,13 +23,15 @@ internal static class InteropTypeDefinitionFactory
     /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="delegateInterfaceEntriesType">The <see cref="TypeDefinition"/> instance returned by <see cref="WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType"/>.</param>
     /// <param name="delegateImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateImplType"/>.</param>
-    /// <param name="owningModule">The module that will contain the type being created.</param>
+    /// <param name="delegateReferenceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="DelegateReferenceImplType"/>.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateInterfaceEntriesImplType(
         TypeSignature delegateType,
         TypeDefinition delegateInterfaceEntriesType,
         TypeDefinition delegateImplType,
-        ModuleDefinition owningModule)
+        TypeDefinition delegateReferenceImplType,
+        ModuleDefinition module)
     {
         // We're declaring an 'internal static class' type
         TypeDefinition implType = new(
@@ -45,45 +47,22 @@ internal static class InteropTypeDefinitionFactory
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private, delegateInterfaceEntriesType.ToTypeSignature(isValueType: true))
         {
-            CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(owningModule) }
+            CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(module) }
         };
 
         implType.Fields.Add(entriesField);
 
         // Create the static constructor to initialize the interface entries
-        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(owningModule);
-
-        // Resolve 'ComInterfaceEntry', so we can set its fields:
-        //   - [0]: Guid IID
-        //   - [1]: nint Vtable
-        TypeDefinition comInterfaceEntryType = owningModule.MetadataResolver.ResolveType(owningModule.DefaultImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)))!;
-
-        // Import the target fields (they have to be in the module, or the resulting assembly won't be valid)
-        IFieldDescriptor comInterfaceEntryIIDField = owningModule.DefaultImporter.ImportField(comInterfaceEntryType.Fields[0]);
-        IFieldDescriptor comInterfaceEntryVtableField = owningModule.DefaultImporter.ImportField(comInterfaceEntryType.Fields[1]);
-
-        // We need to create a new method body bound to this constructor
-        CilInstructionCollection instructions = cctor.CreateAndBindCilMethodBody().Instructions;
-
-        // Initialize the COM interface entries, doing this for each entry:
-        //
-        // Entries.<FIELD#i>.IID = <INTERFACE>Impl.IID;
-        // Entries.<FIELD#i>.Vtable = <INTERFACE>Impl.Vtable;
-        //
-        // For the two generated 'Impl' types, we just directly store the address of the RVA vtable data.
-        _ = instructions.Add(CilOpCodes.Ldsflda, entriesField);
-        _ = instructions.Add(CilOpCodes.Ldflda, delegateInterfaceEntriesType.Fields[0]);
-        _ = instructions.Add(CilOpCodes.Call, delegateImplType.Properties[0].GetMethod!);
-        _ = instructions.Add(CilOpCodes.Ldobj, owningModule.DefaultImporter.ImportType(typeof(Guid)));
-        _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryIIDField);
-        _ = instructions.Add(CilOpCodes.Ldsflda, entriesField);
-        _ = instructions.Add(CilOpCodes.Ldflda, delegateInterfaceEntriesType.Fields[0]);
-        _ = instructions.Add(CilOpCodes.Call, delegateImplType.Properties[1].GetMethod!);
-        _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryVtableField);
-        _ = instructions.Add(CilOpCodes.Ret);
+        InteropMethodBodyFactory.InterfaceEntriesImpl(
+            cctor: implType.GetOrCreateStaticConstructor(module),
+            entriesField: entriesField,
+            entriesFieldType: delegateInterfaceEntriesType,
+            implTypes: [
+                delegateImplType,
+                delegateReferenceImplType]);
 
         // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
-        PointerTypeSignature vtablesPropertyType = owningModule.DefaultImporter
+        PointerTypeSignature vtablesPropertyType = module.DefaultImporter
             .ImportType(typeof(ComWrappers.ComInterfaceEntry))
             .MakePointerType();
 
@@ -122,14 +101,14 @@ internal static class InteropTypeDefinitionFactory
     /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="delegateVftblType">The <see cref="TypeDefinition"/> instance returned by <see cref="WellKnownTypeDefinitionFactory.DelegateVftbl"/>.</param>
     /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
-    /// <param name="owningModule">The module that will contain the type being created.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateImplType(
         TypeSignature delegateType,
         TypeDefinition delegateVftblType,
         TypeDefinition iidRvaDataType,
-        ModuleDefinition owningModule,
+        ModuleDefinition module,
         out FieldDefinition iidRvaField)
     {
         // We're declaring an 'internal static class' type
@@ -144,13 +123,13 @@ internal static class InteropTypeDefinitionFactory
         // private static readonly <DelegateVftbl> Vftbl;
         FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, delegateVftblType.ToTypeSignature())
         {
-            CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(owningModule) }
+            CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(module) }
         };
 
         implType.Fields.Add(vftblField);
 
         // Create the static constructor to initialize the vtable
-        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(owningModule);
+        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
 
         // We need to create a new method body bound to this constructor
         CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
@@ -169,10 +148,10 @@ internal static class InteropTypeDefinitionFactory
         };
 
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        CustomModifierTypeSignature iidPropertyType = owningModule.DefaultImporter
+        CustomModifierTypeSignature iidPropertyType = module.DefaultImporter
             .ImportType(typeof(Guid))
             .MakeByReferenceType()
-            .MakeModifierType(owningModule.DefaultImporter.ImportType(typeof(InAttribute)), isRequired: true);
+            .MakeModifierType(module.DefaultImporter.ImportType(typeof(InAttribute)), isRequired: true);
 
         // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
         PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
@@ -180,7 +159,7 @@ internal static class InteropTypeDefinitionFactory
         // Create the 'IID' property
         PropertyDefinition iidProperty = new("IID"u8, PropertyAttributes.None, iidPropertySignature)
         {
-            CustomAttributes = { InteropCustomAttributeFactory.IsReadOnly(owningModule) },
+            CustomAttributes = { InteropCustomAttributeFactory.IsReadOnly(module) },
             GetMethod = new MethodDefinition(
                 name: "get_IID"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
@@ -202,7 +181,7 @@ internal static class InteropTypeDefinitionFactory
         _ = get_IIDInstructions.Add(CilOpCodes.Ret);
 
         // The 'Vtable' property has the signature being just 'nint'
-        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, owningModule.CorLibTypeFactory.IntPtr, []);
+        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, module.CorLibTypeFactory.IntPtr, []);
 
         // Create the 'Vtable' property
         PropertyDefinition vtableProperty = new("Vtable"u8, PropertyAttributes.None, vtablePropertySignature)
@@ -212,7 +191,7 @@ internal static class InteropTypeDefinitionFactory
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
                 signature: new MethodSignature(
                     attributes: CallingConventionAttributes.Default,
-                    returnType: owningModule.CorLibTypeFactory.IntPtr,
+                    returnType: module.CorLibTypeFactory.IntPtr,
                     parameterTypes: []))
             { IsAggressiveInlining = true }
         };
@@ -236,13 +215,13 @@ internal static class InteropTypeDefinitionFactory
             attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: new MethodSignature(
                 attributes: CallingConventionAttributes.Default,
-                returnType: owningModule.CorLibTypeFactory.Int32,
+                returnType: module.CorLibTypeFactory.Int32,
                 parameterTypes: [
-                    owningModule.CorLibTypeFactory.Void.MakePointerType(),
-                    owningModule.CorLibTypeFactory.Void.MakePointerType(),
-                    owningModule.CorLibTypeFactory.Void.MakePointerType()]))
+                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    module.CorLibTypeFactory.Void.MakePointerType()]))
         {
-            CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(owningModule) }
+            CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(module) }
         };
 
         implType.Methods.Add(invokeMethod);
@@ -262,14 +241,14 @@ internal static class InteropTypeDefinitionFactory
     /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="delegateReferenceVftblType">The <see cref="TypeDefinition"/> instance returned by <see cref="WellKnownTypeDefinitionFactory.DelegateVftbl"/>.</param>
     /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
-    /// <param name="owningModule">The module that will contain the type being created.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateReferenceImplType(
         TypeSignature delegateType,
         TypeDefinition delegateReferenceVftblType,
         TypeDefinition iidRvaDataType,
-        ModuleDefinition owningModule,
+        ModuleDefinition module,
         out FieldDefinition iidRvaField)
     {
         // We're declaring an 'internal static class' type
@@ -284,13 +263,13 @@ internal static class InteropTypeDefinitionFactory
         // private static readonly <DelegateReferenceVftbl> Vftbl;
         FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, delegateReferenceVftblType.ToTypeSignature())
         {
-            CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(owningModule) }
+            CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(module) }
         };
 
         implType.Fields.Add(vftblField);
 
         // Create the static constructor to initialize the vtable
-        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(owningModule);
+        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
 
         // We need to create a new method body bound to this constructor
         CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
@@ -309,10 +288,10 @@ internal static class InteropTypeDefinitionFactory
         };
 
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        CustomModifierTypeSignature iidPropertyType = owningModule.DefaultImporter
+        CustomModifierTypeSignature iidPropertyType = module.DefaultImporter
             .ImportType(typeof(Guid))
             .MakeByReferenceType()
-            .MakeModifierType(owningModule.DefaultImporter.ImportType(typeof(InAttribute)), isRequired: true);
+            .MakeModifierType(module.DefaultImporter.ImportType(typeof(InAttribute)), isRequired: true);
 
         // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
         PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
@@ -320,7 +299,7 @@ internal static class InteropTypeDefinitionFactory
         // Create the 'IID' property
         PropertyDefinition iidProperty = new("IID"u8, PropertyAttributes.None, iidPropertySignature)
         {
-            CustomAttributes = { InteropCustomAttributeFactory.IsReadOnly(owningModule) },
+            CustomAttributes = { InteropCustomAttributeFactory.IsReadOnly(module) },
             GetMethod = new MethodDefinition(
                 name: "get_IID"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
@@ -342,7 +321,7 @@ internal static class InteropTypeDefinitionFactory
         _ = get_IIDInstructions.Add(CilOpCodes.Ret);
 
         // The 'Vtable' property has the signature being just 'nint'
-        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, owningModule.CorLibTypeFactory.IntPtr, []);
+        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, module.CorLibTypeFactory.IntPtr, []);
 
         // Create the 'Vtable' property
         PropertyDefinition vtableProperty = new("Vtable"u8, PropertyAttributes.None, vtablePropertySignature)
@@ -352,7 +331,7 @@ internal static class InteropTypeDefinitionFactory
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
                 signature: new MethodSignature(
                     attributes: CallingConventionAttributes.Default,
-                    returnType: owningModule.CorLibTypeFactory.IntPtr,
+                    returnType: module.CorLibTypeFactory.IntPtr,
                     parameterTypes: []))
             { IsAggressiveInlining = true }
         };
@@ -376,12 +355,12 @@ internal static class InteropTypeDefinitionFactory
             attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: new MethodSignature(
                 attributes: CallingConventionAttributes.Default,
-                returnType: owningModule.CorLibTypeFactory.Int32,
+                returnType: module.CorLibTypeFactory.Int32,
                 parameterTypes: [
-                    owningModule.CorLibTypeFactory.Void.MakePointerType(),
-                    owningModule.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
         {
-            CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(owningModule) }
+            CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(module) }
         };
 
         implType.Methods.Add(valueMethod);

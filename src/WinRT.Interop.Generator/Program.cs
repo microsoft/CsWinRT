@@ -154,6 +154,7 @@ internal static class InteropGenerator
                     typeSignature,
                     delegateInterfaceEntriesType,
                     delegateImplType,
+                    delegateReferenceImplType,
                     winRTInteropModule);
 
                 winRTInteropModule.TopLevelTypes.Add(delegateImplType);
