@@ -147,7 +147,7 @@ internal static class InteropGenerator
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
                     module: winRTInteropModule,
-                    implType: out _);
+                    implType: out TypeDefinition delegateInterfaceEntriesImplType);
 
                 // Define the 'NativeDelegate' type (with the extension method implementation)
                 InteropDelegateTypeDefinitionBuilder.NativeDelegateType(
@@ -160,6 +160,15 @@ internal static class InteropGenerator
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
                     nativeDelegateType: nativeDelegateType,
+                    wellKnownInteropReferences: wellKnownInteropReferences,
+                    module: winRTInteropModule,
+                    out _);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropDelegateTypeDefinitionBuilder.ComWrappersMarshallerAttribute(
+                    delegateType: typeSignature,
+                    delegateInterfaceEntriesImplType: delegateInterfaceEntriesImplType,
+                    wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
                     module: winRTInteropModule,
                     out _);

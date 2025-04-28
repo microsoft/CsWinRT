@@ -62,8 +62,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         MethodDefinition invokeMethod = new(
             name: "Invoke"u8,
             attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
-            signature: new MethodSignature(
-                attributes: CallingConventionAttributes.Default,
+            signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Int32,
                 parameterTypes: [
                     module.CorLibTypeFactory.Void.MakePointerType(),
@@ -168,8 +167,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         MethodDefinition valueMethod = new(
             name: "Value"u8,
             attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
-            signature: new MethodSignature(
-                attributes: CallingConventionAttributes.Default,
+            signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Int32,
                 parameterTypes: [
                     module.CorLibTypeFactory.Void.MakePointerType(),
@@ -300,8 +298,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
             GetMethod = new MethodDefinition(
                 name: "get_Vtables"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-                signature: new MethodSignature(
-                    attributes: CallingConventionAttributes.Default,
+                signature: MethodSignature.CreateStatic(
                     returnType: vtablesPropertyType,
                     parameterTypes: []))
             { IsAggressiveInlining = true }
@@ -354,8 +351,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         MethodDefinition createObjectMethod = new(
             name: "CreateObject"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-            signature: new MethodSignature(
-                attributes: CallingConventionAttributes.Default,
+            signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Object,
                 parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
 
@@ -373,8 +369,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
         IMethodDefOrRef ctor = delegateType
             .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor", new MethodSignature(
-                attributes: CallingConventionAttributes.HasThis,
+            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
                 returnType: module.CorLibTypeFactory.Void,
                 parameterTypes: [module.CorLibTypeFactory.Object, module.CorLibTypeFactory.IntPtr]))
             .ImportWith(module.DefaultImporter);
@@ -413,8 +408,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         MethodDefinition invokeMethod = new(
             name: "Invoke"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-            signature: new MethodSignature(
-                attributes: CallingConventionAttributes.Default,
+            signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Void,
                 parameterTypes: [
                     module.CorLibTypeFactory.Object,
@@ -426,5 +420,92 @@ internal static class InteropDelegateTypeDefinitionBuilder
         CilInstructionCollection invokeInstructions = invokeMethod.CreateAndBindCilMethodBody().Instructions;
 
         _ = invokeInstructions.Add(CilOpCodes.Ret);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the marshaller of some <see cref="Delegate"/> type.
+    /// </summary>
+    /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="delegateInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImplType"/>.</param>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="marshallerType">The resulting marshaller type.</param>
+    public static void ComWrappersMarshallerAttribute(
+        TypeSignature delegateType,
+        TypeDefinition delegateInterfaceEntriesImplType,
+        WellKnownInteropDefinitions wellKnownInteropDefinitions,
+        WellKnownInteropReferences wellKnownInteropReferences,
+        ModuleDefinition module,
+        out TypeDefinition marshallerType)
+    {
+        // We're declaring an 'internal sealed class' type
+        marshallerType = new(
+            ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+            name: InteropUtf8NameFactory.TypeName(delegateType, "ComWrappersMarshallerAttribute"),
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: wellKnownInteropReferences.WindowsRuntimeComWrappersMarshallerAttribute.ImportWith(module.DefaultImporter));
+
+        module.TopLevelTypes.Add(marshallerType);
+
+        // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
+        PointerTypeSignature computeVtablesReturnType = module.DefaultImporter
+            .ImportType(typeof(ComWrappers.ComInterfaceEntry))
+            .MakePointerType();
+
+        // Define the 'ComputeVtables' methods as follows:
+        //
+        // public static ComInterfaceEntry* ComputeVtables(out int count)
+        MethodDefinition computeVtablesMethod = new(
+            name: "ComputeVtables"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+            signature: MethodSignature.CreateInstance(
+                returnType: computeVtablesReturnType,
+                parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]));
+
+        // The parameter is '[out]'
+        computeVtablesMethod.ParameterDefinitions.Add(new ParameterDefinition(
+            sequence: 1,
+            name: null,
+            attributes: ParameterAttributes.Out));
+
+        marshallerType.Methods.Add(computeVtablesMethod);
+
+        // Mark the 'ComputeVtables' method as overriding the base method
+        marshallerType.MethodImplementations.Add(new MethodImplementation(
+            declaration: wellKnownInteropReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.ImportWith(module.DefaultImporter),
+            body: computeVtablesMethod));
+
+        // Create a method body for the 'ComputeVtables' method
+        CilInstructionCollection computeVtablesInstructions = computeVtablesMethod.CreateAndBindCilMethodBody().Instructions;
+
+        _ = computeVtablesInstructions.Add(CilOpCodes.Ldarg_1);
+        _ = computeVtablesInstructions.Add(CilOpCodes.Ldc_I4, wellKnownInteropDefinitions.DelegateInterfaceEntries.Fields.Count);
+        _ = computeVtablesInstructions.Add(CilOpCodes.Stind_I4);
+        _ = computeVtablesInstructions.Add(CilOpCodes.Call, delegateInterfaceEntriesImplType.GetMethod("get_Vtables"u8));
+        _ = computeVtablesInstructions.Add(CilOpCodes.Ret);
+
+        // Define the 'CreateObject' methods as follows:
+        //
+        // public static object CreateObject(void* value)
+        MethodDefinition createObjectMethod = new(
+            name: "CreateObject"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+            signature: MethodSignature.CreateInstance(
+                returnType: module.CorLibTypeFactory.Object,
+                parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+
+        marshallerType.Methods.Add(createObjectMethod);
+
+        // Mark the 'CreateObject' method as overriding the base method
+        marshallerType.MethodImplementations.Add(new MethodImplementation(
+            declaration: wellKnownInteropReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.ImportWith(module.DefaultImporter),
+            body: createObjectMethod));
+
+        // Create a method body for the 'CreateObject' method
+        CilInstructionCollection createObjectInstructions = createObjectMethod.CreateAndBindCilMethodBody().Instructions;
+
+        _ = createObjectInstructions.Add(CilOpCodes.Ldnull);
+        _ = createObjectInstructions.Add(CilOpCodes.Ret);
     }
 }
