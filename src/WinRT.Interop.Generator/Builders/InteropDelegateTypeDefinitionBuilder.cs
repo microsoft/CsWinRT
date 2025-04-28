@@ -279,6 +279,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
                 module.MetadataResolver.ResolveType(wellKnownInteropReferences.IStringableImpl)!,
                 module.MetadataResolver.ResolveType(wellKnownInteropReferences.IWeakReferenceSourceImpl)!,
                 module.MetadataResolver.ResolveType(wellKnownInteropReferences.IMarshalImpl)!,
+                module.MetadataResolver.ResolveType(wellKnownInteropReferences.IAgileObjectImpl)!,
                 module.MetadataResolver.ResolveType(wellKnownInteropReferences.IInspectableImpl)!,
                 module.MetadataResolver.ResolveType(wellKnownInteropReferences.IUnknownImpl)!]);
 
