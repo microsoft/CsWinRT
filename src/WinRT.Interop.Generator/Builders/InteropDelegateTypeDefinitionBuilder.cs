@@ -374,8 +374,8 @@ internal static class InteropDelegateTypeDefinitionBuilder
         IMethodDefOrRef ctor = delegateType
             .ToTypeDefOrRef()
             .CreateMemberReference(".ctor", new MethodSignature(
-                attributes: CallingConventionAttributes.Default,
-                returnType: delegateType,
+                attributes: CallingConventionAttributes.HasThis,
+                returnType: module.CorLibTypeFactory.Void,
                 parameterTypes: [module.CorLibTypeFactory.Object, module.CorLibTypeFactory.IntPtr]))
             .ImportWith(module.DefaultImporter);
 
