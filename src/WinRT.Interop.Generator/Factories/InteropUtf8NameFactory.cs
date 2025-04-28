@@ -39,8 +39,9 @@ internal static class InteropUtf8NameFactory
         {
             "System.Runtime" or "System.Private.CoreLib" => "#corlib"u8,
             "Microsoft.Windows.SDK.NET" or "Microsoft.Windows.UI.Xaml" => "#Windows"u8,
-            "Microsoft.UI.Xaml.Projection" => "<>WinUI2"u8,
-            "Microsoft.Graphics.Canvas.Interop" => "<>Win2D"u8,
+            "WinRT.Runtime" => "#CsWinRT"u8,
+            "Microsoft.UI.Xaml.Projection" => "#WinUI2"u8,
+            "Microsoft.Graphics.Canvas.Interop" => "#Win2D"u8,
             _ => originalAssemblyNameUtf8
         };
     }
