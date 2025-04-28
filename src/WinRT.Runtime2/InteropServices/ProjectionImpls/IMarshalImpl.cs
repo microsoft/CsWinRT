@@ -11,7 +11,7 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IMarshal</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-imarshal"/>
-internal static unsafe class IMarshalImpl
+public static unsafe class IMarshalImpl
 {
     /// <summary>
     /// The <see cref="IMarshalVftbl"/> value for the managed <c>IMarshal</c> implementation.
@@ -32,6 +32,15 @@ internal static unsafe class IMarshalImpl
         Vftbl.UnmarshalInterface = &UnmarshalInterface;
         Vftbl.ReleaseMarshalData = &ReleaseMarshalData;
         Vftbl.DisconnectObject = &DisconnectObject;
+    }
+
+    /// <summary>
+    /// Gets the IID for the <c>IMarshal</c> interface.
+    /// </summary>
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IMarshal;
     }
 
     /// <summary>

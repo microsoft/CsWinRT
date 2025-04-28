@@ -13,7 +13,7 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IStringable</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/windows.foundation/nn-windows-foundation-istringable"/>
-internal static unsafe class IStringableImpl
+public static unsafe class IStringableImpl
 {
     /// <summary>
     /// The <see cref="IStringableVftbl"/> value for the managed <c>IStringable</c> implementation.
@@ -29,6 +29,15 @@ internal static unsafe class IStringableImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IUnknownImpl.Vtable;
 
         Vftbl.ToString = &ToString;
+    }
+
+    /// <summary>
+    /// Gets the IID for the <c>IStringable</c> interface.
+    /// </summary>
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IStringable;
     }
 
     /// <summary>

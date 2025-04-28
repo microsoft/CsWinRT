@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>IIDs for common COM/WinRT interfaces.</summary>
-public static class WellKnownInterfaceIds
+internal static class WellKnownInterfaceIds
 {
     /// <summary>The IID for <c>IUnknown</c> (00000000-0000-0000-C000-000000000046).</summary>
     public static ref readonly Guid IID_IUnknown
@@ -61,7 +61,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IWeakReference</c> (00000037-0000-0000-C000-000000000046).</summary>
-    internal static ref readonly Guid IID_IWeakReference
+    public static ref readonly Guid IID_IWeakReference
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -86,7 +86,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IWeakReferenceSource</c> (00000038-0000-0000-C000-000000000046).</summary>
-    internal static ref readonly Guid IID_IWeakReferenceSource
+    public static ref readonly Guid IID_IWeakReferenceSource
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -111,7 +111,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceTracker</c> (11D3B13A-180E-4789-A8BE-7712882893E6).</summary>
-    internal static ref readonly Guid IID_IReferenceTracker
+    public static ref readonly Guid IID_IReferenceTracker
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -136,7 +136,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceTrackerTarget</c> (64BD43F8-BFEE-4EC4-B7EB-2935158DAE21).</summary>
-    internal static ref readonly Guid IID_IReferenceTrackerTarget
+    public static ref readonly Guid IID_IReferenceTrackerTarget
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -311,7 +311,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IContextCallback</c> (000001DA-0000-0000-C000-000000000046).</summary>
-    internal static ref readonly Guid IID_IContextCallback
+    public static ref readonly Guid IID_IContextCallback
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -336,7 +336,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>ICallbackWithNoReentrancyToApplicationSTA</c> (0A299774-3E4E-FC42-1D9D-72CEE105CA57).</summary>
-    internal static ref readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA
+    public static ref readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -361,7 +361,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IErrorInfo</c> (1CF2B120-547D-101B-8E65-08002B2BD119).</summary>
-    internal static ref readonly Guid IID_IErrorInfo
+    public static ref readonly Guid IID_IErrorInfo
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -386,7 +386,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>ISupportErrorInfo</c> (DF0B3D60-548F-101B-8E65-08002B2BD119).</summary>
-    internal static ref readonly Guid IID_ISupportErrorInfo
+    public static ref readonly Guid IID_ISupportErrorInfo
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -411,7 +411,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>ILanguageExceptionErrorInfo</c> (04A2DBF3-DF83-116C-0946-0812ABF6E07D).</summary>
-    internal static ref readonly Guid IID_ILanguageExceptionErrorInfo
+    public static ref readonly Guid IID_ILanguageExceptionErrorInfo
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -436,7 +436,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>ILanguageExceptionErrorInfo2</c> (5746E5C4-5B97-424C-B620-2822915734DD).</summary>
-    internal static ref readonly Guid IID_ILanguageExceptionErrorInfo2
+    public static ref readonly Guid IID_ILanguageExceptionErrorInfo2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -461,7 +461,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IRestrictedErrorInfo</c> (82BA7092-4C88-427D-A7BC-16DD93FEB67E).</summary>
-    internal static ref readonly Guid IID_IRestrictedErrorInfo
+    public static ref readonly Guid IID_IRestrictedErrorInfo
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -486,7 +486,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_INotifyPropertyChanged</c> (90B17601-B065-586E-83D9-9ADC3A695284).</summary>
-    internal static ref readonly Guid IID_MUX_INotifyPropertyChanged
+    public static ref readonly Guid IID_MUX_INotifyPropertyChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -511,7 +511,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_INotifyPropertyChanged</c> (CF75D69C-F2F4-486B-B302-BB4C09BAEBFA).</summary>
-    internal static ref readonly Guid IID_WUX_INotifyPropertyChanged
+    public static ref readonly Guid IID_WUX_INotifyPropertyChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -536,7 +536,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_INotifyCollectionChanged</c> (530155E1-28A5-5693-87CE-30724D95A06D).</summary>
-    internal static ref readonly Guid IID_MUX_INotifyCollectionChanged
+    public static ref readonly Guid IID_MUX_INotifyCollectionChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -561,7 +561,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_INotifyCollectionChanged</c> (28B167D5-1A31-465B-9B25-D5C3AE686C40).</summary>
-    internal static ref readonly Guid IID_WUX_INotifyCollectionChanged
+    public static ref readonly Guid IID_WUX_INotifyCollectionChanged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -586,7 +586,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_INotifyCollectionChangedEventArgsFactory</c> (5108EBA4-4892-5A20-8374-A96815E0FD27).</summary>
-    internal static ref readonly Guid IID_MUX_INotifyCollectionChangedEventArgsFactory
+    public static ref readonly Guid IID_MUX_INotifyCollectionChangedEventArgsFactory
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -611,7 +611,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_INotifyCollectionChangedEventArgsFactory</c> (B30C3E3A-DF8D-44A5-9A38-7AC0D08CE63D).</summary>
-    internal static ref readonly Guid IID_WUX_INotifyCollectionChangedEventArgsFactory
+    public static ref readonly Guid IID_WUX_INotifyCollectionChangedEventArgsFactory
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -636,7 +636,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_INotifyCollectionChangedEventArgs</c> (DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F).</summary>
-    internal static ref readonly Guid IID_MUX_INotifyCollectionChangedEventArgs
+    public static ref readonly Guid IID_MUX_INotifyCollectionChangedEventArgs
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -661,7 +661,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_INotifyCollectionChangedEventArgs</c> (4CF68D33-E3F2-4964-B85E-945B4F7E2F21).</summary>
-    internal static ref readonly Guid IID_WUX_INotifyCollectionChangedEventArgs
+    public static ref readonly Guid IID_WUX_INotifyCollectionChangedEventArgs
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -686,7 +686,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_NotifyCollectionChangedEventHandler</c> (8B0909DC-2005-5D93-BF8A-725F017BAA8D).</summary>
-    internal static ref readonly Guid IID_MUX_NotifyCollectionChangedEventHandler
+    public static ref readonly Guid IID_MUX_NotifyCollectionChangedEventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -711,7 +711,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_NotifyCollectionChangedEventHandler</c> (CA10B37C-F382-4591-8557-5E24965279B0).</summary>
-    internal static ref readonly Guid IID_WUX_NotifyCollectionChangedEventHandler
+    public static ref readonly Guid IID_WUX_NotifyCollectionChangedEventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -736,7 +736,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_PropertyChangedEventArgs</c> (63D0C952-396B-54F4-AF8C-BA8724A427BF).</summary>
-    internal static ref readonly Guid IID_MUX_PropertyChangedEventArgs
+    public static ref readonly Guid IID_MUX_PropertyChangedEventArgs
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -761,7 +761,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_PropertyChangedEventArgs</c> (4F33A9A0-5CF4-47A4-B16F-D7FAAF17457E).</summary>
-    internal static ref readonly Guid IID_WUX_PropertyChangedEventArgs
+    public static ref readonly Guid IID_WUX_PropertyChangedEventArgs
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -786,7 +786,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_PropertyChangedEventArgsRuntimeClassFactory</c> (7C0C27A8-0B41-5070-B160-FC9AE960A36C).</summary>
-    internal static ref readonly Guid IID_MUX_PropertyChangedEventArgsRuntimeClassFactory
+    public static ref readonly Guid IID_MUX_PropertyChangedEventArgsRuntimeClassFactory
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -811,7 +811,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_PropertyChangedEventArgsRuntimeClassFactory</c> (6DCC9C03-E0C7-4EEE-8EA9-37E3406EEB1C).</summary>
-    internal static ref readonly Guid IID_WUX_PropertyChangedEventArgsRuntimeClassFactory
+    public static ref readonly Guid IID_WUX_PropertyChangedEventArgsRuntimeClassFactory
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -836,7 +836,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_PropertyChangedEventHandler</c> (E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D).</summary>
-    internal static ref readonly Guid IID_MUX_PropertyChangedEventHandler
+    public static ref readonly Guid IID_MUX_PropertyChangedEventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -861,7 +861,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_PropertyChangedEventHandler</c> (50F19C16-0A22-4D8E-A089-1EA9951657D2).</summary>
-    internal static ref readonly Guid IID_WUX_PropertyChangedEventHandler
+    public static ref readonly Guid IID_WUX_PropertyChangedEventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -886,7 +886,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>DataErrorsChangedEventArgs</c> (D026DD64-5F26-5F15-A86A-0DEC8A431796).</summary>
-    internal static ref readonly Guid IID_DataErrorsChangedEventArgs
+    public static ref readonly Guid IID_DataErrorsChangedEventArgs
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -911,7 +911,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>DataErrorsChangedEventArgsRuntimeClassFactory</c> (62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5).</summary>
-    internal static ref readonly Guid IID_DataErrorsChangedEventArgsRuntimeClassFactory
+    public static ref readonly Guid IID_DataErrorsChangedEventArgsRuntimeClassFactory
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -936,7 +936,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>UriRuntimeClass</c> (9E365E57-48B2-4160-956F-C7385120BBFC).</summary>
-    internal static ref readonly Guid IID_UriRuntimeClass
+    public static ref readonly Guid IID_UriRuntimeClass
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -961,7 +961,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>UriRuntimeClassFactory</c> (44A9796F-723E-4FDF-A218-033E75B0C084).</summary>
-    internal static ref readonly Guid IID_UriRuntimeClassFactory
+    public static ref readonly Guid IID_UriRuntimeClassFactory
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -986,7 +986,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>INotifyDataErrorInfo</c> (0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA).</summary>
-    internal static ref readonly Guid IID_INotifyDataErrorInfo
+    public static ref readonly Guid IID_INotifyDataErrorInfo
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1011,7 +1011,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>ICommand</c> (E5AF3542-CA67-4081-995B-709DD13792DF).</summary>
-    internal static ref readonly Guid IID_ICommand
+    public static ref readonly Guid IID_ICommand
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1036,7 +1036,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IGlobalInterfaceTable</c> (00000146-0000-0000-C000-000000000046).</summary>
-    internal static ref readonly Guid IID_IGlobalInterfaceTable
+    public static ref readonly Guid IID_IGlobalInterfaceTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1061,7 +1061,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>EventHandler</c> (C50898F6-C536-5F47-8583-8B2C2438A13B).</summary>
-    internal static ref readonly Guid IID_EventHandler
+    public static ref readonly Guid IID_EventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1086,7 +1086,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IBindableVectorView</c> (346DD6E7-976E-4BC3-815D-ECE243BC0F33).</summary>
-    internal static ref readonly Guid IID_IBindableVectorView
+    public static ref readonly Guid IID_IBindableVectorView
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1111,7 +1111,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IEnumerable</c> (036D2C08-DF29-41AF-8AA2-D774BE62BA6F).</summary>
-    internal static ref readonly Guid IID_IEnumerable
+    public static ref readonly Guid IID_IEnumerable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1136,7 +1136,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IList</c> (393DE7DE-6FD0-4C0D-BB71-47244A113E93).</summary>
-    internal static ref readonly Guid IID_IList
+    public static ref readonly Guid IID_IList
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1161,7 +1161,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>ICustomProperty</c> (30DA92C0-23E8-42A0-AE7C-734A0E5D2782).</summary>
-    internal static ref readonly Guid IID_ICustomProperty
+    public static ref readonly Guid IID_ICustomProperty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1186,7 +1186,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>ICustomPropertyProvider</c> (7C925755-3E48-42B4-8677-76372267033F).</summary>
-    internal static ref readonly Guid IID_ICustomPropertyProvider
+    public static ref readonly Guid IID_ICustomPropertyProvider
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1211,7 +1211,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IPropertyValue</c> (4BD682DD-7554-40E9-9A9B-82654EDE7E62).</summary>
-    internal static ref readonly Guid IID_IPropertyValue
+    public static ref readonly Guid IID_IPropertyValue
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1236,7 +1236,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IDisposable</c> (30D5A829-7FA4-4026-83BB-D75BAE4EA99E).</summary>
-    internal static ref readonly Guid IID_IDisposable
+    public static ref readonly Guid IID_IDisposable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1261,7 +1261,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IStringable</c> (96369F54-8EB6-48F0-ABCE-C1B211E627C3).</summary>
-    internal static ref readonly Guid IID_IStringable
+    public static ref readonly Guid IID_IStringable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1286,7 +1286,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IServiceProvider</c> (68B3A2DF-8173-539F-B524-C8A2348F5AFB).</summary>
-    internal static ref readonly Guid IID_IServiceProvider
+    public static ref readonly Guid IID_IServiceProvider
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1311,7 +1311,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfByte</c> (E5198CC8-2873-55F5-B0A1-84FF9E4AAD62).</summary>
-    internal static ref readonly Guid IID_IReferenceOfByte
+    public static ref readonly Guid IID_IReferenceOfByte
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1336,7 +1336,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfSByte</c> (95500129-FBF6-5AFC-89DF-70642D741990).</summary>
-    internal static ref readonly Guid IID_IReferenceOfSByte
+    public static ref readonly Guid IID_IReferenceOfSByte
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1361,7 +1361,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfShort</c> (6EC9E41B-6709-5647-9918-A1270110FC4E).</summary>
-    internal static ref readonly Guid IID_IReferenceOfShort
+    public static ref readonly Guid IID_IReferenceOfShort
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1386,7 +1386,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfUShort</c> (5AB7D2C3-6B62-5E71-A4B6-2D49C4F238FD).</summary>
-    internal static ref readonly Guid IID_IReferenceOfUShort
+    public static ref readonly Guid IID_IReferenceOfUShort
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1411,7 +1411,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfInt</c> (548CEFBD-BC8A-5FA0-8DF2-957440FC8BF4).</summary>
-    internal static ref readonly Guid IID_IReferenceOfInt
+    public static ref readonly Guid IID_IReferenceOfInt
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1436,7 +1436,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfUInt</c> (513EF3AF-E784-5325-A91E-97C2B8111CF3).</summary>
-    internal static ref readonly Guid IID_IReferenceOfUInt
+    public static ref readonly Guid IID_IReferenceOfUInt
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1461,7 +1461,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfLong</c> (4DDA9E24-E69F-5C6A-A0A6-93427365AF2A).</summary>
-    internal static ref readonly Guid IID_IReferenceOfLong
+    public static ref readonly Guid IID_IReferenceOfLong
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1486,7 +1486,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfULong</c> (6755E376-53BB-568B-A11D-17239868309E).</summary>
-    internal static ref readonly Guid IID_IReferenceOfULong
+    public static ref readonly Guid IID_IReferenceOfULong
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1511,7 +1511,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfFloat</c> (719CC2BA-3E76-5DEF-9F1A-38D85A145EA8).</summary>
-    internal static ref readonly Guid IID_IReferenceOfFloat
+    public static ref readonly Guid IID_IReferenceOfFloat
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1536,7 +1536,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfDouble</c> (2F2D6C29-5473-5F3E-92E7-96572BB990E2).</summary>
-    internal static ref readonly Guid IID_IReferenceOfDouble
+    public static ref readonly Guid IID_IReferenceOfDouble
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1561,7 +1561,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfChar</c> (FB393EF3-BBAC-5BD5-9144-84F23576F415).</summary>
-    internal static ref readonly Guid IID_IReferenceOfChar
+    public static ref readonly Guid IID_IReferenceOfChar
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1586,7 +1586,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfBool</c> (3C00FD60-2950-5939-A21A-2D12C5A01B8A).</summary>
-    internal static ref readonly Guid IID_IReferenceOfBool
+    public static ref readonly Guid IID_IReferenceOfBool
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1611,7 +1611,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfGuid</c> (7D50F649-632C-51F9-849A-EE49428933EA).</summary>
-    internal static ref readonly Guid IID_IReferenceOfGuid
+    public static ref readonly Guid IID_IReferenceOfGuid
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1636,7 +1636,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfDateTimeOffset</c> (5541D8A7-497C-5AA4-86FC-7713ADBF2A2C).</summary>
-    internal static ref readonly Guid IID_IReferenceOfDateTimeOffset
+    public static ref readonly Guid IID_IReferenceOfDateTimeOffset
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1661,7 +1661,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfTimeSpan</c> (604D0C4C-91DE-5C2A-935F-362F13EAF800).</summary>
-    internal static ref readonly Guid IID_IReferenceOfTimeSpan
+    public static ref readonly Guid IID_IReferenceOfTimeSpan
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1686,7 +1686,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfObject</c> (06DCCC90-A058-5C88-87B7-6F3360A2FC16).</summary>
-    internal static ref readonly Guid IID_IReferenceOfObject
+    public static ref readonly Guid IID_IReferenceOfObject
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1711,7 +1711,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfType</c> (3830AD99-D8DA-53F3-989B-FC92AD222778).</summary>
-    internal static ref readonly Guid IID_IReferenceOfType
+    public static ref readonly Guid IID_IReferenceOfType
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1736,7 +1736,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfException</c> (6FF27A1E-4B6A-59B7-B2C3-D1F2EE474593).</summary>
-    internal static ref readonly Guid IID_IReferenceOfException
+    public static ref readonly Guid IID_IReferenceOfException
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1761,7 +1761,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfEventHandler</c> (25230F05-B49C-57EE-8961-5373D98E1AB1).</summary>
-    internal static ref readonly Guid IID_IReferenceOfEventHandler
+    public static ref readonly Guid IID_IReferenceOfEventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1786,7 +1786,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfString</c> (FD416DFB-2A07-52EB-AAE3-DFCE14116C05).</summary>
-    internal static ref readonly Guid IID_IReferenceOfString
+    public static ref readonly Guid IID_IReferenceOfString
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1811,7 +1811,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfPoint</c> (84F14C22-A00A-5272-8D3D-82112E66DF00).</summary>
-    internal static ref readonly Guid IID_IReferenceOfPoint
+    public static ref readonly Guid IID_IReferenceOfPoint
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1836,7 +1836,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfSize</c> (61723086-8E53-5276-9F36-2A4BB93E2B75).</summary>
-    internal static ref readonly Guid IID_IReferenceOfSize
+    public static ref readonly Guid IID_IReferenceOfSize
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1861,7 +1861,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfRect</c> (80423F11-054F-5EAC-AFD3-63B6CE15E77B).</summary>
-    internal static ref readonly Guid IID_IReferenceOfRect
+    public static ref readonly Guid IID_IReferenceOfRect
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1886,7 +1886,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfMatrix3x2</c> (76358CFD-2CBD-525B-A49E-90EE18247B71).</summary>
-    internal static ref readonly Guid IID_IReferenceOfMatrix3x2
+    public static ref readonly Guid IID_IReferenceOfMatrix3x2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1911,7 +1911,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfMatrix4x4</c> (DACBFFDC-68EF-5FD0-B657-782D0AC9807E).</summary>
-    internal static ref readonly Guid IID_IReferenceOfMatrix4x4
+    public static ref readonly Guid IID_IReferenceOfMatrix4x4
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1936,7 +1936,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfPlane</c> (46D542A1-52F7-58E7-ACFC-9A6D364DA022).</summary>
-    internal static ref readonly Guid IID_IReferenceOfPlane
+    public static ref readonly Guid IID_IReferenceOfPlane
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1961,7 +1961,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfQuaternion</c> (B27004BB-C014-5DCE-9A21-799C5A3C1461).</summary>
-    internal static ref readonly Guid IID_IReferenceOfQuaternion
+    public static ref readonly Guid IID_IReferenceOfQuaternion
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -1986,7 +1986,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfVector2</c> (48F6A69E-8465-57AE-9400-9764087F65AD).</summary>
-    internal static ref readonly Guid IID_IReferenceOfVector2
+    public static ref readonly Guid IID_IReferenceOfVector2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2011,7 +2011,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfVector3</c> (1EE770FF-C954-59CA-A754-6199A9BE282C).</summary>
-    internal static ref readonly Guid IID_IReferenceOfVector3
+    public static ref readonly Guid IID_IReferenceOfVector3
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2036,7 +2036,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfVector4</c> (A5E843C9-ED20-5339-8F8D-9FE404CF3654).</summary>
-    internal static ref readonly Guid IID_IReferenceOfVector4
+    public static ref readonly Guid IID_IReferenceOfVector4
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2061,7 +2061,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceOfEventRegistrationToken</c> (A9B18291-CE2A-5DAE-8A23-B7F7388416DB).</summary>
-    internal static ref readonly Guid IID_IReferenceOfEventRegistrationToken
+    public static ref readonly Guid IID_IReferenceOfEventRegistrationToken
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2086,7 +2086,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfInt32</c> (A6D080A5-B087-5BC2-9A9F-5CD687B4D1F7).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfInt32
+    public static ref readonly Guid IID_IReferenceArrayOfInt32
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2111,7 +2111,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfString</c> (0385688E-E3C7-5C5E-A389-5524EDE349F1).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfString
+    public static ref readonly Guid IID_IReferenceArrayOfString
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2136,7 +2136,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfByte</c> (2AF22683-3734-56D0-A60E-688CC85D1619).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfByte
+    public static ref readonly Guid IID_IReferenceArrayOfByte
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2161,7 +2161,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfInt16</c> (912F8FD7-ADC0-5D60-A896-7ED76089CC5B).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfInt16
+    public static ref readonly Guid IID_IReferenceArrayOfInt16
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2186,7 +2186,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfUInt16</c> (6624A2DD-83F7-519C-9D55-BB1F6560456B).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfUInt16
+    public static ref readonly Guid IID_IReferenceArrayOfUInt16
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2211,7 +2211,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfUInt32</c> (97374B68-EB87-56CC-B18E-27EF0F9CFC0C).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfUInt32
+    public static ref readonly Guid IID_IReferenceArrayOfUInt32
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2236,7 +2236,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfInt64</c> (6E333271-2E2A-5955-8790-836C76EE53B6).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfInt64
+    public static ref readonly Guid IID_IReferenceArrayOfInt64
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2261,7 +2261,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfUInt64</c> (38B60434-D67C-523E-9D0E-24D643411073).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfUInt64
+    public static ref readonly Guid IID_IReferenceArrayOfUInt64
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2286,7 +2286,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfSingle</c> (6AB1EA83-CB41-5F99-92CC-23BD4336A1FB).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfSingle
+    public static ref readonly Guid IID_IReferenceArrayOfSingle
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2311,7 +2311,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfDouble</c> (D301F253-E0A3-5D2B-9A41-A4D62BEC4623).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfDouble
+    public static ref readonly Guid IID_IReferenceArrayOfDouble
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2336,7 +2336,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfChar</c> (A4095AAB-EB7D-5782-8FAD-1609DEA249AD).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfChar
+    public static ref readonly Guid IID_IReferenceArrayOfChar
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2361,7 +2361,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfBoolean</c> (E8E72666-48CC-593F-BA85-2663496956E3).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfBoolean
+    public static ref readonly Guid IID_IReferenceArrayOfBoolean
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2386,7 +2386,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfGuid</c> (EECF9838-C1C2-5B4A-976F-CEC261AE1D55).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfGuid
+    public static ref readonly Guid IID_IReferenceArrayOfGuid
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2411,7 +2411,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfDateTimeOffset</c> (1B8E9594-588E-5A07-9E65-0731A4C9A2DB).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfDateTimeOffset
+    public static ref readonly Guid IID_IReferenceArrayOfDateTimeOffset
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2436,7 +2436,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfTimeSpan</c> (AD73197D-2CFA-57A6-8993-9FAC40FEB791).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfTimeSpan
+    public static ref readonly Guid IID_IReferenceArrayOfTimeSpan
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2461,7 +2461,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfObject</c> (9CD7A84F-0C80-59C5-B44E-977841BB43D9).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfObject
+    public static ref readonly Guid IID_IReferenceArrayOfObject
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2486,7 +2486,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfType</c> (DA8457A7-C2EB-5DA1-80BE-7132A2E1BFA4).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfType
+    public static ref readonly Guid IID_IReferenceArrayOfType
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2511,7 +2511,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfMatrix3x2</c> (A525D9FF-C09B-501A-A785-4D1ED9E102B8).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfMatrix3x2
+    public static ref readonly Guid IID_IReferenceArrayOfMatrix3x2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2536,7 +2536,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfMatrix4x4</c> (FC0D5A15-8F9D-5E8F-8828-AEF2C2E25BAD).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfMatrix4x4
+    public static ref readonly Guid IID_IReferenceArrayOfMatrix4x4
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2561,7 +2561,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfPlane</c> (F9CF7F7D-5459-5F98-91B9-F2632A9EC298).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfPlane
+    public static ref readonly Guid IID_IReferenceArrayOfPlane
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2586,7 +2586,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfQuaternion</c> (E9BA76BE-2C31-5E1D-98A4-EBDB625AEE93).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfQuaternion
+    public static ref readonly Guid IID_IReferenceArrayOfQuaternion
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2611,7 +2611,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfVector2</c> (29DF2178-FFDB-563E-88DB-3869A007305E).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfVector2
+    public static ref readonly Guid IID_IReferenceArrayOfVector2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2636,7 +2636,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfVector3</c> (AA1A35FA-0B4E-5248-BD79-FFD47CFE4027).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfVector3
+    public static ref readonly Guid IID_IReferenceArrayOfVector3
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2661,7 +2661,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfVector4</c> (68757250-5849-5772-90E3-AADB4C970BFF).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfVector4
+    public static ref readonly Guid IID_IReferenceArrayOfVector4
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2686,7 +2686,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>IReferenceArrayOfException</c> (401AE4CC-4AB9-5A8F-B993-E327900C364D).</summary>
-    internal static ref readonly Guid IID_IReferenceArrayOfException
+    public static ref readonly Guid IID_IReferenceArrayOfException
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2711,7 +2711,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_IReferenceOfPropertyChangedEventHandler</c> (1EEAE0CB-8F57-5C37-A087-A55d46E2FE3F).</summary>
-    internal static ref readonly Guid IID_MUX_IReferenceOfPropertyChangedEventHandler
+    public static ref readonly Guid IID_MUX_IReferenceOfPropertyChangedEventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2736,7 +2736,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_IReferenceOfPropertyChangedEventHandler</c> (B1A920A9-C2F2-5453-A53E-66B1294A8BFE).</summary>
-    internal static ref readonly Guid IID_WUX_IReferenceOfPropertyChangedEventHandler
+    public static ref readonly Guid IID_WUX_IReferenceOfPropertyChangedEventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2761,7 +2761,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>MUX_IReferenceOfNotifyCollectionChangedEventHandler</c> (779D5A21-0E7d-5476-BB90-27FA3B4B8DE5).</summary>
-    internal static ref readonly Guid IID_MUX_IReferenceOfNotifyCollectionChangedEventHandler
+    public static ref readonly Guid IID_MUX_IReferenceOfNotifyCollectionChangedEventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
@@ -2786,7 +2786,7 @@ public static class WellKnownInterfaceIds
     }
 
     /// <summary>The IID for <c>WUX_IReferenceOfNotifyCollectionChangedEventHandler</c> (A4FD5C6E-6549-59A9-86EF-5A490A1875D9).</summary>
-    internal static ref readonly Guid IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
+    public static ref readonly Guid IID_WUX_IReferenceOfNotifyCollectionChangedEventHandler
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get

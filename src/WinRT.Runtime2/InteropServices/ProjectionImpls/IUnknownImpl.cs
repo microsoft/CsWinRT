@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -10,7 +11,7 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IUnknown</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/unknwn/nn-unknwn-iunknown"/>
-internal static unsafe class IUnknownImpl
+public static unsafe class IUnknownImpl
 {
     /// <summary>
     /// The <see cref="IUnknownVftbl"/> value for the managed <c>IUnknown</c> implementation.
@@ -31,6 +32,15 @@ internal static unsafe class IUnknownImpl
             fpQueryInterface: out *(nint*)&((IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl))->QueryInterface,
             fpAddRef: out *(nint*)&((IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl))->AddRef,
             fpRelease: out *(nint*)&((IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl))->Release);
+    }
+
+    /// <summary>
+    /// Gets the IID for the <c>IUnknown</c> interface.
+    /// </summary>
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IUnknown;
     }
 
     /// <summary>

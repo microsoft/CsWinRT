@@ -13,7 +13,7 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IInspectable</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/nn-inspectable-iinspectable"/>
-internal static unsafe class IInspectableImpl
+public static unsafe class IInspectableImpl
 {
     /// <summary>
     /// The <see cref="IInspectableVftbl"/> value for the managed <c>IInspectable</c> implementation.
@@ -31,6 +31,15 @@ internal static unsafe class IInspectableImpl
         Vftbl.GetIids = &GetIids;
         Vftbl.GetRuntimeClassName = &GetRuntimeClassName;
         Vftbl.GetTrustLevel = &GetTrustLevel;
+    }
+
+    /// <summary>
+    /// Gets the IID for the <c>IInspectable</c> interface.
+    /// </summary>
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IInspectable;
     }
 
     /// <summary>

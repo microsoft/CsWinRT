@@ -13,7 +13,7 @@ namespace WindowsRuntime.InteropServices;
 /// The <c>IWeakReferenceSource</c> implementation for managed types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreferencesource"/>
-internal static unsafe class IWeakReferenceSourceImpl
+public static unsafe class IWeakReferenceSourceImpl
 {
     /// <summary>
     /// The <see cref="IWeakReferenceSourceVftbl"/> value for the managed <c>IWeakReferenceSource</c> implementation.
@@ -29,6 +29,15 @@ internal static unsafe class IWeakReferenceSourceImpl
         *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
         Vftbl.GetWeakReference = &GetWeakReference;
+    }
+
+    /// <summary>
+    /// Gets the IID for the <c>IWeakReferenceSource</c> interface.
+    /// </summary>
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownInterfaceIds.IID_IWeakReferenceSource;
     }
 
     /// <summary>
