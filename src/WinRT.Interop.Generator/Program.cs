@@ -148,6 +148,13 @@ internal static class InteropGenerator
                     wellKnownInteropReferences: wellKnownInteropReferences,
                     module: winRTInteropModule,
                     implType: out _);
+
+                // Define the 'ComWrappersCallback' type (with the 'IComWrappersCallback' implementation)
+                InteropDelegateTypeDefinitionBuilder.ComWrappersCallbackType(
+                    delegateType: typeSignature,
+                    wellKnownInteropReferences: wellKnownInteropReferences,
+                    module: winRTInteropModule,
+                    out _);
             }
             catch
             {

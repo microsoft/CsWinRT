@@ -91,12 +91,12 @@ internal static class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
-    /// Creates a new type definition for the vtable of a <see langword="delegate"/> type.
+    /// Creates a new type definition for the vtable of a <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    /// <remarks>This method always assumes the <see langword="delegate"/> type will take two objects as input parameters.</remarks>
+    /// <remarks>This method always assumes the <see cref="Delegate"/> type will take two objects as input parameters.</remarks>
     public static TypeDefinition DelegateVftbl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
     {
         // We're declaring an 'internal struct' type
@@ -138,7 +138,7 @@ internal static class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
-    /// Creates a new type definition for the vtable of an 'IReference`1&lt;T&gt;' instantiation for some <see langword="delegate"/> type.
+    /// Creates a new type definition for the vtable of an 'IReference`1&lt;T&gt;' instantiation for some <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
@@ -193,7 +193,7 @@ internal static class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
-    /// Creates a new type definition for COM interface entries for a <see langword="delegate"/> type.
+    /// Creates a new type definition for COM interface entries for a <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>

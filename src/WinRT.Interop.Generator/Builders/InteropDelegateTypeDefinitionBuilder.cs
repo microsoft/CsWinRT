@@ -124,7 +124,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
     }
 
     /// <summary>
-    /// Creates a new type definition for the implementation of the vtable for the 'IReference`1&lt;T&gt;' instantiation for some <see langword="delegate"/> type.
+    /// Creates a new type definition for the implementation of the vtable for the 'IReference`1&lt;T&gt;' instantiation for some <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
@@ -313,5 +313,52 @@ internal static class InteropDelegateTypeDefinitionBuilder
         _ = get_VtablesInstructions.Add(CilOpCodes.Ldsflda, entriesField);
         _ = get_VtablesInstructions.Add(CilOpCodes.Conv_U);
         _ = get_VtablesInstructions.Add(CilOpCodes.Ret);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the implementation of the <c>IComWrappersCallback</c> interface for some <see cref="Delegate"/> type.
+    /// </summary>
+    /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="callbackType">The resulting callback type.</param>
+    public static void ComWrappersCallbackType(
+        TypeSignature delegateType,
+        WellKnownInteropReferences wellKnownInteropReferences,
+        ModuleDefinition module,
+        out TypeDefinition callbackType)
+    {
+        // We're declaring an 'internal abstract class' type
+        callbackType = new(
+            ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+            name: InteropUtf8NameFactory.TypeName(delegateType, "ComWrappersCallback"),
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit)
+        {
+            Interfaces = { new InterfaceImplementation(wellKnownInteropReferences.IWindowsRuntimeComWrappersCallback.ImportWith(module.DefaultImporter)) }
+        };
+
+        module.TopLevelTypes.Add(callbackType);
+
+        // Add a parameterless constructor, to be idiomatic
+        callbackType.Methods.Add(MethodDefinition.CreateConstructor(module));
+
+        // Define the 'CreateObject' methods as follows:
+        //
+        // public static object CreateObject(void* value)
+        MethodDefinition createObjectMethod = new(
+            name: "CreateObject"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+            signature: new MethodSignature(
+                attributes: CallingConventionAttributes.Default,
+                returnType: module.CorLibTypeFactory.Object,
+                parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+
+        callbackType.Methods.Add(createObjectMethod);
+
+        // Create a method body for the 'CreateObject' method
+        CilInstructionCollection invokeInstructions = createObjectMethod.CreateAndBindCilMethodBody().Instructions;
+
+        _ = invokeInstructions.Add(CilOpCodes.Ldnull);
+        _ = invokeInstructions.Add(CilOpCodes.Ret);
     }
 }
