@@ -39,7 +39,8 @@ internal static class InteropDelegateTypeDefinitionBuilder
         implType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
             name: InteropUtf8NameFactory.TypeName(delegateType, "Impl"),
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(implType);
 
@@ -144,7 +145,8 @@ internal static class InteropDelegateTypeDefinitionBuilder
         implType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
             name: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceImpl"),
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(implType);
 
@@ -250,7 +252,8 @@ internal static class InteropDelegateTypeDefinitionBuilder
         implType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
             name: InteropUtf8NameFactory.TypeName(delegateType, "InterfaceEntriesImpl"),
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(implType);
 
@@ -337,15 +340,13 @@ internal static class InteropDelegateTypeDefinitionBuilder
         callbackType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
             name: InteropUtf8NameFactory.TypeName(delegateType, "ComWrappersCallback"),
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit)
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
         {
             Interfaces = { new InterfaceImplementation(wellKnownInteropReferences.IWindowsRuntimeComWrappersCallback.ImportWith(module.DefaultImporter)) }
         };
 
         module.TopLevelTypes.Add(callbackType);
-
-        // Add a parameterless constructor, to be idiomatic
-        callbackType.Methods.Add(MethodDefinition.CreateConstructor(module));
 
         // Define the 'CreateObject' methods as follows:
         //
@@ -360,22 +361,30 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         callbackType.Methods.Add(createObjectMethod);
 
+        // Mark the 'CreateObject' method as implementing the interface method
+        callbackType.MethodImplementations.Add(new MethodImplementation(
+            declaration: wellKnownInteropReferences.IWindowsRuntimeComWrappersCallbackCreateObject.ImportWith(module.DefaultImporter),
+            body: createObjectMethod));
+
         // Create a method body for the 'CreateObject' method
-        CilInstructionCollection invokeInstructions = createObjectMethod.CreateAndBindCilMethodBody().Instructions;
+        CilInstructionCollection createObjectInstructions = createObjectMethod.CreateAndBindCilMethodBody().Instructions;
 
         // Get the special delegate constructor taking the target and function pointer. We leverage this to create
         // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
-        IMethodDefOrRef ctor = module.MetadataResolver
-            .ResolveType(delegateType)!
-            .GetConstructor(module.CorLibTypeFactory.Object, module.CorLibTypeFactory.IntPtr)!
+        IMethodDefOrRef ctor = delegateType
+            .ToTypeDefOrRef()
+            .CreateMemberReference(".ctor", new MethodSignature(
+                attributes: CallingConventionAttributes.Default,
+                returnType: delegateType,
+                parameterTypes: [module.CorLibTypeFactory.Object, module.CorLibTypeFactory.IntPtr]))
             .ImportWith(module.DefaultImporter);
 
-        _ = invokeInstructions.Add(CilOpCodes.Ldarg_0);
-        _ = invokeInstructions.Add(CilOpCodes.Call, delegateImplType.GetMethod("get_IID"u8));
-        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceCreateUnsafe.ImportWith(module.DefaultImporter));
-        _ = invokeInstructions.Add(CilOpCodes.Ldftn, nativeDelegateType.GetMethod("Invoke"u8));
-        _ = invokeInstructions.Add(CilOpCodes.Newobj, ctor);
-        _ = invokeInstructions.Add(CilOpCodes.Ret);
+        _ = createObjectInstructions.Add(CilOpCodes.Ldarg_0);
+        _ = createObjectInstructions.Add(CilOpCodes.Call, delegateImplType.GetMethod("get_IID"u8));
+        _ = createObjectInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceCreateUnsafe.ImportWith(module.DefaultImporter));
+        _ = createObjectInstructions.Add(CilOpCodes.Ldftn, nativeDelegateType.GetMethod("Invoke"u8));
+        _ = createObjectInstructions.Add(CilOpCodes.Newobj, ctor);
+        _ = createObjectInstructions.Add(CilOpCodes.Ret);
     }
 
     /// <summary>
@@ -393,7 +402,8 @@ internal static class InteropDelegateTypeDefinitionBuilder
         nativeDelegateType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
             name: InteropUtf8NameFactory.TypeName(delegateType, "NativeDelegate"),
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit);
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(nativeDelegateType);
 
