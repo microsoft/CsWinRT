@@ -113,6 +113,7 @@ internal static class WellKnownMemberDefinitionFactory
 
         // The 'get_Vtable' method directly returns the 'Vftbl' field address
         _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
+        _ = get_VtableInstructions.Add(CilOpCodes.Conv_U);
         _ = get_VtableInstructions.Add(CilOpCodes.Ret);
     }
 }

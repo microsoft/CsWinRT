@@ -234,21 +234,20 @@ internal static class WellKnownTypeDefinitionFactory
     /// Creates types to use to declare RVA fields.
     /// </summary>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
-    /// <param name="rvaFieldsType">The containing type for all RVA fields.</param>
-    /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
-    public static void RvaFields(
-        ReferenceImporter referenceImporter,
-        out TypeDefinition rvaFieldsType,
-        out TypeDefinition iidRvaDataType)
+    /// <returns>The <see cref="TypeDefinition"/> to use to contain all RVA fields.</returns>
+    /// <remarks>
+    /// The returned type will have exactly one nested type, for RVA fields of size 16 (ie. <see cref="Guid"/>).
+    /// </remarks>
+    public static TypeDefinition RvaFields(ReferenceImporter referenceImporter)
     {
         // Define the special '<RvaFields>' type, to contain all RVA fields
-        rvaFieldsType = new(
+        TypeDefinition rvaFieldsType = new(
             ns: null,
             name: "<RvaFields>"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
 
         // Define the data type for IID data
-        iidRvaDataType = new(
+        TypeDefinition iidRvaDataType = new(
             ns: null,
             name: "IIDRvaDataSize=16",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
@@ -259,5 +258,7 @@ internal static class WellKnownTypeDefinitionFactory
 
         // The IID RVA type is nested under the '<RvaFields>' type
         rvaFieldsType.NestedTypes.Add(iidRvaDataType);
+
+        return rvaFieldsType;
     }
 }
