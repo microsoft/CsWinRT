@@ -46,10 +46,7 @@ internal static class WellKnownMemberDefinitionFactory
         };
 
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        CustomModifierTypeSignature iidPropertyType = module.DefaultImporter
-            .ImportType(typeof(Guid))
-            .MakeByReferenceType()
-            .MakeModifierType(module.DefaultImporter.ImportType(typeof(InAttribute)), isRequired: true);
+        CustomModifierTypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(module.DefaultImporter);
 
         // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
         PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);

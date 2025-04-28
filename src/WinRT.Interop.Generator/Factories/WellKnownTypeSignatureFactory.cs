@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
@@ -129,5 +130,19 @@ internal static class WellKnownTypeSignatureFactory
             parameterTypes: [
                 corLibTypeFactory.Void.MakePointerType(),
                 corLibTypeFactory.Int32.MakePointerType()]).MakeFunctionPointerType();
+    }
+
+    /// <summary>
+    /// Creates a type signature for <c>in Guid</c> values.
+    /// </summary>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <returns>The resulting <see cref="CustomModifierTypeSignature"/> instance.</returns>
+    public static CustomModifierTypeSignature InGuid(ReferenceImporter referenceImporter)
+    {
+        // Signature for 'Guid& modreq(InAttribute)'
+        return referenceImporter
+            .ImportType(typeof(Guid))
+            .MakeByReferenceType()
+            .MakeModifierType(referenceImporter.ImportType(typeof(InAttribute)), isRequired: true);
     }
 }

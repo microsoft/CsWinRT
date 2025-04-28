@@ -50,13 +50,13 @@ internal static class InteropMethodBodyFactory
         for (int i = 0; i < implTypes.Length; i++)
         {
             _ = instructions.Add(CilOpCodes.Ldsflda, entriesField);
-            _ = instructions.Add(CilOpCodes.Ldflda, entriesFieldType.Fields[0]);
-            _ = instructions.Add(CilOpCodes.Call, implTypes[i].Properties[0].GetMethod!.ImportWith(module.DefaultImporter));
+            _ = instructions.Add(CilOpCodes.Ldflda, entriesFieldType.Fields[i]);
+            _ = instructions.Add(CilOpCodes.Call, implTypes[i].GetMethod("get_IID"u8).ImportWith(module.DefaultImporter));
             _ = instructions.Add(CilOpCodes.Ldobj, module.DefaultImporter.ImportType(typeof(Guid)));
             _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryIIDField);
             _ = instructions.Add(CilOpCodes.Ldsflda, entriesField);
-            _ = instructions.Add(CilOpCodes.Ldflda, entriesFieldType.Fields[0]);
-            _ = instructions.Add(CilOpCodes.Call, implTypes[i].Properties[1].GetMethod!.ImportWith(module.DefaultImporter));
+            _ = instructions.Add(CilOpCodes.Ldflda, entriesFieldType.Fields[i]);
+            _ = instructions.Add(CilOpCodes.Call, implTypes[i].GetMethod("get_Vtable"u8).ImportWith(module.DefaultImporter));
             _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryVtableField);
         }
 

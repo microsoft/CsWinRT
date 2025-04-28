@@ -319,11 +319,15 @@ internal static class InteropDelegateTypeDefinitionBuilder
     /// Creates a new type definition for the implementation of the <c>IComWrappersCallback</c> interface for some <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="delegateImplType">The type returned by <see cref="ImplType"/>.</param>
+    /// <param name="nativeDelegateType">The type returned by <see cref="NativeDelegateType"/>.</param>
     /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="callbackType">The resulting callback type.</param>
     public static void ComWrappersCallbackType(
         TypeSignature delegateType,
+        TypeDefinition delegateImplType,
+        TypeDefinition nativeDelegateType,
         WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         out TypeDefinition callbackType)
@@ -358,7 +362,58 @@ internal static class InteropDelegateTypeDefinitionBuilder
         // Create a method body for the 'CreateObject' method
         CilInstructionCollection invokeInstructions = createObjectMethod.CreateAndBindCilMethodBody().Instructions;
 
-        _ = invokeInstructions.Add(CilOpCodes.Ldnull);
+        // Get the special delegate constructor taking the target and function pointer. We leverage this to create
+        // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
+        IMethodDefOrRef ctor = module.MetadataResolver
+            .ResolveType(delegateType)!
+            .GetConstructor(module.CorLibTypeFactory.Object, module.CorLibTypeFactory.IntPtr)!
+            .ImportWith(module.DefaultImporter);
+
+        _ = invokeInstructions.Add(CilOpCodes.Ldarg_0);
+        _ = invokeInstructions.Add(CilOpCodes.Call, delegateImplType.GetMethod("get_IID"u8));
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceCreateUnsafe.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Ldftn, nativeDelegateType.GetMethod("Invoke"u8));
+        _ = invokeInstructions.Add(CilOpCodes.Newobj, ctor);
+        _ = invokeInstructions.Add(CilOpCodes.Ret);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the implementation of the native delegate for some <see cref="Delegate"/> type.
+    /// </summary>
+    /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="nativeDelegateType">The resulting callback type.</param>
+    public static void NativeDelegateType(
+        TypeSignature delegateType,
+        ModuleDefinition module,
+        out TypeDefinition nativeDelegateType)
+    {
+        // We're declaring an 'internal static class' type
+        nativeDelegateType = new(
+            ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+            name: InteropUtf8NameFactory.TypeName(delegateType, "NativeDelegate"),
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit);
+
+        module.TopLevelTypes.Add(nativeDelegateType);
+
+        // Define the 'Invoke' methods as follows:
+        //
+        // public static void Invoke(WindowsRuntimeObjectReference objectReference, <PARAMETER#0> arg0, <PARAMETER#1> arg1)
+        MethodDefinition invokeMethod = new(
+            name: "Invoke"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+            signature: new MethodSignature(
+                attributes: CallingConventionAttributes.Default,
+                returnType: module.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    module.CorLibTypeFactory.Object,
+                    module.CorLibTypeFactory.Object]));
+
+        nativeDelegateType.Methods.Add(invokeMethod);
+
+        // Create a method body for the 'Invoke' method
+        CilInstructionCollection invokeInstructions = invokeMethod.CreateAndBindCilMethodBody().Instructions;
+
         _ = invokeInstructions.Add(CilOpCodes.Ret);
     }
 }

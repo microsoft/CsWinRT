@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Factories;
 
 namespace WindowsRuntime.InteropGenerator.References;
 
@@ -13,6 +14,11 @@ namespace WindowsRuntime.InteropGenerator.References;
 internal sealed class WellKnownInteropReferences
 {
     /// <summary>
+    /// The <see cref="ModuleDefinition"/> for the interop assembly being produced.
+    /// </summary>
+    private readonly ModuleDefinition _interopModule;
+
+    /// <summary>
     /// The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.
     /// </summary>
     private readonly ModuleDefinition _windowsRuntimeModule;
@@ -20,9 +26,11 @@ internal sealed class WellKnownInteropReferences
     /// <summary>
     /// Creates a new <see cref="WellKnownInteropReferences"/> instance.
     /// </summary>
+    /// <param name="interopModule">The <see cref="ModuleDefinition"/> for the interop assembly being produced.</param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
-    public WellKnownInteropReferences(ModuleDefinition windowsRuntimeModule)
+    public WellKnownInteropReferences(ModuleDefinition interopModule, ModuleDefinition windowsRuntimeModule)
     {
+        _interopModule = interopModule;
         _windowsRuntimeModule = windowsRuntimeModule;
     }
 
@@ -61,6 +69,12 @@ internal sealed class WellKnownInteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IWindowsRuntimeComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IWindowsRuntimeComWrappersCallback");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeObjectReference => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "WindowsRuntimeObjectReference");
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IUnknownImpl.get_Vtable()</c>.
@@ -106,4 +120,15 @@ internal sealed class WellKnownInteropReferences
         .CreateMemberReference("get_Vtable", MethodSignature.CreateStatic(
             returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr,
             parameterTypes: []));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference.CreateUnsafe(void*, in Guid)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeObjectReferenceCreateUnsafe => field ??= WindowsRuntimeObjectReference
+        .CreateMemberReference("CreateUnsafe", MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReference.ToTypeSignature(),
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)]));
 }

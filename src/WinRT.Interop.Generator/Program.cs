@@ -115,7 +115,7 @@ internal static class InteropGenerator
 
         // Setup the well known items to use when emitting code
         WellKnownInteropDefinitions wellKnownInteropDefinitions = new(winRTInteropModule);
-        WellKnownInteropReferences wellKnownInteropReferences = new(winRTRuntime2Module);
+        WellKnownInteropReferences wellKnownInteropReferences = new(winRTInteropModule, winRTRuntime2Module);
 
         foreach (GenericInstanceTypeSignature typeSignature in genericTypes)
         {
@@ -149,9 +149,17 @@ internal static class InteropGenerator
                     module: winRTInteropModule,
                     implType: out _);
 
+                // Define the 'NativeDelegate' type (with the extension method implementation)
+                InteropDelegateTypeDefinitionBuilder.NativeDelegateType(
+                    delegateType: typeSignature,
+                    module: winRTInteropModule,
+                    nativeDelegateType: out TypeDefinition nativeDelegateType);
+
                 // Define the 'ComWrappersCallback' type (with the 'IComWrappersCallback' implementation)
                 InteropDelegateTypeDefinitionBuilder.ComWrappersCallbackType(
                     delegateType: typeSignature,
+                    delegateImplType: delegateImplType,
+                    nativeDelegateType: nativeDelegateType,
                     wellKnownInteropReferences: wellKnownInteropReferences,
                     module: winRTInteropModule,
                     out _);
