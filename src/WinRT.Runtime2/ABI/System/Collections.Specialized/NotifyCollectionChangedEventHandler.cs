@@ -85,8 +85,10 @@ file static unsafe class NotifyCollectionChangedEventHandlerNativeDelegate
         using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
         using WindowsRuntimeObjectReferenceValue eValue = NotifyCollectionChangedEventArgsMarshaller.ConvertToUnmanaged(e);
 
-        HRESULT hresult = (*(NotifyCollectionChangedEventHandlerVftbl**)thisValue.GetThisPtrUnsafe())->Invoke(
-            thisValue.GetThisPtrUnsafe(),
+        void* thisPtr = thisValue.GetThisPtrUnsafe();
+
+        HRESULT hresult = (*(NotifyCollectionChangedEventHandlerVftbl**)thisPtr)->Invoke(
+            thisPtr,
             senderValue.GetThisPtrUnsafe(),
             eValue.GetThisPtrUnsafe());
 

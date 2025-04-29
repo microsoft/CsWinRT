@@ -75,8 +75,10 @@ file static unsafe class EventHandlerNativeDelegate
         using WindowsRuntimeObjectReferenceValue senderValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(sender);
         using WindowsRuntimeObjectReferenceValue eValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(e);
 
-        HRESULT hresult = (*(EventHandlerVftbl**)thisValue.GetThisPtrUnsafe())->Invoke(
-            thisValue.GetThisPtrUnsafe(),
+        void* thisPtr = thisValue.GetThisPtrUnsafe();
+
+        HRESULT hresult = (*(EventHandlerVftbl**)thisPtr)->Invoke(
+            thisPtr,
             senderValue.GetThisPtrUnsafe(),
             eValue.GetThisPtrUnsafe());
 
