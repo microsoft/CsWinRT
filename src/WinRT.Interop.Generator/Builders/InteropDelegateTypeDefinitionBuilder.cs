@@ -546,14 +546,18 @@ internal static class InteropDelegateTypeDefinitionBuilder
     /// Creates a new type definition for the marshaller attribute of some <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="delegateReferenceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ReferenceImplType"/>.</param>
     /// <param name="delegateInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImplType"/>.</param>
+    /// <param name="delegateComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
     /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
     /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting marshaller type.</param>
     public static void ComWrappersMarshallerAttribute(
         TypeSignature delegateType,
+        TypeDefinition delegateReferenceImplType,
         TypeDefinition delegateInterfaceEntriesImplType,
+        TypeDefinition delegateComWrappersCallbackType,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
         WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
@@ -633,7 +637,14 @@ internal static class InteropDelegateTypeDefinitionBuilder
         // Create a method body for the 'CreateObject' method
         CilInstructionCollection createObjectInstructions = createObjectMethod.CreateAndBindCilMethodBody().Instructions;
 
-        _ = createObjectInstructions.Add(CilOpCodes.Ldnull);
+        // Import the 'UnboxToManaged<TCallback>' method for the delegate
+        IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor = wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged2
+            .ImportWith(module.DefaultImporter)
+            .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToTypeSignature(isValueType: false));
+
+        _ = createObjectInstructions.Add(CilOpCodes.Ldarg_1);
+        _ = createObjectInstructions.Add(CilOpCodes.Call, delegateReferenceImplType.GetMethod("get_IID"u8));
+        _ = createObjectInstructions.Add(CilOpCodes.Call, windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor);
         _ = createObjectInstructions.Add(CilOpCodes.Ret);
     }
 
