@@ -89,6 +89,18 @@ internal sealed class WellKnownInteropReferences
     public TypeReference WindowsRuntimeObjectReference => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "WindowsRuntimeObjectReference");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeObjectReferenceValue => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "WindowsRuntimeObjectReferenceValue");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeDelegateMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "WindowsRuntimeDelegateMarshaller");
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IUnknownImpl.get_Vtable()</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -178,5 +190,47 @@ internal sealed class WellKnownInteropReferences
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeCreateObject => field ??= WindowsRuntimeComWrappersMarshallerAttribute
         .CreateMemberReference("CreateObject", MethodSignature.CreateStatic(
             returnType: _windowsRuntimeModule.CorLibTypeFactory.Object,
+            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(Delegate, in Guid)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeDelegateMarshallerConvertToUnmanaged => field ??= WindowsRuntimeComWrappersMarshallerAttribute
+        .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(),
+            parameterTypes: [
+                new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Delegate"u8).ToTypeSignature(isValueType: false),
+                new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Guid"u8).MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.ConvertToManaged&lt;TCallback&gt;(void*)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeDelegateMarshallerConvertToManaged => field ??= WindowsRuntimeComWrappersMarshallerAttribute
+        .CreateMemberReference("ConvertToManaged", MethodSignature.CreateStatic(
+            returnType: new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Delegate"u8).ToTypeSignature(isValueType: false),
+            genericParameterCount: 1,
+            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.BoxToUnmanaged(Delegate, in Guid)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeDelegateMarshallerBoxToUnmanaged => field ??= WindowsRuntimeComWrappersMarshallerAttribute
+        .CreateMemberReference("BoxToUnmanaged", MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(),
+            parameterTypes: [
+                new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Delegate"u8).ToTypeSignature(isValueType: false),
+                new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Guid"u8).MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeDelegateMarshaller.UnboxToManaged&lt;TCallback&gt;(void*)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeDelegateMarshallerUnboxToManaged => field ??= WindowsRuntimeComWrappersMarshallerAttribute
+        .CreateMemberReference("UnboxToManaged", MethodSignature.CreateStatic(
+            returnType: new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Delegate"u8).ToTypeSignature(isValueType: false),
+            genericParameterCount: 1,
             parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
 }

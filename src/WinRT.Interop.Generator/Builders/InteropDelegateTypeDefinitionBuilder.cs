@@ -423,7 +423,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
     }
 
     /// <summary>
-    /// Creates a new type definition for the marshaller of some <see cref="Delegate"/> type.
+    /// Creates a new type definition for the marshaller attribute of some <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
     /// <param name="delegateInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImplType"/>.</param>
@@ -480,7 +480,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         CilInstructionCollection computeVtablesInstructions = computeVtablesMethod.CreateAndBindCilMethodBody().Instructions;
 
         _ = computeVtablesInstructions.Add(CilOpCodes.Ldarg_1);
-        _ = computeVtablesInstructions.Add(CilOpCodes.Ldc_I4, wellKnownInteropDefinitions.DelegateInterfaceEntries.Fields.Count);
+        computeVtablesInstructions.Add(CilInstruction.CreateLdcI4(wellKnownInteropDefinitions.DelegateInterfaceEntries.Fields.Count));
         _ = computeVtablesInstructions.Add(CilOpCodes.Stind_I4);
         _ = computeVtablesInstructions.Add(CilOpCodes.Call, delegateInterfaceEntriesImplType.GetMethod("get_Vtables"u8));
         _ = computeVtablesInstructions.Add(CilOpCodes.Ret);
@@ -507,5 +507,129 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         _ = createObjectInstructions.Add(CilOpCodes.Ldnull);
         _ = createObjectInstructions.Add(CilOpCodes.Ret);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the marshaller of some <see cref="Delegate"/> type.
+    /// </summary>
+    /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="delegateImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ImplType"/>.</param>
+    /// <param name="delegateReferenceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ReferenceImplType"/>.</param>
+    /// <param name="delegateComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="marshallerType">The resulting marshaller type.</param>
+    public static void Marshaller(
+        TypeSignature delegateType,
+        TypeDefinition delegateImplType,
+        TypeDefinition delegateReferenceImplType,
+        TypeDefinition delegateComWrappersCallbackType,
+        WellKnownInteropReferences wellKnownInteropReferences,
+        ModuleDefinition module,
+        out TypeDefinition marshallerType)
+    {
+        // We're declaring an 'internal static class' type
+        marshallerType = new(
+            ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+            name: InteropUtf8NameFactory.TypeName(delegateType, "Marshaller"),
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+        module.TopLevelTypes.Add(marshallerType);
+
+        // Prepare the external types we need in the implemented methods
+        TypeSignature delegateType2 = module.DefaultImporter.ImportType(delegateType.ToTypeDefOrRef()).ToTypeSignature(isValueType: false);
+        TypeSignature windowsRuntimeObjectReferenceValueType = module.DefaultImporter.ImportType(wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue).ToTypeSignature(isValueType: false);
+
+        // Define the 'ConvertToUnmanaged' methods as follows:
+        //
+        // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<DELEGATE_TYPE> value)
+        MethodDefinition convertToUnmanagedMethod = new(
+            name: "ConvertToUnmanaged"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+            signature: MethodSignature.CreateInstance(
+                returnType: windowsRuntimeObjectReferenceValueType,
+                parameterTypes: [delegateType2]));
+
+        marshallerType.Methods.Add(convertToUnmanagedMethod);
+
+        // Create a method body for the 'ConvertToUnmanaged' method
+        CilInstructionCollection convertToUnmanagedMethodInstructions = convertToUnmanagedMethod.CreateAndBindCilMethodBody().Instructions;
+
+        _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Ldarg_0);
+        _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Call, delegateImplType.GetMethod("get_IID"u8));
+        _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+        _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Ret);
+
+        // Define the 'ConvertToManaged' methods as follows:
+        //
+        // public static <DELEGATE_TYPE> ConvertToManaged(void* value)
+        MethodDefinition convertToManagedMethod = new(
+            name: "ConvertToManaged"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+            signature: MethodSignature.CreateInstance(
+                returnType: delegateType2,
+                parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+
+        marshallerType.Methods.Add(convertToManagedMethod);
+
+        // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.ConvertToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
+        IMethodDescriptor windowsRuntimeDelegateMarshallerConvertToManagedDescriptor =
+            wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerConvertToManaged
+            .ImportWith(module.DefaultImporter)
+            .MakeGenericInstanceMethod(delegateComWrappersCallbackType
+            .ToTypeSignature(isValueType: false));
+
+        // Create a method body for the 'ConvertToManaged' method
+        CilInstructionCollection convertToManagedMethodInstructions = convertToManagedMethod.CreateAndBindCilMethodBody().Instructions;
+
+        _ = convertToManagedMethodInstructions.Add(CilOpCodes.Ldarg_0);
+        _ = convertToManagedMethodInstructions.Add(CilOpCodes.Call, windowsRuntimeDelegateMarshallerConvertToManagedDescriptor);
+        _ = convertToManagedMethodInstructions.Add(CilOpCodes.Ret);
+
+        // Define the 'BoxToUnmanaged' methods as follows:
+        //
+        // public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(<DELEGATE_TYPE> value)
+        MethodDefinition boxToUnmanagedMethod = new(
+            name: "BoxToUnmanaged"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+            signature: MethodSignature.CreateInstance(
+                returnType: windowsRuntimeObjectReferenceValueType,
+                parameterTypes: [delegateType2]));
+
+        marshallerType.Methods.Add(boxToUnmanagedMethod);
+
+        // Create a method body for the 'ConvertToUnmanaged' method
+        CilInstructionCollection boxToUnmanagedMethodInstructions = boxToUnmanagedMethod.CreateAndBindCilMethodBody().Instructions;
+
+        _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Ldarg_0);
+        _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Call, delegateReferenceImplType.GetMethod("get_IID"u8));
+        _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerBoxToUnmanaged.ImportWith(module.DefaultImporter));
+        _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Ret);
+
+        // Define the 'UnboxToManaged' methods as follows:
+        //
+        // public static <DELEGATE_TYPE> UnboxToManaged(void* value)
+        MethodDefinition unboxToUnmanagedMethod = new(
+            name: "UnboxToManaged"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+            signature: MethodSignature.CreateInstance(
+                returnType: delegateType2,
+                parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+
+        marshallerType.Methods.Add(unboxToUnmanagedMethod);
+
+        // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.UnboxToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
+        IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManagedDescriptor =
+            wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged
+            .ImportWith(module.DefaultImporter)
+            .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToTypeSignature(isValueType: false));
+
+        // Create a method body for the 'UnboxToManaged' method
+        CilInstructionCollection unboxToUnmanagedMethodInstructions = unboxToUnmanagedMethod.CreateAndBindCilMethodBody().Instructions;
+
+        _ = unboxToUnmanagedMethodInstructions.Add(CilOpCodes.Ldarg_0);
+        _ = unboxToUnmanagedMethodInstructions.Add(CilOpCodes.Call, windowsRuntimeDelegateMarshallerUnboxToManagedDescriptor);
+        _ = unboxToUnmanagedMethodInstructions.Add(CilOpCodes.Ret);
     }
 }
