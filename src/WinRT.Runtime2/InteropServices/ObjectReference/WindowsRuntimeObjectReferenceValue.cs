@@ -62,7 +62,15 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     {
         if (_objectReference is not null)
         {
-            return _objectReference.GetThisPtr();
+            // We're manually getting the pointer and incrementing its reference
+            // count, to avoid 'GetThisPtr()' adding and removing a reference on
+            // the managed reference tracker, since we're already holding it.
+            // This is functionally the same, but it's a bit more efficient.
+            void* thisPtr = _objectReference.GetThisPtrUnsafe();
+
+            _ = IUnknownVftbl.AddRefUnsafe(thisPtr);
+
+            return thisPtr;
         }
 
         if (_thisPtr != null)
@@ -88,12 +96,45 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     }
 
     /// <summary>
+    /// Detaches the underlying pointer owned by the current instance, and transfers ownership.
+    /// </summary>
+    /// <returns>The underlying pointer that will be owned by the caller.</returns>
+    /// <remarks>
+    /// <para>
+    /// Using any other methods on the current instance after calling <see cref="DetachThisPtrUnsafe"/>
+    /// <b>is undefined behavior</b>, as the current instance will no longer own the underlying pointer.
+    /// </para>
+    /// <para>
+    /// For the same reason, this method should not be used when the current instance is declared in
+    /// a <see langword="using"/> block or statement (as that would call <see cref="Dispose"/>).
+    /// </para>
+    /// </remarks>
+    public void* DetachThisPtrUnsafe()
+    {
+        if (_objectReference is not null)
+        {
+            void* thisPtr = _objectReference.GetThisPtrUnsafe();
+
+            _ = IUnknownVftbl.AddRefUnsafe(thisPtr);
+
+            _objectReference.ReleaseUnsafe();
+
+            return thisPtr;
+        }
+
+        return _thisPtr;
+    }
+
+    /// <summary>
     /// Disposes the current instance.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This method is analogous to <see cref="System.IDisposable.Dispose"/>, but with one crucial
     /// difference. That is: <b>calling this method more than once is undefined behavior</b>.
+    /// </para>
+    /// <para>
+    /// Similarly, using any other methods after <see cref="Dispose"/> is called <b>is also undefined behavior</b>.
     /// </para>
     /// <para>
     /// This type is meant to primarily be used by generated marshalling code, or in very advanced scenarios.

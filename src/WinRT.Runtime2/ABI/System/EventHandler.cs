@@ -290,7 +290,7 @@ file static unsafe class EventHandlerReferenceImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.EventHandler>((ComInterfaceDispatch*)thisPtr);
 
-            *result = EventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).GetThisPtrUnsafe();
+            *result = EventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }

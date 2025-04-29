@@ -311,7 +311,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerReferenceImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
-            *result = NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).GetThisPtrUnsafe();
+            *result = NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }

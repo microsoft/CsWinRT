@@ -105,7 +105,7 @@ public static unsafe class IServiceProviderImpl
 
             object? service = unboxedValue.GetService(managedType);
 
-            *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(service).GetThisPtrUnsafe();
+            *result = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(service).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }

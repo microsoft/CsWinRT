@@ -310,7 +310,7 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.PropertyChangedEventHandler>((ComInterfaceDispatch*)thisPtr);
 
-            *result = PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).GetThisPtrUnsafe();
+            *result = PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }
