@@ -171,7 +171,7 @@ internal static class InteropGenerator
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
                     module: winRTInteropModule,
-                    out _);
+                    out TypeDefinition delegateComWrappersMarshallerType);
 
                 // Define the 'Marshaller' type (with the static marshaller methods)
                 InteropDelegateTypeDefinitionBuilder.Marshaller(
@@ -182,6 +182,14 @@ internal static class InteropGenerator
                     wellKnownInteropReferences: wellKnownInteropReferences,
                     module: winRTInteropModule,
                     marshallerType: out _);
+
+                // Define the proxy type (for the type map)
+                InteropDelegateTypeDefinitionBuilder.Proxy(
+                    delegateType: typeSignature,
+                    delegateComWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
+                    wellKnownInteropReferences: wellKnownInteropReferences,
+                    module: winRTInteropModule,
+                    out _);
             }
             catch
             {

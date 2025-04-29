@@ -448,6 +448,14 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(marshallerType);
 
+        // Define the constructor
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+
+        marshallerType.Methods.Add(ctor);
+
+        _ = ctor.CilMethodBody!.Instructions.Insert(0, CilOpCodes.Ldarg_0);
+        _ = ctor.CilMethodBody!.Instructions.Insert(1, CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeComWrappersMarshallerAttributector.ImportWith(module.DefaultImporter));
+
         // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
         PointerTypeSignature computeVtablesReturnType = module.DefaultImporter
             .ImportType(typeof(ComWrappers.ComInterfaceEntry))
@@ -631,5 +639,47 @@ internal static class InteropDelegateTypeDefinitionBuilder
         _ = unboxToUnmanagedMethodInstructions.Add(CilOpCodes.Ldarg_0);
         _ = unboxToUnmanagedMethodInstructions.Add(CilOpCodes.Call, windowsRuntimeDelegateMarshallerUnboxToManagedDescriptor);
         _ = unboxToUnmanagedMethodInstructions.Add(CilOpCodes.Ret);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the proxy type of some <see cref="Delegate"/> type.
+    /// </summary>
+    /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="delegateComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="marshallerType">The resulting proxy type.</param>
+    public static void Proxy(
+        TypeSignature delegateType,
+        TypeDefinition delegateComWrappersMarshallerAttributeType,
+        WellKnownInteropReferences wellKnownInteropReferences,
+        ModuleDefinition module,
+        out TypeDefinition marshallerType)
+    {
+        // We're declaring an 'internal static class' type
+        marshallerType = new(
+            ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
+            name: InteropUtf8NameFactory.TypeName(delegateType),
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+        module.TopLevelTypes.Add(marshallerType);
+
+        // Get the constructor for '[WindowsRuntimeClassName]'
+        MemberReference windowsRuntimeClassNameAttributeCtor = wellKnownInteropReferences.WindowsRuntimeClassNameAttribute
+            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+                returnType: module.CorLibTypeFactory.Void,
+                parameterTypes: [module.CorLibTypeFactory.String]))
+            .ImportWith(module.DefaultImporter);
+
+        // Add the attribute with the name of the runtime class
+        marshallerType.CustomAttributes.Add(new CustomAttribute(
+            constructor: windowsRuntimeClassNameAttributeCtor,
+            signature: new CustomAttributeSignature(new CustomAttributeArgument(
+                argumentType: module.CorLibTypeFactory.String,
+                value: delegateType.FullName))));
+
+        // Add the generated marshaller attribute
+        marshallerType.CustomAttributes.Add(new CustomAttribute(delegateComWrappersMarshallerAttributeType.GetConstructor()!));
     }
 }
