@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -78,7 +79,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         CilMethodBody invokeBody = invokeMethod.CreateAndBindCilMethodBody();
         CilInstructionCollection invokeInstructions = invokeBody.Instructions;
 
-        // Declare one variable:
+        // Declare 1 variable:
         //   [0]: 'int' (the 'HRESULT' to return)
         invokeBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
 
@@ -233,7 +234,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         CilMethodBody valueBody = valueMethod.CreateAndBindCilMethodBody();
         CilInstructionCollection valueInstructions = valueBody.Instructions;
 
-        // Declare two local variables:
+        // Declare 2 local variables:
         //   [0]: 'int' (the 'HRESULT' to return)
         //   [1]: 'WindowsRuntimeObjectReferenceValue' to use to marshal the delegate
         valueBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
@@ -278,7 +279,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         _ = valueInstructions.Add(CilOpCodes.Stloc_0);
         _ = valueInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
 
-        // '.catch' code
+        // 'catch' code
         CilInstruction catchStart = valueInstructions.Add(CilOpCodes.Ldarg_1);
         _ = valueInstructions.Add(CilOpCodes.Ldc_I4_0);
         _ = valueInstructions.Add(CilOpCodes.Conv_U);
@@ -506,10 +507,14 @@ internal static class InteropDelegateTypeDefinitionBuilder
     /// Creates a new type definition for the implementation of the native delegate for some <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="nativeDelegateType">The resulting callback type.</param>
     public static void NativeDelegateType(
         TypeSignature delegateType,
+        WellKnownInteropDefinitions wellKnownInteropDefinitions,
+        WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         out TypeDefinition nativeDelegateType)
     {
@@ -522,6 +527,8 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(nativeDelegateType);
 
+        GenericInstanceTypeSignature genericDelegateType = (GenericInstanceTypeSignature)delegateType;
+
         // Define the 'Invoke' methods as follows:
         //
         // public static void Invoke(WindowsRuntimeObjectReference objectReference, <PARAMETER#0> arg0, <PARAMETER#1> arg1)
@@ -531,15 +538,123 @@ internal static class InteropDelegateTypeDefinitionBuilder
             signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Void,
                 parameterTypes: [
-                    module.CorLibTypeFactory.Object,
-                    module.CorLibTypeFactory.Object]));
+                    wellKnownInteropReferences.WindowsRuntimeObjectReference.ImportWith(module.DefaultImporter).ToTypeSignature(isValueType: false),
+                    module.DefaultImporter.ImportTypeSignature(genericDelegateType.TypeArguments[0]),
+                    module.DefaultImporter.ImportTypeSignature(genericDelegateType.TypeArguments[1])]));
 
         nativeDelegateType.Methods.Add(invokeMethod);
 
         // Create a method body for the 'Invoke' method
-        CilInstructionCollection invokeInstructions = invokeMethod.CreateAndBindCilMethodBody().Instructions;
+        CilMethodBody invokeBody = invokeMethod.CreateAndBindCilMethodBody();
+        CilInstructionCollection invokeInstructions = invokeBody.Instructions;
 
-        _ = invokeInstructions.Add(CilOpCodes.Ret);
+        // Import 'WindowsRuntimeObjectReferenceValue', compute it just once
+        TypeSignature windowsRuntimeObjectReferenceValueType = wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue
+            .ImportWith(module.DefaultImporter)
+            .ToTypeSignature(isValueType: true);
+
+        // Declare 3 variables:
+        //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
+        //   [1]: 'WindowsRuntimeObjectReferenceValue' (for 'senderValue')
+        //   [2]: 'WindowsRuntimeObjectReferenceValue' (for 'eValue')
+        //   [3]: 'void*' (for 'thisPtr')
+        invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
+        invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
+        invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
+        invokeBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Void.MakePointerType()));
+
+        CilInstruction ret = new(CilOpCodes.Ret);
+
+        // Load the local [0]
+        _ = invokeInstructions.Add(CilOpCodes.Ldarg_0);
+        _ = invokeInstructions.Add(CilOpCodes.Callvirt, wellKnownInteropReferences.WindowsRuntimeObjectReferenceAsValue.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Stloc_0);
+
+        // '.try' for local [0]
+        CilInstruction try_0 = invokeInstructions.Add(CilOpCodes.Ldarg_1);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Stloc_1);
+
+        // '.try' for local [1]
+        CilInstruction try_1 = invokeInstructions.Add(CilOpCodes.Ldarg_2);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Stloc_2);
+
+        // 'Invoke' call for the native delegate (and 'try' for local [2])
+        CilInstruction try_2 = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[0]);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Stloc_3);
+        _ = invokeInstructions.Add(CilOpCodes.Ldloc_3);
+        _ = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[1]);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[2]);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Ldloc_3);
+        _ = invokeInstructions.Add(CilOpCodes.Ldind_I);
+        _ = invokeInstructions.Add(CilOpCodes.Ldfld, wellKnownInteropDefinitions.DelegateVftbl.Fields[3]);
+        _ = invokeInstructions.Add(CilOpCodes.Calli, wellKnownInteropDefinitions.DelegateVftbl.Fields[3].Signature!.FieldType.MakeStandAloneSignature());
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoThrowExceptionForHR.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Leave_S, ret.CreateLabel());
+
+        // 'finally' for local [2]
+        CilInstruction finally_2 = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[2]);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDispose.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Endfinally);
+
+        // 'finally' for local [1]
+        CilInstruction finally_1 = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[1]);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDispose.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Endfinally);
+
+        // 'finally' for local [0]
+        CilInstruction finally_0 = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[0]);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDispose.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Endfinally);
+
+        invokeInstructions.Add(ret);
+
+        // Setup 'try/finally' for local [0]
+        invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
+        {
+            HandlerType = CilExceptionHandlerType.Finally,
+            TryStart = try_0.CreateLabel(),
+            TryEnd = finally_0.CreateLabel(),
+            HandlerStart = finally_0.CreateLabel(),
+            HandlerEnd = ret.CreateLabel()
+        });
+
+        // Setup 'try/finally' for local [1]
+        invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
+        {
+            HandlerType = CilExceptionHandlerType.Finally,
+            TryStart = try_1.CreateLabel(),
+            TryEnd = finally_1.CreateLabel(),
+            HandlerStart = finally_1.CreateLabel(),
+            HandlerEnd = finally_0.CreateLabel()
+        });
+
+        // Setup 'try/finally' for local [2]
+        invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
+        {
+            HandlerType = CilExceptionHandlerType.Finally,
+            TryStart = try_2.CreateLabel(),
+            TryEnd = finally_2.CreateLabel(),
+            HandlerStart = finally_2.CreateLabel(),
+            HandlerEnd = finally_1.CreateLabel()
+        });
+
+        invokeBody.ComputeMaxStackOnBuild = false;
+
+        invokeInstructions.CalculateOffsets();
+
+        var builder = new StringBuilder();
+        var formatter = new CilInstructionFormatter();
+        foreach (CilInstruction instruction in invokeInstructions)
+            builder.AppendLine(formatter.FormatInstruction(instruction));
+        var text = builder.ToString();
+
+        //var idx = invokeInstructions.GetIndexByOffset(0x52);
+        //var ins = invokeInstructions[idx];
     }
 
     /// <summary>

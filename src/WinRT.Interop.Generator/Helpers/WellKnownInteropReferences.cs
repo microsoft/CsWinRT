@@ -119,6 +119,12 @@ internal sealed class WellKnownInteropReferences
     public TypeReference WindowsRuntimeDelegateMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "WindowsRuntimeDelegateMarshaller");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfo</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference RestrictedErrorInfo => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "RestrictedErrorInfo");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfoExceptionMarshaller</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -185,10 +191,17 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference WindowsRuntimeObjectReferenceCreateUnsafe => field ??= WindowsRuntimeObjectReference
         .CreateMemberReference("CreateUnsafe", MethodSignature.CreateStatic(
-            returnType: WindowsRuntimeObjectReference.ToTypeSignature(),
+            returnType: WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
             parameterTypes: [
                 _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
                 WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference.AsValue()</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeObjectReferenceAsValue => field ??= WindowsRuntimeObjectReference
+        .CreateMemberReference("AsValue", MethodSignature.CreateInstance(WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback.CreateObject(void*)</c>.
@@ -200,11 +213,25 @@ internal sealed class WellKnownInteropReferences
             parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.GetThisPtrUnsafe()</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe => field ??= WindowsRuntimeObjectReferenceValue
+        .CreateMemberReference("GetThisPtrUnsafe", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.DetachThisPtrUnsafe()</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe => field ??= WindowsRuntimeObjectReferenceValue
         .CreateMemberReference("DetachThisPtrUnsafe", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.Dispose()</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeObjectReferenceValueDispose => field ??= WindowsRuntimeObjectReferenceValue
+        .CreateMemberReference("Dispose", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.ctor()</c>.
@@ -241,6 +268,15 @@ internal sealed class WellKnownInteropReferences
             parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(object)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeObjectMarshallerConvertToUnmanaged => field ??= WindowsRuntimeObjectMarshaller
+        .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
+            returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
+            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Object]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectMarshaller.ConvertToManaged(void*)</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -255,7 +291,7 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference WindowsRuntimeDelegateMarshallerConvertToUnmanaged => field ??= WindowsRuntimeDelegateMarshaller
         .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
-            returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(),
+            returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
             parameterTypes: [
                 new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Delegate"u8).ToTypeSignature(isValueType: false),
                 new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Guid"u8).MakeByReferenceType()]));
@@ -276,7 +312,7 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference WindowsRuntimeDelegateMarshallerBoxToUnmanaged => field ??= WindowsRuntimeDelegateMarshaller
         .CreateMemberReference("BoxToUnmanaged", MethodSignature.CreateStatic(
-            returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(),
+            returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
             parameterTypes: [
                 new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Delegate"u8).ToTypeSignature(isValueType: false),
                 new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Guid"u8).MakeByReferenceType()]));
@@ -302,6 +338,15 @@ internal sealed class WellKnownInteropReferences
             parameterTypes: [
                 _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
                 new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Guid"u8).MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.RestrictedErrorInfo.ThrowExceptionForHR(int)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference RestrictedErrorInfoThrowExceptionForHR => field ??= RestrictedErrorInfo
+        .CreateMemberReference("ThrowExceptionForHR", MethodSignature.CreateStatic(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(Exception)</c>.
