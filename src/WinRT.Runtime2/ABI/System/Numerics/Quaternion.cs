@@ -13,12 +13,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CS0649
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Quaternion>",
     target: typeof(ABI.System.Numerics.Quaternion),
     trimTarget: typeof(Quaternion))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(typeof(Quaternion), typeof(ABI.System.Numerics.Quaternion))]
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(Quaternion), typeof(ABI.System.Numerics.Quaternion))]
 
 namespace ABI.System.Numerics;
 

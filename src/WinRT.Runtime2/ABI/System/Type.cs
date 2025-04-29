@@ -18,12 +18,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CS0649
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>",
     target: typeof(ABI.System.Type),
     trimTarget: typeof(Type))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(typeof(Type), typeof(ABI.System.Type))]
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(Type), typeof(ABI.System.Type))]
 
 namespace ABI.System;
 

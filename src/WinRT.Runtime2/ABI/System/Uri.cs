@@ -11,12 +11,12 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.Uri",
     target: typeof(ABI.System.Uri),
     trimTarget: typeof(Uri))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(
     typeof(Uri),
     typeof(ABI.System.Uri))]
 

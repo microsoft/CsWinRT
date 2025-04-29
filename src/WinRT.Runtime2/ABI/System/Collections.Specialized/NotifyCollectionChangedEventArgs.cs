@@ -15,17 +15,17 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE0008, IDE0055
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
     target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
     trimTarget: typeof(NotifyCollectionChangedEventArgs))]
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",
     target: typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs),
     trimTarget: typeof(NotifyCollectionChangedEventArgs))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(
     typeof(NotifyCollectionChangedEventArgs),
     typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs))]
 

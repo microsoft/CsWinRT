@@ -12,12 +12,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CS0649
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.HResult>",
     target: typeof(ABI.System.Exception),
     trimTarget: typeof(Exception))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(typeof(Exception), typeof(ABI.System.Exception))]
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(Exception), typeof(ABI.System.Exception))]
 
 namespace ABI.System;
 

@@ -13,12 +13,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CS0649
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Plane>",
     target: typeof(ABI.System.Numerics.Plane),
     trimTarget: typeof(Plane))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(typeof(Plane), typeof(ABI.System.Numerics.Plane))]
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(Plane), typeof(ABI.System.Numerics.Plane))]
 
 namespace ABI.System.Numerics;
 

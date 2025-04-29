@@ -11,17 +11,17 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.UI.Xaml.Data.PropertyChangedEventArgs",
     target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
     trimTarget: typeof(PropertyChangedEventArgs))]
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs",
     target: typeof(ABI.System.ComponentModel.PropertyChangedEventArgs),
     trimTarget: typeof(PropertyChangedEventArgs))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(
     typeof(PropertyChangedEventArgs),
     typeof(ABI.System.ComponentModel.PropertyChangedEventArgs))]
 

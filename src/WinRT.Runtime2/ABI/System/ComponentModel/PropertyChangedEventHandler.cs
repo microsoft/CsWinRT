@@ -12,17 +12,17 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CS0649, IDE0008
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.UI.Xaml.Data.PropertyChangedEventHandler>",
     target: typeof(ABI.System.ComponentModel.PropertyChangedEventHandler),
     trimTarget: typeof(PropertyChangedEventHandler))]
 
-[assembly: TypeMap<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Microsoft.UI.Xaml.Data.PropertyChangedEventHandler>",
     target: typeof(ABI.System.ComponentModel.PropertyChangedEventHandler),
     trimTarget: typeof(PropertyChangedEventHandler))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(
     typeof(PropertyChangedEventHandler),
     typeof(ABI.System.ComponentModel.PropertyChangedEventHandler))]
 

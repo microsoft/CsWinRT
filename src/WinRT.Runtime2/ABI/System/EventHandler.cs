@@ -13,7 +13,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CS0649, IDE0008
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapUniverse>(
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(
     typeof(EventHandler),
     typeof(ABI.System.EventHandler))]
 
