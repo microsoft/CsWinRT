@@ -74,11 +74,67 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         implType.Methods.Add(invokeMethod);
 
-        // Create a method body for the 'Invoke' method
-        CilInstructionCollection invokeInstructions = invokeMethod.CreateAndBindCilMethodBody().Instructions;
+        // Create a method body for the 'Value' method
+        CilMethodBody invokeBody = invokeMethod.CreateAndBindCilMethodBody();
+        CilInstructionCollection invokeInstructions = invokeBody.Instructions;
 
+        // Declare one variable:
+        //   [0]: 'int' (the 'HRESULT' to return)
+        invokeBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
+
+        CilInstruction ldloc_0 = new(CilOpCodes.Ldloc_0);
+
+        // Import 'ComWrappers.ComInterfaceDispatch.GetInstance' for the delegate
+        MethodSpecification getInstanceMethod = module
+            .CreateTypeReference("System.Runtime.InteropServices", "ComWrappers/ComInterfaceDispatch")
+            .CreateMemberReference("GetInstance", MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Method, index: 0),
+                genericParameterCount: 1,
+                parameterTypes: [module.CreateTypeReference("System.Runtime.InteropServices", "ComWrappers/ComInterfaceDispatch").MakePointerType()]))
+            .MakeGenericInstanceMethod(module.DefaultImporter.ImportTypeSignature(delegateType))
+            .ImportWith(module.DefaultImporter);
+
+        // Import the 'Invoke' method for the delegate
+        IMethodDefOrRef invoke = delegateType
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Invoke", MethodSignature.CreateInstance(
+                returnType: module.CorLibTypeFactory.Void,
+                parameterTypes: ((GenericInstanceTypeSignature)delegateType).TypeArguments))
+            .ImportWith(module.DefaultImporter);
+
+        // '.try' code
+        CilInstruction tryStart = invokeInstructions.Add(CilOpCodes.Ldarg_0);
+        _ = invokeInstructions.Add(CilOpCodes.Call, getInstanceMethod);
+        _ = invokeInstructions.Add(CilOpCodes.Ldarg_1);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToManaged.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Ldarg_2);
+        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToManaged.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Callvirt, invoke);
         _ = invokeInstructions.Add(CilOpCodes.Ldc_I4_0);
+        _ = invokeInstructions.Add(CilOpCodes.Stloc_0);
+        _ = invokeInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
+
+        // '.catch' code
+        CilInstruction catchStart = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+        _ = invokeInstructions.Add(CilOpCodes.Stloc_0);
+        _ = invokeInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
+
+        // Return the 'HRESULT' from location [0]
+        invokeInstructions.Add(ldloc_0);
         _ = invokeInstructions.Add(CilOpCodes.Ret);
+
+        // Setup the exception handler
+        invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
+        {
+            HandlerType = CilExceptionHandlerType.Exception,
+            TryStart = tryStart.CreateLabel(),
+            TryEnd = catchStart.CreateLabel(),
+            HandlerStart = catchStart.CreateLabel(),
+            HandlerEnd = ldloc_0.CreateLabel(),
+            ExceptionType = module.CorLibTypeFactory.CorLibScope
+                .CreateTypeReference("System", "Exception")
+                .ImportWith(module.DefaultImporter)
+        });
 
         // Create the static constructor to initialize the vtable
         MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
@@ -179,30 +235,27 @@ internal static class InteropDelegateTypeDefinitionBuilder
         implType.Methods.Add(valueMethod);
 
         // Create a method body for the 'Value' method
-        CilMethodBody invokeBody = valueMethod.CreateAndBindCilMethodBody();
-        CilInstructionCollection invokeInstructions = invokeBody.Instructions;
+        CilMethodBody valueBody = valueMethod.CreateAndBindCilMethodBody();
+        CilInstructionCollection valueInstructions = valueBody.Instructions;
 
         // Declare two local variables:
         //   [0]: 'int' (the 'HRESULT' to return)
         //   [1]: 'WindowsRuntimeObjectReferenceValue' to use to marshal the delegate
-        invokeBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
-        invokeBody.LocalVariables.Add(new CilLocalVariable(
+        valueBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
+        valueBody.LocalVariables.Add(new CilLocalVariable(
             wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue.ImportWith(module.DefaultImporter).ToTypeSignature(isValueType: true)));
 
         CilInstruction nop = new(CilOpCodes.Nop);
-        ICilLabel nopLabel = nop.CreateLabel();
-
         CilInstruction ldloc_0 = new(CilOpCodes.Ldloc_0);
-        ICilLabel ldloc_0Label = ldloc_0.CreateLabel();
 
         // Return 'E_POINTER' if the argument is 'null'
-        _ = invokeInstructions.Add(CilOpCodes.Ldarg_1);
-        _ = invokeInstructions.Add(CilOpCodes.Ldc_I4_0);
-        _ = invokeInstructions.Add(CilOpCodes.Conv_U);
-        _ = invokeInstructions.Add(CilOpCodes.Bne_Un_S, nopLabel);
-        _ = invokeInstructions.Add(CilOpCodes.Ldc_I4, unchecked((int)0x80004003));
-        _ = invokeInstructions.Add(CilOpCodes.Ret);
-        invokeInstructions.Add(nop);
+        _ = valueInstructions.Add(CilOpCodes.Ldarg_1);
+        _ = valueInstructions.Add(CilOpCodes.Ldc_I4_0);
+        _ = valueInstructions.Add(CilOpCodes.Conv_U);
+        _ = valueInstructions.Add(CilOpCodes.Bne_Un_S, nop.CreateLabel());
+        _ = valueInstructions.Add(CilOpCodes.Ldc_I4, unchecked((int)0x80004003));
+        _ = valueInstructions.Add(CilOpCodes.Ret);
+        valueInstructions.Add(nop);
 
         // Import 'ComWrappers.ComInterfaceDispatch.GetInstance' for the delegate
         MethodSpecification getInstanceMethod = module
@@ -223,39 +276,39 @@ internal static class InteropDelegateTypeDefinitionBuilder
             .ImportWith(module.DefaultImporter);
 
         // '.try' code
-        CilInstruction tryStart = invokeInstructions.Add(CilOpCodes.Ldarg_1);
-        _ = invokeInstructions.Add(CilOpCodes.Ldarg_0);
-        _ = invokeInstructions.Add(CilOpCodes.Call, getInstanceMethod);
-        _ = invokeInstructions.Add(CilOpCodes.Call, convertToUnmanagedMethod);
-        _ = invokeInstructions.Add(CilOpCodes.Stloc_1);
-        _ = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[1]);
-        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.ImportWith(module.DefaultImporter));
-        _ = invokeInstructions.Add(CilOpCodes.Stind_I);
-        _ = invokeInstructions.Add(CilOpCodes.Ldc_I4_0);
-        _ = invokeInstructions.Add(CilOpCodes.Stloc_0);
-        _ = invokeInstructions.Add(CilOpCodes.Leave_S, ldloc_0Label);
+        CilInstruction tryStart = valueInstructions.Add(CilOpCodes.Ldarg_1);
+        _ = valueInstructions.Add(CilOpCodes.Ldarg_0);
+        _ = valueInstructions.Add(CilOpCodes.Call, getInstanceMethod);
+        _ = valueInstructions.Add(CilOpCodes.Call, convertToUnmanagedMethod);
+        _ = valueInstructions.Add(CilOpCodes.Stloc_1);
+        _ = valueInstructions.Add(CilOpCodes.Ldloca_S, valueBody.LocalVariables[1]);
+        _ = valueInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.ImportWith(module.DefaultImporter));
+        _ = valueInstructions.Add(CilOpCodes.Stind_I);
+        _ = valueInstructions.Add(CilOpCodes.Ldc_I4_0);
+        _ = valueInstructions.Add(CilOpCodes.Stloc_0);
+        _ = valueInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
 
         // '.catch' code
-        CilInstruction catchStart = invokeInstructions.Add(CilOpCodes.Ldarg_1);
-        _ = invokeInstructions.Add(CilOpCodes.Ldc_I4_0);
-        _ = invokeInstructions.Add(CilOpCodes.Conv_U);
-        _ = invokeInstructions.Add(CilOpCodes.Stind_I);
-        _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
-        _ = invokeInstructions.Add(CilOpCodes.Stloc_0);
-        CilInstruction catchEnd = invokeInstructions.Add(CilOpCodes.Leave_S, ldloc_0Label);
+        CilInstruction catchStart = valueInstructions.Add(CilOpCodes.Ldarg_1);
+        _ = valueInstructions.Add(CilOpCodes.Ldc_I4_0);
+        _ = valueInstructions.Add(CilOpCodes.Conv_U);
+        _ = valueInstructions.Add(CilOpCodes.Stind_I);
+        _ = valueInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+        _ = valueInstructions.Add(CilOpCodes.Stloc_0);
+        _ = valueInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
 
         // Return the 'HRESULT' from location [0]
-        invokeInstructions.Add(ldloc_0);
-        _ = invokeInstructions.Add(CilOpCodes.Ret);
+        valueInstructions.Add(ldloc_0);
+        _ = valueInstructions.Add(CilOpCodes.Ret);
 
         // Setup the exception handler
-        invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
+        valueBody.ExceptionHandlers.Add(new CilExceptionHandler
         {
             HandlerType = CilExceptionHandlerType.Exception,
             TryStart = tryStart.CreateLabel(),
             TryEnd = catchStart.CreateLabel(),
             HandlerStart = catchStart.CreateLabel(),
-            HandlerEnd = catchEnd.CreateLabel(),
+            HandlerEnd = ldloc_0.CreateLabel(),
             ExceptionType = module.CorLibTypeFactory.CorLibScope
                 .CreateTypeReference("System", "Exception")
                 .ImportWith(module.DefaultImporter)
@@ -662,8 +715,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         IMethodDescriptor windowsRuntimeDelegateMarshallerConvertToManagedDescriptor =
             wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerConvertToManaged
             .ImportWith(module.DefaultImporter)
-            .MakeGenericInstanceMethod(delegateComWrappersCallbackType
-            .ToTypeSignature(isValueType: false));
+            .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToTypeSignature(isValueType: false));
 
         // Create a method body for the 'ConvertToManaged' method
         CilInstructionCollection convertToManagedMethodInstructions = convertToManagedMethod.CreateAndBindCilMethodBody().Instructions;
