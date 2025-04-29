@@ -9,7 +9,7 @@ using WindowsRuntime.InteropGenerator.Factories;
 namespace WindowsRuntime.InteropGenerator.References;
 
 /// <summary>
-/// Well known references to APIs from the Windows Runtime assembly.
+/// Well known references to APIs used in interop scenarios.
 /// </summary>
 internal sealed class WellKnownInteropReferences
 {
@@ -33,6 +33,12 @@ internal sealed class WellKnownInteropReferences
         _interopModule = interopModule;
         _windowsRuntimeModule = windowsRuntimeModule;
     }
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference ComInterfaceDispatch => field ??= _windowsRuntimeModule.CreateTypeReference("System.Runtime.InteropServices.ComWrappers", "ComWrappers/ComInterfaceDispatch");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
@@ -126,6 +132,16 @@ internal sealed class WellKnownInteropReferences
         .CreateMemberReference("get_Vtable", MethodSignature.CreateStatic(
             returnType: _windowsRuntimeModule.CorLibTypeFactory.IntPtr,
             parameterTypes: []));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance&lt;T&gt;(ComWrappers.ComInterfaceDispatch*)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference ComInterfaceDispatchGetInstance => field ??= ComInterfaceDispatch
+        .CreateMemberReference("GetInstance", MethodSignature.CreateStatic(
+            returnType: new GenericParameterSignature(GenericParameterType.Method, index: 0),
+            genericParameterCount: 1,
+            parameterTypes: [_interopModule.CreateTypeReference("System.Runtime.InteropServices", "ComWrappers/ComInterfaceDispatch").MakePointerType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IInspectableImpl.get_Vtable()</c>.

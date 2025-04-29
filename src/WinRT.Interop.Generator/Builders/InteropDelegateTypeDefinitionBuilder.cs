@@ -85,12 +85,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         CilInstruction ldloc_0 = new(CilOpCodes.Ldloc_0);
 
         // Import 'ComWrappers.ComInterfaceDispatch.GetInstance' for the delegate
-        MethodSpecification getInstanceMethod = module
-            .CreateTypeReference("System.Runtime.InteropServices", "ComWrappers/ComInterfaceDispatch")
-            .CreateMemberReference("GetInstance", MethodSignature.CreateStatic(
-                returnType: new GenericParameterSignature(GenericParameterType.Method, index: 0),
-                genericParameterCount: 1,
-                parameterTypes: [module.CreateTypeReference("System.Runtime.InteropServices", "ComWrappers/ComInterfaceDispatch").MakePointerType()]))
+        MethodSpecification getInstanceMethod = wellKnownInteropReferences.ComInterfaceDispatchGetInstance
             .MakeGenericInstanceMethod(module.DefaultImporter.ImportTypeSignature(delegateType))
             .ImportWith(module.DefaultImporter);
 
@@ -258,12 +253,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         valueInstructions.Add(nop);
 
         // Import 'ComWrappers.ComInterfaceDispatch.GetInstance' for the delegate
-        MethodSpecification getInstanceMethod = module
-            .CreateTypeReference("System.Runtime.InteropServices", "ComWrappers/ComInterfaceDispatch")
-            .CreateMemberReference("GetInstance", MethodSignature.CreateStatic(
-                returnType: new GenericParameterSignature(GenericParameterType.Method, index: 0),
-                genericParameterCount: 1,
-                parameterTypes: [module.CreateTypeReference("System.Runtime.InteropServices", "ComWrappers/ComInterfaceDispatch").MakePointerType()]))
+        MethodSpecification getInstanceMethod = wellKnownInteropReferences.ComInterfaceDispatchGetInstance
             .MakeGenericInstanceMethod(module.DefaultImporter.ImportTypeSignature(delegateType))
             .ImportWith(module.DefaultImporter);
 
