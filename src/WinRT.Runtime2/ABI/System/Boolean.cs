@@ -14,46 +14,46 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable CS0649, IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
-    value: "Windows.Foundation.IReference<Int32>",
-    target: typeof(ABI.System.Int32),
-    trimTarget: typeof(int))]
+    value: "Windows.Foundation.IReference<Boolean>",
+    target: typeof(ABI.System.Boolean),
+    trimTarget: typeof(bool))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(int), typeof(ABI.System.Int32))]
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(bool), typeof(ABI.System.Boolean))]
 
 namespace ABI.System;
 
 /// <summary>
-/// ABI type for <see cref="int"/>.
+/// ABI type for <see cref="bool"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<Int32>")]
-[Int32ComWrappersMarshaller]
-file static class Int32;
+[WindowsRuntimeClassName("Windows.Foundation.IReference<Boolean>")]
+[BooleanComWrappersMarshaller]
+file static class Boolean;
 
 /// <summary>
-/// Marshaller for <see cref="int"/>.
+/// Marshaller for <see cref="bool"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class Int32Marshaller
+public static unsafe class BooleanMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(int? value)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(bool? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfInt);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfBool);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
-    public static int? UnboxToManaged(void* value)
+    public static bool? UnboxToManaged(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<int>(value);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<bool>(value);
     }
 }
 
 /// <summary>
-/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="int"/>.
+/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="bool"/>.
 /// </summary>
-file struct Int32InterfaceEntries
+file struct BooleanInterfaceEntries
 {
-    public ComInterfaceEntry IReferenceOfInt32;
+    public ComInterfaceEntry IReferenceOfBoolean;
     public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
@@ -64,25 +64,25 @@ file struct Int32InterfaceEntries
 }
 
 /// <summary>
-/// The implementation of <see cref="Int32InterfaceEntries"/>.
+/// The implementation of <see cref="BooleanInterfaceEntries"/>.
 /// </summary>
-file static class Int32InterfaceEntriesImpl
+file static class BooleanInterfaceEntriesImpl
 {
     /// <summary>
-    /// The <see cref="Int32InterfaceEntries"/> value for <see cref="int"/>.
+    /// The <see cref="BooleanInterfaceEntries"/> value for <see cref="bool"/>.
     /// </summary>
     [FixedAddressValueType]
-    public static readonly Int32InterfaceEntries Entries;
+    public static readonly BooleanInterfaceEntries Entries;
 
     /// <summary>
     /// Initializes <see cref="Entries"/>.
     /// </summary>
-    static Int32InterfaceEntriesImpl()
+    static BooleanInterfaceEntriesImpl()
     {
-        Entries.IReferenceOfInt32.IID = WellKnownInterfaceIds.IID_IReferenceOfInt;
-        Entries.IReferenceOfInt32.Vtable = Int32ReferenceImpl.Vtable;
+        Entries.IReferenceOfBoolean.IID = WellKnownInterfaceIds.IID_IReferenceOfBool;
+        Entries.IReferenceOfBoolean.Vtable = BooleanReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
-        Entries.IPropertyValue.Vtable = Int32PropertyValueImpl.Vtable;
+        Entries.IPropertyValue.Vtable = BooleanPropertyValueImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
@@ -99,9 +99,9 @@ file static class Int32InterfaceEntriesImpl
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="int"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="bool"/>.
 /// </summary>
-internal sealed unsafe class Int32ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+internal sealed unsafe class BooleanComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -112,22 +112,22 @@ internal sealed unsafe class Int32ComWrappersMarshallerAttribute : WindowsRuntim
     /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(Int32InterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(BooleanInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in Int32InterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in BooleanInterfaceEntriesImpl.Entries));
     }
 
     /// <inheritdoc/>
     public override object CreateObject(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<int>(value, in WellKnownInterfaceIds.IID_IReferenceOfInt);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<bool>(value, in WellKnownInterfaceIds.IID_IReferenceOfBool);
     }
 }
 
 /// <summary>
-/// Binding type for the <c>IReference`1</c> implementation for <see cref="int"/>.
+/// Binding type for the <c>IReference`1</c> implementation for <see cref="bool"/>.
 /// </summary>
-file unsafe struct Int32ReferenceVftbl
+file unsafe struct BooleanReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -135,24 +135,24 @@ file unsafe struct Int32ReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, int*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> Value;
 }
 
 /// <summary>
-/// The <c>IReference`1</c> implementation for <see cref="int"/>.
+/// The <c>IReference`1</c> implementation for <see cref="bool"/>.
 /// </summary>
-file static unsafe class Int32ReferenceImpl
+file static unsafe class BooleanReferenceImpl
 {
     /// <summary>
-    /// The <see cref="Int32ReferenceVftbl"/> value for the managed <c>IReference`1</c> implementation.
+    /// The <see cref="BooleanReferenceVftbl"/> value for the managed <c>IReference`1</c> implementation.
     /// </summary>
     [FixedAddressValueType]
-    private static readonly Int32ReferenceVftbl Vftbl;
+    private static readonly BooleanReferenceVftbl Vftbl;
 
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static Int32ReferenceImpl()
+    static BooleanReferenceImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
@@ -170,7 +170,7 @@ file static unsafe class Int32ReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, int* result)
+    public static HRESULT Value(void* thisPtr, bool* result)
     {
         if (result is null)
         {
@@ -179,7 +179,7 @@ file static unsafe class Int32ReferenceImpl
 
         try
         {
-            *result = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            *result = (bool)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -191,9 +191,9 @@ file static unsafe class Int32ReferenceImpl
 }
 
 /// <summary>
-/// The <c>IPropertyValue</c> implementation for <see cref="int"/>.
+/// The <c>IPropertyValue</c> implementation for <see cref="bool"/>.
 /// </summary>
-file static unsafe class Int32PropertyValueImpl
+file static unsafe class BooleanPropertyValueImpl
 {
     /// <summary>
     /// The <see cref="IPropertyValueVftbl"/> value for the managed <c>IPropertyValue</c> implementation.
@@ -204,23 +204,23 @@ file static unsafe class Int32PropertyValueImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static Int32PropertyValueImpl()
+    static BooleanPropertyValueImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.get_Type = &get_Type;
         Vftbl.get_IsNumericScalar = &get_IsNumericScalar;
-        Vftbl.GetUInt8 = &GetUInt8;
-        Vftbl.GetInt16 = &GetInt16;
-        Vftbl.GetUInt16 = &GetUInt16;
-        Vftbl.GetInt32 = &Int32ReferenceImpl.Value;
-        Vftbl.GetUInt32 = &GetUInt32;
-        Vftbl.GetInt64 = &GetInt64;
-        Vftbl.GetUInt64 = &GetUInt64;
-        Vftbl.GetSingle = &GetSingle;
-        Vftbl.GetDouble = &GetDouble;
+        Vftbl.GetUInt8 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetSingle = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetDouble = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetBoolean = &BooleanReferenceImpl.Value;
         Vftbl.GetString = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetGuid = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;
@@ -268,7 +268,7 @@ file static unsafe class Int32PropertyValueImpl
             return WellKnownErrorCodes.E_POINTER;
         }
 
-        *value = PropertyType.Int32;
+        *value = PropertyType.Boolean;
 
         return WellKnownErrorCodes.S_OK;
     }
@@ -283,219 +283,8 @@ file static unsafe class Int32PropertyValueImpl
             return WellKnownErrorCodes.E_POINTER;
         }
 
-        *value = true;
+        *value = false;
 
         return WellKnownErrorCodes.S_OK;
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint8"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
-    private static HRESULT GetUInt8(void* thisPtr, byte* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            if (unboxedValue is < byte.MinValue or > byte.MaxValue)
-            {
-                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
-            }
-
-            *value = (byte)unboxedValue;
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint16"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
-    private static HRESULT GetInt16(void* thisPtr, short* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            if (unboxedValue is < short.MinValue or > short.MaxValue)
-            {
-                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
-            }
-
-            *value = (short)unboxedValue;
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint16"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
-    private static HRESULT GetUInt16(void* thisPtr, ushort* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            if (unboxedValue is < ushort.MinValue or > ushort.MaxValue)
-            {
-                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
-            }
-
-            *value = (ushort)unboxedValue;
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint32"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
-    private static HRESULT GetUInt32(void* thisPtr, uint* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            if (unboxedValue < 0)
-            {
-                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
-            }
-
-            *value = (uint)unboxedValue;
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint64"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
-    private static HRESULT GetInt64(void* thisPtr, long* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            *value = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint64"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
-    private static HRESULT GetUInt64(void* thisPtr, ulong* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            if (unboxedValue < 0)
-            {
-                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
-            }
-
-            *value = (ulong)unboxedValue;
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getsingle"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
-    private static HRESULT GetSingle(void* thisPtr, float* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            *value = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getdouble"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
-    private static HRESULT GetDouble(void* thisPtr, double* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            *value = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
     }
 }
