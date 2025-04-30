@@ -20,10 +20,10 @@ internal static class WellKnownTypeSignatureFactory
     /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
-    public static FunctionPointerTypeSignature QueryInterfaceImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static MethodSignature QueryInterfaceImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
     {
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT>'
-        return new MethodSignature(
+        return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
                 modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
@@ -32,7 +32,7 @@ internal static class WellKnownTypeSignatureFactory
             parameterTypes: [
                 corLibTypeFactory.Void.MakePointerType(),
                 referenceImporter.ImportType(typeof(Guid)).MakePointerType(),
-                corLibTypeFactory.Void.MakePointerType().MakePointerType()]).MakeFunctionPointerType();
+                corLibTypeFactory.Void.MakePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -41,16 +41,16 @@ internal static class WellKnownTypeSignatureFactory
     /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
-    public static FunctionPointerTypeSignature AddRefImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static MethodSignature AddRefImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
     {
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint>'
-        return new MethodSignature(
+        return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
                 modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
                 isRequired: false,
                 baseType: corLibTypeFactory.UInt32),
-            parameterTypes: [corLibTypeFactory.Void.MakePointerType()]).MakeFunctionPointerType();
+            parameterTypes: [corLibTypeFactory.Void.MakePointerType()]);
     }
 
     /// <summary>
@@ -59,16 +59,16 @@ internal static class WellKnownTypeSignatureFactory
     /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
-    public static FunctionPointerTypeSignature ReleaseImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static MethodSignature ReleaseImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
     {
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint>'
-        return new MethodSignature(
+        return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
                 modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
                 isRequired: false,
                 baseType: corLibTypeFactory.UInt32),
-            parameterTypes: [corLibTypeFactory.Void.MakePointerType()]).MakeFunctionPointerType();
+            parameterTypes: [corLibTypeFactory.Void.MakePointerType()]);
     }
 
     /// <summary>
@@ -77,10 +77,10 @@ internal static class WellKnownTypeSignatureFactory
     /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
-    public static FunctionPointerTypeSignature GetIidsImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static MethodSignature GetIidsImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
     {
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int>'
-        return new MethodSignature(
+        return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
                 modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
@@ -89,7 +89,7 @@ internal static class WellKnownTypeSignatureFactory
             parameterTypes: [
                 corLibTypeFactory.Void.MakePointerType(),
                 corLibTypeFactory.UInt32.MakePointerType(),
-                referenceImporter.ImportType(typeof(Guid)).MakePointerType().MakePointerType()]).MakeFunctionPointerType();
+                referenceImporter.ImportType(typeof(Guid)).MakePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -98,10 +98,10 @@ internal static class WellKnownTypeSignatureFactory
     /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
-    public static FunctionPointerTypeSignature GetRuntimeClassNameImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static MethodSignature GetRuntimeClassNameImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
     {
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
-        return new MethodSignature(
+        return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
                 modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
@@ -109,7 +109,7 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: corLibTypeFactory.Int32),
             parameterTypes: [
                 corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Void.MakePointerType().MakePointerType()]).MakeFunctionPointerType();
+                corLibTypeFactory.Void.MakePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -118,10 +118,10 @@ internal static class WellKnownTypeSignatureFactory
     /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
-    public static FunctionPointerTypeSignature GetTrustLevelImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static MethodSignature GetTrustLevelImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
     {
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int>'
-        return new MethodSignature(
+        return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
                 modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
@@ -129,7 +129,28 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: corLibTypeFactory.Int32),
             parameterTypes: [
                 corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Int32.MakePointerType()]).MakeFunctionPointerType();
+                corLibTypeFactory.Int32.MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>Invoke</c> vtable entry for a delegate, taking objects for both parameters.
+    /// </summary>
+    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature InvokeImpl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, void*, int>'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
+                isRequired: false,
+                baseType: corLibTypeFactory.Int32),
+            parameterTypes: [
+                corLibTypeFactory.Void.MakePointerType(),
+                corLibTypeFactory.Void.MakePointerType(),
+                corLibTypeFactory.Void.MakePointerType()]);
     }
 
     /// <summary>

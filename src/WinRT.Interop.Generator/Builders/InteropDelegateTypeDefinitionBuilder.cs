@@ -3,7 +3,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -592,7 +591,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         _ = invokeInstructions.Add(CilOpCodes.Ldloc_3);
         _ = invokeInstructions.Add(CilOpCodes.Ldind_I);
         _ = invokeInstructions.Add(CilOpCodes.Ldfld, wellKnownInteropDefinitions.DelegateVftbl.Fields[3]);
-        _ = invokeInstructions.Add(CilOpCodes.Calli, wellKnownInteropDefinitions.DelegateVftbl.Fields[3].Signature!.FieldType.MakeStandAloneSignature());
+        _ = invokeInstructions.Add(CilOpCodes.Calli, WellKnownTypeSignatureFactory.InvokeImpl(module.CorLibTypeFactory, module.DefaultImporter).MakeStandAloneSignature());
         _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoThrowExceptionForHR.ImportWith(module.DefaultImporter));
         _ = invokeInstructions.Add(CilOpCodes.Leave_S, ret.CreateLabel());
 
@@ -642,19 +641,6 @@ internal static class InteropDelegateTypeDefinitionBuilder
             HandlerStart = finally_2.CreateLabel(),
             HandlerEnd = finally_1.CreateLabel()
         });
-
-        invokeBody.ComputeMaxStackOnBuild = false;
-
-        invokeInstructions.CalculateOffsets();
-
-        var builder = new StringBuilder();
-        var formatter = new CilInstructionFormatter();
-        foreach (CilInstruction instruction in invokeInstructions)
-            builder.AppendLine(formatter.FormatInstruction(instruction));
-        var text = builder.ToString();
-
-        //var idx = invokeInstructions.GetIndexByOffset(0x52);
-        //var ins = invokeInstructions[idx];
     }
 
     /// <summary>
