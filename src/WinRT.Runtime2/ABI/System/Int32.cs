@@ -306,14 +306,12 @@ file static unsafe class Int32PropertyValueImpl
         {
             int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            try
-            {
-                *value = checked((byte)unboxedValue);
-            }
-            catch (OverflowException)
+            if (unboxedValue is < byte.MinValue or > byte.MaxValue)
             {
                 throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
             }
+
+            *value = (byte)unboxedValue;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -339,14 +337,12 @@ file static unsafe class Int32PropertyValueImpl
         {
             int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            try
-            {
-                *value = checked((short)unboxedValue);
-            }
-            catch (OverflowException)
+            if (unboxedValue is < short.MinValue or > short.MaxValue)
             {
                 throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
             }
+
+            *value = (short)unboxedValue;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -372,14 +368,12 @@ file static unsafe class Int32PropertyValueImpl
         {
             int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            try
-            {
-                *value = checked((ushort)unboxedValue);
-            }
-            catch (OverflowException)
+            if (unboxedValue is < ushort.MinValue or > ushort.MaxValue)
             {
                 throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
             }
+
+            *value = (ushort)unboxedValue;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -429,14 +423,12 @@ file static unsafe class Int32PropertyValueImpl
         {
             int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            try
-            {
-                *value = checked((uint)unboxedValue);
-            }
-            catch (OverflowException)
+            if (unboxedValue < 0)
             {
                 throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
             }
+
+            *value = (uint)unboxedValue;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -486,14 +478,12 @@ file static unsafe class Int32PropertyValueImpl
         {
             int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            try
-            {
-                *value = checked((ulong)unboxedValue);
-            }
-            catch (OverflowException)
+            if (unboxedValue < 0)
             {
                 throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
             }
+
+            *value = (ulong)unboxedValue;
 
             return WellKnownErrorCodes.S_OK;
         }
