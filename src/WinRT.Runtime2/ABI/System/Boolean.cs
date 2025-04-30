@@ -260,7 +260,6 @@ file static unsafe class BooleanPropertyValueImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.type"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT get_Type(void* thisPtr, PropertyType* value)
     {
         if (value == null)
@@ -275,7 +274,6 @@ file static unsafe class BooleanPropertyValueImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.isnumericscalar"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-
     private static HRESULT get_IsNumericScalar(void* thisPtr, bool* value)
     {
         if (value == null)
