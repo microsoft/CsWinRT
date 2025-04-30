@@ -31,7 +31,7 @@ internal unsafe struct IPropertyValueVftbl
     public delegate* unmanaged[MemberFunction]<void*, ulong*, HRESULT> GetUInt64;
     public delegate* unmanaged[MemberFunction]<void*, float*, HRESULT> GetSingle;
     public delegate* unmanaged[MemberFunction]<void*, double*, HRESULT> GetDouble;
-    public delegate* unmanaged[MemberFunction]<void*, ushort*, HRESULT> GetChar16;
+    public delegate* unmanaged[MemberFunction]<void*, char*, HRESULT> GetChar16;
     public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> GetBoolean;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetString;
     public delegate* unmanaged[MemberFunction]<void*, Guid*, HRESULT> GetGuid;

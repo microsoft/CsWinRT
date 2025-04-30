@@ -23,4 +23,10 @@ internal partial class WellKnownErrorCodes
 
     /// <summary>Class not registered.</summary>
     public const HRESULT REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
+
+    /// <summary>Type mismatch.</summary>
+    public const HRESULT TYPE_E_TYPEMISMATCH = unchecked((int)0x80028CA0);
+
+    /// <summary>Numeric overflow.</summary>
+    public const HRESULT DISP_E_OVERFLOW = unchecked((int)0x8002000A);
 }

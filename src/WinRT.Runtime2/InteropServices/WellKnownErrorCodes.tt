@@ -18,7 +18,9 @@ var entries = new (string Name, uint Value, string Description)[]
     ("E_ABORT", 0x80004004, "Operation aborted."),
     ("E_NOINTERFACE", 0x80004002, "No such interface supported."),
     ("E_POINTER", 0x80004003, "Pointer that is not valid."),
-    ("REGDB_E_CLASSNOTREG", 0x80040154, "Class not registered.")
+    ("REGDB_E_CLASSNOTREG", 0x80040154, "Class not registered."),
+    ("TYPE_E_TYPEMISMATCH", 0x80028CA0, "Type mismatch."),
+    ("DISP_E_OVERFLOW", 0x8002000A, "Numeric overflow.")
 };
 
 for (int i = 0; i < entries.Length; i++)
