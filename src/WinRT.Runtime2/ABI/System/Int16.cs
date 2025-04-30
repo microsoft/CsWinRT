@@ -14,46 +14,46 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable CS0649, IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
-    value: "Windows.Foundation.IReference<UInt8>",
-    target: typeof(ABI.System.Byte),
-    trimTarget: typeof(byte))]
+    value: "Windows.Foundation.IReference<Int16>",
+    target: typeof(ABI.System.Int16),
+    trimTarget: typeof(short))]
 
-[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(byte), typeof(ABI.System.Byte))]
+[assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(short), typeof(ABI.System.Int16))]
 
 namespace ABI.System;
 
 /// <summary>
-/// ABI type for <see cref="byte"/>.
+/// ABI type for <see cref="short"/>.
 /// </summary>
-[WindowsRuntimeClassName("Windows.Foundation.IReference<UInt8>")]
-[ByteComWrappersMarshaller]
-file static class Byte;
+[WindowsRuntimeClassName("Windows.Foundation.IReference<Int16>")]
+[Int16ComWrappersMarshaller]
+file static class Int16;
 
 /// <summary>
-/// Marshaller for <see cref="byte"/>.
+/// Marshaller for <see cref="short"/>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class ByteMarshaller
+public static unsafe class Int16Marshaller
 {
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged"/>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(byte? value)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(short? value)
     {
-        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfByte);
+        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, in WellKnownInterfaceIds.IID_IReferenceOfShort);
     }
 
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.UnboxToManaged(void*)"/>
-    public static byte? UnboxToManaged(void* value)
+    public static short? UnboxToManaged(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<byte>(value);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<short>(value);
     }
 }
 
 /// <summary>
-/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="byte"/>.
+/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="short"/>.
 /// </summary>
-file struct ByteInterfaceEntries
+file struct Int16InterfaceEntries
 {
-    public ComInterfaceEntry IReferenceOfByte;
+    public ComInterfaceEntry IReferenceOfInt16;
     public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
@@ -64,25 +64,25 @@ file struct ByteInterfaceEntries
 }
 
 /// <summary>
-/// The implementation of <see cref="ByteInterfaceEntries"/>.
+/// The implementation of <see cref="Int16InterfaceEntries"/>.
 /// </summary>
-file static class ByteInterfaceEntriesImpl
+file static class Int16InterfaceEntriesImpl
 {
     /// <summary>
-    /// The <see cref="ByteInterfaceEntries"/> value for <see cref="byte"/>.
+    /// The <see cref="Int16InterfaceEntries"/> value for <see cref="short"/>.
     /// </summary>
     [FixedAddressValueType]
-    public static readonly ByteInterfaceEntries Entries;
+    public static readonly Int16InterfaceEntries Entries;
 
     /// <summary>
     /// Initializes <see cref="Entries"/>.
     /// </summary>
-    static ByteInterfaceEntriesImpl()
+    static Int16InterfaceEntriesImpl()
     {
-        Entries.IReferenceOfByte.IID = WellKnownInterfaceIds.IID_IReferenceOfByte;
-        Entries.IReferenceOfByte.Vtable = ByteReferenceImpl.Vtable;
+        Entries.IReferenceOfInt16.IID = WellKnownInterfaceIds.IID_IReferenceOfShort;
+        Entries.IReferenceOfInt16.Vtable = Int16ReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
-        Entries.IPropertyValue.Vtable = BytePropertyValueImpl.Vtable;
+        Entries.IPropertyValue.Vtable = Int16PropertyValueImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
@@ -99,9 +99,9 @@ file static class ByteInterfaceEntriesImpl
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="byte"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="short"/>.
 /// </summary>
-internal sealed unsafe class ByteComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+internal sealed unsafe class Int16ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -112,22 +112,22 @@ internal sealed unsafe class ByteComWrappersMarshallerAttribute : WindowsRuntime
     /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(ByteInterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(Int16InterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in ByteInterfaceEntriesImpl.Entries));
+        return (ComInterfaceEntry*)Unsafe.AsPointer(ref Unsafe.AsRef(in Int16InterfaceEntriesImpl.Entries));
     }
 
     /// <inheritdoc/>
     public override object CreateObject(void* value)
     {
-        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<byte>(value, in WellKnownInterfaceIds.IID_IReferenceOfByte);
+        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<short>(value, in WellKnownInterfaceIds.IID_IReferenceOfShort);
     }
 }
 
 /// <summary>
-/// Binding type for the <c>IReference`1</c> implementation for <see cref="byte"/>.
+/// Binding type for the <c>IReference`1</c> implementation for <see cref="short"/>.
 /// </summary>
-file unsafe struct ByteReferenceVftbl
+file unsafe struct Int16ReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -135,24 +135,24 @@ file unsafe struct ByteReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, byte*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, short*, HRESULT> Value;
 }
 
 /// <summary>
-/// The <c>IReference`1</c> implementation for <see cref="byte"/>.
+/// The <c>IReference`1</c> implementation for <see cref="short"/>.
 /// </summary>
-file static unsafe class ByteReferenceImpl
+file static unsafe class Int16ReferenceImpl
 {
     /// <summary>
-    /// The <see cref="ByteReferenceVftbl"/> value for the managed <c>IReference`1</c> implementation.
+    /// The <see cref="Int16ReferenceVftbl"/> value for the managed <c>IReference`1</c> implementation.
     /// </summary>
     [FixedAddressValueType]
-    private static readonly ByteReferenceVftbl Vftbl;
+    private static readonly Int16ReferenceVftbl Vftbl;
 
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static ByteReferenceImpl()
+    static Int16ReferenceImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
@@ -170,7 +170,7 @@ file static unsafe class ByteReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, byte* result)
+    public static HRESULT Value(void* thisPtr, short* result)
     {
         if (result is null)
         {
@@ -179,7 +179,7 @@ file static unsafe class ByteReferenceImpl
 
         try
         {
-            *result = (byte)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            *result = (short)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -191,9 +191,9 @@ file static unsafe class ByteReferenceImpl
 }
 
 /// <summary>
-/// The <c>IPropertyValue</c> implementation for <see cref="byte"/>.
+/// The <c>IPropertyValue</c> implementation for <see cref="short"/>.
 /// </summary>
-file static unsafe class BytePropertyValueImpl
+file static unsafe class Int16PropertyValueImpl
 {
     /// <summary>
     /// The <see cref="IPropertyValueVftbl"/> value for the managed <c>IPropertyValue</c> implementation.
@@ -204,14 +204,14 @@ file static unsafe class BytePropertyValueImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static BytePropertyValueImpl()
+    static Int16PropertyValueImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.get_Type = &get_Type;
         Vftbl.get_IsNumericScalar = &get_IsNumericScalar;
-        Vftbl.GetUInt8 = &ByteReferenceImpl.Value;
-        Vftbl.GetInt16 = &GetInt16;
+        Vftbl.GetUInt8 = &GetUInt8;
+        Vftbl.GetInt16 = &Int16ReferenceImpl.Value;
         Vftbl.GetUInt16 = &GetUInt16;
         Vftbl.GetInt32 = &GetInt32;
         Vftbl.GetUInt32 = &GetUInt32;
@@ -268,7 +268,7 @@ file static unsafe class BytePropertyValueImpl
             return WellKnownErrorCodes.E_POINTER;
         }
 
-        *value = PropertyType.UInt8;
+        *value = PropertyType.Int16;
 
         return WellKnownErrorCodes.S_OK;
     }
@@ -288,10 +288,10 @@ file static unsafe class BytePropertyValueImpl
         return WellKnownErrorCodes.S_OK;
     }
 
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint16"/>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint8"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
-    private static HRESULT GetInt16(void* thisPtr, short* value)
+    private static HRESULT GetUInt8(void* thisPtr, byte* value)
     {
         if (value == null)
         {
@@ -300,7 +300,14 @@ file static unsafe class BytePropertyValueImpl
 
         try
         {
-            *value = (byte)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            short unboxedValue = (short)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            if (unboxedValue is < byte.MinValue or > byte.MaxValue)
+            {
+                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
+            }
+
+            *value = (byte)unboxedValue;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -322,7 +329,14 @@ file static unsafe class BytePropertyValueImpl
 
         try
         {
-            *value = (byte)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            short unboxedValue = (short)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            if (unboxedValue < 0)
+            {
+                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
+            }
+
+            *value = (ushort)unboxedValue;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -332,7 +346,7 @@ file static unsafe class BytePropertyValueImpl
         }
     }
 
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint32"/>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint32"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
 
     private static HRESULT GetInt32(void* thisPtr, int* value)
@@ -344,7 +358,7 @@ file static unsafe class BytePropertyValueImpl
 
         try
         {
-            *value = (byte)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            *value = (short)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -366,7 +380,14 @@ file static unsafe class BytePropertyValueImpl
 
         try
         {
-            *value = (byte)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            short unboxedValue = (short)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            if (unboxedValue < 0)
+            {
+                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
+            }
+
+            *value = (uint)unboxedValue;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -388,7 +409,7 @@ file static unsafe class BytePropertyValueImpl
 
         try
         {
-            *value = (byte)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            *value = (short)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -410,7 +431,14 @@ file static unsafe class BytePropertyValueImpl
 
         try
         {
-            *value = (byte)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            short unboxedValue = (short)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            if (unboxedValue < 0)
+            {
+                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
+            }
+
+            *value = (ulong)unboxedValue;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -432,7 +460,7 @@ file static unsafe class BytePropertyValueImpl
 
         try
         {
-            *value = (byte)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            *value = (short)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -454,7 +482,7 @@ file static unsafe class BytePropertyValueImpl
 
         try
         {
-            *value = (byte)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+            *value = (short)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
