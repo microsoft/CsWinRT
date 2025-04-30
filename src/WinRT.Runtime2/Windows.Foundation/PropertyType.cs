@@ -4,7 +4,7 @@
 using System.ComponentModel;
 using WindowsRuntime;
 
-namespace Windows.UI.Xaml.Interop;
+namespace Windows.Foundation;
 
 /// <summary>
 /// Specifies property value types.

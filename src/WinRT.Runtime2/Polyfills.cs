@@ -10,7 +10,7 @@ public sealed class TypeMapAttribute<TTypeMapGroup> : Attribute
 {
     public TypeMapAttribute(string value, Type target) { }
 
-    [RequiresUnreferencedCode("Interop types may be removed by trimming")]
+    //[RequiresUnreferencedCode("Interop types may be removed by trimming")]
     public TypeMapAttribute(string value, Type target, Type trimTarget) { }
 }
 

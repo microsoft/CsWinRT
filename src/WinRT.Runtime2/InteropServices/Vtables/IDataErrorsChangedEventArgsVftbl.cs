@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Windows.Foundation;
 
 #pragma warning disable CS0649, IDE1006
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using Windows.Foundation;
 
 #pragma warning disable CS0649
 

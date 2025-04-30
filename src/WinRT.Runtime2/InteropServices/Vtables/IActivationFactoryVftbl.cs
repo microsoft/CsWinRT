@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
+using Windows.Foundation;
 
 #pragma warning disable CS0649, CS1573
 

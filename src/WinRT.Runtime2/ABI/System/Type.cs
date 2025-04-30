@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Windows.Foundation;
 using Windows.UI.Xaml.Interop;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
