@@ -15,7 +15,7 @@ namespace Windows.Foundation;
 /// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.propertytype"/>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public enum PropertyType
+public enum PropertyType : uint
 {
     /// <summary>
     /// No type is specified.
