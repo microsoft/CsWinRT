@@ -166,16 +166,12 @@ file static unsafe class EventRegistrationTokenReferenceImpl
 
         try
         {
-            EventRegistrationToken unboxedValue = (EventRegistrationToken)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            Unsafe.WriteUnaligned(result, unboxedValue);
+            *result = (EventRegistrationToken)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(EventRegistrationToken));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

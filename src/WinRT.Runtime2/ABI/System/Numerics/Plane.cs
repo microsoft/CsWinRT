@@ -178,16 +178,12 @@ file static unsafe class PlaneReferenceImpl
 
         try
         {
-            global::System.Numerics.Plane unboxedValue = (global::System.Numerics.Plane)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            Unsafe.WriteUnaligned(result, unboxedValue);
+            *result = (global::System.Numerics.Plane)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (global::System.Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(global::System.Numerics.Plane));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

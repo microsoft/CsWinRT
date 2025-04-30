@@ -179,16 +179,12 @@ file static unsafe class Int32ReferenceImpl
 
         try
         {
-            int unboxedValue = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            Unsafe.WriteUnaligned(result, unboxedValue);
+            *result = (int)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (global::System.Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(int));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

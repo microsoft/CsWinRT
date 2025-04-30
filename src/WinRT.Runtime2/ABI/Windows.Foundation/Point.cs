@@ -166,16 +166,12 @@ file static unsafe class PointReferenceImpl
 
         try
         {
-            Point unboxedValue = (Point)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            Unsafe.WriteUnaligned(result, unboxedValue);
+            *result = (Point)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(Point));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

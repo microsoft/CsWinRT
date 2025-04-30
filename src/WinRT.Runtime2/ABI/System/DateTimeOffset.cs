@@ -220,14 +220,12 @@ file static unsafe class DateTimeOffsetReferenceImpl
         {
             global::System.DateTimeOffset unboxedValue = (global::System.DateTimeOffset)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            Unsafe.WriteUnaligned(result, DateTimeOffsetMarshaller.ConvertToUnmanaged(unboxedValue));
+            *result = DateTimeOffsetMarshaller.ConvertToUnmanaged(unboxedValue);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (global::System.Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(TimeSpan));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

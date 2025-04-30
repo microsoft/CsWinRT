@@ -211,14 +211,12 @@ file static unsafe class TimeSpanReferenceImpl
         {
             global::System.TimeSpan unboxedValue = (global::System.TimeSpan)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            Unsafe.WriteUnaligned(result, TimeSpanMarshaller.ConvertToUnmanaged(unboxedValue));
+            *result = TimeSpanMarshaller.ConvertToUnmanaged(unboxedValue);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (global::System.Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(TimeSpan));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

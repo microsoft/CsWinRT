@@ -287,14 +287,12 @@ file static unsafe class TypeReferenceImpl
         {
             global::System.Type unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Type>((ComInterfaceDispatch*)thisPtr);
 
-            Unsafe.WriteUnaligned(result, TypeMarshaller.ConvertToUnmanaged(unboxedValue));
+            *result = TypeMarshaller.ConvertToUnmanaged(unboxedValue);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (global::System.Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(TimeSpan));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

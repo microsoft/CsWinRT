@@ -195,14 +195,12 @@ file static unsafe class ExceptionReferenceImpl
         {
             global::System.Exception unboxedValue = ComInterfaceDispatch.GetInstance<global::System.Exception>((ComInterfaceDispatch*)thisPtr);
 
-            Unsafe.WriteUnaligned(result, ExceptionMarshaller.ConvertToUnmanaged(unboxedValue));
+            *result = ExceptionMarshaller.ConvertToUnmanaged(unboxedValue);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (global::System.Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(Exception));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

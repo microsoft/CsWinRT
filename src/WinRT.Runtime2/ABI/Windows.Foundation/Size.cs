@@ -166,16 +166,12 @@ file static unsafe class SizeReferenceImpl
 
         try
         {
-            Size unboxedValue = (Size)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            Unsafe.WriteUnaligned(result, unboxedValue);
+            *result = (Size)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(Size));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

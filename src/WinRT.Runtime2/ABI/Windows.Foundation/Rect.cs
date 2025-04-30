@@ -166,16 +166,12 @@ file static unsafe class RectReferenceImpl
 
         try
         {
-            Rect unboxedValue = (Rect)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            Unsafe.WriteUnaligned(result, unboxedValue);
+            *result = (Rect)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(Rect));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

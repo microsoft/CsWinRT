@@ -178,16 +178,12 @@ file static unsafe class Vector4ReferenceImpl
 
         try
         {
-            global::System.Numerics.Vector4 unboxedValue = (global::System.Numerics.Vector4)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            Unsafe.WriteUnaligned(result, unboxedValue);
+            *result = (global::System.Numerics.Vector4)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (global::System.Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(global::System.Numerics.Vector4));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }

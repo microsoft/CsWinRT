@@ -178,16 +178,12 @@ file static unsafe class Matrix3x2ReferenceImpl
 
         try
         {
-            global::System.Numerics.Matrix3x2 unboxedValue = (global::System.Numerics.Matrix3x2)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            Unsafe.WriteUnaligned(result, unboxedValue);
+            *result = (global::System.Numerics.Matrix3x2)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
             return WellKnownErrorCodes.S_OK;
         }
         catch (global::System.Exception e)
         {
-            Unsafe.WriteUnaligned(result, default(global::System.Numerics.Matrix3x2));
-
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
     }
