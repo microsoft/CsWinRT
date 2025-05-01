@@ -122,7 +122,7 @@ file static class DateTimeOffsetInterfaceEntriesImpl
         Entries.IReferenceOfDateTimeOffset.IID = WellKnownInterfaceIds.IID_IReferenceOfDateTimeOffset;
         Entries.IReferenceOfDateTimeOffset.Vtable = DateTimeOffsetReferenceImpl.Vtable;
         Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
-        Entries.IPropertyValue.Vtable = GuidPropertyValueImpl.Vtable;
+        Entries.IPropertyValue.Vtable = DateTimeOffsetPropertyValueImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
@@ -237,7 +237,7 @@ file static unsafe class DateTimeOffsetReferenceImpl
 /// <summary>
 /// The <c>IPropertyValue</c> implementation for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
-file static unsafe class GuidPropertyValueImpl
+file static unsafe class DateTimeOffsetPropertyValueImpl
 {
     /// <summary>
     /// The <see cref="IPropertyValueVftbl"/> value for the managed <c>IPropertyValue</c> implementation.
@@ -248,7 +248,7 @@ file static unsafe class GuidPropertyValueImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static GuidPropertyValueImpl()
+    static DateTimeOffsetPropertyValueImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 

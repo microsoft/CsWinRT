@@ -11,7 +11,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649, IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.TimeSpan>",
@@ -85,6 +85,7 @@ public static unsafe class TimeSpanMarshaller
 file struct TimeSpanInterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfTimeSpan;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -111,6 +112,8 @@ file static class TimeSpanInterfaceEntriesImpl
     {
         Entries.IReferenceOfTimeSpan.IID = WellKnownInterfaceIds.IID_IReferenceOfTimeSpan;
         Entries.IReferenceOfTimeSpan.Vtable = TimeSpanReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = TimeSpanPropertyValueImpl.Vtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
@@ -200,7 +203,7 @@ file static unsafe class TimeSpanReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT Value(void* thisPtr, TimeSpan* result)
+    public static HRESULT Value(void* thisPtr, TimeSpan* result)
     {
         if (result is null)
         {
@@ -219,5 +222,88 @@ file static unsafe class TimeSpanReferenceImpl
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
+    }
+}
+
+/// <summary>
+/// The <c>IPropertyValue</c> implementation for <see cref="global::System.TimeSpan"/>.
+/// </summary>
+file static unsafe class TimeSpanPropertyValueImpl
+{
+    /// <summary>
+    /// The <see cref="IPropertyValueVftbl"/> value for the managed <c>IPropertyValue</c> implementation.
+    /// </summary>
+    [FixedAddressValueType]
+    private static readonly IPropertyValueVftbl Vftbl;
+
+    /// <summary>
+    /// Initializes <see cref="Vftbl"/>.
+    /// </summary>
+    static TimeSpanPropertyValueImpl()
+    {
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+
+        Vftbl.get_Type = &get_Type;
+        Vftbl.get_IsNumericScalar = &IPropertyValueImpl.get_IsNumericScalarFalse;
+        Vftbl.GetUInt8 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt32 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt64 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetSingle = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetDouble = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetString = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetGuid = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetTimeSpan = &TimeSpanReferenceImpl.Value;
+        Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetSize = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetRect = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetUInt8Array = (delegate* unmanaged[MemberFunction]<void*, int*, byte**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, short**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, ushort**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, int**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt32Array = (delegate* unmanaged[MemberFunction]<void*, int*, uint**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, long**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetUInt64Array = (delegate* unmanaged[MemberFunction]<void*, int*, ulong**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetSingleArray = (delegate* unmanaged[MemberFunction]<void*, int*, float**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetDoubleArray = (delegate* unmanaged[MemberFunction]<void*, int*, double**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetChar16Array = (delegate* unmanaged[MemberFunction]<void*, int*, char**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetBooleanArray = (delegate* unmanaged[MemberFunction]<void*, int*, bool**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, int*, HSTRING**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetInspectableArray = &IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, int*, Guid**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, int*, DateTimeOffset**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetTimeSpanArray = (delegate* unmanaged[MemberFunction]<void*, int*, TimeSpan**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetPointArray = (delegate* unmanaged[MemberFunction]<void*, int*, Point**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetSizeArray = (delegate* unmanaged[MemberFunction]<void*, int*, Size**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+        Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, int*, Rect**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
+    }
+
+    /// <summary>
+    /// Gets a pointer to the managed <c>IPropertyValue</c> implementation.
+    /// </summary>
+    public static nint Vtable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(ref Unsafe.AsRef(in Vftbl));
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.type"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT get_Type(void* thisPtr, PropertyType* value)
+    {
+        if (value == null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        *value = PropertyType.TimeSpan;
+
+        return WellKnownErrorCodes.S_OK;
     }
 }
