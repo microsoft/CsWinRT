@@ -209,7 +209,7 @@ file static unsafe class BooleanPropertyValueImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.get_Type = &get_Type;
-        Vftbl.get_IsNumericScalar = &get_IsNumericScalar;
+        Vftbl.get_IsNumericScalar = &IPropertyValueImpl.get_IsNumericScalarFalse;
         Vftbl.GetUInt8 = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetUInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
@@ -268,20 +268,6 @@ file static unsafe class BooleanPropertyValueImpl
         }
 
         *value = PropertyType.Boolean;
-
-        return WellKnownErrorCodes.S_OK;
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.isnumericscalar"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT get_IsNumericScalar(void* thisPtr, bool* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        *value = false;
 
         return WellKnownErrorCodes.S_OK;
     }

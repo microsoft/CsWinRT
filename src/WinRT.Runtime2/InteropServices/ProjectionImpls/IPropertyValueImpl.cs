@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable IDE0060
+#pragma warning disable IDE0060, IDE1006
 
 namespace WindowsRuntime.InteropServices;
 
@@ -20,6 +20,40 @@ namespace WindowsRuntime.InteropServices;
 /// <see href="https://learn.microsoft.com/en-us/uwp/api/windows.foundation.ipropertyvalue"/>
 public static unsafe class IPropertyValueImpl
 {
+    /// <summary>
+    /// Shared stub that returns <see langword="true"/>.
+    /// </summary>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.isnumericscalar"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    internal static HRESULT get_IsNumericScalarTrue(void* thisPtr, bool* value)
+    {
+        if (value == null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        *value = true;
+
+        return WellKnownErrorCodes.S_OK;
+    }
+
+    /// <summary>
+    /// Shared stub that returns <see langword="false"/>.
+    /// </summary>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.isnumericscalar"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    internal static HRESULT get_IsNumericScalarFalse(void* thisPtr, bool* value)
+    {
+        if (value == null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        *value = false;
+
+        return WellKnownErrorCodes.S_OK;
+    }
+
     /// <summary>
     /// Shared stub that always throws <see cref="InvalidCastException"/> for any type.
     /// </summary>

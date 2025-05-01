@@ -209,7 +209,7 @@ file static unsafe class SinglePropertyValueImpl
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.get_Type = &get_Type;
-        Vftbl.get_IsNumericScalar = &get_IsNumericScalar;
+        Vftbl.get_IsNumericScalar = &IPropertyValueImpl.get_IsNumericScalarTrue;
         Vftbl.GetUInt8 = &GetUInt8;
         Vftbl.GetInt16 = &GetInt16;
         Vftbl.GetUInt16 = &GetUInt16;
@@ -268,20 +268,6 @@ file static unsafe class SinglePropertyValueImpl
         }
 
         *value = PropertyType.Single;
-
-        return WellKnownErrorCodes.S_OK;
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.isnumericscalar"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT get_IsNumericScalar(void* thisPtr, bool* value)
-    {
-        if (value == null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        *value = true;
 
         return WellKnownErrorCodes.S_OK;
     }
