@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -306,6 +307,69 @@ file static unsafe class StringPropertyValueImpl
         return WellKnownErrorCodes.S_OK;
     }
 
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint8"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetUInt8(void* thisPtr, byte* value)
+    {
+        return GetNumeric(thisPtr, value);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint16"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetInt16(void* thisPtr, short* value)
+    {
+        return GetNumeric(thisPtr, value);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint16"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetUInt16(void* thisPtr, ushort* value)
+    {
+        return GetNumeric(thisPtr, value);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint32"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetInt32(void* thisPtr, int* value)
+    {
+        return GetNumeric(thisPtr, value);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint32"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetUInt32(void* thisPtr, uint* value)
+    {
+        return GetNumeric(thisPtr, value);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint64"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetInt64(void* thisPtr, long* value)
+    {
+        return GetNumeric(thisPtr, value);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint64"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetUInt64(void* thisPtr, ulong* value)
+    {
+        return GetNumeric(thisPtr, value);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getsingle"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetSingle(void* thisPtr, float* value)
+    {
+        return GetNumeric(thisPtr, value);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getdouble"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetDouble(void* thisPtr, double* value)
+    {
+        return GetNumeric(thisPtr, value);
+    }
+
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getguid"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetGuid(void* thisPtr, Guid* value)
@@ -322,6 +386,44 @@ file static unsafe class StringPropertyValueImpl
             *value = Guid.Parse(unboxedValue);
 
             return WellKnownErrorCodes.S_OK;
+        }
+        catch (global::System.Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+
+    /// <summary>
+    /// Shared stub to get a numeric value, with parsing.
+    /// </summary>
+    /// <typeparam name="T">The numeric type to get.</typeparam>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint32"/>
+    private static HRESULT GetNumeric<T>(void* thisPtr, T* value)
+        where T : unmanaged, IParsable<T>
+    {
+        if (value == null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            string unboxedValue = ComInterfaceDispatch.GetInstance<string>((ComInterfaceDispatch*)thisPtr);
+
+            try
+            {
+                *value = T.Parse(unboxedValue, CultureInfo.InvariantCulture);
+
+                return WellKnownErrorCodes.S_OK;
+            }
+            catch (FormatException)
+            {
+                throw new InvalidCastException("", WellKnownErrorCodes.TYPE_E_TYPEMISMATCH);
+            }
+            catch (OverflowException)
+            {
+                throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
+            }
         }
         catch (global::System.Exception e)
         {
