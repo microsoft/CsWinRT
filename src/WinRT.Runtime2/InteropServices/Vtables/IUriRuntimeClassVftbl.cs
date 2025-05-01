@@ -47,7 +47,7 @@ internal unsafe struct IUriRuntimeClassVftbl
     /// <param name="result">The raw Uniform Resource Identifier (URI) string.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int get_RawUriUnsafe(void* thisPtr, HSTRING* result)
+    public static HRESULT get_RawUriUnsafe(void* thisPtr, HSTRING* result)
     {
         return ((IUriRuntimeClassVftbl*)thisPtr)->_get_RawUri(thisPtr, result);
     }

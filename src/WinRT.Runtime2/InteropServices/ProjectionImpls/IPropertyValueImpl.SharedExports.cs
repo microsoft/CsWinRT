@@ -52,7 +52,7 @@ public unsafe partial class IPropertyValueImpl
     /// </summary>
     /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint32array"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static int ThrowStubForGetOverloads(void* thisPtr, void* value)
+    internal static HRESULT ThrowStubForGetOverloads(void* thisPtr, void* value)
     {
         if (value == null)
         {
@@ -74,7 +74,7 @@ public unsafe partial class IPropertyValueImpl
     /// </summary>
     /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint32array"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static int ThrowStubForGetArrayOverloads(void* thisPtr, int* size, void** value)
+    internal static HRESULT ThrowStubForGetArrayOverloads(void* thisPtr, int* size, void** value)
     {
         if (size == null || value == null)
         {

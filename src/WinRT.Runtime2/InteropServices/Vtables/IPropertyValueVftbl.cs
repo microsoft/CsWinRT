@@ -52,7 +52,7 @@ internal unsafe struct IPropertyValueVftbl
     public delegate* unmanaged[MemberFunction]<void*, int*, char**, HRESULT> GetChar16Array;
     public delegate* unmanaged[MemberFunction]<void*, int*, bool**, HRESULT> GetBooleanArray;
     public delegate* unmanaged[MemberFunction]<void*, int*, HSTRING**, HRESULT> GetStringArray;
-    public delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT> GetInspectableArray;
+    public delegate* unmanaged[MemberFunction]<void*, int*, void***, HRESULT> GetInspectableArray;
     public delegate* unmanaged[MemberFunction]<void*, int*, Guid**, HRESULT> GetGuidArray;
     public delegate* unmanaged[MemberFunction]<void*, int*, ABI.System.DateTimeOffset**, HRESULT> GetDateTimeArray;
     public delegate* unmanaged[MemberFunction]<void*, int*, ABI.System.TimeSpan**, HRESULT> GetTimeSpanArray;
