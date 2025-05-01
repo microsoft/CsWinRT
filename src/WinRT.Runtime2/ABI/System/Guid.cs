@@ -11,7 +11,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE1006
+#pragma warning disable CS0649, IDE0008, IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Guid>",
@@ -221,7 +221,7 @@ file static unsafe class GuidPropertyValueImpl
         Vftbl.GetDouble = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetString = &IPropertyValueImpl.ThrowStubForGetOverloads;
+        Vftbl.GetString = &GetString;
         Vftbl.GetGuid = &GuidReferenceImpl.Value;
         Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetTimeSpan = &IPropertyValueImpl.ThrowStubForGetOverloads;
@@ -270,5 +270,34 @@ file static unsafe class GuidPropertyValueImpl
         *value = PropertyType.Guid;
 
         return WellKnownErrorCodes.S_OK;
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getstring"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static HRESULT GetString(void* thisPtr, HSTRING* value)
+    {
+        if (value == null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            var unboxedValue = (global::System.Guid)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            // A 'Guid' formatted as 'D' is always exactly 36 characters
+            Span<char> buffer = stackalloc char[36];
+
+            // This formatting call will always succeed, and it will always write 36 characters
+            _ = unboxedValue.TryFormat(buffer, out _, format: "D");
+
+            *value = HStringMarshaller.ConvertToUnmanaged(buffer);
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (global::System.Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
     }
 }
