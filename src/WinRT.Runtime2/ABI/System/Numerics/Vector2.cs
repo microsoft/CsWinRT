@@ -56,6 +56,7 @@ public static unsafe class Vector2Marshaller
 file struct Vector2InterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfVector2;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -82,6 +83,8 @@ file static class Vector2InterfaceEntriesImpl
     {
         Entries.IReferenceOfVector2.IID = WellKnownInterfaceIds.IID_IReferenceOfVector2;
         Entries.IReferenceOfVector2.Vtable = Vector2ReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;

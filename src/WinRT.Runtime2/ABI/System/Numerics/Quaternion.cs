@@ -56,6 +56,7 @@ public static unsafe class QuaternionMarshaller
 file struct QuaternionInterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfQuaternion;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -82,6 +83,8 @@ file static class QuaternionInterfaceEntriesImpl
     {
         Entries.IReferenceOfQuaternion.IID = WellKnownInterfaceIds.IID_IReferenceOfQuaternion;
         Entries.IReferenceOfQuaternion.Vtable = QuaternionReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;

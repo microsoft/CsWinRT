@@ -72,6 +72,7 @@ public static class ExceptionMarshaller
 file struct ExceptionInterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfException;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -98,6 +99,8 @@ file static class ExceptionInterfaceEntriesImpl
     {
         Entries.IReferenceOfException.IID = WellKnownInterfaceIds.IID_IReferenceOfException;
         Entries.IReferenceOfException.Vtable = ExceptionReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;

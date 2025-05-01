@@ -151,6 +151,7 @@ internal static unsafe class TypeExceptions
 file struct TypeInterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfType;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -177,6 +178,8 @@ file static class TypeInterfaceEntriesImpl
     {
         Entries.IReferenceOfType.IID = WellKnownInterfaceIds.IID_IReferenceOfType;
         Entries.IReferenceOfType.Vtable = TypeReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;

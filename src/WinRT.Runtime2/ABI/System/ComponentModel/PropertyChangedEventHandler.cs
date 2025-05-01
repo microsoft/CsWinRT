@@ -117,6 +117,7 @@ file struct PropertyChangedEventHandlerInterfaceEntries
 {
     public ComInterfaceEntry PropertyChangedEventHandler;
     public ComInterfaceEntry IReferenceOfPropertyChangedEventHandler;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -145,6 +146,8 @@ file static class PropertyChangedEventHandlerInterfaceEntriesImpl
         Entries.PropertyChangedEventHandler.Vtable = PropertyChangedEventHandlerImpl.Vtable;
         Entries.IReferenceOfPropertyChangedEventHandler.IID = PropertyChangedEventHandlerReferenceImpl.IID;
         Entries.IReferenceOfPropertyChangedEventHandler.Vtable = PropertyChangedEventHandlerReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;

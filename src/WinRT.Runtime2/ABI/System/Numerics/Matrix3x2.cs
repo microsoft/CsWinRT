@@ -56,6 +56,7 @@ public static unsafe class Matrix3x2Marshaller
 file struct Matrix3x2InterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfMatrix3x2;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -82,6 +83,8 @@ file static class Matrix3x2InterfaceEntriesImpl
     {
         Entries.IReferenceOfMatrix3x2.IID = WellKnownInterfaceIds.IID_IReferenceOfMatrix3x2;
         Entries.IReferenceOfMatrix3x2.Vtable = Matrix3x2ReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;

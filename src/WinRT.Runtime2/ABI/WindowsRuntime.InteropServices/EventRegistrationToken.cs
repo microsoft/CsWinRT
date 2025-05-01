@@ -44,6 +44,7 @@ public static unsafe class EventRegistrationTokenMarshaller
 file struct EventRegistrationTokenInterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfEventRegistrationToken;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -70,6 +71,8 @@ file static class EventRegistrationTokenInterfaceEntriesImpl
     {
         Entries.IReferenceOfEventRegistrationToken.IID = WellKnownInterfaceIds.IID_IReferenceOfEventRegistrationToken;
         Entries.IReferenceOfEventRegistrationToken.Vtable = EventRegistrationTokenReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;

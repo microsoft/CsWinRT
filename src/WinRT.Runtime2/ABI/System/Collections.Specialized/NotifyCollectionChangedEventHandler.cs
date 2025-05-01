@@ -118,6 +118,7 @@ file struct NotifyCollectionChangedEventHandlerInterfaceEntries
 {
     public ComInterfaceEntry NotifyCollectionChangedEventHandler;
     public ComInterfaceEntry IReferenceOfNotifyCollectionChangedEventHandler;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -146,6 +147,8 @@ file static class NotifyCollectionChangedEventHandlerInterfaceEntriesImpl
         Entries.NotifyCollectionChangedEventHandler.Vtable = NotifyCollectionChangedEventHandlerImpl.Vtable;
         Entries.IReferenceOfNotifyCollectionChangedEventHandler.IID = NotifyCollectionChangedEventHandlerReferenceImpl.IID;
         Entries.IReferenceOfNotifyCollectionChangedEventHandler.Vtable = NotifyCollectionChangedEventHandlerReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;

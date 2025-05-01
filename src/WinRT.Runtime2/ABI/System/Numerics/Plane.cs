@@ -56,6 +56,7 @@ public static unsafe class PlaneMarshaller
 file struct PlaneInterfaceEntries
 {
     public ComInterfaceEntry IReferenceOfPlane;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -82,6 +83,8 @@ file static class PlaneInterfaceEntriesImpl
     {
         Entries.IReferenceOfPlane.IID = WellKnownInterfaceIds.IID_IReferenceOfPlane;
         Entries.IReferenceOfPlane.Vtable = PlaneReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;

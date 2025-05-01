@@ -108,6 +108,7 @@ file struct EventHandlerInterfaceEntries
 {
     public ComInterfaceEntry EventHandler;
     public ComInterfaceEntry IReferenceOfEventHandler;
+    public ComInterfaceEntry IPropertyValue;
     public ComInterfaceEntry IStringable;
     public ComInterfaceEntry IWeakReferenceSource;
     public ComInterfaceEntry IMarshal;
@@ -136,6 +137,8 @@ file static class EventHandlerInterfaceEntriesImpl
         Entries.EventHandler.Vtable = EventHandlerImpl.Vtable;
         Entries.IReferenceOfEventHandler.IID = WellKnownInterfaceIds.IID_IReferenceOfEventHandler;
         Entries.IReferenceOfEventHandler.Vtable = EventHandlerReferenceImpl.Vtable;
+        Entries.IPropertyValue.IID = WellKnownInterfaceIds.IID_IPropertyValue;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
         Entries.IStringable.IID = WellKnownInterfaceIds.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownInterfaceIds.IID_IWeakReferenceSource;
