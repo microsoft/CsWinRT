@@ -439,7 +439,7 @@ file static unsafe class SinglePropertyValueImpl
         {
             float unboxedValue = (float)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            if (float.IsNaN(unboxedValue))
+            if (float.IsNaN(unboxedValue) || unboxedValue is < long.MinValue or > long.MaxValue)
             {
                 throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
             }
@@ -467,7 +467,7 @@ file static unsafe class SinglePropertyValueImpl
         {
             float unboxedValue = (float)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-            if (float.IsNaN(unboxedValue) || unboxedValue < 0)
+            if (float.IsNaN(unboxedValue) || unboxedValue is < ulong.MinValue or > ulong.MaxValue)
             {
                 throw new InvalidCastException("", WellKnownErrorCodes.DISP_E_OVERFLOW);
             }
