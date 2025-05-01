@@ -38,10 +38,21 @@ public static unsafe class HStringMarshaller
     /// <summary>
     /// Converts a text buffer (eg. a pinned <see cref="string"/>) to a fast-pass <c>HSTRING</c> value.
     /// </summary>
-    /// <param name="value">The input text buffer to wrap with the resulting <c>HSTRING</c> value.</param>
+    /// <param name="value">
+    /// <para>
+    /// The input text buffer to wrap with the resulting <c>HSTRING</c> value.
+    /// </para>
+    /// <para>
+    /// The buffer must be <see langword="null"/>-terminated.
+    /// </para>
+    /// </param>
     /// <param name="length">
-    /// The length of the input text buffer. It should be <see langword="null"/>
-    /// if and only if <paramref name="value"/> is <see langword="null"/>.
+    /// <para>
+    /// The length of the input text buffer. It should be <see langword="null"/> if and only if <paramref name="value"/> is <see langword="null"/>.
+    /// </para>
+    /// <para>
+    /// The length should not include the <see langword="null"/> terminator character at the end of <paramref name="value"/>.
+    /// </para>
     /// </param>
     /// <param name="reference">
     /// <para>
