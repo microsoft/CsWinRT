@@ -203,6 +203,7 @@ internal static class WellKnownTypeDefinitionFactory
         //
         // public ComInterfaceEntry Delegate;
         // public ComInterfaceEntry DelegateReference;
+        // public ComInterfaceEntry IPropertyValue;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
         // public ComInterfaceEntry IMarshal;
@@ -211,6 +212,7 @@ internal static class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry IUnknown;
         interfaceEntriesType.Fields.Add(new FieldDefinition("Delegate"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("DelegateReference"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IPropertyValue"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
@@ -395,14 +396,15 @@ internal static class InteropDelegateTypeDefinitionBuilder
             entriesFieldType: wellKnownInteropDefinitions.DelegateInterfaceEntries,
             module: module,
             implTypes: [
-                delegateImplType,
-                delegateReferenceImplType,
-                module.MetadataResolver.ResolveType(wellKnownInteropReferences.IStringableImpl)!,
-                module.MetadataResolver.ResolveType(wellKnownInteropReferences.IWeakReferenceSourceImpl)!,
-                module.MetadataResolver.ResolveType(wellKnownInteropReferences.IMarshalImpl)!,
-                module.MetadataResolver.ResolveType(wellKnownInteropReferences.IAgileObjectImpl)!,
-                module.MetadataResolver.ResolveType(wellKnownInteropReferences.IInspectableImpl)!,
-                module.MetadataResolver.ResolveType(wellKnownInteropReferences.IUnknownImpl)!]);
+                (delegateImplType.GetMethod("get_IID"u8), delegateImplType.GetMethod("get_Vtable"u8)),
+                (delegateReferenceImplType.GetMethod("get_IID"u8), delegateReferenceImplType.GetMethod("get_Vtable"u8)),
+                (wellKnownInteropReferences.IPropertyValueImplget_IID, wellKnownInteropReferences.IPropertyValueImplget_OtherTypeVtable),
+                (wellKnownInteropReferences.IStringableImplget_IID, wellKnownInteropReferences.IStringableImplget_Vtable),
+                (wellKnownInteropReferences.IWeakReferenceSourceImplget_IID, wellKnownInteropReferences.IWeakReferenceSourceImplget_Vtable),
+                (wellKnownInteropReferences.IMarshalImplget_IID, wellKnownInteropReferences.IMarshalImplget_Vtable),
+                (wellKnownInteropReferences.IAgileObjectImplget_IID, wellKnownInteropReferences.IAgileObjectImplget_Vtable),
+                (wellKnownInteropReferences.IInspectableImplget_IID, wellKnownInteropReferences.IInspectableImplget_Vtable),
+                (wellKnownInteropReferences.IUnknownImplget_IID, wellKnownInteropReferences.IUnknownImplget_Vtable)]);
 
         // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
         PointerTypeSignature vtablesPropertyType = module.DefaultImporter

@@ -21,13 +21,13 @@ internal static class InteropMethodBodyFactory
     /// <param name="entriesField">The <see cref="FieldDefinition"/> for the COM interface entries.</param>
     /// <param name="entriesFieldType">The <see cref="TypeDefinition"/> for the type of <paramref name="entriesField"/>.</param>
     /// <param name="module">The module that will contain the type being created.</param>
-    /// <param name="implTypes">The types to use to extracr COM interface entry values.</param>
+    /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
     public static void InterfaceEntriesImpl(
         MethodDefinition cctor,
         FieldDefinition entriesField,
         TypeDefinition entriesFieldType,
         ModuleDefinition module,
-        params ReadOnlySpan<TypeDefinition> implTypes)
+        params ReadOnlySpan<(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable)> implTypes)
     {
         // Resolve 'ComInterfaceEntry', so we can set its fields:
         //   - [0]: Guid IID
@@ -51,12 +51,12 @@ internal static class InteropMethodBodyFactory
         {
             _ = instructions.Add(CilOpCodes.Ldsflda, entriesField);
             _ = instructions.Add(CilOpCodes.Ldflda, entriesFieldType.Fields[i]);
-            _ = instructions.Add(CilOpCodes.Call, implTypes[i].GetMethod("get_IID"u8).ImportWith(module.DefaultImporter));
+            _ = instructions.Add(CilOpCodes.Call, (IMethodDefOrRef)implTypes[i].get_IID.ImportWith(module.DefaultImporter));
             _ = instructions.Add(CilOpCodes.Ldobj, module.DefaultImporter.ImportType(typeof(Guid)));
             _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryIIDField);
             _ = instructions.Add(CilOpCodes.Ldsflda, entriesField);
             _ = instructions.Add(CilOpCodes.Ldflda, entriesFieldType.Fields[i]);
-            _ = instructions.Add(CilOpCodes.Call, implTypes[i].GetMethod("get_Vtable"u8).ImportWith(module.DefaultImporter));
+            _ = instructions.Add(CilOpCodes.Call, (IMethodDefOrRef)implTypes[i].get_Vtable.ImportWith(module.DefaultImporter));
             _ = instructions.Add(CilOpCodes.Stfld, comInterfaceEntryVtableField);
         }
 
