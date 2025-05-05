@@ -120,7 +120,7 @@ public static unsafe class TypeMarshaller
     {
         Type? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<Type>(value);
 
-        return abi.HasValue ? ConvertToManaged(abi.Value) : null;
+        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
     }
 }
 

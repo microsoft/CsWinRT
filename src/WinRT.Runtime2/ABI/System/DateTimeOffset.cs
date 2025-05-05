@@ -84,7 +84,7 @@ public static unsafe class DateTimeOffsetMarshaller
     {
         DateTimeOffset? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<DateTimeOffset>(value);
 
-        return abi.HasValue ? ConvertToManaged(abi.Value) : null;
+        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
     }
 }
 

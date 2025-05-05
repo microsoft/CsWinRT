@@ -75,7 +75,7 @@ public static unsafe class TimeSpanMarshaller
     {
         TimeSpan? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<TimeSpan>(value);
 
-        return abi.HasValue ? ConvertToManaged(abi.Value) : null;
+        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
     }
 }
 
