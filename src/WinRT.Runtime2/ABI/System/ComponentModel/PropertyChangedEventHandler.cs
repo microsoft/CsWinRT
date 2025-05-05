@@ -87,7 +87,7 @@ file static unsafe class PropertyChangedEventHandlerNativeDelegate
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
 
-        HRESULT hresult = (*(PropertyChangedEventHandlerVftbl**)thisPtr)->Invoke(
+        HRESULT hresult = ((PropertyChangedEventHandlerVftbl*)*(void***)thisPtr)->Invoke(
             thisPtr,
             senderValue.GetThisPtrUnsafe(),
             eValue.GetThisPtrUnsafe());

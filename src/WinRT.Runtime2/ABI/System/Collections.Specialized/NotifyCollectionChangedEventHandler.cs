@@ -88,7 +88,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerNativeDelegate
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
 
-        HRESULT hresult = (*(NotifyCollectionChangedEventHandlerVftbl**)thisPtr)->Invoke(
+        HRESULT hresult = ((NotifyCollectionChangedEventHandlerVftbl*)*(void***)thisPtr)->Invoke(
             thisPtr,
             senderValue.GetThisPtrUnsafe(),
             eValue.GetThisPtrUnsafe());

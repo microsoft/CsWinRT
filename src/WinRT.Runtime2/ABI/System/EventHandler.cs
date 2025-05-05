@@ -78,7 +78,7 @@ file static unsafe class EventHandlerNativeDelegate
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
 
-        HRESULT hresult = (*(EventHandlerVftbl**)thisPtr)->Invoke(
+        HRESULT hresult = ((EventHandlerVftbl*)*(void***)thisPtr)->Invoke(
             thisPtr,
             senderValue.GetThisPtrUnsafe(),
             eValue.GetThisPtrUnsafe());
