@@ -135,7 +135,7 @@ file unsafe struct SingleReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, float*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, float*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -156,7 +156,7 @@ file static unsafe class SingleReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ file static unsafe class SingleReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, float* result)
+    public static HRESULT get_Value(void* thisPtr, float* result)
     {
         if (result is null)
         {
@@ -217,7 +217,7 @@ file static unsafe class SinglePropertyValueImpl
         Vftbl.GetUInt32 = &GetUInt32;
         Vftbl.GetInt64 = &GetInt64;
         Vftbl.GetUInt64 = &GetUInt64;
-        Vftbl.GetSingle = &SingleReferenceImpl.Value;
+        Vftbl.GetSingle = &SingleReferenceImpl.get_Value;
         Vftbl.GetDouble = &GetDouble;
         Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;

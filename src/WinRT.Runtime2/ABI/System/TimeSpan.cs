@@ -168,7 +168,7 @@ file unsafe struct TimeSpanReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, TimeSpan*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, TimeSpan*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -189,7 +189,7 @@ file static unsafe class TimeSpanReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -203,7 +203,7 @@ file static unsafe class TimeSpanReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, TimeSpan* result)
+    public static HRESULT get_Value(void* thisPtr, TimeSpan* result)
     {
         if (result is null)
         {
@@ -259,7 +259,7 @@ file static unsafe class TimeSpanPropertyValueImpl
         Vftbl.GetString = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetGuid = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetTimeSpan = &TimeSpanReferenceImpl.Value;
+        Vftbl.GetTimeSpan = &TimeSpanReferenceImpl.get_Value;
         Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetSize = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetRect = &IPropertyValueImpl.ThrowStubForGetOverloads;

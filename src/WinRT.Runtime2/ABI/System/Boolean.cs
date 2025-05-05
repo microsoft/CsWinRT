@@ -135,7 +135,7 @@ file unsafe struct BooleanReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -156,7 +156,7 @@ file static unsafe class BooleanReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ file static unsafe class BooleanReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, bool* result)
+    public static HRESULT get_Value(void* thisPtr, bool* result)
     {
         if (result is null)
         {
@@ -220,7 +220,7 @@ file static unsafe class BooleanPropertyValueImpl
         Vftbl.GetSingle = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetDouble = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetBoolean = &BooleanReferenceImpl.Value;
+        Vftbl.GetBoolean = &BooleanReferenceImpl.get_Value;
         Vftbl.GetString = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetGuid = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;

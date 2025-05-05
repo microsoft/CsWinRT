@@ -135,7 +135,7 @@ file unsafe struct Int16ReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, short*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, short*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -156,7 +156,7 @@ file static unsafe class Int16ReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ file static unsafe class Int16ReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, short* result)
+    public static HRESULT get_Value(void* thisPtr, short* result)
     {
         if (result is null)
         {
@@ -211,7 +211,7 @@ file static unsafe class Int16PropertyValueImpl
         Vftbl.get_Type = &get_Type;
         Vftbl.get_IsNumericScalar = &IPropertyValueImpl.get_IsNumericScalarTrue;
         Vftbl.GetUInt8 = &GetUInt8;
-        Vftbl.GetInt16 = &Int16ReferenceImpl.Value;
+        Vftbl.GetInt16 = &Int16ReferenceImpl.get_Value;
         Vftbl.GetUInt16 = &GetUInt16;
         Vftbl.GetInt32 = &GetInt32;
         Vftbl.GetUInt32 = &GetUInt32;

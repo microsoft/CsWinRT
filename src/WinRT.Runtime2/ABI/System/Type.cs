@@ -17,7 +17,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649, IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>",
@@ -244,7 +244,7 @@ file unsafe struct TypeReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, Type*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, Type*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -265,7 +265,7 @@ file static unsafe class TypeReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -279,7 +279,7 @@ file static unsafe class TypeReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT Value(void* thisPtr, Type* result)
+    private static HRESULT get_Value(void* thisPtr, Type* result)
     {
         if (result is null)
         {

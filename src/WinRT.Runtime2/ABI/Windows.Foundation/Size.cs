@@ -125,7 +125,7 @@ file unsafe struct SizeReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, Size*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, Size*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -146,7 +146,7 @@ file static unsafe class SizeReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ file static unsafe class SizeReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, Size* result)
+    public static HRESULT get_Value(void* thisPtr, Size* result)
     {
         if (result is null)
         {
@@ -216,7 +216,7 @@ file static unsafe class SizePropertyValueImpl
         Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetTimeSpan = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetSize = &SizeReferenceImpl.Value;
+        Vftbl.GetSize = &SizeReferenceImpl.get_Value;
         Vftbl.GetRect = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetUInt8Array = (delegate* unmanaged[MemberFunction]<void*, int*, byte**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, short**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;

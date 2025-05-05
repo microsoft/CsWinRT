@@ -125,7 +125,7 @@ file unsafe struct RectReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, Rect*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, Rect*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -146,7 +146,7 @@ file static unsafe class RectReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ file static unsafe class RectReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, Rect* result)
+    public static HRESULT get_Value(void* thisPtr, Rect* result)
     {
         if (result is null)
         {
@@ -217,7 +217,7 @@ file static unsafe class RectPropertyValueImpl
         Vftbl.GetTimeSpan = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetSize = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetRect = &RectReferenceImpl.Value;
+        Vftbl.GetRect = &RectReferenceImpl.get_Value;
         Vftbl.GetUInt8Array = (delegate* unmanaged[MemberFunction]<void*, int*, byte**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, short**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetUInt16Array = (delegate* unmanaged[MemberFunction]<void*, int*, ushort**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, int*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;

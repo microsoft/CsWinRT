@@ -177,7 +177,7 @@ file unsafe struct DateTimeOffsetReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, DateTimeOffset*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, DateTimeOffset*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -198,7 +198,7 @@ file static unsafe class DateTimeOffsetReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -212,7 +212,7 @@ file static unsafe class DateTimeOffsetReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, DateTimeOffset* result)
+    public static HRESULT get_Value(void* thisPtr, DateTimeOffset* result)
     {
         if (result is null)
         {
@@ -267,7 +267,7 @@ file static unsafe class DateTimeOffsetPropertyValueImpl
         Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetString = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetGuid = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetDateTime = &DateTimeOffsetReferenceImpl.Value;
+        Vftbl.GetDateTime = &DateTimeOffsetReferenceImpl.get_Value;
         Vftbl.GetTimeSpan = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetPoint = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetSize = &IPropertyValueImpl.ThrowStubForGetOverloads;

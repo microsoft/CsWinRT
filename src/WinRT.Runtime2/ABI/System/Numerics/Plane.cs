@@ -12,7 +12,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649, IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Plane>",
@@ -137,7 +137,7 @@ file unsafe struct PlaneReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, global::System.Numerics.Plane*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, global::System.Numerics.Plane*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -158,7 +158,7 @@ file static unsafe class PlaneReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -172,7 +172,7 @@ file static unsafe class PlaneReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT Value(void* thisPtr, global::System.Numerics.Plane* result)
+    private static HRESULT get_Value(void* thisPtr, global::System.Numerics.Plane* result)
     {
         if (result is null)
         {

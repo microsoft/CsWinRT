@@ -54,7 +54,7 @@ public static unsafe class StringMarshaller
 
         // Extract the underlying 'HSTRING' from the native object
         HSTRING result;
-        HRESULT hresult = IReferenceVftbl.ValueUnsafe(value, &result);
+        HRESULT hresult = IReferenceVftbl.get_ValueUnsafe(value, &result);
 
         Marshal.ThrowExceptionForHR(hresult);
 
@@ -168,7 +168,7 @@ file unsafe struct StringReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, String**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -189,7 +189,7 @@ file static unsafe class StringReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -203,7 +203,7 @@ file static unsafe class StringReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, HSTRING* result)
+    public static HRESULT get_Value(void* thisPtr, HSTRING* result)
     {
         if (result is null)
         {
@@ -256,7 +256,7 @@ file static unsafe class StringPropertyValueImpl
         Vftbl.GetDouble = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetChar16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetBoolean = &IPropertyValueImpl.ThrowStubForGetOverloads;
-        Vftbl.GetString = &StringReferenceImpl.Value;
+        Vftbl.GetString = &StringReferenceImpl.get_Value;
         Vftbl.GetGuid = &GetGuid;
         Vftbl.GetDateTime = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetTimeSpan = &IPropertyValueImpl.ThrowStubForGetOverloads;

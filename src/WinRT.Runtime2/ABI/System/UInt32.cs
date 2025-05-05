@@ -135,7 +135,7 @@ file unsafe struct UInt32ReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -156,7 +156,7 @@ file static unsafe class UInt32ReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ file static unsafe class UInt32ReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    public static HRESULT Value(void* thisPtr, uint* result)
+    public static HRESULT get_Value(void* thisPtr, uint* result)
     {
         if (result is null)
         {
@@ -214,7 +214,7 @@ file static unsafe class UInt32PropertyValueImpl
         Vftbl.GetInt16 = &GetInt16;
         Vftbl.GetUInt16 = &GetUInt16;
         Vftbl.GetInt32 = &GetInt32;
-        Vftbl.GetUInt32 = &UInt32ReferenceImpl.Value;
+        Vftbl.GetUInt32 = &UInt32ReferenceImpl.get_Value;
         Vftbl.GetInt64 = &GetInt64;
         Vftbl.GetUInt64 = &GetUInt64;
         Vftbl.GetSingle = &GetSingle;

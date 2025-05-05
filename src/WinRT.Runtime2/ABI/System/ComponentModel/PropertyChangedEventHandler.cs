@@ -11,7 +11,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE0008
+#pragma warning disable CS0649, IDE0008, IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.UI.Xaml.Data.PropertyChangedEventHandler>",
@@ -263,7 +263,7 @@ file unsafe struct PropertyChangedEventHandlerReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Value;
 }
 
 /// <summary>
@@ -284,7 +284,7 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.Value = &Value;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -305,7 +305,7 @@ file static unsafe class PropertyChangedEventHandlerReferenceImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT Value(void* thisPtr, void** result)
+    private static HRESULT get_Value(void* thisPtr, void** result)
     {
         if (result is null)
         {

@@ -212,12 +212,12 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         implType.Fields.Add(vftblField);
 
-        // Define the 'Value' methods as follows:
+        // Define the 'get_Value' methods as follows:
         //
         // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        // private static int Value(void* thisPtr, void** result)
+        // private static int get_Value(void* thisPtr, void** result)
         MethodDefinition valueMethod = new(
-            name: "Value"u8,
+            name: "get_Value"u8,
             attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Int32,

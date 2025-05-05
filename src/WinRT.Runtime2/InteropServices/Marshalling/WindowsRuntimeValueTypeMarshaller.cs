@@ -75,7 +75,7 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
         T result;
 
         // Unbox the blittable value (we always just discard the outer reference)
-        HRESULT hresult = IReferenceVftbl.ValueUnsafe(value, &result);
+        HRESULT hresult = IReferenceVftbl.get_ValueUnsafe(value, &result);
 
         Marshal.ThrowExceptionForHR(hresult);
 
@@ -145,7 +145,7 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
 
         T result;
 
-        hresult = IReferenceVftbl.ValueUnsafe(referencePtr, &result);
+        hresult = IReferenceVftbl.get_ValueUnsafe(referencePtr, &result);
 
         Marshal.ThrowExceptionForHR(hresult);
 

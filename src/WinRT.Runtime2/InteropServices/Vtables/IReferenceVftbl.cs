@@ -5,7 +5,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Windows.Foundation;
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649, IDE1006
 
 namespace WindowsRuntime.InteropServices;
 
@@ -21,7 +21,7 @@ internal unsafe struct IReferenceVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
     public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-    public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> Value;
+    public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Value;
 
     /// <summary>
     /// Gets the type that is represented as an <c>IPropertyValue</c>.
@@ -30,8 +30,8 @@ internal unsafe struct IReferenceVftbl
     /// <param name="value">The resulting value.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT ValueUnsafe(void* thisPtr, void* value)
+    public static HRESULT get_ValueUnsafe(void* thisPtr, void* value)
     {
-        return ((IReferenceVftbl*)thisPtr)->Value(thisPtr, &value);
+        return ((IReferenceVftbl*)thisPtr)->get_Value(thisPtr, &value);
     }
 }
