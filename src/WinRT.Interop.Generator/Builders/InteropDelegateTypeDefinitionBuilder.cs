@@ -55,7 +55,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         implType.Fields.Add(vftblField);
 
-        // Define the 'Invoke' methods as follows:
+        // Define the 'Invoke' method as follows:
         //
         // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
         // private static int Invoke(void* thisPtr, void* sender, void* e)
@@ -74,7 +74,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         implType.Methods.Add(invokeMethod);
 
-        // Create a method body for the 'Value' method
+        // Create a method body for the 'Invoke' method
         CilMethodBody invokeBody = invokeMethod.CreateAndBindCilMethodBody();
         CilInstructionCollection invokeInstructions = invokeBody.Instructions;
 
@@ -211,7 +211,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         implType.Fields.Add(vftblField);
 
-        // Define the 'get_Value' methods as follows:
+        // Define the 'get_Value' method as follows:
         //
         // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
         // private static int get_Value(void* thisPtr, void** result)
@@ -229,7 +229,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         implType.Methods.Add(valueMethod);
 
-        // Create a method body for the 'Value' method
+        // Create a method body for the 'get_Value' method
         CilMethodBody valueBody = valueMethod.CreateAndBindCilMethodBody();
         CilInstructionCollection valueInstructions = valueBody.Instructions;
 
@@ -466,7 +466,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(callbackType);
 
-        // Define the 'CreateObject' methods as follows:
+        // Define the 'CreateObject' method as follows:
         //
         // public static object CreateObject(void* value)
         MethodDefinition createObjectMethod = new(
@@ -529,7 +529,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
 
         GenericInstanceTypeSignature genericDelegateType = (GenericInstanceTypeSignature)delegateType;
 
-        // Define the 'Invoke' methods as follows:
+        // Define the 'Invoke' method as follows:
         //
         // public static void Invoke(WindowsRuntimeObjectReference objectReference, <PARAMETER#0> arg0, <PARAMETER#1> arg1)
         MethodDefinition invokeMethod = new(
@@ -687,7 +687,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
             .ImportType(typeof(ComWrappers.ComInterfaceEntry))
             .MakePointerType();
 
-        // Define the 'ComputeVtables' methods as follows:
+        // Define the 'ComputeVtables' method as follows:
         //
         // public static ComInterfaceEntry* ComputeVtables(out int count)
         MethodDefinition computeVtablesMethod = new(
@@ -719,7 +719,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         _ = computeVtablesInstructions.Add(CilOpCodes.Call, delegateInterfaceEntriesImplType.GetMethod("get_Vtables"u8));
         _ = computeVtablesInstructions.Add(CilOpCodes.Ret);
 
-        // Define the 'CreateObject' methods as follows:
+        // Define the 'CreateObject' method as follows:
         //
         // public static object CreateObject(void* value)
         MethodDefinition createObjectMethod = new(
@@ -782,7 +782,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         TypeSignature delegateType2 = module.DefaultImporter.ImportTypeSignature(delegateType);
         TypeSignature windowsRuntimeObjectReferenceValueType = module.DefaultImporter.ImportType(wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue).ToTypeSignature(isValueType: false);
 
-        // Define the 'ConvertToUnmanaged' methods as follows:
+        // Define the 'ConvertToUnmanaged' method as follows:
         //
         // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<DELEGATE_TYPE> value)
         MethodDefinition convertToUnmanagedMethod = new(
@@ -802,7 +802,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
         _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Ret);
 
-        // Define the 'ConvertToManaged' methods as follows:
+        // Define the 'ConvertToManaged' method as follows:
         //
         // public static <DELEGATE_TYPE> ConvertToManaged(void* value)
         MethodDefinition convertToManagedMethod = new(
@@ -827,7 +827,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         _ = convertToManagedMethodInstructions.Add(CilOpCodes.Call, windowsRuntimeDelegateMarshallerConvertToManagedDescriptor);
         _ = convertToManagedMethodInstructions.Add(CilOpCodes.Ret);
 
-        // Define the 'BoxToUnmanaged' methods as follows:
+        // Define the 'BoxToUnmanaged' method as follows:
         //
         // public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(<DELEGATE_TYPE> value)
         MethodDefinition boxToUnmanagedMethod = new(
@@ -847,7 +847,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerBoxToUnmanaged.ImportWith(module.DefaultImporter));
         _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Ret);
 
-        // Define the 'UnboxToManaged' methods as follows:
+        // Define the 'UnboxToManaged' method as follows:
         //
         // public static <DELEGATE_TYPE> UnboxToManaged(void* value)
         MethodDefinition unboxToUnmanagedMethod = new(

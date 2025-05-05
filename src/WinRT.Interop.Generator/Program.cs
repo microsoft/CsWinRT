@@ -62,6 +62,7 @@ internal static class InteropGenerator
         InteropGeneratorState state = new();
 
         List<GenericInstanceTypeSignature> genericTypes = [];
+        List<GenericInstanceTypeSignature> keyValuePairTypes = [];
 
         foreach (string path in referencePath)
         {
@@ -96,6 +97,12 @@ internal static class InteropGenerator
                         typeSpecification.Signature is GenericInstanceTypeSignature { GenericType.Name.Value: "TypedEventHandler`2" } typeSignature)
                     {
                         genericTypes.Add(typeSignature);
+                    }
+
+                    if (typeSpecification.Resolve() is { IsValueType: true } &&
+                        typeSpecification.Signature is GenericInstanceTypeSignature { GenericType.Name.Value: "KeyValuePair`2" } keyValuePairType)
+                    {
+                        keyValuePairTypes.Add(keyValuePairType);
                     }
                 }
             }
@@ -200,6 +207,24 @@ internal static class InteropGenerator
             }
         }
 
+        foreach (GenericInstanceTypeSignature typeSignature in keyValuePairTypes)
+        {
+            try
+            {
+                // Define the 'DelegateImpl' type (with the delegate interface vtable implementation)
+                InteropKeyValuePairTypeDefinitionBuilder.ImplType(
+                    keyValuePairType: typeSignature,
+                    wellKnownInteropDefinitions: wellKnownInteropDefinitions,
+                    wellKnownInteropReferences: wellKnownInteropReferences,
+                    module: winRTInteropModule,
+                    implType: out TypeDefinition delegateImplType,
+                    iidRvaField: out _);
+            }
+            catch
+            {
+            }
+        }
+
         // Add all top level internal types to the interop module
         winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.RvaFields);
         winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.IUnknownVftbl);
@@ -207,6 +232,8 @@ internal static class InteropGenerator
         winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateVftbl);
         winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateReferenceVftbl);
         winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateInterfaceEntries);
+        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairVftbl);
+        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries);
 
         // Emit the interop .dll to disk
         winRTInteropModule.Write(winRTInteropAssemblyPath);
