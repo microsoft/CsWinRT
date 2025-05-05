@@ -75,4 +75,10 @@ internal sealed class WellKnownInteropDefinitions
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeDefinition IKeyValuePairVftbl => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairVftbl(_interopModule.CorLibTypeFactory, _interopModule.DefaultImporter);
+
+    /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairInterfaceEntries</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_interopModule.DefaultImporter);
 }

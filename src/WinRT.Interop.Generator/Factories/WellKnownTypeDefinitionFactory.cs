@@ -233,7 +233,7 @@ internal static class WellKnownTypeDefinitionFactory
     {
         TypeDefinition vftblType = new(
             ns: null,
-            name: "<KeyValuePairVftbl>"u8,
+            name: "<IKeyValuePairVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: referenceImporter.ImportType(typeof(ValueType)));
 
@@ -278,6 +278,42 @@ internal static class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.MakeFunctionPointerType()));
 
         return vftblType;
+    }
+
+    /// <summary>
+    /// Creates a new type definition for COM interface entries for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+    /// </summary>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition IKeyValuePairInterfaceEntriesType(ReferenceImporter referenceImporter)
+    {
+        TypeDefinition interfaceEntriesType = new(
+            ns: null,
+            name: "<IKeyValuePairInterfaceEntries>"u8,
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: referenceImporter.ImportType(typeof(ValueType)));
+
+        // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
+        TypeSignature comInterfaceEntryType = referenceImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)).ToTypeSignature(isValueType: true);
+
+        // The type layout looks like this:
+        //
+        // public ComInterfaceEntry IKeyValuePair;
+        // public ComInterfaceEntry IStringable;
+        // public ComInterfaceEntry IWeakReferenceSource;
+        // public ComInterfaceEntry IMarshal;
+        // public ComInterfaceEntry IAgileObject;
+        // public ComInterfaceEntry IInspectable;
+        // public ComInterfaceEntry IUnknown;
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IKeyValuePair"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IAgileObject"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IInspectable"u8, FieldAttributes.Public, comInterfaceEntryType));
+        interfaceEntriesType.Fields.Add(new FieldDefinition("IUnknown"u8, FieldAttributes.Public, comInterfaceEntryType));
+
+        return interfaceEntriesType;
     }
 
     /// <summary>
