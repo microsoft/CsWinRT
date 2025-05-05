@@ -69,4 +69,10 @@ internal sealed class WellKnownInteropDefinitions
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeDefinition DelegateInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(_interopModule.DefaultImporter);
+
+    /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairVftbl</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition IKeyValuePairVftbl => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairVftbl(_interopModule.CorLibTypeFactory, _interopModule.DefaultImporter);
 }
