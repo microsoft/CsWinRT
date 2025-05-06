@@ -211,14 +211,23 @@ internal static class InteropGenerator
         {
             try
             {
-                // Define the 'DelegateImpl' type (with the delegate interface vtable implementation)
+                // Define the 'KeyValuePairImpl' type (with the delegate interface vtable implementation)
                 InteropTypeDefinitionBuilder.KeyValuePair.ImplType(
                     keyValuePairType: typeSignature,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
                     module: winRTInteropModule,
-                    implType: out TypeDefinition delegateImplType,
+                    implType: out TypeDefinition keyValuePairTypeImplType,
                     iidRvaField: out _);
+
+                // Define the 'KeyValuePairInterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
+                InteropTypeDefinitionBuilder.KeyValuePair.InterfaceEntriesImplType(
+                    keyValuePairType: typeSignature,
+                    keyValuePairTypeImplType: keyValuePairTypeImplType,
+                    wellKnownInteropDefinitions: wellKnownInteropDefinitions,
+                    wellKnownInteropReferences: wellKnownInteropReferences,
+                    module: winRTInteropModule,
+                    implType: out _);
             }
             catch
             {

@@ -210,5 +210,38 @@ internal partial class InteropTypeDefinitionBuilder
             implType.Properties.Add(vtableProperty);
             implType.Methods.Add(get_VtableMethod);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the COM interface entries for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.
+        /// </summary>
+        /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        /// <param name="keyValuePairTypeImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ImplType"/>.</param>
+        /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+        /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void InterfaceEntriesImplType(
+            TypeSignature keyValuePairType,
+            TypeDefinition keyValuePairTypeImplType,
+            WellKnownInteropDefinitions wellKnownInteropDefinitions,
+            WellKnownInteropReferences wellKnownInteropReferences,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            InteropTypeDefinitionBuilder.InterfaceEntriesImplType(
+                ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType, "InterfaceEntriesImpl"),
+                entriesFieldType: wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries,
+                module: module,
+                implType: out implType,
+                implTypes: [
+                    (keyValuePairTypeImplType.GetMethod("get_IID"u8), keyValuePairTypeImplType.GetMethod("get_Vtable"u8)),
+                    (wellKnownInteropReferences.IStringableImplget_IID, wellKnownInteropReferences.IStringableImplget_Vtable),
+                    (wellKnownInteropReferences.IWeakReferenceSourceImplget_IID, wellKnownInteropReferences.IWeakReferenceSourceImplget_Vtable),
+                    (wellKnownInteropReferences.IMarshalImplget_IID, wellKnownInteropReferences.IMarshalImplget_Vtable),
+                    (wellKnownInteropReferences.IAgileObjectImplget_IID, wellKnownInteropReferences.IAgileObjectImplget_Vtable),
+                    (wellKnownInteropReferences.IInspectableImplget_IID, wellKnownInteropReferences.IInspectableImplget_Vtable),
+                    (wellKnownInteropReferences.IUnknownImplget_IID, wellKnownInteropReferences.IUnknownImplget_Vtable)]);
+        }
     }
 }

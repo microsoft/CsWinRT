@@ -365,34 +365,12 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            // We're declaring an 'internal static class' type
-            implType = new(
+            InteropTypeDefinitionBuilder.InterfaceEntriesImplType(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "InterfaceEntriesImpl"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
-
-            module.TopLevelTypes.Add(implType);
-
-            // The interface entries field looks like this:
-            //
-            // [FixedAddressValueType]
-            // private static readonly <DelegateInterfaceEntries> Entries;
-            //
-            // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
-            FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private, wellKnownInteropDefinitions.DelegateInterfaceEntries.ToTypeSignature(isValueType: true))
-            {
-                CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(module) }
-            };
-
-            implType.Fields.Add(entriesField);
-
-            // Create the static constructor to initialize the interface entries
-            InteropMethodBodyFactory.InterfaceEntriesImpl(
-                cctor: implType.GetOrCreateStaticConstructor(module),
-                entriesField: entriesField,
                 entriesFieldType: wellKnownInteropDefinitions.DelegateInterfaceEntries,
                 module: module,
+                implType: out implType,
                 implTypes: [
                     (delegateImplType.GetMethod("get_IID"u8), delegateImplType.GetMethod("get_Vtable"u8)),
                     (delegateReferenceImplType.GetMethod("get_IID"u8), delegateReferenceImplType.GetMethod("get_Vtable"u8)),
@@ -403,37 +381,6 @@ internal partial class InteropTypeDefinitionBuilder
                     (wellKnownInteropReferences.IAgileObjectImplget_IID, wellKnownInteropReferences.IAgileObjectImplget_Vtable),
                     (wellKnownInteropReferences.IInspectableImplget_IID, wellKnownInteropReferences.IInspectableImplget_Vtable),
                     (wellKnownInteropReferences.IUnknownImplget_IID, wellKnownInteropReferences.IUnknownImplget_Vtable)]);
-
-            // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
-            PointerTypeSignature vtablesPropertyType = module.DefaultImporter
-                .ImportType(typeof(ComWrappers.ComInterfaceEntry))
-                .MakePointerType();
-
-            // The 'Vtables' property doesn't have a special signature
-            PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, vtablesPropertyType, []);
-
-            // Create the 'Vtables' property
-            PropertyDefinition vtablesProperty = new("Vtables"u8, PropertyAttributes.None, vtablePropertySignature)
-            {
-                GetMethod = new MethodDefinition(
-                    name: "get_Vtables"u8,
-                    attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-                    signature: MethodSignature.CreateStatic(
-                        returnType: vtablesPropertyType,
-                        parameterTypes: []))
-                { IsAggressiveInlining = true }
-            };
-
-            implType.Properties.Add(vtablesProperty);
-            implType.Methods.Add(vtablesProperty.GetMethod!);
-
-            // Create a method body for the 'Vtables' property
-            CilInstructionCollection get_VtablesInstructions = vtablesProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
-
-            // The 'get_Vtables' method directly returns the 'Entries' field address
-            _ = get_VtablesInstructions.Add(CilOpCodes.Ldsflda, entriesField);
-            _ = get_VtablesInstructions.Add(CilOpCodes.Conv_U);
-            _ = get_VtablesInstructions.Add(CilOpCodes.Ret);
         }
 
         /// <summary>
