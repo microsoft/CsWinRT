@@ -256,7 +256,7 @@ internal static class WellKnownTypeDefinitionFactory
                 baseType: corLibTypeFactory.Int32),
             parameterTypes: [
                 corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                corLibTypeFactory.Void.MakePointerType()]);
 
         // The vtable layout for 'IReference`1<T>' looks like this:
         //
@@ -266,8 +266,8 @@ internal static class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Key;
-        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Value;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Key;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Value;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
