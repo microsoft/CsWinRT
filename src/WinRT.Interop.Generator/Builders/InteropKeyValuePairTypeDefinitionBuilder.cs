@@ -112,7 +112,9 @@ internal static class InteropKeyValuePairTypeDefinitionBuilder
             // Reference the 'KeyValuePair<,>' accessor
             MemberReference get_MethodRef = keyValuePairTypeRef.CreateMemberReference(
                 memberName: name,
-                signature: MethodSignature.CreateInstance(module.DefaultImporter.ImportTypeSignature(typeArgument)));
+                signature: MethodSignature.CreateInstance(new GenericParameterSignature(
+                    parameterType: GenericParameterType.Type,
+                    index: keyValuePairType.TypeArguments.IndexOf(typeArgument))));
 
             // '.try' code
             CilInstruction tryStart = methodInstructions.Add(CilOpCodes.Ldarg_1);
