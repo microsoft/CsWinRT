@@ -129,7 +129,7 @@ internal static class InteropGenerator
             try
             {
                 // Define the 'DelegateImpl' type (with the delegate interface vtable implementation)
-                InteropDelegateTypeDefinitionBuilder.ImplType(
+                InteropTypeDefinitionBuilder.Delegate.ImplType(
                     delegateType: typeSignature,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
@@ -138,7 +138,7 @@ internal static class InteropGenerator
                     iidRvaField: out _);
 
                 // Define the 'DelegateReferenceImpl' type (with the boxed delegate interface vtable implementation)
-                InteropDelegateTypeDefinitionBuilder.ReferenceImplType(
+                InteropTypeDefinitionBuilder.Delegate.ReferenceImplType(
                     delegateType: typeSignature,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
@@ -147,7 +147,7 @@ internal static class InteropGenerator
                     iidRvaField: out _);
 
                 // Define the 'DelegateInterfaceEntriesImpl' type (with the 'ComWrappers' interface entries implementation)
-                InteropDelegateTypeDefinitionBuilder.InterfaceEntriesImplType(
+                InteropTypeDefinitionBuilder.Delegate.InterfaceEntriesImplType(
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
                     delegateReferenceImplType: delegateReferenceImplType,
@@ -157,7 +157,7 @@ internal static class InteropGenerator
                     implType: out TypeDefinition delegateInterfaceEntriesImplType);
 
                 // Define the 'NativeDelegate' type (with the extension method implementation)
-                InteropDelegateTypeDefinitionBuilder.NativeDelegateType(
+                InteropTypeDefinitionBuilder.Delegate.NativeDelegateType(
                     delegateType: typeSignature,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
@@ -165,7 +165,7 @@ internal static class InteropGenerator
                     nativeDelegateType: out TypeDefinition nativeDelegateType);
 
                 // Define the 'ComWrappersCallback' type (with the 'IComWrappersCallback' implementation)
-                InteropDelegateTypeDefinitionBuilder.ComWrappersCallbackType(
+                InteropTypeDefinitionBuilder.Delegate.ComWrappersCallbackType(
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
                     nativeDelegateType: nativeDelegateType,
@@ -174,7 +174,7 @@ internal static class InteropGenerator
                     out TypeDefinition delegateComWrappersCallbackType);
 
                 // Define the 'ComWrappersMarshallerAttribute' type
-                InteropDelegateTypeDefinitionBuilder.ComWrappersMarshallerAttribute(
+                InteropTypeDefinitionBuilder.Delegate.ComWrappersMarshallerAttribute(
                     delegateType: typeSignature,
                     delegateReferenceImplType: delegateReferenceImplType,
                     delegateInterfaceEntriesImplType: delegateInterfaceEntriesImplType,
@@ -185,7 +185,7 @@ internal static class InteropGenerator
                     out TypeDefinition delegateComWrappersMarshallerType);
 
                 // Define the 'Marshaller' type (with the static marshaller methods)
-                InteropDelegateTypeDefinitionBuilder.Marshaller(
+                InteropTypeDefinitionBuilder.Delegate.Marshaller(
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
                     delegateReferenceImplType: delegateReferenceImplType,
@@ -195,7 +195,7 @@ internal static class InteropGenerator
                     marshallerType: out _);
 
                 // Define the proxy type (for the type map)
-                InteropDelegateTypeDefinitionBuilder.Proxy(
+                InteropTypeDefinitionBuilder.Delegate.Proxy(
                     delegateType: typeSignature,
                     delegateComWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
                     wellKnownInteropReferences: wellKnownInteropReferences,
@@ -212,7 +212,7 @@ internal static class InteropGenerator
             try
             {
                 // Define the 'DelegateImpl' type (with the delegate interface vtable implementation)
-                InteropKeyValuePairTypeDefinitionBuilder.ImplType(
+                InteropTypeDefinitionBuilder.KeyValuePair.ImplType(
                     keyValuePairType: typeSignature,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
