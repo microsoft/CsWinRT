@@ -279,11 +279,7 @@ internal static class InteropDelegateTypeDefinitionBuilder
         _ = valueInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
 
         // 'catch' code
-        CilInstruction catchStart = valueInstructions.Add(CilOpCodes.Ldarg_1);
-        _ = valueInstructions.Add(CilOpCodes.Ldc_I4_0);
-        _ = valueInstructions.Add(CilOpCodes.Conv_U);
-        _ = valueInstructions.Add(CilOpCodes.Stind_I);
-        _ = valueInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+        CilInstruction catchStart = valueInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
         _ = valueInstructions.Add(CilOpCodes.Stloc_0);
         _ = valueInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
 

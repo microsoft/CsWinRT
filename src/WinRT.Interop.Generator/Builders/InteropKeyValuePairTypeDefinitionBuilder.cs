@@ -131,11 +131,7 @@ internal static class InteropKeyValuePairTypeDefinitionBuilder
             _ = methodInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
 
             // 'catch' code
-            CilInstruction catchStart = methodInstructions.Add(CilOpCodes.Ldarg_1);
-            _ = methodInstructions.Add(CilOpCodes.Ldc_I4_0);
-            _ = methodInstructions.Add(CilOpCodes.Conv_U);
-            _ = methodInstructions.Add(CilOpCodes.Stind_I);
-            _ = methodInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+            CilInstruction catchStart = methodInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
             _ = methodInstructions.Add(CilOpCodes.Stloc_0);
             _ = methodInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
 
