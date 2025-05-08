@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
+using AsmResolver.DotNet.Collections;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -54,10 +56,7 @@ internal static class WellKnownMemberDefinitionFactory
         get_IidMethod = new MethodDefinition(
             name: "get_IID"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-            signature: new MethodSignature(
-                attributes: CallingConventionAttributes.Default,
-                returnType: iidPropertyType,
-                parameterTypes: []))
+            signature: MethodSignature.CreateStatic(iidPropertyType))
         { IsAggressiveInlining = true };
 
         // Create the 'IID' property
@@ -95,10 +94,7 @@ internal static class WellKnownMemberDefinitionFactory
         get_VtableMethod = new MethodDefinition(
             name: "get_Vtable"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-            signature: new MethodSignature(
-                attributes: CallingConventionAttributes.Default,
-                returnType: corLibTypeFactory.IntPtr,
-                parameterTypes: []))
+            signature: MethodSignature.CreateStatic(corLibTypeFactory.IntPtr))
         { IsAggressiveInlining = true };
 
         // Create the 'Vtable' property
@@ -111,5 +107,82 @@ internal static class WellKnownMemberDefinitionFactory
         _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
         _ = get_VtableInstructions.Add(CilOpCodes.Conv_U);
         _ = get_VtableInstructions.Add(CilOpCodes.Ret);
+    }
+
+    /// <summary>
+    /// Creates the 'ComputeReadOnlySpanHash' method.
+    /// </summary>
+    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    public static MethodDefinition ComputeReadOnlySpanHash(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    {
+        // Create the 'ComputeReadOnlySpanHash' getter method
+        MethodDefinition hashMethod = new(
+            name: "ComputeReadOnlySpanHash"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(
+                returnType: corLibTypeFactory.Int32,
+                parameterTypes: [referenceImporter.ImportType(typeof(ReadOnlySpan<char>)).ToTypeSignature(isValueType: true)]));
+
+        // Reference the 'get_Item' method
+        MemberReference get_ItemMethod = referenceImporter
+            .ImportType(typeof(ReadOnlySpan<char>))
+            .CreateMemberReference("get_Item", MethodSignature.CreateInstance(
+                returnType:
+                    new GenericParameterSignature(GenericParameterType.Type, index: 0)
+                    .MakeByReferenceType()
+                    .MakeModifierType(referenceImporter.ImportType(typeof(InAttribute)), isRequired: true),
+                parameterTypes: [corLibTypeFactory.Int32]));
+
+        // Reference the 'get_Length' method
+        MemberReference get_LengthMethod = referenceImporter
+            .ImportType(typeof(ReadOnlySpan<char>))
+            .CreateMemberReference("get_Length", MethodSignature.CreateInstance(corLibTypeFactory.Int32));
+
+        // Create a method body for the 'ComputeReadOnlySpanHash' method
+        CilMethodBody hashBody = hashMethod.CreateAndBindCilMethodBody();
+        CilInstructionCollection hashInstructions = hashBody.Instructions;
+
+        // Define the locals (hash value, and loop index)
+        hashBody.LocalVariables.Add(new CilLocalVariable(corLibTypeFactory.UInt32));
+        hashBody.LocalVariables.Add(new CilLocalVariable(corLibTypeFactory.Int32));
+
+        CilInstruction rangeCheck = new(CilOpCodes.Ldloc_1);
+
+        // This method copies the simple hash implementation that Roslyn emits.
+        // To verify that source, just inspect the code generated for a method
+        // with at least a dozen 'string'-s in a big switch statement.
+        hashInstructions.Add(CilInstruction.CreateLdcI4(unchecked((int)2166136261u)));
+        _ = hashInstructions.Add(CilOpCodes.Stloc_0);
+        _ = hashInstructions.Add(CilOpCodes.Ldc_I4_0);
+        _ = hashInstructions.Add(CilOpCodes.Stloc_1);
+        _ = hashInstructions.Add(CilOpCodes.Br_S, rangeCheck.CreateLabel());
+
+        // Loop
+        CilInstruction loopStart = hashInstructions.Add(CilOpCodes.Ldarga_S, hashMethod.Parameters[0]);
+        _ = hashInstructions.Add(CilOpCodes.Ldloc_1);
+        _ = hashInstructions.Add(CilOpCodes.Call, get_ItemMethod);
+        _ = hashInstructions.Add(CilOpCodes.Ldind_U2);
+        _ = hashInstructions.Add(CilOpCodes.Ldloc_0);
+        _ = hashInstructions.Add(CilOpCodes.Xor);
+        hashInstructions.Add(CilInstruction.CreateLdcI4(16777619));
+        _ = hashInstructions.Add(CilOpCodes.Mul);
+        _ = hashInstructions.Add(CilOpCodes.Stloc_0);
+        _ = hashInstructions.Add(CilOpCodes.Ldloc_1);
+        _ = hashInstructions.Add(CilOpCodes.Ldc_I4_1);
+        _ = hashInstructions.Add(CilOpCodes.Add);
+        _ = hashInstructions.Add(CilOpCodes.Stloc_1);
+
+        // Loop range check
+        hashInstructions.Add(rangeCheck);
+        _ = hashInstructions.Add(CilOpCodes.Ldarga_S, hashMethod.Parameters[0]);
+        _ = hashInstructions.Add(CilOpCodes.Call, get_LengthMethod);
+        _ = hashInstructions.Add(CilOpCodes.Blt_S, loopStart.CreateLabel());
+
+        // Return the hash
+        _ = hashInstructions.Add(CilOpCodes.Ldloc_0);
+        _ = hashInstructions.Add(CilOpCodes.Ret);
+
+        return hashMethod;
     }
 }

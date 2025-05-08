@@ -17,7 +17,7 @@ ConsoleApp.Run(args, InteropGenerator.Run);
 
 internal sealed class InteropGeneratorState
 {
-    private readonly Dictionary<string, string> _typeHierarchyEntries = new(StringComparer.Ordinal);
+    private readonly SortedDictionary<string, string> _typeHierarchyEntries = [];
 
     public void TrackTypeHierarchyEntry(string runtimeClassName, string baseRuntimeClassName)
     {
@@ -71,7 +71,8 @@ internal static class InteropGenerator
                 ModuleDefinition module = ModuleDefinition.FromFile(path, pathAssemblyResolver.ReaderParameters);
 
                 if (!module.AssemblyReferences.Any(static reference => reference.Name?.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET.dll"u8) is true) &&
-                    module.Name?.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET.dll"u8) is not true)
+                    module.Name?.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET.dll"u8) is not true &&
+                    module.Name?.AsSpan().SequenceEqual("Microsoft.Windows.UI.Xaml.dll"u8) is not true)
                 {
                     Console.WriteLine($"SKIPPED {Path.GetFileNameWithoutExtension(path)}");
 
@@ -82,10 +83,14 @@ internal static class InteropGenerator
 
                 foreach (TypeDefinition type in module.GetAllTypes())
                 {
-                    if (type.IsClass && !type.IsValueType && !type.IsDelegate &&
+                    if (type.IsClass &&
+                        !type.IsValueType &&
+                        !type.IsDelegate &&
                         !(type.IsAbstract && type.IsSealed) &&
+                        type.BaseType is not null &&
                         !SignatureComparer.Default.Equals(type.BaseType, objectType) &&
-                        type.HasCustomAttribute("WinRT", "WindowsRuntimeTypeAttribute"))
+                        type.HasCustomAttribute("WinRT", "WindowsRuntimeTypeAttribute") &&
+                        type.BaseType.HasCustomAttribute("WinRT", "WindowsRuntimeTypeAttribute"))
                     {
                         state.TrackTypeHierarchyEntry(type.FullName, type.BaseType.FullName);
                     }
@@ -243,6 +248,7 @@ internal static class InteropGenerator
         winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateInterfaceEntries);
         winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairVftbl);
         winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries);
+        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.InteropImplementationDetails);
 
         // Emit the interop .dll to disk
         winRTInteropModule.Write(winRTInteropAssemblyPath);

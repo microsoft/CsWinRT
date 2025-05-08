@@ -27,13 +27,19 @@ internal sealed class WellKnownInteropDefinitions
     }
 
     /// <summary>
-    /// Gets the <see cref="TypeDefinition"/> for the <c>ccRvaFields</c> type.
+    /// Gets the <see cref="TypeDefinition"/> for the <c>InteropImplementationDetails</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition InteropImplementationDetails => field ??= WellKnownTypeDefinitionFactory.InteropImplementationDetails(_interopModule.CorLibTypeFactory, _interopModule.DefaultImporter);
+
+    /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>RvaFields</c> type.
     /// </summary>
     /// <remarks>
     /// This type has exactly one nested type, for RVA fields of size 16 (ie. <see cref="System.Guid"/>).
     /// </remarks>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_interopModule.DefaultImporter);
+    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_interopModule.CorLibTypeFactory, _interopModule.DefaultImporter);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IIDRvaDataSize=16</c> type.

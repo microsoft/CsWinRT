@@ -319,18 +319,20 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates types to use to declare RVA fields.
     /// </summary>
+    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
     /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
     /// <returns>The <see cref="TypeDefinition"/> to use to contain all RVA fields.</returns>
     /// <remarks>
     /// The returned type will have exactly one nested type, for RVA fields of size 16 (ie. <see cref="Guid"/>).
     /// </remarks>
-    public static TypeDefinition RvaFields(ReferenceImporter referenceImporter)
+    public static TypeDefinition RvaFields(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
     {
         // Define the special '<RvaFields>' type, to contain all RVA fields
         TypeDefinition rvaFieldsType = new(
             ns: null,
             name: "<RvaFields>"u8,
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract);
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+            baseType: corLibTypeFactory.Object.ToTypeDefOrRef());
 
         // Define the data type for IID data
         TypeDefinition iidRvaDataType = new(
@@ -346,5 +348,25 @@ internal static class WellKnownTypeDefinitionFactory
         rvaFieldsType.NestedTypes.Add(iidRvaDataType);
 
         return rvaFieldsType;
+    }
+
+    /// <summary>
+    /// Creates a type to hold implementation detail helpers.
+    /// </summary>
+    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
+    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <returns>The <see cref="TypeDefinition"/> to hold implementation detail helpers.</returns>
+    public static TypeDefinition InteropImplementationDetails(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    {
+        // Define the special '<InteropImplementationDetails>' type, with all internal helpers
+        TypeDefinition interopImplementationDetailsType = new(
+            ns: null,
+            name: "<InteropImplementationDetails>"u8,
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+            baseType: corLibTypeFactory.Object.ToTypeDefOrRef());
+
+        interopImplementationDetailsType.Methods.Add(WellKnownMemberDefinitionFactory.ComputeReadOnlySpanHash(corLibTypeFactory, referenceImporter));
+
+        return interopImplementationDetailsType;
     }
 }
