@@ -34,19 +34,8 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
             ? CreateComInterfaceFlags.TrackerSupport
             : CreateComInterfaceFlags.None;
 
-        // Box the value type (we don't need reference tracking support here, it's just a blittable struct)
-        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, flags);
-
-        // Do the 'QueryInterface' for the 'IReference<T>' interface (this should always succeed)
-        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* boxPtr);
-
-        // We can release the 'IUnknown' reference now
-        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
-
-        // Ensure the 'QueryInterface' succeeded (same as above)
-        Marshal.ThrowExceptionForHR(hresult);
-
-        return new(boxPtr);
+        // Box the value type and return the right interface pointer for it
+        return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, flags, in iid));
     }
 
     /// <summary>
