@@ -30,13 +30,11 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// </summary>
     /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
     /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="lookupType">The resulting <see cref="TypeDefinition"/>.</param>
     public static unsafe void Lookup(
         SortedDictionary<string, string> typeHierarchyEntries,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
-        WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         out TypeDefinition lookupType)
     {
@@ -72,11 +70,11 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         module.TopLevelTypes.Add(lookupType);
 
+        // Emit the actual lookup method, using the RVA fields just declared
         TryGetBaseRuntimeClassName(
             typeHierarchyEntries,
             bucketSize,
             wellKnownInteropDefinitions,
-            wellKnownInteropReferences,
             module,
             bucketsRvaField,
             keysRvaField,
@@ -360,11 +358,21 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         wellKnownInteropDefinitions.RvaFields.Fields.Add(bucketsRvaField);
     }
 
+    /// <summary>
+    /// Creates the 'TryGetBaseRuntimeClassName' method for the type hierarchy.
+    /// </summary>
+    /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
+    /// <param name="bucketSize">The resulting bucket size.</param>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="bucketsRvaField">The 'Buckets' RVA field (created by <see cref="BucketsRva"/>).</param>
+    /// <param name="keysRvaField">The 'Keys' RVA field (created by <see cref="KeysRva"/>).</param>
+    /// <param name="valuesRvaField">The 'Values' RVA field (created by <see cref="ValuesRva"/>).</param>
+    /// <param name="tryGetBaseRuntimeClassNameMethod">The resulting 'TryGetBaseRuntimeClassName' method.</param>
     private static void TryGetBaseRuntimeClassName(
         SortedDictionary<string, string> typeHierarchyEntries,
         int bucketSize,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
-        WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         FieldDefinition bucketsRvaField,
         FieldDefinition keysRvaField,
@@ -410,11 +418,15 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         //   [2]: 'int' (the length of the current key candidate)
         //   [3]: 'int' (the offset to the matching value in the 'Values' RVA field)
         //   [4]: 'ReadOnlySpan<char>' (the current key candidate)
+        //   [5]: 'byte&' (the reference into the 'Values' RVA field)
+        //   [6]: 'int' (the length of the matching value)
         body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
         body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Byte.MakeByReferenceType()));
         body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
         body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
         body.LocalVariables.Add(new CilLocalVariable(module.DefaultImporter.ImportTypeSignature(typeof(ReadOnlySpan<char>))));
+        body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Byte.MakeByReferenceType()));
+        body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
 
         // Set the 'out' parameters to default
         _ = instructions.Add(CilOpCodes.Ldarg_1);
@@ -502,7 +514,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         // Import 'MemoryExtensions.SequenceEqual<char>'
         MethodSpecification sequenceEqualMethod = module.DefaultImporter
             .ImportType(typeof(System.MemoryExtensions))
-            .CreateMemberReference("SequenceEqual", MethodSignature.CreateInstance(
+            .CreateMemberReference("SequenceEqual", MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
@@ -525,6 +537,28 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         _ = instructions.Add(CilOpCodes.Call, sequenceEqualMethod);
         _ = instructions.Add(CilOpCodes.Brfalse_S, loopStart.CreateLabel());
 
+        // Read the matching value and the index of the next parent from the 'Values' RVA field and set the arguments
+        _ = instructions.Add(CilOpCodes.Ldsflda, valuesRvaField);
+        _ = instructions.Add(CilOpCodes.Ldloc_3);
+        _ = instructions.Add(CilOpCodes.Add);
+        _ = instructions.Add(CilOpCodes.Stloc_S, body.LocalVariables[5]);
+        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[5]);
+        _ = instructions.Add(CilOpCodes.Ldind_U2);
+        _ = instructions.Add(CilOpCodes.Stloc_S, body.LocalVariables[6]);
+        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[5]);
+        _ = instructions.Add(CilOpCodes.Ldc_I4_2);
+        _ = instructions.Add(CilOpCodes.Add);
+        _ = instructions.Add(CilOpCodes.Stloc_S, body.LocalVariables[5]);
+        _ = instructions.Add(CilOpCodes.Ldarg_2);
+        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[5]);
+        _ = instructions.Add(CilOpCodes.Ldind_U2);
+        _ = instructions.Add(CilOpCodes.Stind_I4);
+        _ = instructions.Add(CilOpCodes.Ldarg_1);
+        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[5]);
+        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[6]);
+        _ = instructions.Add(CilOpCodes.Call, createReadOnlySpanMethod);
+        _ = instructions.Add(CilOpCodes.Stobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)));
+
         // Success epilogue
         _ = instructions.Add(CilOpCodes.Ldc_I4_1);
         _ = instructions.Add(CilOpCodes.Ret);
@@ -532,8 +566,6 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         // Shared failure epilogue
         instructions.Add(returnFalse);
         _ = instructions.Add(CilOpCodes.Ret);
-
-        //body.ComputeMaxStackOnBuild = false;
     }
 
     /// <summary>

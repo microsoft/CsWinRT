@@ -132,7 +132,6 @@ internal static class InteropGenerator
         WindowsRuntimeTypeHierarchyBuilder.Lookup(
             state._typeHierarchyEntries,
             wellKnownInteropDefinitions,
-            wellKnownInteropReferences,
             winRTInteropModule,
             out _);
 
