@@ -4,6 +4,7 @@
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
+using AsmResolver.DotNet.Collections;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -17,6 +18,7 @@ using System.Numerics.Tensors;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -408,96 +410,11 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             }
         };
 
-        // Create a method body for the 'TryGetBaseRuntimeClassName' method
-        CilMethodBody body = tryGetBaseRuntimeClassNameMethod.CreateAndBindCilMethodBody();
-        CilInstructionCollection instructions = body.Instructions;
-
-        // Declare 1 variable:
-        //   [0]: 'int' (the bucket index)
-        //   [1]: 'byte&' (the reference into the 'Keys' RVA field)
-        //   [2]: 'int' (the length of the current key candidate)
-        //   [3]: 'int' (the offset to the matching value in the 'Values' RVA field)
-        //   [4]: 'ReadOnlySpan<char>' (the current key candidate)
-        //   [5]: 'byte&' (the reference into the 'Values' RVA field)
-        //   [6]: 'int' (the length of the matching value)
-        body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
-        body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Byte.MakeByReferenceType()));
-        body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
-        body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
-        body.LocalVariables.Add(new CilLocalVariable(module.DefaultImporter.ImportTypeSignature(typeof(ReadOnlySpan<char>))));
-        body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Byte.MakeByReferenceType()));
-        body.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
-
-        // Set the 'out' parameters to default
-        _ = instructions.Add(CilOpCodes.Ldarg_1);
-        _ = instructions.Add(CilOpCodes.Initobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)));
-        _ = instructions.Add(CilOpCodes.Ldarg_2);
-        _ = instructions.Add(CilOpCodes.Ldc_I4_0);
-        _ = instructions.Add(CilOpCodes.Stind_I4);
-
         // Import the 'ReadOnlySpan<char>.Length' getter
         MemberReference readOnlySpanCharget_Length = module.DefaultImporter
             .ImportType(typeof(ReadOnlySpan<char>))
             .CreateMemberReference("get_Length", MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32))
             .ImportWith(module.DefaultImporter);
-
-        // Compute the range check arguments
-        int minLength = typeHierarchyEntries.Keys.Min(static key => key.Length);
-        int maxLength = typeHierarchyEntries.Keys.Max(static key => key.Length);
-
-        CilInstruction returnFalse = new(CilOpCodes.Ldc_I4_0);
-        CilInstruction rangeCheckSuccess = new(CilOpCodes.Ldsflda, bucketsRvaField);
-
-        // Emit the range checks
-        _ = instructions.Add(CilOpCodes.Ldarga_S, tryGetBaseRuntimeClassNameMethod.Parameters[0]);
-        _ = instructions.Add(CilOpCodes.Call, readOnlySpanCharget_Length);
-        instructions.Add(CilInstruction.CreateLdcI4(minLength));
-        _ = instructions.Add(CilOpCodes.Blt_S, returnFalse.CreateLabel());
-        _ = instructions.Add(CilOpCodes.Ldarga_S, tryGetBaseRuntimeClassNameMethod.Parameters[0]);
-        _ = instructions.Add(CilOpCodes.Call, readOnlySpanCharget_Length);
-        instructions.Add(CilInstruction.CreateLdcI4(maxLength));
-        _ = instructions.Add(CilOpCodes.Bgt_S, returnFalse.CreateLabel());
-
-        // Compute the hash and get the bucket index
-        instructions.Add(rangeCheckSuccess);
-        _ = instructions.Add(CilOpCodes.Ldarg_0);
-        _ = instructions.Add(CilOpCodes.Call, wellKnownInteropDefinitions.InteropImplementationDetails.GetMethod("ComputeReadOnlySpanHash"u8));
-        _ = instructions.Add(CilOpCodes.Ldc_I4, bucketSize);
-        _ = instructions.Add(CilOpCodes.Rem_Un);
-        _ = instructions.Add(CilOpCodes.Ldc_I4_4);
-        _ = instructions.Add(CilOpCodes.Mul);
-        _ = instructions.Add(CilOpCodes.Add);
-        _ = instructions.Add(CilOpCodes.Ldind_I4);
-        _ = instructions.Add(CilOpCodes.Stloc_0);
-        _ = instructions.Add(CilOpCodes.Ldloc_0);
-        _ = instructions.Add(CilOpCodes.Ldc_I4_0);
-        _ = instructions.Add(CilOpCodes.Blt_S, returnFalse.CreateLabel());
-
-        // Get the reference to the start of the keys RVA field data, for this bucket
-        _ = instructions.Add(CilOpCodes.Ldsflda, keysRvaField);
-        _ = instructions.Add(CilOpCodes.Ldloc_0);
-        _ = instructions.Add(CilOpCodes.Add);
-        _ = instructions.Add(CilOpCodes.Stloc_1);
-
-        // Start looping through conflicting keys for this chain, stop if we reached the end
-        CilInstruction loopStart = instructions.Add(CilOpCodes.Ldloc_1);
-        _ = instructions.Add(CilOpCodes.Ldind_U2);
-        _ = instructions.Add(CilOpCodes.Stloc_2);
-        _ = instructions.Add(CilOpCodes.Ldloc_2);
-        _ = instructions.Add(CilOpCodes.Brfalse_S, returnFalse.CreateLabel());
-        _ = instructions.Add(CilOpCodes.Ldloc_1);
-        _ = instructions.Add(CilOpCodes.Ldc_I4_2);
-        _ = instructions.Add(CilOpCodes.Add);
-        _ = instructions.Add(CilOpCodes.Stloc_1);
-
-        // Load the value offset for the current key, and save it for later
-        _ = instructions.Add(CilOpCodes.Ldloc_1);
-        _ = instructions.Add(CilOpCodes.Ldind_U2);
-        _ = instructions.Add(CilOpCodes.Stloc_3);
-        _ = instructions.Add(CilOpCodes.Ldloc_1);
-        _ = instructions.Add(CilOpCodes.Ldc_I4_2);
-        _ = instructions.Add(CilOpCodes.Add);
-        _ = instructions.Add(CilOpCodes.Stloc_1);
 
         // Import 'MemoryMarshal.CreateReadOnlySpan<char>'
         MethodSpecification createReadOnlySpanMethod = module.DefaultImporter
@@ -523,49 +440,157 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
             .ImportWith(module.DefaultImporter);
 
-        // Create the span, advance past it, compare it, and repeat if we don't have a match
-        _ = instructions.Add(CilOpCodes.Ldloc_1);
-        _ = instructions.Add(CilOpCodes.Ldloc_2);
-        _ = instructions.Add(CilOpCodes.Call, createReadOnlySpanMethod);
-        _ = instructions.Add(CilOpCodes.Stloc_S, body.LocalVariables[4]);
-        _ = instructions.Add(CilOpCodes.Ldloc_1);
-        _ = instructions.Add(CilOpCodes.Ldloc_2);
-        _ = instructions.Add(CilOpCodes.Add);
-        _ = instructions.Add(CilOpCodes.Stloc_1);
-        _ = instructions.Add(CilOpCodes.Ldarg_0);
-        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[4]);
-        _ = instructions.Add(CilOpCodes.Call, sequenceEqualMethod);
-        _ = instructions.Add(CilOpCodes.Brfalse_S, loopStart.CreateLabel());
+        // Compute the range check arguments
+        int minLength = typeHierarchyEntries.Keys.Min(static key => key.Length);
+        int maxLength = typeHierarchyEntries.Keys.Max(static key => key.Length);
 
-        // Read the matching value and the index of the next parent from the 'Values' RVA field and set the arguments
-        _ = instructions.Add(CilOpCodes.Ldsflda, valuesRvaField);
-        _ = instructions.Add(CilOpCodes.Ldloc_3);
-        _ = instructions.Add(CilOpCodes.Add);
-        _ = instructions.Add(CilOpCodes.Stloc_S, body.LocalVariables[5]);
-        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[5]);
-        _ = instructions.Add(CilOpCodes.Ldind_U2);
-        _ = instructions.Add(CilOpCodes.Stloc_S, body.LocalVariables[6]);
-        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[5]);
-        _ = instructions.Add(CilOpCodes.Ldc_I4_2);
-        _ = instructions.Add(CilOpCodes.Add);
-        _ = instructions.Add(CilOpCodes.Stloc_S, body.LocalVariables[5]);
-        _ = instructions.Add(CilOpCodes.Ldarg_2);
-        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[5]);
-        _ = instructions.Add(CilOpCodes.Ldind_U2);
-        _ = instructions.Add(CilOpCodes.Stind_I4);
-        _ = instructions.Add(CilOpCodes.Ldarg_1);
-        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[5]);
-        _ = instructions.Add(CilOpCodes.Ldloc_S, body.LocalVariables[6]);
-        _ = instructions.Add(CilOpCodes.Call, createReadOnlySpanMethod);
-        _ = instructions.Add(CilOpCodes.Stobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)));
+        // Labels for jumps
+        CilInstruction ldc_I4_0_rangeCheckFail = new(Ldc_I4_0);
+        CilInstruction ldsflda_rangeCheckSuccess = new(Ldsflda, bucketsRvaField);
+        CilInstruction ldloc_1_loopStart = new(Ldloc_1);
 
-        // Success epilogue
-        _ = instructions.Add(CilOpCodes.Ldc_I4_1);
-        _ = instructions.Add(CilOpCodes.Ret);
+        // Extract the parameters:
+        //   [0]: 'scoped ReadOnlySpan<char>' (the runtime class name)
+        //   [1]: 'ReadOnlySpan<char>&' (the base runtime class name)
+        //   [2]: 'int&' (the next base runtime class name index)
+        Parameter arg_0_runtimeClassName = tryGetBaseRuntimeClassNameMethod.Parameters[0];
+        Parameter arg_1_baseRuntimeClassName = tryGetBaseRuntimeClassNameMethod.Parameters[1];
+        Parameter arg_2_nextBaseRuntimeClassNameIndex = tryGetBaseRuntimeClassNameMethod.Parameters[2];
 
-        // Shared failure epilogue
-        instructions.Add(returnFalse);
-        _ = instructions.Add(CilOpCodes.Ret);
+        // Declare the following variables:
+        //   [0]: 'int' (the bucket index)
+        //   [1]: 'byte&' (the reference into the 'Keys' RVA field)
+        //   [2]: 'int' (the length of the current key candidate)
+        //   [3]: 'int' (the offset to the matching value in the 'Values' RVA field)
+        //   [4]: 'ReadOnlySpan<char>' (the current key candidate)
+        //   [5]: 'byte&' (the reference into the 'Values' RVA field)
+        //   [6]: 'int' (the length of the matching value)
+        CilLocalVariable loc_0_bucketIndex = new(module.CorLibTypeFactory.Int32);
+        CilLocalVariable loc_1_keysRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
+        CilLocalVariable loc_2_keyLength = new(module.CorLibTypeFactory.Int32);
+        CilLocalVariable loc_3_valueOffset = new(module.CorLibTypeFactory.Int32);
+        CilLocalVariable loc_4_keySpan = new(module.DefaultImporter.ImportTypeSignature(typeof(ReadOnlySpan<char>)));
+        CilLocalVariable loc_5_valuesRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
+        CilLocalVariable loc_6_valueLength = new(module.CorLibTypeFactory.Int32);
+
+        // Create a method body for the 'TryGetBaseRuntimeClassName' method
+        tryGetBaseRuntimeClassNameMethod.CilMethodBody = new CilMethodBody(tryGetBaseRuntimeClassNameMethod)
+        {
+            LocalVariables =
+            {
+                loc_0_bucketIndex,
+                loc_1_keysRef,
+                loc_2_keyLength,
+                loc_3_valueOffset,
+                loc_4_keySpan,
+                loc_5_valuesRef,
+                loc_6_valueLength
+            },
+            Instructions =
+            {
+                // Set the 'out' parameters to default
+                { Ldarg_1 },
+                { Initobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)) },
+                { Ldarg_2 },
+                { Ldc_I4_0 },
+                { Stind_I4 },
+
+                // Emit the range checks
+                { Ldarga_S, arg_0_runtimeClassName },
+                { Call, readOnlySpanCharget_Length },
+                { CilInstruction.CreateLdcI4(minLength) },
+                { Blt_S, ldc_I4_0_rangeCheckFail.CreateLabel() },
+                { Ldarga_S, arg_0_runtimeClassName },
+                { Call, readOnlySpanCharget_Length },
+                { CilInstruction.CreateLdcI4(maxLength) },
+                { Bgt_S, ldc_I4_0_rangeCheckFail.CreateLabel() },
+
+                // Compute the hash and get the bucket index
+                { ldsflda_rangeCheckSuccess },
+                { Ldarg_0 },
+                { Call, wellKnownInteropDefinitions.InteropImplementationDetails.GetMethod("ComputeReadOnlySpanHash"u8) },
+                { Ldc_I4, bucketSize },
+                { Rem_Un },
+                { Ldc_I4_4 },
+                { Mul },
+                { Add },
+                { Ldind_I4 },
+                { Stloc_0 },
+                { Ldloc_0 },
+                { Ldc_I4_0 },
+                { Blt_S, ldc_I4_0_rangeCheckFail.CreateLabel() },
+
+                // Get the reference to the start of the keys RVA field data, for this bucket
+                { Ldsflda, keysRvaField },
+                { Ldloc_0 },
+                { Add },
+                { Stloc_1 },
+
+                // Start looping through conflicting keys for this chain, stop if we reached the end
+                { ldloc_1_loopStart },
+                { Ldind_U2 },
+                { Stloc_2 },
+                { Ldloc_2 },
+                { Brfalse_S, ldc_I4_0_rangeCheckFail.CreateLabel() },
+                { Ldloc_1 },
+                { Ldc_I4_2 },
+                { Add },
+                { Stloc_1 },
+
+                // Load the value offset for the current key, and save it for later
+                { Ldloc_1 },
+                { Ldind_U2 },
+                { Stloc_3 },
+                { Ldloc_1 },
+                { Ldc_I4_2 },
+                { Add },
+                { Stloc_1 },
+
+                // Create the span, advance past it, compare it, and repeat if we don't have a match
+                { Ldloc_1 },
+                { Ldloc_2 },
+                { Call, createReadOnlySpanMethod },
+                { Stloc_S, loc_4_keySpan },
+                { Ldloc_1 },
+                { Ldloc_2 },
+                { Add },
+                { Stloc_1 },
+                { Ldarg_0 },
+                { Ldloc_S, loc_4_keySpan },
+                { Call, sequenceEqualMethod },
+                { Brfalse_S, ldloc_1_loopStart.CreateLabel() },
+
+                // Read the matching value and the index of the next parent from the 'Values' RVA field and set the arguments
+                { Ldsflda, valuesRvaField },
+                { Ldloc_3 },
+                { Add },
+                { Stloc_S, loc_5_valuesRef },
+                { Ldloc_S, loc_5_valuesRef },
+                { Ldind_U2 },
+                { Stloc_S, loc_6_valueLength },
+                { Ldloc_S, loc_5_valuesRef },
+                { Ldc_I4_2 },
+                { Add },
+                { Stloc_S, loc_5_valuesRef },
+                { Ldarg_2 },
+                { Ldloc_S, loc_5_valuesRef },
+                { Ldind_U2 },
+                { Stind_I4 },
+                { Ldarg_1 },
+                { Ldloc_S, loc_5_valuesRef },
+                { Ldloc_S, loc_6_valueLength },
+                { Call, createReadOnlySpanMethod },
+                { Stobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)) },
+
+                // Success epilogue
+                { Ldc_I4_1 },
+                { Ret },
+
+                // Shared failure epilogue
+                { ldc_I4_0_rangeCheckFail },
+                { Ret },
+            }
+        };
     }
 
     /// <summary>
