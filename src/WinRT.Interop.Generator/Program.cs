@@ -129,7 +129,7 @@ internal static class InteropGenerator
         WellKnownInteropDefinitions wellKnownInteropDefinitions = new(winRTInteropModule);
         WellKnownInteropReferences wellKnownInteropReferences = new(winRTInteropModule, winRTRuntime2Module);
 
-        TypeHierarchyBuilder.Lookup(
+        WindowsRuntimeTypeHierarchyBuilder.Lookup(
             state._typeHierarchyEntries,
             wellKnownInteropDefinitions,
             winRTInteropModule,

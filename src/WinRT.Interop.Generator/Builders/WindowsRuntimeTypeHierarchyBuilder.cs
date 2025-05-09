@@ -19,35 +19,44 @@ namespace WindowsRuntime.InteropGenerator.Builders;
 /// <summary>
 /// A builder for the <c>WindowsRuntimeTypeHierarchy</c> type.
 /// </summary>
-internal static partial class TypeHierarchyBuilder
+internal static partial class WindowsRuntimeTypeHierarchyBuilder
 {
     /// <summary>
-    /// Set of known prime numbers, in ascending order.
+    /// Creates a new type definition for the <c>WindowsRuntimeTypeHierarchy</c> type.
     /// </summary>
-    private static ReadOnlySpan<int> PrimeNumbers =>
-    [
-        3, 7, 11, 17, 23, 29, 37, 47, 59, 71, 89, 107, 131, 163, 197, 239, 293, 353, 431, 521, 631, 761, 919,
-        1103, 1327, 1597, 1931, 2333, 2801, 3371, 4049, 4861, 5839, 7013, 8419, 10103, 12143, 14591,
-        17519, 21023, 25229, 30293, 36353, 43627, 52361, 62851, 75431, 90523, 108631, 130363, 156437,
-        187751, 225307, 270371, 324449, 389357, 467237, 560689, 672827, 807403, 968897, 1162687, 1395263,
-        1674319, 2009191, 2411033, 2893249, 3471899, 4166287, 4999559, 5999471, 7199369
-    ];
-
-    /// <summary>
-    /// Creates a new type definition for the implementation of the COM interface entries for a managed type.
-    /// </summary>
-    /// <param name="ns">The namespace for the type.</param>
-    /// <param name="name">The type name.</param>
-    /// <param name="entriesFieldType">The <see cref="TypeDefinition"/> for the type of entries field.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
-    /// <param name="implType">The resulting implementation type.</param>
-    /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
+    /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="lookupType">The resulting <see cref="TypeDefinition"/>.</param>
     public static unsafe void Lookup(
         SortedDictionary<string, string> typeHierarchyEntries,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
         ModuleDefinition module,
         out TypeDefinition lookupType)
     {
+        ValuesRva(
+            typeHierarchyEntries,
+            wellKnownInteropDefinitions,
+            module,
+            out SortedDictionary<string, ValueInfo> typeHierarchyValues,
+            out FieldDefinition valuesRvaField);
+
+        KeysRva(
+            typeHierarchyEntries,
+            typeHierarchyValues,
+            wellKnownInteropDefinitions,
+            module,
+            out int bucketSize,
+            out Dictionary<int, int> chainOffsets,
+            out FieldDefinition keysRvaField);
+
+        BucketsRva(
+            bucketSize,
+            chainOffsets,
+            wellKnownInteropDefinitions,
+            module,
+            out FieldDefinition bucketsRvaField);
+
         // We're declaring an 'internal static class' type
         lookupType = new TypeDefinition(
             ns: "WindowsRuntime.Interop"u8,
@@ -57,7 +66,26 @@ internal static partial class TypeHierarchyBuilder
 
         module.TopLevelTypes.Add(lookupType);
 
-        SortedDictionary<string, ValueInfo> typeHierarchyValues = [];
+
+    }
+
+    /// <summary>
+    /// Creates the 'Values' RVA field for the type hierarchy.
+    /// </summary>
+    /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="typeHierarchyValues">The mapping of infos of all type hierarchy values.</param>
+    /// <param name="valuesRvaField">The resulting 'Values' RVA field.</param>
+    private static void ValuesRva(
+        SortedDictionary<string, string> typeHierarchyEntries,
+        WellKnownInteropDefinitions wellKnownInteropDefinitions,
+        ModuleDefinition module,
+        out SortedDictionary<string, ValueInfo> typeHierarchyValues,
+        out FieldDefinition valuesRvaField)
+    {
+        typeHierarchyValues = [];
+
         int valueIndex = 0;
 
         // Add all values with a unique, progressive index to each of them
@@ -112,7 +140,7 @@ internal static partial class TypeHierarchyBuilder
         wellKnownInteropDefinitions.RvaFields.NestedTypes.Add(valuesRvaDataType);
 
         // Create the RVA field for the 'Values' data
-        FieldDefinition valuesRvaField = new(
+        valuesRvaField = new(
             name: "TypeHierarchyLookupValues"u8,
             attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.HasFieldRva,
             fieldType: valuesRvaDataType.ToTypeSignature())
@@ -122,13 +150,43 @@ internal static partial class TypeHierarchyBuilder
 
         // Add the RVA field to the parent type
         wellKnownInteropDefinitions.RvaFields.Fields.Add(valuesRvaField);
+    }
 
-        int bucketSize = 0;
+    /// <summary>
+    /// Creates the 'Keys' RVA field for the type hierarchy.
+    /// </summary>
+    /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
+    /// <param name="typeHierarchyValues">The mapping of infos of all type hierarchy values.</param>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="bucketSize">The resulting bucket size.</param>
+    /// <param name="chainOffsets">The mapping of offsets of each chain.</param>
+    /// <param name="keysRvaField">The resulting 'Keys' RVA field.</param>
+    private static void KeysRva(
+        SortedDictionary<string, string> typeHierarchyEntries,
+        SortedDictionary<string, ValueInfo> typeHierarchyValues,
+        WellKnownInteropDefinitions wellKnownInteropDefinitions,
+        ModuleDefinition module,
+        out int bucketSize,
+        out Dictionary<int, int> chainOffsets,
+        out FieldDefinition keysRvaField)
+    {
+        // Set of known prime numbers, in ascending order
+        scoped ReadOnlySpan<int> primeNumbers =
+        [
+            3, 7, 11, 17, 23, 29, 37, 47, 59, 71, 89, 107, 131, 163, 197, 239, 293, 353, 431, 521, 631, 761, 919,
+            1103, 1327, 1597, 1931, 2333, 2801, 3371, 4049, 4861, 5839, 7013, 8419, 10103, 12143, 14591,
+            17519, 21023, 25229, 30293, 36353, 43627, 52361, 62851, 75431, 90523, 108631, 130363, 156437,
+            187751, 225307, 270371, 324449, 389357, 467237, 560689, 672827, 807403, 968897, 1162687, 1395263,
+            1674319, 2009191, 2411033, 2893249, 3471899, 4166287, 4999559, 5999471, 7199369
+        ];
+
+        int startingBucketSize = 0;
 
         // Find the smallest prime number greater than the number of values
-        for (int i = 0; i < PrimeNumbers.Length && bucketSize < typeHierarchyEntries.Count; i++)
+        for (int i = 0; i < primeNumbers.Length && startingBucketSize < typeHierarchyEntries.Count; i++)
         {
-            bucketSize = PrimeNumbers[i];
+            startingBucketSize = primeNumbers[i];
         }
 
         // Hash all keys to avoid wasting time re-hashing them multiple times
@@ -137,10 +195,11 @@ internal static partial class TypeHierarchyBuilder
             .ToDictionary(keySelector: static key => key, elementSelector: static key => ComputeReadOnlySpanHash(key));
 
         int numberOfKeysPerChain = int.MaxValue;
-        int bestBucketSize = 0;
+
+        bucketSize = 0;
 
         // Search up to some maximum size for the best bucket size we can use for the application
-        for (int i = bucketSize; i < 2333; i++)
+        for (int i = startingBucketSize; i < 2333; i++)
         {
             using SpanOwner<int> buckets = SpanOwner<int>.Allocate(i, AllocationMode.Clear);
 
@@ -163,7 +222,7 @@ internal static partial class TypeHierarchyBuilder
             if (maxNumberOfKeysPerChain < numberOfKeysPerChain)
             {
                 numberOfKeysPerChain = maxNumberOfKeysPerChain;
-                bestBucketSize = i;
+                bucketSize = i;
             }
 
             // Stop if we reached 3 keys per chain, as that's good enough and allows us to
@@ -181,7 +240,7 @@ internal static partial class TypeHierarchyBuilder
         // Precompute the keys in each chain, so we can figure out the contents of the other RVA fields
         foreach ((string key, int hash) in typeHierarchyKeyHashes)
         {
-            List<string> chain = CollectionsMarshal.GetValueRefOrAddDefault(keyChains, (int)((uint)hash % (uint)bestBucketSize), out _) ??= [];
+            List<string> chain = CollectionsMarshal.GetValueRefOrAddDefault(keyChains, (int)((uint)hash % (uint)bucketSize), out _) ??= [];
 
             // Add the current key to the chain
             chain.Add(key);
@@ -190,7 +249,7 @@ internal static partial class TypeHierarchyBuilder
         using ArrayPoolBufferWriter<byte> keysRvaBuffer = new();
 
         // We also need to track the offset of the start of each chain, to reference it from the bucket entries
-        Dictionary<int, int> chainOffsets = [];
+        chainOffsets = [];
 
         // We need to go through indices in order to ensure the results are deterministic
         foreach ((int bucketIndex, List<string> chain) in keyChains.OrderBy(static pair => pair.Key))
@@ -235,7 +294,7 @@ internal static partial class TypeHierarchyBuilder
         wellKnownInteropDefinitions.RvaFields.NestedTypes.Add(keysRvaDataType);
 
         // Create the RVA field for the 'Keys' data
-        FieldDefinition keysRvaField = new(
+        keysRvaField = new(
             name: "TypeHierarchyLookupKeys"u8,
             attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.HasFieldRva,
             fieldType: keysRvaDataType.ToTypeSignature())
@@ -245,11 +304,27 @@ internal static partial class TypeHierarchyBuilder
 
         // Add the RVA field to the parent type
         wellKnownInteropDefinitions.RvaFields.Fields.Add(keysRvaField);
+    }
 
-        using ArrayPoolBufferWriter<byte> bucketsRvaBuffer = new(initialCapacity: bestBucketSize);
+    /// <summary>
+    /// Creates the 'Buckets' RVA field for the type hierarchy.
+    /// </summary>
+    /// <param name="bucketSize">The resulting bucket size.</param>
+    /// <param name="chainOffsets">The mapping of offsets of each chain.</param>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="bucketsRvaField">The resulting 'Buckets' RVA field.</param>
+    private static void BucketsRva(
+        int bucketSize,
+        Dictionary<int, int> chainOffsets,
+        WellKnownInteropDefinitions wellKnownInteropDefinitions,
+        ModuleDefinition module,
+        out FieldDefinition bucketsRvaField)
+    {
+        using ArrayPoolBufferWriter<byte> bucketsRvaBuffer = new(initialCapacity: bucketSize);
 
         // Fill the buckets RVA data with the right offsets (or '-1' for no matches)
-        for (int i = 0; i < bestBucketSize; i++)
+        for (int i = 0; i < bucketSize; i++)
         {
             bucketsRvaBuffer.Write((short)(chainOffsets.TryGetValue(i, out int offset) ? offset : -1));
         }
@@ -268,7 +343,7 @@ internal static partial class TypeHierarchyBuilder
         wellKnownInteropDefinitions.RvaFields.NestedTypes.Add(bucketsRvaDataType);
 
         // Create the RVA field for the 'Buckets' data
-        FieldDefinition bucketsRvaField = new(
+        bucketsRvaField = new(
             name: "TypeHierarchyLookupBuckets"u8,
             attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.HasFieldRva,
             fieldType: bucketsRvaDataType.ToTypeSignature())
@@ -280,22 +355,39 @@ internal static partial class TypeHierarchyBuilder
         wellKnownInteropDefinitions.RvaFields.Fields.Add(bucketsRvaField);
     }
 
-    static int ComputeReadOnlySpanHash(ReadOnlySpan<char> s)
+    /// <summary>
+    /// Computes a deterministic hash of an input span.
+    /// </summary>
+    /// <param name="span">The input span.</param>
+    /// <returns>The hash of <paramref name="span"/>.</returns>
+    /// <remarks>
+    /// This implementation must be identical to the one emitted from <see cref="Factories.WellKnownMemberDefinitionFactory.ComputeReadOnlySpanHash"/>
+    /// </remarks>
+    private static int ComputeReadOnlySpanHash(ReadOnlySpan<char> span)
     {
-        uint num = 2166136261u;
-        int num2 = 0;
-        while (num2 < s.Length)
+        uint hash = 2166136261u;
+
+        foreach (char c in span)
         {
-            num = (s[num2] ^ num) * 16777619;
-            num2++;
+            hash = (c ^ hash) * 16777619;
         }
-        return (int)num;
+
+        return (int)hash;
     }
-}
 
-file sealed class ValueInfo
-{
-    public required int Index { get; init; }
+    /// <summary>
+    /// Info on a given type hierarchy value.
+    /// </summary>
+    private sealed class ValueInfo
+    {
+        /// <summary>
+        /// The index of the value in the final set.
+        /// </summary>
+        public required int Index { get; init; }
 
-    public int RvaOffset { get; set; }
+        /// <summary>
+        /// The starting offset of the value in its RVA field.
+        /// </summary>
+        public int RvaOffset { get; set; }
+    }
 }

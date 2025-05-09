@@ -337,11 +337,11 @@ internal static class WellKnownTypeDefinitionFactory
         // Define the data type for IID data
         TypeDefinition iidRvaDataType = new(
             ns: null,
-            name: "IIDRvaData(Size=16)",
+            name: "IIDRvaData(Size=16|Align=4)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
             baseType: referenceImporter.ImportType(typeof(ValueType)))
         {
-            ClassLayout = new ClassLayout(packingSize: 1, classSize: 16)
+            ClassLayout = new ClassLayout(packingSize: 4, classSize: 16)
         };
 
         // The IID RVA type is nested under the '<RvaFields>' type
