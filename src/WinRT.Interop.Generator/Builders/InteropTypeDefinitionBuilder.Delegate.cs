@@ -641,13 +641,11 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: computeVtablesReturnType,
-                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]));
-
-            // The parameter is '[out]'
-            computeVtablesMethod.ParameterDefinitions.Add(new ParameterDefinition(
-                sequence: 1,
-                name: null,
-                attributes: ParameterAttributes.Out));
+                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+            {
+                // The parameter is '[out]'
+                ParameterDefinitions = { new ParameterDefinition(sequence: 1, name: null, attributes: ParameterAttributes.Out) }
+            };
 
             marshallerType.Methods.Add(computeVtablesMethod);
 

@@ -47,6 +47,22 @@ internal static class InteropCustomAttributeFactory
     }
 
     /// <summary>
+    /// Creates a new custom attribute value for <see cref="ScopedRefAttribute"/>.
+    /// </summary>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
+    public static CustomAttribute ScopedRef(ModuleDefinition module)
+    {
+        // Resolve the '[ScopedRef]' attribute type
+        TypeDefinition scopedRefAttributeType = module.MetadataResolver.ResolveType(module.DefaultImporter.ImportType(typeof(ScopedRefAttribute)))!;
+
+        // Import the constructor, so we can use it
+        ICustomAttributeType scopedRefAttributeCtor = (ICustomAttributeType)module.DefaultImporter.ImportMethod(scopedRefAttributeType.GetConstructor()!);
+
+        return new(scopedRefAttributeCtor);
+    }
+
+    /// <summary>
     /// Creates a new custom attribute value for <see cref="UnmanagedCallersOnlyAttribute"/>.
     /// </summary>
     /// <param name="module">The module that the attribute will be used from.</param>
