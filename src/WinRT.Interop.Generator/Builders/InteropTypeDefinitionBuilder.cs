@@ -36,7 +36,7 @@ internal static partial class InteropTypeDefinitionBuilder
         params ReadOnlySpan<(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable)> implTypes)
     {
         // We're declaring an 'internal static class' type
-        implType = new(
+        implType = new TypeDefinition(
             ns: ns,
             name: name,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,

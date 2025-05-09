@@ -337,7 +337,7 @@ internal static class WellKnownTypeDefinitionFactory
         // Define the data type for IID data
         TypeDefinition iidRvaDataType = new(
             ns: null,
-            name: "IIDRvaDataSize=16",
+            name: "IIDRvaData(Size=16)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
             baseType: referenceImporter.ImportType(typeof(ValueType)))
         {
@@ -362,7 +362,7 @@ internal static class WellKnownTypeDefinitionFactory
         TypeDefinition interopImplementationDetailsType = new(
             ns: null,
             name: "<InteropImplementationDetails>"u8,
-            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: corLibTypeFactory.Object.ToTypeDefOrRef());
 
         interopImplementationDetailsType.Methods.Add(WellKnownMemberDefinitionFactory.ComputeReadOnlySpanHash(corLibTypeFactory, referenceImporter));

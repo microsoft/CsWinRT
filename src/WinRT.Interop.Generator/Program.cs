@@ -17,7 +17,7 @@ ConsoleApp.Run(args, InteropGenerator.Run);
 
 internal sealed class InteropGeneratorState
 {
-    private readonly SortedDictionary<string, string> _typeHierarchyEntries = [];
+    public readonly SortedDictionary<string, string> _typeHierarchyEntries = [];
 
     public void TrackTypeHierarchyEntry(string runtimeClassName, string baseRuntimeClassName)
     {
@@ -128,6 +128,12 @@ internal static class InteropGenerator
         // Setup the well known items to use when emitting code
         WellKnownInteropDefinitions wellKnownInteropDefinitions = new(winRTInteropModule);
         WellKnownInteropReferences wellKnownInteropReferences = new(winRTInteropModule, winRTRuntime2Module);
+
+        TypeHierarchyBuilder.Lookup(
+            state._typeHierarchyEntries,
+            wellKnownInteropDefinitions,
+            winRTInteropModule,
+            out _);
 
         foreach (GenericInstanceTypeSignature typeSignature in genericTypes)
         {
