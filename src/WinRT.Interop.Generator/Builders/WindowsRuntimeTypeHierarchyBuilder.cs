@@ -84,6 +84,14 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             out MethodDefinition tryGetBaseRuntimeClassNameMethod);
 
         lookupType.Methods.Add(tryGetBaseRuntimeClassNameMethod);
+
+        // Emit the fast lookup method for following base types
+        TryGetNextBaseRuntimeClassName(
+            module,
+            valuesRvaField,
+            out MethodDefinition tryGetNextBaseRuntimeClassNameMethod);
+
+        lookupType.Methods.Add(tryGetNextBaseRuntimeClassNameMethod);
     }
 
     /// <summary>
@@ -445,7 +453,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         int maxLength = typeHierarchyEntries.Keys.Max(static key => key.Length);
 
         // Labels for jumps
-        CilInstruction ldc_I4_0_rangeCheckFail = new(Ldc_I4_0);
+        CilInstruction ldc_I4_0_returnFalse = new(Ldc_I4_0);
         CilInstruction ldsflda_rangeCheckSuccess = new(Ldsflda, bucketsRvaField);
         CilInstruction ldloc_1_loopStart = new(Ldloc_1);
 
@@ -499,11 +507,11 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldarga_S, arg_0_runtimeClassName },
                 { Call, readOnlySpanCharget_Length },
                 { CilInstruction.CreateLdcI4(minLength) },
-                { Blt_S, ldc_I4_0_rangeCheckFail.CreateLabel() },
+                { Blt, ldc_I4_0_returnFalse.CreateLabel() },
                 { Ldarga_S, arg_0_runtimeClassName },
                 { Call, readOnlySpanCharget_Length },
                 { CilInstruction.CreateLdcI4(maxLength) },
-                { Bgt_S, ldc_I4_0_rangeCheckFail.CreateLabel() },
+                { Bgt_S, ldc_I4_0_returnFalse.CreateLabel() },
 
                 // Compute the hash and get the bucket index
                 { ldsflda_rangeCheckSuccess },
@@ -518,7 +526,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Stloc_0 },
                 { Ldloc_0 },
                 { Ldc_I4_0 },
-                { Blt_S, ldc_I4_0_rangeCheckFail.CreateLabel() },
+                { Blt_S, ldc_I4_0_returnFalse.CreateLabel() },
 
                 // Get the reference to the start of the keys RVA field data, for this bucket
                 { Ldsflda, keysRvaField },
@@ -531,7 +539,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldind_U2 },
                 { Stloc_2 },
                 { Ldloc_2 },
-                { Brfalse_S, ldc_I4_0_rangeCheckFail.CreateLabel() },
+                { Brfalse_S, ldc_I4_0_returnFalse.CreateLabel() },
                 { Ldloc_1 },
                 { Ldc_I4_2 },
                 { Add },
@@ -576,6 +584,10 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldloc_S, loc_5_valuesRef },
                 { Ldind_U2 },
                 { Stind_I4 },
+                { Ldloc_S, loc_5_valuesRef },
+                { Ldc_I4_2 },
+                { Add },
+                { Stloc_S, loc_5_valuesRef },
                 { Ldarg_1 },
                 { Ldloc_S, loc_5_valuesRef },
                 { Ldloc_S, loc_6_valueLength },
@@ -587,7 +599,118 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ret },
 
                 // Shared failure epilogue
-                { ldc_I4_0_rangeCheckFail },
+                { ldc_I4_0_returnFalse },
+                { Ret },
+            }
+        };
+    }
+
+    /// <summary>
+    /// Creates the 'TryGetNextBaseRuntimeClassName' method for the type hierarchy.
+    /// </summary>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="valuesRvaField">The 'Values' RVA field (created by <see cref="ValuesRva"/>).</param>
+    /// <param name="tryGetNextBaseRuntimeClassNameMethod">The resulting 'TryGetNextBaseRuntimeClassName' method.</param>
+    private static void TryGetNextBaseRuntimeClassName(
+        ModuleDefinition module,
+        FieldDefinition valuesRvaField,
+        out MethodDefinition tryGetNextBaseRuntimeClassNameMethod)
+    {
+        // Define the 'TryGetNextBaseRuntimeClassName' method as follows:
+        //
+        // public static bool TryGetNextBaseRuntimeClassName(
+        //     int baseRuntimeClassNameIndex,
+        //     out ReadOnlySpan<char> baseRuntimeClassName,
+        //     out int nextBaseRuntimeClassNameIndex)
+        tryGetNextBaseRuntimeClassNameMethod = new MethodDefinition(
+            name: "TryGetNextBaseRuntimeClassName"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(
+                returnType: module.CorLibTypeFactory.Boolean,
+                parameterTypes: [
+                    module.CorLibTypeFactory.Int32,
+                    module.DefaultImporter.ImportTypeSignature(typeof(ReadOnlySpan<char>)).MakeByReferenceType(),
+                    module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+        {
+            // Both 'baseRuntimeClassName' and 'nextBaseRuntimeClassNameIndex' are '[out]' parameters
+            ParameterDefinitions =
+            {
+                new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out),
+                new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out)
+            }
+        };
+
+        // Import 'MemoryMarshal.CreateReadOnlySpan<char>'
+        MethodSpecification createReadOnlySpanMethod = module.DefaultImporter
+            .ImportType(typeof(MemoryMarshal))
+            .CreateMemberReference("CreateReadOnlySpan", MethodSignature.CreateStatic(
+                returnType: module.DefaultImporter.ImportType(typeof(ReadOnlySpan<>)).MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Method, 0).MakeByReferenceType(),
+                    module.CorLibTypeFactory.Int32]))
+            .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
+            .ImportWith(module.DefaultImporter);
+
+        // Labels for jumps
+        CilInstruction ldc_I4_0_returnFalse = new(Ldc_I4_0);
+
+        // Declare the following variables:
+        //   [0]: 'byte&' (the reference into the 'Values' RVA field)
+        //   [1]: 'int' (the length of the matching value)
+        CilLocalVariable loc_0_valuesRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
+        CilLocalVariable loc_1_valueLength = new(module.CorLibTypeFactory.Int32);
+
+        // Create a method body for the 'TryGetNextBaseRuntimeClassName' method
+        tryGetNextBaseRuntimeClassNameMethod.CilMethodBody = new CilMethodBody(tryGetNextBaseRuntimeClassNameMethod)
+        {
+            LocalVariables = { loc_0_valuesRef, loc_1_valueLength },
+            Instructions =
+            {
+                // Set the 'out' parameters to default
+                { Ldarg_1 },
+                { Initobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)) },
+                { Ldarg_2 },
+                { Ldc_I4_0 },
+                { Stind_I4 },
+
+                // Emit the range check
+                { Ldarg_0 },
+                { Ldc_I4_0 },
+                { Blt_S, ldc_I4_0_returnFalse.CreateLabel() },
+
+                // Read the matching value and the index of the next parent from the 'Values' RVA field and set the arguments
+                { Ldsflda, valuesRvaField },
+                { Ldarg_0 },
+                { Add },
+                { Stloc_0 },
+                { Ldloc_0 },
+                { Ldind_U2 },
+                { Stloc_1 },
+                { Ldloc_0 },
+                { Ldc_I4_2 },
+                { Add },
+                { Stloc_0 },
+                { Ldarg_2 },
+                { Ldloc_0 },
+                { Ldind_U2 },
+                { Stind_I4 },
+                { Ldloc_0 },
+                { Ldc_I4_2 },
+                { Add },
+                { Stloc_0 },
+                { Ldarg_1 },
+                { Ldloc_0 },
+                { Ldloc_1 },
+                { Call, createReadOnlySpanMethod },
+                { Stobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)) },
+
+                // Success epilogue
+                { Ldc_I4_1 },
+                { Ret },
+
+                // Shared failure epilogue
+                { ldc_I4_0_returnFalse },
                 { Ret },
             }
         };
