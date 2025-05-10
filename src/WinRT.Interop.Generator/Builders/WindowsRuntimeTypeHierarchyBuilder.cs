@@ -32,11 +32,13 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// </summary>
     /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
     /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="lookupType">The resulting <see cref="TypeDefinition"/>.</param>
     public static unsafe void Lookup(
         SortedDictionary<string, string> typeHierarchyEntries,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
+        WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         out TypeDefinition lookupType)
     {
@@ -77,6 +79,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             typeHierarchyEntries,
             bucketSize,
             wellKnownInteropDefinitions,
+            wellKnownInteropReferences,
             module,
             bucketsRvaField,
             keysRvaField,
@@ -87,6 +90,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         // Emit the fast lookup method for following base types
         TryGetNextBaseRuntimeClassName(
+            wellKnownInteropReferences,
             module,
             valuesRvaField,
             out MethodDefinition tryGetNextBaseRuntimeClassNameMethod);
@@ -374,6 +378,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
     /// <param name="bucketSize">The resulting bucket size.</param>
     /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="bucketsRvaField">The 'Buckets' RVA field (created by <see cref="BucketsRva"/>).</param>
     /// <param name="keysRvaField">The 'Keys' RVA field (created by <see cref="KeysRva"/>).</param>
@@ -383,6 +388,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         SortedDictionary<string, string> typeHierarchyEntries,
         int bucketSize,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
+        WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         FieldDefinition bucketsRvaField,
         FieldDefinition keysRvaField,
@@ -401,8 +407,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Boolean,
                 parameterTypes: [
-                    module.DefaultImporter.ImportTypeSignature(typeof(ReadOnlySpan<char>)),
-                    module.DefaultImporter.ImportTypeSignature(typeof(ReadOnlySpan<char>)).MakeByReferenceType(),
+                    wellKnownInteropReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module),
+                    wellKnownInteropReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module).MakeByReferenceType(),
                     module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
         {
             // Both 'baseRuntimeClassName' and 'nextBaseRuntimeClassNameIndex' are '[out]' parameters.
@@ -418,12 +424,6 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             }
         };
 
-        // Import the 'ReadOnlySpan<char>.Length' getter
-        MemberReference readOnlySpanCharget_Length = module.DefaultImporter
-            .ImportType(typeof(ReadOnlySpan<char>))
-            .CreateMemberReference("get_Length", MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32))
-            .ImportWith(module.DefaultImporter);
-
         // Import 'MemoryMarshal.CreateReadOnlySpan<char>'
         MethodSpecification createReadOnlySpanMethod = module.DefaultImporter
             .ImportType(typeof(MemoryMarshal))
@@ -433,18 +433,6 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 parameterTypes: [
                     new GenericParameterSignature(GenericParameterType.Method, 0).MakeByReferenceType(),
                     module.CorLibTypeFactory.Int32]))
-            .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
-            .ImportWith(module.DefaultImporter);
-
-        // Import 'MemoryExtensions.SequenceEqual<char>'
-        MethodSpecification sequenceEqualMethod = module.DefaultImporter
-            .ImportType(typeof(System.MemoryExtensions))
-            .CreateMemberReference("SequenceEqual", MethodSignature.CreateStatic(
-                returnType: module.CorLibTypeFactory.Boolean,
-                genericParameterCount: 1,
-                parameterTypes: [
-                    module.DefaultImporter.ImportType(typeof(ReadOnlySpan<>)).MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
-                    module.DefaultImporter.ImportType(typeof(ReadOnlySpan<>)).MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0))]))
             .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
             .ImportWith(module.DefaultImporter);
 
@@ -477,7 +465,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         CilLocalVariable loc_1_keysRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
         CilLocalVariable loc_2_keyLength = new(module.CorLibTypeFactory.Int32);
         CilLocalVariable loc_3_valueOffset = new(module.CorLibTypeFactory.Int32);
-        CilLocalVariable loc_4_keySpan = new(module.DefaultImporter.ImportTypeSignature(typeof(ReadOnlySpan<char>)));
+        CilLocalVariable loc_4_keySpan = new(wellKnownInteropReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module));
         CilLocalVariable loc_5_valuesRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
         CilLocalVariable loc_6_valueLength = new(module.CorLibTypeFactory.Int32);
 
@@ -498,18 +486,18 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 // Set the 'out' parameters to default
                 { Ldarg_1 },
-                { Initobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)) },
+                { Initobj, wellKnownInteropReferences.ReadOnlySpanChar.Import(module) },
                 { Ldarg_2 },
                 { Ldc_I4_0 },
                 { Stind_I4 },
 
                 // Emit the range checks
                 { Ldarga_S, arg_0_runtimeClassName },
-                { Call, readOnlySpanCharget_Length },
+                { Call, wellKnownInteropReferences.ReadOnlySpanCharget_Length.Import(module) },
                 { CilInstruction.CreateLdcI4(minLength) },
                 { Blt, ldc_I4_0_returnFalse.CreateLabel() },
                 { Ldarga_S, arg_0_runtimeClassName },
-                { Call, readOnlySpanCharget_Length },
+                { Call, wellKnownInteropReferences.ReadOnlySpanCharget_Length.Import(module) },
                 { CilInstruction.CreateLdcI4(maxLength) },
                 { Bgt_S, ldc_I4_0_returnFalse.CreateLabel() },
 
@@ -565,7 +553,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Stloc_1 },
                 { Ldarg_0 },
                 { Ldloc_S, loc_4_keySpan },
-                { Call, sequenceEqualMethod },
+                { Call, wellKnownInteropReferences.MemoryExtensionsSequenceEqualChar.Import(module) },
                 { Brfalse_S, ldloc_1_loopStart.CreateLabel() },
 
                 // Read the matching value and the index of the next parent from the 'Values' RVA field and set the arguments
@@ -592,7 +580,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldloc_S, loc_5_valuesRef },
                 { Ldloc_S, loc_6_valueLength },
                 { Call, createReadOnlySpanMethod },
-                { Stobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)) },
+                { Stobj, wellKnownInteropReferences.ReadOnlySpanChar.Import(module) },
 
                 // Success epilogue
                 { Ldc_I4_1 },
@@ -608,10 +596,12 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <summary>
     /// Creates the 'TryGetNextBaseRuntimeClassName' method for the type hierarchy.
     /// </summary>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="valuesRvaField">The 'Values' RVA field (created by <see cref="ValuesRva"/>).</param>
     /// <param name="tryGetNextBaseRuntimeClassNameMethod">The resulting 'TryGetNextBaseRuntimeClassName' method.</param>
     private static void TryGetNextBaseRuntimeClassName(
+        WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         FieldDefinition valuesRvaField,
         out MethodDefinition tryGetNextBaseRuntimeClassNameMethod)
@@ -629,7 +619,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 returnType: module.CorLibTypeFactory.Boolean,
                 parameterTypes: [
                     module.CorLibTypeFactory.Int32,
-                    module.DefaultImporter.ImportTypeSignature(typeof(ReadOnlySpan<char>)).MakeByReferenceType(),
+                    wellKnownInteropReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module).MakeByReferenceType(),
                     module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
         {
             // Both 'baseRuntimeClassName' and 'nextBaseRuntimeClassNameIndex' are '[out]' parameters
@@ -669,7 +659,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 // Set the 'out' parameters to default
                 { Ldarg_1 },
-                { Initobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)) },
+                { Initobj, wellKnownInteropReferences.ReadOnlySpanChar.Import(module) },
                 { Ldarg_2 },
                 { Ldc_I4_0 },
                 { Stind_I4 },
@@ -703,7 +693,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldloc_0 },
                 { Ldloc_1 },
                 { Call, createReadOnlySpanMethod },
-                { Stobj, module.DefaultImporter.ImportType(typeof(ReadOnlySpan<char>)) },
+                { Stobj, wellKnownInteropReferences.ReadOnlySpanChar.Import(module) },
 
                 // Success epilogue
                 { Ldc_I4_1 },

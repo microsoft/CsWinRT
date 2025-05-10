@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -35,10 +36,30 @@ internal sealed class WellKnownInteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.ReadOnlySpan&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference ReadOnlySpan => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "ReadOnlySpan`1");
+
+    /// <summary>
+    /// Gets the <see cref="ITypeDefOrRef"/> for <c>System.ReadOnlySpan&lt;T&gt;</c> of <see cref="char"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public ITypeDefOrRef ReadOnlySpanChar => field ??= ReadOnlySpan
+        .MakeGenericInstanceType(_interopModule.CorLibTypeFactory.Char)
+        .ToTypeDefOrRef();
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.MemoryExtensions</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference MemoryExtensions => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "MemoryExtensions");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference ComInterfaceDispatch => field ??= _windowsRuntimeModule.CreateTypeReference("System.Runtime.InteropServices.ComWrappers", "ComWrappers/ComInterfaceDispatch");
+    public TypeReference ComInterfaceDispatch => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices.ComWrappers", "ComWrappers/ComInterfaceDispatch");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
@@ -135,6 +156,26 @@ internal sealed class WellKnownInteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference RestrictedErrorInfoExceptionMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling", "RestrictedErrorInfoExceptionMarshaller");
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>System.ReadOnlySpane&lt;T&gt;.Length</c> (of <see cref="char"/>).
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference ReadOnlySpanCharget_Length => field ??= ReadOnlySpanChar
+        .CreateMemberReference("get_Length", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Int32));
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>System.MemoryExtensions.SequenceEqual&lt;T&gt;</c> (for <see cref="ReadOnlySpanChar"/>).
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MethodSpecification MemoryExtensionsSequenceEqualChar => field ??= MemoryExtensions
+        .CreateMemberReference("SequenceEqual", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Boolean,
+            genericParameterCount: 1,
+            parameterTypes: [
+                ReadOnlySpan.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
+                ReadOnlySpan.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0))]))
+        .MakeGenericInstanceMethod(_interopModule.CorLibTypeFactory.Char);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance&lt;T&gt;(ComWrappers.ComInterfaceDispatch*)</c>.
