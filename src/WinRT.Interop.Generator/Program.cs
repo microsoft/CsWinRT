@@ -5,11 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using ConsoleAppFramework;
 using WindowsRuntime.InteropGenerator.Builders;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
 
@@ -33,16 +35,34 @@ internal static class InteropGenerator
     /// <param name="referencePath">The input .dll paths.</param>
     /// <param name="assemblyPath">The path of the assembly that was built.</param>
     /// <param name="outputDirectory">The output path for the resulting assembly.</param>
+    /// <param name="token">The token for the operation.</param>
     public static void Run(
         string[] referencePath,
         string assemblyPath,
-        string outputDirectory)
+        string outputDirectory,
+        CancellationToken token)
     {
-        ArgumentNullException.ThrowIfNull(referencePath);
-        ArgumentOutOfRangeException.ThrowIfZero(referencePath.Length, nameof(referencePath));
-        ArgumentException.ThrowIfNullOrEmpty(assemblyPath);
-        ArgumentException.ThrowIfNullOrEmpty(outputDirectory);
+        // Wrap the actual logic, to ensure that we're only ever throwing an exception that will result
+        // in either graceful cancellation, or a well formatted error message. The 'ConsoleApp' code is
+        // taking care of passing the exception 'ToString()' result to the output buffer, so we want all
+        // exceptions that can reach that path to have our custom formatting implementation there.
+        try
+        {
+            RunCore(referencePath, assemblyPath, outputDirectory, token);
+        }
+        catch (Exception e) when (e is not (OperationCanceledException or WellKnownInteropException))
+        {
+            throw new UnhandledInteropException(e);
+        }
+    }
 
+    /// <inheritdoc cref="Run"/>
+    public static void RunCore(
+        string[] referencePath,
+        string assemblyPath,
+        string outputDirectory,
+        CancellationToken token)
+    {
         PathAssemblyResolver pathAssemblyResolver = new(referencePath);
 
         ModuleDefinition assemblyModule = ModuleDefinition.FromFile(assemblyPath, pathAssemblyResolver.ReaderParameters);

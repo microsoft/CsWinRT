@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics.Tensors;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -131,6 +132,11 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         // Prepare the buffer for the 'Values' RVA field
         foreach ((string value, ValueInfo info) in typeHierarchyValues)
         {
+            if (value.Length > ushort.MaxValue)
+            {
+                throw WellKnownInteropExceptions.RuntimeClassNameTooLong(value);
+            }
+
             // Update the RVA offset for this value, for later
             info.RvaOffset = valuesRvaBuffer.WrittenCount;
 
@@ -147,6 +153,11 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
             // Write the value right after that
             valuesRvaBuffer.Write(MemoryMarshal.AsBytes(value.AsSpan()));
+        }
+
+        if (valuesRvaBuffer.WrittenCount >= ushort.MaxValue)
+        {
+            throw WellKnownInteropExceptions.RuntimeClassNameLookupSizeLimitExceeded();
         }
 
         // Define the data type for 'Values' data
@@ -284,6 +295,11 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             // That is, they are in the same chain just because the hash collided.
             foreach (string key in chain)
             {
+                if (key.Length > ushort.MaxValue)
+                {
+                    throw WellKnownInteropExceptions.RuntimeClassNameTooLong(key);
+                }
+
                 // The format is as follows:
                 //   - (2 bytes) length of the key
                 //   - (2 bytes) RVA offset of the value
