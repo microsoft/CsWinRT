@@ -65,7 +65,8 @@ internal partial class InteropTypeDefinitionBuilder
                 ModuleDefinition module,
                 string name)
             {
-                TypeSignature typeArgument = keyValuePairType.TypeArguments[name == "get_Key" ? 0 : 1];
+                int typeArgumentIndex = name == "get_Key" ? 0 : 1;
+                TypeSignature typeArgument = keyValuePairType.TypeArguments[typeArgumentIndex];
 
                 // Define the method as follows:
                 //
@@ -96,7 +97,7 @@ internal partial class InteropTypeDefinitionBuilder
                     memberName: name,
                     signature: MethodSignature.CreateInstance(new GenericParameterSignature(
                         parameterType: GenericParameterType.Type,
-                        index: keyValuePairType.TypeArguments.IndexOf(typeArgument))));
+                        index: typeArgumentIndex)));
 
                 // Jump labels
                 CilInstruction nop_beforeTry = new(Nop);

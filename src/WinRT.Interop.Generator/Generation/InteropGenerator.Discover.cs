@@ -27,45 +27,61 @@ internal partial class InteropGenerator
 
         foreach (string path in args.ReferencePath.Concat([args.AssemblyPath]))
         {
-            ModuleDefinition module;
-
-            // Try to load the .dll at the current path
-            try
-            {
-                module = ModuleDefinition.FromFile(path, pathAssemblyResolver.ReaderParameters);
-            }
-            catch (BadImageFormatException)
-            {
-                // The input .dll is not a valid .NET assembly. This is generally the case either for
-                // native .dll-s, or for malformed .NET .dll-s. We don't need to worry about either one.
-                continue;
-            }
-
-            state.TrackModuleDefinition(path, module);
-
-            // We're only interested in harvesting .dll-s which reference the Windows SDK projections.
-            // This is true for all .dll-s that were built targeting 'netX.0-windows10.0.XXXX.0'.
-            // So this check effectively lets us filter all .dll-s that were in projects with this TFM.
-            if (!module.IsOrReferencesWindowsSDKProjectionsAssembly())
-            {
-                continue;
-            }
-
-            args.Token.ThrowIfCancellationRequested();
-
-            // Discover all type hierarchy types
-            DiscoverTypeHierarchyTypes(args, state, module);
-
-            args.Token.ThrowIfCancellationRequested();
-
-            // Discover all generic type instantiations
-            DiscoverGenericTypeInstantiations(args, state, module);
+            LoadAndProcessModule(args, state, path);
         }
 
         // We want to ensure the state will never be mutated after this method completes
         state.MakeReadOnly();
 
         return state;
+    }
+
+    /// <summary>
+    /// Loads and processes a module definition.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="state">The state for this invocation.</param>
+    /// <param name="path">The path of the module to load.</param>
+    private static void LoadAndProcessModule(
+        InteropGeneratorArgs args,
+        InteropGeneratorState state,
+        string path)
+    {
+        ModuleDefinition module;
+
+        // Try to load the .dll at the current path
+        try
+        {
+            module = ModuleDefinition.FromFile(path, ((PathAssemblyResolver)state.AssemblyResolver).ReaderParameters);
+        }
+        catch (BadImageFormatException)
+        {
+            // The input .dll is not a valid .NET assembly. This is generally the case either for
+            // native .dll-s, or for malformed .NET .dll-s. We don't need to worry about either one.
+            return;
+        }
+
+        state.TrackModuleDefinition(path, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // We're only interested in harvesting .dll-s which reference the Windows SDK projections.
+        // This is true for all .dll-s that were built targeting 'netX.0-windows10.0.XXXX.0'.
+        // So this check effectively lets us filter all .dll-s that were in projects with this TFM.
+        if (!module.IsOrReferencesWindowsSDKProjectionsAssembly())
+        {
+            return;
+        }
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Discover all type hierarchy types
+        DiscoverTypeHierarchyTypes(args, state, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Discover all generic type instantiations
+        DiscoverGenericTypeInstantiations(args, state, module);
     }
 
     /// <summary>
