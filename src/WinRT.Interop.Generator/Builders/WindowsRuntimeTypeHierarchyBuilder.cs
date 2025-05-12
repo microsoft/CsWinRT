@@ -37,21 +37,25 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <param name="module">The interop module being built.</param>
     /// <param name="lookupType">The resulting <see cref="TypeDefinition"/>.</param>
     public static unsafe void Lookup(
-        SortedDictionary<string, string> typeHierarchyEntries,
+        IReadOnlyDictionary<string, string> typeHierarchyEntries,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
         WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         out TypeDefinition lookupType)
     {
+        // Use a sorted dictionary to ensure the resulting lookup is deterministic.
+        // That is, we want to guarantee the same ordering if all pairs are the same.
+        SortedDictionary<string, string> sortedTypeHierarchyEntries = new(typeHierarchyEntries.ToDictionary());
+
         ValuesRva(
-            typeHierarchyEntries,
+            sortedTypeHierarchyEntries,
             wellKnownInteropDefinitions,
             module,
             out SortedDictionary<string, ValueInfo> typeHierarchyValues,
             out FieldDefinition valuesRvaField);
 
         KeysRva(
-            typeHierarchyEntries,
+            sortedTypeHierarchyEntries,
             typeHierarchyValues,
             wellKnownInteropDefinitions,
             module,
@@ -77,7 +81,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         // Emit the actual lookup method, using the RVA fields just declared
         TryGetBaseRuntimeClassName(
-            typeHierarchyEntries,
+            sortedTypeHierarchyEntries,
             bucketSize,
             wellKnownInteropDefinitions,
             wellKnownInteropReferences,
