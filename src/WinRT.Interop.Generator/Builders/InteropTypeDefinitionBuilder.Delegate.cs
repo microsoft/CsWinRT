@@ -10,6 +10,7 @@ using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -77,79 +78,73 @@ internal partial class InteropTypeDefinitionBuilder
 
             implType.Methods.Add(invokeMethod);
 
+            // Labels for jumps
+            CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
+            CilInstruction ldarg_o_tryStart = new(Ldarg_0);
+            CilInstruction call_catchStartMarshalException = new(Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+
             // Create a method body for the 'Invoke' method
-            CilMethodBody invokeBody = invokeMethod.CreateAndBindCilMethodBody();
-            CilInstructionCollection invokeInstructions = invokeBody.Instructions;
-
-            // Declare 1 variable:
-            //   [0]: 'int' (the 'HRESULT' to return)
-            invokeBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
-
-            CilInstruction ldloc_0 = new(CilOpCodes.Ldloc_0);
-
-            // Import 'ComWrappers.ComInterfaceDispatch.GetInstance' for the delegate
-            MethodSpecification getInstanceMethod = wellKnownInteropReferences.ComInterfaceDispatchGetInstance
-                .MakeGenericInstanceMethod(module.DefaultImporter.ImportTypeSignature(delegateType))
-                .ImportWith(module.DefaultImporter);
-
-            // Import the 'Invoke' method for the delegate
-            IMethodDefOrRef invoke = delegateType
-                .ToTypeDefOrRef()
-                .CreateMemberReference("Invoke", MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: ((GenericInstanceTypeSignature)delegateType).TypeArguments))
-                .ImportWith(module.DefaultImporter);
-
-            // '.try' code
-            CilInstruction tryStart = invokeInstructions.Add(CilOpCodes.Ldarg_0);
-            _ = invokeInstructions.Add(CilOpCodes.Call, getInstanceMethod);
-            _ = invokeInstructions.Add(CilOpCodes.Ldarg_1);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToManaged.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Ldarg_2);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToManaged.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Callvirt, invoke);
-            _ = invokeInstructions.Add(CilOpCodes.Ldc_I4_0);
-            _ = invokeInstructions.Add(CilOpCodes.Stloc_0);
-            _ = invokeInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
-
-            // '.catch' code
-            CilInstruction catchStart = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Stloc_0);
-            _ = invokeInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
-
-            // Return the 'HRESULT' from location [0]
-            invokeInstructions.Add(ldloc_0);
-            _ = invokeInstructions.Add(CilOpCodes.Ret);
-
-            // Setup the exception handler
-            invokeBody.ExceptionHandlers.Add(new CilExceptionHandler
+            invokeMethod.CilMethodBody = new CilMethodBody(invokeMethod)
             {
-                HandlerType = CilExceptionHandlerType.Exception,
-                TryStart = tryStart.CreateLabel(),
-                TryEnd = catchStart.CreateLabel(),
-                HandlerStart = catchStart.CreateLabel(),
-                HandlerEnd = ldloc_0.CreateLabel(),
-                ExceptionType = module.CorLibTypeFactory.CorLibScope
-                    .CreateTypeReference("System", "Exception")
-                    .ImportWith(module.DefaultImporter)
-            });
+                // Declare 1 variable:
+                //   [0]: 'int' (the 'HRESULT' to return)
+                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                Instructions =
+                {
+                    // '.try' code
+                    { ldarg_o_tryStart },
+                    { Call, wellKnownInteropReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType).Import(module) },
+                    { Ldarg_1 },
+                    { Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToManaged.Import(module) },
+                    { Ldarg_2 },
+                    { Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToManaged.Import(module) },
+                    { Callvirt, wellKnownInteropReferences.DelegateInvoke(delegateType).Import(module) },
+                    { Ldc_I4_0 },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // '.catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [0]
+                    { ldloc_0_returnHResult  },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_o_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
+                        ExceptionType = wellKnownInteropReferences.Exception.Import(module)
+                    }
+                }
+            };
 
             // Create the static constructor to initialize the vtable
             MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
 
-            // We need to create a new method body bound to this constructor
-            CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
-
             // Initialize the delegate vtable
-            _ = cctorInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-            _ = cctorInstructions.Add(CilOpCodes.Conv_U);
-            _ = cctorInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.IUnknownImplget_Vtable.ImportWith(module.DefaultImporter));
-            _ = cctorInstructions.Add(CilOpCodes.Ldobj, wellKnownInteropDefinitions.IUnknownVftbl);
-            _ = cctorInstructions.Add(CilOpCodes.Stobj, wellKnownInteropDefinitions.IUnknownVftbl);
-            _ = cctorInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-            _ = cctorInstructions.Add(CilOpCodes.Ldftn, invokeMethod);
-            _ = cctorInstructions.Add(CilOpCodes.Stfld, wellKnownInteropDefinitions.DelegateVftbl.Fields[3]);
-            _ = cctorInstructions.Add(CilOpCodes.Ret);
+            cctor.CilMethodBody = new CilMethodBody(cctor)
+            {
+                Instructions =
+                {
+                    { Ldsflda, vftblField },
+                    { Conv_U },
+                    { Call, wellKnownInteropReferences.IUnknownImplget_Vtable.Import(module) },
+                    { Ldobj, wellKnownInteropDefinitions.IUnknownVftbl },
+                    { Stobj, wellKnownInteropDefinitions.IUnknownVftbl },
+                    { Ldsflda, vftblField },
+                    { Ldftn, invokeMethod },
+                    { Stfld, wellKnownInteropDefinitions.DelegateVftbl.Fields[3] },
+                    { Ret }
+                }
+            };
 
             // Create the field for the IID for the delegate type
             WellKnownMemberDefinitionFactory.IID(
@@ -232,93 +227,96 @@ internal partial class InteropTypeDefinitionBuilder
 
             implType.Methods.Add(valueMethod);
 
-            // Create a method body for the 'get_Value' method
-            CilMethodBody valueBody = valueMethod.CreateAndBindCilMethodBody();
-            CilInstructionCollection valueInstructions = valueBody.Instructions;
-
-            // Declare 2 local variables:
-            //   [0]: 'int' (the 'HRESULT' to return)
-            //   [1]: 'WindowsRuntimeObjectReferenceValue' to use to marshal the delegate
-            valueBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
-            valueBody.LocalVariables.Add(new CilLocalVariable(
-                wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue.ImportWith(module.DefaultImporter).ToTypeSignature(isValueType: true)));
-
-            CilInstruction nop = new(CilOpCodes.Nop);
-            CilInstruction ldloc_0 = new(CilOpCodes.Ldloc_0);
-
-            // Return 'E_POINTER' if the argument is 'null'
-            _ = valueInstructions.Add(CilOpCodes.Ldarg_1);
-            _ = valueInstructions.Add(CilOpCodes.Ldc_I4_0);
-            _ = valueInstructions.Add(CilOpCodes.Conv_U);
-            _ = valueInstructions.Add(CilOpCodes.Bne_Un_S, nop.CreateLabel());
-            _ = valueInstructions.Add(CilOpCodes.Ldc_I4, unchecked((int)0x80004003));
-            _ = valueInstructions.Add(CilOpCodes.Ret);
-            valueInstructions.Add(nop);
-
-            // Import 'ComWrappers.ComInterfaceDispatch.GetInstance' for the delegate
-            MethodSpecification getInstanceMethod = wellKnownInteropReferences.ComInterfaceDispatchGetInstance
-                .MakeGenericInstanceMethod(module.DefaultImporter.ImportTypeSignature(delegateType))
-                .ImportWith(module.DefaultImporter);
-
             // Reference the generated 'ConvertToUnmanaged' method
             MemberReference convertToUnmanagedMethod = module
                 .CreateTypeReference(InteropUtf8NameFactory.TypeNamespace(delegateType), InteropUtf8NameFactory.TypeName(delegateType, "Marshaller"))
                 .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
-                    returnType: wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue.ImportWith(module.DefaultImporter).ToTypeSignature(isValueType: true),
-                    parameterTypes: [module.DefaultImporter.ImportTypeSignature(delegateType)]))
-                .ImportWith(module.DefaultImporter);
+                    returnType: wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
+                    parameterTypes: [delegateType]))
+                .Import(module);
 
-            // '.try' code
-            CilInstruction tryStart = valueInstructions.Add(CilOpCodes.Ldarg_1);
-            _ = valueInstructions.Add(CilOpCodes.Ldarg_0);
-            _ = valueInstructions.Add(CilOpCodes.Call, getInstanceMethod);
-            _ = valueInstructions.Add(CilOpCodes.Call, convertToUnmanagedMethod);
-            _ = valueInstructions.Add(CilOpCodes.Stloc_1);
-            _ = valueInstructions.Add(CilOpCodes.Ldloca_S, valueBody.LocalVariables[1]);
-            _ = valueInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.ImportWith(module.DefaultImporter));
-            _ = valueInstructions.Add(CilOpCodes.Stind_I);
-            _ = valueInstructions.Add(CilOpCodes.Ldc_I4_0);
-            _ = valueInstructions.Add(CilOpCodes.Stloc_0);
-            _ = valueInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
+            // Jump labels
+            CilInstruction nop_beforeTry = new(Nop);
+            CilInstruction ldarg_1_tryStart = new(Ldarg_1);
+            CilInstruction call_catchStartMarshalException = new(Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
 
-            // 'catch' code
-            CilInstruction catchStart = valueInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
-            _ = valueInstructions.Add(CilOpCodes.Stloc_0);
-            _ = valueInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
+            // Declare 2 local variables:
+            //   [0]: 'int' (the 'HRESULT' to return)
+            //   [1]: 'WindowsRuntimeObjectReferenceValue' to use to marshal the delegate
+            CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_1_referenceValue = new(wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true).Import(module));
 
-            // Return the 'HRESULT' from location [0]
-            valueInstructions.Add(ldloc_0);
-            _ = valueInstructions.Add(CilOpCodes.Ret);
-
-            // Setup the exception handler
-            valueBody.ExceptionHandlers.Add(new CilExceptionHandler
+            // Create a method body for the 'get_Value' method
+            valueMethod.CilMethodBody = new CilMethodBody(valueMethod)
             {
-                HandlerType = CilExceptionHandlerType.Exception,
-                TryStart = tryStart.CreateLabel(),
-                TryEnd = catchStart.CreateLabel(),
-                HandlerStart = catchStart.CreateLabel(),
-                HandlerEnd = ldloc_0.CreateLabel(),
-                ExceptionType = module.CorLibTypeFactory.CorLibScope
-                    .CreateTypeReference("System", "Exception")
-                    .ImportWith(module.DefaultImporter)
-            });
+                LocalVariables = { loc_0_hresult, loc_1_referenceValue },
+                Instructions =
+                {
+                    // Return 'E_POINTER' if the argument is 'null'
+                    { Ldarg_1 },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Bne_Un_S, nop_beforeTry.CreateLabel() },
+                    { Ldc_I4, unchecked((int)0x80004003) },
+                    { Ret },
+                    { nop_beforeTry },
+
+                    // '.try' code
+                    { ldarg_1_tryStart },
+                    { Ldarg_0 },
+                    { Call, wellKnownInteropReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType).Import(module) },
+                    { Call, convertToUnmanagedMethod },
+                    { Stloc_1 },
+                    { Ldloca_S, loc_1_referenceValue },
+                    { Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.Import(module) },
+                    { Stind_I },
+                    { Ldc_I4_0 },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // 'catch' code
+                    { call_catchStartMarshalException },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_returnHResult.CreateLabel() },
+
+                    // Return the 'HRESULT' from location [0]
+                    { ldloc_0_returnHResult },
+                    { Ret }
+                },
+                ExceptionHandlers =
+                {
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Exception,
+                        TryStart = ldarg_1_tryStart.CreateLabel(),
+                        TryEnd = call_catchStartMarshalException.CreateLabel(),
+                        HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                        HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
+                        ExceptionType = wellKnownInteropReferences.Exception.Import(module)
+                    }
+                }
+            };
 
             // Create the static constructor to initialize the vtable
             MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
 
-            // We need to create a new method body bound to this constructor
-            CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
-
             // Initialize the delegate vtable
-            _ = cctorInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-            _ = cctorInstructions.Add(CilOpCodes.Conv_U);
-            _ = cctorInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.IInspectableImplget_Vtable.ImportWith(module.DefaultImporter));
-            _ = cctorInstructions.Add(CilOpCodes.Ldobj, wellKnownInteropDefinitions.IInspectableVftbl);
-            _ = cctorInstructions.Add(CilOpCodes.Stobj, wellKnownInteropDefinitions.IInspectableVftbl);
-            _ = cctorInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-            _ = cctorInstructions.Add(CilOpCodes.Ldftn, valueMethod);
-            _ = cctorInstructions.Add(CilOpCodes.Stfld, wellKnownInteropDefinitions.DelegateReferenceVftbl.Fields[6]);
-            _ = cctorInstructions.Add(CilOpCodes.Ret);
+            cctor.CilMethodBody = new CilMethodBody(cctor)
+            {
+                Instructions =
+                {
+                    { Ldsflda, vftblField },
+                    { Conv_U },
+                    { Call, wellKnownInteropReferences.IInspectableImplget_Vtable.Import(module) },
+                    { Ldobj, wellKnownInteropDefinitions.IInspectableVftbl },
+                    { Stobj, wellKnownInteropDefinitions.IInspectableVftbl },
+                    { Ldsflda, vftblField },
+                    { Ldftn, valueMethod },
+                    { Stfld, wellKnownInteropDefinitions.DelegateReferenceVftbl.Fields[6] },
+                    { Ret }
+                }
+            };
 
             // Create the field for the IID for the boxed delegate type
             WellKnownMemberDefinitionFactory.IID(
@@ -407,7 +405,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(wellKnownInteropReferences.IWindowsRuntimeComWrappersCallback.ImportWith(module.DefaultImporter)) }
+                Interfaces = { new InterfaceImplementation(wellKnownInteropReferences.IWindowsRuntimeComWrappersCallback.Import(module)) }
             };
 
             module.TopLevelTypes.Add(callbackType);
@@ -426,27 +424,22 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Mark the 'CreateObject' method as implementing the interface method
             callbackType.MethodImplementations.Add(new MethodImplementation(
-                declaration: wellKnownInteropReferences.IWindowsRuntimeComWrappersCallbackCreateObject.ImportWith(module.DefaultImporter),
+                declaration: wellKnownInteropReferences.IWindowsRuntimeComWrappersCallbackCreateObject.Import(module),
                 body: createObjectMethod));
 
             // Create a method body for the 'CreateObject' method
-            CilInstructionCollection createObjectInstructions = createObjectMethod.CreateAndBindCilMethodBody().Instructions;
-
-            // Get the special delegate constructor taking the target and function pointer. We leverage this to create
-            // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
-            IMethodDefOrRef ctor = delegateType
-                .ToTypeDefOrRef()
-                .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [module.CorLibTypeFactory.Object, module.CorLibTypeFactory.IntPtr]))
-                .ImportWith(module.DefaultImporter);
-
-            _ = createObjectInstructions.Add(CilOpCodes.Ldarg_0);
-            _ = createObjectInstructions.Add(CilOpCodes.Call, delegateImplType.GetMethod("get_IID"u8));
-            _ = createObjectInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceCreateUnsafe.ImportWith(module.DefaultImporter));
-            _ = createObjectInstructions.Add(CilOpCodes.Ldftn, nativeDelegateType.GetMethod("Invoke"u8));
-            _ = createObjectInstructions.Add(CilOpCodes.Newobj, ctor);
-            _ = createObjectInstructions.Add(CilOpCodes.Ret);
+            createObjectMethod.CilMethodBody = new CilMethodBody(createObjectMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, delegateImplType.GetMethod("get_IID"u8) },
+                    { Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
+                    { Ldftn, nativeDelegateType.GetMethod("Invoke"u8) },
+                    { Newobj, wellKnownInteropReferences.DelegateCtor(delegateType).Import(module) },
+                    { Ret }
+                }
+            };
         }
 
         /// <summary>
@@ -484,7 +477,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        wellKnownInteropReferences.WindowsRuntimeObjectReference.ImportWith(module.DefaultImporter).ToTypeSignature(isValueType: false),
+                        wellKnownInteropReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module),
                         module.DefaultImporter.ImportTypeSignature(genericDelegateType.TypeArguments[0]),
                         module.DefaultImporter.ImportTypeSignature(genericDelegateType.TypeArguments[1])]));
 
@@ -509,53 +502,53 @@ internal partial class InteropTypeDefinitionBuilder
             invokeBody.LocalVariables.Add(new CilLocalVariable(windowsRuntimeObjectReferenceValueType));
             invokeBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Void.MakePointerType()));
 
-            CilInstruction ret = new(CilOpCodes.Ret);
+            CilInstruction ret = new(Ret);
 
             // Load the local [0]
-            _ = invokeInstructions.Add(CilOpCodes.Ldarg_0);
-            _ = invokeInstructions.Add(CilOpCodes.Callvirt, wellKnownInteropReferences.WindowsRuntimeObjectReferenceAsValue.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Stloc_0);
+            _ = invokeInstructions.Add(Ldarg_0);
+            _ = invokeInstructions.Add(Callvirt, wellKnownInteropReferences.WindowsRuntimeObjectReferenceAsValue.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Stloc_0);
 
             // '.try' for local [0]
-            CilInstruction try_0 = invokeInstructions.Add(CilOpCodes.Ldarg_1);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Stloc_1);
+            CilInstruction try_0 = invokeInstructions.Add(Ldarg_1);
+            _ = invokeInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Stloc_1);
 
             // '.try' for local [1]
-            CilInstruction try_1 = invokeInstructions.Add(CilOpCodes.Ldarg_2);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Stloc_2);
+            CilInstruction try_1 = invokeInstructions.Add(Ldarg_2);
+            _ = invokeInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeObjectMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Stloc_2);
 
             // 'Invoke' call for the native delegate (and 'try' for local [2])
-            CilInstruction try_2 = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[0]);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Stloc_3);
-            _ = invokeInstructions.Add(CilOpCodes.Ldloc_3);
-            _ = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[1]);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[2]);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Ldloc_3);
-            _ = invokeInstructions.Add(CilOpCodes.Ldind_I);
-            _ = invokeInstructions.Add(CilOpCodes.Ldfld, wellKnownInteropDefinitions.DelegateVftbl.Fields[3]);
-            _ = invokeInstructions.Add(CilOpCodes.Calli, WellKnownTypeSignatureFactory.InvokeImpl(module.CorLibTypeFactory, module.DefaultImporter).MakeStandAloneSignature());
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoThrowExceptionForHR.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Leave_S, ret.CreateLabel());
+            CilInstruction try_2 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[0]);
+            _ = invokeInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Stloc_3);
+            _ = invokeInstructions.Add(Ldloc_3);
+            _ = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[1]);
+            _ = invokeInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[2]);
+            _ = invokeInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Ldloc_3);
+            _ = invokeInstructions.Add(Ldind_I);
+            _ = invokeInstructions.Add(Ldfld, wellKnownInteropDefinitions.DelegateVftbl.Fields[3]);
+            _ = invokeInstructions.Add(Calli, WellKnownTypeSignatureFactory.InvokeImpl(module.CorLibTypeFactory, module.DefaultImporter).MakeStandAloneSignature());
+            _ = invokeInstructions.Add(Call, wellKnownInteropReferences.RestrictedErrorInfoThrowExceptionForHR.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Leave_S, ret.CreateLabel());
 
             // 'finally' for local [2]
-            CilInstruction finally_2 = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[2]);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDispose.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Endfinally);
+            CilInstruction finally_2 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[2]);
+            _ = invokeInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDispose.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Endfinally);
 
             // 'finally' for local [1]
-            CilInstruction finally_1 = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[1]);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDispose.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Endfinally);
+            CilInstruction finally_1 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[1]);
+            _ = invokeInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDispose.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Endfinally);
 
             // 'finally' for local [0]
-            CilInstruction finally_0 = invokeInstructions.Add(CilOpCodes.Ldloca_S, invokeBody.LocalVariables[0]);
-            _ = invokeInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDispose.ImportWith(module.DefaultImporter));
-            _ = invokeInstructions.Add(CilOpCodes.Endfinally);
+            CilInstruction finally_0 = invokeInstructions.Add(Ldloca_S, invokeBody.LocalVariables[0]);
+            _ = invokeInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceValueDispose.ImportWith(module.DefaultImporter));
+            _ = invokeInstructions.Add(Endfinally);
 
             invokeInstructions.Add(ret);
 
@@ -625,8 +618,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             marshallerType.Methods.Add(ctor);
 
-            _ = ctor.CilMethodBody!.Instructions.Insert(0, CilOpCodes.Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeComWrappersMarshallerAttributector.ImportWith(module.DefaultImporter));
+            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, wellKnownInteropReferences.WindowsRuntimeComWrappersMarshallerAttributector.ImportWith(module.DefaultImporter));
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
             PointerTypeSignature computeVtablesReturnType = module.DefaultImporter
@@ -657,11 +650,11 @@ internal partial class InteropTypeDefinitionBuilder
             // Create a method body for the 'ComputeVtables' method
             CilInstructionCollection computeVtablesInstructions = computeVtablesMethod.CreateAndBindCilMethodBody().Instructions;
 
-            _ = computeVtablesInstructions.Add(CilOpCodes.Ldarg_1);
+            _ = computeVtablesInstructions.Add(Ldarg_1);
             computeVtablesInstructions.Add(CilInstruction.CreateLdcI4(wellKnownInteropDefinitions.DelegateInterfaceEntries.Fields.Count));
-            _ = computeVtablesInstructions.Add(CilOpCodes.Stind_I4);
-            _ = computeVtablesInstructions.Add(CilOpCodes.Call, delegateInterfaceEntriesImplType.GetMethod("get_Vtables"u8));
-            _ = computeVtablesInstructions.Add(CilOpCodes.Ret);
+            _ = computeVtablesInstructions.Add(Stind_I4);
+            _ = computeVtablesInstructions.Add(Call, delegateInterfaceEntriesImplType.GetMethod("get_Vtables"u8));
+            _ = computeVtablesInstructions.Add(Ret);
 
             // Define the 'CreateObject' method as follows:
             //
@@ -688,10 +681,10 @@ internal partial class InteropTypeDefinitionBuilder
                 .ImportWith(module.DefaultImporter)
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToTypeSignature(isValueType: false));
 
-            _ = createObjectInstructions.Add(CilOpCodes.Ldarg_1);
-            _ = createObjectInstructions.Add(CilOpCodes.Call, delegateReferenceImplType.GetMethod("get_IID"u8));
-            _ = createObjectInstructions.Add(CilOpCodes.Call, windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor);
-            _ = createObjectInstructions.Add(CilOpCodes.Ret);
+            _ = createObjectInstructions.Add(Ldarg_1);
+            _ = createObjectInstructions.Add(Call, delegateReferenceImplType.GetMethod("get_IID"u8));
+            _ = createObjectInstructions.Add(Call, windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor);
+            _ = createObjectInstructions.Add(Ret);
         }
 
         /// <summary>
@@ -741,10 +734,10 @@ internal partial class InteropTypeDefinitionBuilder
             // Create a method body for the 'ConvertToUnmanaged' method
             CilInstructionCollection convertToUnmanagedMethodInstructions = convertToUnmanagedMethod.CreateAndBindCilMethodBody().Instructions;
 
-            _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Ldarg_0);
-            _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Call, delegateImplType.GetMethod("get_IID"u8));
-            _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
-            _ = convertToUnmanagedMethodInstructions.Add(CilOpCodes.Ret);
+            _ = convertToUnmanagedMethodInstructions.Add(Ldarg_0);
+            _ = convertToUnmanagedMethodInstructions.Add(Call, delegateImplType.GetMethod("get_IID"u8));
+            _ = convertToUnmanagedMethodInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
+            _ = convertToUnmanagedMethodInstructions.Add(Ret);
 
             // Define the 'ConvertToManaged' method as follows:
             //
@@ -767,9 +760,9 @@ internal partial class InteropTypeDefinitionBuilder
             // Create a method body for the 'ConvertToManaged' method
             CilInstructionCollection convertToManagedMethodInstructions = convertToManagedMethod.CreateAndBindCilMethodBody().Instructions;
 
-            _ = convertToManagedMethodInstructions.Add(CilOpCodes.Ldarg_0);
-            _ = convertToManagedMethodInstructions.Add(CilOpCodes.Call, windowsRuntimeDelegateMarshallerConvertToManagedDescriptor);
-            _ = convertToManagedMethodInstructions.Add(CilOpCodes.Ret);
+            _ = convertToManagedMethodInstructions.Add(Ldarg_0);
+            _ = convertToManagedMethodInstructions.Add(Call, windowsRuntimeDelegateMarshallerConvertToManagedDescriptor);
+            _ = convertToManagedMethodInstructions.Add(Ret);
 
             // Define the 'BoxToUnmanaged' method as follows:
             //
@@ -786,10 +779,10 @@ internal partial class InteropTypeDefinitionBuilder
             // Create a method body for the 'ConvertToUnmanaged' method
             CilInstructionCollection boxToUnmanagedMethodInstructions = boxToUnmanagedMethod.CreateAndBindCilMethodBody().Instructions;
 
-            _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Ldarg_0);
-            _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Call, delegateReferenceImplType.GetMethod("get_IID"u8));
-            _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerBoxToUnmanaged.ImportWith(module.DefaultImporter));
-            _ = boxToUnmanagedMethodInstructions.Add(CilOpCodes.Ret);
+            _ = boxToUnmanagedMethodInstructions.Add(Ldarg_0);
+            _ = boxToUnmanagedMethodInstructions.Add(Call, delegateReferenceImplType.GetMethod("get_IID"u8));
+            _ = boxToUnmanagedMethodInstructions.Add(Call, wellKnownInteropReferences.WindowsRuntimeDelegateMarshallerBoxToUnmanaged.ImportWith(module.DefaultImporter));
+            _ = boxToUnmanagedMethodInstructions.Add(Ret);
 
             // Define the 'UnboxToManaged' method as follows:
             //
@@ -812,9 +805,9 @@ internal partial class InteropTypeDefinitionBuilder
             // Create a method body for the 'UnboxToManaged' method
             CilInstructionCollection unboxToUnmanagedMethodInstructions = unboxToUnmanagedMethod.CreateAndBindCilMethodBody().Instructions;
 
-            _ = unboxToUnmanagedMethodInstructions.Add(CilOpCodes.Ldarg_0);
-            _ = unboxToUnmanagedMethodInstructions.Add(CilOpCodes.Call, windowsRuntimeDelegateMarshallerUnboxToManagedDescriptor);
-            _ = unboxToUnmanagedMethodInstructions.Add(CilOpCodes.Ret);
+            _ = unboxToUnmanagedMethodInstructions.Add(Ldarg_0);
+            _ = unboxToUnmanagedMethodInstructions.Add(Call, windowsRuntimeDelegateMarshallerUnboxToManagedDescriptor);
+            _ = unboxToUnmanagedMethodInstructions.Add(Ret);
         }
 
         /// <summary>

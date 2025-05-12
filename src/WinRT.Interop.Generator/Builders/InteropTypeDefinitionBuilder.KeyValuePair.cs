@@ -9,6 +9,7 @@ using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -82,28 +83,6 @@ internal partial class InteropTypeDefinitionBuilder
                     CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(module) }
                 };
 
-                // Create a method body for the method
-                CilMethodBody methodBody = method.CreateAndBindCilMethodBody();
-                CilInstructionCollection methodInstructions = methodBody.Instructions;
-
-                // Declare 2 variable:
-                //   [0]: 'int' (the 'HRESULT' to return)
-                //   [1]: 'KeyValuePair<,>' (the boxed object to get values from)
-                methodBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
-                methodBody.LocalVariables.Add(new CilLocalVariable(module.DefaultImporter.ImportTypeSignature(keyValuePairType)));
-
-                CilInstruction nop = new(CilOpCodes.Nop);
-                CilInstruction ldloc_0 = new(CilOpCodes.Ldloc_0);
-
-                // Return 'E_POINTER' if the argument is 'null'
-                _ = methodInstructions.Add(CilOpCodes.Ldarg_1);
-                _ = methodInstructions.Add(CilOpCodes.Ldc_I4_0);
-                _ = methodInstructions.Add(CilOpCodes.Conv_U);
-                _ = methodInstructions.Add(CilOpCodes.Bne_Un_S, nop.CreateLabel());
-                _ = methodInstructions.Add(CilOpCodes.Ldc_I4, unchecked((int)0x80004003));
-                _ = methodInstructions.Add(CilOpCodes.Ret);
-                methodInstructions.Add(nop);
-
                 // Import 'ComWrappers.ComInterfaceDispatch.GetInstance'
                 MethodSpecification getInstanceMethod = wellKnownInteropReferences.ComInterfaceDispatchGetInstance
                     .MakeGenericInstanceMethod(module.CorLibTypeFactory.Object)
@@ -119,41 +98,70 @@ internal partial class InteropTypeDefinitionBuilder
                         parameterType: GenericParameterType.Type,
                         index: keyValuePairType.TypeArguments.IndexOf(typeArgument))));
 
+                // Jump labels
+                CilInstruction nop_beforeTry = new(Nop);
+                CilInstruction ldarg_1_tryStart = new(Ldarg_1);
+                CilInstruction call_catchStartMarshalException = new(Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+                CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
+
+                // Declare 2 variable:
+                //   [0]: 'int' (the 'HRESULT' to return)
+                //   [1]: 'KeyValuePair<,>' (the boxed object to get values from)
+                CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
+                CilLocalVariable loc_1_keyValuePair = new(keyValuePairType.Import(module));
+
+                // Create a method body for the method
+                method.CilMethodBody = new CilMethodBody(method)
+                {
+                    LocalVariables = { loc_0_hresult, loc_1_keyValuePair },
+                    ExceptionHandlers =
+                    {
+                        new CilExceptionHandler
+                        {
+                            HandlerType = CilExceptionHandlerType.Exception,
+                            TryStart = ldarg_1_tryStart.CreateLabel(),
+                            TryEnd = call_catchStartMarshalException.CreateLabel(),
+                            HandlerStart = call_catchStartMarshalException.CreateLabel(),
+                            HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
+                            ExceptionType = wellKnownInteropReferences.Exception.Import(module)
+                        }
+                    }
+                };
+
+                // This method can dynamically change (eg. different marshallers), so use explicit syntax
+                CilInstructionCollection instructions = method.CilMethodBody.Instructions;
+
+                // Return 'E_POINTER' if the argument is 'null'
+                _ = instructions.Add(Ldarg_1);
+                _ = instructions.Add(Ldc_I4_0);
+                _ = instructions.Add(Conv_U);
+                _ = instructions.Add(Bne_Un_S, nop_beforeTry.CreateLabel());
+                _ = instructions.Add(Ldc_I4, unchecked((int)0x80004003));
+                _ = instructions.Add(Ret);
+                instructions.Add(nop_beforeTry);
+
                 // '.try' code
-                CilInstruction tryStart = methodInstructions.Add(CilOpCodes.Ldarg_1);
-                _ = methodInstructions.Add(CilOpCodes.Ldarg_0);
-                _ = methodInstructions.Add(CilOpCodes.Call, getInstanceMethod);
-                _ = methodInstructions.Add(CilOpCodes.Unbox_Any, keyValuePairTypeRef);
-                _ = methodInstructions.Add(CilOpCodes.Stloc_1);
-                _ = methodInstructions.Add(CilOpCodes.Ldarg_1);
-                _ = methodInstructions.Add(CilOpCodes.Ldloca_S, methodBody.LocalVariables[1]);
-                _ = methodInstructions.Add(CilOpCodes.Call, get_MethodRef);
-                _ = methodInstructions.Add(CilOpCodes.Stind_I);
-                _ = methodInstructions.Add(CilOpCodes.Ldc_I4_0);
-                _ = methodInstructions.Add(CilOpCodes.Stloc_0);
-                _ = methodInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
+                instructions.Add(ldarg_1_tryStart);
+                _ = instructions.Add(Ldarg_0);
+                _ = instructions.Add(Call, getInstanceMethod);
+                _ = instructions.Add(Unbox_Any, keyValuePairTypeRef);
+                _ = instructions.Add(Stloc_1);
+                _ = instructions.Add(Ldarg_1);
+                _ = instructions.Add(Ldloca_S, loc_1_keyValuePair);
+                _ = instructions.Add(Call, get_MethodRef);
+                _ = instructions.Add(Stind_I);
+                _ = instructions.Add(Ldc_I4_0);
+                _ = instructions.Add(Stloc_0);
+                _ = instructions.Add(Leave_S, ldloc_0_returnHResult.CreateLabel());
 
                 // 'catch' code
-                CilInstruction catchStart = methodInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.ImportWith(module.DefaultImporter));
-                _ = methodInstructions.Add(CilOpCodes.Stloc_0);
-                _ = methodInstructions.Add(CilOpCodes.Leave_S, ldloc_0.CreateLabel());
+                instructions.Add(call_catchStartMarshalException);
+                _ = instructions.Add(Stloc_0);
+                _ = instructions.Add(Leave_S, ldloc_0_returnHResult.CreateLabel());
 
                 // Return the 'HRESULT' from location [0]
-                methodInstructions.Add(ldloc_0);
-                _ = methodInstructions.Add(CilOpCodes.Ret);
-
-                // Setup the exception handler
-                methodBody.ExceptionHandlers.Add(new CilExceptionHandler
-                {
-                    HandlerType = CilExceptionHandlerType.Exception,
-                    TryStart = tryStart.CreateLabel(),
-                    TryEnd = catchStart.CreateLabel(),
-                    HandlerStart = catchStart.CreateLabel(),
-                    HandlerEnd = ldloc_0.CreateLabel(),
-                    ExceptionType = module.CorLibTypeFactory.CorLibScope
-                        .CreateTypeReference("System", "Exception")
-                        .ImportWith(module.DefaultImporter)
-                });
+                instructions.Add(ldloc_0_returnHResult);
+                _ = instructions.Add(Ret);
 
                 return method;
             }
@@ -168,22 +176,25 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the static constructor to initialize the vtable
             MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
 
-            // We need to create a new method body bound to this constructor
-            CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
-
             // Initialize the 'KeyValuePair<,>' vtable
-            _ = cctorInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-            _ = cctorInstructions.Add(CilOpCodes.Conv_U);
-            _ = cctorInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.IInspectableImplget_Vtable.ImportWith(module.DefaultImporter));
-            _ = cctorInstructions.Add(CilOpCodes.Ldobj, wellKnownInteropDefinitions.IInspectableVftbl);
-            _ = cctorInstructions.Add(CilOpCodes.Stobj, wellKnownInteropDefinitions.IInspectableVftbl);
-            _ = cctorInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-            _ = cctorInstructions.Add(CilOpCodes.Ldftn, get_KeyMethod);
-            _ = cctorInstructions.Add(CilOpCodes.Stfld, wellKnownInteropDefinitions.IKeyValuePairVftbl.Fields[6]);
-            _ = cctorInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-            _ = cctorInstructions.Add(CilOpCodes.Ldftn, get_ValueMethod);
-            _ = cctorInstructions.Add(CilOpCodes.Stfld, wellKnownInteropDefinitions.IKeyValuePairVftbl.Fields[7]);
-            _ = cctorInstructions.Add(CilOpCodes.Ret);
+            cctor.CilMethodBody = new CilMethodBody(cctor)
+            {
+                Instructions =
+                {
+                    { Ldsflda, vftblField },
+                    { Conv_U },
+                    { Call, wellKnownInteropReferences.IInspectableImplget_Vtable.ImportWith(module.DefaultImporter) },
+                    { Ldobj, wellKnownInteropDefinitions.IInspectableVftbl },
+                    { Stobj, wellKnownInteropDefinitions.IInspectableVftbl },
+                    { Ldsflda, vftblField },
+                    { Ldftn, get_KeyMethod },
+                    { Stfld, wellKnownInteropDefinitions.IKeyValuePairVftbl.Fields[6] },
+                    { Ldsflda, vftblField },
+                    { Ldftn, get_ValueMethod },
+                    { Stfld, wellKnownInteropDefinitions.IKeyValuePairVftbl.Fields[7] },
+                    { Ret }
+                }
+            };
 
             // Create the field for the IID for the 'KeyValuePair<,>' type
             WellKnownMemberDefinitionFactory.IID(

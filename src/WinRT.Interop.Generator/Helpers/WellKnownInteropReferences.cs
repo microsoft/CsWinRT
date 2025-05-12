@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -48,6 +47,13 @@ internal sealed class WellKnownInteropReferences
     public ITypeDefOrRef ReadOnlySpanChar => field ??= ReadOnlySpan
         .MakeGenericInstanceType(_interopModule.CorLibTypeFactory.Char)
         .ToTypeDefOrRef();
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Exception</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference Exception => field ??= _interopModule.CorLibTypeFactory.CorLibScope
+        .CreateTypeReference("System", "Exception");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.MemoryExtensions</c>.
@@ -156,6 +162,35 @@ internal sealed class WellKnownInteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference RestrictedErrorInfoExceptionMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling", "RestrictedErrorInfoExceptionMarshaller");
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given delegate type.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference DelegateCtor(TypeSignature delegateType)
+    {
+        // Get the special delegate constructor taking the target and function pointer. We leverage this to create
+        // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
+        return delegateType
+            .ToTypeDefOrRef()
+            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [_interopModule.CorLibTypeFactory.Object, _interopModule.CorLibTypeFactory.IntPtr]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>Invoke</c> method of a given delegate type.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference DelegateInvoke(TypeSignature delegateType)
+    {
+        // TODO: also handle non-generic delegate types
+        return delegateType
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Invoke", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: ((GenericInstanceTypeSignature)delegateType).TypeArguments));
+    }
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>System.ReadOnlySpane&lt;T&gt;.Length</c> (of <see cref="char"/>).

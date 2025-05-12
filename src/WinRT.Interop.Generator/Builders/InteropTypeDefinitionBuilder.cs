@@ -5,11 +5,11 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using System;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropGenerator.Factories;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -80,18 +80,18 @@ internal static partial class InteropTypeDefinitionBuilder
         // Each 'Impl' types is assumed to always have the 'IID' and 'Vtable' properties, in this order.
         for (int i = 0; i < implTypes.Length; i++)
         {
-            _ = cctorInstructions.Add(CilOpCodes.Ldsflda, entriesField);
-            _ = cctorInstructions.Add(CilOpCodes.Ldflda, entriesFieldType.Fields[i]);
-            _ = cctorInstructions.Add(CilOpCodes.Call, (IMethodDefOrRef)implTypes[i].get_IID.ImportWith(module.DefaultImporter));
-            _ = cctorInstructions.Add(CilOpCodes.Ldobj, module.DefaultImporter.ImportType(typeof(Guid)));
-            _ = cctorInstructions.Add(CilOpCodes.Stfld, comInterfaceEntryIIDField);
-            _ = cctorInstructions.Add(CilOpCodes.Ldsflda, entriesField);
-            _ = cctorInstructions.Add(CilOpCodes.Ldflda, entriesFieldType.Fields[i]);
-            _ = cctorInstructions.Add(CilOpCodes.Call, (IMethodDefOrRef)implTypes[i].get_Vtable.ImportWith(module.DefaultImporter));
-            _ = cctorInstructions.Add(CilOpCodes.Stfld, comInterfaceEntryVtableField);
+            _ = cctorInstructions.Add(Ldsflda, entriesField);
+            _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
+            _ = cctorInstructions.Add(Call, (IMethodDefOrRef)implTypes[i].get_IID.ImportWith(module.DefaultImporter));
+            _ = cctorInstructions.Add(Ldobj, module.DefaultImporter.ImportType(typeof(Guid)));
+            _ = cctorInstructions.Add(Stfld, comInterfaceEntryIIDField);
+            _ = cctorInstructions.Add(Ldsflda, entriesField);
+            _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
+            _ = cctorInstructions.Add(Call, (IMethodDefOrRef)implTypes[i].get_Vtable.ImportWith(module.DefaultImporter));
+            _ = cctorInstructions.Add(Stfld, comInterfaceEntryVtableField);
         }
 
-        _ = cctorInstructions.Add(CilOpCodes.Ret);
+        _ = cctorInstructions.Add(Ret);
 
         // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
         PointerTypeSignature vtablesPropertyType = module.DefaultImporter
@@ -116,12 +116,15 @@ internal static partial class InteropTypeDefinitionBuilder
         implType.Properties.Add(vtablesProperty);
         implType.Methods.Add(vtablesProperty.GetMethod!);
 
-        // Create a method body for the 'Vtables' property
-        CilInstructionCollection get_VtablesInstructions = vtablesProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
-
-        // The 'get_Vtables' method directly returns the 'Entries' field address
-        _ = get_VtablesInstructions.Add(CilOpCodes.Ldsflda, entriesField);
-        _ = get_VtablesInstructions.Add(CilOpCodes.Conv_U);
-        _ = get_VtablesInstructions.Add(CilOpCodes.Ret);
+        // Create a method body for the 'Vtables' property (it directly returns the 'Entries' field address)
+        vtablesProperty.GetMethod!.CilMethodBody = new CilMethodBody(vtablesProperty.GetMethod!)
+        {
+            Instructions =
+            {
+                { Ldsflda, entriesField },
+                { Conv_U },
+                { Ret }
+            }
+        };
     }
 }
