@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
-using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Resolvers;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
@@ -27,59 +27,122 @@ internal partial class InteropGenerator
 
         foreach (string path in args.ReferencePath.Concat([args.AssemblyPath]))
         {
+            ModuleDefinition module;
+
+            // Try to load the .dll at the current path
             try
             {
-                ModuleDefinition module = ModuleDefinition.FromFile(path, pathAssemblyResolver.ReaderParameters);
+                module = ModuleDefinition.FromFile(path, pathAssemblyResolver.ReaderParameters);
+            }
+            catch (BadImageFormatException)
+            {
+                // The input .dll is not a valid .NET assembly. This is generally the case either for
+                // native .dll-s, or for malformed .NET .dll-s. We don't need to worry about either one.
+                continue;
+            }
 
-                state.TrackModuleDefinition(path, module);
+            state.TrackModuleDefinition(path, module);
 
-                if (!module.AssemblyReferences.Any(static reference => reference.Name?.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET.dll"u8) is true) &&
-                    module.Name?.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET.dll"u8) is not true &&
-                    module.Name?.AsSpan().SequenceEqual("Microsoft.Windows.UI.Xaml.dll"u8) is not true)
+            // We're only interested in harvesting .dll-s which reference the Windows SDK projections.
+            // This is true for all .dll-s that were built targeting 'netX.0-windows10.0.XXXX.0'.
+            // So this check effectively lets us filter all .dll-s that were in projects with this TFM.
+            if (!module.IsOrReferencesWindowsSDKProjectionsAssembly())
+            {
+                continue;
+            }
+
+            args.Token.ThrowIfCancellationRequested();
+
+            // Discover all type hierarchy types
+            DiscoverTypeHierarchyTypes(args, state, module);
+
+            args.Token.ThrowIfCancellationRequested();
+
+            // Discover all generic type instantiations
+            DiscoverGenericTypeInstantiations(args, state, module);
+        }
+
+        // We want to ensure the state will never be mutated after this method completes
+        state.MakeReadOnly();
+
+        return state;
+    }
+
+    /// <summary>
+    /// Discovers all type hierarchy types in a given assembly.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="state">The state for this invocation.</param>
+    /// <param name="module">The module currently being analyzed.</param>
+    private static void DiscoverTypeHierarchyTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorState state,
+        ModuleDefinition module)
+    {
+        try
+        {
+            foreach (TypeDefinition type in module.GetAllTypes())
+            {
+                args.Token.ThrowIfCancellationRequested();
+
+                // We only care about projected Windows Runtime classes
+                if (!type.IsProjectedWindowsRuntimeClassType())
                 {
-                    Console.WriteLine($"SKIPPED {Path.GetFileNameWithoutExtension(path)}");
-
                     continue;
                 }
 
-                Console.WriteLine($"Loaded {Path.GetFileNameWithoutExtension(path)}");
-
-                foreach (TypeDefinition type in module.GetAllTypes())
+                // Ignore types that don't have another base class
+                if (type.BaseType is null || SignatureComparer.Default.Equals(type.BaseType, module.CorLibTypeFactory.Object))
                 {
-                    if (type.IsClass &&
-                        !type.IsValueType &&
-                        !type.IsDelegate &&
-                        !(type.IsAbstract && type.IsSealed) &&
-                        type.BaseType is not null &&
-                        !SignatureComparer.Default.Equals(type.BaseType, module.CorLibTypeFactory.Object) &&
-                        type.HasCustomAttribute("WinRT", "WindowsRuntimeTypeAttribute") &&
-                        type.BaseType.HasCustomAttribute("WinRT", "WindowsRuntimeTypeAttribute"))
-                    {
-                        state.TrackTypeHierarchyEntry(type.FullName, type.BaseType.FullName);
-                    }
+                    continue;
                 }
 
-                foreach (TypeSpecification typeSpecification in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
+                // If the base type is also a projected Windows Runtime type, track it
+                if (type.BaseType.IsProjectedWindowsRuntimeType())
                 {
-                    if (typeSpecification.Resolve() is { IsDelegate: true } &&
-                        typeSpecification.Signature is GenericInstanceTypeSignature { GenericType.Name.Value: "TypedEventHandler`2" } typeSignature)
-                    {
-                        state.TrackGenericDelegateType(typeSignature);
-                    }
-
-                    if (typeSpecification.Resolve() is { IsValueType: true } &&
-                        typeSpecification.Signature is GenericInstanceTypeSignature { GenericType.Name.Value: "KeyValuePair`2" } keyValuePairType)
-                    {
-                        state.TrackKeyValuePairType(keyValuePairType);
-                    }
+                    state.TrackTypeHierarchyEntry(type.FullName, type.BaseType.FullName);
                 }
-            }
-            catch (BadImageFormatException e)
-            {
-                Console.WriteLine($"FAILED {Path.GetFileNameWithoutExtension(path)}");
             }
         }
+        catch (Exception e) when (!e.IsWellKnown())
+        {
+            throw WellKnownInteropExceptions.DiscoverTypeHierarchyTypesError(module.Name, e);
+        }
+    }
 
-        return state;
+    /// <summary>
+    /// Discovers all generic type instantiations in a given assembly.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="state">The state for this invocation.</param>
+    /// <param name="module">The module currently being analyzed.</param>
+    private static void DiscoverGenericTypeInstantiations(
+        InteropGeneratorArgs args,
+        InteropGeneratorState state,
+        ModuleDefinition module)
+    {
+        try
+        {
+            foreach (TypeSpecification typeSpecification in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
+            {
+                args.Token.ThrowIfCancellationRequested();
+
+                if (typeSpecification.Resolve() is { IsDelegate: true } &&
+                    typeSpecification.Signature is GenericInstanceTypeSignature { GenericType.Name.Value: "TypedEventHandler`2" } typeSignature)
+                {
+                    state.TrackGenericDelegateType(typeSignature);
+                }
+
+                if (typeSpecification.Resolve() is { IsValueType: true } &&
+                    typeSpecification.Signature is GenericInstanceTypeSignature { GenericType.Name.Value: "KeyValuePair`2" } keyValuePairType)
+                {
+                    state.TrackKeyValuePairType(keyValuePairType);
+                }
+            }
+        }
+        catch (Exception e) when (!e.IsWellKnown())
+        {
+            throw WellKnownInteropExceptions.DiscoverGenericTypeInstantiationsError(module.Name, e);
+        }
     }
 }

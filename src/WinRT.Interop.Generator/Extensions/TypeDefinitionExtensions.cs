@@ -70,4 +70,27 @@ internal static class TypeDefinitionExtensions
 
         throw new ArgumentException("Method not found.", nameof(name));
     }
+
+    /// <summary>
+    /// Checks whether a <see cref="TypeDefinition"/> represents a projected Windows Runtime class type.
+    /// </summary>
+    /// <param name="type">The input <see cref="TypeDefinition"/> instance.</param>
+    /// <returns>Whether <paramref name="type"/> represents a projected Windows Runtime class type.</returns>
+    public static bool IsProjectedWindowsRuntimeClassType(this TypeDefinition type)
+    {
+        // We only care about classes
+        if (type is not { IsClass: true, IsValueType: false, IsDelegate: false })
+        {
+            return false;
+        }
+
+        // Ignore static types
+        if (type.IsAbstract && type.IsSealed)
+        {
+            return false;
+        }
+
+        // The type also must be a projected type
+        return type.IsProjectedWindowsRuntimeType();
+    }
 }

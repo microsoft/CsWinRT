@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics.Tensors;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
@@ -35,17 +36,21 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
     /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
+    /// <param name="token">The token for the operation.</param>
     /// <param name="lookupType">The resulting <see cref="TypeDefinition"/>.</param>
     public static unsafe void Lookup(
         IReadOnlyDictionary<string, string> typeHierarchyEntries,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
         WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
+        CancellationToken token,
         out TypeDefinition lookupType)
     {
         // Use a sorted dictionary to ensure the resulting lookup is deterministic.
         // That is, we want to guarantee the same ordering if all pairs are the same.
         SortedDictionary<string, string> sortedTypeHierarchyEntries = new(typeHierarchyEntries.ToDictionary());
+
+        token.ThrowIfCancellationRequested();
 
         SortedDictionary<string, ValueInfo> typeHierarchyValues;
         FieldDefinition valuesRvaField;
@@ -64,6 +69,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         {
             throw WellKnownInteropExceptions.TypeHierarchyValuesRvaError(e);
         }
+
+        token.ThrowIfCancellationRequested();
 
         int bucketSize;
         Dictionary<int, int> chainOffsets;
@@ -86,6 +93,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             throw WellKnownInteropExceptions.TypeHierarchyKeysRvaError(e);
         }
 
+        token.ThrowIfCancellationRequested();
+
         FieldDefinition bucketsRvaField;
 
         // Emit the 'Buckets' RVA field
@@ -103,6 +112,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             throw WellKnownInteropExceptions.TypeHierarchyBucketsRvaError(e);
         }
 
+        token.ThrowIfCancellationRequested();
+
         // We're declaring a 'public static class' type
         lookupType = new TypeDefinition(
             ns: "WindowsRuntime.Interop"u8,
@@ -111,6 +122,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
         module.TopLevelTypes.Add(lookupType);
+
+        token.ThrowIfCancellationRequested();
 
         try
         {
@@ -127,6 +140,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 out MethodDefinition tryGetBaseRuntimeClassNameMethod);
 
             lookupType.Methods.Add(tryGetBaseRuntimeClassNameMethod);
+
+            token.ThrowIfCancellationRequested();
 
             // Emit the fast lookup method for following base types
             TryGetNextBaseRuntimeClassName(

@@ -88,6 +88,54 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// The state was changed after making it readonly.
+    /// </summary>
+    public static Exception StateChangeAfterMakeReadOnly()
+    {
+        return Exception(10, "An attempt was made to mutate the generator state after it was made readonly (in the emit phase).");
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for a delegate type.
+    /// </summary>
+    public static Exception DelegateTypeCodeGenerationError(string? delegateType, Exception exception)
+    {
+        return Exception(11, $"Failed to generate marshalling code for delegate type '{delegateType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+    /// </summary>
+    public static Exception KeyValuePairTypeCodeGenerationError(string? delegateType, Exception exception)
+    {
+        return Exception(12, $"Failed to generate marshalling code for 'KeyValuePair<,>' type '{delegateType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an implementation detail type.
+    /// </summary>
+    public static Exception ImplementationDetailTypeCodeGenerationError(Exception exception)
+    {
+        return Exception(13, $"Failed to generate marshalling code for some implementation detail type.", exception);
+    }
+
+    /// <summary>
+    /// Failed to discover type hierarchy types.
+    /// </summary>
+    public static Exception DiscoverTypeHierarchyTypesError(string? name, Exception exception)
+    {
+        return Exception(14, $"Failed to discover type hierarchy types for module '{name}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to discover generic type instantiations.
+    /// </summary>
+    public static Exception DiscoverGenericTypeInstantiationsError(string? name, Exception exception)
+    {
+        return Exception(15, $"Failed to discover generic type instantiations for module '{name}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Errors;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -24,6 +25,11 @@ internal sealed class InteropGeneratorState
 
     /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(SignatureComparer.Default);
+
+    /// <summary>
+    /// Indicates whether the current state is readonly.
+    /// </summary>
+    private volatile bool _isReadOnly;
 
     /// <summary>
     /// Gets the assembly resolver to use for loading assemblies.
@@ -57,6 +63,8 @@ internal sealed class InteropGeneratorState
     /// <param name="module">The loaded module.</param>
     public void TrackModuleDefinition(string path, ModuleDefinition module)
     {
+        ThrowIfReadOnly();
+
         _ = _moduleDefinitions.TryAdd(path, module);
     }
 
@@ -67,6 +75,8 @@ internal sealed class InteropGeneratorState
     /// <param name="baseRuntimeClassName">The runtime class name of the base type.</param>
     public void TrackTypeHierarchyEntry(string runtimeClassName, string baseRuntimeClassName)
     {
+        ThrowIfReadOnly();
+
         _ = _typeHierarchyEntries.TryAdd(runtimeClassName, baseRuntimeClassName);
     }
 
@@ -76,6 +86,8 @@ internal sealed class InteropGeneratorState
     /// <param name="delegateType">The delegate type.</param>
     public void TrackGenericDelegateType(GenericInstanceTypeSignature delegateType)
     {
+        ThrowIfReadOnly();
+
         _ = _genericDelegateTypes.TryAdd(delegateType, 0);
     }
 
@@ -85,6 +97,27 @@ internal sealed class InteropGeneratorState
     /// <param name="keyValuePairType">The <see cref="KeyValuePair{TKey, TValue}"/> type.</param>
     public void TrackKeyValuePairType(GenericInstanceTypeSignature keyValuePairType)
     {
+        ThrowIfReadOnly();
+
         _ = _keyValuePairTypes.TryAdd(keyValuePairType, 0);
+    }
+
+    /// <summary>
+    /// Marks the current state as readonly.
+    /// </summary>
+    public void MakeReadOnly()
+    {
+        _isReadOnly = true;
+    }
+
+    /// <summary>
+    /// Throws if <see cref="MakeReadOnly"/> was called.
+    /// </summary>
+    private void ThrowIfReadOnly()
+    {
+        if (_isReadOnly)
+        {
+            throw WellKnownInteropExceptions.StateChangeAfterMakeReadOnly();
+        }
     }
 }

@@ -22,12 +22,18 @@ internal partial class InteropGenerator
     /// <param name="state">The state for this invocation.</param>
     private static void Emit(InteropGeneratorArgs args, InteropGeneratorState state)
     {
+        args.Token.ThrowIfCancellationRequested();
+
         // Define the module to emit
         ModuleDefinition module = DefineInteropModule(args, state, out ModuleDefinition windowsRuntimeModule);
+
+        args.Token.ThrowIfCancellationRequested();
 
         // Setup the well known items to use when emitting code
         WellKnownInteropDefinitions wellKnownInteropDefinitions = new(module);
         WellKnownInteropReferences wellKnownInteropReferences = new(module, windowsRuntimeModule);
+
+        args.Token.ThrowIfCancellationRequested();
 
         // Emit the type hierarchy lookup
         WindowsRuntimeTypeHierarchyBuilder.Lookup(
@@ -35,24 +41,25 @@ internal partial class InteropGenerator
             wellKnownInteropDefinitions,
             wellKnownInteropReferences,
             module,
+            args.Token,
             out _);
 
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for generic delegates
-        DefineGenericDelegateTypes(state, wellKnownInteropDefinitions, wellKnownInteropReferences, module);
+        DefineGenericDelegateTypes(args, state, wellKnownInteropDefinitions, wellKnownInteropReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for 'KeyValuePair<,>' types
-        DefineKeyValuePairTypes(state, wellKnownInteropDefinitions, wellKnownInteropReferences, module);
+        DefineKeyValuePairTypes(args, state, wellKnownInteropDefinitions, wellKnownInteropReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
 
         // Add all top level internal types to the interop module
-        module.TopLevelTypes.Add(wellKnownInteropDefinitions.RvaFields);
-        module.TopLevelTypes.Add(wellKnownInteropDefinitions.IUnknownVftbl);
-        module.TopLevelTypes.Add(wellKnownInteropDefinitions.IInspectableVftbl);
-        module.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateVftbl);
-        module.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateReferenceVftbl);
-        module.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateInterfaceEntries);
-        module.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairVftbl);
-        module.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries);
-        module.TopLevelTypes.Add(wellKnownInteropDefinitions.InteropImplementationDetails);
+        DefineImplementationDetailTypes(wellKnownInteropDefinitions, module);
+
+        args.Token.ThrowIfCancellationRequested();
 
         // Emit the interop .dll to disk
         WriteInteropModuleToDisk(args, module);
@@ -91,11 +98,13 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for generic delegates.
     /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="state"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
     /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineGenericDelegateTypes(
+        InteropGeneratorArgs args,
         InteropGeneratorState state,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
         WellKnownInteropReferences wellKnownInteropReferences,
@@ -103,6 +112,8 @@ internal partial class InteropGenerator
     {
         foreach (GenericInstanceTypeSignature typeSignature in state.GenericDelegateTypes)
         {
+            args.Token.ThrowIfCancellationRequested();
+
             try
             {
                 // Define the 'DelegateImpl' type (with the delegate interface vtable implementation)
@@ -179,8 +190,9 @@ internal partial class InteropGenerator
                     module: module,
                     out _);
             }
-            catch
+            catch (Exception e) when (!e.IsWellKnown())
             {
+                //throw WellKnownInteropExceptions.DelegateTypeCodeGenerationError(typeSignature.Name, e);
             }
         }
     }
@@ -188,11 +200,13 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> types.
     /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="state"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
     /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineKeyValuePairTypes(
+        InteropGeneratorArgs args,
         InteropGeneratorState state,
         WellKnownInteropDefinitions wellKnownInteropDefinitions,
         WellKnownInteropReferences wellKnownInteropReferences,
@@ -200,6 +214,8 @@ internal partial class InteropGenerator
     {
         foreach (GenericInstanceTypeSignature typeSignature in state.KeyValuePairTypes)
         {
+            args.Token.ThrowIfCancellationRequested();
+
             try
             {
                 // Define the 'KeyValuePairImpl' type (with the delegate interface vtable implementation)
@@ -220,9 +236,35 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
             }
-            catch
+            catch (Exception e) when (!e.IsWellKnown())
             {
+                throw WellKnownInteropExceptions.KeyValuePairTypeCodeGenerationError(typeSignature.Name, e);
             }
+        }
+    }
+
+    /// <summary>
+    /// Defines the implementation detail types.
+    /// </summary>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineImplementationDetailTypes(WellKnownInteropDefinitions wellKnownInteropDefinitions, ModuleDefinition module)
+    {
+        try
+        {
+            module.TopLevelTypes.Add(wellKnownInteropDefinitions.RvaFields);
+            module.TopLevelTypes.Add(wellKnownInteropDefinitions.IUnknownVftbl);
+            module.TopLevelTypes.Add(wellKnownInteropDefinitions.IInspectableVftbl);
+            module.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateVftbl);
+            module.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateReferenceVftbl);
+            module.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateInterfaceEntries);
+            module.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairVftbl);
+            module.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries);
+            module.TopLevelTypes.Add(wellKnownInteropDefinitions.InteropImplementationDetails);
+        }
+        catch (Exception e) when (!e.IsWellKnown())
+        {
+            throw WellKnownInteropExceptions.ImplementationDetailTypeCodeGenerationError(e);
         }
     }
 
