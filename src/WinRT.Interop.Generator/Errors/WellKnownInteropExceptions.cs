@@ -32,14 +32,71 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// The assembly module was not found.
+    /// </summary>
+    public static Exception AssemblyModuleNotFound()
+    {
+        return Exception(3, "The assembly module was not found (this might mean that its path was not valid, or that it failed to load).");
+    }
+
+    /// <summary>
+    /// The WinRT runtime module was not found.
+    /// </summary>
+    public static Exception WinRTModuleNotFound()
+    {
+        return Exception(4, "The WinRT runtime module was not found (this might mean that its path was not valid, or that it failed to load).");
+    }
+
+    /// <summary>
+    /// Exception when emitting the 'Values' RVA field.
+    /// </summary>
+    public static Exception TypeHierarchyValuesRvaError(Exception exception)
+    {
+        return Exception(5, "Failed to generate data for the 'Values' RVA field for the type hierarchy lookup.", exception);
+    }
+
+    /// <summary>
+    /// Exception when emitting the 'Keys' RVA field.
+    /// </summary>
+    public static Exception TypeHierarchyKeysRvaError(Exception exception)
+    {
+        return Exception(6, "Failed to generate data for the 'Keys' RVA field for the type hierarchy lookup.", exception);
+    }
+
+    /// <summary>
+    /// Exception when emitting the 'Buckets' RVA field.
+    /// </summary>
+    public static Exception TypeHierarchyBucketsRvaError(Exception exception)
+    {
+        return Exception(7, "Failed to generate data for the 'Buckets' RVA field for the type hierarchy lookup.", exception);
+    }
+
+    /// <summary>
+    /// Exception when emitting the type hierarchy implementation.
+    /// </summary>
+    public static Exception TypeHierarchyImplementationError(Exception exception)
+    {
+        return Exception(8, "Failed to generate the method implementations for the type hierarchy lookup.", exception);
+    }
+
+    /// <summary>
+    /// Exception when emitting the interop .dll to disk.
+    /// </summary>
+    public static Exception EmitDllError(Exception exception)
+    {
+        return Exception(9, "Failed to emit the interop .dll to disk.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
     /// <param name="message">The exception message.</param>
+    /// <param name="innerException">The inner exception.</param>
     /// <returns>The resulting exception.</returns>
-    private static Exception Exception(int id, string message)
+    private static Exception Exception(int id, string message, Exception? innerException = null)
     {
-        return new WellKnownInteropException($"{ErrorPrefix}{id:0000}", message);
+        return new WellKnownInteropException($"{ErrorPrefix}{id:0000}", message, innerException);
     }
 }
 

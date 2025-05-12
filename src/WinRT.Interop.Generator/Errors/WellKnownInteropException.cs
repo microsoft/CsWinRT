@@ -15,8 +15,9 @@ internal sealed class WellKnownInteropException : Exception
     /// </summary>
     /// <param name="id">The id of the exception.</param>
     /// <param name="message">The exception message.</param>
-    public WellKnownInteropException(string id, string message)
-        : base(message)
+    /// <param name="innerException">The inner exception.</param>
+    public WellKnownInteropException(string id, string message, Exception? innerException)
+        : base(message, innerException)
     {
         Id = id;
     }
@@ -29,6 +30,8 @@ internal sealed class WellKnownInteropException : Exception
     /// <inheritdoc/>
     public override string ToString()
     {
-        return $"""error {Id}: {Message}""";
+        return InnerException is not null
+            ? $"""error {Id}: {Message} Inner exception: '{InnerException!.GetType().Name}': '{InnerException!.Message}'."""
+            : $"""error {Id}: {Message}""";
     }
 }

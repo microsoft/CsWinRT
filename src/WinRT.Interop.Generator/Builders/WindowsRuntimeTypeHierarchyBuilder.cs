@@ -47,28 +47,61 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         // That is, we want to guarantee the same ordering if all pairs are the same.
         SortedDictionary<string, string> sortedTypeHierarchyEntries = new(typeHierarchyEntries.ToDictionary());
 
-        ValuesRva(
-            sortedTypeHierarchyEntries,
-            wellKnownInteropDefinitions,
-            module,
-            out SortedDictionary<string, ValueInfo> typeHierarchyValues,
-            out FieldDefinition valuesRvaField);
+        SortedDictionary<string, ValueInfo> typeHierarchyValues;
+        FieldDefinition valuesRvaField;
 
-        KeysRva(
-            sortedTypeHierarchyEntries,
-            typeHierarchyValues,
-            wellKnownInteropDefinitions,
-            module,
-            out int bucketSize,
-            out Dictionary<int, int> chainOffsets,
-            out FieldDefinition keysRvaField);
+        // Emit the 'Values' RVA field
+        try
+        {
+            ValuesRva(
+                sortedTypeHierarchyEntries,
+                wellKnownInteropDefinitions,
+                module,
+                out typeHierarchyValues,
+                out valuesRvaField);
+        }
+        catch (Exception e) when (!e.IsWellKnown())
+        {
+            throw WellKnownInteropExceptions.TypeHierarchyValuesRvaError(e);
+        }
 
-        BucketsRva(
-            bucketSize,
-            chainOffsets,
-            wellKnownInteropDefinitions,
-            module,
-            out FieldDefinition bucketsRvaField);
+        int bucketSize;
+        Dictionary<int, int> chainOffsets;
+        FieldDefinition keysRvaField;
+
+        // Emit the 'Keys' RVA field
+        try
+        {
+            KeysRva(
+                sortedTypeHierarchyEntries,
+                typeHierarchyValues,
+                wellKnownInteropDefinitions,
+                module,
+                out bucketSize,
+                out chainOffsets,
+                out keysRvaField);
+        }
+        catch (Exception e) when (!e.IsWellKnown())
+        {
+            throw WellKnownInteropExceptions.TypeHierarchyKeysRvaError(e);
+        }
+
+        FieldDefinition bucketsRvaField;
+
+        // Emit the 'Buckets' RVA field
+        try
+        {
+            BucketsRva(
+                bucketSize,
+                chainOffsets,
+                wellKnownInteropDefinitions,
+                module,
+                out bucketsRvaField);
+        }
+        catch (Exception e) when (!e.IsWellKnown())
+        {
+            throw WellKnownInteropExceptions.TypeHierarchyBucketsRvaError(e);
+        }
 
         // We're declaring a 'public static class' type
         lookupType = new TypeDefinition(
@@ -79,28 +112,35 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         module.TopLevelTypes.Add(lookupType);
 
-        // Emit the actual lookup method, using the RVA fields just declared
-        TryGetBaseRuntimeClassName(
-            sortedTypeHierarchyEntries,
-            bucketSize,
-            wellKnownInteropDefinitions,
-            wellKnownInteropReferences,
-            module,
-            bucketsRvaField,
-            keysRvaField,
-            valuesRvaField,
-            out MethodDefinition tryGetBaseRuntimeClassNameMethod);
+        try
+        {
+            // Emit the actual lookup method, using the RVA fields just declared
+            TryGetBaseRuntimeClassName(
+                sortedTypeHierarchyEntries,
+                bucketSize,
+                wellKnownInteropDefinitions,
+                wellKnownInteropReferences,
+                module,
+                bucketsRvaField,
+                keysRvaField,
+                valuesRvaField,
+                out MethodDefinition tryGetBaseRuntimeClassNameMethod);
 
-        lookupType.Methods.Add(tryGetBaseRuntimeClassNameMethod);
+            lookupType.Methods.Add(tryGetBaseRuntimeClassNameMethod);
 
-        // Emit the fast lookup method for following base types
-        TryGetNextBaseRuntimeClassName(
-            wellKnownInteropReferences,
-            module,
-            valuesRvaField,
-            out MethodDefinition tryGetNextBaseRuntimeClassNameMethod);
+            // Emit the fast lookup method for following base types
+            TryGetNextBaseRuntimeClassName(
+                wellKnownInteropReferences,
+                module,
+                valuesRvaField,
+                out MethodDefinition tryGetNextBaseRuntimeClassNameMethod);
 
-        lookupType.Methods.Add(tryGetNextBaseRuntimeClassNameMethod);
+            lookupType.Methods.Add(tryGetNextBaseRuntimeClassNameMethod);
+        }
+        catch (Exception e) when (!e.IsWellKnown())
+        {
+            throw WellKnownInteropExceptions.TypeHierarchyImplementationError(e);
+        }
     }
 
     /// <summary>

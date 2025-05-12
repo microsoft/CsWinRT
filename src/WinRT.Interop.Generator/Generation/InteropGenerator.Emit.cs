@@ -1,13 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver.DotNet.Signatures;
-using AsmResolver.DotNet;
-using System.IO;
 using System;
-using WindowsRuntime.InteropGenerator.Builders;
-using WindowsRuntime.InteropGenerator.References;
+using System.IO;
 using System.Linq;
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Builders;
+using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -21,37 +22,85 @@ internal partial class InteropGenerator
     /// <param name="state">The state for this invocation.</param>
     private static void Emit(InteropGeneratorArgs args, InteropGeneratorState state)
     {
-        // Get the loaded module for the application .dll (this should always be available here)
-        if (!state.ModuleDefinitions.TryGetValue(args.AssemblyPath, out ModuleDefinition? assemblyModule))
-        {
-            //throw new WellKnownInteropException("The assembly module was not found.");
-        }
-
-        // Get the loaded module for the runtime .dll (this should also always be available here)
-        if (state.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("WinRT.Runtime2.dll")).Value is not ModuleDefinition winRTRuntime2Module)
-        {
-            winRTRuntime2Module = null!;
-            //throw new WellKnownInteropException("The WinRT runtime module was not found.");
-        }
-
-        AssemblyDefinition winRTInteropAssembly = new(WellKnownInteropNames.InteropDllNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
-        ModuleDefinition winRTInteropModule = new(WellKnownInteropNames.InteropDllName, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib());
-
-        winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
-        winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(winRTRuntime2Module.Assembly?.Name, winRTRuntime2Module.Assembly?.Version ?? new Version(0, 0, 0, 0)));
-        winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(state.AssemblyResolver);
+        // Define the module to emit
+        ModuleDefinition module = DefineInteropModule(args, state, out ModuleDefinition windowsRuntimeModule);
 
         // Setup the well known items to use when emitting code
-        WellKnownInteropDefinitions wellKnownInteropDefinitions = new(winRTInteropModule);
-        WellKnownInteropReferences wellKnownInteropReferences = new(winRTInteropModule, winRTRuntime2Module);
+        WellKnownInteropDefinitions wellKnownInteropDefinitions = new(module);
+        WellKnownInteropReferences wellKnownInteropReferences = new(module, windowsRuntimeModule);
 
+        // Emit the type hierarchy lookup
         WindowsRuntimeTypeHierarchyBuilder.Lookup(
             state.TypeHierarchyEntries,
             wellKnownInteropDefinitions,
             wellKnownInteropReferences,
-            winRTInteropModule,
+            module,
             out _);
 
+        // Emit interop types for generic delegates
+        DefineGenericDelegateTypes(state, wellKnownInteropDefinitions, wellKnownInteropReferences, module);
+
+        // Emit interop types for 'KeyValuePair<,>' types
+        DefineKeyValuePairTypes(state, wellKnownInteropDefinitions, wellKnownInteropReferences, module);
+
+        // Add all top level internal types to the interop module
+        module.TopLevelTypes.Add(wellKnownInteropDefinitions.RvaFields);
+        module.TopLevelTypes.Add(wellKnownInteropDefinitions.IUnknownVftbl);
+        module.TopLevelTypes.Add(wellKnownInteropDefinitions.IInspectableVftbl);
+        module.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateVftbl);
+        module.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateReferenceVftbl);
+        module.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateInterfaceEntries);
+        module.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairVftbl);
+        module.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries);
+        module.TopLevelTypes.Add(wellKnownInteropDefinitions.InteropImplementationDetails);
+
+        // Emit the interop .dll to disk
+        WriteInteropModuleToDisk(args, module);
+    }
+
+    /// <summary>
+    /// Defines the interop module to emit.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="state"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
+    /// <returns>The interop module to populate and emit.</returns>
+    private static ModuleDefinition DefineInteropModule(InteropGeneratorArgs args, InteropGeneratorState state, out ModuleDefinition windowsRuntimeModule)
+    {
+        // Get the loaded module for the application .dll (this should always be available here)
+        if (!state.ModuleDefinitions.TryGetValue(args.AssemblyPath, out ModuleDefinition? assemblyModule))
+        {
+            throw WellKnownInteropExceptions.AssemblyModuleNotFound();
+        }
+
+        // Get the loaded module for the runtime .dll (this should also always be available here)
+        if ((windowsRuntimeModule = state.ModuleDefinitions.FirstOrDefault(static kvp => Path.GetFileName(kvp.Key).Equals("WinRT.Runtime2.dll")).Value) is null)
+        {
+            throw WellKnownInteropExceptions.WinRTModuleNotFound();
+        }
+
+        ModuleDefinition winRTInteropModule = new(WellKnownInteropNames.InteropDllName, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib());
+
+        winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
+        winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(windowsRuntimeModule.Assembly?.Name, windowsRuntimeModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
+        winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(state.AssemblyResolver);
+
+        return winRTInteropModule;
+    }
+
+    /// <summary>
+    /// Defines the interop types for generic delegates.
+    /// </summary>
+    /// <param name="state"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineGenericDelegateTypes(
+        InteropGeneratorState state,
+        WellKnownInteropDefinitions wellKnownInteropDefinitions,
+        WellKnownInteropReferences wellKnownInteropReferences,
+        ModuleDefinition module)
+    {
         foreach (GenericInstanceTypeSignature typeSignature in state.GenericDelegateTypes)
         {
             try
@@ -61,7 +110,7 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     implType: out TypeDefinition delegateImplType,
                     iidRvaField: out _);
 
@@ -70,7 +119,7 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     implType: out TypeDefinition delegateReferenceImplType,
                     iidRvaField: out _);
 
@@ -81,7 +130,7 @@ internal partial class InteropGenerator
                     delegateReferenceImplType: delegateReferenceImplType,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     implType: out TypeDefinition delegateInterfaceEntriesImplType);
 
                 // Define the 'NativeDelegate' type (with the extension method implementation)
@@ -89,7 +138,7 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     nativeDelegateType: out TypeDefinition nativeDelegateType);
 
                 // Define the 'ComWrappersCallback' type (with the 'IComWrappersCallback' implementation)
@@ -98,7 +147,7 @@ internal partial class InteropGenerator
                     delegateImplType: delegateImplType,
                     nativeDelegateType: nativeDelegateType,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     out TypeDefinition delegateComWrappersCallbackType);
 
                 // Define the 'ComWrappersMarshallerAttribute' type
@@ -109,7 +158,7 @@ internal partial class InteropGenerator
                     delegateComWrappersCallbackType: delegateComWrappersCallbackType,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     out TypeDefinition delegateComWrappersMarshallerType);
 
                 // Define the 'Marshaller' type (with the static marshaller methods)
@@ -119,7 +168,7 @@ internal partial class InteropGenerator
                     delegateReferenceImplType: delegateReferenceImplType,
                     delegateComWrappersCallbackType: delegateComWrappersCallbackType,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     marshallerType: out _);
 
                 // Define the proxy type (for the type map)
@@ -127,14 +176,28 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     delegateComWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     out _);
             }
             catch
             {
             }
         }
+    }
 
+    /// <summary>
+    /// Defines the interop types for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> types.
+    /// </summary>
+    /// <param name="state"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineKeyValuePairTypes(
+        InteropGeneratorState state,
+        WellKnownInteropDefinitions wellKnownInteropDefinitions,
+        WellKnownInteropReferences wellKnownInteropReferences,
+        ModuleDefinition module)
+    {
         foreach (GenericInstanceTypeSignature typeSignature in state.KeyValuePairTypes)
         {
             try
@@ -144,7 +207,7 @@ internal partial class InteropGenerator
                     keyValuePairType: typeSignature,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     implType: out TypeDefinition keyValuePairTypeImplType,
                     iidRvaField: out _);
 
@@ -154,28 +217,31 @@ internal partial class InteropGenerator
                     keyValuePairTypeImplType: keyValuePairTypeImplType,
                     wellKnownInteropDefinitions: wellKnownInteropDefinitions,
                     wellKnownInteropReferences: wellKnownInteropReferences,
-                    module: winRTInteropModule,
+                    module: module,
                     implType: out _);
             }
             catch
             {
             }
         }
+    }
 
-        // Add all top level internal types to the interop module
-        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.RvaFields);
-        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.IUnknownVftbl);
-        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.IInspectableVftbl);
-        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateVftbl);
-        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateReferenceVftbl);
-        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.DelegateInterfaceEntries);
-        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairVftbl);
-        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries);
-        winRTInteropModule.TopLevelTypes.Add(wellKnownInteropDefinitions.InteropImplementationDetails);
-
+    /// <summary>
+    /// Writes the interop module to disk.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="module">The module to write to disk.</param>
+    private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module)
+    {
         string winRTInteropAssemblyPath = Path.Combine(args.OutputDirectory, WellKnownInteropNames.InteropDllName);
 
-        // Emit the interop .dll to disk
-        winRTInteropModule.Write(winRTInteropAssemblyPath);
+        try
+        {
+            module.Write(winRTInteropAssemblyPath);
+        }
+        catch (Exception e)
+        {
+            throw WellKnownInteropExceptions.EmitDllError(e);
+        }
     }
 }

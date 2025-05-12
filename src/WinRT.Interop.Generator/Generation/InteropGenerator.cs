@@ -48,7 +48,7 @@ internal static partial class InteropGenerator
         {
             state = Discover(args);
         }
-        catch (Exception e) when (e is not (OperationCanceledException or WellKnownInteropException))
+        catch (Exception e) when (!e.IsWellKnown())
         {
             throw new UnhandledInteropException("discovery", e);
         }
@@ -58,7 +58,7 @@ internal static partial class InteropGenerator
         {
             Emit(args, state);
         }
-        catch (Exception e) when (e is not (OperationCanceledException or WellKnownInteropException))
+        catch (Exception e) when (!e.IsWellKnown())
         {
             throw new UnhandledInteropException("emit", e);
         }
