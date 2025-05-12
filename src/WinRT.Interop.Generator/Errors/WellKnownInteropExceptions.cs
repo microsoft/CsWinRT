@@ -136,6 +136,22 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to discover generic type instantiations.
+    /// </summary>
+    public static Exception LoadAndDiscoverModulesLoopDidNotComplete()
+    {
+        return Exception(16, "Failed to complete processing all input modules.");
+    }
+
+    /// <summary>
+    /// Failed to discover generic type instantiations.
+    /// </summary>
+    public static Exception LoadAndDiscoverModulesLoopError(Exception exception)
+    {
+        return Exception(17, "Failed to load and process all input modules.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

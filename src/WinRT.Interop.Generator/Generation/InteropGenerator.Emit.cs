@@ -190,7 +190,7 @@ internal partial class InteropGenerator
                     module: module,
                     out _);
             }
-            catch (Exception e) when (!e.IsWellKnown())
+            catch (Exception e) when (!e.IsWellKnown)
             {
                 //throw WellKnownInteropExceptions.DelegateTypeCodeGenerationError(typeSignature.Name, e);
             }
@@ -236,7 +236,7 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
             }
-            catch (Exception e) when (!e.IsWellKnown())
+            catch (Exception e) when (!e.IsWellKnown)
             {
                 throw WellKnownInteropExceptions.KeyValuePairTypeCodeGenerationError(typeSignature.Name, e);
             }
@@ -262,7 +262,7 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries);
             module.TopLevelTypes.Add(wellKnownInteropDefinitions.InteropImplementationDetails);
         }
-        catch (Exception e) when (!e.IsWellKnown())
+        catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownInteropExceptions.ImplementationDetailTypeCodeGenerationError(e);
         }

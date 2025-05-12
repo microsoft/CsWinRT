@@ -19,6 +19,9 @@ internal sealed class InteropGeneratorArgs
     /// <summary><inheritdoc cref="InteropGenerator.Run" path="/param[@name='outputDirectory']/node()"/></summary>
     public required string OutputDirectory { get; init; }
 
+    /// <summary><inheritdoc cref="InteropGenerator.Run" path="/param[@name='maxDegreesOfParallelism']/node()"/></summary>
+    public required int MaxDegreesOfParallelism { get; init; }
+
     /// <summary><inheritdoc cref="InteropGenerator.Run" path="/param[@name='token']/node()"/></summary>
     public required CancellationToken Token { get; init; }
 }

@@ -65,7 +65,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 out typeHierarchyValues,
                 out valuesRvaField);
         }
-        catch (Exception e) when (!e.IsWellKnown())
+        catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownInteropExceptions.TypeHierarchyValuesRvaError(e);
         }
@@ -88,7 +88,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 out chainOffsets,
                 out keysRvaField);
         }
-        catch (Exception e) when (!e.IsWellKnown())
+        catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownInteropExceptions.TypeHierarchyKeysRvaError(e);
         }
@@ -107,7 +107,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 module,
                 out bucketsRvaField);
         }
-        catch (Exception e) when (!e.IsWellKnown())
+        catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownInteropExceptions.TypeHierarchyBucketsRvaError(e);
         }
@@ -152,7 +152,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
             lookupType.Methods.Add(tryGetNextBaseRuntimeClassNameMethod);
         }
-        catch (Exception e) when (!e.IsWellKnown())
+        catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownInteropExceptions.TypeHierarchyImplementationError(e);
         }

@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -21,13 +22,37 @@ internal partial class InteropGenerator
     /// <returns>The resulting state.</returns>
     private static InteropGeneratorState Discover(InteropGeneratorArgs args)
     {
+        // Initialize the assembly resolver (we need to reuse this to allow caching)
         PathAssemblyResolver pathAssemblyResolver = new(args.ReferencePath);
 
+        // Initialize the state, which contains all the discovered info we'll use for generation.
+        // No additional parameters will be passed to later steps: all the info is in this object.
         InteropGeneratorState state = new() { AssemblyResolver = pathAssemblyResolver };
 
-        foreach (string path in args.ReferencePath.Concat([args.AssemblyPath]))
+        try
         {
-            LoadAndProcessModule(args, state, path);
+            // Load and process all modules, potentially in parallel
+            ParallelLoopResult result = Parallel.ForEach(
+                source: args.ReferencePath.Concat([args.AssemblyPath]),
+                parallelOptions: new ParallelOptions { CancellationToken = args.Token, MaxDegreeOfParallelism = args.MaxDegreesOfParallelism },
+                body: path => LoadAndProcessModule(args, state, path));
+
+            // Ensure we did complete all iterations (this should always be the case)
+            if (!result.IsCompleted)
+            {
+                throw WellKnownInteropExceptions.LoadAndDiscoverModulesLoopDidNotComplete();
+            }
+        }
+        catch (AggregateException e)
+        {
+            Exception innerException = e.InnerExceptions.FirstOrDefault()!;
+
+            // If the first inner exception is well known, just rethrow it.
+            // We're not concerned about always throwing the same one across
+            // re-runs with parallelism. It can be disabled for debugging.
+            throw innerException.IsWellKnown
+                ? innerException
+                : WellKnownInteropExceptions.LoadAndDiscoverModulesLoopError(innerException);
         }
 
         // We want to ensure the state will never be mutated after this method completes
@@ -120,7 +145,7 @@ internal partial class InteropGenerator
                 }
             }
         }
-        catch (Exception e) when (!e.IsWellKnown())
+        catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownInteropExceptions.DiscoverTypeHierarchyTypesError(module.Name, e);
         }
@@ -156,7 +181,7 @@ internal partial class InteropGenerator
                 }
             }
         }
-        catch (Exception e) when (!e.IsWellKnown())
+        catch (Exception e) when (!e.IsWellKnown)
         {
             throw WellKnownInteropExceptions.DiscoverGenericTypeInstantiationsError(module.Name, e);
         }

@@ -21,11 +21,13 @@ internal static partial class InteropGenerator
     /// <param name="referencePath">The input .dll paths.</param>
     /// <param name="assemblyPath">The path of the assembly that was built.</param>
     /// <param name="outputDirectory">The output path for the resulting assembly.</param>
+    /// <param name="maxDegreesOfParallelism">The maximum number of parallel tasks to use for execution.</param>
     /// <param name="token">The token for the operation.</param>
     public static void Run(
         string[] referencePath,
         string assemblyPath,
         string outputDirectory,
+        int maxDegreesOfParallelism,
         CancellationToken token)
     {
         RunCore(new InteropGeneratorArgs
@@ -33,6 +35,7 @@ internal static partial class InteropGenerator
             ReferencePath = referencePath,
             AssemblyPath = assemblyPath,
             OutputDirectory = outputDirectory,
+            MaxDegreesOfParallelism = maxDegreesOfParallelism,
             Token = token
         });
     }
@@ -53,7 +56,7 @@ internal static partial class InteropGenerator
 
             state = Discover(args);
         }
-        catch (Exception e) when (!e.IsWellKnown())
+        catch (Exception e) when (!e.IsWellKnown)
         {
             throw new UnhandledInteropException("discovery", e);
         }
@@ -67,7 +70,7 @@ internal static partial class InteropGenerator
 
             Emit(args, state);
         }
-        catch (Exception e) when (!e.IsWellKnown())
+        catch (Exception e) when (!e.IsWellKnown)
         {
             throw new UnhandledInteropException("emit", e);
         }

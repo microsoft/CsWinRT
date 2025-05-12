@@ -11,13 +11,12 @@ namespace WindowsRuntime.InteropGenerator;
 /// </summary>
 internal static class InteropExceptionExtensions
 {
-    /// <summary>
-    /// Checks whether an exception is well known (and should therefore not be caught).
-    /// </summary>
-    /// <param name="exception">The exception to check.</param>
-    /// <returns>Whether <paramref name="exception"/> is well known.</returns>
-    public static bool IsWellKnown(this Exception exception)
+    extension(Exception exception)
     {
-        return exception is OperationCanceledException or WellKnownInteropException;
+        /// <summary>
+        /// Checks whether an exception is well known (and should therefore not be caught).
+        /// </summary>
+        /// <returns>Whether the exception is well known.</returns>
+        public bool IsWellKnown => exception is OperationCanceledException or WellKnownInteropException;
     }
 }
