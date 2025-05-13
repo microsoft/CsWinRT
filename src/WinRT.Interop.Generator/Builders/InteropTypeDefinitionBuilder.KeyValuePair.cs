@@ -233,7 +233,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="implType">The resulting implementation type.</param>
         public static void InterfaceEntriesImplType(
-            TypeSignature keyValuePairType,
+            GenericInstanceTypeSignature keyValuePairType,
             TypeDefinition keyValuePairTypeImplType,
             WellKnownInteropDefinitions wellKnownInteropDefinitions,
             WellKnownInteropReferences wellKnownInteropReferences,

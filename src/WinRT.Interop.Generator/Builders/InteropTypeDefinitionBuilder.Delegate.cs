@@ -32,7 +32,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="implType">The resulting implementation type.</param>
         /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
         public static void ImplType(
-            TypeSignature delegateType,
+            GenericInstanceTypeSignature delegateType,
             WellKnownInteropDefinitions wellKnownInteropDefinitions,
             WellKnownInteropReferences wellKnownInteropReferences,
             ModuleDefinition module,
@@ -182,7 +182,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="implType">The resulting implementation type.</param>
         /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
         public static void ReferenceImplType(
-            TypeSignature delegateType,
+            GenericInstanceTypeSignature delegateType,
             WellKnownInteropDefinitions wellKnownInteropDefinitions,
             WellKnownInteropReferences wellKnownInteropReferences,
             ModuleDefinition module,
@@ -355,7 +355,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="implType">The resulting implementation type.</param>
         public static void InterfaceEntriesImplType(
-            TypeSignature delegateType,
+            GenericInstanceTypeSignature delegateType,
             TypeDefinition delegateImplType,
             TypeDefinition delegateReferenceImplType,
             WellKnownInteropDefinitions wellKnownInteropDefinitions,
@@ -451,7 +451,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeDelegateType">The resulting callback type.</param>
         public static void NativeDelegateType(
-            TypeSignature delegateType,
+            GenericInstanceTypeSignature delegateType,
             WellKnownInteropDefinitions wellKnownInteropDefinitions,
             WellKnownInteropReferences wellKnownInteropReferences,
             ModuleDefinition module,
@@ -466,7 +466,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(nativeDelegateType);
 
-            GenericInstanceTypeSignature genericDelegateType = (GenericInstanceTypeSignature)delegateType;
+            // Construct the 'Invoke' method on the delegate type, so we can get the constructed parameter types
+            MethodSignature invokeSignature = delegateType.Resolve()!.GetMethod("Invoke"u8).Signature!.InstantiateGenericTypes(GenericContext.FromType(delegateType));
 
             // Define the 'Invoke' method as follows:
             //
@@ -478,8 +479,8 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         wellKnownInteropReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module),
-                        module.DefaultImporter.ImportTypeSignature(genericDelegateType.TypeArguments[0]),
-                        module.DefaultImporter.ImportTypeSignature(genericDelegateType.TypeArguments[1])]));
+                        invokeSignature.ParameterTypes[0].Import(module),
+                        invokeSignature.ParameterTypes[1].Import(module)]));
 
             nativeDelegateType.Methods.Add(invokeMethod);
 
@@ -595,7 +596,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void ComWrappersMarshallerAttribute(
-            TypeSignature delegateType,
+            GenericInstanceTypeSignature delegateType,
             TypeDefinition delegateReferenceImplType,
             TypeDefinition delegateInterfaceEntriesImplType,
             TypeDefinition delegateComWrappersCallbackType,
@@ -698,7 +699,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
-            TypeSignature delegateType,
+            GenericInstanceTypeSignature delegateType,
             TypeDefinition delegateImplType,
             TypeDefinition delegateReferenceImplType,
             TypeDefinition delegateComWrappersCallbackType,
@@ -819,7 +820,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting proxy type.</param>
         public static void Proxy(
-            TypeSignature delegateType,
+            GenericInstanceTypeSignature delegateType,
             TypeDefinition delegateComWrappersMarshallerAttributeType,
             WellKnownInteropReferences wellKnownInteropReferences,
             ModuleDefinition module,

@@ -177,7 +177,12 @@ internal partial class InteropGenerator
 
                 // Gather all known delegate types
                 if (typeSignature.Resolve() is { IsDelegate: true } &&
-                    typeSignature is { GenericType.Name.Value: "TypedEventHandler`2" })
+                    typeSignature is
+                    {
+                        GenericType.Name.Value:
+                            "TypedEventHandler`2" or
+                            "EventHandler`1"
+                    })
                 {
                     state.TrackGenericDelegateType(typeSignature);
                 }
