@@ -14,9 +14,8 @@ internal static class InteropExceptionExtensions
     extension(Exception exception)
     {
         /// <summary>
-        /// Checks whether an exception is well known (and should therefore not be caught).
+        /// Gets a value indicating whether an exception is well known (and should therefore not be caught).
         /// </summary>
-        /// <returns>Whether the exception is well known.</returns>
         public bool IsWellKnown => exception is OperationCanceledException or WellKnownInteropException;
     }
 }

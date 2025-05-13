@@ -175,6 +175,12 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                // Ignore types that are not fully resolvable (this likely means a .dll is missing)
+                if (!typeSignature.IsFullyResolvable)
+                {
+                    continue;
+                }
+
                 // Gather all known delegate types
                 if (typeSignature.Resolve() is { IsDelegate: true } &&
                     typeSignature is
