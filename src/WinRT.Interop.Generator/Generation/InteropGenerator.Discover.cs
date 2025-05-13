@@ -181,14 +181,12 @@ internal partial class InteropGenerator
                     continue;
                 }
 
-                // Gather all known delegate types
+                // Gather all known delegate types. We want to gather all projected delegate types,
+                // plus any custom mapped ones. For now, that's only 'EventHandler<T>'.
                 if (typeSignature.Resolve() is { IsDelegate: true } &&
-                    typeSignature is
-                    {
-                        GenericType.Name.Value:
-                            "TypedEventHandler`2" or
-                            "EventHandler`1"
-                    })
+                    ((typeSignature.GenericType.Namespace?.AsSpan().SequenceEqual("System"u8) is true &&
+                     typeSignature.GenericType.Name?.AsSpan().StartsWith("EventHandler`1"u8) is true) ||
+                     typeSignature.GenericType.IsProjectedWindowsRuntimeType))
                 {
                     state.TrackGenericDelegateType(typeSignature);
                 }

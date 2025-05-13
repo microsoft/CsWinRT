@@ -37,7 +37,7 @@ internal static class InteropUtf8NameFactory
         // Replace some assembly names with well known constants, to make the names more compact
         return originalAssemblyNameUtf8.Value switch
         {
-            "System.Runtime" or "System.Private.CoreLib" => "#corlib"u8,
+            "System.Runtime" => "#corlib"u8,
             "Microsoft.Windows.SDK.NET" or "Microsoft.Windows.UI.Xaml" => "#Windows"u8,
             "WinRT.Runtime" => "#CsWinRT"u8,
             "Microsoft.UI.Xaml.Projection" => "#WinUI2"u8,
