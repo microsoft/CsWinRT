@@ -6,9 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Resolvers;
+using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -164,18 +164,27 @@ internal partial class InteropGenerator
     {
         try
         {
-            foreach (TypeSpecification typeSpecification in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
+            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                if (typeSpecification.Resolve() is { IsDelegate: true } &&
-                    typeSpecification.Signature is GenericInstanceTypeSignature { GenericType.Name.Value: "TypedEventHandler`2" } typeSignature)
+                // Filter all constructed generic type signatures we have. We don't care about generic type
+                // definitions (eg. 'TypedEventHandler`1<!0, !1>') for the purposes of marshalling code.
+                if (!typeSignature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
+                {
+                    continue;
+                }
+
+                // Gather all known delegate types
+                if (typeSignature.Resolve() is { IsDelegate: true } &&
+                    typeSignature is { GenericType.Name.Value: "TypedEventHandler`2" })
                 {
                     state.TrackGenericDelegateType(typeSignature);
                 }
 
-                if (typeSpecification.Resolve() is { IsValueType: true } &&
-                    typeSpecification.Signature is GenericInstanceTypeSignature { GenericType.Name.Value: "KeyValuePair`2" } keyValuePairType)
+                // Gather all 'KeyValuePair<,>' instances
+                if (typeSignature.Resolve() is { IsValueType: true } &&
+                    typeSignature is { GenericType.Name.Value: "KeyValuePair`2" } keyValuePairType)
                 {
                     state.TrackKeyValuePairType(keyValuePairType);
                 }
