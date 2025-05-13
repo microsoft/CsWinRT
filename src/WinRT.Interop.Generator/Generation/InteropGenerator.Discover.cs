@@ -133,7 +133,7 @@ internal partial class InteropGenerator
                 }
 
                 // Ignore types that don't have another base class
-                if (type.BaseType is null || SignatureComparer.Default.Equals(type.BaseType, module.CorLibTypeFactory.Object))
+                if (type.BaseType is null || SignatureComparer.IgnoreVersion.Equals(type.BaseType, module.CorLibTypeFactory.Object))
                 {
                     continue;
                 }

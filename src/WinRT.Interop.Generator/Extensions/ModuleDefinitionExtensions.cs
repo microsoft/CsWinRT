@@ -15,7 +15,6 @@ internal static class ModuleDefinitionExtensions
     /// <summary>
     /// Imports a type definition or reference into a module using the default reference importer.
     /// </summary>
-    /// <param name="typeDefOrRef">The <see cref="ITypeDefOrRef"/> instance to import.</param>
     /// <param name="module">The module to import into.</param>
     /// <returns>The imported <see cref="ITypeDefOrRef"/>.</returns>
     public static bool IsOrReferencesWindowsSDKProjectionsAssembly(this ModuleDefinition module)

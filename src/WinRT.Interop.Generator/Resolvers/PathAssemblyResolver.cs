@@ -24,7 +24,7 @@ internal sealed class PathAssemblyResolver : IAssemblyResolver
     /// <summary>
     /// The cached assemblies.
     /// </summary>
-    private readonly ConcurrentDictionary<AssemblyDescriptor, AssemblyDefinition> _cache = new(SignatureComparer.Default);
+    private readonly ConcurrentDictionary<AssemblyDescriptor, AssemblyDefinition> _cache = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>
     /// Creates a new <see cref="PathAssemblyResolver"/> instance with the specified parameters.

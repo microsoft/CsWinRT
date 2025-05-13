@@ -21,10 +21,10 @@ internal sealed class InteropGeneratorState
     private readonly ConcurrentDictionary<string, string> _typeHierarchyEntries = [];
 
     /// <summary>Backing field for <see cref="GenericDelegateTypes"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _genericDelegateTypes = new(SignatureComparer.Default);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _genericDelegateTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(SignatureComparer.Default);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>
     /// Indicates whether the current state is readonly.
