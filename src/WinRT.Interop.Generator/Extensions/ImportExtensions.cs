@@ -36,12 +36,23 @@ internal static class ImportExtensions
     /// <summary>
     /// Imports a type signature into a module using the default reference importer.
     /// </summary>
-    /// <param name="typeSignature">The <see cref="TypeSignature"/> instance to import.</param>
+    /// <param name="methodSignature">The <see cref="TypeSignature"/> instance to import.</param>
     /// <param name="module">The module to import into.</param>
     /// <returns>The imported <see cref="TypeSignature"/>.</returns>
-    public static TypeSignature Import(this TypeSignature typeSignature, ModuleDefinition module)
+    public static TypeSignature Import(this TypeSignature methodSignature, ModuleDefinition module)
     {
-        return typeSignature.ImportWith(module.DefaultImporter);
+        return methodSignature.ImportWith(module.DefaultImporter);
+    }
+
+    /// <summary>
+    /// Imports a method signature into a module using the default reference importer.
+    /// </summary>
+    /// <param name="methodSignature">The <see cref="MethodSignature"/> instance to import.</param>
+    /// <param name="module">The module to import into.</param>
+    /// <returns>The imported <see cref="MethodSignature"/>.</returns>
+    public static MethodSignature Import(this MethodSignature methodSignature, ModuleDefinition module)
+    {
+        return (MethodSignature)methodSignature.ImportWith(module.DefaultImporter);
     }
 
     /// <summary>

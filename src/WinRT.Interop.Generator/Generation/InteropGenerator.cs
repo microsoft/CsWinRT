@@ -52,7 +52,7 @@ internal static partial class InteropGenerator
         // exceptions that can reach that path to have our custom formatting implementation there.
         try
         {
-            ConsoleApp.Log($"Processing {args.ReferencePath.Length + 1} modules...");
+            ConsoleApp.Log($"Processing {args.ReferencePath.Length + 1} modules");
 
             state = Discover(args);
         }
@@ -66,7 +66,7 @@ internal static partial class InteropGenerator
         // Same thing for the emit phase
         try
         {
-            ConsoleApp.Log("Generating interop code...");
+            ConsoleApp.Log("Generating interop code");
 
             Emit(args, state);
         }

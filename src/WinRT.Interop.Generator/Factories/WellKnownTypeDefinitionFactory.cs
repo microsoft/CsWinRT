@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
@@ -18,31 +17,31 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates an <c>IUnknownVftbl</c> type.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <c>IUnknownVftbl</c> type.</returns>
-    public static TypeDefinition IUnknownVftbl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static TypeDefinition IUnknownVftbl(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IUnknownVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
+            baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(corLibTypeFactory, referenceImporter);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
 
         // The vtable layout for 'IUnknown' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
         // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -50,27 +49,27 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates an <c>IUnknownVftbl</c> type.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <c>IUnknownVftbl</c> type.</returns>
-    public static TypeDefinition IInspectableVftbl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static TypeDefinition IInspectableVftbl(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IInspectableVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
+            baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(corLibTypeFactory, referenceImporter);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
 
         // Get the 'IInspectable' signatures
-        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(corLibTypeFactory, referenceImporter);
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
 
         // The vtable layout for 'IInspectable' looks like this:
         //
@@ -80,12 +79,12 @@ internal static class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -93,26 +92,26 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates a new type definition for the vtable of a <see cref="Delegate"/> type.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>This method always assumes the <see cref="Delegate"/> type will take two objects as input parameters.</remarks>
-    public static TypeDefinition DelegateVftbl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static TypeDefinition DelegateVftbl(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
             ns: null,
             name: "<DelegateVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
+            baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(corLibTypeFactory, referenceImporter);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
 
         // Also get the 'Invoke' signature
-        MethodSignature invokeType = WellKnownTypeSignatureFactory.InvokeImpl(corLibTypeFactory, referenceImporter);
+        MethodSignature invokeType = WellKnownTypeSignatureFactory.InvokeImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
 
         // The vtable layout for 'IDelegate' looks like this:
         //
@@ -120,10 +119,10 @@ internal static class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
         // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
         // public delegate* unmanaged[MemberFunction]<void*, void*, void*, int> Invoke;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Invoke"u8, FieldAttributes.Public, invokeType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Invoke"u8, FieldAttributes.Public, invokeType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -131,37 +130,37 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates a new type definition for the vtable of an 'IReference`1&lt;T&gt;' instantiation for some <see cref="Delegate"/> type.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateReferenceVftbl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static TypeDefinition DelegateReferenceVftbl(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<DelegateReferenceVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
+            baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(corLibTypeFactory, referenceImporter);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
 
         // Get the 'IInspectable' signatures
-        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(corLibTypeFactory, referenceImporter);
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
 
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
         MethodSignature valueType = new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
-                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
+                modifierType: wellKnownInteropReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: corLibTypeFactory.Int32),
+                baseType: module.CorLibTypeFactory.Int32),
             parameterTypes: [
-                corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                module.CorLibTypeFactory.Void.MakePointerType(),
+                module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
 
         // The vtable layout for 'IReference`1<T>' looks like this:
         //
@@ -172,13 +171,13 @@ internal static class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
         // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Value;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -186,18 +185,19 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates a new type definition for COM interface entries for a <see cref="Delegate"/> type.
     /// </summary>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateInterfaceEntriesType(ReferenceImporter referenceImporter)
+    public static TypeDefinition DelegateInterfaceEntriesType(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
             name: "<DelegateInterfaceEntries>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
+            baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        TypeSignature comInterfaceEntryType = referenceImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)).ToTypeSignature(isValueType: true);
+        TypeSignature comInterfaceEntryType = wellKnownInteropReferences.ComInterfaceEntry.Import(module).ToTypeSignature(isValueType: true);
 
         // The type layout looks like this:
         //
@@ -226,37 +226,37 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates a new type definition for the vtable of an 'IKeyValuePair`2&lt;TKey, TValue&gt;' instantiation for some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IKeyValuePairVftbl(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static TypeDefinition IKeyValuePairVftbl(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IKeyValuePairVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
+            baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(corLibTypeFactory, referenceImporter);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
 
         // Get the 'IInspectable' signatures
-        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(corLibTypeFactory, referenceImporter);
-        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(corLibTypeFactory, referenceImporter);
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
 
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
         MethodSignature valueType = new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
-                modifierType: referenceImporter.ImportType(typeof(CallConvMemberFunction)),
+                modifierType: wellKnownInteropReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: corLibTypeFactory.Int32),
+                baseType: module.CorLibTypeFactory.Int32),
             parameterTypes: [
-                corLibTypeFactory.Void.MakePointerType(),
-                corLibTypeFactory.Void.MakePointerType()]);
+                module.CorLibTypeFactory.Void.MakePointerType(),
+                module.CorLibTypeFactory.Void.MakePointerType()]);
 
         // The vtable layout for 'IReference`1<T>' looks like this:
         //
@@ -268,14 +268,14 @@ internal static class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Key;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Value;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Key"u8, FieldAttributes.Public, valueType.MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Key"u8, FieldAttributes.Public, valueType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -283,18 +283,19 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates a new type definition for COM interface entries for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IKeyValuePairInterfaceEntriesType(ReferenceImporter referenceImporter)
+    public static TypeDefinition IKeyValuePairInterfaceEntriesType(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
             name: "<IKeyValuePairInterfaceEntries>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: referenceImporter.ImportType(typeof(ValueType)));
+            baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        TypeSignature comInterfaceEntryType = referenceImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)).ToTypeSignature(isValueType: true);
+        TypeSignature comInterfaceEntryType = wellKnownInteropReferences.ComInterfaceEntry.Import(module).ToTypeSignature(isValueType: true);
 
         // The type layout looks like this:
         //
@@ -319,27 +320,27 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates types to use to declare RVA fields.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The <see cref="TypeDefinition"/> to use to contain all RVA fields.</returns>
     /// <remarks>
     /// The returned type will have exactly one nested type, for RVA fields of size 16 (ie. <see cref="Guid"/>).
     /// </remarks>
-    public static TypeDefinition RvaFields(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static TypeDefinition RvaFields(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         // Define the special '<RvaFields>' type, to contain all RVA fields
         TypeDefinition rvaFieldsType = new(
             ns: null,
             name: "<RvaFields>"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-            baseType: corLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
         // Define the data type for IID data
         TypeDefinition iidRvaDataType = new(
             ns: null,
             name: "IIDRvaData(Size=16|Align=4)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: referenceImporter.ImportType(typeof(ValueType)))
+            baseType: wellKnownInteropReferences.ValueType.Import(module))
         {
             ClassLayout = new ClassLayout(packingSize: 4, classSize: 16)
         };
@@ -353,19 +354,19 @@ internal static class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates a type to hold implementation detail helpers.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The <see cref="TypeDefinition"/> to hold implementation detail helpers.</returns>
-    public static TypeDefinition InteropImplementationDetails(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    public static TypeDefinition InteropImplementationDetails(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         // Define the special '<InteropImplementationDetails>' type, with all internal helpers
         TypeDefinition interopImplementationDetailsType = new(
             ns: null,
             name: "<InteropImplementationDetails>"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: corLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
-        interopImplementationDetailsType.Methods.Add(WellKnownMemberDefinitionFactory.ComputeReadOnlySpanHash(corLibTypeFactory, referenceImporter));
+        interopImplementationDetailsType.Methods.Add(WellKnownMemberDefinitionFactory.ComputeReadOnlySpanHash(wellKnownInteropReferences, module));
 
         return interopImplementationDetailsType;
     }

@@ -30,8 +30,8 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Setup the well known items to use when emitting code
-        WellKnownInteropDefinitions wellKnownInteropDefinitions = new(module);
         WellKnownInteropReferences wellKnownInteropReferences = new(module, windowsRuntimeModule);
+        WellKnownInteropDefinitions wellKnownInteropDefinitions = new(wellKnownInteropReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 

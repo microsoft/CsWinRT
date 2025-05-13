@@ -149,6 +149,7 @@ internal partial class InteropTypeDefinitionBuilder
             WellKnownMemberDefinitionFactory.IID(
                 iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
                 iidRvaDataType: wellKnownInteropDefinitions.IIDRvaDataSize_16,
+                wellKnownInteropReferences: wellKnownInteropReferences,
                 module: module,
                 iid: Guid.NewGuid(),
                 out iidRvaField,
@@ -321,6 +322,7 @@ internal partial class InteropTypeDefinitionBuilder
             WellKnownMemberDefinitionFactory.IID(
                 iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceIID"),
                 iidRvaDataType: wellKnownInteropDefinitions.IIDRvaDataSize_16,
+                wellKnownInteropReferences: wellKnownInteropReferences,
                 module: module,
                 iid: Guid.NewGuid(),
                 out iidRvaField,
@@ -532,7 +534,7 @@ internal partial class InteropTypeDefinitionBuilder
             _ = invokeInstructions.Add(Ldloc_3);
             _ = invokeInstructions.Add(Ldind_I);
             _ = invokeInstructions.Add(Ldfld, wellKnownInteropDefinitions.DelegateVftbl.Fields[3]);
-            _ = invokeInstructions.Add(Calli, WellKnownTypeSignatureFactory.InvokeImpl(module.CorLibTypeFactory, module.DefaultImporter).MakeStandAloneSignature());
+            _ = invokeInstructions.Add(Calli, WellKnownTypeSignatureFactory.InvokeImpl(module.CorLibTypeFactory, wellKnownInteropReferences).Import(module).MakeStandAloneSignature());
             _ = invokeInstructions.Add(Call, wellKnownInteropReferences.RestrictedErrorInfoThrowExceptionForHR.ImportWith(module.DefaultImporter));
             _ = invokeInstructions.Add(Leave_S, ret.CreateLabel());
 

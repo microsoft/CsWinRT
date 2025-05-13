@@ -201,6 +201,7 @@ internal partial class InteropTypeDefinitionBuilder
             WellKnownMemberDefinitionFactory.IID(
                 iidRvaFieldName: InteropUtf8NameFactory.TypeName(keyValuePairType, "IID"),
                 iidRvaDataType: wellKnownInteropDefinitions.IIDRvaDataSize_16,
+                wellKnownInteropReferences: wellKnownInteropReferences,
                 module: module,
                 iid: Guid.NewGuid(),
                 out iidRvaField,

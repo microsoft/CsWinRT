@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.InteropServices;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
@@ -22,6 +22,7 @@ internal static class WellKnownMemberDefinitionFactory
     /// </summary>
     /// <param name="iidRvaFieldName">The name to use for <paramref name="iidRvaField"/>.</param>
     /// <param name="iidRvaDataType">The type to use for IID RVA fields.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="iid">The <see cref="Guid"/> value to use for the RVA field.</param>
     /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
@@ -30,6 +31,7 @@ internal static class WellKnownMemberDefinitionFactory
     public static void IID(
         Utf8String iidRvaFieldName,
         TypeDefinition iidRvaDataType,
+        WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         in Guid iid,
         out FieldDefinition iidRvaField,
@@ -46,7 +48,7 @@ internal static class WellKnownMemberDefinitionFactory
         };
 
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
-        CustomModifierTypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(module.DefaultImporter);
+        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(wellKnownInteropReferences).Import(module);
 
         // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
         PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
@@ -111,40 +113,25 @@ internal static class WellKnownMemberDefinitionFactory
     /// <summary>
     /// Creates the 'ComputeReadOnlySpanHash' method.
     /// </summary>
-    /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="referenceImporter">The <see cref="ReferenceImporter"/> instance to use.</param>
-    public static MethodDefinition ComputeReadOnlySpanHash(CorLibTypeFactory corLibTypeFactory, ReferenceImporter referenceImporter)
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    public static MethodDefinition ComputeReadOnlySpanHash(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
     {
         // Create the 'ComputeReadOnlySpanHash' getter method
         MethodDefinition hashMethod = new(
             name: "ComputeReadOnlySpanHash"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(
-                returnType: corLibTypeFactory.Int32,
-                parameterTypes: [referenceImporter.ImportType(typeof(ReadOnlySpan<char>)).ToTypeSignature(isValueType: true)]));
-
-        // Reference the 'get_Item' method
-        MemberReference get_ItemMethod = referenceImporter
-            .ImportType(typeof(ReadOnlySpan<char>))
-            .CreateMemberReference("get_Item", MethodSignature.CreateInstance(
-                returnType:
-                    new GenericParameterSignature(GenericParameterType.Type, index: 0)
-                    .MakeByReferenceType()
-                    .MakeModifierType(referenceImporter.ImportType(typeof(InAttribute)), isRequired: true),
-                parameterTypes: [corLibTypeFactory.Int32]));
-
-        // Reference the 'get_Length' method
-        MemberReference get_LengthMethod = referenceImporter
-            .ImportType(typeof(ReadOnlySpan<char>))
-            .CreateMemberReference("get_Length", MethodSignature.CreateInstance(corLibTypeFactory.Int32));
+                returnType: module.CorLibTypeFactory.Int32,
+                parameterTypes: [wellKnownInteropReferences.ReadOnlySpanChar.Import(module).ToTypeSignature(isValueType: true)]));
 
         // Create a method body for the 'ComputeReadOnlySpanHash' method
         CilMethodBody hashBody = hashMethod.CreateAndBindCilMethodBody();
         CilInstructionCollection hashInstructions = hashBody.Instructions;
 
         // Define the locals (hash value, and loop index)
-        hashBody.LocalVariables.Add(new CilLocalVariable(corLibTypeFactory.UInt32));
-        hashBody.LocalVariables.Add(new CilLocalVariable(corLibTypeFactory.Int32));
+        hashBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.UInt32));
+        hashBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
 
         CilInstruction rangeCheck = new(CilOpCodes.Ldloc_1);
 
@@ -160,7 +147,7 @@ internal static class WellKnownMemberDefinitionFactory
         // Loop
         CilInstruction loopStart = hashInstructions.Add(CilOpCodes.Ldarga_S, hashMethod.Parameters[0]);
         _ = hashInstructions.Add(CilOpCodes.Ldloc_1);
-        _ = hashInstructions.Add(CilOpCodes.Call, get_ItemMethod);
+        _ = hashInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.ReadOnlySpanCharget_Item.Import(module));
         _ = hashInstructions.Add(CilOpCodes.Ldind_U2);
         _ = hashInstructions.Add(CilOpCodes.Ldloc_0);
         _ = hashInstructions.Add(CilOpCodes.Xor);
@@ -175,7 +162,7 @@ internal static class WellKnownMemberDefinitionFactory
         // Loop range check
         hashInstructions.Add(rangeCheck);
         _ = hashInstructions.Add(CilOpCodes.Ldarga_S, hashMethod.Parameters[0]);
-        _ = hashInstructions.Add(CilOpCodes.Call, get_LengthMethod);
+        _ = hashInstructions.Add(CilOpCodes.Call, wellKnownInteropReferences.ReadOnlySpanCharget_Length.Import(module));
         _ = hashInstructions.Add(CilOpCodes.Blt_S, loopStart.CreateLabel());
 
         // Return the hash

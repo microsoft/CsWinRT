@@ -85,6 +85,18 @@ internal sealed class WellKnownInteropReferences
     public TypeReference ComInterfaceEntry => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices.ComWrappers", "ComWrappers/ComInterfaceEntry");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.InteropServices.InAttribute</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference InAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices", "InAttribute");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.CompilerServices.CallConvMemberFunction</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference CallConvMemberFunction => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices", "CallConvMemberFunction");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -210,6 +222,18 @@ internal sealed class WellKnownInteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>System.ReadOnlySpane&lt;T&gt;.this[int]</c> (of <see cref="char"/>).
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference ReadOnlySpanCharget_Item => field ??= ReadOnlySpanChar
+        .CreateMemberReference("get_Item", MethodSignature.CreateInstance(
+            returnType:
+                new GenericParameterSignature(GenericParameterType.Type, index: 0)
+                .MakeByReferenceType()
+                .MakeModifierType(InAttribute, isRequired: true),
+            parameterTypes: [_interopModule.CorLibTypeFactory.Int32]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>System.ReadOnlySpane&lt;T&gt;.Length</c> (of <see cref="char"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -257,7 +281,7 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference IUnknownImplget_IID => field ??= IUnknownImpl
         .CreateMemberReference("get_IID", MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)));
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IUnknownImpl.get_Vtable()</c>.
@@ -273,7 +297,7 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference IInspectableImplget_IID => field ??= IInspectableImpl
         .CreateMemberReference("get_IID", MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)));
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IInspectableImpl.get_Vtable()</c>.
@@ -289,7 +313,7 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference IPropertyValueImplget_IID => field ??= IPropertyValueImpl
         .CreateMemberReference("get_IID", MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)));
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IPropertyValueImpl.get_OtherTypeVtable()</c>.
@@ -321,7 +345,7 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference IStringableImplget_IID => field ??= IStringableImpl
         .CreateMemberReference("get_IID", MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)));
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_Vtable()</c>.
@@ -337,7 +361,7 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference IMarshalImplget_IID => field ??= IMarshalImpl
         .CreateMemberReference("get_IID", MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)));
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl.get_Vtable()</c>.
@@ -353,7 +377,7 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference IWeakReferenceSourceImplget_IID => field ??= IWeakReferenceSourceImpl
         .CreateMemberReference("get_IID", MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)));
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.get_Vtable()</c>.
@@ -369,7 +393,7 @@ internal sealed class WellKnownInteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference IAgileObjectImplget_IID => field ??= IAgileObjectImpl
         .CreateMemberReference("get_IID", MethodSignature.CreateStatic(
-            returnType: WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)));
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAgileObjectImpl.get_Vtable()</c>.
@@ -388,7 +412,7 @@ internal sealed class WellKnownInteropReferences
             returnType: WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
             parameterTypes: [
                 _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
-                WellKnownTypeSignatureFactory.InGuid(_interopModule.DefaultImporter)]));
+                WellKnownTypeSignatureFactory.InGuid(this)]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference.AsValue()</c>.
