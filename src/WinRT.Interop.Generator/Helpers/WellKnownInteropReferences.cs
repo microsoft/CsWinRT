@@ -35,6 +35,12 @@ internal sealed class WellKnownInteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.ValueType</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference ValueType => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "ValueType");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.ReadOnlySpan&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -52,8 +58,13 @@ internal sealed class WellKnownInteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>System.Exception</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference Exception => field ??= _interopModule.CorLibTypeFactory.CorLibScope
-        .CreateTypeReference("System", "Exception");
+    public TypeReference Exception => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "Exception");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Guid</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference Guid => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "Guid");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.MemoryExtensions</c>.
@@ -66,6 +77,12 @@ internal sealed class WellKnownInteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference ComInterfaceDispatch => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices.ComWrappers", "ComWrappers/ComInterfaceDispatch");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference ComInterfaceEntry => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices.ComWrappers", "ComWrappers/ComInterfaceEntry");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
@@ -221,6 +238,18 @@ internal sealed class WellKnownInteropReferences
             returnType: new GenericParameterSignature(GenericParameterType.Method, index: 0),
             genericParameterCount: 1,
             parameterTypes: [_interopModule.CreateTypeReference("System.Runtime.InteropServices", "ComWrappers/ComInterfaceDispatch").MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry.IID</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference ComInterfaceEntryIID => field ??= ComInterfaceEntry.CreateMemberReference("IID", new FieldSignature(Guid.ToTypeSignature(isValueType: true)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry.IID</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference ComInterfaceEntryVtable => field ??= ComInterfaceEntry.CreateMemberReference("Vtable", new FieldSignature(_interopModule.CorLibTypeFactory.IntPtr));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IUnknownImpl.get_IID()</c>.

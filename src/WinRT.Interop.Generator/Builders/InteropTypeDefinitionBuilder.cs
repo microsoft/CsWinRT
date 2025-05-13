@@ -1,14 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using System;
-using System.Runtime.InteropServices;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -24,6 +24,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
     /// <param name="entriesFieldType">The <see cref="TypeDefinition"/> for the type of entries field.</param>
+    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="implType">The resulting implementation type.</param>
     /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
@@ -31,6 +32,7 @@ internal static partial class InteropTypeDefinitionBuilder
         Utf8String ns,
         Utf8String name,
         TypeDefinition entriesFieldType,
+        WellKnownInteropReferences wellKnownInteropReferences,
         ModuleDefinition module,
         out TypeDefinition implType,
         params ReadOnlySpan<(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable)> implTypes)
@@ -60,14 +62,11 @@ internal static partial class InteropTypeDefinitionBuilder
         // Create the static constructor to initialize the interface entries
         MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
 
-        // Resolve 'ComInterfaceEntry', so we can set its fields:
+        // Import the target fields (they have to be in the module, or the resulting assembly won't be valid):
         //   - [0]: Guid IID
         //   - [1]: nint Vtable
-        TypeDefinition comInterfaceEntryType = module.MetadataResolver.ResolveType(module.DefaultImporter.ImportType(typeof(ComWrappers.ComInterfaceEntry)))!;
-
-        // Import the target fields (they have to be in the module, or the resulting assembly won't be valid)
-        IFieldDescriptor comInterfaceEntryIIDField = module.DefaultImporter.ImportField(comInterfaceEntryType.Fields[0]);
-        IFieldDescriptor comInterfaceEntryVtableField = module.DefaultImporter.ImportField(comInterfaceEntryType.Fields[1]);
+        IFieldDescriptor comInterfaceEntryIIDField = wellKnownInteropReferences.ComInterfaceEntryIID.Import(module);
+        IFieldDescriptor comInterfaceEntryVtableField = wellKnownInteropReferences.ComInterfaceEntryVtable.Import(module);
 
         // We need to create a new method body bound to this constructor
         CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
@@ -82,21 +81,19 @@ internal static partial class InteropTypeDefinitionBuilder
         {
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
-            _ = cctorInstructions.Add(Call, (IMethodDefOrRef)implTypes[i].get_IID.ImportWith(module.DefaultImporter));
-            _ = cctorInstructions.Add(Ldobj, module.DefaultImporter.ImportType(typeof(Guid)));
+            _ = cctorInstructions.Add(Call, implTypes[i].get_IID.Import(module));
+            _ = cctorInstructions.Add(Ldobj, wellKnownInteropReferences.Guid.Import(module));
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryIIDField);
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
-            _ = cctorInstructions.Add(Call, (IMethodDefOrRef)implTypes[i].get_Vtable.ImportWith(module.DefaultImporter));
+            _ = cctorInstructions.Add(Call, implTypes[i].get_Vtable.Import(module));
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryVtableField);
         }
 
         _ = cctorInstructions.Add(Ret);
 
         // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
-        PointerTypeSignature vtablesPropertyType = module.DefaultImporter
-            .ImportType(typeof(ComWrappers.ComInterfaceEntry))
-            .MakePointerType();
+        PointerTypeSignature vtablesPropertyType = wellKnownInteropReferences.ComInterfaceEntry.Import(module).MakePointerType();
 
         // The 'Vtables' property doesn't have a special signature
         PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, vtablesPropertyType, []);

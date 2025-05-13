@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -367,6 +366,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType, "InterfaceEntriesImpl"),
                 entriesFieldType: wellKnownInteropDefinitions.DelegateInterfaceEntries,
+                wellKnownInteropReferences: wellKnownInteropReferences,
                 module: module,
                 implType: out implType,
                 implTypes: [
@@ -623,9 +623,7 @@ internal partial class InteropTypeDefinitionBuilder
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, wellKnownInteropReferences.WindowsRuntimeComWrappersMarshallerAttributector.ImportWith(module.DefaultImporter));
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
-            PointerTypeSignature computeVtablesReturnType = module.DefaultImporter
-                .ImportType(typeof(ComWrappers.ComInterfaceEntry))
-                .MakePointerType();
+            PointerTypeSignature computeVtablesReturnType = wellKnownInteropReferences.ComInterfaceEntry.Import(module).MakePointerType();
 
             // Define the 'ComputeVtables' method as follows:
             //
@@ -717,8 +715,8 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Prepare the external types we need in the implemented methods
-            TypeSignature delegateType2 = module.DefaultImporter.ImportTypeSignature(delegateType);
-            TypeSignature windowsRuntimeObjectReferenceValueType = module.DefaultImporter.ImportType(wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue).ToTypeSignature(isValueType: false);
+            TypeSignature delegateType2 = delegateType.Import(module);
+            TypeSignature windowsRuntimeObjectReferenceValueType = wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: false);
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //

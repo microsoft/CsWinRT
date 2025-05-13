@@ -79,7 +79,7 @@ internal partial class InteropTypeDefinitionBuilder
                         returnType: module.CorLibTypeFactory.Int32,
                         parameterTypes: [
                             module.CorLibTypeFactory.Void.MakePointerType(),
-                            module.DefaultImporter.ImportTypeSignature(typeArgument).MakePointerType()]))
+                            typeArgument.Import(module).MakePointerType()]))
                 {
                     CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(module) }
                 };
@@ -90,7 +90,7 @@ internal partial class InteropTypeDefinitionBuilder
                     .ImportWith(module.DefaultImporter);
 
                 // Reference the 'KeyValuePair<,>' type
-                ITypeDefOrRef keyValuePairTypeRef = module.DefaultImporter.ImportTypeSignature(keyValuePairType).ToTypeDefOrRef();
+                ITypeDefOrRef keyValuePairTypeRef = keyValuePairType.Import(module).ToTypeDefOrRef();
 
                 // Reference the 'KeyValuePair<,>' accessor
                 MemberReference get_MethodRef = keyValuePairTypeRef.CreateMemberReference(
@@ -244,6 +244,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
                 name: InteropUtf8NameFactory.TypeName(keyValuePairType, "InterfaceEntriesImpl"),
                 entriesFieldType: wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries,
+                wellKnownInteropReferences: wellKnownInteropReferences,
                 module: module,
                 implType: out implType,
                 implTypes: [

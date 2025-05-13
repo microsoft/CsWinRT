@@ -23,6 +23,17 @@ internal static class ImportExtensions
     }
 
     /// <summary>
+    /// Imports a method definition or reference into a module using the default reference importer.
+    /// </summary>
+    /// <param name="methodDefOrRef">The <see cref="IMethodDefOrRef"/> instance to import.</param>
+    /// <param name="module">The module to import into.</param>
+    /// <returns>The imported <see cref="IMethodDefOrRef"/>.</returns>
+    public static IMethodDefOrRef Import(this IMethodDefOrRef methodDefOrRef, ModuleDefinition module)
+    {
+        return (IMethodDefOrRef)methodDefOrRef.ImportWith(module.DefaultImporter);
+    }
+
+    /// <summary>
     /// Imports a type signature into a module using the default reference importer.
     /// </summary>
     /// <param name="typeSignature">The <see cref="TypeSignature"/> instance to import.</param>
