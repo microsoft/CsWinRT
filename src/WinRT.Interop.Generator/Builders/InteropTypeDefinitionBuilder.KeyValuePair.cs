@@ -87,7 +87,7 @@ internal partial class InteropTypeDefinitionBuilder
                 // Import 'ComWrappers.ComInterfaceDispatch.GetInstance'
                 MethodSpecification getInstanceMethod = wellKnownInteropReferences.ComInterfaceDispatchGetInstance
                     .MakeGenericInstanceMethod(module.CorLibTypeFactory.Object)
-                    .ImportWith(module.DefaultImporter);
+                    .Import(module);
 
                 // Reference the 'KeyValuePair<,>' type
                 ITypeDefOrRef keyValuePairTypeRef = keyValuePairType.Import(module).ToTypeDefOrRef();
@@ -184,7 +184,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldsflda, vftblField },
                     { Conv_U },
-                    { Call, wellKnownInteropReferences.IInspectableImplget_Vtable.ImportWith(module.DefaultImporter) },
+                    { Call, wellKnownInteropReferences.IInspectableImplget_Vtable.Import(module) },
                     { Ldobj, wellKnownInteropDefinitions.IInspectableVftbl },
                     { Stobj, wellKnownInteropDefinitions.IInspectableVftbl },
                     { Ldsflda, vftblField },
