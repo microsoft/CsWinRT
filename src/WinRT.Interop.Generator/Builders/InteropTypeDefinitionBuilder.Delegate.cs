@@ -659,7 +659,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'CreateObject' method as follows:
             //
-            // public static object CreateObject(void* value)
+            // public override object CreateObject(void* value)
             MethodDefinition createObjectMethod = new(
                 name: "CreateObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
@@ -718,7 +718,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Prepare the external types we need in the implemented methods
             TypeSignature delegateType2 = delegateType.Import(module);
-            TypeSignature windowsRuntimeObjectReferenceValueType = wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: false);
+            TypeSignature windowsRuntimeObjectReferenceValueType = wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true);
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //
@@ -726,7 +726,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition convertToUnmanagedMethod = new(
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateInstance(
+                signature: MethodSignature.CreateStatic(
                     returnType: windowsRuntimeObjectReferenceValueType,
                     parameterTypes: [delegateType2]));
 
@@ -746,7 +746,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition convertToManagedMethod = new(
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateInstance(
+                signature: MethodSignature.CreateStatic(
                     returnType: delegateType2,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
 
@@ -771,7 +771,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition boxToUnmanagedMethod = new(
                 name: "BoxToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateInstance(
+                signature: MethodSignature.CreateStatic(
                     returnType: windowsRuntimeObjectReferenceValueType,
                     parameterTypes: [delegateType2]));
 
@@ -791,7 +791,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition unboxToUnmanagedMethod = new(
                 name: "UnboxToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateInstance(
+                signature: MethodSignature.CreateStatic(
                     returnType: delegateType2,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
 

@@ -180,7 +180,7 @@ internal partial class InteropGenerator
                     delegateComWrappersCallbackType: delegateComWrappersCallbackType,
                     wellKnownInteropReferences: wellKnownInteropReferences,
                     module: module,
-                    marshallerType: out _);
+                    marshallerType: out TypeDefinition marshallerType);
 
                 // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.Delegate.Proxy(
@@ -189,10 +189,20 @@ internal partial class InteropGenerator
                     wellKnownInteropReferences: wellKnownInteropReferences,
                     module: module,
                     out _);
+
+                if (typeSignature.GenericType.Name?.AsSpan().StartsWith("EventHandler`1"u8) is true)
+                {
+                    InteropTypeDefinitionBuilder.EventSource.EventHandler1(
+                        delegateType: typeSignature,
+                        marshallerType: marshallerType,
+                        wellKnownInteropReferences: wellKnownInteropReferences,
+                        module: module,
+                        eventSourceType: out _);
+                }
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
-                //throw WellKnownInteropExceptions.DelegateTypeCodeGenerationError(typeSignature.Name, e);
+                throw WellKnownInteropExceptions.DelegateTypeCodeGenerationError(typeSignature.Name, e);
             }
         }
     }

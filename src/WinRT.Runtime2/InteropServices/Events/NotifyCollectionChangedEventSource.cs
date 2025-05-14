@@ -18,9 +18,9 @@ public sealed unsafe class NotifyCollectionChangedEventSource : EventSource<Noti
     }
 
     /// <inheritdoc/>
-    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(NotifyCollectionChangedEventHandler handler)
+    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(NotifyCollectionChangedEventHandler value)
     {
-        return NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(handler);
+        return NotifyCollectionChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
     }
 
     /// <inheritdoc/>

@@ -18,9 +18,9 @@ public sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
     }
 
     /// <inheritdoc/>
-    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(EventHandler handler)
+    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(EventHandler value)
     {
-        return EventHandlerMarshaller.ConvertToUnmanaged(handler);
+        return EventHandlerMarshaller.ConvertToUnmanaged(value);
     }
 
     /// <inheritdoc/>

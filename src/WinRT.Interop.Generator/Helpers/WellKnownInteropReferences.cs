@@ -229,6 +229,12 @@ internal sealed class WellKnownInteropReferences
     public TypeReference RestrictedErrorInfoExceptionMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling", "RestrictedErrorInfoExceptionMarshaller");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference EventHandler1EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "EventHandlerEventSource`1");
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>System.ReadOnlySpane&lt;T&gt;.this[int]</c> (of <see cref="char"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -503,7 +509,18 @@ internal sealed class WellKnownInteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference WindowsRuntimeComWrappersMarshallerAttribute_ctor => field ??= WindowsRuntimeComWrappersMarshallerAttribute
-        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void, []));
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;.ctor(...)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference EventHandler1EventSource_ctor => field ??= EventHandler1EventSource
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                _interopModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.GetOrCreateComInterfaceForObject(object)</c>.
@@ -649,5 +666,17 @@ internal sealed class WellKnownInteropReferences
             .CreateMemberReference("Invoke", MethodSignature.CreateInstance(
                 returnType: _interopModule.CorLibTypeFactory.Void,
                 parameterTypes: ((GenericInstanceTypeSignature)delegateType).TypeArguments));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TEventArgs&gt;.ctor(...)</c>.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference EventHandler1EventSourceConvertToUnmanaged(TypeSignature delegateType)
+    {
+        return EventHandler1EventSource
+            .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateInstance(
+                returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
+                parameterTypes: [delegateType]));
     }
 }

@@ -18,9 +18,9 @@ public sealed unsafe class PropertyChangedEventSource : EventSource<PropertyChan
     }
 
     /// <inheritdoc/>
-    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(PropertyChangedEventHandler handler)
+    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(PropertyChangedEventHandler value)
     {
-        return PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(handler);
+        return PropertyChangedEventHandlerMarshaller.ConvertToUnmanaged(value);
     }
 
     /// <inheritdoc/>
