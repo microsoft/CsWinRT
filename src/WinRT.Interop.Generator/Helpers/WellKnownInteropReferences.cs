@@ -35,6 +35,11 @@ internal sealed class WellKnownInteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> instance associated with this instance (for the interop assembly).
+    /// </summary>
+    public CorLibTypeFactory CorLibTypeFactory => _interopModule.CorLibTypeFactory;
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.Type</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -526,7 +531,7 @@ internal sealed class WellKnownInteropReferences
             returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
             parameterTypes: [
                 WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
-                _interopModule.CorLibTypeFactory.Int32]));
+                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
@@ -537,7 +542,7 @@ internal sealed class WellKnownInteropReferences
             returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
             parameterTypes: [
                 WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
-                _interopModule.CorLibTypeFactory.Int32]));
+                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.GetOrCreateComInterfaceForObject(object)</c>.

@@ -30,9 +30,9 @@ internal static class WellKnownTypeDefinitionFactory
             baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(wellKnownInteropReferences);
 
         // The vtable layout for 'IUnknown' looks like this:
         //
@@ -62,14 +62,14 @@ internal static class WellKnownTypeDefinitionFactory
             baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(wellKnownInteropReferences);
 
         // Get the 'IInspectable' signatures
-        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(wellKnownInteropReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(wellKnownInteropReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(wellKnownInteropReferences);
 
         // The vtable layout for 'IInspectable' looks like this:
         //
@@ -106,12 +106,12 @@ internal static class WellKnownTypeDefinitionFactory
             baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(wellKnownInteropReferences);
 
         // Also get the 'Invoke' signature
-        MethodSignature invokeType = WellKnownTypeSignatureFactory.InvokeImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature invokeType = WellKnownTypeSignatureFactory.InvokeImpl(wellKnownInteropReferences);
 
         // The vtable layout for 'IDelegate' looks like this:
         //
@@ -142,14 +142,14 @@ internal static class WellKnownTypeDefinitionFactory
             baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(wellKnownInteropReferences);
 
         // Get the 'IInspectable' signatures
-        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(wellKnownInteropReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(wellKnownInteropReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(wellKnownInteropReferences);
 
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
         MethodSignature valueType = new(
@@ -238,14 +238,14 @@ internal static class WellKnownTypeDefinitionFactory
             baseType: wellKnownInteropReferences.ValueType.Import(module));
 
         // Get the 'IUnknown' signatures
-        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(wellKnownInteropReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(wellKnownInteropReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(wellKnownInteropReferences);
 
         // Get the 'IInspectable' signatures
-        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
-        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(module.CorLibTypeFactory, wellKnownInteropReferences);
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(wellKnownInteropReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(wellKnownInteropReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(wellKnownInteropReferences);
 
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
         MethodSignature valueType = new(

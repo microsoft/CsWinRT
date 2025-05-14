@@ -534,7 +534,7 @@ internal partial class InteropTypeDefinitionBuilder
             _ = invokeInstructions.Add(Ldloc_3);
             _ = invokeInstructions.Add(Ldind_I);
             _ = invokeInstructions.Add(Ldfld, wellKnownInteropDefinitions.DelegateVftbl.Fields[3]);
-            _ = invokeInstructions.Add(Calli, WellKnownTypeSignatureFactory.InvokeImpl(module.CorLibTypeFactory, wellKnownInteropReferences).Import(module).MakeStandAloneSignature());
+            _ = invokeInstructions.Add(Calli, WellKnownTypeSignatureFactory.InvokeImpl(wellKnownInteropReferences).Import(module).MakeStandAloneSignature());
             _ = invokeInstructions.Add(Call, wellKnownInteropReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module));
             _ = invokeInstructions.Add(Leave_S, ret.CreateLabel());
 
