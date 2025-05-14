@@ -25,15 +25,15 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
-        /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
-        /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="implType">The resulting implementation type.</param>
         /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
         public static void ImplType(
             GenericInstanceTypeSignature keyValuePairType,
-            WellKnownInteropDefinitions wellKnownInteropDefinitions,
-            WellKnownInteropReferences wellKnownInteropReferences,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition implType,
             out FieldDefinition iidRvaField)
@@ -51,9 +51,9 @@ internal partial class InteropTypeDefinitionBuilder
             //
             // [FixedAddressValueType]
             // private static readonly <KeyValuePairVftbl> Vftbl;
-            FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, wellKnownInteropDefinitions.IKeyValuePairVftbl.ToTypeSignature(isValueType: true))
+            FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, interopDefinitions.IKeyValuePairVftbl.ToTypeSignature(isValueType: true))
             {
-                CustomAttributes = { new CustomAttribute(wellKnownInteropReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
+                CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
             };
 
             implType.Fields.Add(vftblField);
@@ -61,7 +61,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Helper to define an accessor method
             static MethodDefinition GetKeyOrValuePropertyAccessorMethod(
                 GenericInstanceTypeSignature keyValuePairType,
-                WellKnownInteropReferences wellKnownInteropReferences,
+                InteropReferences interopReferences,
                 ModuleDefinition module,
                 string name)
             {
@@ -81,11 +81,11 @@ internal partial class InteropTypeDefinitionBuilder
                             module.CorLibTypeFactory.Void.MakePointerType(),
                             typeArgument.Import(module).MakePointerType()]))
                 {
-                    CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(wellKnownInteropReferences, module) }
+                    CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
                 };
 
                 // Import 'ComWrappers.ComInterfaceDispatch.GetInstance'
-                MethodSpecification getInstanceMethod = wellKnownInteropReferences.ComInterfaceDispatchGetInstance
+                MethodSpecification getInstanceMethod = interopReferences.ComInterfaceDispatchGetInstance
                     .MakeGenericInstanceMethod(module.CorLibTypeFactory.Object)
                     .Import(module);
 
@@ -102,7 +102,7 @@ internal partial class InteropTypeDefinitionBuilder
                 // Jump labels
                 CilInstruction nop_beforeTry = new(Nop);
                 CilInstruction ldarg_1_tryStart = new(Ldarg_1);
-                CilInstruction call_catchStartMarshalException = new(Call, wellKnownInteropReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+                CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
                 CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
 
                 // Declare 2 variable:
@@ -124,7 +124,7 @@ internal partial class InteropTypeDefinitionBuilder
                             TryEnd = call_catchStartMarshalException.CreateLabel(),
                             HandlerStart = call_catchStartMarshalException.CreateLabel(),
                             HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                            ExceptionType = wellKnownInteropReferences.Exception.Import(module)
+                            ExceptionType = interopReferences.Exception.Import(module)
                         }
                     }
                 };
@@ -168,8 +168,8 @@ internal partial class InteropTypeDefinitionBuilder
             }
 
             // Define the accessor exports
-            MethodDefinition get_KeyMethod = GetKeyOrValuePropertyAccessorMethod(keyValuePairType, wellKnownInteropReferences, module, "get_Key");
-            MethodDefinition get_ValueMethod = GetKeyOrValuePropertyAccessorMethod(keyValuePairType, wellKnownInteropReferences, module, "get_Value");
+            MethodDefinition get_KeyMethod = GetKeyOrValuePropertyAccessorMethod(keyValuePairType, interopReferences, module, "get_Key");
+            MethodDefinition get_ValueMethod = GetKeyOrValuePropertyAccessorMethod(keyValuePairType, interopReferences, module, "get_Value");
 
             implType.Methods.Add(get_KeyMethod);
             implType.Methods.Add(get_ValueMethod);
@@ -184,15 +184,15 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldsflda, vftblField },
                     { Conv_U },
-                    { Call, wellKnownInteropReferences.IInspectableImplget_Vtable.Import(module) },
-                    { Ldobj, wellKnownInteropDefinitions.IInspectableVftbl },
-                    { Stobj, wellKnownInteropDefinitions.IInspectableVftbl },
+                    { Call, interopReferences.IInspectableImplget_Vtable.Import(module) },
+                    { Ldobj, interopDefinitions.IInspectableVftbl },
+                    { Stobj, interopDefinitions.IInspectableVftbl },
                     { Ldsflda, vftblField },
                     { Ldftn, get_KeyMethod },
-                    { Stfld, wellKnownInteropDefinitions.IKeyValuePairVftbl.Fields[6] },
+                    { Stfld, interopDefinitions.IKeyValuePairVftbl.Fields[6] },
                     { Ldsflda, vftblField },
                     { Ldftn, get_ValueMethod },
-                    { Stfld, wellKnownInteropDefinitions.IKeyValuePairVftbl.Fields[7] },
+                    { Stfld, interopDefinitions.IKeyValuePairVftbl.Fields[7] },
                     { Ret }
                 }
             };
@@ -200,15 +200,15 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the field for the IID for the 'KeyValuePair<,>' type
             WellKnownMemberDefinitionFactory.IID(
                 iidRvaFieldName: InteropUtf8NameFactory.TypeName(keyValuePairType, "IID"),
-                iidRvaDataType: wellKnownInteropDefinitions.IIDRvaDataSize_16,
-                wellKnownInteropReferences: wellKnownInteropReferences,
+                iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
+                interopReferences: interopReferences,
                 module: module,
                 iid: Guid.NewGuid(),
                 out iidRvaField,
                 out PropertyDefinition iidProperty,
                 out MethodDefinition get_iidMethod);
 
-            wellKnownInteropDefinitions.RvaFields.Fields.Add(iidRvaField);
+            interopDefinitions.RvaFields.Fields.Add(iidRvaField);
 
             implType.Properties.Add(iidProperty);
             implType.Methods.Add(get_iidMethod);
@@ -229,33 +229,33 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="keyValuePairTypeImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ImplType"/>.</param>
-        /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
-        /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="implType">The resulting implementation type.</param>
         public static void InterfaceEntriesImplType(
             GenericInstanceTypeSignature keyValuePairType,
             TypeDefinition keyValuePairTypeImplType,
-            WellKnownInteropDefinitions wellKnownInteropDefinitions,
-            WellKnownInteropReferences wellKnownInteropReferences,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition implType)
         {
             InteropTypeDefinitionBuilder.InterfaceEntriesImplType(
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType),
                 name: InteropUtf8NameFactory.TypeName(keyValuePairType, "InterfaceEntriesImpl"),
-                entriesFieldType: wellKnownInteropDefinitions.IKeyValuePairInterfaceEntries,
-                wellKnownInteropReferences: wellKnownInteropReferences,
+                entriesFieldType: interopDefinitions.IKeyValuePairInterfaceEntries,
+                interopReferences: interopReferences,
                 module: module,
                 implType: out implType,
                 implTypes: [
                     (keyValuePairTypeImplType.GetMethod("get_IID"u8), keyValuePairTypeImplType.GetMethod("get_Vtable"u8)),
-                    (wellKnownInteropReferences.IStringableImplget_IID, wellKnownInteropReferences.IStringableImplget_Vtable),
-                    (wellKnownInteropReferences.IWeakReferenceSourceImplget_IID, wellKnownInteropReferences.IWeakReferenceSourceImplget_Vtable),
-                    (wellKnownInteropReferences.IMarshalImplget_IID, wellKnownInteropReferences.IMarshalImplget_Vtable),
-                    (wellKnownInteropReferences.IAgileObjectImplget_IID, wellKnownInteropReferences.IAgileObjectImplget_Vtable),
-                    (wellKnownInteropReferences.IInspectableImplget_IID, wellKnownInteropReferences.IInspectableImplget_Vtable),
-                    (wellKnownInteropReferences.IUnknownImplget_IID, wellKnownInteropReferences.IUnknownImplget_Vtable)]);
+                    (interopReferences.IStringableImplget_IID, interopReferences.IStringableImplget_Vtable),
+                    (interopReferences.IWeakReferenceSourceImplget_IID, interopReferences.IWeakReferenceSourceImplget_Vtable),
+                    (interopReferences.IMarshalImplget_IID, interopReferences.IMarshalImplget_Vtable),
+                    (interopReferences.IAgileObjectImplget_IID, interopReferences.IAgileObjectImplget_Vtable),
+                    (interopReferences.IInspectableImplget_IID, interopReferences.IInspectableImplget_Vtable),
+                    (interopReferences.IUnknownImplget_IID, interopReferences.IUnknownImplget_Vtable)]);
         }
     }
 }

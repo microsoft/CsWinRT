@@ -8,7 +8,7 @@ namespace WindowsRuntime.InteropGenerator.References;
 /// <summary>
 /// Well known interop names (constants).
 /// </summary>
-internal static class WellKnownInteropNames
+internal static class InteropNames
 {
     /// <summary>
     /// The name of the CsWinRT runtime .dll.

@@ -17,19 +17,19 @@ internal static class InteropCustomAttributeFactory
     /// <summary>
     /// Creates a new custom attribute value for <see cref="UnmanagedCallersOnlyAttribute"/> (and imports all metadata elements for it).
     /// </summary>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
     /// <remarks>The attribute will specify the <see cref="CallConvMemberFunction"/> calling convention.</remarks>
-    public static CustomAttribute UnmanagedCallersOnly(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition module)
+    public static CustomAttribute UnmanagedCallersOnly(InteropReferences interopReferences, ModuleDefinition module)
     {
         // Get the 'Type[]' signature and reuse it (we need it for both the argument and the element)
-        TypeSignature typeArraySignature = wellKnownInteropReferences.Type.Import(module).MakeSzArrayType();
+        TypeSignature typeArraySignature = interopReferences.Type.Import(module).MakeSzArrayType();
 
         // Create the following attribute:
         //
         // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        return new(wellKnownInteropReferences.UnmanagedCallersOnlyAttribute_ctor.Import(module), new CustomAttributeSignature(
+        return new(interopReferences.UnmanagedCallersOnlyAttribute_ctor.Import(module), new CustomAttributeSignature(
             fixedArguments: [],
             namedArguments: [new CustomAttributeNamedArgument(
                 memberType: CustomAttributeArgumentMemberType.Field,
@@ -37,6 +37,6 @@ internal static class InteropCustomAttributeFactory
                 argumentType: typeArraySignature,
                 argument: new CustomAttributeArgument(
                     argumentType: typeArraySignature,
-                    elements: wellKnownInteropReferences.CallConvMemberFunction.Import(module).ToTypeSignature(isValueType: false)))]));
+                    elements: interopReferences.CallConvMemberFunction.Import(module).ToTypeSignature(isValueType: false)))]));
     }
 }

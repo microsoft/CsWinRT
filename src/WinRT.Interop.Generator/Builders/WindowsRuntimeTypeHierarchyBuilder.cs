@@ -32,15 +32,15 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// Creates a new type definition for the <c>WindowsRuntimeTypeHierarchy</c> type.
     /// </summary>
     /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
-    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="token">The token for the operation.</param>
     /// <param name="lookupType">The resulting <see cref="TypeDefinition"/>.</param>
     public static unsafe void Lookup(
         IReadOnlyDictionary<string, string> typeHierarchyEntries,
-        WellKnownInteropDefinitions wellKnownInteropDefinitions,
-        WellKnownInteropReferences wellKnownInteropReferences,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
         ModuleDefinition module,
         CancellationToken token,
         out TypeDefinition lookupType)
@@ -59,8 +59,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         {
             ValuesRva(
                 sortedTypeHierarchyEntries,
-                wellKnownInteropDefinitions,
-                wellKnownInteropReferences,
+                interopDefinitions,
+                interopReferences,
                 module,
                 out typeHierarchyValues,
                 out valuesRvaField);
@@ -82,8 +82,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             KeysRva(
                 sortedTypeHierarchyEntries,
                 typeHierarchyValues,
-                wellKnownInteropDefinitions,
-                wellKnownInteropReferences,
+                interopDefinitions,
+                interopReferences,
                 module,
                 out bucketSize,
                 out chainOffsets,
@@ -104,8 +104,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             BucketsRva(
                 bucketSize,
                 chainOffsets,
-                wellKnownInteropDefinitions,
-                wellKnownInteropReferences,
+                interopDefinitions,
+                interopReferences,
                 module,
                 out bucketsRvaField);
         }
@@ -133,8 +133,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             TryGetBaseRuntimeClassName(
                 sortedTypeHierarchyEntries,
                 bucketSize,
-                wellKnownInteropDefinitions,
-                wellKnownInteropReferences,
+                interopDefinitions,
+                interopReferences,
                 module,
                 bucketsRvaField,
                 keysRvaField,
@@ -147,7 +147,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
             // Emit the fast lookup method for following base types
             TryGetNextBaseRuntimeClassName(
-                wellKnownInteropReferences,
+                interopReferences,
                 module,
                 valuesRvaField,
                 out MethodDefinition tryGetNextBaseRuntimeClassNameMethod);
@@ -164,15 +164,15 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// Creates the 'Values' RVA field for the type hierarchy.
     /// </summary>
     /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
-    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="typeHierarchyValues">The mapping of infos of all type hierarchy values.</param>
     /// <param name="valuesRvaField">The resulting 'Values' RVA field.</param>
     private static void ValuesRva(
         SortedDictionary<string, string> typeHierarchyEntries,
-        WellKnownInteropDefinitions wellKnownInteropDefinitions,
-        WellKnownInteropReferences wellKnownInteropReferences,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
         ModuleDefinition module,
         out SortedDictionary<string, ValueInfo> typeHierarchyValues,
         out FieldDefinition valuesRvaField)
@@ -228,13 +228,13 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             ns: null,
             name: $"TypeHierarchyLookupValuesRvaData(Size={valuesRvaBuffer.WrittenCount}|Align=2)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: wellKnownInteropReferences.ValueType.Import(module))
+            baseType: interopReferences.ValueType.Import(module))
         {
             ClassLayout = new ClassLayout(packingSize: 2, classSize: (uint)valuesRvaBuffer.WrittenCount)
         };
 
         // Nest the type under the '<RvaFields>' type
-        wellKnownInteropDefinitions.RvaFields.NestedTypes.Add(valuesRvaDataType);
+        interopDefinitions.RvaFields.NestedTypes.Add(valuesRvaDataType);
 
         // Create the RVA field for the 'Values' data
         valuesRvaField = new(
@@ -246,7 +246,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         };
 
         // Add the RVA field to the parent type
-        wellKnownInteropDefinitions.RvaFields.Fields.Add(valuesRvaField);
+        interopDefinitions.RvaFields.Fields.Add(valuesRvaField);
     }
 
     /// <summary>
@@ -254,8 +254,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// </summary>
     /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
     /// <param name="typeHierarchyValues">The mapping of infos of all type hierarchy values.</param>
-    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="bucketSize">The resulting bucket size.</param>
     /// <param name="chainOffsets">The mapping of offsets of each chain.</param>
@@ -263,8 +263,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     private static void KeysRva(
         SortedDictionary<string, string> typeHierarchyEntries,
         SortedDictionary<string, ValueInfo> typeHierarchyValues,
-        WellKnownInteropDefinitions wellKnownInteropDefinitions,
-        WellKnownInteropReferences wellKnownInteropReferences,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
         ModuleDefinition module,
         out int bucketSize,
         out Dictionary<int, int> chainOffsets,
@@ -383,13 +383,13 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             ns: null,
             name: $"TypeHierarchyLookupKeysRvaData(Size={keysRvaBuffer.WrittenCount}|Align=2)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: wellKnownInteropReferences.ValueType.Import(module))
+            baseType: interopReferences.ValueType.Import(module))
         {
             ClassLayout = new ClassLayout(packingSize: 2, classSize: (uint)keysRvaBuffer.WrittenCount)
         };
 
         // Nest the type under the '<RvaFields>' type
-        wellKnownInteropDefinitions.RvaFields.NestedTypes.Add(keysRvaDataType);
+        interopDefinitions.RvaFields.NestedTypes.Add(keysRvaDataType);
 
         // Create the RVA field for the 'Keys' data
         keysRvaField = new(
@@ -401,7 +401,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         };
 
         // Add the RVA field to the parent type
-        wellKnownInteropDefinitions.RvaFields.Fields.Add(keysRvaField);
+        interopDefinitions.RvaFields.Fields.Add(keysRvaField);
     }
 
     /// <summary>
@@ -409,15 +409,15 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// </summary>
     /// <param name="bucketSize">The resulting bucket size.</param>
     /// <param name="chainOffsets">The mapping of offsets of each chain.</param>
-    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="bucketsRvaField">The resulting 'Buckets' RVA field.</param>
     private static void BucketsRva(
         int bucketSize,
         Dictionary<int, int> chainOffsets,
-        WellKnownInteropDefinitions wellKnownInteropDefinitions,
-        WellKnownInteropReferences wellKnownInteropReferences,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
         ModuleDefinition module,
         out FieldDefinition bucketsRvaField)
     {
@@ -434,13 +434,13 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             ns: null,
             name: $"TypeHierarchyLookupBucketsRvaData(Size={bucketsRvaBuffer.WrittenCount}|Align=4)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: wellKnownInteropReferences.ValueType.Import(module))
+            baseType: interopReferences.ValueType.Import(module))
         {
             ClassLayout = new ClassLayout(packingSize: 4, classSize: (uint)bucketsRvaBuffer.WrittenCount)
         };
 
         // Nest the type under the '<RvaFields>' type
-        wellKnownInteropDefinitions.RvaFields.NestedTypes.Add(bucketsRvaDataType);
+        interopDefinitions.RvaFields.NestedTypes.Add(bucketsRvaDataType);
 
         // Create the RVA field for the 'Buckets' data
         bucketsRvaField = new(
@@ -452,7 +452,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         };
 
         // Add the RVA field to the parent type
-        wellKnownInteropDefinitions.RvaFields.Fields.Add(bucketsRvaField);
+        interopDefinitions.RvaFields.Fields.Add(bucketsRvaField);
     }
 
     /// <summary>
@@ -460,8 +460,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// </summary>
     /// <param name="typeHierarchyEntries">The type hierarchy entries for the application.</param>
     /// <param name="bucketSize">The resulting bucket size.</param>
-    /// <param name="wellKnownInteropDefinitions">The <see cref="WellKnownInteropDefinitions"/> instance to use.</param>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="bucketsRvaField">The 'Buckets' RVA field (created by <see cref="BucketsRva"/>).</param>
     /// <param name="keysRvaField">The 'Keys' RVA field (created by <see cref="KeysRva"/>).</param>
@@ -470,8 +470,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     private static void TryGetBaseRuntimeClassName(
         SortedDictionary<string, string> typeHierarchyEntries,
         int bucketSize,
-        WellKnownInteropDefinitions wellKnownInteropDefinitions,
-        WellKnownInteropReferences wellKnownInteropReferences,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
         ModuleDefinition module,
         FieldDefinition bucketsRvaField,
         FieldDefinition keysRvaField,
@@ -490,8 +490,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Boolean,
                 parameterTypes: [
-                    wellKnownInteropReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module),
-                    wellKnownInteropReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module).MakeByReferenceType(),
+                    interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module),
+                    interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module).MakeByReferenceType(),
                     module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
         {
             // Both 'baseRuntimeClassName' and 'nextBaseRuntimeClassNameIndex' are '[out]' parameters.
@@ -500,7 +500,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 new ParameterDefinition(sequence: 1, name: null, attributes: default)
                 {
-                    CustomAttributes = { new CustomAttribute(wellKnownInteropReferences.ScopedRefAttribute_ctor.Import(module)) }
+                    CustomAttributes = { new CustomAttribute(interopReferences.ScopedRefAttribute_ctor.Import(module)) }
                 },
                 new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out),
                 new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out)
@@ -508,7 +508,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         };
 
         // Import 'MemoryMarshal.CreateReadOnlySpan<char>'
-        MethodSpecification createReadOnlySpanMethod = wellKnownInteropReferences.MemoryMarshalCreateSpan
+        MethodSpecification createReadOnlySpanMethod = interopReferences.MemoryMarshalCreateSpan
             .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
             .Import(module);
 
@@ -541,7 +541,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         CilLocalVariable loc_1_keysRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
         CilLocalVariable loc_2_keyLength = new(module.CorLibTypeFactory.Int32);
         CilLocalVariable loc_3_valueOffset = new(module.CorLibTypeFactory.Int32);
-        CilLocalVariable loc_4_keySpan = new(wellKnownInteropReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module));
+        CilLocalVariable loc_4_keySpan = new(interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module));
         CilLocalVariable loc_5_valuesRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
         CilLocalVariable loc_6_valueLength = new(module.CorLibTypeFactory.Int32);
 
@@ -562,25 +562,25 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 // Set the 'out' parameters to default
                 { Ldarg_1 },
-                { Initobj, wellKnownInteropReferences.ReadOnlySpanChar.Import(module) },
+                { Initobj, interopReferences.ReadOnlySpanChar.Import(module) },
                 { Ldarg_2 },
                 { Ldc_I4_0 },
                 { Stind_I4 },
 
                 // Emit the range checks
                 { Ldarga_S, arg_0_runtimeClassName },
-                { Call, wellKnownInteropReferences.ReadOnlySpanCharget_Length.Import(module) },
+                { Call, interopReferences.ReadOnlySpanCharget_Length.Import(module) },
                 { CilInstruction.CreateLdcI4(minLength) },
                 { Blt, ldc_I4_0_returnFalse.CreateLabel() },
                 { Ldarga_S, arg_0_runtimeClassName },
-                { Call, wellKnownInteropReferences.ReadOnlySpanCharget_Length.Import(module) },
+                { Call, interopReferences.ReadOnlySpanCharget_Length.Import(module) },
                 { CilInstruction.CreateLdcI4(maxLength) },
                 { Bgt_S, ldc_I4_0_returnFalse.CreateLabel() },
 
                 // Compute the hash and get the bucket index
                 { ldsflda_rangeCheckSuccess },
                 { Ldarg_0 },
-                { Call, wellKnownInteropDefinitions.InteropImplementationDetails.GetMethod("ComputeReadOnlySpanHash"u8) },
+                { Call, interopDefinitions.InteropImplementationDetails.GetMethod("ComputeReadOnlySpanHash"u8) },
                 { Ldc_I4, bucketSize },
                 { Rem_Un },
                 { Ldc_I4_4 },
@@ -629,7 +629,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Stloc_1 },
                 { Ldarg_0 },
                 { Ldloc_S, loc_4_keySpan },
-                { Call, wellKnownInteropReferences.MemoryExtensionsSequenceEqualChar.Import(module) },
+                { Call, interopReferences.MemoryExtensionsSequenceEqualChar.Import(module) },
                 { Brfalse_S, ldloc_1_loopStart.CreateLabel() },
 
                 // Read the matching value and the index of the next parent from the 'Values' RVA field and set the arguments
@@ -656,7 +656,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldloc_S, loc_5_valuesRef },
                 { Ldloc_S, loc_6_valueLength },
                 { Call, createReadOnlySpanMethod },
-                { Stobj, wellKnownInteropReferences.ReadOnlySpanChar.Import(module) },
+                { Stobj, interopReferences.ReadOnlySpanChar.Import(module) },
 
                 // Success epilogue
                 { Ldc_I4_1 },
@@ -672,12 +672,12 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <summary>
     /// Creates the 'TryGetNextBaseRuntimeClassName' method for the type hierarchy.
     /// </summary>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="valuesRvaField">The 'Values' RVA field (created by <see cref="ValuesRva"/>).</param>
     /// <param name="tryGetNextBaseRuntimeClassNameMethod">The resulting 'TryGetNextBaseRuntimeClassName' method.</param>
     private static void TryGetNextBaseRuntimeClassName(
-        WellKnownInteropReferences wellKnownInteropReferences,
+        InteropReferences interopReferences,
         ModuleDefinition module,
         FieldDefinition valuesRvaField,
         out MethodDefinition tryGetNextBaseRuntimeClassNameMethod)
@@ -695,7 +695,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 returnType: module.CorLibTypeFactory.Boolean,
                 parameterTypes: [
                     module.CorLibTypeFactory.Int32,
-                    wellKnownInteropReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module).MakeByReferenceType(),
+                    interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module).MakeByReferenceType(),
                     module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
         {
             // Both 'baseRuntimeClassName' and 'nextBaseRuntimeClassNameIndex' are '[out]' parameters
@@ -707,7 +707,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         };
 
         // Import 'MemoryMarshal.CreateReadOnlySpan<char>'
-        MethodSpecification createReadOnlySpanMethod = wellKnownInteropReferences.MemoryMarshalCreateSpan
+        MethodSpecification createReadOnlySpanMethod = interopReferences.MemoryMarshalCreateSpan
             .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
             .Import(module);
 
@@ -728,7 +728,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 // Set the 'out' parameters to default
                 { Ldarg_1 },
-                { Initobj, wellKnownInteropReferences.ReadOnlySpanChar.Import(module) },
+                { Initobj, interopReferences.ReadOnlySpanChar.Import(module) },
                 { Ldarg_2 },
                 { Ldc_I4_0 },
                 { Stind_I4 },
@@ -762,7 +762,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 { Ldloc_0 },
                 { Ldloc_1 },
                 { Call, createReadOnlySpanMethod },
-                { Stobj, wellKnownInteropReferences.ReadOnlySpanChar.Import(module) },
+                { Stobj, interopReferences.ReadOnlySpanChar.Import(module) },
 
                 // Success epilogue
                 { Ldc_I4_1 },

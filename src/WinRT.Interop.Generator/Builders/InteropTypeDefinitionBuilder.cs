@@ -23,7 +23,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
     /// <param name="entriesFieldType">The <see cref="TypeDefinition"/> for the type of entries field.</param>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="implType">The resulting implementation type.</param>
     /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
@@ -31,7 +31,7 @@ internal static partial class InteropTypeDefinitionBuilder
         Utf8String ns,
         Utf8String name,
         TypeDefinition entriesFieldType,
-        WellKnownInteropReferences wellKnownInteropReferences,
+        InteropReferences interopReferences,
         ModuleDefinition module,
         out TypeDefinition implType,
         params ReadOnlySpan<(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable)> implTypes)
@@ -53,7 +53,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private, entriesFieldType.ToTypeSignature(isValueType: true))
         {
-            CustomAttributes = { new CustomAttribute(wellKnownInteropReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
+            CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
         };
 
         implType.Fields.Add(entriesField);
@@ -64,8 +64,8 @@ internal static partial class InteropTypeDefinitionBuilder
         // Import the target fields (they have to be in the module, or the resulting assembly won't be valid):
         //   - [0]: Guid IID
         //   - [1]: nint Vtable
-        IFieldDescriptor comInterfaceEntryIIDField = wellKnownInteropReferences.ComInterfaceEntryIID.Import(module);
-        IFieldDescriptor comInterfaceEntryVtableField = wellKnownInteropReferences.ComInterfaceEntryVtable.Import(module);
+        IFieldDescriptor comInterfaceEntryIIDField = interopReferences.ComInterfaceEntryIID.Import(module);
+        IFieldDescriptor comInterfaceEntryVtableField = interopReferences.ComInterfaceEntryVtable.Import(module);
 
         // We need to create a new method body bound to this constructor
         CilInstructionCollection cctorInstructions = cctor.CreateAndBindCilMethodBody().Instructions;
@@ -81,7 +81,7 @@ internal static partial class InteropTypeDefinitionBuilder
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
             _ = cctorInstructions.Add(Call, implTypes[i].get_IID.Import(module));
-            _ = cctorInstructions.Add(Ldobj, wellKnownInteropReferences.Guid.Import(module));
+            _ = cctorInstructions.Add(Ldobj, interopReferences.Guid.Import(module));
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryIIDField);
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
@@ -92,7 +92,7 @@ internal static partial class InteropTypeDefinitionBuilder
         _ = cctorInstructions.Add(Ret);
 
         // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
-        PointerTypeSignature vtablesPropertyType = wellKnownInteropReferences.ComInterfaceEntry.Import(module).MakePointerType();
+        PointerTypeSignature vtablesPropertyType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
 
         // The 'Vtables' property doesn't have a special signature
         PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, vtablesPropertyType, []);

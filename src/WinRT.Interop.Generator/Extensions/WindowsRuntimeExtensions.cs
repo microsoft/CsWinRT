@@ -52,30 +52,30 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Checks whether a <see cref="TypeDefinition"/> represents a fundamental Windows Runtime type.
         /// </summary>
-        /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>Whether the input type is a fundamental Windows Runtime type.</returns>
-        public bool IsFundamentalWindowsRuntimeType(WellKnownInteropReferences wellKnownInteropReferences)
+        public bool IsFundamentalWindowsRuntimeType(InteropReferences interopReferences)
         {
             // Check all fundamental primitive types
-            if (SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.Boolean) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.String) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.Single) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.Double) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.UInt16) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.UInt32) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.UInt64) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.Int16) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.Int32) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.Int64) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.Char) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.Byte) ||
-                SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.CorLibTypeFactory.Object))
+            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Boolean) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.String) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Single) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Double) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt16) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt32) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.UInt64) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int16) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int32) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Int64) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Char) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Byte) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CorLibTypeFactory.Object))
             {
                 return true;
             }
 
             // 'Guid' is special and also counts as a fundamental type
-            return SignatureComparer.IgnoreVersion.Equals(type, wellKnownInteropReferences.Guid);
+            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
         }
     }
 
@@ -92,14 +92,14 @@ internal static class WindowsRuntimeExtensions
                 // If the assembly references the Windows SDK projections, gather it
                 foreach (AssemblyReference reference in module.AssemblyReferences)
                 {
-                    if (reference.Name?.AsSpan().SequenceEqual(WellKnownInteropNames.WindowsSDKDllNameUtf8[..^4]) is true)
+                    if (reference.Name?.AsSpan().SequenceEqual(InteropNames.WindowsSDKDllNameUtf8[..^4]) is true)
                     {
                         return true;
                     }
                 }
 
                 // Otherwise, check if it's the Windows SDK projections assembly itself
-                return module.Name?.AsSpan().SequenceEqual(WellKnownInteropNames.WindowsSDKDllNameUtf8) is true;
+                return module.Name?.AsSpan().SequenceEqual(InteropNames.WindowsSDKDllNameUtf8) is true;
             }
         }
     }

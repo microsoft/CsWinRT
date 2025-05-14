@@ -10,12 +10,12 @@ namespace WindowsRuntime.InteropGenerator.References;
 /// <summary>
 /// Well known definitions to APIs from the interop assembly being produced.
 /// </summary>
-internal sealed class WellKnownInteropDefinitions
+internal sealed class InteropDefinitions
 {
     /// <summary>
-    /// The <see cref="WellKnownInteropReferences"/> instance to use.
+    /// The <see cref="InteropReferences"/> instance to use.
     /// </summary>
-    private readonly WellKnownInteropReferences _wellKnownInteropReferences;
+    private readonly InteropReferences _interopReferences;
 
     /// <summary>
     /// The <see cref="ModuleDefinition"/> for the interop assembly being produced.
@@ -23,13 +23,13 @@ internal sealed class WellKnownInteropDefinitions
     private readonly ModuleDefinition _interopModule;
 
     /// <summary>
-    /// Creates a new <see cref="WellKnownInteropReferences"/> instance.
+    /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
-    /// <param name="wellKnownInteropReferences">The <see cref="WellKnownInteropReferences"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="interopModule">The <see cref="ModuleDefinition"/> for the interop assembly being produced.</param>
-    public WellKnownInteropDefinitions(WellKnownInteropReferences wellKnownInteropReferences, ModuleDefinition interopModule)
+    public InteropDefinitions(InteropReferences interopReferences, ModuleDefinition interopModule)
     {
-        _wellKnownInteropReferences = wellKnownInteropReferences;
+        _interopReferences = interopReferences;
         _interopModule = interopModule;
     }
 
@@ -37,7 +37,7 @@ internal sealed class WellKnownInteropDefinitions
     /// Gets the <see cref="TypeDefinition"/> for the <c>InteropImplementationDetails</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition InteropImplementationDetails => field ??= WellKnownTypeDefinitionFactory.InteropImplementationDetails(_wellKnownInteropReferences, _interopModule);
+    public TypeDefinition InteropImplementationDetails => field ??= WellKnownTypeDefinitionFactory.InteropImplementationDetails(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>RvaFields</c> type.
@@ -46,7 +46,7 @@ internal sealed class WellKnownInteropDefinitions
     /// This type has exactly one nested type, for RVA fields of size 16 (ie. <see cref="System.Guid"/>).
     /// </remarks>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_wellKnownInteropReferences, _interopModule);
+    public TypeDefinition RvaFields => field ??= WellKnownTypeDefinitionFactory.RvaFields(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IIDRvaDataSize=16</c> type.
@@ -57,41 +57,41 @@ internal sealed class WellKnownInteropDefinitions
     /// Gets the <see cref="TypeDefinition"/> for the <c>IUnknownVftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition IUnknownVftbl => field ??= WellKnownTypeDefinitionFactory.IUnknownVftbl(_wellKnownInteropReferences, _interopModule);
+    public TypeDefinition IUnknownVftbl => field ??= WellKnownTypeDefinitionFactory.IUnknownVftbl(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IInspectableVftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition IInspectableVftbl => field ??= WellKnownTypeDefinitionFactory.IInspectableVftbl(_wellKnownInteropReferences, _interopModule);
+    public TypeDefinition IInspectableVftbl => field ??= WellKnownTypeDefinitionFactory.IInspectableVftbl(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>DelegateVftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition DelegateVftbl => field ??= WellKnownTypeDefinitionFactory.DelegateVftbl(_wellKnownInteropReferences, _interopModule);
+    public TypeDefinition DelegateVftbl => field ??= WellKnownTypeDefinitionFactory.DelegateVftbl(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>DelegateReferenceVftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition DelegateReferenceVftbl => field ??= WellKnownTypeDefinitionFactory.DelegateReferenceVftbl(_wellKnownInteropReferences, _interopModule);
+    public TypeDefinition DelegateReferenceVftbl => field ??= WellKnownTypeDefinitionFactory.DelegateReferenceVftbl(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>DelegateInterfaceEntries</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition DelegateInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(_wellKnownInteropReferences, _interopModule);
+    public TypeDefinition DelegateInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairVftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition IKeyValuePairVftbl => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairVftbl(_wellKnownInteropReferences, _interopModule);
+    public TypeDefinition IKeyValuePairVftbl => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairVftbl(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairInterfaceEntries</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_wellKnownInteropReferences, _interopModule);
+    public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_interopReferences, _interopModule);
 }

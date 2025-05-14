@@ -11,7 +11,7 @@ namespace WindowsRuntime.InteropGenerator.References;
 /// <summary>
 /// Well known references to APIs used in interop scenarios.
 /// </summary>
-internal sealed class WellKnownInteropReferences
+internal sealed class InteropReferences
 {
     /// <summary>
     /// The <see cref="ModuleDefinition"/> for the interop assembly being produced.
@@ -24,11 +24,11 @@ internal sealed class WellKnownInteropReferences
     private readonly ModuleDefinition _windowsRuntimeModule;
 
     /// <summary>
-    /// Creates a new <see cref="WellKnownInteropReferences"/> instance.
+    /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="interopModule">The <see cref="ModuleDefinition"/> for the interop assembly being produced.</param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
-    public WellKnownInteropReferences(ModuleDefinition interopModule, ModuleDefinition windowsRuntimeModule)
+    public InteropReferences(ModuleDefinition interopModule, ModuleDefinition windowsRuntimeModule)
     {
         _interopModule = interopModule;
         _windowsRuntimeModule = windowsRuntimeModule;
