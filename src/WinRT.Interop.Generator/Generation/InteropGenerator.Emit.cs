@@ -190,9 +190,19 @@ internal partial class InteropGenerator
                     module: module,
                     out _);
 
+                // Define the 'EventSource' types (for when the delegate types are used for events on projected types)
                 if (typeSignature.GenericType.Name?.AsSpan().StartsWith("EventHandler`1"u8) is true)
                 {
                     InteropTypeDefinitionBuilder.EventSource.EventHandler1(
+                        delegateType: typeSignature,
+                        marshallerType: marshallerType,
+                        wellKnownInteropReferences: wellKnownInteropReferences,
+                        module: module,
+                        eventSourceType: out _);
+                }
+                else if (typeSignature.GenericType.Name?.AsSpan().StartsWith("TypedEventHandler`2"u8) is true)
+                {
+                    InteropTypeDefinitionBuilder.EventSource.EventHandler2(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
                         wellKnownInteropReferences: wellKnownInteropReferences,

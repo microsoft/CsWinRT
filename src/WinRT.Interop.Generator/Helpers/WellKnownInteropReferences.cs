@@ -235,6 +235,12 @@ internal sealed class WellKnownInteropReferences
     public TypeReference EventHandler1EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "EventHandlerEventSource`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference EventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "EventHandlerEventSource`2");
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>System.ReadOnlySpane&lt;T&gt;.this[int]</c> (of <see cref="char"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -523,6 +529,17 @@ internal sealed class WellKnownInteropReferences
                 _interopModule.CorLibTypeFactory.Int32]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference EventHandler2EventSource_ctor => field ??= EventHandler2EventSource
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                _interopModule.CorLibTypeFactory.Int32]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.GetOrCreateComInterfaceForObject(object)</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -675,6 +692,18 @@ internal sealed class WellKnownInteropReferences
     public MemberReference EventHandler1EventSourceConvertToUnmanaged(TypeSignature delegateType)
     {
         return EventHandler1EventSource
+            .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateInstance(
+                returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
+                parameterTypes: [delegateType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.EventHandlerEventSource&lt;TSender, TEventArgs&gt;.ctor(...)</c>.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference EventHandler2EventSourceConvertToUnmanaged(TypeSignature delegateType)
+    {
+        return EventHandler2EventSource
             .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateInstance(
                 returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
                 parameterTypes: [delegateType]));
