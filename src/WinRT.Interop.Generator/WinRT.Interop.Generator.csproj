@@ -8,6 +8,8 @@
     <PublishAot>true</PublishAot>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <StackTraceSupport>false</StackTraceSupport>
       
     <!-- Set the root namespace to match the runtime -->
     <RootNamespace>WindowsRuntime.InteropGenerator</RootNamespace>
