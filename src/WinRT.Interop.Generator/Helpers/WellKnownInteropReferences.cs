@@ -35,6 +35,12 @@ internal sealed class WellKnownInteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Type</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference Type => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "Type");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.ValueType</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -73,6 +79,12 @@ internal sealed class WellKnownInteropReferences
     public TypeReference MemoryExtensions => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "MemoryExtensions");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.InteropServices.MemoryMarshal</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference MemoryMarshal => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices", "MemoryMarshal");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -91,10 +103,34 @@ internal sealed class WellKnownInteropReferences
     public TypeReference InAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices", "InAttribute");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.CompilerServices.IsReadOnlyAttribute</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IsReadOnlyAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices", "IsReadOnlyAttribute");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.CompilerServices.FixedAddressValueTypeAttribute</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference FixedAddressValueTypeAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices", "FixedAddressValueTypeAttribute");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.CompilerServices.ScopedRefAttribute</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference ScopedRefAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices", "ScopedRefAttribute");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.CompilerServices.CallConvMemberFunction</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference CallConvMemberFunction => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.CompilerServices", "CallConvMemberFunction");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference UnmanagedCallersOnlyAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices", "UnmanagedCallersOnlyAttribute");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeClassNameAttribute</c>.
@@ -193,35 +229,6 @@ internal sealed class WellKnownInteropReferences
     public TypeReference RestrictedErrorInfoExceptionMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling", "RestrictedErrorInfoExceptionMarshaller");
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given delegate type.
-    /// </summary>
-    /// <param name="delegateType">The input delegate type.</param>
-    public MemberReference DelegateCtor(TypeSignature delegateType)
-    {
-        // Get the special delegate constructor taking the target and function pointer. We leverage this to create
-        // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
-        return delegateType
-            .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
-                returnType: _interopModule.CorLibTypeFactory.Void,
-                parameterTypes: [_interopModule.CorLibTypeFactory.Object, _interopModule.CorLibTypeFactory.IntPtr]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for the <c>Invoke</c> method of a given delegate type.
-    /// </summary>
-    /// <param name="delegateType">The input delegate type.</param>
-    public MemberReference DelegateInvoke(TypeSignature delegateType)
-    {
-        // TODO: also handle non-generic delegate types
-        return delegateType
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Invoke", MethodSignature.CreateInstance(
-                returnType: _interopModule.CorLibTypeFactory.Void,
-                parameterTypes: ((GenericInstanceTypeSignature)delegateType).TypeArguments));
-    }
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>System.ReadOnlySpane&lt;T&gt;.this[int]</c> (of <see cref="char"/>).
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -252,6 +259,46 @@ internal sealed class WellKnownInteropReferences
                 ReadOnlySpan.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
                 ReadOnlySpan.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0))]))
         .MakeGenericInstanceMethod(_interopModule.CorLibTypeFactory.Char);
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>System.Runtime.InteropServices.MemoryMarshal.CreateSpan</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference MemoryMarshalCreateSpan => field ??= MemoryMarshal
+        .CreateMemberReference("CreateReadOnlySpan", MethodSignature.CreateStatic(
+            returnType: ReadOnlySpan.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
+            genericParameterCount: 1,
+            parameterTypes: [
+                new GenericParameterSignature(GenericParameterType.Method, 0).MakeByReferenceType(),
+                _interopModule.CorLibTypeFactory.Int32]));
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.CompilerServices.FixedAddressValueTypeAttribute</c>'s constructor.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference FixedAddressValueTypeAttribute_ctor => field ??= FixedAddressValueTypeAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(returnType: _interopModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.CompilerServices.IsReadOnlyAttribute</c>'s constructor.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IsReadOnlyAttribute_ctor => field ??= IsReadOnlyAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(returnType: _interopModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.CompilerServices.ScopedRefAttribute</c>'s constructor.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference ScopedRefAttribute_ctor => field ??= ScopedRefAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(returnType: _interopModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute</c>'s constructor.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference UnmanagedCallersOnlyAttribute_ctor => field ??= UnmanagedCallersOnlyAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(returnType: _interopModule.CorLibTypeFactory.Void));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance&lt;T&gt;(ComWrappers.ComInterfaceDispatch*)</c>.
@@ -455,7 +502,7 @@ internal sealed class WellKnownInteropReferences
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.ctor()</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public MemberReference WindowsRuntimeComWrappersMarshallerAttributector => field ??= WindowsRuntimeComWrappersMarshallerAttribute
+    public MemberReference WindowsRuntimeComWrappersMarshallerAttribute_ctor => field ??= WindowsRuntimeComWrappersMarshallerAttribute
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void, []));
 
     /// <summary>
@@ -574,4 +621,33 @@ internal sealed class WellKnownInteropReferences
         .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
             returnType: _windowsRuntimeModule.CorLibTypeFactory.Int32,
             parameterTypes: [new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Exception"u8).ToTypeSignature(isValueType: false)]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given delegate type.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference Delegate_ctor(TypeSignature delegateType)
+    {
+        // Get the special delegate constructor taking the target and function pointer. We leverage this to create
+        // a delegate instance that directly wraps our 'WindowsRuntimeObjectReference' object and 'Invoke' method.
+        return delegateType
+            .ToTypeDefOrRef()
+            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [_interopModule.CorLibTypeFactory.Object, _interopModule.CorLibTypeFactory.IntPtr]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>Invoke</c> method of a given delegate type.
+    /// </summary>
+    /// <param name="delegateType">The input delegate type.</param>
+    public MemberReference DelegateInvoke(TypeSignature delegateType)
+    {
+        // TODO: also handle non-generic delegate types
+        return delegateType
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Invoke", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: ((GenericInstanceTypeSignature)delegateType).TypeArguments));
+    }
 }

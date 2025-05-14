@@ -54,7 +54,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
         FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private, entriesFieldType.ToTypeSignature(isValueType: true))
         {
-            CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(module) }
+            CustomAttributes = { new CustomAttribute(wellKnownInteropReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
         };
 
         implType.Fields.Add(entriesField);

@@ -63,7 +63,7 @@ internal static class WellKnownMemberDefinitionFactory
         // Create the 'IID' property
         iidProperty = new PropertyDefinition("IID"u8, PropertyAttributes.None, iidPropertySignature)
         {
-            CustomAttributes = { InteropCustomAttributeFactory.IsReadOnly(module) },
+            CustomAttributes = { new CustomAttribute(wellKnownInteropReferences.IsReadOnlyAttribute_ctor.Import(module)) },
             GetMethod = get_IidMethod
         };
 

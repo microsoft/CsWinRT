@@ -1,6 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics.Tensors;
+using System.Runtime.InteropServices;
+using System.Threading;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
@@ -10,15 +17,7 @@ using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using CommunityToolkit.HighPerformance;
 using CommunityToolkit.HighPerformance.Buffers;
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics.Tensors;
-using System.Runtime.InteropServices;
-using System.Threading;
 using WindowsRuntime.InteropGenerator.Errors;
-using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -501,7 +500,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 new ParameterDefinition(sequence: 1, name: null, attributes: default)
                 {
-                    CustomAttributes = { InteropCustomAttributeFactory.ScopedRef(module) }
+                    CustomAttributes = { new CustomAttribute(wellKnownInteropReferences.ScopedRefAttribute_ctor.Import(module)) }
                 },
                 new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out),
                 new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out)
@@ -509,16 +508,9 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         };
 
         // Import 'MemoryMarshal.CreateReadOnlySpan<char>'
-        MethodSpecification createReadOnlySpanMethod = module.DefaultImporter
-            .ImportType(typeof(MemoryMarshal))
-            .CreateMemberReference("CreateReadOnlySpan", MethodSignature.CreateStatic(
-                returnType: module.DefaultImporter.ImportType(typeof(ReadOnlySpan<>)).MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
-                genericParameterCount: 1,
-                parameterTypes: [
-                    new GenericParameterSignature(GenericParameterType.Method, 0).MakeByReferenceType(),
-                    module.CorLibTypeFactory.Int32]))
+        MethodSpecification createReadOnlySpanMethod = wellKnownInteropReferences.MemoryMarshalCreateSpan
             .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
-            .ImportWith(module.DefaultImporter);
+            .Import(module);
 
         // Compute the range check arguments
         int minLength = typeHierarchyEntries.Keys.Min(static key => key.Length);
@@ -715,16 +707,9 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         };
 
         // Import 'MemoryMarshal.CreateReadOnlySpan<char>'
-        MethodSpecification createReadOnlySpanMethod = module.DefaultImporter
-            .ImportType(typeof(MemoryMarshal))
-            .CreateMemberReference("CreateReadOnlySpan", MethodSignature.CreateStatic(
-                returnType: module.DefaultImporter.ImportType(typeof(ReadOnlySpan<>)).MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
-                genericParameterCount: 1,
-                parameterTypes: [
-                    new GenericParameterSignature(GenericParameterType.Method, 0).MakeByReferenceType(),
-                    module.CorLibTypeFactory.Int32]))
+        MethodSpecification createReadOnlySpanMethod = wellKnownInteropReferences.MemoryMarshalCreateSpan
             .MakeGenericInstanceMethod(module.CorLibTypeFactory.Char)
-            .ImportWith(module.DefaultImporter);
+            .Import(module);
 
         // Labels for jumps
         CilInstruction ldc_I4_0_returnFalse = new(Ldc_I4_0);

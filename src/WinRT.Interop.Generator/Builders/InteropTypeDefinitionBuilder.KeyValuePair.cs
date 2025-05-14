@@ -53,7 +53,7 @@ internal partial class InteropTypeDefinitionBuilder
             // private static readonly <KeyValuePairVftbl> Vftbl;
             FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, wellKnownInteropDefinitions.IKeyValuePairVftbl.ToTypeSignature(isValueType: true))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(module) }
+                CustomAttributes = { new CustomAttribute(wellKnownInteropReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
             };
 
             implType.Fields.Add(vftblField);
@@ -81,7 +81,7 @@ internal partial class InteropTypeDefinitionBuilder
                             module.CorLibTypeFactory.Void.MakePointerType(),
                             typeArgument.Import(module).MakePointerType()]))
                 {
-                    CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(module) }
+                    CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(wellKnownInteropReferences, module) }
                 };
 
                 // Import 'ComWrappers.ComInterfaceDispatch.GetInstance'

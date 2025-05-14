@@ -53,7 +53,7 @@ internal partial class InteropTypeDefinitionBuilder
             // private static readonly <DelegateVftbl> Vftbl;
             FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, wellKnownInteropDefinitions.DelegateVftbl.ToTypeSignature(isValueType: true))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(module) }
+                CustomAttributes = { new CustomAttribute(wellKnownInteropReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
             };
 
             implType.Fields.Add(vftblField);
@@ -72,7 +72,7 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(wellKnownInteropReferences, module) }
             };
 
             implType.Methods.Add(invokeMethod);
@@ -204,7 +204,7 @@ internal partial class InteropTypeDefinitionBuilder
             // private static readonly <DelegateReferenceVftbl> Vftbl;
             FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, wellKnownInteropDefinitions.DelegateReferenceVftbl.ToTypeSignature(isValueType: true))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.FixedAddressValueType(module) }
+                CustomAttributes = { new CustomAttribute(wellKnownInteropReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
             };
 
             implType.Fields.Add(vftblField);
@@ -222,7 +222,7 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(wellKnownInteropReferences, module) }
             };
 
             implType.Methods.Add(valueMethod);
@@ -438,7 +438,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, delegateImplType.GetMethod("get_IID"u8) },
                     { Call, wellKnownInteropReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
                     { Ldftn, nativeDelegateType.GetMethod("Invoke"u8) },
-                    { Newobj, wellKnownInteropReferences.DelegateCtor(delegateType).Import(module) },
+                    { Newobj, wellKnownInteropReferences.Delegate_ctor(delegateType).Import(module) },
                     { Ret }
                 }
             };
@@ -492,7 +492,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Import 'WindowsRuntimeObjectReferenceValue', compute it just once
             TypeSignature windowsRuntimeObjectReferenceValueType = wellKnownInteropReferences.WindowsRuntimeObjectReferenceValue
-                .ImportWith(module.DefaultImporter)
+                .Import(module)
                 .ToTypeSignature(isValueType: true);
 
             // Declare 3 variables:
@@ -622,7 +622,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(ctor);
 
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, wellKnownInteropReferences.WindowsRuntimeComWrappersMarshallerAttributector.ImportWith(module.DefaultImporter));
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, wellKnownInteropReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
             PointerTypeSignature computeVtablesReturnType = wellKnownInteropReferences.ComInterfaceEntry.Import(module).MakePointerType();
