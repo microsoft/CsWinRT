@@ -20,7 +20,7 @@ public static unsafe class WindowsRuntimeValueTypeMarshaller
     /// <param name="iid">The IID of the <c>IReference`1</c> interface for the Windows Runtime value type.</param>
     /// <returns>The resulting marshalled object for <paramref name="value"/>, as a boxed <c>IReference`1</c> interface pointer.</returns>
     /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged<T>(T? value, in Guid iid)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged<T>(T? value, scoped in Guid iid)
         where T : struct
     {
         if (value is null)

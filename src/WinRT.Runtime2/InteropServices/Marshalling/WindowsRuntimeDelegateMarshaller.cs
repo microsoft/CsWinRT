@@ -35,7 +35,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// </para>
     /// </remarks>
     /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(Delegate? value, in Guid iid)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(Delegate? value, scoped in Guid iid)
     {
         if (value is null)
         {
@@ -89,7 +89,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// <returns>The resulting marshalled object for <paramref name="value"/>, as a boxed <c>IReference`1</c> interface pointer.</returns>
     /// <exception cref="NotSupportedException">Thrown if <paramref name="value"/> is a native delegate object that can't be boxed.</exception>
     /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
-    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(Delegate? value, in Guid iid)
+    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(Delegate? value, scoped in Guid iid)
     {
         if (value is null)
         {

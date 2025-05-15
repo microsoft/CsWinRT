@@ -35,7 +35,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller
     /// Calling this method with <typeparamref name="T"/> being a non-interface type results in undefined behavior.
     /// </para>
     /// </remarks>
-    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged<T>(T? value, in Guid iid)
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged<T>(T? value, scoped in Guid iid)
         where T : class
     {
         if (value is null)
