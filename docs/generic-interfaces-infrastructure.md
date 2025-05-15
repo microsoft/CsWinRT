@@ -53,9 +53,9 @@ Next, an interface is needed for each "Methods" implementation, for each generic
 ```csharp
 public interface IIteratorMethods<T>
 {
-    static abstract T get_Current(WindowsRuntimeObjectReference objectReference);
+    static abstract T Current(WindowsRuntimeObjectReference objectReference);
 
-    static abstract bool get_HasCurrent(WindowsRuntimeObjectReference objectReference);
+    static abstract bool HasCurrent(WindowsRuntimeObjectReference objectReference);
 
     static abstract bool MoveNext(WindowsRuntimeObjectReference obj);
 
@@ -70,16 +70,16 @@ To pair each of these "Methods" interfaces, we have a "Methods" type for the map
 ```csharp
 public static class IEnumeratorMethods<T>
 {
-    public static T get_Current<TMethods>(WindowsRuntimeObjectReference objectReference)
+    public static T Current<TMethods>(WindowsRuntimeObjectReference objectReference)
         where TMethods : IIteratorMethods<T>
     {
-        return TMethods.get_Current(objectReference);
+        return TMethods.Current(objectReference);
     }
 
-    public static bool get_HasCurrent<TMethods>(WindowsRuntimeObjectReference objectReference)
+    public static bool HasCurrent<TMethods>(WindowsRuntimeObjectReference objectReference)
         where TMethods : IIteratorMethods<T>
     {
-        return TMethods.get_HasCurrent(objectReference);
+        return TMethods.HasCurrent(objectReference);
     }
 
     // Other methods...
@@ -121,12 +121,12 @@ Moving on to `WinRT.Interop.dll`, the first generated type is an implementation 
 ```csharp
 public abstract class IIterator_stringMethods : IIteratorMethods<string>
 {
-    public static string get_Current(WindowsRuntimeObjectReference objectReference)
+    public static string Current(WindowsRuntimeObjectReference objectReference)
     {
         throw new NotImplementedException();
     }
 
-    public static bool get_HasCurrent(WindowsRuntimeObjectReference objectReference)
+    public static bool HasCurrent(WindowsRuntimeObjectReference objectReference)
     {
         throw new NotImplementedException();
     }
@@ -142,9 +142,9 @@ To pair this "Methods" interface implementation, a "stub" non-generic implementa
 ```csharp
 public static class IEnumerator_stringMethods
 {
-    public static string get_Current(WindowsRuntimeObjectReference objectReference)
+    public static string Current(WindowsRuntimeObjectReference objectReference)
     {
-        return IEnumeratorMethods<string>.get_Current<IIterator_stringMethods>(objectReference);
+        return IEnumeratorMethods<string>.Current<IIterator_stringMethods>(objectReference);
     }
 
     // Other methods...
@@ -157,7 +157,7 @@ For instance, here's an example of what a callsite from a projection assembly ca
 
 ```csharp
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-public static extern string get_Current(
+public static extern string Current(
     [UnsafeAccessorType("ABI.System.Collections.Generic.IEnumerator_stringMethods, WinRT.Interop.dll")] object? _,
     WindowsRuntimeObjectReference objectReference);
 ```
@@ -172,9 +172,9 @@ public sealed class IEnumerator_stringNativeObject : WindowsRuntimeEnumerator<st
     {
     }
 
-    protected override string CurrentNative => IEnumerator_stringMethods.get_Current(NativeObjectReference);
+    protected override string CurrentNative => IEnumerator_stringMethods.Current(NativeObjectReference);
 
-    protected override bool HasCurrentNative => IIterator_stringMethods.get_HasCurrent(NativeObjectReference);
+    protected override bool HasCurrentNative => IIterator_stringMethods.HasCurrent(NativeObjectReference);
 
     protected override bool MoveNextNative()
     {
@@ -198,7 +198,7 @@ public abstract unsafe class IEnumerator_stringComWrappersCallback : IWindowsRun
         {
             WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in IEnumerator_stringImpl.IID)!;
 
-            result = new WindowsRuntimeIEnumerator_string(objectReference);
+            result = new IEnumerator_stringNativeObject(objectReference);
 
             return true;
         }
@@ -226,7 +226,7 @@ public sealed unsafe class IEnumerator_stringComWrappersMarshallerAttribute : Wi
     {
         WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.AsUnsafe(value, in IEnumerator_stringImpl.IID)!;
 
-        return new WindowsRuntimeIEnumerator_string(objectReference);
+        return new IEnumerator_stringNativeObject(objectReference);
     }
 }
 ```
@@ -248,7 +248,7 @@ public interface IEnumerator_stringInterfaceImpl : IEnumerator<string>
             var thisObject = (WindowsRuntimeObject)this;
             var thisReference = thisObject.GetObjectReferenceForInterface(typeof(IEnumerator<string>).TypeHandle);
 
-            return IEnumerator_stringMethods.get_Current(thisReference);
+            return IEnumerator_stringMethods.Current(thisReference);
         }
     }
 
@@ -271,9 +271,9 @@ Where `DynamicInterfaceCastableImplementationTypeMapGroup` is the type map group
 To marshal managed objects to native, we might also need some additional state to correctly adapt the semantics of the managed interfaces to the native ones. This might not be needed for all generic interfaces, but for those that do need additional state (such as `IEnumerator<T>`), this is what the adapter type would look like:
 
 ```csharp
-public sealed class IEnumerator_stringImplAdapter
+public sealed class IEnumerator_stringAdapterImpl
 {
-    public IEnumerator_stringImplAdapter(IEnumerator<string> value)
+    public IEnumerator_stringAdapterImpl(IEnumerator<string> value)
     {
     }
 
@@ -291,13 +291,13 @@ This is a simple thing wrapper around a given interface instance, with additiona
 Next, we need a table to associate these adapters to each managed object instance:
 
 ```csharp
-public static class IEnumerator_stringImplAdapterTable
+public static class IEnumerator_stringAdapterImplTable
 {
-    private static readonly ConditionalWeakTable<IEnumerator<string>, IEnumerator_stringCcwAdapter> Table = [];
+    private static readonly ConditionalWeakTable<IEnumerator<string>, IEnumerator_stringAdapterImpl> Table = [];
 
-    public static IEnumerator_stringCcwAdapter GetAdapter(IEnumerator<string> value)
+    public static IEnumerator_stringAdapterImpl GetAdapterImpl(IEnumerator<string> value)
     {
-        return Table.GetValue(value, static value => new IEnumerator_stringCcwAdapter(value));
+        return Table.GetValue(value, static value => new IEnumerator_stringAdapterImpl(value));
     }
 }
 ```
@@ -345,8 +345,8 @@ public static unsafe class IEnumerator_stringImpl
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x94, 0x2B, 0xEA, 0x94,
                 0xCC, 0xE9,
                 0xE0, 0x49,
@@ -358,7 +358,7 @@ public static unsafe class IEnumerator_stringImpl
                 0x8F,
                 0x5B,
                 0x90
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -377,7 +377,7 @@ public static unsafe class IEnumerator_stringImpl
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<IEnumerator<string>>((ComInterfaceDispatch*)thisPtr);
 
-            *result = IEnumerator_stringImplAdapterTable.GetAdapter(unboxedValue).get_Current();
+            *result = IEnumerator_stringImplAdapterTable.GetAdapterImpl(unboxedValue).Current();
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -392,6 +392,9 @@ public static unsafe class IEnumerator_stringImpl
 ```
 
 This will either invoke methods directly on the CCW target, if no additional adapter logic is needed, or invoke them on the adapter instance retrieved via the generated table. This will allow tracking any additional state per-CCW, like mentioned above (which is eg. required for properly marshalling `IEnumerator<T>` to native).
+
+> [!NOTE]
+> For interfaces that do not need additional state for adapting CCWs for native consumers, the "AdapterImpl" and "AdapterImplTable" types can be completely emitted. Rather, the CCW vtable methods would directly call the stateless adapter APIs via the generated "Methods" types.
 
 ## Marshalling
 
