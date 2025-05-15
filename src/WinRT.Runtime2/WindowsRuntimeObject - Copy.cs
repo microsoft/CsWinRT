@@ -20,6 +20,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
+#pragma warning disable CS1591
+
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.Collections.IIterator`1<String>",
     target: typeof(IEnumerator_string),
@@ -29,14 +31,23 @@ using static System.Runtime.InteropServices.ComWrappers;
     source: typeof(IEnumerator<string>),
     proxy: typeof(IEnumerator_string))]
 
-namespace WindowsRuntime;
+namespace ABI.System.Collections.Generic;
 
 [IEnumerator_stringComWrappersMarshaller]
 public static class IEnumerator_string;
 
 public unsafe struct IEnumerator_stringVftbl
 {
-    // all vtable slots...
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+    public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+    public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+    public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+    public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+    public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Current;
+    public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> get_HasCurrent;
+    public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> MoveNext;
+    public delegate* unmanaged[MemberFunction]<void*, int, void**, uint*, HRESULT> GetMany;
 }
 
 public static class IEnumerator_stringTable
@@ -219,16 +230,18 @@ public static class IEnumerator_stringMethods
     // etc.
 }
 
-public sealed class WindowsRuntimeIEnumerator_string : WindowsRuntimeEnumerator<string>
+public sealed class IEnumerator_stringNativeObject : WindowsRuntimeEnumerator<string>
 {
-    public WindowsRuntimeIEnumerator_string(WindowsRuntimeObjectReference nativeObjectReference)
+    public IEnumerator_stringNativeObject(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
 
-    public override string Current => IEnumerator_stringMethods.get_Current(NativeObjectReference);
+    protected override string CurrentNative => IEnumerator_stringMethods.get_Current(NativeObjectReference);
 
-    public override bool MoveNext()
+    protected override bool HasCurrentNative => IIterator_stringMethods.get_HasCurrent(NativeObjectReference);
+
+    protected override bool MoveNextNative()
     {
         return IIterator_stringMethods.MoveNext(NativeObjectReference);
     }
@@ -255,23 +268,31 @@ public static class IEnumeratorMethods<T>
         return TMethods.get_Current(objectReference);
     }
 
-    // etc.
+    public static bool get_HasCurrent<TMethods>(WindowsRuntimeObjectReference objectReference)
+        where TMethods : IIteratorMethods<T>
+    {
+        return TMethods.get_HasCurrent(objectReference);
+    }
+
+    // Other methods...
 }
 
 public abstract class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
 {
-    // a whole bunch of state
-
     public WindowsRuntimeEnumerator(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
 
-    /// <inheritdoc/>
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
-    /// <inheritdoc/>
     protected sealed override bool IsOverridableInterface(in Guid iid);
+
+    protected abstract T CurrentNative { get; }
+
+    protected abstract bool HasCurrentNative { get; }
+
+    protected abstract bool MoveNextNative { get; }
 
     public T Current { get; }
 
@@ -290,9 +311,6 @@ public abstract class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnume
     {
         throw new NotSupportedException();
     }
-
-    protected abstract T IIteratorCurrent();
-    protected abstract bool MoveNext();
 
     public WindowsRuntimeObjectReferenceValue GetInterface()
     {

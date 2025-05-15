@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Diagnostics.CodeAnalysis;
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -30,4 +33,12 @@ public unsafe interface IWindowsRuntimeComWrappersCallback
     /// </para>
     /// </remarks>
     static abstract object CreateObject(void* value);
+}
+
+public unsafe interface IWindowsRuntimeUnsealedComWrappersCallback
+{
+    static abstract bool TryCreateObject(
+        void* value,
+        ReadOnlySpan<char> runtimeClassName,
+        [NotNullWhen(true)] out object? result);
 }

@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -33,6 +35,9 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// </remarks>
     [ThreadStatic]
     internal static WindowsRuntimeComWrappersCallback? ComWrappersCallback;
+
+    [ThreadStatic]
+    internal static WindowsRuntimeUnsealedComWrappersCallback? UnsealedComWrappersCallback;
 
     /// <summary>
     /// The statically-visible object type that should be used by <see cref="CreateObject"/>, if available.
@@ -186,6 +191,8 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         {
             void* interfacePointer = CreateObjectTargetInterfacePointer;
 
+            Debug.Assert(interfacePointer != null);
+
             // In some cases, callers might have provided a derived interfcae pointer, if statically visible.
             // For instance, if a native API returned an instance of a delegate type, we can reuse that, rather
             // than doing a 'QueryInterface' call again from here (because 'CreateObject' only ever gets an
@@ -193,6 +200,29 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             return interfacePointer != null
                 ? createObjectCallback.CreateObject(interfacePointer)
                 : createObjectCallback.CreateObject((void*)externalComObject);
+        }
+
+        ReadOnlySpan<char> runtimeClassName = [];
+
+        if (UnsealedComWrappersCallback is { } unsealedCreateObjectCallback)
+        {
+            void* interfacePointer = CreateObjectTargetInterfacePointer;
+
+            Debug.Assert(interfacePointer != null);
+
+            HSTRING hstring = null;
+
+            HRESULT hresult = IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &hstring);
+
+            Marshal.ThrowExceptionForHR(hresult);
+
+            runtimeClassName = HStringMarshaller.ConvertToManagedUnsafe(hstring);
+
+            if (unsealedCreateObjectCallback.TryCreateObject(interfacePointer, runtimeClassName, out object? result))
+            {
+                // yay, fast path
+                return result;
+            }
         }
 
         // Store the type so we do a single read from TLS
