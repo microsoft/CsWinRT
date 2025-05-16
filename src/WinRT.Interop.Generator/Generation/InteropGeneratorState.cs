@@ -20,6 +20,24 @@ internal sealed class InteropGeneratorState
     /// <summary>Backing field for <see cref="TypeHierarchyEntries"/>.</summary>
     private readonly ConcurrentDictionary<string, string> _typeHierarchyEntries = [];
 
+    /// <summary>Backing field for <see cref="IEnumerator1Types"/>.</summary>
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ienumerator1Types = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="IEnumerable1Types"/>.</summary>
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ienumerable1Types = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="IEnumerable1Types"/>.</summary>
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ilist1Types = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="IEnumerable1Types"/>.</summary>
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ireadOnlyList1Types = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="IEnumerable1Types"/>.</summary>
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _idictionary2Types = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>Backing field for <see cref="IEnumerable1Types"/>.</summary>
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ireadOnlyDictionary2Types = new(SignatureComparer.IgnoreVersion);
+
     /// <summary>Backing field for <see cref="GenericDelegateTypes"/>.</summary>
     private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _genericDelegateTypes = new(SignatureComparer.IgnoreVersion);
 
@@ -45,6 +63,36 @@ internal sealed class InteropGeneratorState
     /// Gets the type hierarchy entries.
     /// </summary>
     public IReadOnlyDictionary<string, string> TypeHierarchyEntries => _typeHierarchyEntries;
+
+    /// <summary>
+    /// Gets all <see cref="IEnumerator{T}"/> types.
+    /// </summary>
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IEnumerator1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_ienumerator1Types.Keys;
+
+    /// <summary>
+    /// Gets all <see cref="IEnumerable{T}"/> types.
+    /// </summary>
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IEnumerable1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_ienumerable1Types.Keys;
+
+    /// <summary>
+    /// Gets all <see cref="IList{T}"/> types.
+    /// </summary>
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IList1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_ilist1Types.Keys;
+
+    /// <summary>
+    /// Gets all <see cref="IReadOnlyList{T}"/> types.
+    /// </summary>
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IReadOnlyList1Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_ireadOnlyList1Types.Keys;
+
+    /// <summary>
+    /// Gets all <see cref="IDictionary{TKey, TValue}"/> types.
+    /// </summary>
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IDictionary2Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_idictionary2Types.Keys;
+
+    /// <summary>
+    /// Gets all <see cref="IReadOnlyDictionary{TKey, TValue}"/> types.
+    /// </summary>
+    public IReadOnlyCollection<GenericInstanceTypeSignature> IReadOnlyDictionary2Types => (IReadOnlyCollection<GenericInstanceTypeSignature>)_ireadOnlyDictionary2Types.Keys;
 
     /// <summary>
     /// Gets all generic delegate types.
@@ -78,6 +126,72 @@ internal sealed class InteropGeneratorState
         ThrowIfReadOnly();
 
         _ = _typeHierarchyEntries.TryAdd(runtimeClassName, baseRuntimeClassName);
+    }
+
+    /// <summary>
+    /// Tracks a <see cref="IEnumerator{T}"/> type.
+    /// </summary>
+    /// <param name="enumeratorType">The <see cref="IEnumerator{T}"/> type.</param>
+    public void TrackIEnumerator1Type(GenericInstanceTypeSignature enumeratorType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _ienumerator1Types.TryAdd(enumeratorType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a <see cref="IEnumerable{T}"/> type.
+    /// </summary>
+    /// <param name="enumerableType">The <see cref="IEnumerable{T}"/> type.</param>
+    public void TrackIEnumerable1Type(GenericInstanceTypeSignature enumerableType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _ienumerable1Types.TryAdd(enumerableType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a <see cref="IList{T}"/> type.
+    /// </summary>
+    /// <param name="listType">The <see cref="IList{T}"/> type.</param>
+    public void TrackIList1Type(GenericInstanceTypeSignature listType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _ilist1Types.TryAdd(listType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a <see cref="IReadOnlyList{T}"/> type.
+    /// </summary>
+    /// <param name="listType">The <see cref="IReadOnlyList{T}"/> type.</param>
+    public void TrackIReadOnlyList1Type(GenericInstanceTypeSignature listType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _ireadOnlyList1Types.TryAdd(listType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a <see cref="IDictionary{TKey, TValue}"/> type.
+    /// </summary>
+    /// <param name="dictionaryType">The <see cref="IDictionary{TKey, TValue}"/> type.</param>
+    public void TrackIDictionary2Type(GenericInstanceTypeSignature dictionaryType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _idictionary2Types.TryAdd(dictionaryType, 0);
+    }
+
+    /// <summary>
+    /// Tracks a <see cref="IReadOnlyDictionary{TKey, TValue}"/> type.
+    /// </summary>
+    /// <param name="dictionaryType">The <see cref="IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+    public void TrackIReadOnlyDictionary2Type(GenericInstanceTypeSignature dictionaryType)
+    {
+        ThrowIfReadOnly();
+
+        _ = _ireadOnlyDictionary2Types.TryAdd(dictionaryType, 0);
     }
 
     /// <summary>

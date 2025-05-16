@@ -114,10 +114,40 @@ internal sealed class InteropReferences
     public TypeReference EventHandler2 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "EventHandler`2");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IEnumerator{T}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IEnumerator1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IEnumerator`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IEnumerable{T}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IEnumerable1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IEnumerable`1");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IList{T}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IList1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IList`1");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyList{T}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IReadOnlyList1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IReadOnlyList`1");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IDictionary2 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IDictionary`2");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IReadOnlyDictionary2 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IReadOnlyDictionary`2");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/>.

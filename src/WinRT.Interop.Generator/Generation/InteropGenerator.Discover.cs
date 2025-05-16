@@ -186,9 +186,11 @@ internal partial class InteropGenerator
                     continue;
                 }
 
+                TypeDefinition typeDefinition = typeSignature.Resolve()!;
+
                 // Gather all known delegate types. We want to gather all projected delegate types,
                 // plus any custom mapped ones. For now, that's only 'EventHandler<T>'.
-                if (typeSignature.Resolve() is { IsDelegate: true } &&
+                if (typeDefinition.IsDelegate &&
                     (typeSignature.IsCustomMappedWindowsRuntimeDelegateType(interopReferences) ||
                      typeSignature.GenericType.IsProjectedWindowsRuntimeType))
                 {
@@ -196,10 +198,39 @@ internal partial class InteropGenerator
                 }
 
                 // Gather all 'KeyValuePair<,>' instances
-                if (typeSignature.Resolve() is { IsValueType: true } &&
+                if (typeDefinition.IsValueType &&
                     SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair))
                 {
                     state.TrackKeyValuePairType(typeSignature);
+                }
+
+                // Track all projected Windows Runtime generic interfaces
+                if (typeDefinition.IsInterface)
+                {
+                    if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
+                    {
+                        state.TrackIEnumerator1Type(typeSignature);
+                    }
+                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerable1))
+                    {
+                        state.TrackIEnumerable1Type(typeSignature);
+                    }
+                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
+                    {
+                        state.TrackIList1Type(typeSignature);
+                    }
+                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
+                    {
+                        state.TrackIReadOnlyList1Type(typeSignature);
+                    }
+                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
+                    {
+                        state.TrackIDictionary2Type(typeSignature);
+                    }
+                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
+                    {
+                        state.TrackIReadOnlyDictionary2Type(typeSignature);
+                    }
                 }
             }
         }
