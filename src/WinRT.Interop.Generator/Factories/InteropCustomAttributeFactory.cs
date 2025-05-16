@@ -70,4 +70,27 @@ internal static class InteropCustomAttributeFactory
                     argumentType: module.CorLibTypeFactory.Boolean,
                     value: allowMultiple))]));
     }
+
+    /// <summary>
+    /// Creates a new custom attribute value for <c>IgnoreAccessChecksToAttribute</c>.
+    /// </summary>
+    /// <param name="assemblyName">The target assemby name.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
+    public static CustomAttribute IgnoreAccessChecksTo(
+        string assemblyName,
+        InteropDefinitions interopDefinitions,
+        ModuleDefinition module)
+    {
+        // Get the constructor taking 'assemblyName' as a string argument
+        MethodDefinition ctor = interopDefinitions.IgnoreAccessChecksToAttribute.GetConstructor(module.CorLibTypeFactory.String)!;
+
+        // Create the following attribute:
+        //
+        // [IgnoreAccessChecksTo(<assemblyName>)]
+        return new(ctor, new CustomAttributeSignature(new CustomAttributeArgument(
+            argumentType: module.CorLibTypeFactory.String,
+            value: assemblyName)));
+    }
 }

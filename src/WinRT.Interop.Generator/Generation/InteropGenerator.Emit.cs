@@ -62,7 +62,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Add all '[IgnoreAccessChecksTo]' attributes
-        DefineIgnoreAccessChecksToAttributes(interopDefinitions, module);
+        DefineIgnoreAccessChecksToAttributes(state, interopDefinitions, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -91,11 +91,15 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.WinRTModuleNotFound();
         }
 
+        AssemblyDefinition winRTInteropAssembly = new(InteropNames.InteropDllNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
         ModuleDefinition winRTInteropModule = new(InteropNames.InteropDllName, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib());
 
         winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
         winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(windowsRuntimeModule.Assembly?.Name, windowsRuntimeModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
         winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(state.AssemblyResolver);
+
+        // Add the module to the parent assembly
+        winRTInteropAssembly.Modules.Add(winRTInteropModule);
 
         return winRTInteropModule;
     }
@@ -296,9 +300,13 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the <c>[IgnoreAccessChecksTo]</c> attribute, and applies it to the assembly for each input reference.
     /// </summary>
+    /// <param name="state"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
-    private static void DefineIgnoreAccessChecksToAttributes(InteropDefinitions interopDefinitions, ModuleDefinition module)
+    private static void DefineIgnoreAccessChecksToAttributes(
+        InteropGeneratorState state,
+        InteropDefinitions interopDefinitions,
+        ModuleDefinition module)
     {
         try
         {
@@ -306,6 +314,7 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IgnoreAccessChecksToAttribute);
 
             // Next, emit all the '[IgnoreAccessChecksTo]' attributes for each type
+            IgnoreAccessChecksToBuilder.AssemblyAttributes(state.ModuleDefinitions.Values, interopDefinitions, module);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
