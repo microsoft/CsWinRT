@@ -52,6 +52,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <CsWinRTUseEnvironmentalTools Condition="'$(CsWinRTUseEnvironmentalTools)' == '' AND '$(VSCMD_VER)' != ''">true</CsWinRTUseEnvironmentalTools>
     <CsWinRTUseEnvironmentalTools Condition="'$(CsWinRTUseEnvironmentalTools)' == ''">false</CsWinRTUseEnvironmentalTools>
+
+    <!-- Generate a C# version of DllGetActivationFactory which matches the native export. -->
+    <CsWinRTGenerateManagedDllGetActivationFactory Condition="'$(CsWinRTGenerateManagedDllGetActivationFactory)' != 'true'">false</CsWinRTGenerateManagedDllGetActivationFactory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -62,6 +65,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTCcwLookupTableGeneratorEnabled" />
     <CompilerVisibleProperty Include="CsWinRTMergeReferencedActivationFactories" />
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
+    <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
