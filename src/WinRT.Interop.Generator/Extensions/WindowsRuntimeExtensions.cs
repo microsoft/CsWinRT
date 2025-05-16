@@ -27,7 +27,6 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Checks whether a <see cref="TypeDefinition"/> represents a projected Windows Runtime class type.
         /// </summary>
-        /// <returns>Whether the type represents a projected Windows Runtime class type.</returns>
         public bool IsProjectedWindowsRuntimeClassType
         {
             get
@@ -39,7 +38,7 @@ internal static class WindowsRuntimeExtensions
                 }
 
                 // Ignore static types
-                if (type.IsAbstract && type.IsSealed)
+                if (type.IsStatic)
                 {
                     return false;
                 }
@@ -76,6 +75,21 @@ internal static class WindowsRuntimeExtensions
 
             // 'Guid' is special and also counts as a fundamental type
             return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
+        }
+    }
+
+    extension(GenericInstanceTypeSignature signature)
+    {
+        /// <summary>
+        /// Checks whether a <see cref="GenericInstanceTypeSignature"/> represents a projected Windows Runtime delegate type.
+        /// </summary>
+        /// <returns>Whether the type represents a projected Windows Runtime class type.</returns>
+        public bool IsCustomMappedWindowsRuntimeDelegateType(InteropReferences interopReferences)
+        {
+            return
+                SignatureComparer.IgnoreVersion.Equals(signature.GenericType, interopReferences.EventHandler) ||
+                SignatureComparer.IgnoreVersion.Equals(signature.GenericType, interopReferences.EventHandler1) ||
+                SignatureComparer.IgnoreVersion.Equals(signature.GenericType, interopReferences.EventHandler2);
         }
     }
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Resolvers;
 using WindowsRuntime.InteropGenerator.Visitors;
 
@@ -164,6 +165,10 @@ internal partial class InteropGenerator
     {
         try
         {
+            // Create the interop references scoped to this module. We're not going to use any references
+            // from the 'WinRT.Runtime.dll' assembly, so we can just pass 'null' here and suppress warnings.
+            InteropReferences interopReferences = new(module, null!);
+
             foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
             {
                 args.Token.ThrowIfCancellationRequested();
@@ -184,8 +189,7 @@ internal partial class InteropGenerator
                 // Gather all known delegate types. We want to gather all projected delegate types,
                 // plus any custom mapped ones. For now, that's only 'EventHandler<T>'.
                 if (typeSignature.Resolve() is { IsDelegate: true } &&
-                    ((typeSignature.GenericType.Namespace?.AsSpan().SequenceEqual("System"u8) is true &&
-                     typeSignature.GenericType.Name?.AsSpan().StartsWith("EventHandler`1"u8) is true) ||
+                    (typeSignature.IsCustomMappedWindowsRuntimeDelegateType(interopReferences) ||
                      typeSignature.GenericType.IsProjectedWindowsRuntimeType))
                 {
                     state.TrackGenericDelegateType(typeSignature);
@@ -193,9 +197,9 @@ internal partial class InteropGenerator
 
                 // Gather all 'KeyValuePair<,>' instances
                 if (typeSignature.Resolve() is { IsValueType: true } &&
-                    typeSignature is { GenericType.Name.Value: "KeyValuePair`2" } keyValuePairType)
+                    SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair))
                 {
-                    state.TrackKeyValuePairType(keyValuePairType);
+                    state.TrackKeyValuePairType(typeSignature);
                 }
             }
         }

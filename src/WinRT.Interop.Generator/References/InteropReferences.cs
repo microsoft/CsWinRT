@@ -96,6 +96,36 @@ internal sealed class InteropReferences
     public TypeReference Guid => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "Guid");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.EventHandler</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference EventHandler => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "EventHandler");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.EventHandler&lt;TEventArgs&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference EventHandler1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "EventHandler`1");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.EventHandler&lt;TSender, TEventArgs&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference EventHandler2 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "EventHandler`2");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Collections.Generic.IEnumerable&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IEnumerable1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IEnumerable`1");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Collections.Generic.KeyValuePair&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference KeyValuePair => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "KeyValuePair`2");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.MemoryExtensions</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
