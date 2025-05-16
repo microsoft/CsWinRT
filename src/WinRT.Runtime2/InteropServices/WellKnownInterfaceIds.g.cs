@@ -16,8 +16,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00,
                 0x00, 0x00,
@@ -29,7 +29,7 @@ internal static class WellKnownInterfaceIds
                 0x00,
                 0x00,
                 0x46
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -41,8 +41,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xE0, 0xE2, 0x86, 0xAF,
                 0x2D, 0xB1,
                 0x6A, 0x4C,
@@ -54,7 +54,7 @@ internal static class WellKnownInterfaceIds
                 0x10,
                 0x1E,
                 0x90
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -66,8 +66,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x37, 0x00, 0x00, 0x00,
                 0x00, 0x00,
                 0x00, 0x00,
@@ -79,7 +79,7 @@ internal static class WellKnownInterfaceIds
                 0x00,
                 0x00,
                 0x46
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -91,8 +91,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x38, 0x00, 0x00, 0x00,
                 0x00, 0x00,
                 0x00, 0x00,
@@ -104,7 +104,7 @@ internal static class WellKnownInterfaceIds
                 0x00,
                 0x00,
                 0x46
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -116,8 +116,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x3A, 0xB1, 0xD3, 0x11,
                 0x0E, 0x18,
                 0x89, 0x47,
@@ -129,7 +129,7 @@ internal static class WellKnownInterfaceIds
                 0x28,
                 0x93,
                 0xE6
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -141,8 +141,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xF8, 0x43, 0xBD, 0x64,
                 0xEE, 0xBF,
                 0xC4, 0x4E,
@@ -154,7 +154,7 @@ internal static class WellKnownInterfaceIds
                 0x8D,
                 0xAE,
                 0x21
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -166,8 +166,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x35, 0x00, 0x00, 0x00,
                 0x00, 0x00,
                 0x00, 0x00,
@@ -179,7 +179,7 @@ internal static class WellKnownInterfaceIds
                 0x00,
                 0x00,
                 0x46
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -191,8 +191,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x94, 0x2B, 0xEA, 0x94,
                 0xCC, 0xE9,
                 0xE0, 0x49,
@@ -204,7 +204,7 @@ internal static class WellKnownInterfaceIds
                 0x8F,
                 0x5B,
                 0x90
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -216,8 +216,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x03, 0x00, 0x00, 0x00,
                 0x00, 0x00,
                 0x00, 0x00,
@@ -229,7 +229,7 @@ internal static class WellKnownInterfaceIds
                 0x00,
                 0x00,
                 0x46
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -241,8 +241,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xE0, 0x0F, 0x5A, 0x90,
                 0x53, 0xBC,
                 0xDF, 0x11,
@@ -254,7 +254,7 @@ internal static class WellKnownInterfaceIds
                 0xC6,
                 0x86,
                 0xDA
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -266,8 +266,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xEF, 0x0F, 0x5A, 0x90,
                 0x53, 0xBC,
                 0xDF, 0x11,
@@ -279,7 +279,7 @@ internal static class WellKnownInterfaceIds
                 0xC6,
                 0x86,
                 0xDA
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -291,8 +291,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x35, 0x32, 0x0D, 0x5B,
                 0xBA, 0x4D,
                 0x44, 0x4D,
@@ -304,7 +304,7 @@ internal static class WellKnownInterfaceIds
                 0x4F,
                 0xD0,
                 0x4D
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -316,8 +316,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xDA, 0x01, 0x00, 0x00,
                 0x00, 0x00,
                 0x00, 0x00,
@@ -329,7 +329,7 @@ internal static class WellKnownInterfaceIds
                 0x00,
                 0x00,
                 0x46
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -341,8 +341,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x74, 0x97, 0x29, 0x0A,
                 0x4E, 0x3E,
                 0x42, 0xFC,
@@ -354,7 +354,7 @@ internal static class WellKnownInterfaceIds
                 0x05,
                 0xCA,
                 0x57
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -366,8 +366,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x20, 0xB1, 0xF2, 0x1C,
                 0x7D, 0x54,
                 0x1B, 0x10,
@@ -379,7 +379,7 @@ internal static class WellKnownInterfaceIds
                 0x2B,
                 0xD1,
                 0x19
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -391,8 +391,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x60, 0x3D, 0x0B, 0xDF,
                 0x8F, 0x54,
                 0x1B, 0x10,
@@ -404,7 +404,7 @@ internal static class WellKnownInterfaceIds
                 0x2B,
                 0xD1,
                 0x19
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -416,8 +416,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xF3, 0xDB, 0xA2, 0x04,
                 0x83, 0xDF,
                 0x6C, 0x11,
@@ -429,7 +429,7 @@ internal static class WellKnownInterfaceIds
                 0xF6,
                 0xE0,
                 0x7D
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -441,8 +441,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xC4, 0xE5, 0x46, 0x57,
                 0x97, 0x5B,
                 0x4C, 0x42,
@@ -454,7 +454,7 @@ internal static class WellKnownInterfaceIds
                 0x57,
                 0x34,
                 0xDD
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -466,8 +466,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x92, 0x70, 0xBA, 0x82,
                 0x88, 0x4C,
                 0x7D, 0x42,
@@ -479,7 +479,7 @@ internal static class WellKnownInterfaceIds
                 0xFE,
                 0xB6,
                 0x7E
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -491,8 +491,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x01, 0x76, 0xB1, 0x90,
                 0x65, 0xB0,
                 0x6E, 0x58,
@@ -504,7 +504,7 @@ internal static class WellKnownInterfaceIds
                 0x69,
                 0x52,
                 0x84
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -516,8 +516,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x9C, 0xD6, 0x75, 0xCF,
                 0xF4, 0xF2,
                 0x6B, 0x48,
@@ -529,7 +529,7 @@ internal static class WellKnownInterfaceIds
                 0xBA,
                 0xEB,
                 0xFA
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -541,8 +541,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xE1, 0x55, 0x01, 0x53,
                 0xA5, 0x28,
                 0x93, 0x56,
@@ -554,7 +554,7 @@ internal static class WellKnownInterfaceIds
                 0x95,
                 0xA0,
                 0x6D
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -566,8 +566,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xD5, 0x67, 0xB1, 0x28,
                 0x31, 0x1A,
                 0x5B, 0x46,
@@ -579,7 +579,7 @@ internal static class WellKnownInterfaceIds
                 0x68,
                 0x6C,
                 0x40
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -591,8 +591,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xA4, 0xEB, 0x08, 0x51,
                 0x92, 0x48,
                 0x20, 0x5A,
@@ -604,7 +604,7 @@ internal static class WellKnownInterfaceIds
                 0xE0,
                 0xFD,
                 0x27
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -616,8 +616,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x3A, 0x3E, 0x0C, 0xB3,
                 0x8D, 0xDF,
                 0xA5, 0x44,
@@ -629,7 +629,7 @@ internal static class WellKnownInterfaceIds
                 0x8C,
                 0xE6,
                 0x3D
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -641,8 +641,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xF2, 0x9F, 0x04, 0xDA,
                 0xE0, 0xD2,
                 0xE8, 0x5F,
@@ -654,7 +654,7 @@ internal static class WellKnownInterfaceIds
                 0x06,
                 0x0B,
                 0x6F
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -666,8 +666,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x33, 0x8D, 0xF6, 0x4C,
                 0xF2, 0xE3,
                 0x64, 0x49,
@@ -679,7 +679,7 @@ internal static class WellKnownInterfaceIds
                 0x7E,
                 0x2F,
                 0x21
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -691,8 +691,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xDC, 0x09, 0x09, 0x8B,
                 0x05, 0x20,
                 0x93, 0x5D,
@@ -704,7 +704,7 @@ internal static class WellKnownInterfaceIds
                 0x7B,
                 0xAA,
                 0x8D
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -716,8 +716,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x7C, 0xB3, 0x10, 0xCA,
                 0x82, 0xF3,
                 0x91, 0x45,
@@ -729,7 +729,7 @@ internal static class WellKnownInterfaceIds
                 0x52,
                 0x79,
                 0xB0
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -741,8 +741,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x52, 0xC9, 0xD0, 0x63,
                 0x6B, 0x39,
                 0xF4, 0x54,
@@ -754,7 +754,7 @@ internal static class WellKnownInterfaceIds
                 0xA4,
                 0x27,
                 0xBF
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -766,8 +766,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xA0, 0xA9, 0x33, 0x4F,
                 0xF4, 0x5C,
                 0xA4, 0x47,
@@ -779,7 +779,7 @@ internal static class WellKnownInterfaceIds
                 0x17,
                 0x45,
                 0x7E
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -791,8 +791,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xA8, 0x27, 0x0C, 0x7C,
                 0x41, 0x0B,
                 0x70, 0x50,
@@ -804,7 +804,7 @@ internal static class WellKnownInterfaceIds
                 0x60,
                 0xA3,
                 0x6C
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -816,8 +816,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x03, 0x9C, 0xCC, 0x6D,
                 0xC7, 0xE0,
                 0xEE, 0x4E,
@@ -829,7 +829,7 @@ internal static class WellKnownInterfaceIds
                 0x6E,
                 0xEB,
                 0x1C
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -841,8 +841,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xF6, 0x52, 0xDE, 0xE3,
                 0x32, 0x1E,
                 0xA6, 0x5D,
@@ -854,7 +854,7 @@ internal static class WellKnownInterfaceIds
                 0x6C,
                 0x96,
                 0x2D
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -866,8 +866,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x16, 0x9C, 0xF1, 0x50,
                 0x22, 0x0A,
                 0x8E, 0x4D,
@@ -879,7 +879,7 @@ internal static class WellKnownInterfaceIds
                 0x16,
                 0x57,
                 0xD2
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -891,8 +891,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x64, 0xDD, 0x26, 0xD0,
                 0x26, 0x5F,
                 0x15, 0x5F,
@@ -904,7 +904,7 @@ internal static class WellKnownInterfaceIds
                 0x43,
                 0x17,
                 0x96
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -916,8 +916,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x1E, 0xBD, 0xD0, 0x62,
                 0x5F, 0xB8,
                 0xCC, 0x5F,
@@ -929,7 +929,7 @@ internal static class WellKnownInterfaceIds
                 0xA3,
                 0x7F,
                 0xE5
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -941,8 +941,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x57, 0x5E, 0x36, 0x9E,
                 0xB2, 0x48,
                 0x60, 0x41,
@@ -954,7 +954,7 @@ internal static class WellKnownInterfaceIds
                 0x20,
                 0xBB,
                 0xFC
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -966,8 +966,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x6F, 0x79, 0xA9, 0x44,
                 0x3E, 0x72,
                 0xDF, 0x4F,
@@ -979,7 +979,7 @@ internal static class WellKnownInterfaceIds
                 0xB0,
                 0xC0,
                 0x84
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -991,8 +991,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xCC, 0xC2, 0xE6, 0x0E,
                 0x3E, 0x27,
                 0x7D, 0x56,
@@ -1004,7 +1004,7 @@ internal static class WellKnownInterfaceIds
                 0xE5,
                 0x1E,
                 0xBA
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1016,8 +1016,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x42, 0x35, 0xAF, 0xE5,
                 0x67, 0xCA,
                 0x81, 0x40,
@@ -1029,7 +1029,7 @@ internal static class WellKnownInterfaceIds
                 0x37,
                 0x92,
                 0xDF
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1041,8 +1041,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x46, 0x01, 0x00, 0x00,
                 0x00, 0x00,
                 0x00, 0x00,
@@ -1054,7 +1054,7 @@ internal static class WellKnownInterfaceIds
                 0x00,
                 0x00,
                 0x46
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1066,8 +1066,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xF6, 0x98, 0x08, 0xC5,
                 0x36, 0xC5,
                 0x47, 0x5F,
@@ -1079,7 +1079,7 @@ internal static class WellKnownInterfaceIds
                 0x38,
                 0xA1,
                 0x3B
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1091,8 +1091,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xE7, 0xD6, 0x6D, 0x34,
                 0x6E, 0x97,
                 0xC3, 0x4B,
@@ -1104,7 +1104,7 @@ internal static class WellKnownInterfaceIds
                 0xBC,
                 0x0F,
                 0x33
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1116,8 +1116,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x08, 0x2C, 0x6D, 0x03,
                 0x29, 0xDF,
                 0xAF, 0x41,
@@ -1129,7 +1129,7 @@ internal static class WellKnownInterfaceIds
                 0x62,
                 0xBA,
                 0x6F
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1141,8 +1141,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xDE, 0xE7, 0x3D, 0x39,
                 0xD0, 0x6F,
                 0x0D, 0x4C,
@@ -1154,7 +1154,7 @@ internal static class WellKnownInterfaceIds
                 0x11,
                 0x3E,
                 0x93
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1166,8 +1166,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xC0, 0x92, 0xDA, 0x30,
                 0xE8, 0x23,
                 0xA0, 0x42,
@@ -1179,7 +1179,7 @@ internal static class WellKnownInterfaceIds
                 0x5D,
                 0x27,
                 0x82
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1191,8 +1191,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x55, 0x57, 0x92, 0x7C,
                 0x48, 0x3E,
                 0xB4, 0x42,
@@ -1204,7 +1204,7 @@ internal static class WellKnownInterfaceIds
                 0x67,
                 0x03,
                 0x3F
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1216,8 +1216,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xDD, 0x82, 0xD6, 0x4B,
                 0x54, 0x75,
                 0xE9, 0x40,
@@ -1229,7 +1229,7 @@ internal static class WellKnownInterfaceIds
                 0xDE,
                 0x7E,
                 0x62
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1241,8 +1241,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x29, 0xA8, 0xD5, 0x30,
                 0xA4, 0x7F,
                 0x26, 0x40,
@@ -1254,7 +1254,7 @@ internal static class WellKnownInterfaceIds
                 0x4E,
                 0xA9,
                 0x9E
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1266,8 +1266,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x54, 0x9F, 0x36, 0x96,
                 0xB6, 0x8E,
                 0xF0, 0x48,
@@ -1279,7 +1279,7 @@ internal static class WellKnownInterfaceIds
                 0xE6,
                 0x27,
                 0xC3
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1291,8 +1291,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xDF, 0xA2, 0xB3, 0x68,
                 0x73, 0x81,
                 0x9F, 0x53,
@@ -1304,7 +1304,7 @@ internal static class WellKnownInterfaceIds
                 0x8F,
                 0x5A,
                 0xFB
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1316,8 +1316,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xC8, 0x8C, 0x19, 0xE5,
                 0x73, 0x28,
                 0xF5, 0x55,
@@ -1329,7 +1329,7 @@ internal static class WellKnownInterfaceIds
                 0x4A,
                 0xAD,
                 0x62
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1341,8 +1341,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x29, 0x01, 0x50, 0x95,
                 0xF6, 0xFB,
                 0xFC, 0x5A,
@@ -1354,7 +1354,7 @@ internal static class WellKnownInterfaceIds
                 0x74,
                 0x19,
                 0x90
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1366,8 +1366,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x1B, 0xE4, 0xC9, 0x6E,
                 0x09, 0x67,
                 0x47, 0x56,
@@ -1379,7 +1379,7 @@ internal static class WellKnownInterfaceIds
                 0x10,
                 0xFC,
                 0x4E
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1391,8 +1391,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xC3, 0xD2, 0xB7, 0x5A,
                 0x62, 0x6B,
                 0x71, 0x5E,
@@ -1404,7 +1404,7 @@ internal static class WellKnownInterfaceIds
                 0xF2,
                 0x38,
                 0xFD
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1416,8 +1416,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xBD, 0xEF, 0x8C, 0x54,
                 0x8A, 0xBC,
                 0xA0, 0x5F,
@@ -1429,7 +1429,7 @@ internal static class WellKnownInterfaceIds
                 0xFC,
                 0x8B,
                 0xF4
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1441,8 +1441,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xAF, 0xF3, 0x3E, 0x51,
                 0x84, 0xE7,
                 0x25, 0x53,
@@ -1454,7 +1454,7 @@ internal static class WellKnownInterfaceIds
                 0x11,
                 0x1C,
                 0xF3
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1466,8 +1466,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x24, 0x9E, 0xDA, 0x4D,
                 0x9F, 0xE6,
                 0x6A, 0x5C,
@@ -1479,7 +1479,7 @@ internal static class WellKnownInterfaceIds
                 0x65,
                 0xAF,
                 0x2A
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1491,8 +1491,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x76, 0xE3, 0x55, 0x67,
                 0xBB, 0x53,
                 0x8B, 0x56,
@@ -1504,7 +1504,7 @@ internal static class WellKnownInterfaceIds
                 0x68,
                 0x30,
                 0x9E
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1516,8 +1516,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xBA, 0xC2, 0x9C, 0x71,
                 0x76, 0x3E,
                 0xEF, 0x5D,
@@ -1529,7 +1529,7 @@ internal static class WellKnownInterfaceIds
                 0x14,
                 0x5E,
                 0xA8
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1541,8 +1541,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x29, 0x6C, 0x2D, 0x2F,
                 0x73, 0x54,
                 0x3E, 0x5F,
@@ -1554,7 +1554,7 @@ internal static class WellKnownInterfaceIds
                 0xB9,
                 0x90,
                 0xE2
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1566,8 +1566,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xF3, 0x3E, 0x39, 0xFB,
                 0xAC, 0xBB,
                 0xD5, 0x5B,
@@ -1579,7 +1579,7 @@ internal static class WellKnownInterfaceIds
                 0x76,
                 0xF4,
                 0x15
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1591,8 +1591,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x60, 0xFD, 0x00, 0x3C,
                 0x50, 0x29,
                 0x39, 0x59,
@@ -1604,7 +1604,7 @@ internal static class WellKnownInterfaceIds
                 0xA0,
                 0x1B,
                 0x8A
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1616,8 +1616,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x49, 0xF6, 0x50, 0x7D,
                 0x2C, 0x63,
                 0xF9, 0x51,
@@ -1629,7 +1629,7 @@ internal static class WellKnownInterfaceIds
                 0x89,
                 0x33,
                 0xEA
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1641,8 +1641,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xA7, 0xD8, 0x41, 0x55,
                 0x7C, 0x49,
                 0xA4, 0x5A,
@@ -1654,7 +1654,7 @@ internal static class WellKnownInterfaceIds
                 0xBF,
                 0x2A,
                 0x2C
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1666,8 +1666,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x4C, 0x0C, 0x4D, 0x60,
                 0xDE, 0x91,
                 0x2A, 0x5C,
@@ -1679,7 +1679,7 @@ internal static class WellKnownInterfaceIds
                 0xEA,
                 0xF8,
                 0x00
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1691,8 +1691,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x90, 0xCC, 0xDC, 0x06,
                 0x58, 0xA0,
                 0x88, 0x5C,
@@ -1704,7 +1704,7 @@ internal static class WellKnownInterfaceIds
                 0xA2,
                 0xFC,
                 0x16
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1716,8 +1716,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x99, 0xAD, 0x30, 0x38,
                 0xDA, 0xD8,
                 0xF3, 0x53,
@@ -1729,7 +1729,7 @@ internal static class WellKnownInterfaceIds
                 0x22,
                 0x27,
                 0x78
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1741,8 +1741,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x1E, 0x7A, 0xF2, 0x6F,
                 0x6A, 0x4B,
                 0xB7, 0x59,
@@ -1754,7 +1754,7 @@ internal static class WellKnownInterfaceIds
                 0x47,
                 0x45,
                 0x93
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1766,8 +1766,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x05, 0x0F, 0x23, 0x25,
                 0x9C, 0xB4,
                 0xEE, 0x57,
@@ -1779,7 +1779,7 @@ internal static class WellKnownInterfaceIds
                 0x8E,
                 0x1A,
                 0xB1
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1791,8 +1791,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xFB, 0x6D, 0x41, 0xFD,
                 0x07, 0x2A,
                 0xEB, 0x52,
@@ -1804,7 +1804,7 @@ internal static class WellKnownInterfaceIds
                 0x11,
                 0x6C,
                 0x05
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1816,8 +1816,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x22, 0x4C, 0xF1, 0x84,
                 0x0A, 0xA0,
                 0x72, 0x52,
@@ -1829,7 +1829,7 @@ internal static class WellKnownInterfaceIds
                 0x66,
                 0xDF,
                 0x00
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1841,8 +1841,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x86, 0x30, 0x72, 0x61,
                 0x53, 0x8E,
                 0x76, 0x52,
@@ -1854,7 +1854,7 @@ internal static class WellKnownInterfaceIds
                 0x3E,
                 0x2B,
                 0x75
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1866,8 +1866,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x11, 0x3F, 0x42, 0x80,
                 0x4F, 0x05,
                 0xAC, 0x5E,
@@ -1879,7 +1879,7 @@ internal static class WellKnownInterfaceIds
                 0x15,
                 0xE7,
                 0x7B
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1891,8 +1891,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xFD, 0x8C, 0x35, 0x76,
                 0xBD, 0x2C,
                 0x5B, 0x52,
@@ -1904,7 +1904,7 @@ internal static class WellKnownInterfaceIds
                 0x24,
                 0x7B,
                 0x71
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1916,8 +1916,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xDC, 0xFF, 0xCB, 0xDA,
                 0xEF, 0x68,
                 0xD0, 0x5F,
@@ -1929,7 +1929,7 @@ internal static class WellKnownInterfaceIds
                 0xC9,
                 0x80,
                 0x7E
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1941,8 +1941,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xA1, 0x42, 0xD5, 0x46,
                 0xF7, 0x52,
                 0xE7, 0x58,
@@ -1954,7 +1954,7 @@ internal static class WellKnownInterfaceIds
                 0x4D,
                 0xA0,
                 0x22
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1966,8 +1966,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xBB, 0x04, 0x70, 0xB2,
                 0x14, 0xC0,
                 0xCE, 0x5D,
@@ -1979,7 +1979,7 @@ internal static class WellKnownInterfaceIds
                 0x3C,
                 0x14,
                 0x61
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -1991,8 +1991,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x9E, 0xA6, 0xF6, 0x48,
                 0x65, 0x84,
                 0xAE, 0x57,
@@ -2004,7 +2004,7 @@ internal static class WellKnownInterfaceIds
                 0x7F,
                 0x65,
                 0xAD
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2016,8 +2016,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xFF, 0x70, 0xE7, 0x1E,
                 0x54, 0xC9,
                 0xCA, 0x59,
@@ -2029,7 +2029,7 @@ internal static class WellKnownInterfaceIds
                 0xBE,
                 0x28,
                 0x2C
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2041,8 +2041,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xC9, 0x43, 0xE8, 0xA5,
                 0x20, 0xED,
                 0x39, 0x53,
@@ -2054,7 +2054,7 @@ internal static class WellKnownInterfaceIds
                 0xCF,
                 0x36,
                 0x54
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2066,8 +2066,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x91, 0x82, 0xB1, 0xA9,
                 0x2A, 0xCE,
                 0xAE, 0x5D,
@@ -2079,7 +2079,7 @@ internal static class WellKnownInterfaceIds
                 0x84,
                 0x16,
                 0xDB
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2091,8 +2091,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xA5, 0x80, 0xD0, 0xA6,
                 0x87, 0xB0,
                 0xC2, 0x5B,
@@ -2104,7 +2104,7 @@ internal static class WellKnownInterfaceIds
                 0xB4,
                 0xD1,
                 0xF7
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2116,8 +2116,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x8E, 0x68, 0x85, 0x03,
                 0xC7, 0xE3,
                 0x5E, 0x5C,
@@ -2129,7 +2129,7 @@ internal static class WellKnownInterfaceIds
                 0xE3,
                 0x49,
                 0xF1
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2141,8 +2141,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x83, 0x26, 0xF2, 0x2A,
                 0x34, 0x37,
                 0xD0, 0x56,
@@ -2154,7 +2154,7 @@ internal static class WellKnownInterfaceIds
                 0x5D,
                 0x16,
                 0x19
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2166,8 +2166,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xD7, 0x8F, 0x2F, 0x91,
                 0xC0, 0xAD,
                 0x60, 0x5D,
@@ -2179,7 +2179,7 @@ internal static class WellKnownInterfaceIds
                 0x89,
                 0xCC,
                 0x5B
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2191,8 +2191,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xDD, 0xA2, 0x24, 0x66,
                 0xF7, 0x83,
                 0x9C, 0x51,
@@ -2204,7 +2204,7 @@ internal static class WellKnownInterfaceIds
                 0x60,
                 0x45,
                 0x6B
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2216,8 +2216,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x68, 0x4B, 0x37, 0x97,
                 0x87, 0xEB,
                 0xCC, 0x56,
@@ -2229,7 +2229,7 @@ internal static class WellKnownInterfaceIds
                 0x9C,
                 0xFC,
                 0x0C
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2241,8 +2241,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x71, 0x32, 0x33, 0x6E,
                 0x2A, 0x2E,
                 0x55, 0x59,
@@ -2254,7 +2254,7 @@ internal static class WellKnownInterfaceIds
                 0xEE,
                 0x53,
                 0xB6
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2266,8 +2266,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x34, 0x04, 0xB6, 0x38,
                 0x7C, 0xD6,
                 0x3E, 0x52,
@@ -2279,7 +2279,7 @@ internal static class WellKnownInterfaceIds
                 0x41,
                 0x10,
                 0x73
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2291,8 +2291,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x83, 0xEA, 0xB1, 0x6A,
                 0x41, 0xCB,
                 0x99, 0x5F,
@@ -2304,7 +2304,7 @@ internal static class WellKnownInterfaceIds
                 0x36,
                 0xA1,
                 0xFB
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2316,8 +2316,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x53, 0xF2, 0x01, 0xD3,
                 0xA3, 0xE0,
                 0x2B, 0x5D,
@@ -2329,7 +2329,7 @@ internal static class WellKnownInterfaceIds
                 0xEC,
                 0x46,
                 0x23
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2341,8 +2341,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xAB, 0x5A, 0x09, 0xA4,
                 0x7D, 0xEB,
                 0x82, 0x57,
@@ -2354,7 +2354,7 @@ internal static class WellKnownInterfaceIds
                 0xA2,
                 0x49,
                 0xAD
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2366,8 +2366,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x66, 0x26, 0xE7, 0xE8,
                 0xCC, 0x48,
                 0x3F, 0x59,
@@ -2379,7 +2379,7 @@ internal static class WellKnownInterfaceIds
                 0x69,
                 0x56,
                 0xE3
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2391,8 +2391,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x38, 0x98, 0xCF, 0xEE,
                 0xC2, 0xC1,
                 0x4A, 0x5B,
@@ -2404,7 +2404,7 @@ internal static class WellKnownInterfaceIds
                 0xAE,
                 0x1D,
                 0x55
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2416,8 +2416,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x94, 0x95, 0x8E, 0x1B,
                 0x8E, 0x58,
                 0x07, 0x5A,
@@ -2429,7 +2429,7 @@ internal static class WellKnownInterfaceIds
                 0xC9,
                 0xA2,
                 0xDB
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2441,8 +2441,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x7D, 0x19, 0x73, 0xAD,
                 0xFA, 0x2C,
                 0xA6, 0x57,
@@ -2454,7 +2454,7 @@ internal static class WellKnownInterfaceIds
                 0xFE,
                 0xB7,
                 0x91
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2466,8 +2466,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x4F, 0xA8, 0xD7, 0x9C,
                 0x80, 0x0C,
                 0xC5, 0x59,
@@ -2479,7 +2479,7 @@ internal static class WellKnownInterfaceIds
                 0xBB,
                 0x43,
                 0xD9
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2491,8 +2491,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xA7, 0x57, 0x84, 0xDA,
                 0xEB, 0xC2,
                 0xA1, 0x5D,
@@ -2504,7 +2504,7 @@ internal static class WellKnownInterfaceIds
                 0xE1,
                 0xBF,
                 0xA4
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2516,8 +2516,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xFF, 0xD9, 0x25, 0xA5,
                 0x9B, 0xC0,
                 0x1A, 0x50,
@@ -2529,7 +2529,7 @@ internal static class WellKnownInterfaceIds
                 0xE1,
                 0x02,
                 0xB8
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2541,8 +2541,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x15, 0x5A, 0x0D, 0xFC,
                 0x9D, 0x8F,
                 0x8F, 0x5E,
@@ -2554,7 +2554,7 @@ internal static class WellKnownInterfaceIds
                 0xE2,
                 0x5B,
                 0xAD
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2566,8 +2566,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x7D, 0x7F, 0xCF, 0xF9,
                 0x59, 0x54,
                 0x98, 0x5F,
@@ -2579,7 +2579,7 @@ internal static class WellKnownInterfaceIds
                 0x9E,
                 0xC2,
                 0x98
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2591,8 +2591,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xBE, 0x76, 0xBA, 0xE9,
                 0x31, 0x2C,
                 0x1D, 0x5E,
@@ -2604,7 +2604,7 @@ internal static class WellKnownInterfaceIds
                 0x5A,
                 0xEE,
                 0x93
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2616,8 +2616,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x78, 0x21, 0xDF, 0x29,
                 0xDB, 0xFF,
                 0x3E, 0x56,
@@ -2629,7 +2629,7 @@ internal static class WellKnownInterfaceIds
                 0x07,
                 0x30,
                 0x5E
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2641,8 +2641,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xFA, 0x35, 0x1A, 0xAA,
                 0x4E, 0x0B,
                 0x48, 0x52,
@@ -2654,7 +2654,7 @@ internal static class WellKnownInterfaceIds
                 0xFE,
                 0x40,
                 0x27
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2666,8 +2666,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x50, 0x72, 0x75, 0x68,
                 0x49, 0x58,
                 0x72, 0x57,
@@ -2679,7 +2679,7 @@ internal static class WellKnownInterfaceIds
                 0x97,
                 0x0B,
                 0xFF
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2691,8 +2691,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xCC, 0xE4, 0x1A, 0x40,
                 0xB9, 0x4A,
                 0x8F, 0x5A,
@@ -2704,7 +2704,7 @@ internal static class WellKnownInterfaceIds
                 0x0C,
                 0x36,
                 0x4D
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2716,8 +2716,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xCB, 0xE0, 0xEA, 0x1E,
                 0x57, 0x8F,
                 0x37, 0x5C,
@@ -2729,7 +2729,7 @@ internal static class WellKnownInterfaceIds
                 0xE2,
                 0xFE,
                 0x3F
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2741,8 +2741,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0xA9, 0x20, 0xA9, 0xB1,
                 0xF2, 0xC2,
                 0x53, 0x54,
@@ -2754,7 +2754,7 @@ internal static class WellKnownInterfaceIds
                 0x4A,
                 0x8B,
                 0xFE
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2766,8 +2766,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x21, 0x5A, 0x9D, 0x77,
                 0x7D, 0x0E,
                 0x76, 0x54,
@@ -2779,7 +2779,7 @@ internal static class WellKnownInterfaceIds
                 0x4B,
                 0x8D,
                 0xE5
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
@@ -2791,8 +2791,8 @@ internal static class WellKnownInterfaceIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get
         {
-            ReadOnlySpan<byte> data = new byte[]
-            {
+            ReadOnlySpan<byte> data =
+            [
                 0x6E, 0x5C, 0xFD, 0xA4,
                 0x49, 0x65,
                 0xA9, 0x59,
@@ -2804,7 +2804,7 @@ internal static class WellKnownInterfaceIds
                 0x18,
                 0x75,
                 0xD9
-            };
+            ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
