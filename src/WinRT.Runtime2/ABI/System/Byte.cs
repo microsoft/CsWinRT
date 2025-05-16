@@ -118,8 +118,10 @@ internal sealed unsafe class ByteComWrappersMarshallerAttribute : WindowsRuntime
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<byte>(value, in WellKnownInterfaceIds.IID_IReferenceOfByte);
     }
 }

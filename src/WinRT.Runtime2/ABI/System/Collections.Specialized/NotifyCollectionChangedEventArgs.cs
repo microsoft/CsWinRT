@@ -192,8 +192,10 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
 
     /// <inheritdoc/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         ref readonly Guid iid = ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
             ? ref WellKnownInterfaceIds.IID_WUX_INotifyCollectionChangedEventArgs
             : ref WellKnownInterfaceIds.IID_MUX_INotifyCollectionChangedEventArgs;

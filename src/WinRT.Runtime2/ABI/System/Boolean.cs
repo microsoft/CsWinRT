@@ -118,8 +118,10 @@ internal sealed unsafe class BooleanComWrappersMarshallerAttribute : WindowsRunt
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<bool>(value, in WellKnownInterfaceIds.IID_IReferenceOfBool);
     }
 }

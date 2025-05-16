@@ -118,8 +118,10 @@ internal sealed unsafe class CharComWrappersMarshallerAttribute : WindowsRuntime
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<char>(value, in WellKnownInterfaceIds.IID_IReferenceOfChar);
     }
 }

@@ -108,8 +108,10 @@ internal sealed unsafe class EventRegistrationTokenComWrappersMarshallerAttribut
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<EventRegistrationToken>(value, in WellKnownInterfaceIds.IID_IReferenceOfEventRegistrationToken);
     }
 }

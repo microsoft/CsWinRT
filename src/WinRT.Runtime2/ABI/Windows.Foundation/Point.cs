@@ -108,8 +108,10 @@ internal sealed unsafe class PointComWrappersMarshallerAttribute : WindowsRuntim
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Point>(value, in WellKnownInterfaceIds.IID_IReferenceOfPoint);
     }
 }

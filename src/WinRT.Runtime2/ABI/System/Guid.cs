@@ -118,8 +118,10 @@ internal sealed unsafe class GuidComWrappersMarshallerAttribute : WindowsRuntime
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<global::System.Guid>(value, in WellKnownInterfaceIds.IID_IReferenceOfGuid);
     }
 }

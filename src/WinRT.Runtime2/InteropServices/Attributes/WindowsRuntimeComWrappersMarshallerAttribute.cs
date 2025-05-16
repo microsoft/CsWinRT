@@ -100,6 +100,7 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// Creates a managed Windows Runtime object for a given native object.
     /// </summary>
     /// <param name="value">The input native object to marshal.</param>
+    /// <param name="wrapperFlags">Flags used to describe the created wrapper object.</param>
     /// <returns>The resulting managed Windows Runtime object.</returns>
     /// <remarks>
     /// <para>
@@ -111,5 +112,5 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// </para>
     /// </remarks>
     /// <seealso cref="ComWrappers.CreateObject"/>
-    public abstract object CreateObject(void* value);
+    public abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
 }

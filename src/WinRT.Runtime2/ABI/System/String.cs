@@ -140,8 +140,10 @@ internal sealed unsafe class StringComWrappersMarshallerAttribute : WindowsRunti
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownInterfaceIds.IID_IReferenceOfString, out void* result);
 
         Marshal.ThrowExceptionForHR(hresult);

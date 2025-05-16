@@ -215,8 +215,10 @@ file sealed unsafe class TypeComWrappersMarshallerAttribute : WindowsRuntimeComW
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         Type abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Type>(value, in WellKnownInterfaceIds.IID_IReferenceOfType);
 
         // Try to marshal the resulting type (it might not actually succeed)

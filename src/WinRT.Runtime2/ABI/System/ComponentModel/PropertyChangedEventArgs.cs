@@ -95,8 +95,10 @@ file sealed unsafe class PropertyChangedEventArgsComWrappersMarshallerAttribute 
 
     /// <inheritdoc/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         ref readonly Guid iid = ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
             ? ref WellKnownInterfaceIds.IID_WUX_PropertyChangedEventArgs
             : ref WellKnownInterfaceIds.IID_MUX_PropertyChangedEventArgs;

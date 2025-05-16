@@ -453,8 +453,10 @@ file sealed unsafe class PlaceholderWindowsRuntimeComWrappersMarshallerAttribute
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.None;
+
         return null!;
     }
 }

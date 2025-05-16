@@ -149,8 +149,10 @@ internal sealed unsafe class TimeSpanComWrappersMarshallerAttribute : WindowsRun
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         TimeSpan abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<TimeSpan>(value, in WellKnownInterfaceIds.IID_IReferenceOfTimeSpan);
 
         return TimeSpanMarshaller.ConvertToManaged(abi);

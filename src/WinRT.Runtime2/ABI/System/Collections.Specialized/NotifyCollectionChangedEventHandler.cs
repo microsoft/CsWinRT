@@ -180,8 +180,10 @@ file sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshalle
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         return WindowsRuntimeDelegateMarshaller.UnboxToManaged<NotifyCollectionChangedEventHandlerComWrappersCallback>(value, in NotifyCollectionChangedEventHandlerReferenceImpl.IID)!;
     }
 }

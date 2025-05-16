@@ -170,7 +170,7 @@ file sealed unsafe class EventHandlerComWrappersMarshallerAttribute : WindowsRun
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         // Marshalling 'EventHandler' from an opaque object should never happen. If a native method
         // returns a boxed 'EventHandler' delegate, the RCW we create will always be 'EventHandler<T>'.

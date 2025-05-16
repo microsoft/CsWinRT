@@ -158,8 +158,10 @@ file sealed unsafe class DateTimeOffsetComWrappersMarshallerAttribute : WindowsR
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         DateTimeOffset abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<DateTimeOffset>(value, in WellKnownInterfaceIds.IID_IReferenceOfDateTimeOffset);
 
         return DateTimeOffsetMarshaller.ConvertToManaged(abi);

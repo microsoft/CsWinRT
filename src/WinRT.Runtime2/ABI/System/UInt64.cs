@@ -118,8 +118,10 @@ internal sealed unsafe class UInt64ComWrappersMarshallerAttribute : WindowsRunti
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<ulong>(value, in WellKnownInterfaceIds.IID_IReferenceOfULong);
     }
 }

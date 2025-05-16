@@ -108,8 +108,10 @@ internal sealed unsafe class RectComWrappersMarshallerAttribute : WindowsRuntime
     }
 
     /// <inheritdoc/>
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
+        wrapperFlags = CreatedWrapperFlags.NonWrapping;
+
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Rect>(value, in WellKnownInterfaceIds.IID_IReferenceOfRect);
     }
 }

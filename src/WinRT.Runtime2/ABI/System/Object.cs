@@ -81,7 +81,7 @@ file sealed unsafe class ObjectComWrappersMarshallerAttribute : WindowsRuntimeCo
     }
 
     /// <inheritdoc/>
-    public override unsafe object CreateObject(void* value)
+    public override unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         throw new NotSupportedException("Marshalling 'object' instances is not supported.");
     }
