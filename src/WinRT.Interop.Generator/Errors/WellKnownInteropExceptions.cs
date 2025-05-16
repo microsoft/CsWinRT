@@ -152,6 +152,22 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to define the interop assembly.
+    /// </summary>
+    public static Exception DefineInteropAssemblyError(Exception exception)
+    {
+        return Exception(18, "Failed to define the interop module and assembly.", exception);
+    }
+
+    /// <summary>
+    /// Failed to define the <c>[IgnoreAccessChecksTo]</c> attributes
+    /// </summary>
+    public static Exception DefineIgnoreAccessChecksToAttributesError(Exception exception)
+    {
+        return Exception(19, "Failed to generate the '[IgnoreAccessChecksTo]' attribute definition and annotations.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

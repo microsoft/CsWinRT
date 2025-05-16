@@ -91,17 +91,24 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.WinRTModuleNotFound();
         }
 
-        AssemblyDefinition winRTInteropAssembly = new(InteropNames.InteropDllNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
-        ModuleDefinition winRTInteropModule = new(InteropNames.InteropDllName, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib());
+        try
+        {
+            AssemblyDefinition winRTInteropAssembly = new(InteropNames.InteropDllNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
+            ModuleDefinition winRTInteropModule = new(InteropNames.InteropDllName, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib());
 
-        winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
-        winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(windowsRuntimeModule.Assembly?.Name, windowsRuntimeModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
-        winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(state.AssemblyResolver);
+            winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
+            winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(windowsRuntimeModule.Assembly?.Name, windowsRuntimeModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
+            winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(state.AssemblyResolver);
 
-        // Add the module to the parent assembly
-        winRTInteropAssembly.Modules.Add(winRTInteropModule);
+            // Add the module to the parent assembly
+            winRTInteropAssembly.Modules.Add(winRTInteropModule);
 
-        return winRTInteropModule;
+            return winRTInteropModule;
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownInteropExceptions.DefineInteropAssemblyError(e);
+        }
     }
 
     /// <summary>
@@ -310,7 +317,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            // Emi the '[IgnoreAccessChecksTo]' type first
+            // Emit the '[IgnoreAccessChecksTo]' type first
             module.TopLevelTypes.Add(interopDefinitions.IgnoreAccessChecksToAttribute);
 
             // Next, emit all the '[IgnoreAccessChecksTo]' attributes for each type
@@ -318,7 +325,7 @@ internal partial class InteropGenerator
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw WellKnownInteropExceptions.ImplementationDetailTypeCodeGenerationError(e);
+            throw WellKnownInteropExceptions.DefineIgnoreAccessChecksToAttributesError(e);
         }
     }
 
