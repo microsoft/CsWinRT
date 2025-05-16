@@ -31,6 +31,12 @@ public unsafe interface IWindowsRuntimeObjectComWrappersCallback
     /// that <see cref="IWindowsRuntimeObjectComWrappersCallback"/> implementations for that can assume <paramref name="value"/>
     /// will be such an interface pointer, and avoid doing a <c>QueryInterface</c> call for that same interface.
     /// </para>
+    /// <para>
+    /// This method will be called from the <see cref="ComWrappers.CreateObject"/> method, so implementations must
+    /// not call back into <see cref="ComWrappers.CreateObject"/> themselves, but rather they should just marshal
+    /// the object directly, and return it. Calling back into <see cref="ComWrappers.CreateObject"/> is not supported,
+    /// and it will likely lead to a stack overlow exception.
+    /// </para>
     /// </remarks>
     static abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
 }

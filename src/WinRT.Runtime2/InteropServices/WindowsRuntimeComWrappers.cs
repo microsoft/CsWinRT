@@ -32,12 +32,21 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// immediately afterwards, to ensure following calls won't accidentally see the wrong type.
     /// </remarks>
     [ThreadStatic]
-    internal static WindowsRuntimeObjectComWrappersCallback? ComWrappersCallback;
+    internal static WindowsRuntimeObjectComWrappersCallback? ObjectComWrappersCallback;
+
+    /// <summary>
+    /// The <see cref="WindowsRuntimeUnsealedObjectComWrappersCallback"/> instance passed by callers where the target type was statically-visible, enabling the unsealed <see cref="CreateObject"/> fast-path, if available.
+    /// </summary>
+    /// <remarks>
+    /// The same remarks as with <see cref="ObjectComWrappersCallback"/> apply here, the only difference is this callback is for unsealed types.
+    /// </remarks>
+    [ThreadStatic]
+    internal static WindowsRuntimeUnsealedObjectComWrappersCallback? UnsealedObjectComWrappersCallback;
 
     /// <summary>
     /// The statically-visible object type that should be used by <see cref="CreateObject"/>, if available.
     /// </summary>
-    /// <remarks><inheritdoc cref="ComWrappersCallback" path="/remarks/node()"/></remarks>
+    /// <remarks><inheritdoc cref="ObjectComWrappersCallback" path="/remarks/node()"/></remarks>
     [ThreadStatic]
     internal static Type? CreateObjectTargetType;
 
@@ -184,7 +193,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 
         // If we have a callback instance, it means this invocation was for a statically visible type that can
         // always be marshalled directly (eg. a delegate type, or a sealed type). In that case, just use it.
-        if (ComWrappersCallback is { } createObjectCallback)
+        if (ObjectComWrappersCallback is { } createObjectCallback)
         {
             void* interfacePointer = CreateObjectTargetInterfacePointer;
 

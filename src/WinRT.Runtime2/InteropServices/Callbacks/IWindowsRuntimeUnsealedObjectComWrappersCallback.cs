@@ -29,6 +29,11 @@ public unsafe interface IWindowsRuntimeUnsealedObjectComWrappersCallback
     /// <para>
     /// The same semantics around <paramref name="value"/> apply as in <see cref="IWindowsRuntimeObjectComWrappersCallback.CreateObject"/>.
     /// </para>
+    /// <para>
+    /// Like <see cref="IWindowsRuntimeObjectComWrappersCallback.CreateObject"/>, this method will be called from the <see cref="ComWrappers.CreateObject"/>
+    /// method, so implementations must not call back into <see cref="ComWrappers.CreateObject"/> themselves, but rather they should just marshal the object
+    /// directly, and return it. Calling back into <see cref="ComWrappers.CreateObject"/> is not supported, and it will likely lead to a stack overlow exception.
+    /// </para>
     /// </remarks>
     /// <seealso cref="IWindowsRuntimeObjectComWrappersCallback"/>
     static abstract bool TryCreateObject(
