@@ -61,6 +61,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Add all '[IgnoreAccessChecksTo]' attributes
+        DefineIgnoreAccessChecksToAttributes(interopDefinitions, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit the interop .dll to disk
         WriteInteropModuleToDisk(args, module);
     }
@@ -281,6 +286,26 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
             module.TopLevelTypes.Add(interopDefinitions.InteropImplementationDetails);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw WellKnownInteropExceptions.ImplementationDetailTypeCodeGenerationError(e);
+        }
+    }
+
+    /// <summary>
+    /// Defines the <c>[IgnoreAccessChecksTo]</c> attribute, and applies it to the assembly for each input reference.
+    /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIgnoreAccessChecksToAttributes(InteropDefinitions interopDefinitions, ModuleDefinition module)
+    {
+        try
+        {
+            // Emi the '[IgnoreAccessChecksTo]' type first
+            module.TopLevelTypes.Add(interopDefinitions.IgnoreAccessChecksToAttribute);
+
+            // Next, emit all the '[IgnoreAccessChecksTo]' attributes for each type
         }
         catch (Exception e) when (!e.IsWellKnown)
         {

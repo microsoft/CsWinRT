@@ -40,6 +40,24 @@ internal sealed class InteropReferences
     public CorLibTypeFactory CorLibTypeFactory => _interopModule.CorLibTypeFactory;
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.Attribute</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference Attribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "Attribute");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.AttributeTargets</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference AttributeTargets => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "AttributeTargets");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.AttributeUsageAttribute</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference AttributeUsageAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "AttributeUsageAttribute");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>System.Type</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -244,6 +262,22 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference EventHandler2EventSource => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "EventHandlerEventSource`2");
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>System.Attribute.ctor()</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference Attribute_ctor => field ??= Attribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>System.AttributeUsageAttribute</c>'s constructor using <see cref="AttributeTargets"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference AttributeUsageAttribute_ctor_AttributeTargets => field ??= AttributeUsageAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+            returnType: _interopModule.CorLibTypeFactory.Void,
+            parameterTypes: [AttributeTargets.ToTypeSignature(isValueType: true)]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>System.ReadOnlySpane&lt;T&gt;.this[int]</c> (of <see cref="char"/>).

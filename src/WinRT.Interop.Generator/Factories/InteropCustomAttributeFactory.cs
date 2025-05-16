@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
@@ -38,5 +39,35 @@ internal static class InteropCustomAttributeFactory
                 argument: new CustomAttributeArgument(
                     argumentType: typeArraySignature,
                     elements: interopReferences.CallConvMemberFunction.Import(module).ToTypeSignature(isValueType: false)))]));
+    }
+
+    /// <summary>
+    /// Creates a new custom attribute value for <see cref="AttributeUsageAttribute"/> (and imports all metadata elements for it).
+    /// </summary>
+    /// <param name="attributeTargets">The <see cref="AttributeTargets"/> value to use.</param>
+    /// <param name="allowMultiple">Whether to allow multiple uses of the attribute.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that the attribute will be used from.</param>
+    /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>
+    public static CustomAttribute AttributeUsage(
+        AttributeTargets attributeTargets,
+        bool allowMultiple,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        // Create the following attribute:
+        //
+        // [AttributeUsage(<attributeTargets>, AllowMultiple = <allowMultiple>)]
+        return new(interopReferences.AttributeUsageAttribute_ctor_AttributeTargets.Import(module), new CustomAttributeSignature(
+            fixedArguments: [new CustomAttributeArgument(
+                argumentType: interopReferences.AttributeTargets.Import(module).ToTypeSignature(isValueType: true),
+                value: (int)attributeTargets)],
+            namedArguments: [new CustomAttributeNamedArgument(
+                memberType: CustomAttributeArgumentMemberType.Property,
+                memberName: "AllowMultiple"u8,
+                argumentType: module.CorLibTypeFactory.Boolean,
+                argument: new CustomAttributeArgument(
+                    argumentType: module.CorLibTypeFactory.Boolean,
+                    value: allowMultiple))]));
     }
 }

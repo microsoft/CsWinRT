@@ -34,6 +34,12 @@ internal sealed class InteropDefinitions
     }
 
     /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IgnoreAccessChecksToAttribute</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition IgnoreAccessChecksToAttribute => field ??= WellKnownTypeDefinitionFactory.IgnoreAccessChecksToAttribute(_interopReferences, _interopModule);
+
+    /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>InteropImplementationDetails</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]

@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 /// <summary>
 /// A factory for well known type definitions.
 /// </summary>
-internal static class WellKnownTypeDefinitionFactory
+internal static partial class WellKnownTypeDefinitionFactory
 {
     /// <summary>
     /// Creates an <c>IUnknownVftbl</c> type.
