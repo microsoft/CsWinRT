@@ -5883,7 +5883,7 @@ return (eventSource.Subscribe, eventSource.Unsubscribe);
         }
     }
     
-    std::string get_vmethod_delegate_type(writer& w, MethodDef const& method, std::string vmethod_name)
+    std::string get_vmethod_delegate_type(writer& w, MethodDef const& method, std::string)
     {
         method_signature signature{ method };
         if (is_special(method))
