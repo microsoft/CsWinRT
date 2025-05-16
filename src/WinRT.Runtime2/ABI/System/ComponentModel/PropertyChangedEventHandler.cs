@@ -97,9 +97,9 @@ file static unsafe class PropertyChangedEventHandlerNativeDelegate
 }
 
 /// <summary>
-/// A custom <see cref="IWindowsRuntimeComWrappersCallback"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
+/// A custom <see cref="IWindowsRuntimeObjectComWrappersCallback"/> implementation for <see cref="global::System.ComponentModel.PropertyChangedEventHandler"/>.
 /// </summary>
-file abstract unsafe class PropertyChangedEventHandlerComWrappersCallback : IWindowsRuntimeComWrappersCallback
+file abstract unsafe class PropertyChangedEventHandlerComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
 {
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)

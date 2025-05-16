@@ -88,9 +88,9 @@ file static unsafe class EventHandlerNativeDelegate
 }
 
 /// <summary>
-/// A custom <see cref="IWindowsRuntimeComWrappersCallback"/> implementation for <see cref="global::System.EventHandler"/>.
+/// A custom <see cref="IWindowsRuntimeObjectComWrappersCallback"/> implementation for <see cref="global::System.EventHandler"/>.
 /// </summary>
-file abstract unsafe class EventHandlerComWrappersCallback : IWindowsRuntimeComWrappersCallback
+file abstract unsafe class EventHandlerComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
 {
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)

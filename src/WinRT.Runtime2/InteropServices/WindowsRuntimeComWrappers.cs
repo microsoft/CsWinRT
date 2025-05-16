@@ -24,7 +24,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     internal static WindowsRuntimeMarshallingInfo? MarshallingInfo;
 
     /// <summary>
-    /// The <see cref="WindowsRuntimeComWrappersCallback"/> instance passed by callers where the target type was statically-visible, enabling the <see cref="CreateObject"/> fast-path, if available.
+    /// The <see cref="WindowsRuntimeObjectComWrappersCallback"/> instance passed by callers where the target type was statically-visible, enabling the <see cref="CreateObject"/> fast-path, if available.
     /// </summary>
     /// <remarks>
     /// This can be set by a thread right before calling the <see cref="ComWrappers.GetOrCreateObjectForComInstance"/> method,
@@ -32,7 +32,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// immediately afterwards, to ensure following calls won't accidentally see the wrong type.
     /// </remarks>
     [ThreadStatic]
-    internal static WindowsRuntimeComWrappersCallback? ComWrappersCallback;
+    internal static WindowsRuntimeObjectComWrappersCallback? ComWrappersCallback;
 
     /// <summary>
     /// The statically-visible object type that should be used by <see cref="CreateObject"/>, if available.

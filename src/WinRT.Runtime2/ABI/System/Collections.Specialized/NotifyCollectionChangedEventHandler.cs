@@ -98,9 +98,9 @@ file static unsafe class NotifyCollectionChangedEventHandlerNativeDelegate
 }
 
 /// <summary>
-/// A custom <see cref="IWindowsRuntimeComWrappersCallback"/> implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
+/// A custom <see cref="IWindowsRuntimeObjectComWrappersCallback"/> implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
 /// </summary>
-file abstract unsafe class NotifyCollectionChangedEventHandlerComWrappersCallback : IWindowsRuntimeComWrappersCallback
+file abstract unsafe class NotifyCollectionChangedEventHandlerComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
 {
     /// <inheritdoc/>
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)

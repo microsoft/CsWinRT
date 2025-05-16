@@ -60,14 +60,14 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// <returns>The resulting managed Windows Runtime delegate object.</returns>
     /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
     public static Delegate? ConvertToManaged<TCallback>(void* value)
-        where TCallback : IWindowsRuntimeComWrappersCallback, allows ref struct
+        where TCallback : IWindowsRuntimeObjectComWrappersCallback, allows ref struct
     {
         if (value is null)
         {
             return null;
         }
 
-        WindowsRuntimeComWrappers.ComWrappersCallback = WindowsRuntimeComWrappersCallback.GetInstance<TCallback>();
+        WindowsRuntimeComWrappers.ComWrappersCallback = WindowsRuntimeObjectComWrappersCallback.GetInstance<TCallback>();
         WindowsRuntimeComWrappers.CreateObjectTargetType = null;
         WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
 
@@ -136,7 +136,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// </remarks>
     /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
     public static Delegate? UnboxToManaged<TCallback>(void* value)
-        where TCallback : IWindowsRuntimeComWrappersCallback, allows ref struct
+        where TCallback : IWindowsRuntimeObjectComWrappersCallback, allows ref struct
     {
         if (value is null)
         {
@@ -171,7 +171,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
     /// </remarks>
     /// <exception cref="Exception">Thrown if <paramref name="value"/> cannot be marshalled.</exception>
     public static Delegate? UnboxToManaged<TCallback>(void* value, in Guid iid)
-        where TCallback : IWindowsRuntimeComWrappersCallback, allows ref struct
+        where TCallback : IWindowsRuntimeObjectComWrappersCallback, allows ref struct
     {
         if (value is null)
         {
