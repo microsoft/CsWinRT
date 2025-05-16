@@ -71,7 +71,7 @@ public static unsafe class WindowsRuntimeDelegateMarshaller
         WindowsRuntimeComWrappers.CreateObjectTargetType = null;
         WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = value;
 
-        object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.TrackerObject);
+        object? managedDelegate = WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.None);
 
         WindowsRuntimeComWrappers.ComWrappersCallback = null;
         WindowsRuntimeComWrappers.CreateObjectTargetInterfacePointer = null;

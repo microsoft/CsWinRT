@@ -93,9 +93,11 @@ file static unsafe class EventHandlerNativeDelegate
 file abstract unsafe class EventHandlerComWrappersCallback : IWindowsRuntimeComWrappersCallback
 {
     /// <inheritdoc/>
-    public static object CreateObject(void* value)
+    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in WellKnownInterfaceIds.IID_EventHandler)!;
+
+        wrapperFlags = valueReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
 
         return new global::System.EventHandler(valueReference.Invoke);
     }

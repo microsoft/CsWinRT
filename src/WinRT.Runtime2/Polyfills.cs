@@ -46,5 +46,12 @@ namespace System
                 return null!;
             }
         }
+
+        public enum CreatedWrapperFlags
+        {
+            None = 0,
+            TrackerObject = 0x1,
+            NonWrapping = 0x2
+        }
     }
 }

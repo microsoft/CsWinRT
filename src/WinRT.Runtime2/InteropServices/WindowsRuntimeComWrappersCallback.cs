@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -20,7 +22,7 @@ internal abstract unsafe class WindowsRuntimeComWrappersCallback
     }
 
     /// <inheritdoc cref="IWindowsRuntimeComWrappersCallback.CreateObject"/>
-    public abstract object CreateObject(void* value);
+    public abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
 }
 
 /// <summary>
@@ -36,8 +38,8 @@ file sealed class WindowsRuntimeComWrappersCallbackHost<TCallback> : WindowsRunt
     public static readonly WindowsRuntimeComWrappersCallbackHost<TCallback> Instance = new();
 
     /// <inheritdoc/>
-    public override unsafe object CreateObject(void* value)
+    public override unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        return TCallback.CreateObject(value);
+        return TCallback.CreateObject(value, out wrapperFlags);
     }
 }

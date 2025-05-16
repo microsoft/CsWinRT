@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// An interface for callbacks for <see cref="System.Runtime.InteropServices.ComWrappers.CreateObject"/>, for Windows Runtime objects.
+/// An interface for callbacks for <see cref="ComWrappers.CreateObject"/>, for Windows Runtime objects.
 /// </summary>
 public unsafe interface IWindowsRuntimeComWrappersCallback
 {
@@ -12,6 +14,7 @@ public unsafe interface IWindowsRuntimeComWrappersCallback
     /// Creates a managed Windows Runtime object for a given native object.
     /// </summary>
     /// <param name="value">The input native object to marshal.</param>
+    /// <param name="wrapperFlags">Flags used to describe the created wrapper object.</param>
     /// <returns>The resulting managed Windows Runtime object.</returns>
     /// <remarks>
     /// <para>
@@ -29,5 +32,5 @@ public unsafe interface IWindowsRuntimeComWrappersCallback
     /// will be such an interface pointer, and avoid doing a <c>QueryInterface</c> call for that same interface.
     /// </para>
     /// </remarks>
-    static abstract object CreateObject(void* value);
+    static abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
 }

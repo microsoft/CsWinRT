@@ -103,9 +103,11 @@ file static unsafe class NotifyCollectionChangedEventHandlerNativeDelegate
 file abstract unsafe class NotifyCollectionChangedEventHandlerComWrappersCallback : IWindowsRuntimeComWrappersCallback
 {
     /// <inheritdoc/>
-    public static object CreateObject(void* value)
+    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         WindowsRuntimeObjectReference valueReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in NotifyCollectionChangedEventHandlerImpl.IID)!;
+
+        wrapperFlags = valueReference.GetReferenceTrackerPtrUnsafe() == null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
 
         return new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(valueReference.Invoke);
     }

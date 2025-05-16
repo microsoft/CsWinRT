@@ -180,6 +180,8 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override object? CreateObject(nint externalComObject, CreateObjectFlags flags)
     {
+        CreatedWrapperFlags wrapperFlags = CreatedWrapperFlags.None;
+
         // If we have a callback instance, it means this invocation was for a statically visible type that can
         // always be marshalled directly (eg. a delegate type, or a sealed type). In that case, just use it.
         if (ComWrappersCallback is { } createObjectCallback)
@@ -191,8 +193,8 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             // than doing a 'QueryInterface' call again from here (because 'CreateObject' only ever gets an
             // 'IUnknown' object as input. So, just select the best available input argument here.
             return interfacePointer != null
-                ? createObjectCallback.CreateObject(interfacePointer)
-                : createObjectCallback.CreateObject((void*)externalComObject);
+                ? createObjectCallback.CreateObject(interfacePointer, out wrapperFlags)
+                : createObjectCallback.CreateObject((void*)externalComObject, out wrapperFlags);
         }
 
         // Store the type so we do a single read from TLS
