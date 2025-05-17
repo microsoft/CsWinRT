@@ -115,6 +115,7 @@ public sealed class IEnumeratorAdapter<T>
     /// <summary>
     /// Retrieves multiple items from the iterator.
     /// </summary>
+    /// <param name="items">The target <see cref="Span{T}"/> to write items into.</param>
     /// <remarks>
     /// This method should directly implement the <c>Windows.Foundation.Collections.IIterator&lt;T&gt;.GetMany</c> method.
     /// </remarks>
