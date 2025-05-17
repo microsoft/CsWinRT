@@ -14,9 +14,11 @@ namespace WindowsRuntime;
 /// <summary>
 /// The base class for all projected Windows Runtime <see cref="IEnumerator{T}"/> types.
 /// </summary>
+/// <typeparam name="T">The type of objects to enumerate.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1"/>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
 {
