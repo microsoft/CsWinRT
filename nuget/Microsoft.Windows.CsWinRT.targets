@@ -368,6 +368,8 @@ $(CsWinRTInternalProjection)
       <!-- Get the target platform (we either use 'Platform', if set and not 'AnyCPU', or fallback to 'PlatformTarget' ) -->
       <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(Platform)' != '' AND '$(Platform)' != 'AnyCPU'">$(Platform)</_StubExePlatform>
       <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(PlatformTarget)' != ''">$(PlatformTarget)</_StubExePlatform>
+
+      <_StubExeWin32ManifestPath Condition="'$(Win32Manifest)' != ''">$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(Win32Manifest)))</_StubExeWin32ManifestPath>
     </PropertyGroup>
     
     <!-- This whole target might take a minute (and it might fail), so notify the user to help debug issues -->
@@ -463,8 +465,9 @@ $(CsWinRTInternalProjection)
       <!-- Hide the copyright banner for the linker as well -->
       <_StubExeMsvcArgs Include="/NOLOGO" />
 
-      <!-- Skip generating a manifest file, matching Native AOT (https://learn.microsoft.com/cpp/build/reference/manifest-create-side-by-side-assembly-manifest) -->
-      <_StubExeMsvcArgs Include="/MANIFEST:NO" />
+      <!-- Embed a manifest if Win32Manifest is specified. (https://learn.microsoft.com/cpp/build/reference/manifest-create-side-by-side-assembly-manifest) -->
+      <_StubExeMsvcArgs Include="/MANIFEST:NO" Condition="'$(_StubExeWin32ManifestPath)'==''" />
+      <_StubExeMsvcArgs Include="/MANIFEST:EMBED /MANIFESTINPUT:$(_StubExeWin32ManifestPath)" Condition="'$(_StubExeWin32ManifestPath)'!=''" />
 
       <!--
         Change the behavior for UCRT to be dynamically linked (the default would be to statically link it, due to '/MT[d]').
