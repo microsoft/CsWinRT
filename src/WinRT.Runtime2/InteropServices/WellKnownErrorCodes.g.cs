@@ -29,4 +29,10 @@ internal partial class WellKnownErrorCodes
 
     /// <summary>Numeric overflow.</summary>
     public const HRESULT DISP_E_OVERFLOW = unchecked((int)0x8002000A);
+
+    /// <summary>A concurrent or interleaved operation changed the state of the object, invalidating this operation.</summary>
+    public const HRESULT E_CHANGED_STATE = unchecked((int)0x8000000C);
+
+    /// <summary>The operation attempted to access data outside the valid range.</summary>
+    public const HRESULT E_BOUNDS = unchecked((int)0x8000000B);
 }

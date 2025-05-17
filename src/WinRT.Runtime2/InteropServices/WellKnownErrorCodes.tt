@@ -20,7 +20,9 @@ var entries = new (string Name, uint Value, string Description)[]
     ("E_POINTER", 0x80004003, "Pointer that is not valid."),
     ("REGDB_E_CLASSNOTREG", 0x80040154, "Class not registered."),
     ("TYPE_E_TYPEMISMATCH", 0x80028CA0, "Type mismatch."),
-    ("DISP_E_OVERFLOW", 0x8002000A, "Numeric overflow.")
+    ("DISP_E_OVERFLOW", 0x8002000A, "Numeric overflow."),
+    ("E_CHANGED_STATE", 0x8000000C, "A concurrent or interleaved operation changed the state of the object, invalidating this operation."),
+    ("E_BOUNDS", 0x8000000B, "The operation attempted to access data outside the valid range.")
 };
 
 for (int i = 0; i < entries.Length; i++)
