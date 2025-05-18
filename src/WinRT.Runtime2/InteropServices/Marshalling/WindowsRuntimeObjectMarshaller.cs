@@ -91,4 +91,22 @@ public static unsafe class WindowsRuntimeObjectMarshaller
 
         return WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstance((nint)value, CreateObjectFlags.None);
     }
+
+    /// <summary>
+    /// Release a given Windows Runtime object.
+    /// </summary>
+    /// <param name="value">The input object to free.</param>
+    /// <remarks>
+    /// Unlike <see cref="Marshal.Release"/>, this method will not throw <see cref="ArgumentNullException"/>
+    /// if <paramref name="value"/> is <see langword="null"/>. This method can be used with any object type.
+    /// </remarks>
+    public static void Free(void* value)
+    {
+        if (value == null)
+        {
+            return;
+        }
+
+        _ = IUnknownVftbl.ReleaseUnsafe(value);
+    }
 }

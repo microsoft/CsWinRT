@@ -210,7 +210,7 @@ file sealed unsafe class NotifyCollectionChangedEventArgsComWrappersMarshallerAt
         }
         finally
         {
-            _ = IUnknownVftbl.ReleaseUnsafe(result);
+            WindowsRuntimeObjectMarshaller.Free(result);
         }
     }
 }
@@ -267,10 +267,7 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
             innerInterface: out void* innerInterface,
             defaultInterface: out void* defaultInterface);
 
-        if (innerInterface == null)
-        {
-            _ = IUnknownVftbl.ReleaseUnsafe(innerInterface);
-        }
+        WindowsRuntimeObjectMarshaller.Free(innerInterface);
 
         return defaultInterface;
     }

@@ -103,7 +103,7 @@ file sealed unsafe class UriComWrappersMarshallerAttribute : WindowsRuntimeComWr
         }
         finally
         {
-            _ = IUnknownVftbl.ReleaseUnsafe(result);
+            WindowsRuntimeObjectMarshaller.Free(result);
         }
     }
 }

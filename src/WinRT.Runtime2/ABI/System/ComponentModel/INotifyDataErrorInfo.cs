@@ -97,10 +97,7 @@ public static unsafe class INotifyDataErrorInfoMethods
             }
             finally
             {
-                if (result != null)
-                {
-                    _ = IUnknownVftbl.ReleaseUnsafe(result);
-                }
+                WindowsRuntimeObjectMarshaller.Free(result);
             }
         }
     }

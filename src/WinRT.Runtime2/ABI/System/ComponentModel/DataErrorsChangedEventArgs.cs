@@ -102,7 +102,7 @@ file sealed unsafe class DataErrorsChangedEventArgsComWrappersMarshallerAttribut
         }
         finally
         {
-            _ = IUnknownVftbl.ReleaseUnsafe(result);
+            WindowsRuntimeObjectMarshaller.Free(result);
         }
     }
 }
@@ -135,10 +135,7 @@ file static unsafe class DataErrorsChangedEventArgsRuntimeClassFactory
             defaultInterface: out void* defaultInterface);
 
         // The value of 'innerInterface' should always be 'null', but let's release it just in case
-        if (innerInterface == null)
-        {
-            _ = IUnknownVftbl.ReleaseUnsafe(innerInterface);
-        }
+        WindowsRuntimeObjectMarshaller.Free(innerInterface);
 
         return defaultInterface;
     }

@@ -154,7 +154,7 @@ internal sealed unsafe class StringComWrappersMarshallerAttribute : WindowsRunti
         }
         finally
         {
-            _ = IUnknownVftbl.ReleaseUnsafe(result);
+            WindowsRuntimeObjectMarshaller.Free(result);
         }
     }
 }
