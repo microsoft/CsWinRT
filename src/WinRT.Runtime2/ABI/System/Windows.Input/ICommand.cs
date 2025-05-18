@@ -59,7 +59,7 @@ public static unsafe class ICommandMethods
         using WindowsRuntimeObjectReferenceValue parameterValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(parameter);
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
-        bool result = false;
+        bool result;
 
         RestrictedErrorInfo.ThrowExceptionForHR(((ICommandVftbl*)*(void***)thisPtr)->CanExecute(thisPtr, parameterValue.GetThisPtrUnsafe(), &result));
 

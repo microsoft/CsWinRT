@@ -16,18 +16,20 @@ namespace WindowsRuntime.InteropServices;
 public static class IEnumeratorMethods<T>
 {
     /// <inheritdoc cref="System.Collections.Generic.IEnumerator{T}.Current"/>
-    /// <param name="thisObject">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
-    public static T Current<TMethods>(WindowsRuntimeObjectReference thisObject)
+    /// <param name="thisObject">The <see cref="WindowsRuntimeObject"/> instance owning <paramref name="thisReference"/>.</param>
+    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
+    public static T Current<TMethods>(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
         where TMethods : IIteratorMethods<T>
     {
-        return TMethods.Current(thisObject);
+        return TMethods.Current(thisReference);
     }
 
     /// <inheritdoc cref="System.Collections.IEnumerator.MoveNext"/>
-    /// <param name="thisObject">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
-    public static bool MoveNext<TMethods>(WindowsRuntimeObjectReference thisObject)
+    /// <param name="thisObject">The <see cref="WindowsRuntimeObject"/> instance owning <paramref name="thisReference"/>.</param>
+    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
+    public static bool MoveNext<TMethods>(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
         where TMethods : IIteratorMethods<T>
     {
-        return TMethods.MoveNext(thisObject);
+        return TMethods.MoveNext(thisReference);
     }
 }

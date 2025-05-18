@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -43,6 +44,16 @@ public sealed class IEnumeratorAdapter<T>
         ArgumentNullException.ThrowIfNull(enumerator);
 
         _enumerator = enumerator;
+    }
+
+    /// <summary>
+    /// Gets an <see cref="IEnumeratorAdapter{T}"/> instance associated to a given <see cref="IEnumerator{T}"/> object.
+    /// </summary>
+    /// <param name="enumerator">The input <see cref="IEnumerator{T}"/> object.</param>
+    /// <returns>The <see cref="IEnumeratorAdapter{T}"/> instance associated to <paramref name="enumerator"/>.</returns>
+    public static IEnumeratorAdapter<T> GetInstance(IEnumerator<T> enumerator)
+    {
+        return IEnumeratorAdapterTable<T>.Table.GetValue(enumerator, static enumerator => new IEnumeratorAdapter<T>(enumerator));
     }
 
     /// <summary>
@@ -139,4 +150,16 @@ public sealed class IEnumeratorAdapter<T>
 
         return index;
     }
+}
+
+/// <summary>
+/// Mapping table for <see cref="IEnumeratorAdapter{T}"/> instances.
+/// </summary>
+/// <typeparam name="T">The type of objects to enumerate.</typeparam>
+file static class IEnumeratorAdapterTable<T>
+{
+    /// <summary>
+    /// The <see cref="ConditionalWeakTable{TKey, TValue}"/> instance for the mapping table.
+    /// </summary>
+    public static readonly ConditionalWeakTable<IEnumerator<T>, IEnumeratorAdapter<T>> Table = [];
 }
