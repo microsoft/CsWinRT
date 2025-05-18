@@ -19,6 +19,7 @@ namespace WindowsRuntime;
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1"/>
+[Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
 {
@@ -60,6 +61,9 @@ public abstract class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnume
     /// <summary>
     /// Advances the iterator to the next item in the collection.
     /// </summary>
+    /// <returns>
+    /// True if the iterator refers to a valid item in the collection, false if the iterator passes the end of the collection.
+    /// </returns>
     /// <remarks>
     /// This method should directly implement the <c>Windows.Foundation.Collections.IIterator&lt;T&gt;.MoveNext</c> method.
     /// </remarks>

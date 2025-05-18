@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
@@ -13,6 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// This type should only be used by generated code.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1"/>
+[Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IIteratorMethods<T>
 {
