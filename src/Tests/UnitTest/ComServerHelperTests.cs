@@ -1,6 +1,4 @@
 ﻿#if NET8_0_OR_GREATER
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -14,7 +12,6 @@ namespace UnitTest
 {
     public class ComServerHelperTests
     {
-
         [Fact]
         public void TestCOMRegistrationAndActivation()
         {
