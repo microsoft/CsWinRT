@@ -35,7 +35,7 @@ namespace UnitTest
 
         private static void RegisterClassObject(Guid clsid, object factory)
         {
-            int hr = PInvoke.CoRegisterClassObject(in clsid, factory, CLSCTX.CLSCTX_LOCAL_SERVER, (int)REGCLS.REGCLS_MULTIPLEUSE, out uint _);
+            int hr = PInvoke.CoRegisterClassObject(in clsid, factory, CLSCTX.CLSCTX_LOCAL_SERVER, REGCLS.REGCLS_MULTIPLEUSE, out uint _);
             if (hr < 0)
             {
                 Marshal.ThrowExceptionForHR(hr);
