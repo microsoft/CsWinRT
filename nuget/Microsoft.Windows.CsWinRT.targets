@@ -526,12 +526,20 @@ $(CsWinRTInternalProjection)
       compiling the binary, to ensure users won't ever see the wrong one in the publish folder and use that by accident.
     -->
     <Delete Files="$(_StubExeBinaryDestinationFilePath)" />
+
+    <!-- Add WindowsSDKBuildToolsBinVersionedArchFolder to the path if we're not using environmental tools since mt.exe and rc.exe aren't alongside link.exe. -->
+    <PropertyGroup Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' and '$(WindowsSDKBuildToolsBinVersionedArchFolder)'!=''">
+      <_StubExeAdditionalPath>$(PATH);$(WindowsSDKBuildToolsBinVersionedArchFolder)</_StubExeAdditionalPath>
+      <_StubExeEnvVars>PATH=$(_StubExeAdditionalPath.Replace(';','%3B'))</_StubExeEnvVars>
+    </PropertyGroup>
     
     <!-- Invoke MSVC to produce the native executable -->
     <Exec
       Command='$(_ClExeFilePath) "$(_StubExeSourceFilePath)" "$(_StubExeNativeLibraryPath)" $(_StubExeMsvcArgsText)'
       ConsoleToMsBuild="true"
-      WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
+      WorkingDirectory="$(_StubExeGeneratedFilesDir)"
+      EnvironmentVariables="$(_StubExeEnvVars)">
+    </Exec>
     
     <!-- Copy the resulting executable to the native directory -->
     <Copy SourceFiles="$(_StubExeBinaryOutputFilePath)" DestinationFiles="$(_StubExeBinaryDestinationFilePath)" />
