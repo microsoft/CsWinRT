@@ -40,6 +40,10 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
+  
+  <ItemGroup Condition="$(IsTargetFrameworkNet8OrGreater)">
+    <ProjectReference Include="..\..\ComServerHelpers\ComServerHelpers.csproj"/>
+  </ItemGroup>
 
   <ItemGroup Condition="!$(IsTargetFrameworkNet5OrGreater)">
     <Compile Remove="**/*.net5.cs" />

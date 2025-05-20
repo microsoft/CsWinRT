@@ -13,7 +13,6 @@
     <ProjectReference Include="..\..\TestWinRT\test_component_fast\test_component_fast.vcxproj" />
     <PackageReference Include="System.Numerics.Vectors" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
-    <ProjectReference Include="..\..\ComServerHelpers\ComServerHelpers.csproj"/>
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
     <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />
