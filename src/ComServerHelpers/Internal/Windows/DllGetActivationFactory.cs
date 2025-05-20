@@ -1,4 +1,7 @@
-﻿using System.Runtime.InteropServices;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.WinRT;
 

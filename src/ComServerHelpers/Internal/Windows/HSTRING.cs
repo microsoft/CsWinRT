@@ -1,4 +1,7 @@
-﻿using System.Runtime.Versioning;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Runtime.Versioning;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.WinRT;
 using static Windows.Win32.PInvoke;

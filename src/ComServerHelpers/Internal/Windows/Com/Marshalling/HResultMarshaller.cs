@@ -1,4 +1,7 @@
-﻿using System.Runtime.InteropServices.Marshalling;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Runtime.InteropServices.Marshalling;
 using Windows.Win32.Foundation;
 
 namespace ComServerHelpers.Internal.Windows.Com.Marshalling;
