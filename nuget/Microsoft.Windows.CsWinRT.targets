@@ -528,9 +528,9 @@ $(CsWinRTInternalProjection)
     <Delete Files="$(_StubExeBinaryDestinationFilePath)" />
 
     <!-- Add WindowsSDKBuildToolsBinVersionedArchFolder to the path if we're not using environmental tools since mt.exe and rc.exe aren't alongside link.exe. -->
-    <PropertyGroup>
-      <_StubExeAdditionalPathForCL>$(PATH)</_StubExeAdditionalPathForCL>
-      <_StubExeAdditionalPathForCL Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' and '$(WindowsSDKBuildToolsBinVersionedArchFolder)'!=''">$(_StubExeAdditionalPathForCL);$(WindowsSDKBuildToolsBinVersionedArchFolder)</_StubExeAdditionalPathForCL>
+    <PropertyGroup Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' and '$(WindowsSDKBuildToolsBinVersionedArchFolder)'!=''">
+      <_StubExeAdditionalPath>$(PATH);$(WindowsSDKBuildToolsBinVersionedArchFolder)</_StubExeAdditionalPath>
+      <_StubExeEnvVars>PATH=$(_StubExeAdditionalPath.Replace(';','%3B'))</_StubExeEnvVars>
     </PropertyGroup>
     
     <!-- Invoke MSVC to produce the native executable -->
@@ -538,7 +538,7 @@ $(CsWinRTInternalProjection)
       Command='$(_ClExeFilePath) "$(_StubExeSourceFilePath)" "$(_StubExeNativeLibraryPath)" $(_StubExeMsvcArgsText)'
       ConsoleToMsBuild="true"
       WorkingDirectory="$(_StubExeGeneratedFilesDir)"
-      EnvironmentVariables="PATH=$(_StubExeAdditionalPathForCL.Replace(';','%3B'))">
+      EnvironmentVariables="$(_StubExeEnvVars)">
     </Exec>
     
     <!-- Copy the resulting executable to the native directory -->
