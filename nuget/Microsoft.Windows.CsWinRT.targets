@@ -369,16 +369,7 @@ $(CsWinRTInternalProjection)
       <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(Platform)' != '' AND '$(Platform)' != 'AnyCPU'">$(Platform)</_StubExePlatform>
       <_StubExePlatform Condition="'$(_StubExePlatform)' == '' AND '$(PlatformTarget)' != ''">$(PlatformTarget)</_StubExePlatform>
 
-      <!-- Win32Manifest is relative to the source dir so make an absolute path since we will invoke cl.exe with current dir that may be different than the project dir. -->
       <_StubExeWin32ManifestPath Condition="'$(Win32Manifest)' != ''">$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(Win32Manifest)))</_StubExeWin32ManifestPath>
-
-      <!-- 
-        Calculate a path to mt.exe and rc.exe from WindowsSDKBuildToolsBinVersionedArchFolder if it's set (this comes
-        from the microsoft.windows.sdk.buildtools nuget). Do this only if we're not using the environmental tools,
-        since in that case the tools should already be in the PATH.
-      -->
-      <_StubExeManifestToolPath Condition="Exists('$(WindowsSDKBuildToolsBinVersionedArchFolder)\mt.exe') and '$(CsWinRTUseEnvironmentalTools)'!='true'">$(WindowsSDKBuildToolsBinVersionedArchFolder)\mt.exe</_StubExeManifestToolPath>
-      <_StubExeRCToolPath Condition="Exists('$(WindowsSDKBuildToolsBinVersionedArchFolder)\rc.exe') and '$(CsWinRTUseEnvironmentalTools)'!='true'">$(WindowsSDKBuildToolsBinVersionedArchFolder)\rc.exe</_StubExeRCToolPath>
     </PropertyGroup>
     
     <!-- This whole target might take a minute (and it might fail), so notify the user to help debug issues -->
@@ -478,10 +469,6 @@ $(CsWinRTInternalProjection)
       <_StubExeMsvcArgs Include="/MANIFEST:NO" Condition="'$(_StubExeWin32ManifestPath)'==''" />
       <_StubExeMsvcArgs Include="/MANIFEST:EMBED /MANIFESTINPUT:$(_StubExeWin32ManifestPath)" Condition="'$(_StubExeWin32ManifestPath)'!=''" />
 
-      <!-- If not using environmental tools, give link.exe a hint about where mt.exe and rc.exe are if we can. -->
-      <_StubExeMsvcArgs Include="&quot;/MT:$(_StubExeManifestToolPath)&quot;" Condition="'$(_StubExeManifestToolPath)'!=''" />
-      <_StubExeMsvcArgs Include="&quot;/RC:$(_StubExeRCToolPath)&quot;" Condition="'$(_StubExeRCToolPath)'!=''" />
-
       <!--
         Change the behavior for UCRT to be dynamically linked (the default would be to statically link it, due to '/MT[d]').
         See: https://learn.microsoft.com/cpp/build/reference/defaultlib-specify-default-library.
@@ -539,12 +526,20 @@ $(CsWinRTInternalProjection)
       compiling the binary, to ensure users won't ever see the wrong one in the publish folder and use that by accident.
     -->
     <Delete Files="$(_StubExeBinaryDestinationFilePath)" />
+
+    <!-- Add WindowsSDKBuildToolsBinVersionedArchFolder to the path if we're not using environmental tools since mt.exe and rc.exe aren't alongside link.exe. -->
+    <PropertyGroup>
+      <_StubExeAdditionalPathForCL>$(PATH)</_StubExeAdditionalPathForCL>
+      <_StubExeAdditionalPathForCL Condition="'$(CsWinRTUseEnvironmentalTools)' != 'true' and '$(WindowsSDKBuildToolsBinVersionedArchFolder)'!=''">$(_StubExeAdditionalPathForCL);$(WindowsSDKBuildToolsBinVersionedArchFolder)</_StubExeAdditionalPathForCL>
+    </PropertyGroup>
     
     <!-- Invoke MSVC to produce the native executable -->
     <Exec
       Command='$(_ClExeFilePath) "$(_StubExeSourceFilePath)" "$(_StubExeNativeLibraryPath)" $(_StubExeMsvcArgsText)'
       ConsoleToMsBuild="true"
-      WorkingDirectory="$(_StubExeGeneratedFilesDir)" />
+      WorkingDirectory="$(_StubExeGeneratedFilesDir)"
+      EnvironmentVariables="PATH=$(_StubExeAdditionalPathForCL.Replace(';','%3B'))">
+    </Exec>
     
     <!-- Copy the resulting executable to the native directory -->
     <Copy SourceFiles="$(_StubExeBinaryOutputFilePath)" DestinationFiles="$(_StubExeBinaryDestinationFilePath)" />
