@@ -32,6 +32,11 @@
     <AnalysisLevel>9.0-all</AnalysisLevel>
   </PropertyGroup>
 
+  <!-- Configure the assembly version as needed -->
+  <PropertyGroup>
+    <AssemblyVersion Condition="'$(ComServerHelpersAssemblyVersionNumber)'!=''">$(ComServerHelpersAssemblyVersionNumber)</AssemblyVersion>
+  </PropertyGroup>
+
   <!-- TODO: Add API Compat. Check how WinRT.Runtime does it. -->
 
   <ItemGroup>

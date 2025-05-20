@@ -7,6 +7,8 @@ variables:
   value: 0
 - name: WinRT.Runtime.AssemblyVersion
   value: '2.3.0.0'
+- name: ComServerHelpers.AssemblyVersion
+  value: '1.0.0.0'
 - name: Net5.SDK.Feed
   value: 'https://dotnetcli.blob.core.windows.net/dotnet'
 - name: Net8.SDK.Version
