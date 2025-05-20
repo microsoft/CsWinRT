@@ -287,6 +287,16 @@ steps:
           WinRT.Runtime.dll
           WinRT.Runtime.pdb
         TargetFolder: $(StagingFolder)\net8.0
+    
+    - task: CopyFiles@2
+      displayName: Stage Net8.0
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\ComServerHelpers\bin\$(BuildConfiguration)\net8.0
+        Contents: |
+          ComServerHelpers.dll
+          ComServerHelpers.pdb
+        TargetFolder: $(StagingFolder)\net8.0
 
     # Stage Net9.0
     - task: CopyFiles@2
