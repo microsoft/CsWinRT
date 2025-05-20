@@ -183,6 +183,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "WinRT.SourceGenerator", "Au
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinRT.SourceGenerator.Roslyn4120", "Authoring\WinRT.SourceGenerator.Roslyn4120\WinRT.SourceGenerator.Roslyn4120.csproj", "{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComServerHelpers", "ComServerHelpers\ComServerHelpers.csproj", "{6FE6A510-E778-0066-2C33-B9A53F7957A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -883,6 +885,22 @@ Global
 		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|x64.Build.0 = Release|Any CPU
 		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|x86.ActiveCfg = Release|Any CPU
 		{20F67B53-BDF2-4252-A0E1-6D0AB55BA2F9}.Release|x86.Build.0 = Release|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Debug|ARM.Build.0 = Debug|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Debug|x64.Build.0 = Debug|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Debug|x86.Build.0 = Debug|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Release|ARM.ActiveCfg = Release|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Release|ARM.Build.0 = Release|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Release|ARM64.Build.0 = Release|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Release|x64.ActiveCfg = Release|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Release|x64.Build.0 = Release|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Release|x86.ActiveCfg = Release|Any CPU
+		{6FE6A510-E778-0066-2C33-B9A53F7957A1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

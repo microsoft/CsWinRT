@@ -1,0 +1,10 @@
+<Project>
+
+   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+   <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    
+    <!-- Projections should not require runtime marshalling. -->
+    <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
+  </PropertyGroup>
+</Project>

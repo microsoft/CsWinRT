@@ -321,6 +321,7 @@ set interop_winmd=%cswinrt_bin_dir%WinRT.Interop.winmd
 set netstandard2_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
 set net8_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net8.0\WinRT.Runtime.dll
 set net9_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net9.0\WinRT.Runtime.dll
+set net8_comserver_helpers=%this_dir%ComServerHelpers\bin\%cswinrt_configuration%\net8.0\ComServerHelpers.dll
 set source_generator_roslyn4080=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4080\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set source_generator_roslyn4120=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4120\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll

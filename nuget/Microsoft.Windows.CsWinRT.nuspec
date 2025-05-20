@@ -34,6 +34,8 @@
     <file src="readme.txt"/>
     <file src="$net8_runtime$" target="lib\net8.0\"/>
     <file src="$net9_runtime$" target="lib\net9.0\"/>
+    <file src="$net8_comserver_helpers$" target="lib\net8.0\"/>
+    <file src="$net8_comserver_helpers$" target="lib\net9.0\"/>
     <file src="$source_generator_roslyn4080$" target="analyzers\dotnet\cs\roslyn4.8"/>
     <file src="$source_generator_roslyn4120$" target="analyzers\dotnet\cs\roslyn4.12"/>
     <file src="$winrt_host_x64$" target ="hosting\x64\native"/>
@@ -72,6 +74,8 @@
     <file src="..\src\WinRT.Runtime\Projections\*netstandard2.0*.cs" target="embedded\netstandard2.0\" />
 
     <file src="..\src\WinRT.Runtime\Configuration\*.cs" exclude="..\src\WinRT.Runtime\Configuration\*.net*.cs"  target="embedded\any\" />
+
+    <!-- -->
 
     <file src="sources\StubExe.c" target="build\sources"/>
 

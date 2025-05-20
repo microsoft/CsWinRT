@@ -1,0 +1,79 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <RootNamespace>ComServerHelpers</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Authors>Microsoft Corporation</Authors>
+    <Company>Microsoft Corporation</Company>
+    <Product>C#/WinRT</Product>
+    <PackageId>ComServerHelpers</PackageId>
+    <FileVersion>$(VersionNumber)</FileVersion>
+    <Version>$(VersionNumber)</Version>
+    <InformationalVersion>$(VersionNumber)</InformationalVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Description>C#/WinRT ComServerHelpers v$(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT ComServerHelpers v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsTrimmable>true</IsTrimmable>
+    <DefineConstants>$(DefineConstants);CsWinRT_LANG_11_FEATURES</DefineConstants>
+    <!-- Set remote for source link. -->
+    <AdoMirrorBuild Condition="'$(AdoMirrorBuild)' == ''">false</AdoMirrorBuild>
+    <GitRepositoryRemoteName Condition="$(AdoMirrorBuild)">github</GitRepositoryRemoteName>
+    <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
+    <RuntimeIdentifiers>win-x64;win-x86;win-arm64;$(RuntimeIdentifiers)</RuntimeIdentifiers>
+    <Nullable>enable</Nullable>
+    <NoWarn>CA1416</NoWarn>
+    <AnalysisLevel>9.0-all</AnalysisLevel>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <Compile Remove="**/*.net5.cs" />
+    <None Include="**/*.net5.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(IsTargetFrameworkNet5OrGreater)">
+    <Compile Remove="**/*.netstandard2.0.cs" />
+    <None Include="**/*.netstandard2.0.cs" />
+  </ItemGroup>
+
+    <!-- API Compat -->
+  <!-- <PropertyGroup>
+     Checks for both breaking changes and for new API additions.
+    <RunApiCompatForSrc>true</RunApiCompatForSrc>
+    <RunMatchingRefApiCompat>true</RunMatchingRefApiCompat>
+    <ApiCompatEnforceOptionalRules>true</ApiCompatEnforceOptionalRules>
+    <CsWinRTApiCompatVersion>2.1.1</CsWinRTApiCompatVersion>
+    <ApiCompatArgs>$(ApiCompatArgs) allow-default-interface-methods</ApiCompatArgs>
+    <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) allow-default-interface-methods</MatchingRefApiCompatArgs>
+  </PropertyGroup>  -->
+    <!-- <ItemGroup Condition="'$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net8.0'">
+    <PackageReference Include="Microsoft.DotNet.ApiCompat" PrivateAssets="All" />
+    <PackageDownload Include="Microsoft.Windows.CsWinRT" Version="[$(CsWinRTApiCompatVersion)]" />
+  </ItemGroup>  -->
+
+    <!-- <Target Name="_ResolveResolvedMatchingContract" BeforeTargets="ValidateApiCompatForSrc;RunMatchingRefApiCompat" Condition="'$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net8.0'">
+    <ItemGroup>
+      <_ReferencePathDirectories Include="@(ReferencePath -> '%(RootDir)%(Directory)')" />
+      <ResolvedMatchingContract Include="$(NuGetPackageRoot)\Microsoft.Windows.CsWinRT\$(CsWinRTApiCompatVersion)\lib\$(TargetFramework)\$(TargetFileName)">
+        <DependencyPaths>@(_ReferencePathDirectories-&gt;Distinct(), ',')</DependencyPaths>
+      </ResolvedMatchingContract>
+    </ItemGroup>
+  </Target> -->
+
+  <!-- NativeAOT specific options, only starting from .NET 8 -->
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
+  </ItemGroup>
+</Project>
