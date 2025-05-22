@@ -224,6 +224,94 @@ internal static partial class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
+    /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IEnumerator{T}"/> instantiation.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition IEnumeratorVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition vftblType = new(
+            ns: null,
+            name: "<IEnumerator1Vftbl>"u8,
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the 'IUnknown' signatures
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(interopReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
+
+        // Get the 'IInspectable' signatures
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(interopReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
+
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Current'
+        MethodSignature get_CurrentType = new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: module.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                module.CorLibTypeFactory.Void.MakePointerType(),
+                module.CorLibTypeFactory.Void.MakePointerType()]);
+
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> get_HasCurrent'
+        MethodSignature get_HasCurrentType = new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: module.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                module.CorLibTypeFactory.Void.MakePointerType(),
+                module.CorLibTypeFactory.Boolean.MakePointerType()]);
+
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> MoveNext'
+        MethodSignature moveNextType = get_HasCurrentType;
+
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, void*, uint*, HRESULT> GetMany'
+        MethodSignature getManyType = new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: module.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                module.CorLibTypeFactory.Void.MakePointerType(),
+                module.CorLibTypeFactory.UInt32,
+                module.CorLibTypeFactory.Void.MakePointerType(),
+                module.CorLibTypeFactory.UInt32.MakePointerType()]);
+
+        // The vtable layout for 'IEnumerator`1<T>' looks like this:
+        //
+        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+        // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+        // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+        // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Current;
+        // public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> get_HasCurrent;
+        // public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> MoveNext;
+        // public delegate* unmanaged[MemberFunction]<void*, uint, void*, uint*, HRESULT> GetMany;
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Current"u8, FieldAttributes.Public, get_CurrentType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_HasCurrent"u8, FieldAttributes.Public, get_HasCurrentType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("MoveNext"u8, FieldAttributes.Public, moveNextType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetMany"u8, FieldAttributes.Public, getManyType.Import(module).MakeFunctionPointerType()));
+
+        return vftblType;
+    }
+
+    /// <summary>
     /// Creates a new type definition for the vtable of an 'IKeyValuePair`2&lt;TKey, TValue&gt;' instantiation for some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -248,7 +336,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
         // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, int>'
-        MethodSignature valueType = new(
+        MethodSignature get_KeyOrValueType = new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
@@ -274,8 +362,8 @@ internal static partial class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Key"u8, FieldAttributes.Public, valueType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Key"u8, FieldAttributes.Public, get_KeyOrValueType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, get_KeyOrValueType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }

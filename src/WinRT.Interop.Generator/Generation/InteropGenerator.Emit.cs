@@ -51,6 +51,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit interop types for 'IEnumerator<T>' types
+        DefineIEnumeratorTypes(args, state, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for 'KeyValuePair<,>' types
         DefineKeyValuePairTypes(args, state, interopDefinitions, interopReferences, module);
 
@@ -234,6 +239,35 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Defines the interop types for <see cref="System.Collections.Generic.IEnumerator{T}"/> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="state"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIEnumeratorTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorState state,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in state.IEnumerator1Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IEnumerator1TypeCodeGenerationError(typeSignature.Name, e);
+            }
+        }
+    }
+
+    /// <summary>
     /// Defines the interop types for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> types.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
@@ -294,6 +328,7 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.DelegateVftbl);
             module.TopLevelTypes.Add(interopDefinitions.DelegateReferenceVftbl);
             module.TopLevelTypes.Add(interopDefinitions.DelegateInterfaceEntries);
+            module.TopLevelTypes.Add(interopDefinitions.IEnumerator1Vftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
             module.TopLevelTypes.Add(interopDefinitions.InteropImplementationDetails);
