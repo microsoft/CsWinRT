@@ -53,7 +53,8 @@ internal sealed partial class BaseClassFactoryWrapper(BaseClassFactory factory, 
         }
         catch (Exception e)
         {
-            return (HRESULT)Marshal.GetHRForException(e);
+            WinRT.ExceptionHelpers.SetErrorInfo(e);
+            return (HRESULT)WinRT.ExceptionHelpers.GetHRForException(e);
         }
         finally
         {
@@ -81,7 +82,8 @@ internal sealed partial class BaseClassFactoryWrapper(BaseClassFactory factory, 
         }
         catch (Exception e)
         {
-            return (HRESULT)Marshal.GetHRForException(e);
+            WinRT.ExceptionHelpers.SetErrorInfo(e);
+            return (HRESULT)WinRT.ExceptionHelpers.GetHRForException(e);
         }
         return HRESULT.S_OK;
     }

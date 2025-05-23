@@ -25,14 +25,20 @@ internal sealed partial class BaseActivationFactoryWrapper(BaseActivationFactory
         try
         {
             object managedInstance = factory.ActivateInstance();
+            factory.OnInstanceCreated(managedInstance);
+
             unknown = comWrappers.GetOrCreateComInterfaceForObject(managedInstance, CreateComInterfaceFlags.None);
             *instance = (void*)unknown;
-
-            factory.OnInstanceCreated(managedInstance);
         }
         catch (Exception e)
         {
-            return (HRESULT)Marshal.GetHRForException(e);
+            if (unknown != 0)
+            {
+                Marshal.Release(unknown);
+            }
+
+            WinRT.ExceptionHelpers.SetErrorInfo(e);
+            return (HRESULT)WinRT.ExceptionHelpers.GetHRForException(e);
         }
         return HRESULT.S_OK;
     }
@@ -41,11 +47,11 @@ internal sealed partial class BaseActivationFactoryWrapper(BaseActivationFactory
     {
         if (iidCount is null || iids is null)
         {
-            return HRESULT.E_INVALIDARG;
+            return HRESULT.E_POINTER;
         }
 
         *iidCount = 1;
-        *iids = (Guid*)Marshal.AllocHGlobal(sizeof(Guid));
+        *iids = (Guid*)NativeMemory.Alloc((nuint)sizeof(Guid));
         *iids[0] = global::Windows.Win32.System.WinRT.IActivationFactory.IID_Guid;
         return HRESULT.S_OK;
     }
@@ -74,7 +80,8 @@ internal sealed partial class BaseActivationFactoryWrapper(BaseActivationFactory
         }
         catch (Exception e)
         {
-            return (HRESULT)Marshal.GetHRForException(e);
+            WinRT.ExceptionHelpers.SetErrorInfo(e);
+            return (HRESULT)WinRT.ExceptionHelpers.GetHRForException(e);
         }
     }
 

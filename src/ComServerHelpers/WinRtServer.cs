@@ -12,6 +12,7 @@ using ComServerHelpers.Internal.Windows;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Com;
 using Windows.Win32.System.WinRT;
+using WinRT;
 using static Windows.Win32.PInvoke;
 //using unsafe DllActivationCallback = delegate* unmanaged[Stdcall]<Windows.Win32.System.WinRT.HSTRING, Windows.Win32.System.WinRT.IActivationFactory**, Windows.Win32.Foundation.HRESULT>;
 
@@ -71,12 +72,15 @@ public sealed class WinRtServer : IDisposable
             result.ThrowOnFailure();
         }
 
-        using ComPtr<IGlobalOptions> options = default;
         Guid clsid = CLSID_GlobalOptions;
         Guid iid = IGlobalOptions.IID_Guid;
-        if (CoCreateInstance(&clsid, null, CLSCTX.CLSCTX_INPROC_SERVER, &iid, (void**)options.GetAddressOf()) == HRESULT.S_OK)
+
+        IntPtr abiPtr = IntPtr.Zero;
+        if (CoCreateInstance(&clsid, null, CLSCTX.CLSCTX_INPROC_SERVER, &iid, (void**)&abiPtr) == HRESULT.S_OK)
         {
-            options.Get()->Set(GLOBALOPT_PROPERTIES.COMGLB_RO_SETTINGS, (nuint)GLOBALOPT_RO_FLAGS.COMGLB_FAST_RUNDOWN);
+            var options = MarshalInterface<IGlobalOptions>.FromAbi(abiPtr);
+            options.Set(GLOBALOPT_PROPERTIES.COMGLB_RO_SETTINGS, (nuint)GLOBALOPT_RO_FLAGS.COMGLB_FAST_RUNDOWN);
+            Marshal.Release(abiPtr);
         }
     }
 
@@ -193,7 +197,7 @@ public sealed class WinRtServer : IDisposable
         delegate* unmanaged[Stdcall]<HSTRING, IActivationFactory**, HRESULT>* activationFactoryCallbacks = null;
         try
         {
-            activatableClassIds = (HSTRING*)Marshal.AllocHGlobal(sizeof(HSTRING) * managedActivatableClassIds.Length);
+            activatableClassIds = (HSTRING*)NativeMemory.Alloc((nuint)(sizeof(HSTRING) * managedActivatableClassIds.Length));
             for (int activatableClassIdIndex = 0; activatableClassIdIndex < managedActivatableClassIds.Length; activatableClassIdIndex++)
             {
                 string managedActivatableClassId = managedActivatableClassIds[activatableClassIdIndex];
@@ -203,7 +207,7 @@ public sealed class WinRtServer : IDisposable
                 }
             }
 
-            activationFactoryCallbacks = (delegate* unmanaged[Stdcall]<HSTRING, IActivationFactory**, HRESULT>*)Marshal.AllocHGlobal(sizeof(delegate* unmanaged[Stdcall]<HSTRING, IActivationFactory**, HRESULT>*) * managedActivatableClassIds.Length);
+            activationFactoryCallbacks = (delegate* unmanaged[Stdcall]<HSTRING, IActivationFactory**, HRESULT>*)NativeMemory.Alloc((nuint)(sizeof(delegate* unmanaged[Stdcall]<HSTRING, IActivationFactory**, HRESULT>*) * managedActivatableClassIds.Length));
             for (int activationFactoryCallbackIndex = 0; activationFactoryCallbackIndex < managedActivatableClassIds.Length; activationFactoryCallbackIndex++)
             {
                 activationFactoryCallbacks[activationFactoryCallbackIndex] = activationFactoryCallbackPointer;

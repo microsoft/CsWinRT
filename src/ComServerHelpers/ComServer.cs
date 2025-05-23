@@ -11,6 +11,7 @@ using ComServerHelpers.Internal;
 using ComServerHelpers.Internal.Windows;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Com;
+using WinRT;
 using static Windows.Win32.PInvoke;
 
 namespace ComServerHelpers;
@@ -54,12 +55,15 @@ public sealed class ComServer : IDisposable
     /// </summary>
     public unsafe ComServer()
     {
-        using ComPtr<IGlobalOptions> options = default;
         Guid clsid = CLSID_GlobalOptions;
         Guid iid = IGlobalOptions.IID_Guid;
-        if (CoCreateInstance(&clsid, null, CLSCTX.CLSCTX_INPROC_SERVER, &iid, (void**)options.GetAddressOf()) == HRESULT.S_OK)
+
+        IntPtr abiPtr = IntPtr.Zero;
+        if (CoCreateInstance(&clsid, null, CLSCTX.CLSCTX_INPROC_SERVER, &iid, (void**)&abiPtr) == HRESULT.S_OK)
         {
-            options.Get()->Set(GLOBALOPT_PROPERTIES.COMGLB_RO_SETTINGS, (nuint)GLOBALOPT_RO_FLAGS.COMGLB_FAST_RUNDOWN);
+            var options = MarshalInterface<IGlobalOptions>.FromAbi(abiPtr);
+            options.Set(GLOBALOPT_PROPERTIES.COMGLB_RO_SETTINGS, (nuint)GLOBALOPT_RO_FLAGS.COMGLB_FAST_RUNDOWN);
+            Marshal.Release(abiPtr);
         }
     }
 
@@ -85,20 +89,31 @@ public sealed class ComServer : IDisposable
         }
 
         Guid clsid = factory.Clsid;
-
         if (factories.ContainsKey(clsid))
         {
             return false;
         }
 
         factory.InstanceCreated += Factory_InstanceCreated;
+        nint wrapper = 0;
+        try
+        {
+            wrapper = this.comWrappers.GetOrCreateComInterfaceForObject(new BaseClassFactoryWrapper(factory, comWrappers), CreateComInterfaceFlags.None);
 
-        nint wrapper = this.comWrappers.GetOrCreateComInterfaceForObject(new BaseClassFactoryWrapper(factory, comWrappers), CreateComInterfaceFlags.None);
+            uint cookie;
+            CoRegisterClassObject(&clsid, (IUnknown*)wrapper, CLSCTX.CLSCTX_LOCAL_SERVER, (REGCLS.REGCLS_MULTIPLEUSE | REGCLS.REGCLS_SUSPENDED), &cookie).ThrowOnFailure();
 
-        uint cookie;
-        CoRegisterClassObject(&clsid, (IUnknown*)wrapper, CLSCTX.CLSCTX_LOCAL_SERVER, (REGCLS.REGCLS_MULTIPLEUSE | REGCLS.REGCLS_SUSPENDED), &cookie).ThrowOnFailure();
+            factories.Add(clsid, (factory, cookie));
+        }
+        catch (Exception)
+        {
+            if (wrapper != 0)
+            {
+                Marshal.Release(wrapper);
+            }
+            throw;
+        }
 
-        factories.Add(clsid, (factory, cookie));
         return true;
     }
 

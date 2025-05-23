@@ -18,10 +18,7 @@ public abstract class BaseActivationFactory
     /// <summary>
     /// Gets the Activatable Class ID.
     /// </summary>
-    public abstract string ActivatableClassId
-    {
-        get;
-    }
+    public abstract string ActivatableClassId { get; }
 
     /// <summary>
     /// Occurs when a new instance is created.
