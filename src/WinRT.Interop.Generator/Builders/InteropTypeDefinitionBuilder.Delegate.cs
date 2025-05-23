@@ -649,17 +649,21 @@ internal partial class InteropTypeDefinitionBuilder
                 body: computeVtablesMethod));
 
             // Create a method body for the 'ComputeVtables' method
-            CilInstructionCollection computeVtablesInstructions = computeVtablesMethod.CreateAndBindCilMethodBody().Instructions;
-
-            _ = computeVtablesInstructions.Add(Ldarg_1);
-            computeVtablesInstructions.Add(CilInstruction.CreateLdcI4(interopDefinitions.DelegateInterfaceEntries.Fields.Count));
-            _ = computeVtablesInstructions.Add(Stind_I4);
-            _ = computeVtablesInstructions.Add(Call, delegateInterfaceEntriesImplType.GetMethod("get_Vtables"u8));
-            _ = computeVtablesInstructions.Add(Ret);
+            computeVtablesMethod.CilMethodBody = new CilMethodBody(computeVtablesMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_1 },
+                    { CilInstruction.CreateLdcI4(interopDefinitions.DelegateInterfaceEntries.Fields.Count) },
+                    { Stind_I4 },
+                    { Call, delegateInterfaceEntriesImplType.GetMethod("get_Vtables"u8) },
+                    { Ret }
+                }
+            };
 
             // Define the 'CreateObject' method as follows:
             //
-            // public override object CreateObject(void* value)
+            // public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
             MethodDefinition createObjectMethod = new(
                 name: "CreateObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
