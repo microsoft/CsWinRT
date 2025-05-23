@@ -665,7 +665,13 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Object,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.CreatedWrapperFlags.Import(module).ToTypeSignature(isValueType: true)]))
+            {
+                // The 'wrapperFlags' parameter is '[out]'
+                ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
+            };
 
             marshallerType.Methods.Add(createObjectMethod);
 
@@ -674,18 +680,25 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
                 body: createObjectMethod));
 
-            // Create a method body for the 'CreateObject' method
-            CilInstructionCollection createObjectInstructions = createObjectMethod.CreateAndBindCilMethodBody().Instructions;
-
             // Import the 'UnboxToManaged<TCallback>' method for the delegate
             IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor = interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged2
                 .Import(module)
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToTypeSignature(isValueType: false));
 
-            _ = createObjectInstructions.Add(Ldarg_1);
-            _ = createObjectInstructions.Add(Call, delegateReferenceImplType.GetMethod("get_IID"u8));
-            _ = createObjectInstructions.Add(Call, windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor);
-            _ = createObjectInstructions.Add(Ret);
+            // Create a method body for the 'CreateObject' method
+            createObjectMethod.CilMethodBody = new CilMethodBody(createObjectMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_2 },
+                    { Ldc_I4_1 },
+                    { Stind_I4 },
+                    { Ldarg_1 },
+                    { Call, delegateReferenceImplType.GetMethod("get_IID"u8) },
+                    { Call, windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor },
+                    { Ret }
+                }
+            };
         }
 
         /// <summary>
