@@ -247,43 +247,11 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
         MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
 
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Current'
-        MethodSignature get_CurrentType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType()]);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> get_HasCurrent'
-        MethodSignature get_HasCurrentType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Boolean.MakePointerType()]);
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> MoveNext'
+        // Get the 'IIterator`1' signatures
+        MethodSignature get_CurrentType = WellKnownTypeSignatureFactory.IEnumerator1CurrentImpl(interopReferences);
+        MethodSignature get_HasCurrentType = WellKnownTypeSignatureFactory.IEnumerator1HasCurrentImpl(interopReferences);
         MethodSignature moveNextType = get_HasCurrentType;
-
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, void*, uint*, HRESULT> GetMany'
-        MethodSignature getManyType = new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
-            parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.UInt32,
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.UInt32.MakePointerType()]);
+        MethodSignature getManyType = WellKnownTypeSignatureFactory.IEnumerator1GetManyImpl(interopReferences);
 
         // The vtable layout for 'IEnumerator`1<T>' looks like this:
         //
