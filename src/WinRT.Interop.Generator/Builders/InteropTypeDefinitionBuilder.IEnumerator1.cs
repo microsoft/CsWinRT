@@ -27,7 +27,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <param name="iteratorMethodsType">The resulting implementation type.</param>
+        /// <param name="iteratorMethodsType">The resulting methods type.</param>
         public static void IIteratorMethods(
             GenericInstanceTypeSignature enumeratorType,
             InteropDefinitions interopDefinitions,
@@ -200,6 +200,70 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Call, interopReferences.IIteratorMethodsMoveNext.Import(module) },
+                    { Ret }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for an <c>IIterator&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type type.</param>
+        /// <param name="iteratorMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IIteratorMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature enumeratorType,
+            TypeDefinition iteratorMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
+            TypeSignature windowsRuntimeEnumerator1Type = interopReferences.WindowsRuntimeEnumerator1.MakeGenericInstanceType(elementType);
+
+            // We're declaring an 'internal sealed class' type
+            nativeObjectType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, "NativeObject"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed,
+                baseType: windowsRuntimeEnumerator1Type.Import(module).ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(nativeObjectType);
+
+            // Define the constructor
+            MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false));
+
+            nativeObjectType.Methods.Add(ctor);
+
+            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
+            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeEnumerator1_ctor(windowsRuntimeEnumerator1Type).Import(module));
+
+            // Define the 'CurrentNative' method as follows:
+            //
+            // public static <ELEMENT_TYPE> CurrentNative()
+            MethodDefinition currentNativeMethod = new(
+                name: "CurrentNative"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(elementType.Import(module)));
+
+            nativeObjectType.Methods.Add(currentNativeMethod);
+
+            // Mark the 'CurrentNative' method as overriding the base method
+            nativeObjectType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.WindowsRuntimeEnumerator1CurrentNative.Import(module),
+                body: currentNativeMethod));
+
+            // Create a method body for the 'CurrentNative' method
+            currentNativeMethod.CilMethodBody = new CilMethodBody(currentNativeMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.WindowsRuntimeObjectget_NativeObjectReference.Import(module) },
+                    { Call, iteratorMethodsType.GetMethod("Current"u8) },
                     { Ret }
                 }
             };

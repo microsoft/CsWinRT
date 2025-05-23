@@ -270,6 +270,18 @@ internal sealed class InteropReferences
     public TypeReference IIteratorMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IIteratorMethods");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeObject => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeObject");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeEnumerator&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeEnumerator1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeEnumerator`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -610,6 +622,22 @@ internal sealed class InteropReferences
             parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeEnumerator1"/>'s <c>CurrentNative</c> method.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeObjectget_NativeObjectReference => field ??= WindowsRuntimeObject
+        .CreateMemberReference("get_NativeObjectReference", MethodSignature.CreateInstance(
+            returnType: WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)));
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeEnumerator1"/>'s <c>CurrentNative</c> method.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeEnumerator1CurrentNative => field ??= WindowsRuntimeEnumerator1
+        .CreateMemberReference("CurrentNative", MethodSignature.CreateInstance(
+            returnType: new GenericParameterSignature(GenericParameterType.Type, 0)));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback.CreateObject(void*)</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -854,5 +882,18 @@ internal sealed class InteropReferences
             .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateInstance(
                 returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
                 parameterTypes: [delegateType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given <see cref="WindowsRuntimeEnumerator1"/> instantiation.
+    /// </summary>
+    /// <param name="enumeratorType">The input delegate type.</param>
+    public MemberReference WindowsRuntimeEnumerator1_ctor(TypeSignature enumeratorType)
+    {
+        return enumeratorType
+            .ToTypeDefOrRef()
+            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
     }
 }

@@ -259,13 +259,21 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'DelegateImpl' type (with the delegate interface vtable implementation)
+                // Define the 'IIteratorMethods' type (with the public thunks for 'IIterator<T>' native calls)
                 InteropTypeDefinitionBuilder.IEnumerator1.IIteratorMethods(
                     enumeratorType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     iteratorMethodsType: out TypeDefinition iteratorMethodsType);
+
+                // Define the 'NativeObject' type (with the RCW implementation)
+                InteropTypeDefinitionBuilder.IEnumerator1.NativeObject(
+                    enumeratorType: typeSignature,
+                    iteratorMethodsType: iteratorMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out _);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

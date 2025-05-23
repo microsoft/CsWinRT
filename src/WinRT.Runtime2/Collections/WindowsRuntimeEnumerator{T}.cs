@@ -43,11 +43,12 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
     /// <summary>
     /// Gets the current item in the collection.
     /// </summary>
+    /// <returns>The current element.</returns>
     /// <remarks>
     /// This method should directly implement the <c>Windows.Foundation.Collections.IIterator&lt;T&gt;.Current</c> property.
     /// </remarks>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1.current"/>
-    protected abstract T CurrentNative { get; }
+    protected abstract T CurrentNative();
 
     /// <inheritdoc/>
     public T Current { get; }
