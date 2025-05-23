@@ -90,6 +90,12 @@ internal sealed class InteropReferences
     public TypeReference Exception => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "Exception");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Diagnostics.UnreachableException"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference UnreachableException => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Diagnostics", "UnreachableException");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Guid"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -364,6 +370,13 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference Attribute_ctor => field ??= Attribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Diagnostics.UnreachableException.UnreachableException()"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference UnreachableException_ctor => field ??= UnreachableException
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
 
     /// <summary>
