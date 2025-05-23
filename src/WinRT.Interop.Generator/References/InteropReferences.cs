@@ -264,6 +264,12 @@ internal sealed class InteropReferences
     public TypeReference IAgileObjectImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IAgileObjectImpl");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IIterator1Methods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IIteratorMethods`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -298,6 +304,12 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference WindowsRuntimeDelegateMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "WindowsRuntimeDelegateMarshaller");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference HStringMarshaller => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "HStringMarshaller");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.RestrictedErrorInfo</c>.
@@ -738,6 +750,24 @@ internal sealed class InteropReferences
                 new TypeReference(_windowsRuntimeModule.CorLibTypeFactory.CorLibScope, "System"u8, "Guid"u8).MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToManaged</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference HStringMarshallerConvertToManaged => field ??= HStringMarshaller
+        .CreateMemberReference("ConvertToManaged", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.String,
+            parameterTypes: [_interopModule.CorLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.Free</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference HStringMarshallerFree => field ??= HStringMarshaller
+        .CreateMemberReference("Free", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Void,
+            parameterTypes: [_interopModule.CorLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.RestrictedErrorInfo.ThrowExceptionForHR(int)</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -806,5 +836,19 @@ internal sealed class InteropReferences
             .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateInstance(
                 returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
                 parameterTypes: [delegateType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods&lt;T&gt;.Current</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IIterator1MethodsCurrent(TypeSignature elementType)
+    {
+        return IIterator1Methods
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Current", MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
     }
 }

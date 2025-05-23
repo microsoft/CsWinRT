@@ -259,6 +259,13 @@ internal partial class InteropGenerator
 
             try
             {
+                // Define the 'DelegateImpl' type (with the delegate interface vtable implementation)
+                InteropTypeDefinitionBuilder.IEnumerator1.IIteratorMethods(
+                    enumeratorType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    iteratorMethodsType: out TypeDefinition iteratorMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
