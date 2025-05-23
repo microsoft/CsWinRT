@@ -180,6 +180,12 @@ internal sealed class InteropReferences
     public TypeReference ComInterfaceEntry => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices.ComWrappers", "ComWrappers/ComInterfaceEntry");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.CreatedWrapperFlags"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference CreatedWrapperFlags => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices", "CreatedWrapperFlags");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.InAttribute"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -288,6 +294,12 @@ internal sealed class InteropReferences
     public TypeReference IWindowsRuntimeComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IWindowsRuntimeComWrappersCallback");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeUnsealedObjectComWrappersCallback</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IWindowsRuntimeUnsealedObjectComWrappersCallback => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IWindowsRuntimeUnsealedObjectComWrappersCallback");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -394,6 +406,15 @@ internal sealed class InteropReferences
                 ReadOnlySpan.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
                 ReadOnlySpan.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Method, 0))]))
         .MakeGenericInstanceMethod(_interopModule.CorLibTypeFactory.Char);
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <see cref="System.MemoryExtensions.AsSpan(string?)"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference MemoryExtensionsAsSpanCharString => field ??= MemoryExtensions
+        .CreateMemberReference("AsSpan", MethodSignature.CreateStatic(
+            returnType: ReadOnlySpanChar.ToTypeSignature(isValueType: true),
+            parameterTypes: [_interopModule.CorLibTypeFactory.String]));
 
     /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <see cref="System.Runtime.InteropServices.MemoryMarshal.CreateSpan"/>.
@@ -645,6 +666,26 @@ internal sealed class InteropReferences
         .CreateMemberReference("CreateObject", MethodSignature.CreateStatic(
             returnType: _windowsRuntimeModule.CorLibTypeFactory.Object,
             parameterTypes: [_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback.CreateObject(void*)</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IWindowsRuntimeUnsealedObjectComWrappersCallbackTryCreateObject => field ??= IWindowsRuntimeUnsealedObjectComWrappersCallback
+        .CreateMemberReference("TryCreateObject", MethodSignature.CreateStatic(
+            returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+            parameterTypes: [
+                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                ReadOnlySpanChar.ToTypeSignature(isValueType: true),
+                _windowsRuntimeModule.CorLibTypeFactory.Object.MakeByReferenceType(),
+                CreatedWrapperFlags.MakeByReferenceType()]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReference.GetReferenceTrackerPtrUnsafe()</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeObjectReferenceGetReferenceTrackerPtrUnsafe => field ??= WindowsRuntimeObjectReference
+        .CreateMemberReference("GetReferenceTrackerPtrUnsafe", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType()));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.GetThisPtrUnsafe()</c>.

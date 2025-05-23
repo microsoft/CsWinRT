@@ -173,7 +173,7 @@ internal partial class InteropGenerator
                     module: module,
                     nativeDelegateType: out TypeDefinition nativeDelegateType);
 
-                // Define the 'ComWrappersCallback' type (with the 'IComWrappersCallback' implementation)
+                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeObjectComWrappersCallback' implementation)
                 InteropTypeDefinitionBuilder.Delegate.ComWrappersCallbackType(
                     delegateType: typeSignature,
                     delegateImplType: delegateImplType,
@@ -271,6 +271,14 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IEnumerator1.NativeObject(
                     enumeratorType: typeSignature,
                     iteratorMethodsType: iteratorMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
+
+                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
+                InteropTypeDefinitionBuilder.IEnumerator1.ComWrappersCallbackType(
+                    enumeratorType: typeSignature,
+                    nativeObjectType: nativeObjectType,
                     interopReferences: interopReferences,
                     module: module,
                     out _);
