@@ -750,12 +750,16 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(convertToUnmanagedMethod);
 
             // Create a method body for the 'ConvertToUnmanaged' method
-            CilInstructionCollection convertToUnmanagedMethodInstructions = convertToUnmanagedMethod.CreateAndBindCilMethodBody().Instructions;
-
-            _ = convertToUnmanagedMethodInstructions.Add(Ldarg_0);
-            _ = convertToUnmanagedMethodInstructions.Add(Call, delegateImplType.GetMethod("get_IID"u8));
-            _ = convertToUnmanagedMethodInstructions.Add(Call, interopReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.Import(module));
-            _ = convertToUnmanagedMethodInstructions.Add(Ret);
+            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, delegateImplType.GetMethod("get_IID"u8) },
+                    { Call, interopReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.Import(module) }
+                    { Ret }
+                }
+            };
 
             // Define the 'ConvertToManaged' method as follows:
             //
@@ -776,11 +780,15 @@ internal partial class InteropTypeDefinitionBuilder
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToTypeSignature(isValueType: false));
 
             // Create a method body for the 'ConvertToManaged' method
-            CilInstructionCollection convertToManagedMethodInstructions = convertToManagedMethod.CreateAndBindCilMethodBody().Instructions;
-
-            _ = convertToManagedMethodInstructions.Add(Ldarg_0);
-            _ = convertToManagedMethodInstructions.Add(Call, windowsRuntimeDelegateMarshallerConvertToManagedDescriptor);
-            _ = convertToManagedMethodInstructions.Add(Ret);
+            convertToManagedMethod.CilMethodBody = new CilMethodBody(convertToManagedMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, windowsRuntimeDelegateMarshallerConvertToManagedDescriptor },
+                    { Ret }
+                }
+            };
 
             // Define the 'BoxToUnmanaged' method as follows:
             //
@@ -795,12 +803,16 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(boxToUnmanagedMethod);
 
             // Create a method body for the 'ConvertToUnmanaged' method
-            CilInstructionCollection boxToUnmanagedMethodInstructions = boxToUnmanagedMethod.CreateAndBindCilMethodBody().Instructions;
-
-            _ = boxToUnmanagedMethodInstructions.Add(Ldarg_0);
-            _ = boxToUnmanagedMethodInstructions.Add(Call, delegateReferenceImplType.GetMethod("get_IID"u8));
-            _ = boxToUnmanagedMethodInstructions.Add(Call, interopReferences.WindowsRuntimeDelegateMarshallerBoxToUnmanaged.Import(module));
-            _ = boxToUnmanagedMethodInstructions.Add(Ret);
+            boxToUnmanagedMethod.CilMethodBody = new CilMethodBody(boxToUnmanagedMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, delegateReferenceImplType.GetMethod("get_IID"u8) },
+                    { Call, interopReferences.WindowsRuntimeDelegateMarshallerBoxToUnmanaged.Import(module) },
+                    { Ret }
+                }
+            };
 
             // Define the 'UnboxToManaged' method as follows:
             //
@@ -821,11 +833,15 @@ internal partial class InteropTypeDefinitionBuilder
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToTypeSignature(isValueType: false));
 
             // Create a method body for the 'UnboxToManaged' method
-            CilInstructionCollection unboxToUnmanagedMethodInstructions = unboxToUnmanagedMethod.CreateAndBindCilMethodBody().Instructions;
-
-            _ = unboxToUnmanagedMethodInstructions.Add(Ldarg_0);
-            _ = unboxToUnmanagedMethodInstructions.Add(Call, windowsRuntimeDelegateMarshallerUnboxToManagedDescriptor);
-            _ = unboxToUnmanagedMethodInstructions.Add(Ret);
+            unboxToUnmanagedMethod.CilMethodBody = new CilMethodBody(unboxToUnmanagedMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, windowsRuntimeDelegateMarshallerUnboxToManagedDescriptor },
+                    { Ret }
+                }
+            };
         }
 
         /// <summary>
