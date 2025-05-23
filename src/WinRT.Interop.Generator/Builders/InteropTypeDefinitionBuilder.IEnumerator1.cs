@@ -352,7 +352,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // Compare the runtime class name for the fast path
                     { Ldarg_1 },
-                    { Ldstr, InteropUtf8NameFactory.TypeName(enumeratorType) }, // TODO
+                    { Ldstr, enumeratorType.FullName }, // TODO
                     { Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module) },
                     { Call, interopReferences.MemoryExtensionsSequenceEqualChar.Import(module) },
                     { Brfalse_S, ldarg_3_failure.CreateLabel() },
@@ -394,7 +394,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <summary>
         /// Creates a new type definition for the marshaller attribute of some <c>IIterator&lt;T&gt;</c> interface.
         /// </summary>
-        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -519,6 +519,31 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret },
                 }
             };
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the proxy type of some <c>IIterator&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="enumeratorComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            GenericInstanceTypeSignature enumeratorType,
+            TypeDefinition enumeratorComWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition proxyType)
+        {
+            ProxyType(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType),
+                runtimeClassName: enumeratorType.FullName, // TODO
+                comWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
         }
     }
 }

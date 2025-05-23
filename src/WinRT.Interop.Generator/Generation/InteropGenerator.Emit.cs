@@ -289,7 +289,15 @@ internal partial class InteropGenerator
                     nativeObjectType: nativeObjectType,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition delegateComWrappersMarshallerType);
+                    out TypeDefinition enumeratorComWrappersMarshallerType);
+
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.IEnumerator1.Proxy(
+                    enumeratorType: typeSignature,
+                    enumeratorComWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out _);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
