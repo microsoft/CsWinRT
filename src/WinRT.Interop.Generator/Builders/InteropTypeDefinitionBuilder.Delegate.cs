@@ -835,39 +835,22 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="marshallerType">The resulting proxy type.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
         public static void Proxy(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition delegateComWrappersMarshallerAttributeType,
             InteropReferences interopReferences,
             ModuleDefinition module,
-            out TypeDefinition marshallerType)
+            out TypeDefinition proxyType)
         {
-            // We're declaring an 'internal static class' type
-            marshallerType = new(
+            ProxyType(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
                 name: InteropUtf8NameFactory.TypeName(delegateType),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
-
-            module.TopLevelTypes.Add(marshallerType);
-
-            // Get the constructor for '[WindowsRuntimeClassName]'
-            MemberReference windowsRuntimeClassNameAttributeCtor = interopReferences.WindowsRuntimeClassNameAttribute
-                .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [module.CorLibTypeFactory.String]))
-                .Import(module);
-
-            // Add the attribute with the name of the runtime class
-            marshallerType.CustomAttributes.Add(new CustomAttribute(
-                constructor: windowsRuntimeClassNameAttributeCtor,
-                signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                    argumentType: module.CorLibTypeFactory.String,
-                    value: delegateType.FullName))));
-
-            // Add the generated marshaller attribute
-            marshallerType.CustomAttributes.Add(new CustomAttribute(delegateComWrappersMarshallerAttributeType.GetConstructor()!));
+                runtimeClassName: delegateType.FullName, // TODO
+                comWrappersMarshallerAttributeType: delegateComWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
         }
     }
 }
