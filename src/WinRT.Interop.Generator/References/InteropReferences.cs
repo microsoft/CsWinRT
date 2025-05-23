@@ -264,10 +264,10 @@ internal sealed class InteropReferences
     public TypeReference IAgileObjectImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IAgileObjectImpl");
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods&lt;T&gt;</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference IIterator1Methods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IIteratorMethods`1");
+    public TypeReference IIteratorMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IIteratorMethods");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback</c>.
@@ -592,6 +592,24 @@ internal sealed class InteropReferences
         .CreateMemberReference("AsValue", MethodSignature.CreateInstance(WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true)));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods.HasCurrent</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IIteratorMethodsHasCurrent => field ??= IIteratorMethods
+        .CreateMemberReference("HasCurrent", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Boolean,
+            parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods.MoveNext</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IIteratorMethodsMoveNext => field ??= IIteratorMethods
+        .CreateMemberReference("MoveNext", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Boolean,
+            parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback.CreateObject(void*)</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -836,19 +854,5 @@ internal sealed class InteropReferences
             .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateInstance(
                 returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
                 parameterTypes: [delegateType]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethods&lt;T&gt;.Current</c>.
-    /// </summary>
-    /// <param name="elementType">The input element type.</param>
-    public MemberReference IIterator1MethodsCurrent(TypeSignature elementType)
-    {
-        return IIterator1Methods
-            .MakeGenericInstanceType(elementType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Current", MethodSignature.CreateStatic(
-                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
-                parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
     }
 }

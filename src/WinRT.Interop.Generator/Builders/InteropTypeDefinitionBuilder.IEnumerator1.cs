@@ -35,17 +35,12 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition iteratorMethodsType)
         {
-            TypeSignature iteratorMethodsInterfaceType = interopReferences.IIterator1Methods.MakeGenericInstanceType(enumeratorType.TypeArguments[0]).Import(module);
-
             // We're declaring an 'internal abstract class' type
             iteratorMethodsType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
                 name: InteropUtf8NameFactory.TypeName(enumeratorType, "IIteratorMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
-            {
-                Interfaces = { new InterfaceImplementation(iteratorMethodsInterfaceType.ToTypeDefOrRef()) }
-            };
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(iteratorMethodsType);
 
@@ -63,11 +58,6 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             iteratorMethodsType.Methods.Add(currentMethod);
-
-            // Mark the 'Current' method as implementing the interface method
-            iteratorMethodsType.MethodImplementations.Add(new MethodImplementation(
-                declaration: interopReferences.IIterator1MethodsCurrent(enumeratorType.TypeArguments[0]).Import(module),
-                body: currentMethod));
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
@@ -167,6 +157,52 @@ internal partial class InteropTypeDefinitionBuilder
                     HandlerEnd = ldloc_3_finallyEnd.CreateLabel()
                 });
             }
+
+            // Define the 'HasCurrent' method as follows:
+            //
+            // public static bool HasCurrent(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition hasCurrentMethod = new(
+                name: "HasCurrent"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+
+            iteratorMethodsType.Methods.Add(hasCurrentMethod);
+
+            // Create a method body for the 'HasCurrent' method
+            hasCurrentMethod.CilMethodBody = new CilMethodBody(hasCurrentMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.IIteratorMethodsHasCurrent.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'MoveNext' method as follows:
+            //
+            // public static bool HasCurrent(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition moveNextMethod = new(
+                name: "MoveNext"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+
+            iteratorMethodsType.Methods.Add(moveNextMethod);
+
+            // Create a method body for the 'HasCurrent' method
+            moveNextMethod.CilMethodBody = new CilMethodBody(moveNextMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.IIteratorMethodsMoveNext.Import(module) },
+                    { Ret }
+                }
+            };
         }
     }
 }

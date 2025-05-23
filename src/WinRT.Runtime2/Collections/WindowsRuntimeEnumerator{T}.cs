@@ -21,7 +21,7 @@ namespace WindowsRuntime;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
+public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
 {
     private bool _hadCurrent = true;
     private bool _isInitialized = false;
@@ -48,27 +48,6 @@ public abstract class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnume
     /// </remarks>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1.current"/>
     protected abstract T CurrentNative { get; }
-
-    /// <summary>
-    /// Gets a value that indicates whether the iterator refers to a current item or is at the end of the collection.
-    /// </summary>
-    /// <remarks>
-    /// This method should directly implement the <c>Windows.Foundation.Collections.IIterator&lt;T&gt;.HasCurrent</c> property.
-    /// </remarks>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1.hascurrent"/>
-    protected abstract bool HasCurrentNative { get; }
-
-    /// <summary>
-    /// Advances the iterator to the next item in the collection.
-    /// </summary>
-    /// <returns>
-    /// True if the iterator refers to a valid item in the collection, false if the iterator passes the end of the collection.
-    /// </returns>
-    /// <remarks>
-    /// This method should directly implement the <c>Windows.Foundation.Collections.IIterator&lt;T&gt;.MoveNext</c> method.
-    /// </remarks>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1.movenext"/>
-    protected abstract bool MoveNextNative();
 
     /// <inheritdoc/>
     public T Current { get; }
