@@ -522,6 +522,93 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the marshaller of some <c>IIterator&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="enumeratorComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void Marshaller(
+            GenericInstanceTypeSignature enumeratorType,
+            TypeDefinition enumeratorComWrappersCallbackType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            // We're declaring an 'internal static class' type
+            marshallerType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, "Marshaller"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(marshallerType);
+
+            // Prepare the external types we need in the implemented methods
+            TypeSignature delegateType2 = enumeratorType.Import(module);
+            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true);
+
+            // Define the 'ConvertToUnmanaged' method as follows:
+            //
+            // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<ENUMERATOR_TYPE> value)
+            MethodDefinition convertToUnmanagedMethod = new(
+                name: "ConvertToUnmanaged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                signature: MethodSignature.CreateStatic(
+                    returnType: windowsRuntimeObjectReferenceValueType,
+                    parameterTypes: [delegateType2]));
+
+            marshallerType.Methods.Add(convertToUnmanagedMethod);
+
+            // Reference the instantiated 'ConvertToUnmanaged' method for the marshaller
+            MethodSpecification windowsRuntimeInterfaceMarshallerConvertToUnmanaged =
+                interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged
+                .MakeGenericInstanceMethod(enumeratorType);
+
+            // Create a method body for the 'ConvertToUnmanaged' method
+            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldnull }, // TODO
+                    { Call, windowsRuntimeInterfaceMarshallerConvertToUnmanaged.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'ConvertToManaged' method as follows:
+            //
+            // public static <ENUMERATOR_TYPE> ConvertToManaged(void* value)
+            MethodDefinition convertToManagedMethod = new(
+                name: "ConvertToManaged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                signature: MethodSignature.CreateStatic(
+                    returnType: delegateType2,
+                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+
+            marshallerType.Methods.Add(convertToManagedMethod);
+
+            // Construct a descriptor for 'WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<<ENUMERATOR_CALLBACK_TYPE>>(void*)'
+            IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
+                interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
+                .Import(module)
+                .MakeGenericInstanceMethod(enumeratorComWrappersCallbackType.ToTypeSignature(isValueType: false));
+
+            // Create a method body for the 'ConvertToManaged' method
+            convertToManagedMethod.CilMethodBody = new CilMethodBody(convertToManagedMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, windowsRuntimeUnsealedObjectMarshallerConvertToManaged },
+                    { Ret }
+                }
+            };
+        }
+
+        /// <summary>
         /// Creates a new type definition for the proxy type of some <c>IIterator&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>

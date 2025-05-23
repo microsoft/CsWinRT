@@ -756,7 +756,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Call, delegateImplType.GetMethod("get_IID"u8) },
-                    { Call, interopReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.Import(module) }
+                    { Call, interopReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.Import(module) },
                     { Ret }
                 }
             };
@@ -774,7 +774,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(convertToManagedMethod);
 
             // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.ConvertToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
-            IMethodDescriptor windowsRuntimeDelegateMarshallerConvertToManagedDescriptor =
+            IMethodDescriptor windowsRuntimeDelegateMarshallerConvertToManaged =
                 interopReferences.WindowsRuntimeDelegateMarshallerConvertToManaged
                 .Import(module)
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToTypeSignature(isValueType: false));
@@ -785,7 +785,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Call, windowsRuntimeDelegateMarshallerConvertToManagedDescriptor },
+                    { Call, windowsRuntimeDelegateMarshallerConvertToManaged },
                     { Ret }
                 }
             };
@@ -827,7 +827,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(unboxToUnmanagedMethod);
 
             // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.UnboxToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
-            IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManagedDescriptor =
+            IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged =
                 interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged
                 .Import(module)
                 .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToTypeSignature(isValueType: false));
@@ -838,7 +838,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Call, windowsRuntimeDelegateMarshallerUnboxToManagedDescriptor },
+                    { Call, windowsRuntimeDelegateMarshallerUnboxToManaged },
                     { Ret }
                 }
             };

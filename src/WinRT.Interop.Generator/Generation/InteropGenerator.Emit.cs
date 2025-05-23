@@ -281,7 +281,7 @@ internal partial class InteropGenerator
                     nativeObjectType: nativeObjectType,
                     interopReferences: interopReferences,
                     module: module,
-                    out _);
+                    out TypeDefinition enumeratorComWrappersCallbackType);
 
                 // Define the 'ComWrappersMarshallerAttribute' type
                 InteropTypeDefinitionBuilder.IEnumerator1.ComWrappersMarshallerAttribute(
@@ -290,6 +290,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition enumeratorComWrappersMarshallerType);
+
+                // Define the 'Marshaller' type (with the static marshaller methods)
+                InteropTypeDefinitionBuilder.IEnumerator1.Marshaller(
+                    enumeratorType: typeSignature,
+                    enumeratorComWrappersCallbackType: enumeratorComWrappersCallbackType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
 
                 // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IEnumerator1.Proxy(
