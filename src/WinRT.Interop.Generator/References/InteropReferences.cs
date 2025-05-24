@@ -318,6 +318,12 @@ internal sealed class InteropReferences
     public TypeReference IIteratorMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IIteratorMethods");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IEnumeratorAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IEnumeratorAdapter`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -990,6 +996,15 @@ internal sealed class InteropReferences
                 Guid.MakeByReferenceType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToUnmanaged</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference HStringMarshallerConvertToUnmanaged => field ??= HStringMarshaller
+        .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Void.MakePointerType(),
+            parameterTypes: [ReadOnlySpanChar.ToTypeSignature(isValueType: true)]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToManaged</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1064,6 +1079,59 @@ internal sealed class InteropReferences
             .MakeGenericInstanceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Current", MethodSignature.CreateInstance(new GenericParameterSignature(GenericParameterType.Type, 0)));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;.GetInstance</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IEnumeratorAdapter1GetInstance(TypeSignature elementType)
+    {
+        return IEnumeratorAdapter1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetInstance", MethodSignature.CreateStatic(
+                returnType: IEnumeratorAdapter1.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                parameterTypes: [IEnumerator1.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;.Current</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IEnumeratorAdapter1get_Current(TypeSignature elementType)
+    {
+        return IEnumeratorAdapter1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Current", MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0)));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;.HasCurrent</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IEnumeratorAdapter1get_HasCurrent(TypeSignature elementType)
+    {
+        return IEnumeratorAdapter1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_HasCurrent", MethodSignature.CreateInstance(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;.MoveNext</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IEnumeratorAdapter1MoveNext(TypeSignature elementType)
+    {
+        return IEnumeratorAdapter1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("MoveNext", MethodSignature.CreateInstance(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean));
     }
 
     /// <summary>

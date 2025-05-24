@@ -259,6 +259,15 @@ internal partial class InteropGenerator
 
             try
             {
+                // Define the 'Impl' type (with the CCW vtable implementation)
+                InteropTypeDefinitionBuilder.IEnumerator1.ImplType(
+                    enumeratorType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    implType: out TypeDefinition enumeratorImplType,
+                    iidRvaField: out _);
+
                 // Define the 'IIteratorMethods' type (with the public thunks for 'IIterator<T>' native calls)
                 InteropTypeDefinitionBuilder.IEnumerator1.IIteratorMethods(
                     enumeratorType: typeSignature,

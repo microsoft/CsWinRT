@@ -79,7 +79,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Labels for jumps
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
-            CilInstruction ldarg_o_tryStart = new(Ldarg_0);
+            CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
 
             // Create a method body for the 'Invoke' method
@@ -91,7 +91,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     // '.try' code
-                    { ldarg_o_tryStart },
+                    { ldarg_0_tryStart },
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType).Import(module) },
                     { Ldarg_1 },
                     { Call, interopReferences.WindowsRuntimeObjectMarshallerConvertToManaged.Import(module) },
@@ -116,7 +116,7 @@ internal partial class InteropTypeDefinitionBuilder
                     new CilExceptionHandler
                     {
                         HandlerType = CilExceptionHandlerType.Exception,
-                        TryStart = ldarg_o_tryStart.CreateLabel(),
+                        TryStart = ldarg_0_tryStart.CreateLabel(),
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
