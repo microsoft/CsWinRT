@@ -524,7 +524,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <summary>
         /// Creates a new type definition for the marshaller of some <c>IIterator&lt;T&gt;</c> interface.
         /// </summary>
-        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="enumeratorComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -605,6 +605,188 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, windowsRuntimeUnsealedObjectMarshallerConvertToManaged },
                     { Ret }
                 }
+            };
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the interface implementation of some <c>IIterator&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="iteratorMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IIteratorMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceImplType">The resulting interface implementation type.</param>
+        public static void InterfaceImpl(
+            GenericInstanceTypeSignature enumeratorType,
+            TypeDefinition iteratorMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition interfaceImplType)
+        {
+            TypeSignature elementType = enumeratorType.TypeArguments[0];
+
+            // We're declaring an 'internal interface class' type
+            interfaceImplType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, "InterfaceImpl"),
+                attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: null)
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                Interfaces =
+                {
+                    new InterfaceImplementation(enumeratorType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerator.Import(module)),
+                    new InterfaceImplementation(interopReferences.IDisposable.Import(module))
+                }
+            };
+
+            module.TopLevelTypes.Add(interfaceImplType);
+
+            // Create the 'IEnumerator<T>.Current' getter method
+            MethodDefinition get_IEnumerator1CurrentMethod = new(
+                name: $"System.Collections.Generic.IEnumerator<{elementType.FullName}>.get_Current",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(elementType.Import(module)));
+
+            interfaceImplType.Methods.Add(get_IEnumerator1CurrentMethod);
+
+            // Mark the 'IEnumerator<T>.Current' get accessor method as implementing the interface accessor
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumerator1get_Current(elementType).Import(module),
+                body: get_IEnumerator1CurrentMethod));
+
+            // Create a method body for the 'IEnumerator<T>.Current' property
+            get_IEnumerator1CurrentMethod.CilMethodBody = new CilMethodBody(get_IEnumerator1CurrentMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, enumeratorType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Call, iteratorMethodsType.GetMethod("Current"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'IEnumerator<T>.Current' property
+            PropertyDefinition enumerator1CurrentProperty = new(
+                name: $"System.Collections.Generic.IEnumerator<{elementType.FullName}>.get_Current",
+                attributes: PropertyAttributes.None,
+                signature: new PropertySignature(CallingConventionAttributes.Property, elementType.Import(module), []))
+            {
+                GetMethod = get_IEnumerator1CurrentMethod
+            };
+
+            interfaceImplType.Properties.Add(enumerator1CurrentProperty);
+
+            // Create the 'IEnumerator.Current' getter method
+            MethodDefinition get_IEnumeratorCurrentMethod = new(
+                name: "System.Collections.IEnumerator.get_Current"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Object));
+
+            interfaceImplType.Methods.Add(get_IEnumeratorCurrentMethod);
+
+            // Mark the 'IEnumerator.Current' get accessor method as implementing the interface accessor
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumeratorget_Current.Import(module),
+                body: get_IEnumeratorCurrentMethod));
+
+            // Create a method body for the 'IEnumerator.Current' property
+            get_IEnumeratorCurrentMethod.CilMethodBody = new CilMethodBody(get_IEnumeratorCurrentMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Callvirt, interopReferences.IEnumerator1get_Current(elementType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'IEnumerator.Current' property
+            PropertyDefinition enumeratorCurrentProperty = new(
+                name: "System.Collections.IEnumerator.get_Current"u8,
+                attributes: PropertyAttributes.None,
+                signature: new PropertySignature(CallingConventionAttributes.Property, elementType.Import(module), []))
+            {
+                GetMethod = get_IEnumeratorCurrentMethod
+            };
+
+            interfaceImplType.Properties.Add(enumeratorCurrentProperty);
+
+            // Define the 'System.IEnumerator.MoveNext' method
+            MethodDefinition moveNextMethod = new(
+                name: "System.IEnumerator.MoveNext"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
+
+            interfaceImplType.Methods.Add(moveNextMethod);
+
+            // Mark the 'Reset' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumeratorMoveNext.Import(module),
+                body: moveNextMethod));
+
+            // Create a method body for the 'MoveNext' method
+            moveNextMethod.CilMethodBody = new CilMethodBody(moveNextMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, enumeratorType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Call, iteratorMethodsType.GetMethod("MoveNext"u8) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'System.IEnumerator.Reset' method
+            MethodDefinition resetMethod = new(
+                name: "System.IEnumerator.Reset"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+
+            interfaceImplType.Methods.Add(resetMethod);
+
+            // Mark the 'Reset' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumeratorReset.Import(module),
+                body: resetMethod));
+
+            // Create a method body for the 'Reset' method
+            resetMethod.CilMethodBody = new CilMethodBody(resetMethod)
+            {
+                Instructions =
+                {
+                    { Newobj, interopReferences.NotSupportedException_ctor.Import(module) },
+                    { Throw }
+                }
+            };
+
+            // Define the 'System.IDisposable.Dispose' method
+            MethodDefinition disposeMethod = new(
+                name: "System.IDisposable.Dispose"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+
+            interfaceImplType.Methods.Add(disposeMethod);
+
+            // Mark the 'Dispose' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IDisposableDispose.Import(module),
+                body: disposeMethod));
+
+            // Create a method body for the 'Dispose' method
+            disposeMethod.CilMethodBody = new CilMethodBody(disposeMethod)
+            {
+                Instructions = { { Ret } }
             };
         }
 

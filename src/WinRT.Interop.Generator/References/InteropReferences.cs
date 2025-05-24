@@ -64,6 +64,12 @@ internal sealed class InteropReferences
     public TypeReference Type => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "Type");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.RuntimeTypeHandle"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference RuntimeTypeHandle => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "RuntimeTypeHandle");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Delegate"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -102,6 +108,12 @@ internal sealed class InteropReferences
     public TypeReference UnreachableException => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Diagnostics", "UnreachableException");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.NotSupportedException"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference NotSupportedException => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "NotSupportedException");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Guid"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -124,6 +136,18 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference EventHandler2 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "EventHandler`2");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.IDisposable"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IDisposable => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System", "IDisposable");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.IEnumerator"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IEnumerator => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections", "IEnumerator");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IEnumerator{T}"/>.
@@ -202,6 +226,12 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference InAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices", "InAttribute");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.DynamicInterfaceCastableImplementationAttribute"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference DynamicInterfaceCastableImplementationAttribute => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Runtime.InteropServices", "DynamicInterfaceCastableImplementationAttribute");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.CompilerServices.IsReadOnlyAttribute"/>.
@@ -398,6 +428,30 @@ internal sealed class InteropReferences
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.NotSupportedException.NotSupportedException()"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference NotSupportedException_ctor => field ??= NotSupportedException
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(_windowsRuntimeModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Type.GetTypeFromHandle"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference TypeGetTypeFromHandle => field ??= Type
+        .CreateMemberReference("GetTypeFromHandle", MethodSignature.CreateStatic(
+            returnType: Type.ToTypeSignature(isValueType: false),
+            parameterTypes: [RuntimeTypeHandle.ToTypeSignature(isValueType: true)]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Type.TypeHandle"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference Typeget_TypeHandle => field ??= Type
+        .CreateMemberReference("get_TypeHandle", MethodSignature.CreateInstance(
+            returnType: RuntimeTypeHandle.ToTypeSignature(isValueType: true)));
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.AttributeUsageAttribute.AttributeUsageAttribute(System.AttributeTargets)"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -405,6 +459,34 @@ internal sealed class InteropReferences
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
             returnType: _interopModule.CorLibTypeFactory.Void,
             parameterTypes: [AttributeTargets.ToTypeSignature(isValueType: true)]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.IDisposable.Dispose"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IDisposableDispose => field ??= IDisposable
+        .CreateMemberReference("Dispose", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.IEnumerator.Current"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IEnumeratorget_Current => field ??= IEnumerator
+        .CreateMemberReference("get_Current", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Object));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.IEnumerator.MoveNext"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IEnumeratorMoveNext => field ??= IEnumerator
+        .CreateMemberReference("MoveNext", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Boolean));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.IEnumerator.Reset"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IEnumeratorReset => field ??= IEnumerator
+        .CreateMemberReference("Reset", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Void));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s indexer (of <see cref="char"/>).
@@ -464,6 +546,13 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference FixedAddressValueTypeAttribute_ctor => field ??= FixedAddressValueTypeAttribute
+        .CreateMemberReference(".ctor", MethodSignature.CreateInstance(returnType: _interopModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Runtime.InteropServices.DynamicInterfaceCastableImplementationAttribute.DynamicInterfaceCastableImplementationAttribute()"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference DynamicInterfaceCastableImplementationAttribute_ctor => field ??= DynamicInterfaceCastableImplementationAttribute
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(returnType: _interopModule.CorLibTypeFactory.Void));
 
     /// <summary>
@@ -674,12 +763,21 @@ internal sealed class InteropReferences
             parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeEnumerator1"/>'s <c>CurrentNative</c> method.
+    /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeObject"/>'s <c>get_NativeObjectReference</c> method.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference WindowsRuntimeObjectget_NativeObjectReference => field ??= WindowsRuntimeObject
         .CreateMemberReference("get_NativeObjectReference", MethodSignature.CreateInstance(
             returnType: WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)));
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeObject"/>'s <c>GetObjectReferenceForInterface</c> method.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference WindowsRuntimeObjectGetObjectReferenceForInterface => field ??= WindowsRuntimeObject
+        .CreateMemberReference("GetObjectReferenceForInterface", MethodSignature.CreateInstance(
+            returnType: WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+            parameterTypes: [RuntimeTypeHandle.ToTypeSignature(isValueType: true)]));
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeEnumerator1"/>'s <c>CurrentNative</c> method.
@@ -954,6 +1052,18 @@ internal sealed class InteropReferences
             .CreateMemberReference("Invoke", MethodSignature.CreateInstance(
                 returnType: _interopModule.CorLibTypeFactory.Void,
                 parameterTypes: ((GenericInstanceTypeSignature)delegateType).TypeArguments));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IEnumerator{T}.Current"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IEnumerator1get_Current(TypeSignature elementType)
+    {
+        return IEnumerator1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Current", MethodSignature.CreateInstance(new GenericParameterSignature(GenericParameterType.Type, 0)));
     }
 
     /// <summary>
