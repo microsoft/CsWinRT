@@ -360,6 +360,14 @@ internal partial class InteropGenerator
 
             try
             {
+                // Define the 'Impl' type (with the CCW vtable implementation)
+                InteropTypeDefinitionBuilder.IEnumerable1.ImplType(
+                    enumerableType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    implType: out TypeDefinition enumeratorImplType,
+                    iidRvaField: out _);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

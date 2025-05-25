@@ -1082,6 +1082,19 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IEnumerable{T}.GetEnumerator"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IEnumerable1GetEnumerator(TypeSignature elementType)
+    {
+        return IEnumerable1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetEnumerator", MethodSignature.CreateInstance(
+                returnType: IEnumerator1.MakeGenericInstanceType(new GenericParameterSignature(GenericParameterType.Type, 0))));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;.GetInstance</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>

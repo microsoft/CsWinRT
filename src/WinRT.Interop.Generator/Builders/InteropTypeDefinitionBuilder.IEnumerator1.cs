@@ -936,10 +936,12 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition proxyType)
         {
+            string runtimeClassName = $"Windows.Foundation.Collections.IIterator`1<{enumeratorType.TypeArguments[0]}>"; // TODO
+
             ProxyType(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
                 name: InteropUtf8NameFactory.TypeName(enumeratorType),
-                runtimeClassName: enumeratorType.FullName, // TODO
+                runtimeClassName: runtimeClassName,
                 comWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerAttributeType,
                 interopReferences: interopReferences,
                 module: module,

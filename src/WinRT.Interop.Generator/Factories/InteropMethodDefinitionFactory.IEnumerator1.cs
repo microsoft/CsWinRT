@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 /// <summary>
 /// A factory for interop method definitions.
 /// </summary>
-internal static class InteropMethodDefinitionFactory
+internal static partial class InteropMethodDefinitionFactory
 {
     /// <summary>
     /// Helpers for <see cref="System.Collections.Generic.IEnumerator{T}"/> types.
