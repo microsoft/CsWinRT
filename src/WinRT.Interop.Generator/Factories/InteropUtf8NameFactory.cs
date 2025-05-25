@@ -38,47 +38,61 @@ internal static class InteropUtf8NameFactory
     {
         DefaultInterpolatedStringHandler interpolatedStringHandler = new(literalLength: 2, formattedCount: 1);
 
-        // Each type name uses this format: '<ASSEMBLY_NAME>TYPE_NAME'
-        interpolatedStringHandler.AppendLiteral("<");
-        interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name));
-        interpolatedStringHandler.AppendLiteral(">");
-
-        // If the type is generic, append the definition name and the type arguments
-        if (typeSignature is GenericInstanceTypeSignature genericInstanceTypeSignature)
+        // Helper to recursively build the type name (to handle nested generic types too)
+        static void AppendTypeName(
+            ref DefaultInterpolatedStringHandler interpolatedStringHandler,
+            TypeSignature typeSignature,
+            int depth)
         {
-            interpolatedStringHandler.AppendFormatted(genericInstanceTypeSignature.GenericType.Name!.Value);
-            interpolatedStringHandler.AppendLiteral("<");
-
-            foreach ((int i, TypeSignature typeArgumentSignature) in genericInstanceTypeSignature.TypeArguments.Index())
+            // Special case for well known type identifiers (eg. 'string', 'int', etc.)
+            if (TryGetWellKnownIdentifier(typeSignature, out Utf8String? identifierUtf8))
             {
-                // We use '|' to separate generic type arguments
-                if (i > 0)
-                {
-                    interpolatedStringHandler.AppendLiteral("|");
-                }
+                interpolatedStringHandler.AppendFormatted(identifierUtf8);
 
-                // If the type argument has a well known identifier (eg. 'string'), just append it directly
-                if (TryGetWellKnownIdentifier(typeArgumentSignature, out _))
-                {
-                    interpolatedStringHandler.AppendFormatted(FullNameOrWellKnownIdentifier(typeArgumentSignature));
-                }
-                else
-                {
-                    // Otherwise, append the type argument with the same format as the root type
-                    interpolatedStringHandler.AppendLiteral("<");
-                    interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeArgumentSignature.Scope!.GetAssembly()!.Name));
-                    interpolatedStringHandler.AppendLiteral(">");
-                    interpolatedStringHandler.AppendFormatted(FullNameOrWellKnownIdentifier(typeArgumentSignature));
-                }
+                return;
             }
 
+            // Each type name uses this format: '<ASSEMBLY_NAME>TYPE_NAME'
+            interpolatedStringHandler.AppendLiteral("<");
+            interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name));
             interpolatedStringHandler.AppendLiteral(">");
+
+            // If the type is generic, append the definition name and the type arguments
+            if (typeSignature is GenericInstanceTypeSignature genericInstanceTypeSignature)
+            {
+                // We can skip the namespace when the indentation level is '0', as that means
+                // the type will already be defined in the same namespace (so we can omit it).
+                interpolatedStringHandler.AppendFormatted(depth == 0
+                    ? genericInstanceTypeSignature.GenericType.Name!.Value
+                    : genericInstanceTypeSignature.GenericType.FullName);
+
+                interpolatedStringHandler.AppendLiteral("<");
+
+                foreach ((int i, TypeSignature typeArgumentSignature) in genericInstanceTypeSignature.TypeArguments.Index())
+                {
+                    // We use '|' to separate generic type arguments
+                    if (i > 0)
+                    {
+                        interpolatedStringHandler.AppendLiteral("|");
+                    }
+
+                    // Append the type argument with the same format as the root type. This is
+                    // important to ensure that nested generic types will be handled correctly.
+                    AppendTypeName(ref interpolatedStringHandler, typeArgumentSignature, depth: depth + 1);
+                }
+
+                interpolatedStringHandler.AppendLiteral(">");
+            }
+            else
+            {
+                // If the type is a type definition, append the name of the type definition.
+                // Just like with generic types, we can skip the namespace if the deth is '0'.
+                interpolatedStringHandler.AppendFormatted(depth == 0 ? typeSignature.Name! : typeSignature.FullName);
+            }
         }
-        else
-        {
-            // Otherwise just append the type name directly
-            interpolatedStringHandler.AppendFormatted(FullNameOrWellKnownIdentifier(typeSignature));
-        }
+
+        // Append the full type name first
+        AppendTypeName(ref interpolatedStringHandler, typeSignature, depth: 0);
 
         // Append the suffix, if we have one
         interpolatedStringHandler.AppendFormatted(nameSuffix);
@@ -106,18 +120,6 @@ internal static class InteropUtf8NameFactory
             { Value: "Microsoft.Graphics.Canvas.Interop" } => "#Win2D"u8,
             _ => assemblyName
         };
-    }
-
-    /// <summary>
-    /// Gets the full name or a well known identifier for the given type signature.
-    /// </summary>
-    /// <param name="typeSignature">The input type signature to convert.</param>
-    /// <returns>The resulting type name to use.</returns>
-    private static Utf8String FullNameOrWellKnownIdentifier(TypeSignature typeSignature)
-    {
-        return TryGetWellKnownIdentifier(typeSignature, out Utf8String? identifierUtf8)
-            ? identifierUtf8
-            : typeSignature.FullName!;
     }
 
     /// <summary>
