@@ -244,7 +244,8 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="interfaceType">The type handle for the interface to retrieve the object reference for.</param>
     /// <returns>The resulting <see cref="WindowsRuntimeObjectReference"/> object.</returns>
     /// <exception cref="Exception">Thrown if the interface specified by <paramref name="interfaceType"/> is not implemented.</exception>
-    internal WindowsRuntimeObjectReference GetObjectReferenceForInterface(RuntimeTypeHandle interfaceType)
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public WindowsRuntimeObjectReference GetObjectReferenceForInterface(RuntimeTypeHandle interfaceType)
     {
         throw null!;
     }
