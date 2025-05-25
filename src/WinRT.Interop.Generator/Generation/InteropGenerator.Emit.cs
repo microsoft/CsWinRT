@@ -366,8 +366,16 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    implType: out TypeDefinition enumeratorImplType,
+                    implType: out TypeDefinition enumerableImplType,
                     iidRvaField: out _);
+
+                // Define the 'IIterableMethods' type (with the public thunks for 'IIterable<T>' native calls)
+                InteropTypeDefinitionBuilder.IEnumerable1.IIterableMethods(
+                    enumerableType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    iiterableMethodsType: out TypeDefinition iteratorMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

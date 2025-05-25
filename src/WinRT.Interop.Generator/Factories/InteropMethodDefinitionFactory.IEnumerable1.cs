@@ -50,7 +50,9 @@ internal partial class InteropMethodDefinitionFactory
 
             // Reference the generated 'ConvertToUnmanaged' method to marshal the 'IEnumerator<T>' instance to unmanaged
             MemberReference convertToUnmanagedMethod = module
-                .CreateTypeReference(InteropUtf8NameFactory.TypeNamespace(enumerableType), InteropUtf8NameFactory.TypeName(enumerableType, "Marshaller"))
+                .CreateTypeReference(
+                    ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
+                    name: InteropUtf8NameFactory.TypeName(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType), "Marshaller"))
                 .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
                     returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
                     parameterTypes: [interopReferences.IEnumerator1.MakeGenericInstanceType(elementType)]));
