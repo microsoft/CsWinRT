@@ -848,9 +848,16 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
+            // Define the 'GetMany' method
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IEnumerator1.GetMany(
+                enumeratorType: enumeratorType,
+                interopReferences: interopReferences,
+                module: module);
+
             implType.Methods.Add(currentMethod);
             implType.Methods.Add(hasCurrentMethod);
             implType.Methods.Add(moveNextMethod);
+            implType.Methods.Add(getManyMethod);
 
             // Create the static constructor to initialize the vtable
             MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
@@ -874,6 +881,9 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldsflda, vftblField },
                     { Ldftn, moveNextMethod },
                     { Stfld, interopDefinitions.IEnumerator1Vftbl.Fields[8] },
+                    { Ldsflda, vftblField },
+                    { Ldftn, getManyMethod },
+                    { Stfld, interopDefinitions.IEnumerator1Vftbl.Fields[9] },
                     { Ret }
                 }
             };
