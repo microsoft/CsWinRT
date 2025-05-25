@@ -93,7 +93,13 @@ internal sealed class InteropDefinitions
     /// Gets the <see cref="TypeDefinition"/> for the <c>IEnumerator1Vftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeDefinition IEnumerator1Vftbl => field ??= WellKnownTypeDefinitionFactory.IEnumeratorVftbl(_interopReferences, _interopModule);
+    public TypeDefinition IEnumerator1Vftbl => field ??= WellKnownTypeDefinitionFactory.IEnumerator1Vftbl(_interopReferences, _interopModule);
+
+    /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IEnumerable1Vftbl</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition IEnumerable1Vftbl => field ??= WellKnownTypeDefinitionFactory.IEnumerable1Vftbl(_interopReferences, _interopModule);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairVftbl</c> type.

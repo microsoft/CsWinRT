@@ -229,7 +229,7 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IEnumeratorVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IEnumerator1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
     {
         TypeDefinition vftblType = new(
             ns: null,
@@ -275,6 +275,53 @@ internal static partial class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("get_HasCurrent"u8, FieldAttributes.Public, get_HasCurrentType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("MoveNext"u8, FieldAttributes.Public, moveNextType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("GetMany"u8, FieldAttributes.Public, getManyType.Import(module).MakeFunctionPointerType()));
+
+        return vftblType;
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IEnumerable{T}"/> instantiation.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition IEnumerable1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        TypeDefinition vftblType = new(
+            ns: null,
+            name: "<IEnumerable1Vftbl>"u8,
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the 'IUnknown' signatures
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(interopReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
+
+        // Get the 'IInspectable' signatures
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(interopReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
+
+        // Get the 'IIterable`1' signatures
+        MethodSignature firstType = WellKnownTypeSignatureFactory.IEnumerable1FirstImpl(interopReferences);
+
+        // The vtable layout for 'IEnumerator`1<T>' looks like this:
+        //
+        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+        // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+        // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> First;
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("First"u8, FieldAttributes.Public, firstType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }

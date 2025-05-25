@@ -176,6 +176,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IEnumerable{T}"/> type.
+    /// </summary>
+    public static Exception IEnumerable1TypeCodeGenerationError(string? enumeratorType, Exception exception)
+    {
+        return Exception(21, $"Failed to generate marshalling code for 'IEnumerable<T>' type '{enumeratorType}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
