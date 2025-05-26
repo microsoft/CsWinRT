@@ -563,6 +563,94 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the interface implementation of some <c>IIterable&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumerableType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
+        /// <param name="iterableMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IIterableMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceImplType">The resulting interface implementation type.</param>
+        public static void InterfaceImpl(
+            GenericInstanceTypeSignature enumerableType,
+            TypeDefinition iterableMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition interfaceImplType)
+        {
+            TypeSignature elementType = enumerableType.TypeArguments[0];
+
+            // We're declaring an 'internal interface class' type
+            interfaceImplType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, "InterfaceImpl"),
+                attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: null)
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                Interfaces =
+                {
+                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                }
+            };
+
+            module.TopLevelTypes.Add(interfaceImplType);
+
+            // Create the 'IEnumerable<T>.GetEnumerator' method
+            MethodDefinition enumerable1GetEnumeratorMethod = new(
+                name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
+
+            interfaceImplType.Methods.Add(enumerable1GetEnumeratorMethod);
+
+            // Mark the 'IEnumerable<T>.GetEnumerator' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
+                body: enumerable1GetEnumeratorMethod));
+
+            // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
+            enumerable1GetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerable1GetEnumeratorMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, enumerableType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Call, iterableMethodsType.GetMethod("First"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'IEnumerable.GetEnumerator' method
+            MethodDefinition enumerableGetEnumeratorMethod = new(
+                name: "System.Collections.IEnumerable.GetEnumerator"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToTypeSignature(isValueType: false)));
+
+            interfaceImplType.Methods.Add(enumerableGetEnumeratorMethod);
+
+            // Mark the 'IEnumerable.GetEnumerator' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
+                body: enumerableGetEnumeratorMethod));
+
+            // Create a method body for the 'IEnumerable.GetEnumerator' method
+            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerableGetEnumeratorMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
+                    { Ret }
+                }
+            };
+        }
+
+        /// <summary>
         /// Creates a new type definition for the implementation of the vtable for some <c>IIterable&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumerableType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>

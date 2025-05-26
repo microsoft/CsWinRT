@@ -156,6 +156,12 @@ internal sealed class InteropReferences
     public TypeReference IEnumerator1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IEnumerator`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.IEnumerable"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IEnumerable => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections", "IEnumerable");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IEnumerable{T}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -499,6 +505,13 @@ internal sealed class InteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference IEnumeratorReset => field ??= IEnumerator
         .CreateMemberReference("Reset", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Void));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.IEnumerable.GetEnumerator"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IEnumerableGetEnumerator => field ??= IEnumerable
+        .CreateMemberReference("GetEnumerator", MethodSignature.CreateInstance(IEnumerator.ToTypeSignature(isValueType: false)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.ReadOnlySpan{T}"/>'s indexer (of <see cref="char"/>).
