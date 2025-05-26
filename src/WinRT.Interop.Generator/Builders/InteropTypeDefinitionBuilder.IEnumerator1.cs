@@ -554,7 +554,7 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(marshallerType);
 
             // Prepare the external types we need in the implemented methods
-            TypeSignature delegateType2 = enumeratorType.Import(module);
+            TypeSignature enumeratorType2 = enumeratorType.Import(module);
             TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true);
 
             // Define the 'ConvertToUnmanaged' method as follows:
@@ -565,7 +565,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
                     returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [delegateType2]));
+                    parameterTypes: [enumeratorType2]));
 
             marshallerType.Methods.Add(convertToUnmanagedMethod);
 
@@ -593,7 +593,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToManaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: delegateType2,
+                    returnType: enumeratorType2,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
 
             marshallerType.Methods.Add(convertToManagedMethod);

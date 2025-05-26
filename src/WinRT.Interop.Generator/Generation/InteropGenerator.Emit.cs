@@ -401,7 +401,16 @@ internal partial class InteropGenerator
                     enumerableImplType: enumerableImplType,
                     interopReferences: interopReferences,
                     module: module,
-                    out TypeDefinition enumerableComWrappersMarshallerType);
+                    out TypeDefinition enumerableComWrappersCallbackType);
+
+                // Define the 'Marshaller' type (with the static marshaller methods)
+                InteropTypeDefinitionBuilder.IEnumerable1.Marshaller(
+                    enumerableType: typeSignature,
+                    enumerableImplType: enumerableImplType,
+                    enumerableComWrappersCallbackType: enumerableComWrappersCallbackType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
