@@ -35,11 +35,6 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
     private bool _hadCurrent = true;
 
     /// <summary>
-    /// The cached <see cref="Current"/> value, if available.
-    /// </summary>
-    private T? _current;
-
-    /// <summary>
     /// Creates a <see cref="WindowsRuntimeEnumerator{T}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
@@ -79,15 +74,16 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
                 throw new InvalidOperationException("InvalidOperation_EnumEnded");
             }
 
-            return _current!;
+            return field!;
         }
+        private set;
     }
 
     /// <inheritdoc/>
     object IEnumerator.Current => Current!;
 
     /// <inheritdoc/>
-    [MemberNotNullWhen(true, nameof(_current))]
+    [MemberNotNullWhen(true, nameof(Current))]
     public bool MoveNext()
     {
         // If we've passed the end of the iteration, 'IEnumerable<T>' should return 'false',
@@ -120,7 +116,7 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
             //     of the collection.
             if (_hadCurrent)
             {
-                _current = CurrentNative();
+                Current = CurrentNative();
             }
 
             return _hadCurrent;
