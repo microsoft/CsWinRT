@@ -360,6 +360,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, interopReferences.MemoryExtensionsSequenceEqualChar.Import(module) },
                     { Brfalse_S, ldarg_3_failure.CreateLabel() },
 
+                    // Create the 'NativeObject' instance to return
                     { Ldarg_0 },
                     { Call, enumeratorImplType.GetMethod("get_IID"u8) },
                     { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },

@@ -7,7 +7,6 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
