@@ -28,24 +28,24 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <param name="iiterableMethodsType">The resulting methods type.</param>
+        /// <param name="iterableMethodsType">The resulting methods type.</param>
         public static void IIterableMethods(
             GenericInstanceTypeSignature enumerableType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
-            out TypeDefinition iiterableMethodsType)
+            out TypeDefinition iterableMethodsType)
         {
             TypeSignature elementType = enumerableType.TypeArguments[0];
 
             // We're declaring an 'internal abstract class' type
-            iiterableMethodsType = new TypeDefinition(
+            iterableMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
                 name: InteropUtf8NameFactory.TypeName(enumerableType, "IIterableMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
-            module.TopLevelTypes.Add(iiterableMethodsType);
+            module.TopLevelTypes.Add(iterableMethodsType);
 
             // Define the 'First' method as follows:
             //
@@ -60,7 +60,7 @@ internal partial class InteropTypeDefinitionBuilder
                 NoInlining = true
             };
 
-            iiterableMethodsType.Methods.Add(firstMethod);
+            iterableMethodsType.Methods.Add(firstMethod);
 
             // Reference the generated 'ConvertToManaged' method to marshal the 'IEnumerator<T>' instance to managed
             MemberReference convertToManagedMethod = module
@@ -148,6 +148,70 @@ internal partial class InteropTypeDefinitionBuilder
                         HandlerStart = ldloc_2_finallyStart.CreateLabel(),
                         HandlerEnd = ldloc_3_finallyEnd.CreateLabel()
                     }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for an <c>IIterable&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumerableType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type type.</param>
+        /// <param name="iterableMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IIterableMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature enumerableType,
+            TypeDefinition iterableMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            TypeSignature elementType = enumerableType.TypeArguments[0];
+            TypeSignature windowsRuntimeEnumerable1Type = interopReferences.WindowsRuntimeEnumerable1.MakeGenericInstanceType(elementType);
+
+            // We're declaring an 'internal sealed class' type
+            nativeObjectType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, "NativeObject"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed,
+                baseType: windowsRuntimeEnumerable1Type.Import(module).ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(nativeObjectType);
+
+            // Define the constructor
+            MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false));
+
+            nativeObjectType.Methods.Add(ctor);
+
+            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
+            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeEnumerator1_ctor(windowsRuntimeEnumerable1Type).Import(module));
+
+            // Define the 'FirstNative' method as follows:
+            //
+            // public static IEnumerator<<ELEMENT_TYPE>> FirstNative()
+            MethodDefinition firstNativeMethod = new(
+                name: "FirstNative"u8,
+                attributes: MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
+
+            nativeObjectType.Methods.Add(firstNativeMethod);
+
+            // Mark the 'CurrentNative' method as overriding the base method
+            nativeObjectType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.WindowsRuntimeEnumerable1FirstNative.Import(module),
+                body: firstNativeMethod));
+
+            // Create a method body for the 'CurrentNative' method
+            firstNativeMethod.CilMethodBody = new CilMethodBody(firstNativeMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.WindowsRuntimeObjectget_NativeObjectReference.Import(module) },
+                    { Call, iterableMethodsType.GetMethod("First"u8) },
+                    { Ret }
                 }
             };
         }

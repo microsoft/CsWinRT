@@ -247,7 +247,7 @@ internal partial class InteropTypeDefinitionBuilder
             // public static <ELEMENT_TYPE> CurrentNative()
             MethodDefinition currentNativeMethod = new(
                 name: "CurrentNative"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(elementType.Import(module)));
 
             nativeObjectType.Methods.Add(currentNativeMethod);

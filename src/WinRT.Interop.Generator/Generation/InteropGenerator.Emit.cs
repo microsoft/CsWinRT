@@ -375,7 +375,15 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    iiterableMethodsType: out TypeDefinition iteratorMethodsType);
+                    iterableMethodsType: out TypeDefinition iterableMethodsType);
+
+                // Define the 'NativeObject' type (with the RCW implementation)
+                InteropTypeDefinitionBuilder.IEnumerable1.NativeObject(
+                    enumerableType: typeSignature,
+                    iterableMethodsType: iterableMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
