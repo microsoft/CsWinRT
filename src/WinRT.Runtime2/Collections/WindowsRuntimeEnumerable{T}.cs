@@ -36,26 +36,13 @@ public abstract class WindowsRuntimeEnumerable<T> : WindowsRuntimeObject, IEnume
     /// <inheritdoc/>
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
-    /// <summary>
-    /// Returns an iterator for the items in the collection.
-    /// </summary>
-    /// <returns>The iterator.</returns>
-    /// <remarks>
-    /// This method should directly implement the <c>Windows.Foundation.Collections.IIterable&lt;T&gt;.First</c> method.
-    /// </remarks>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterable-1.first"/>
-    protected abstract IEnumerator<T> FirstNative();
-
     /// <inheritdoc/>
-    IEnumerator<T> IEnumerable<T>.GetEnumerator()
-    {
-        return FirstNative();
-    }
+    public abstract IEnumerator<T> GetEnumerator();
 
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return FirstNative();
+        return GetEnumerator();
     }
 
     /// <inheritdoc/>

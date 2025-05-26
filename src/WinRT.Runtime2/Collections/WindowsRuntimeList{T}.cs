@@ -10,41 +10,40 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using WindowsRuntime.InteropServices;
 
+#pragma warning disable CA1816
+
 namespace WindowsRuntime;
 
 /// <summary>
-/// The base class for all projected Windows Runtime <see cref="IReadOnlyList{T}"/> types.
+/// The base class for all projected Windows Runtime <see cref="IList{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1"/>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class WindowsRuntimeReadOnlyList<T> : WindowsRuntimeObject,
+public abstract class WindowsRuntimeList<T> : WindowsRuntimeObject,
+    IList<T>,
     IReadOnlyList<T>,
-    IWindowsRuntimeInterface<IReadOnlyList<T>>,
+    IWindowsRuntimeInterface<IList<T>>,
     IWindowsRuntimeInterface<IEnumerable<T>>
 {
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeReadOnlyList{T}"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeList{T}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeReadOnlyList(WindowsRuntimeObjectReference nativeObjectReference)
+    public WindowsRuntimeList(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
 
-    /// <summary>
-    /// Gets the IID for the <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> interface.
-    /// </summary>
+    /// <inheritdoc cref="WindowsRuntimeReadOnlyList{T}.IID_IIterable"/>
     protected abstract ref readonly Guid IID_IIterable { get; }
 
-    /// <summary>
-    /// Gets the lazy-loaded, cached object reference for <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> for the current object.
-    /// </summary>
+    /// <inheritdoc cref="WindowsRuntimeReadOnlyList{T}.IIterableObjectReference"/>
     [field: AllowNull, MaybeNull]
     protected WindowsRuntimeObjectReference IIterableObjectReference
     {
@@ -69,10 +68,43 @@ public abstract class WindowsRuntimeReadOnlyList<T> : WindowsRuntimeObject,
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
-    public int Count => IReadOnlyListMethods.Count(NativeObjectReference);
+    public int Count => IListMethods.Count(NativeObjectReference);
 
     /// <inheritdoc/>
-    public abstract T this[int index] { get; }
+    public bool IsReadOnly => false;
+
+    /// <inheritdoc/>
+    public abstract T this[int index] { get; set; }
+
+    /// <inheritdoc/>
+    public abstract int IndexOf(T item);
+
+    /// <inheritdoc/>
+    public abstract void Insert(int index, T item);
+
+    /// <inheritdoc/>
+    public void RemoveAt(int index)
+    {
+        IListMethods.RemoveAt(NativeObjectReference, index);
+    }
+
+    /// <inheritdoc/>
+    public abstract void Add(T item);
+
+    /// <inheritdoc/>
+    public void Clear()
+    {
+        IListMethods.Clear(NativeObjectReference);
+    }
+
+    /// <inheritdoc/>
+    public abstract bool Contains(T item);
+
+    /// <inheritdoc/>
+    public abstract void CopyTo(T[] array, int arrayIndex);
+
+    /// <inheritdoc/>
+    public abstract bool Remove(T item);
 
     /// <inheritdoc/>
     public abstract IEnumerator<T> GetEnumerator();
@@ -84,7 +116,7 @@ public abstract class WindowsRuntimeReadOnlyList<T> : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IReadOnlyList<T>>.GetInterface()
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IList<T>>.GetInterface()
     {
         return NativeObjectReference.AsValue();
     }

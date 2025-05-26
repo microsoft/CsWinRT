@@ -51,25 +51,25 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
     protected abstract T CurrentNative();
 
     /// <inheritdoc/>
-    T IEnumerator<T>.Current => CurrentNative();
+    public T Current => CurrentNative();
 
     /// <inheritdoc/>
-    object IEnumerator.Current => CurrentNative()!;
+    object IEnumerator.Current => Current!;
 
     /// <inheritdoc/>
-    bool IEnumerator.MoveNext()
+    public bool MoveNext()
     {
         return false;
     }
 
     /// <inheritdoc/>
-    void IEnumerator.Reset()
+    public void Reset()
     {
         throw new NotSupportedException("Calling 'IEnumerator.Reset()' is not supported on native Windows Runtime enumerators.");
     }
 
     /// <inheritdoc/>
-    void IDisposable.Dispose()
+    public void Dispose()
     {
     }
 
