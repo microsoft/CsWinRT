@@ -18,10 +18,11 @@ namespace WindowsRuntime.InteropServices;
 public static unsafe class IVectorViewMethods
 {
     /// <summary>
-    /// Gets a value that indicates whether the iterator refers to a current item or is at the end of the collection.
+    /// Gets the number of items in the vector view.
     /// </summary>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1.hascurrent"/>
+    /// <returns>The number of items in the vector view.</returns>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1.size"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static uint Size(WindowsRuntimeObjectReference thisReference)
     {

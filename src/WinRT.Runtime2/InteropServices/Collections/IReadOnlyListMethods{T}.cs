@@ -20,6 +20,7 @@ namespace WindowsRuntime.InteropServices;
 public static unsafe class IReadOnlyListMethods<T>
 {
     /// <inheritdoc cref="System.Collections.Generic.IReadOnlyList{T}.this[int]"/>
+    /// <typeparam name="TMethods">The <see cref="IVectorViewMethods{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static T Item<TMethods>(WindowsRuntimeObjectReference thisReference, int index)
         where TMethods : IVectorViewMethods<T>
