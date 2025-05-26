@@ -38,7 +38,7 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    protected internal override bool HasUnwrappableNativeObjectReference => true;
+    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <summary>
     /// Gets the current item in the collection.
@@ -51,26 +51,26 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
     protected abstract T CurrentNative();
 
     /// <inheritdoc/>
-    public T Current { get; }
+    T IEnumerator<T>.Current => CurrentNative();
 
     /// <inheritdoc/>
-    object IEnumerator.Current => Current!;
+    object IEnumerator.Current => CurrentNative()!;
 
     /// <inheritdoc/>
-    public bool MoveNext()
+    bool IEnumerator.MoveNext()
     {
         return false;
     }
 
     /// <inheritdoc/>
-    public void Dispose()
+    void IEnumerator.Reset()
     {
+        throw new NotSupportedException("Calling 'IEnumerator.Reset()' is not supported on native Windows Runtime enumerators.");
     }
 
     /// <inheritdoc/>
-    public void Reset()
+    void IDisposable.Dispose()
     {
-        throw new NotSupportedException("Calling 'IEnumerator.Reset()' is not supported on native Windows Runtime enumerators.");
     }
 
     /// <inheritdoc/>

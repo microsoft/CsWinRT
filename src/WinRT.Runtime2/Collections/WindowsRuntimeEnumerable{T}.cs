@@ -34,7 +34,7 @@ public abstract class WindowsRuntimeEnumerable<T> : WindowsRuntimeObject, IEnume
     }
 
     /// <inheritdoc/>
-    protected internal override bool HasUnwrappableNativeObjectReference => true;
+    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <summary>
     /// Returns an iterator for the items in the collection.
@@ -47,7 +47,7 @@ public abstract class WindowsRuntimeEnumerable<T> : WindowsRuntimeObject, IEnume
     protected abstract IEnumerator<T> FirstNative();
 
     /// <inheritdoc/>
-    public IEnumerator<T> GetEnumerator()
+    IEnumerator<T> IEnumerable<T>.GetEnumerator()
     {
         return FirstNative();
     }
@@ -55,7 +55,7 @@ public abstract class WindowsRuntimeEnumerable<T> : WindowsRuntimeObject, IEnume
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return GetEnumerator();
+        return FirstNative();
     }
 
     /// <inheritdoc/>
