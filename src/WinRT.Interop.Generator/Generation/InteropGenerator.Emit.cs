@@ -393,6 +393,15 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition enumeratorComWrappersCallbackType);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropTypeDefinitionBuilder.IEnumerable1.ComWrappersMarshallerAttribute(
+                    enumerableType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    enumerableImplType: enumerableImplType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition enumerableComWrappersMarshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
