@@ -741,5 +741,32 @@ internal partial class InteropTypeDefinitionBuilder
             implType.Properties.Add(vtableProperty);
             implType.Methods.Add(get_VtableMethod);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the proxy type of some <c>IIterable&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumerableType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
+        /// <param name="enumerableComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            GenericInstanceTypeSignature enumerableType,
+            TypeDefinition enumerableComWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition proxyType)
+        {
+            string runtimeClassName = $"Windows.Foundation.Collections.IIterable`1<{enumerableType.TypeArguments[0]}>"; // TODO
+
+            ProxyType(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
+                name: InteropUtf8NameFactory.TypeName(enumerableType),
+                runtimeClassName: runtimeClassName,
+                comWrappersMarshallerAttributeType: enumerableComWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
+        }
     }
 }
