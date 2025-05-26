@@ -17,7 +17,7 @@ namespace WindowsRuntime.InteropServices;
 /// </remarks>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class IReadOnlyListMethods<T>
+public static class IReadOnlyListMethods<T>
 {
     /// <inheritdoc cref="System.Collections.Generic.IReadOnlyList{T}.this[int]"/>
     /// <typeparam name="TMethods">The <see cref="IVectorViewMethods{T}"/> implementation to use.</typeparam>

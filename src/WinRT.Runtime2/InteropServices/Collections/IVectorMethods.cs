@@ -23,7 +23,6 @@ public static unsafe class IVectorMethods
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <returns>The number of items in the vector.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.size"/>
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static uint Size(WindowsRuntimeObjectReference thisReference)
     {
         // The vtable slot for 'get_Size' is identical between 'IVector<T>' and 'IVectorView<T>'

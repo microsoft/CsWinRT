@@ -15,7 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// </remarks>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public unsafe interface IVectorViewMethods<T>
+public interface IVectorViewMethods<T>
 {
     /// <summary>
     /// Returns the item at the specified index in the vector view.

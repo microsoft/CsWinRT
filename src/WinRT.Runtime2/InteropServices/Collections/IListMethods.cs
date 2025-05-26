@@ -16,7 +16,7 @@ namespace WindowsRuntime.InteropServices;
 /// </remarks>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe class IListMethods
+public static class IListMethods
 {
     /// <inheritdoc cref="System.Collections.Generic.ICollection{T}.Count"/>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
