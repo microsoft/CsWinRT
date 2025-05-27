@@ -19,7 +19,7 @@ namespace WindowsRuntime.InteropServices;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListMethods<T>
 {
-    /// <inheritdoc cref="System.Collections.Generic.IReadOnlyList{T}.this[int]"/>
+    /// <inheritdoc cref="System.Collections.Generic.IReadOnlyList{T}.this"/>
     /// <typeparam name="TMethods">The <see cref="IVectorViewMethods{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static T Item<TMethods>(WindowsRuntimeObjectReference thisReference, int index)

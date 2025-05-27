@@ -20,7 +20,7 @@ namespace WindowsRuntime.InteropServices;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IListMethods<T>
 {
-    /// <inheritdoc cref="System.Collections.Generic.IList{T}.this[int]"/>
+    /// <inheritdoc cref="System.Collections.Generic.IList{T}.this"/>
     /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static T Item<TMethods>(WindowsRuntimeObjectReference thisReference, int index)
@@ -39,7 +39,7 @@ public static class IListMethods<T>
         }
     }
 
-    /// <inheritdoc cref="System.Collections.Generic.IList{T}.this[int]"/>
+    /// <inheritdoc cref="System.Collections.Generic.IList{T}.this"/>
     /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <param name="item">The item to set.</param>
