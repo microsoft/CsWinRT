@@ -254,7 +254,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature moveNextType = get_HasCurrentType;
         MethodSignature getManyType = WellKnownTypeSignatureFactory.IEnumerator1GetManyImpl(interopReferences);
 
-        // The vtable layout for 'IEnumerator`1<T>' looks like this:
+        // The vtable layout for 'IEnumerator<T>' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -307,7 +307,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // Get the 'IIterable`1' signatures
         MethodSignature firstType = WellKnownTypeSignatureFactory.IEnumerable1FirstImpl(interopReferences);
 
-        // The vtable layout for 'IEnumerator`1<T>' looks like this:
+        // The vtable layout for 'IEnumerable<T>' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -342,7 +342,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         return IReadOnlyList1Vftbl(
             ns: null,
             name: "<IReadOnlyList1Vftbl>"u8,
-            elementType: interopReferences.CorLibTypeFactory.Void,
+            elementType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
             interopReferences: interopReferences,
             module: module);
     }
@@ -385,7 +385,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature indexOfType = WellKnownTypeSignatureFactory.IReadOnlyList1IndexOfImpl(elementType, interopReferences);
         MethodSignature getManyType = WellKnownTypeSignatureFactory.IReadOnlyList1GetManyImpl(elementType, interopReferences);
 
-        // The vtable layout for 'IReadOnlyList`1<T>' looks like this:
+        // The vtable layout for 'IReadOnlyList<T>' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -426,7 +426,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         return IList1Vftbl(
             ns: null,
             name: "<IList1Vftbl>"u8,
-            elementType: interopReferences.CorLibTypeFactory.Void,
+            elementType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
             interopReferences: interopReferences,
             module: module);
     }
@@ -478,7 +478,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature replaceAllType = WellKnownTypeSignatureFactory.IList1ReplaceAllImpl(elementType, interopReferences);
 
 
-        // The vtable layout for 'IReadOnlyList`1<T>' looks like this:
+        // The vtable layout for 'IList<T>' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -535,8 +535,8 @@ internal static partial class WellKnownTypeDefinitionFactory
         return IReadOnlyDictionary2Vftbl(
             ns: null,
             name: "<IReadOnlyDictionary2Vftbl>"u8,
-            keyType: interopReferences.CorLibTypeFactory.Void,
-            valueType: interopReferences.CorLibTypeFactory.Void,
+            keyType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            valueType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
             interopReferences: interopReferences,
             module: module);
     }
@@ -581,7 +581,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         MethodSignature hasKeyType = WellKnownTypeSignatureFactory.IReadOnlyDictionary2HasKeyImpl(keyType, interopReferences);
         MethodSignature splitType = WellKnownTypeSignatureFactory.IReadOnlyDictionary2SplitImpl(interopReferences);
 
-        // The vtable layout for 'IReadOnlyList`1<T>' looks like this:
+        // The vtable layout for 'IReadOnlyDictionary<TKey, TValue>' looks like this:
         //
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -603,6 +603,102 @@ internal static partial class WellKnownTypeDefinitionFactory
         vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("HasKey"u8, FieldAttributes.Public, hasKeyType.Import(module).MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("Split"u8, FieldAttributes.Public, splitType.Import(module).MakeFunctionPointerType()));
+
+        return vftblType;
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> instantiation.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    /// <remarks>
+    /// Unlike <see cref="IDictionary2Vftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// this overload just uses <see cref="void"/><c>*</c> as key and value types, so it can be shared across reference types (for both types).
+    /// </remarks>
+    public static TypeDefinition IDictionary2Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    {
+        return IDictionary2Vftbl(
+            ns: null,
+            name: "<IDictionary2Vftbl>"u8,
+            keyType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            valueType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+            interopReferences: interopReferences,
+            module: module);
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> instantiation.
+    /// </summary>
+    /// <param name="ns">The namespace for the type.</param>
+    /// <param name="name">The type name.</param>
+    /// <param name="keyType">The key type for the vtable type.</param>
+    /// <param name="valueType">The value type for the vtable type.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    public static TypeDefinition IDictionary2Vftbl(
+        Utf8String? ns,
+        Utf8String name,
+        TypeSignature keyType,
+        TypeSignature valueType,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        TypeDefinition vftblType = new(
+            ns: ns,
+            name: name,
+            attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.ValueType.Import(module));
+
+        // Get the 'IUnknown' signatures
+        MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
+        MethodSignature addRefType = WellKnownTypeSignatureFactory.AddRefImpl(interopReferences);
+        MethodSignature releaseType = WellKnownTypeSignatureFactory.ReleaseImpl(interopReferences);
+
+        // Get the 'IInspectable' signatures
+        MethodSignature getIidsType = WellKnownTypeSignatureFactory.GetIidsImpl(interopReferences);
+        MethodSignature getRuntimeClassNameType = WellKnownTypeSignatureFactory.GetRuntimeClassNameImpl(interopReferences);
+        MethodSignature getTrustLevelType = WellKnownTypeSignatureFactory.GetTrustLevelImpl(interopReferences);
+
+        // Get the 'IMap`2' signatures
+        MethodSignature lookupType = WellKnownTypeSignatureFactory.IDictionary2LookupImpl(keyType, valueType, interopReferences);
+        MethodSignature get_SizeType = WellKnownTypeSignatureFactory.IDictionary2get_SizeImpl(interopReferences);
+        MethodSignature hasKeyType = WellKnownTypeSignatureFactory.IDictionary2HasKeyImpl(keyType, interopReferences);
+        MethodSignature getViewType = WellKnownTypeSignatureFactory.IDictionary2GetViewImpl(interopReferences);
+        MethodSignature insertType = WellKnownTypeSignatureFactory.IDictionary2InsertImpl(keyType, valueType, interopReferences);
+        MethodSignature removeType = WellKnownTypeSignatureFactory.IDictionary2RemoveImpl(keyType, interopReferences);
+        MethodSignature clearType = WellKnownTypeSignatureFactory.IDictionary2ClearImpl(interopReferences);
+
+        // The vtable layout for 'IDictionary<TKey, TValue>' looks like this:
+        //
+        // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+        // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+        // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
+        // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, HSTRING*, HRESULT> Lookup;
+        // public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Size;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, bool*, HRESULT> HasKey;
+        // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetView;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, HSTRING, bool*, HRESULT> Insert;
+        // public delegate* unmanaged[MemberFunction]<void*, HSTRING, HRESULT> Remove;
+        // public delegate* unmanaged[MemberFunction]<void*, HRESULT> Clear;
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Lookup"u8, FieldAttributes.Public, lookupType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("HasKey"u8, FieldAttributes.Public, hasKeyType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetView"u8, FieldAttributes.Public, getViewType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Insert"u8, FieldAttributes.Public, insertType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Remove"u8, FieldAttributes.Public, removeType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Clear"u8, FieldAttributes.Public, clearType.Import(module).MakeFunctionPointerType()));
 
         return vftblType;
     }

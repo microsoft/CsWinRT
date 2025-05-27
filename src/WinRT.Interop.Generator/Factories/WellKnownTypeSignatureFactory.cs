@@ -584,6 +584,110 @@ internal static class WellKnownTypeSignatureFactory
     }
 
     /// <summary>
+    /// Creates a type signature for the <c>Lookup</c> vtable entry for a map.
+    /// </summary>
+    /// <param name="keyType">The type of keys in the map.</param>
+    /// <param name="valueType">The type of values in the map.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IDictionary2LookupImpl(
+        TypeSignature keyType,
+        TypeSignature valueType,
+        InteropReferences interopReferences)
+    {
+        return IReadOnlyDictionary2LookupImpl(keyType, valueType, interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>get_Size</c> vtable entry for a map.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IDictionary2get_SizeImpl(InteropReferences interopReferences)
+    {
+        return IReadOnlyDictionary2get_SizeImpl(interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>HasKey</c> vtable entry for a map.
+    /// </summary>
+    /// <param name="keyType">The type of keys in the map.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IDictionary2HasKeyImpl(TypeSignature keyType, InteropReferences interopReferences)
+    {
+        return IReadOnlyDictionary2HasKeyImpl(keyType, interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>GetView</c> vtable entry for a map.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IDictionary2GetViewImpl(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetView'.
+        // This is identical to 'IVector<T>.GetView', so we can reuse that method here.
+        return IList1GetViewImpl(interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>Insert</c> vtable entry for a map.
+    /// </summary>
+    /// <param name="keyType">The type of keys in the map.</param>
+    /// <param name="valueType">The type of values in the map.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IDictionary2InsertImpl(
+        TypeSignature keyType,
+        TypeSignature valueType,
+        InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, <VALUE_TYPE>, bool*, HRESULT> Insert'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                keyType,
+                valueType,
+                interopReferences.CorLibTypeFactory.Boolean.MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>Remove</c> vtable entry for a map.
+    /// </summary>
+    /// <param name="keyType">The type of keys in the map.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IDictionary2RemoveImpl(TypeSignature keyType, InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, HRESULT> Remove'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                keyType]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>Clear</c> vtable entry for a map.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IDictionary2ClearImpl(InteropReferences interopReferences)
+    {
+        return IList1ClearImpl(interopReferences);
+    }
+
+    /// <summary>
     /// Creates a type signature for <c>in Guid</c> values.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>

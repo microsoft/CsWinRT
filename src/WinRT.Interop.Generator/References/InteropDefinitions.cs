@@ -120,6 +120,12 @@ internal sealed class InteropDefinitions
     public TypeDefinition IReadOnlyDictionary2Vftbl => field ??= WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(_interopReferences, _interopModule);
 
     /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IDictionary2Vftbl</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition IDictionary2Vftbl => field ??= WellKnownTypeDefinitionFactory.IDictionary2Vftbl(_interopReferences, _interopModule);
+
+    /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairVftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
