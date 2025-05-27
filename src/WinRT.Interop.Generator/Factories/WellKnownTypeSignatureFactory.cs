@@ -507,6 +507,83 @@ internal static class WellKnownTypeSignatureFactory
     }
 
     /// <summary>
+    /// Creates a type signature for the <c>Lookup</c> vtable entry for a map view.
+    /// </summary>
+    /// <param name="keyType">The type of keys in the map view.</param>
+    /// <param name="valueType">The type of values in the map view.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IReadOnlyDictionary2LookupImpl(
+        TypeSignature keyType,
+        TypeSignature valueType,
+        InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, <VALUE_TYPE>*, HRESULT> Lookup'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                keyType,
+                valueType.MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>get_Size</c> vtable entry for a map view.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IReadOnlyDictionary2get_SizeImpl(InteropReferences interopReferences)
+    {
+        // The signature is identical to 'IVectorView<T>.get_Size'
+        return IReadOnlyList1get_SizeImpl(interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>HasKey</c> vtable entry for a map view.
+    /// </summary>
+    /// <param name="keyType">The type of keys in the map view.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IReadOnlyDictionary2HasKeyImpl(TypeSignature keyType, InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, bool*, HRESULT> HasKey'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                keyType,
+                interopReferences.CorLibTypeFactory.Boolean.MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>Split</c> vtable entry for a map view.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IReadOnlyDictionary2SplitImpl(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, void**, HRESULT> Split'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+    }
+
+    /// <summary>
     /// Creates a type signature for <c>in Guid</c> values.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>

@@ -500,6 +500,7 @@ internal partial class InteropGenerator
             module.TopLevelTypes.Add(interopDefinitions.IEnumerable1Vftbl);
             module.TopLevelTypes.Add(interopDefinitions.IReadOnlyList1Vftbl);
             module.TopLevelTypes.Add(interopDefinitions.IList1Vftbl);
+            module.TopLevelTypes.Add(interopDefinitions.IReadOnlyDictionary2Vftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IKeyValuePairInterfaceEntries);
             module.TopLevelTypes.Add(interopDefinitions.InteropImplementationDetails);
