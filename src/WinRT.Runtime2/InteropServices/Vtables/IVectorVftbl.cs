@@ -32,6 +32,6 @@ internal unsafe struct IVectorVftbl
     public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> Append;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> RemoveAtEnd;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> Clear;
-    public delegate* unmanaged[MemberFunction]<void*, uint, int, void*, uint*, HRESULT> GetMany;
-    public delegate* unmanaged[MemberFunction]<void*, int, void*, HRESULT> ReplaceAll;
+    public delegate* unmanaged[MemberFunction]<void*, uint, uint, void*, uint*, HRESULT> GetMany;
+    public delegate* unmanaged[MemberFunction]<void*, uint, void*, HRESULT> ReplaceAll;
 }

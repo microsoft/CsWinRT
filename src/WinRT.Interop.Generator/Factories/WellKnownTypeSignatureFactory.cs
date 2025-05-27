@@ -291,7 +291,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IReadOnlyList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -301,8 +301,209 @@ internal static class WellKnownTypeSignatureFactory
             parameterTypes: [
                 interopReferences.CorLibTypeFactory.Void.MakePointerType(),
                 interopReferences.CorLibTypeFactory.UInt32,
+                interopReferences.CorLibTypeFactory.UInt32,
                 elementType.MakePointerType(),
                 interopReferences.CorLibTypeFactory.UInt32.MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>GetAt</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="elementType">The type of elements in the vector.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1GetAtImpl(TypeSignature elementType, InteropReferences interopReferences)
+    {
+        // The signature is identical to 'IVectorView<T>.GetAt'
+        return IReadOnlyList1GetAtImpl(elementType, interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>get_Size</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1get_SizeImpl(InteropReferences interopReferences)
+    {
+        // The signature is identical to 'IVectorView<T>.get_Size'
+        return IReadOnlyList1get_SizeImpl(interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>GetView</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1GetViewImpl(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> GetView'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>IndexOf</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="elementType">The type of elements in the vector.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1IndexOfImpl(TypeSignature elementType, InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, uint*, bool*, HRESULT> IndexOf'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                elementType,
+                interopReferences.CorLibTypeFactory.UInt32.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Boolean.MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>SetAt</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="elementType">The type of elements in the vector.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1SetAtImpl(TypeSignature elementType, InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>, HRESULT> SetAt'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.UInt32,
+                elementType]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>InsertAt</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="elementType">The type of elements in the vector.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1InsertAtImpl(TypeSignature elementType, InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>, HRESULT> InsertAt'.
+        // This is identical to the signature of 'SetAt', so we can just reuse that method here as well.
+        return IList1SetAtImpl(elementType, interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>RemoveAt</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1RemoveAtImpl(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, HRESULT> RemoveAt'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.UInt32]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>Append</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="elementType">The type of elements in the vector.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1AppendImpl(TypeSignature elementType, InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, HRESULT> Append'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                elementType]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>RemoveAtEnd</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1RemoveAtEndImpl(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, HRESULT> RemoveAtEnd'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>Clear</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1ClearImpl(InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, HRESULT> Clear'.
+        // This is identical to the signature of 'RemoveAtEnd', so we can reuse that.
+        return IList1RemoveAtEndImpl(interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>GetMany</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="elementType">The type of elements in the vector.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, int, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'.
+        // This is the same as 'IVectorView<T>.GetMany', so we can reuse that one here (like the methods above).
+        return IReadOnlyList1GetManyImpl(elementType, interopReferences);
+    }
+
+    /// <summary>
+    /// Creates a type signature for the <c>ReplaceAll</c> vtable entry for a vector.
+    /// </summary>
+    /// <param name="elementType">The type of elements in the vector.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
+    public static MethodSignature IList1ReplaceAllImpl(TypeSignature elementType, InteropReferences interopReferences)
+    {
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, HRESULT> ReplaceAll'
+        return new(
+            attributes: CallingConventionAttributes.Unmanaged,
+            returnType: new CustomModifierTypeSignature(
+                modifierType: interopReferences.CallConvMemberFunction,
+                isRequired: false,
+                baseType: interopReferences.CorLibTypeFactory.Int32),
+            parameterTypes: [
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.UInt32,
+                elementType.MakePointerType()]);
     }
 
     /// <summary>

@@ -108,6 +108,12 @@ internal sealed class InteropDefinitions
     public TypeDefinition IReadOnlyList1Vftbl => field ??= WellKnownTypeDefinitionFactory.IReadOnlyList1Vftbl(_interopReferences, _interopModule);
 
     /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>IList1Vftbl</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition IList1Vftbl => field ??= WellKnownTypeDefinitionFactory.IList1Vftbl(_interopReferences, _interopModule);
+
+    /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairVftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]
