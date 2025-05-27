@@ -23,7 +23,7 @@ namespace WindowsRuntime.InteropServices;
 public static class IReadOnlyDictionaryMethods<TKey, TValue>
 {
     /// <inheritdoc cref="IReadOnlyDictionary{TKey, TValue}.this"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IMapViewMethods{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static TValue Item<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key)
         where TMethods : IMapViewMethods<TKey, TValue>
@@ -41,7 +41,7 @@ public static class IReadOnlyDictionaryMethods<TKey, TValue>
     }
 
     /// <inheritdoc cref="IReadOnlyDictionary{TKey, TValue}.ContainsKey"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IMapViewMethods{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static bool ContainsKey<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key)
         where TMethods : IMapViewMethods<TKey, TValue>
@@ -52,7 +52,7 @@ public static class IReadOnlyDictionaryMethods<TKey, TValue>
     }
 
     /// <inheritdoc cref="IReadOnlyDictionary{TKey, TValue}.TryGetValue"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IMapViewMethods{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static bool TryGetValue<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key, [MaybeNullWhen(false)] out TValue value)
         where TMethods : IMapViewMethods<TKey, TValue>
