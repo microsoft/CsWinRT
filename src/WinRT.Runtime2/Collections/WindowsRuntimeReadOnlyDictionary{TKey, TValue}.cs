@@ -29,6 +29,16 @@ public abstract class WindowsRuntimeReadOnlyDictionary<TKey, TValue> : WindowsRu
     IWindowsRuntimeInterface<IEnumerable<KeyValuePair<TKey, TValue>>>
 {
     /// <summary>
+    /// The <see cref="ReadOnlyDictionaryKeyCollection{TKey, TValue}"/> instance, if initialized.
+    /// </summary>
+    private ReadOnlyDictionaryKeyCollection<TKey, TValue>? _keys;
+
+    /// <summary>
+    /// The <see cref="ReadOnlyDictionaryValueCollection{TKey, TValue}"/> instance, if initialized.
+    /// </summary>
+    private ReadOnlyDictionaryValueCollection<TKey, TValue>? _values;
+
+    /// <summary>
     /// Creates a <see cref="WindowsRuntimeReadOnlyDictionary{TKey, TValue}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
@@ -70,10 +80,10 @@ public abstract class WindowsRuntimeReadOnlyDictionary<TKey, TValue> : WindowsRu
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
-    public IEnumerable<TKey> Keys => throw new NotImplementedException();
+    public IEnumerable<TKey> Keys => _keys ??= new ReadOnlyDictionaryKeyCollection<TKey, TValue>(this);
 
     /// <inheritdoc/>
-    public IEnumerable<TValue> Values => throw new NotImplementedException();
+    public IEnumerable<TValue> Values => _values ??= new ReadOnlyDictionaryValueCollection<TKey, TValue>(this);
 
     /// <inheritdoc/>
     public int Count => IReadOnlyDictionaryMethods.Count(NativeObjectReference);
