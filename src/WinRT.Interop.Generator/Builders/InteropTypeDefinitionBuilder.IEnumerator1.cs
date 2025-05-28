@@ -36,11 +36,11 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition iteratorMethodsType)
         {
-            // We're declaring an 'internal abstract class' type
+            // We're declaring an 'internal static class' type
             iteratorMethodsType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
                 name: InteropUtf8NameFactory.TypeName(enumeratorType, "IIteratorMethods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(iteratorMethodsType);
@@ -228,7 +228,7 @@ internal partial class InteropTypeDefinitionBuilder
             nativeObjectType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
                 name: InteropUtf8NameFactory.TypeName(enumeratorType, "NativeObject"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed,
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: windowsRuntimeEnumerator1Type.Import(module).ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(nativeObjectType);

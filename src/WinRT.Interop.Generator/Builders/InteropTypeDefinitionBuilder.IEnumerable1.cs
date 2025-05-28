@@ -38,11 +38,11 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature elementType = enumerableType.TypeArguments[0];
 
-            // We're declaring an 'internal abstract class' type
+            // We're declaring an 'internal static class' type
             iterableMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
                 name: InteropUtf8NameFactory.TypeName(enumerableType, "IIterableMethods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(iterableMethodsType);
@@ -174,7 +174,7 @@ internal partial class InteropTypeDefinitionBuilder
             nativeObjectType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
                 name: InteropUtf8NameFactory.TypeName(enumerableType, "NativeObject"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed,
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: windowsRuntimeEnumerable1Type.Import(module).ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(nativeObjectType);
