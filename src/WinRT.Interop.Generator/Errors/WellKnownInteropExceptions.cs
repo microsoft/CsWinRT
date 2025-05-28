@@ -184,6 +184,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.
+    /// </summary>
+    public static Exception IReadOnlyList1TypeCodeGenerationError(string? enumeratorType, Exception exception)
+    {
+        return Exception(22, $"Failed to generate marshalling code for 'IReadOnlyList<T>' type '{enumeratorType}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

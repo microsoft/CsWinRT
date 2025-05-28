@@ -78,6 +78,18 @@ internal static class WindowsRuntimeExtensions
         }
     }
 
+    extension(TypeSignature signature)
+    {
+        /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> is some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
+        /// </summary>
+        /// <returns>Whether the type is some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</returns>
+        public bool IsKeyValuePairType(InteropReferences interopReferences)
+        {
+            return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair);
+        }
+    }
+
     extension(GenericInstanceTypeSignature signature)
     {
         /// <summary>
