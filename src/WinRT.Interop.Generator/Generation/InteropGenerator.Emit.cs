@@ -468,6 +468,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     vftblType: out TypeDefinition vftblType);
+
+                // Define the 'IVectorViewMethods' type (with the public thunks for 'IVectorView<T>' native calls)
+                InteropTypeDefinitionBuilder.IReadOnlyList1.IVectorViewMethods(
+                    readOnlyListType: typeSignature,
+                    vftblType: vftblType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    vectorViewMethodsType: out TypeDefinition vectorViewMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

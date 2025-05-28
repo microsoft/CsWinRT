@@ -330,6 +330,12 @@ internal sealed class InteropReferences
     public TypeReference IEnumeratorAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IEnumeratorAdapter`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorViewMethods&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IVectorViewMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IVectorViewMethods`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1181,6 +1187,22 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateMemberReference("MoveNext", MethodSignature.CreateInstance(
                 returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IVectorViewMethods&lt;T&gt;.GetAt</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IVectorViewMethods1GetAt(TypeSignature elementType)
+    {
+        return IVectorViewMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetAt", MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [
+                    WindowsRuntimeObject.ToTypeSignature(isValueType: false),
+                    _windowsRuntimeModule.CorLibTypeFactory.UInt32]));
     }
 
     /// <summary>

@@ -71,7 +71,7 @@ internal partial class InteropTypeDefinitionBuilder
                 // Define the method as follows:
                 //
                 // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-                // private static int <METHOD_NAME>(void* thisPtr, <ABI_TYPE>* key)
+                // private static int <METHOD_NAME>(void* thisPtr, <ABI_KEY_TYPE>* key)
                 MethodDefinition method = new(
                     name: name,
                     attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
