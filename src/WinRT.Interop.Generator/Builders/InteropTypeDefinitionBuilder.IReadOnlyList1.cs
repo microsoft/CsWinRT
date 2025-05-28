@@ -100,8 +100,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "GetAt"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]))
+                    returnType: elementType.Import(module),
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        module.CorLibTypeFactory.UInt32]))
             {
                 NoInlining = true
             };
@@ -173,6 +175,7 @@ internal partial class InteropTypeDefinitionBuilder
                     }
                 }
             };
+
             // If the value is blittable, return it directly
             if (elementType.IsValueType) // TODO, share with all methods returning a value (eg. 'Current')
             {
@@ -215,6 +218,82 @@ internal partial class InteropTypeDefinitionBuilder
                     HandlerEnd = ldloc_3_finallyEnd.CreateLabel()
                 });
             }
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the methods for an <see cref="System.Collections.Generic.IReadOnlyList{T}"/> interface.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="vectorViewMethodsType">The type returned by <see cref="IVectorViewMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="readOnlyListMethodsType">The resulting methods type.</param>
+        public static void IReadOnlyListMethods(
+            GenericInstanceTypeSignature readOnlyListType,
+            TypeDefinition vectorViewMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition readOnlyListMethodsType)
+        {
+            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+
+            // We're declaring an 'internal static class' type
+            readOnlyListMethodsType = new TypeDefinition(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IReadOnlyListMethods"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(readOnlyListMethodsType);
+
+            // Define the 'Item' getter method as follows:
+            //
+            // public static <TYPE_ARGUMENT> Item(WindowsRuntimeObjectReference thisReference, int index)
+            MethodDefinition get_ItemMethod = new(
+                name: "Item"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: elementType.Import(module),
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        module.CorLibTypeFactory.Int32]));
+
+            readOnlyListMethodsType.Methods.Add(get_ItemMethod);
+
+            // Create a method body for the 'Item' method
+            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IReadOnlyListMethods1Item(elementType, vectorViewMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Count' method as follows:
+            //
+            // public static int Count(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition countMethod = new(
+                name: "Count"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+
+            readOnlyListMethodsType.Methods.Add(countMethod);
+
+            // Create a method body for the 'Count' method
+            countMethod.CilMethodBody = new CilMethodBody(countMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.IReadOnlyListMethodsCount.Import(module) },
+                    { Ret }
+                }
+            };
         }
     }
 }

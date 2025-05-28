@@ -336,6 +336,18 @@ internal sealed class InteropReferences
     public TypeReference IVectorViewMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IVectorViewMethods`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IReadOnlyListMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyListMethods");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IReadOnlyListMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyListMethods`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -794,6 +806,15 @@ internal sealed class InteropReferences
             parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods.Count</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IReadOnlyListMethodsCount => field ??= IReadOnlyListMethods
+        .CreateMemberReference("Count", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Int32,
+            parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeObject"/>'s <c>get_NativeObjectReference</c> method.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1201,8 +1222,27 @@ internal sealed class InteropReferences
             .CreateMemberReference("GetAt", MethodSignature.CreateInstance(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
                 parameterTypes: [
-                    WindowsRuntimeObject.ToTypeSignature(isValueType: false),
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
                     _windowsRuntimeModule.CorLibTypeFactory.UInt32]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods&lt;T&gt;.Item</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="vectorViewMethods">The <see cref="IVectorViewMethods1"/> type.</param>
+    public MethodSpecification IReadOnlyListMethods1Item(TypeSignature elementType, TypeDefinition vectorViewMethods)
+    {
+        return IReadOnlyListMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Item", MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    _windowsRuntimeModule.CorLibTypeFactory.Int32]))
+            .MakeGenericInstanceMethod(vectorViewMethods.ToTypeSignature());
     }
 
     /// <summary>

@@ -476,6 +476,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     vectorViewMethodsType: out TypeDefinition vectorViewMethodsType);
+
+                // Define the 'IReadOnlyListMethods' type
+                InteropTypeDefinitionBuilder.IReadOnlyList1.IReadOnlyListMethods(
+                    readOnlyListType: typeSignature,
+                    vectorViewMethodsType: vectorViewMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    readOnlyListMethodsType: out TypeDefinition readOnlyListMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
