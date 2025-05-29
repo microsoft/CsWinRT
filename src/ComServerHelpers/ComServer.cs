@@ -61,8 +61,8 @@ public sealed class ComServer : IDisposable
         IntPtr abiPtr = IntPtr.Zero;
         if (CoCreateInstance(&clsid, null, CLSCTX.CLSCTX_INPROC_SERVER, &iid, (void**)&abiPtr) == HRESULT.S_OK)
         {
-            var options = MarshalInterface<IGlobalOptions>.FromAbi(abiPtr);
-            options.Set(GLOBALOPT_PROPERTIES.COMGLB_RO_SETTINGS, (nuint)GLOBALOPT_RO_FLAGS.COMGLB_FAST_RUNDOWN);
+            var options = (IGlobalOptions*)abiPtr;
+            options->Set(GLOBALOPT_PROPERTIES.COMGLB_RO_SETTINGS, (nuint)GLOBALOPT_RO_FLAGS.COMGLB_FAST_RUNDOWN);
             Marshal.Release(abiPtr);
         }
     }
