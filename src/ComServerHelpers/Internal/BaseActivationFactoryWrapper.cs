@@ -18,7 +18,7 @@ internal sealed partial class BaseActivationFactoryWrapper(BaseActivationFactory
     {
         if (instance is null)
         {
-            return HRESULT.E_INVALIDARG;
+            return HRESULT.E_POINTER;
         }
 
         nint unknown = 0;
@@ -61,7 +61,7 @@ internal sealed partial class BaseActivationFactoryWrapper(BaseActivationFactory
     {
         if (className is null)
         {
-            return HRESULT.E_INVALIDARG;
+            return HRESULT.E_POINTER;
         }
 
         try
@@ -89,7 +89,7 @@ internal sealed partial class BaseActivationFactoryWrapper(BaseActivationFactory
     {
         if (trustLevel is null)
         {
-            return HRESULT.E_INVALIDARG;
+            return HRESULT.E_POINTER;
         }
 
         *trustLevel = global::Windows.Win32.System.WinRT.TrustLevel.BaseTrust;
