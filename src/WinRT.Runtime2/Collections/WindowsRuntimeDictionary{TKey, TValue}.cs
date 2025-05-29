@@ -10,6 +10,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using WindowsRuntime.InteropServices;
 
+#pragma warning disable IDE0046
+
 namespace WindowsRuntime;
 
 /// <summary>
@@ -144,25 +146,52 @@ public sealed class WindowsRuntimeDictionary<
     /// <inheritdoc/>
     public void Add(KeyValuePair<TKey, TValue> item)
     {
-        throw new NotImplementedException();
+        TIDictionaryMethods.Add(NativeObjectReference, item.Key, item.Value);
     }
 
     /// <inheritdoc/>
     public bool Contains(KeyValuePair<TKey, TValue> item)
     {
-        throw new NotImplementedException();
+        if (!TIDictionaryMethods.TryGetValue(NativeObjectReference, item.Key, out TValue? value))
+        {
+            return false;
+        }
+
+        return EqualityComparer<TValue>.Default.Equals(value, item.Value);
     }
 
     /// <inheritdoc/>
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(array);
+        ArgumentOutOfRangeException.ThrowIfNegative(arrayIndex);
+
+        int count = IDictionaryMethods.Count(NativeObjectReference);
+
+        if (array.Length <= arrayIndex && count > 0)
+        {
+            throw new ArgumentException("Argument_IndexOutOfArrayBounds");
+        }
+
+        if (array.Length - arrayIndex < count)
+        {
+            throw new ArgumentException("Argument_InsufficientSpaceToCopyCollection");
+        }
+
+        // Copy all items into the target array, at the specified starting offset
+        foreach (KeyValuePair<TKey, TValue> item in this)
+        {
+            array[arrayIndex++] = item;
+        }
     }
 
     /// <inheritdoc/>
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
-        throw new NotImplementedException();
+        // TODO: should we handle the value as well?
+        _ = TIDictionaryMethods.Remove(NativeObjectReference, item.Key);
+
+        return true;
     }
 
     /// <inheritdoc/>
