@@ -13,20 +13,31 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime;
 
 /// <summary>
-/// The base class for all projected Windows Runtime <see cref="IReadOnlyDictionary{TKey, TValue}"/> types.
+/// The implementation of all projected Windows Runtime <see cref="IReadOnlyDictionary{TKey, TValue}"/> types.
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the read-only dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the read-only dictionary.</typeparam>
+/// <typeparam name="TIIterable">The <see cref="IEnumerable{T}"/> interface type.</typeparam>
+/// <typeparam name="TIEnumerableMethods">The <see cref="IEnumerableMethodsImpl{T}"/> implementation type.</typeparam>
+/// <typeparam name="TIReadOnlyDictionaryMethods">The <see cref="IReadOnlyDictionaryMethodsImpl{TKey, TValue}"/> implementation type.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class WindowsRuntimeReadOnlyDictionary<TKey, TValue> : WindowsRuntimeObject,
+public sealed class WindowsRuntimeReadOnlyDictionary<
+    TKey,
+    TValue,
+    TIIterable,
+    TIEnumerableMethods,
+    TIReadOnlyDictionaryMethods> : WindowsRuntimeObject,
     IReadOnlyDictionary<TKey, TValue>,
     IWindowsRuntimeInterface<IReadOnlyDictionary<TKey, TValue>>,
     IWindowsRuntimeInterface<IEnumerable<KeyValuePair<TKey, TValue>>>
+    where TIIterable : IWindowsRuntimeInterface
+    where TIEnumerableMethods : IEnumerableMethodsImpl<KeyValuePair<TKey, TValue>>
+    where TIReadOnlyDictionaryMethods : IReadOnlyDictionaryMethodsImpl<TKey, TValue>
 {
     /// <summary>
     /// The <see cref="ReadOnlyDictionaryKeyCollection{TKey, TValue}"/> instance, if initialized.
@@ -39,7 +50,7 @@ public abstract class WindowsRuntimeReadOnlyDictionary<TKey, TValue> : WindowsRu
     private ReadOnlyDictionaryValueCollection<TKey, TValue>? _values;
 
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeReadOnlyDictionary{TKey, TValue}"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeReadOnlyDictionary{TKey, TValue, TIIterable, TIEnumerableMethods, TIReadOnlyDictionaryMethods}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
@@ -49,15 +60,10 @@ public abstract class WindowsRuntimeReadOnlyDictionary<TKey, TValue> : WindowsRu
     }
 
     /// <summary>
-    /// Gets the IID for the <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> interface.
-    /// </summary>
-    protected abstract ref readonly Guid IID_IIterable { get; }
-
-    /// <summary>
     /// Gets the lazy-loaded, cached object reference for <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> for the current object.
     /// </summary>
     [field: AllowNull, MaybeNull]
-    protected WindowsRuntimeObjectReference IIterableObjectReference
+    private WindowsRuntimeObjectReference IIterableObjectReference
     {
         get
         {
@@ -66,7 +72,7 @@ public abstract class WindowsRuntimeReadOnlyDictionary<TKey, TValue> : WindowsRu
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
-                    value: NativeObjectReference.As(in IID_IIterable),
+                    value: NativeObjectReference.As(in TIIterable.IID),
                     comparand: null);
 
                 return field;
@@ -77,7 +83,7 @@ public abstract class WindowsRuntimeReadOnlyDictionary<TKey, TValue> : WindowsRu
     }
 
     /// <inheritdoc/>
-    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
+    protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
     public IEnumerable<TKey> Keys => _keys ??= new ReadOnlyDictionaryKeyCollection<TKey, TValue>(this);
@@ -89,16 +95,25 @@ public abstract class WindowsRuntimeReadOnlyDictionary<TKey, TValue> : WindowsRu
     public int Count => IReadOnlyDictionaryMethods.Count(NativeObjectReference);
 
     /// <inheritdoc/>
-    public abstract TValue this[TKey key] { get; }
+    public TValue this[TKey key] => TIReadOnlyDictionaryMethods.Item(NativeObjectReference, key);
 
     /// <inheritdoc/>
-    public abstract bool ContainsKey(TKey key);
+    public bool ContainsKey(TKey key)
+    {
+        return TIReadOnlyDictionaryMethods.ContainsKey(NativeObjectReference, key);
+    }
 
     /// <inheritdoc/>
-    public abstract bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value);
+    public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
+    {
+        return TIReadOnlyDictionaryMethods.TryGetValue(NativeObjectReference, key, out value);
+    }
 
     /// <inheritdoc/>
-    public abstract IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator();
+    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+    {
+        return TIEnumerableMethods.GetEnumerator(IIterableObjectReference);
+    }
 
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator()
@@ -119,7 +134,7 @@ public abstract class WindowsRuntimeReadOnlyDictionary<TKey, TValue> : WindowsRu
     }
 
     /// <inheritdoc/>
-    protected sealed override bool IsOverridableInterface(in Guid iid)
+    protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;
     }
