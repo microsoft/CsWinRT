@@ -178,49 +178,55 @@ internal static class WellKnownMemberDefinitionFactory
                 returnType: module.CorLibTypeFactory.Int32,
                 parameterTypes: [interopReferences.ReadOnlySpanChar.Import(module).ToTypeSignature(isValueType: true)]));
 
-        // Create a method body for the 'ComputeReadOnlySpanHash' method
-        CilMethodBody hashBody = hashMethod.CreateAndBindCilMethodBody();
-        CilInstructionCollection hashInstructions = hashBody.Instructions;
+        // Jump labels
+        CilInstruction ldloc_1_rangeCheck = new(Ldloc_1);
+        CilInstruction ldarga_S_0_loopStart = new(Ldarga_S, hashMethod.Parameters[0]);
 
         // Define the locals (hash value, and loop index)
-        hashBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.UInt32));
-        hashBody.LocalVariables.Add(new CilLocalVariable(module.CorLibTypeFactory.Int32));
+        CilLocalVariable loc_0_hash = new(module.CorLibTypeFactory.UInt32);
+        CilLocalVariable loc_1_index = new(module.CorLibTypeFactory.Int32);
 
-        CilInstruction rangeCheck = new(CilOpCodes.Ldloc_1);
+        // Create a method body for the 'ComputeReadOnlySpanHash' method
+        hashMethod.CilMethodBody = new CilMethodBody(hashMethod)
+        {
+            LocalVariables = { loc_0_hash, loc_1_index },
+            Instructions =
+            {
+                // This method copies the simple hash implementation that Roslyn emits.
+                // To verify that source, just inspect the code generated for a method
+                // with at least a dozen 'string'-s in a big switch statement.
+                { CilInstruction.CreateLdcI4(unchecked((int)2166136261u)) },
+                { Stloc_0 },
+                { Ldc_I4_0 },
+                { Stloc_1 },
+                { Br_S, ldloc_1_rangeCheck.CreateLabel() },
 
-        // This method copies the simple hash implementation that Roslyn emits.
-        // To verify that source, just inspect the code generated for a method
-        // with at least a dozen 'string'-s in a big switch statement.
-        hashInstructions.Add(CilInstruction.CreateLdcI4(unchecked((int)2166136261u)));
-        _ = hashInstructions.Add(CilOpCodes.Stloc_0);
-        _ = hashInstructions.Add(CilOpCodes.Ldc_I4_0);
-        _ = hashInstructions.Add(CilOpCodes.Stloc_1);
-        _ = hashInstructions.Add(CilOpCodes.Br_S, rangeCheck.CreateLabel());
+                // Loop
+                { ldarga_S_0_loopStart },
+                { Ldloc_1 },
+                { Call, interopReferences.ReadOnlySpanCharget_Item.Import(module) },
+                { Ldind_U2 },
+                { Ldloc_0 },
+                { Xor },
+                { CilInstruction.CreateLdcI4(16777619) },
+                { Mul },
+                { Stloc_0 },
+                { Ldloc_1 },
+                { Ldc_I4_1 },
+                { Add },
+                { Stloc_1 },
 
-        // Loop
-        CilInstruction loopStart = hashInstructions.Add(CilOpCodes.Ldarga_S, hashMethod.Parameters[0]);
-        _ = hashInstructions.Add(CilOpCodes.Ldloc_1);
-        _ = hashInstructions.Add(CilOpCodes.Call, interopReferences.ReadOnlySpanCharget_Item.Import(module));
-        _ = hashInstructions.Add(CilOpCodes.Ldind_U2);
-        _ = hashInstructions.Add(CilOpCodes.Ldloc_0);
-        _ = hashInstructions.Add(CilOpCodes.Xor);
-        hashInstructions.Add(CilInstruction.CreateLdcI4(16777619));
-        _ = hashInstructions.Add(CilOpCodes.Mul);
-        _ = hashInstructions.Add(CilOpCodes.Stloc_0);
-        _ = hashInstructions.Add(CilOpCodes.Ldloc_1);
-        _ = hashInstructions.Add(CilOpCodes.Ldc_I4_1);
-        _ = hashInstructions.Add(CilOpCodes.Add);
-        _ = hashInstructions.Add(CilOpCodes.Stloc_1);
+                // Loop range check
+                { ldloc_1_rangeCheck },
+                { Ldarga_S, hashMethod.Parameters[0] },
+                { Call, interopReferences.ReadOnlySpanCharget_Length.Import(module) },
+                { Blt_S, ldarga_S_0_loopStart.CreateLabel() },
 
-        // Loop range check
-        hashInstructions.Add(rangeCheck);
-        _ = hashInstructions.Add(CilOpCodes.Ldarga_S, hashMethod.Parameters[0]);
-        _ = hashInstructions.Add(CilOpCodes.Call, interopReferences.ReadOnlySpanCharget_Length.Import(module));
-        _ = hashInstructions.Add(CilOpCodes.Blt_S, loopStart.CreateLabel());
-
-        // Return the hash
-        _ = hashInstructions.Add(CilOpCodes.Ldloc_0);
-        _ = hashInstructions.Add(CilOpCodes.Ret);
+                // Return the hash
+                { Ldloc_0 },
+                { Ret }
+            }
+        };
 
         return hashMethod;
     }
