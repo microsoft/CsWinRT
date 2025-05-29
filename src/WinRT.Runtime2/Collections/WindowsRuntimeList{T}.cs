@@ -15,23 +15,33 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime;
 
 /// <summary>
-/// The base class for all projected Windows Runtime <see cref="IList{T}"/> types.
+/// The implementation of all projected Windows Runtime <see cref="IList{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
+/// <typeparam name="TIIterable">The <see cref="IEnumerable{T}"/> interface type.</typeparam>
+/// <typeparam name="TIEnumerableMethods">The <see cref="IEnumerableMethodsImpl{T}"/> implementation type.</typeparam>
+/// <typeparam name="TIListMethods">The <see cref="IListMethodsImpl{T}"/> implementation type.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class WindowsRuntimeList<T> : WindowsRuntimeObject,
+public sealed class WindowsRuntimeList<
+    T,
+    TIIterable,
+    TIEnumerableMethods,
+    TIListMethods> : WindowsRuntimeObject,
     IList<T>,
     IReadOnlyList<T>,
     IWindowsRuntimeInterface<IList<T>>,
     IWindowsRuntimeInterface<IEnumerable<T>>
+    where TIIterable : IWindowsRuntimeInterface
+    where TIEnumerableMethods : IEnumerableMethodsImpl<T>
+    where TIListMethods : IListMethodsImpl<T>
 {
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeList{T}"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeList{T, TIIterable, TIEnumerableMethods, TIListMethods}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
@@ -40,12 +50,9 @@ public abstract class WindowsRuntimeList<T> : WindowsRuntimeObject,
     {
     }
 
-    /// <inheritdoc cref="WindowsRuntimeReadOnlyList{T}.IID_IIterable"/>
-    protected abstract ref readonly Guid IID_IIterable { get; }
-
-    /// <inheritdoc cref="WindowsRuntimeReadOnlyList{T}.IIterableObjectReference"/>
+    /// <inheritdoc cref="WindowsRuntimeReadOnlyList{T, TIIterable, TIEnumerableMethods, TIReadOnlyListMethods}.IIterableObjectReference"/>
     [field: AllowNull, MaybeNull]
-    protected WindowsRuntimeObjectReference IIterableObjectReference
+    private WindowsRuntimeObjectReference IIterableObjectReference
     {
         get
         {
@@ -54,7 +61,7 @@ public abstract class WindowsRuntimeList<T> : WindowsRuntimeObject,
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
-                    value: NativeObjectReference.As(in IID_IIterable),
+                    value: NativeObjectReference.As(in TIIterable.IID),
                     comparand: null);
 
                 return field;
@@ -65,7 +72,7 @@ public abstract class WindowsRuntimeList<T> : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
+    protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
     public int Count => IListMethods.Count(NativeObjectReference);
@@ -74,13 +81,23 @@ public abstract class WindowsRuntimeList<T> : WindowsRuntimeObject,
     public bool IsReadOnly => false;
 
     /// <inheritdoc/>
-    public abstract T this[int index] { get; set; }
+    public T this[int index]
+    {
+        get => TIListMethods.Item(NativeObjectReference, index);
+        set => TIListMethods.Item(NativeObjectReference, index, value);
+    }
 
     /// <inheritdoc/>
-    public abstract int IndexOf(T item);
+    public int IndexOf(T item)
+    {
+        return TIListMethods.IndexOf(NativeObjectReference, item);
+    }
 
     /// <inheritdoc/>
-    public abstract void Insert(int index, T item);
+    public void Insert(int index, T item)
+    {
+        TIListMethods.Insert(NativeObjectReference, index, item);
+    }
 
     /// <inheritdoc/>
     public void RemoveAt(int index)
@@ -89,7 +106,10 @@ public abstract class WindowsRuntimeList<T> : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    public abstract void Add(T item);
+    public void Add(T item)
+    {
+        TIListMethods.Add(NativeObjectReference, item);
+    }
 
     /// <inheritdoc/>
     public void Clear()
@@ -98,16 +118,28 @@ public abstract class WindowsRuntimeList<T> : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    public abstract bool Contains(T item);
+    public bool Contains(T item)
+    {
+        return TIListMethods.Contains(NativeObjectReference, item);
+    }
 
     /// <inheritdoc/>
-    public abstract void CopyTo(T[] array, int arrayIndex);
+    public void CopyTo(T[] array, int arrayIndex)
+    {
+        TIListMethods.CopyTo(NativeObjectReference, array, arrayIndex);
+    }
 
     /// <inheritdoc/>
-    public abstract bool Remove(T item);
+    public bool Remove(T item)
+    {
+        return TIListMethods.Remove(NativeObjectReference, item);
+    }
 
     /// <inheritdoc/>
-    public abstract IEnumerator<T> GetEnumerator();
+    public IEnumerator<T> GetEnumerator()
+    {
+        return TIEnumerableMethods.GetEnumerator(IIterableObjectReference);
+    }
 
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator()
@@ -128,7 +160,7 @@ public abstract class WindowsRuntimeList<T> : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    protected sealed override bool IsOverridableInterface(in Guid iid)
+    protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;
     }

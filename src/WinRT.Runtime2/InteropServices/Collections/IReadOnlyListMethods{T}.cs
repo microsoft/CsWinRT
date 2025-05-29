@@ -9,7 +9,7 @@ using System.ComponentModel;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Methods for implementations of <see cref="System.Collections.Generic.IReadOnlyList{T}"/> types.
+/// Methods for <see cref="System.Collections.Generic.IReadOnlyList{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
 /// <remarks>
@@ -20,10 +20,10 @@ namespace WindowsRuntime.InteropServices;
 public static class IReadOnlyListMethods<T>
 {
     /// <inheritdoc cref="System.Collections.Generic.IReadOnlyList{T}.this"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorViewMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IVectorViewMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static T Item<TMethods>(WindowsRuntimeObjectReference thisReference, int index)
-        where TMethods : IVectorViewMethods<T>
+        where TMethods : IVectorViewMethodsImpl<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
 

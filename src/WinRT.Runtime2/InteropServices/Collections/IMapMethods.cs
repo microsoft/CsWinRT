@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Methods for implementations of <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> types.
+/// Methods for <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> types.
 /// </summary>
 /// <remarks>
 /// This type should only be used by generated code.

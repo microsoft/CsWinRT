@@ -8,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Methods for implementations of <see cref="System.Collections.Generic.IReadOnlyList{T}"/> types.
+/// Methods for <see cref="System.Collections.Generic.IReadOnlyList{T}"/> types.
 /// </summary>
 /// <remarks>
 /// This type should only be used by generated code.

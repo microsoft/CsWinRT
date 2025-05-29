@@ -23,10 +23,10 @@ namespace WindowsRuntime.InteropServices;
 public static class IDictionaryMethods<TKey, TValue>
 {
     /// <inheritdoc cref="IDictionary{TKey, TValue}.this"/>
-    /// <typeparam name="TMethods">The <see cref="IMapMethods{K, V}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static TValue Item<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key)
-        where TMethods : IMapMethods<TKey, TValue>
+        where TMethods : IMapMethodsImpl<TKey, TValue>
     {
         ArgumentNullException.ThrowIfNull(key);
 
@@ -41,10 +41,10 @@ public static class IDictionaryMethods<TKey, TValue>
     }
 
     /// <inheritdoc cref="IDictionary{TKey, TValue}.this"/>
-    /// <typeparam name="TMethods">The <see cref="IMapMethods{K, V}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static void Item<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key, TValue value)
-        where TMethods : IMapMethods<TKey, TValue>
+        where TMethods : IMapMethodsImpl<TKey, TValue>
     {
         ArgumentNullException.ThrowIfNull(key);
 
@@ -53,10 +53,10 @@ public static class IDictionaryMethods<TKey, TValue>
     }
 
     /// <inheritdoc cref="IDictionary{TKey, TValue}.Add"/>
-    /// <typeparam name="TMethods">The <see cref="IMapMethods{K, V}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static void Add<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key, TValue value)
-        where TMethods : IMapMethods<TKey, TValue>
+        where TMethods : IMapMethodsImpl<TKey, TValue>
     {
         ArgumentNullException.ThrowIfNull(key);
 
@@ -71,10 +71,10 @@ public static class IDictionaryMethods<TKey, TValue>
     }
 
     /// <inheritdoc cref="IDictionary{TKey, TValue}.ContainsKey"/>
-    /// <typeparam name="TMethods">The <see cref="IMapMethods{K, V}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static bool ContainsKey<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key)
-        where TMethods : IMapMethods<TKey, TValue>
+        where TMethods : IMapMethodsImpl<TKey, TValue>
     {
         ArgumentNullException.ThrowIfNull(key);
 
@@ -82,10 +82,10 @@ public static class IDictionaryMethods<TKey, TValue>
     }
 
     /// <inheritdoc cref="IDictionary{TKey, TValue}.Remove"/>
-    /// <typeparam name="TMethods">The <see cref="IMapMethods{K, V}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static bool Remove<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key)
-        where TMethods : IMapMethods<TKey, TValue>
+        where TMethods : IMapMethodsImpl<TKey, TValue>
     {
         ArgumentNullException.ThrowIfNull(key);
 
@@ -112,10 +112,10 @@ public static class IDictionaryMethods<TKey, TValue>
     }
 
     /// <inheritdoc cref="IDictionary{TKey, TValue}.TryGetValue"/>
-    /// <typeparam name="TMethods">The <see cref="IMapMethods{K, V}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static bool TryGetValue<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key, [MaybeNullWhen(false)] out TValue value)
-        where TMethods : IMapViewMethods<TKey, TValue>
+        where TMethods : IMapViewMethodsImpl<TKey, TValue>
     {
         ArgumentNullException.ThrowIfNull(key);
 

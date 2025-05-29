@@ -10,7 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Methods for implementations of <see cref="System.Collections.Generic.IList{T}"/> types.
+/// Methods for <see cref="System.Collections.Generic.IList{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
 /// <remarks>
@@ -21,10 +21,10 @@ namespace WindowsRuntime.InteropServices;
 public static class IListMethods<T>
 {
     /// <inheritdoc cref="System.Collections.Generic.IList{T}.this"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IVectorMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static T Item<TMethods>(WindowsRuntimeObjectReference thisReference, int index)
-        where TMethods : IVectorMethods<T>
+        where TMethods : IVectorMethodsImpl<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
 
@@ -40,11 +40,11 @@ public static class IListMethods<T>
     }
 
     /// <inheritdoc cref="System.Collections.Generic.IList{T}.this"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IVectorMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <param name="item">The item to set.</param>
     public static void Item<TMethods>(WindowsRuntimeObjectReference thisReference, int index, T item)
-        where TMethods : IVectorMethods<T>
+        where TMethods : IVectorMethodsImpl<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
 
@@ -60,28 +60,28 @@ public static class IListMethods<T>
     }
 
     /// <inheritdoc cref="System.Collections.Generic.ICollection{T}.Add"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IVectorMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static void Add<TMethods>(WindowsRuntimeObjectReference thisReference, T item)
-        where TMethods : IVectorMethods<T>
+        where TMethods : IVectorMethodsImpl<T>
     {
         TMethods.Append(thisReference, item);
     }
 
     /// <inheritdoc cref="System.Collections.Generic.ICollection{T}.Contains"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IVectorMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static bool Contains<TMethods>(WindowsRuntimeObjectReference thisReference, T item)
-        where TMethods : IVectorMethods<T>
+        where TMethods : IVectorMethodsImpl<T>
     {
         return TMethods.IndexOf(thisReference, item, out _);
     }
 
     /// <inheritdoc cref="System.Collections.Generic.ICollection{T}.CopyTo"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IVectorMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static void CopyTo<TMethods>(WindowsRuntimeObjectReference thisReference, T[] array, int arrayIndex)
-        where TMethods : IVectorMethods<T>
+        where TMethods : IVectorMethodsImpl<T>
     {
         ArgumentNullException.ThrowIfNull(array);
         ArgumentOutOfRangeException.ThrowIfNegative(arrayIndex);
@@ -106,10 +106,10 @@ public static class IListMethods<T>
     }
 
     /// <inheritdoc cref="System.Collections.Generic.ICollection{T}.Remove"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IVectorMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static bool Remove<TMethods>(WindowsRuntimeObjectReference thisReference, T item)
-        where TMethods : IVectorMethods<T>
+        where TMethods : IVectorMethodsImpl<T>
     {
         int index = IndexOf<TMethods>(thisReference, item);
 
@@ -126,10 +126,10 @@ public static class IListMethods<T>
     }
 
     /// <inheritdoc cref="System.Collections.Generic.IList{T}.IndexOf"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IVectorMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static int IndexOf<TMethods>(WindowsRuntimeObjectReference thisReference, T item)
-        where TMethods : IVectorMethods<T>
+        where TMethods : IVectorMethodsImpl<T>
     {
         // If the item is not in the collection, stop here
         if (!TMethods.IndexOf(thisReference, item, out uint index))
@@ -151,10 +151,10 @@ public static class IListMethods<T>
     }
 
     /// <inheritdoc cref="System.Collections.Generic.IList{T}.Insert"/>
-    /// <typeparam name="TMethods">The <see cref="IVectorMethods{T}"/> implementation to use.</typeparam>
+    /// <typeparam name="TMethods">The <see cref="IVectorMethodsImpl{T}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static void Insert<TMethods>(WindowsRuntimeObjectReference thisReference, int index, T item)
-        where TMethods : IVectorMethods<T>
+        where TMethods : IVectorMethodsImpl<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
 

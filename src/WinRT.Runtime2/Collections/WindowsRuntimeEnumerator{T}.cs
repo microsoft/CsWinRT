@@ -13,16 +13,18 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime;
 
 /// <summary>
-/// The base class for all projected Windows Runtime <see cref="IEnumerator{T}"/> types.
+/// The implementation of all projected Windows Runtime <see cref="IEnumerator{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
+/// <typeparam name="TIIteratorMethods">The <see cref="IIteratorMethodsImpl{T}"/> implementation type.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
+public sealed unsafe class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
+    where TIIteratorMethods : IIteratorMethodsImpl<T>
 {
     /// <summary>
     /// Indicates whether the underlying enumerator has been initialized.
@@ -35,7 +37,7 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
     private bool _hadCurrent = true;
 
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeEnumerator{T}"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeEnumerator{T, TIIteratorMethods}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
@@ -45,17 +47,7 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
-
-    /// <summary>
-    /// Gets the current item in the collection.
-    /// </summary>
-    /// <returns>The current element.</returns>
-    /// <remarks>
-    /// This method should directly implement the <c>Windows.Foundation.Collections.IIterator&lt;T&gt;.Current</c> property.
-    /// </remarks>
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1.current"/>
-    protected abstract T CurrentNative();
+    protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
     public T Current
@@ -116,7 +108,7 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
             //     of the collection.
             if (_hadCurrent)
             {
-                Current = CurrentNative();
+                Current = TIIteratorMethods.Current(NativeObjectReference);
             }
 
             return _hadCurrent;
@@ -146,7 +138,7 @@ public abstract unsafe class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    protected sealed override bool IsOverridableInterface(in Guid iid)
+    protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;
     }

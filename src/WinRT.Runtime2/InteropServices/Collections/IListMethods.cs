@@ -9,7 +9,7 @@ using System.ComponentModel;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Methods for implementations of <see cref="System.Collections.Generic.IList{T}"/> types.
+/// Methods for <see cref="System.Collections.Generic.IList{T}"/> types.
 /// </summary>
 /// <remarks>
 /// This type should only be used by generated code.

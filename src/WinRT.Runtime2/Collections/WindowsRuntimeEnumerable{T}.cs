@@ -12,19 +12,21 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime;
 
 /// <summary>
-/// The base class for all projected Windows Runtime <see cref="IEnumerable{T}"/> types.
+/// The implementation of all projected Windows Runtime <see cref="IEnumerable{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
+/// <typeparam name="TIEnumerableMethods">The <see cref="IEnumerableMethodsImpl{T}"/> implementation type.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterable-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class WindowsRuntimeEnumerable<T> : WindowsRuntimeObject, IEnumerable<T>, IWindowsRuntimeInterface<IEnumerable<T>>
+public sealed class WindowsRuntimeEnumerable<T, TIEnumerableMethods> : WindowsRuntimeObject, IEnumerable<T>, IWindowsRuntimeInterface<IEnumerable<T>>
+    where TIEnumerableMethods : IEnumerableMethodsImpl<T>
 {
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeEnumerable{T}"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeEnumerable{T, TIEnumerableMethods}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
@@ -37,7 +39,10 @@ public abstract class WindowsRuntimeEnumerable<T> : WindowsRuntimeObject, IEnume
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
-    public abstract IEnumerator<T> GetEnumerator();
+    public IEnumerator<T> GetEnumerator()
+    {
+        return TIEnumerableMethods.GetEnumerator(NativeObjectReference);
+    }
 
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator()

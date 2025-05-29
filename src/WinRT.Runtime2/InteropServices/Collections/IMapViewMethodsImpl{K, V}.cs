@@ -16,7 +16,7 @@ namespace WindowsRuntime.InteropServices;
 /// </remarks>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IMapViewMethods<K, V>
+public interface IMapViewMethodsImpl<K, V>
 {
     /// <summary>
     /// Returns the item at the specified key in the map view.
