@@ -50,9 +50,10 @@ internal sealed partial class BaseActivationFactoryWrapper(BaseActivationFactory
             return HRESULT.E_POINTER;
         }
 
-        *iidCount = 1;
-        *iids = (Guid*)NativeMemory.Alloc((nuint)sizeof(Guid));
-        *iids[0] = global::Windows.Win32.System.WinRT.IActivationFactory.IID_Guid;
+        (int length, nint data) = WinRT.MarshalBlittable<Guid>.FromManagedArray(new Guid[]{ global::Windows.Win32.System.WinRT.IActivationFactory.IID_Guid });
+        *iidCount = (uint)length;
+        *iids = (Guid*)data;
+
         return HRESULT.S_OK;
     }
 

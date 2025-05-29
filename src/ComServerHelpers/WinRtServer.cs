@@ -66,12 +66,6 @@ public sealed class WinRtServer : IDisposable
         activationFactoryCallbackWrapper = ActivationFactoryCallback;
         activationFactoryCallbackPointer = (delegate* unmanaged[Stdcall]<HSTRING, IActivationFactory**, HRESULT>)Marshal.GetFunctionPointerForDelegate(activationFactoryCallbackWrapper);
 
-        HRESULT result = RoInitialize(RO_INIT_TYPE.RO_INIT_MULTITHREADED);
-        if (result != HRESULT.S_OK && result != HRESULT.S_FALSE)
-        {
-            result.ThrowOnFailure();
-        }
-
         Guid clsid = CLSID_GlobalOptions;
         Guid iid = IGlobalOptions.IID_Guid;
 
