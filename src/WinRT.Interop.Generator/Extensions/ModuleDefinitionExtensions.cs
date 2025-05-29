@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -15,6 +17,41 @@ namespace WindowsRuntime.InteropGenerator;
 /// </summary>
 internal static class ModuleDefinitionExtensions
 {
+    /// <summary>
+    /// Gets the first type with a given name from the specified module.
+    /// </summary>
+    /// <param name="name">The target module.</param>
+    /// <param name="ns">The namespace of the type to get.</param>
+    /// <param name="module">The name of the type to get.</param>
+    /// <returns>The resulting type.</returns>
+    /// <exception cref="ArgumentException">Thrown if the type couldn't be found.</exception>
+    public static TypeDefinition GetType(this ModuleDefinition module, ReadOnlySpan<byte> ns, ReadOnlySpan<byte> name)
+    {
+        if (ns.IsEmpty)
+        {
+            foreach (TypeDefinition type in module.TopLevelTypes)
+            {
+                if (type.Namespace is null && type.Name?.AsSpan().SequenceEqual(name) is true)
+                {
+                    return type;
+                }
+            }
+        }
+        else
+        {
+            foreach (TypeDefinition type in module.TopLevelTypes)
+            {
+                if (type.Namespace?.AsSpan().SequenceEqual(ns) is true &&
+                    type.Name?.AsSpan().SequenceEqual(name) is true)
+                {
+                    return type;
+                }
+            }
+        }
+
+        throw new ArgumentException($"Type with name '{new Utf8String(ns) + new Utf8String(name)}' not found.", nameof(name));
+    }
+
     /// <summary>
     /// Enumerates all generic instance type signatures in the module.
     /// </summary>

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using AsmResolver;
 using AsmResolver.DotNet;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -34,7 +35,7 @@ internal static class TypeDefinitionExtensions
                 }
             }
 
-            throw new ArgumentException("Method not found.", nameof(name));
+            throw new ArgumentException($"Method with name '{new Utf8String(name)}' not found.", nameof(name));
         }
 
         /// <summary>
@@ -53,7 +54,7 @@ internal static class TypeDefinitionExtensions
                 }
             }
 
-            throw new ArgumentException("Property not found.", nameof(name));
+            throw new ArgumentException($"Property with name '{new Utf8String(name)}' not found.", nameof(name));
         }
 
         /// <summary>
@@ -72,7 +73,7 @@ internal static class TypeDefinitionExtensions
                 }
             }
 
-            throw new ArgumentException("Method not found.", nameof(name));
+            throw new ArgumentException($"Field with name '{new Utf8String(name)}' not found.", nameof(name));
         }
     }
 }
