@@ -23,7 +23,7 @@ namespace WindowsRuntime;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed unsafe class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
+public abstract unsafe class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
     where TIIteratorMethods : IIteratorMethodsImpl<T>
 {
     /// <summary>
@@ -41,13 +41,13 @@ public sealed unsafe class WindowsRuntimeEnumerator<T, TIIteratorMethods> : Wind
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeEnumerator(WindowsRuntimeObjectReference nativeObjectReference)
+    protected WindowsRuntimeEnumerator(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
 
     /// <inheritdoc/>
-    protected internal override bool HasUnwrappableNativeObjectReference => true;
+    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
     public T Current
@@ -138,7 +138,7 @@ public sealed unsafe class WindowsRuntimeEnumerator<T, TIIteratorMethods> : Wind
     }
 
     /// <inheritdoc/>
-    protected override bool IsOverridableInterface(in Guid iid)
+    protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;
     }
