@@ -365,14 +365,23 @@ internal partial class InteropGenerator
 
             try
             {
-                // Define the 'Impl' type (with the CCW vtable implementation)
-                InteropTypeDefinitionBuilder.IEnumerable1.ImplType(
+                // Define the 'Interface' type (with the IID property)
+                InteropTypeDefinitionBuilder.IEnumerable1.Interface(
                     enumerableType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    implType: out TypeDefinition enumerableImplType,
+                    interfaceType: out TypeDefinition interfaceType,
                     iidRvaField: out _);
+
+                // Define the 'Impl' type (with the CCW vtable implementation)
+                InteropTypeDefinitionBuilder.IEnumerable1.ImplType(
+                    enumerableType: typeSignature,
+                    interfaceType: interfaceType,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    implType: out TypeDefinition enumerableImplType);
 
                 // Define the 'IIterableMethods' type (with the public thunks for 'IIterable<T>' native calls)
                 InteropTypeDefinitionBuilder.IEnumerable1.IIterableMethods(
@@ -381,6 +390,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     iterableMethodsType: out TypeDefinition iterableMethodsType);
+
+                // Define the 'IEnumerableMethods' type (with the public thunks for 'IEnumerable<T>' calls)
+                InteropTypeDefinitionBuilder.IEnumerable1.IEnumerableMethods(
+                    enumerableType: typeSignature,
+                    iterableMethodsType: iterableMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    enumerableMethodsType: out TypeDefinition enumerableMethodsType);
 
                 // Define the 'NativeObject' type (with the RCW implementation)
                 InteropTypeDefinitionBuilder.IEnumerable1.NativeObject(

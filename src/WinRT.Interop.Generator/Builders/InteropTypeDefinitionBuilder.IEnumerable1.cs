@@ -22,6 +22,57 @@ internal partial class InteropTypeDefinitionBuilder
     public static class IEnumerable1
     {
         /// <summary>
+        /// Creates a new type definition for the interface type for some <c>IIterable&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="interfaceType">The resulting interface type.</param>
+        /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
+        public static void Interface(
+            GenericInstanceTypeSignature enumerableType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition interfaceType,
+            out FieldDefinition iidRvaField)
+        {
+            // We're declaring an 'internal abstract class' type
+            interfaceType = new TypeDefinition(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, "Interface"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeInterface.Import(module)) }
+            };
+
+            module.TopLevelTypes.Add(interfaceType);
+
+            // Create the field for the IID for the enumerable type
+            WellKnownMemberDefinitionFactory.IID(
+                iidRvaFieldName: InteropUtf8NameFactory.TypeName(enumerableType, "IID"),
+                iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
+                interopReferences: interopReferences,
+                module: module,
+                iid: Guid.NewGuid(),
+                out iidRvaField,
+                out PropertyDefinition iidProperty,
+                out MethodDefinition get_iidMethod);
+
+            interopDefinitions.RvaFields.Fields.Add(iidRvaField);
+
+            interfaceType.Properties.Add(iidProperty);
+            interfaceType.Methods.Add(get_iidMethod);
+
+            // Mark the 'get_IID' method as implementing the interface method
+            interfaceType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IWindowsRuntimeInterfaceget_IID.Import(module),
+                body: get_iidMethod));
+        }
+
+        /// <summary>
         /// Creates a new type definition for the methods for an <c>IIterable&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
@@ -153,6 +204,64 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the methods for an <see cref="System.Collections.Generic.IEnumerable{T}"/> interface.
+        /// </summary>
+        /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
+        /// <param name="iterableMethodsType">The type returned by <see cref="IIterableMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="enumerableMethodsType">The resulting methods type.</param>
+        public static void IEnumerableMethods(
+            GenericInstanceTypeSignature enumerableType,
+            TypeDefinition iterableMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition enumerableMethodsType)
+        {
+            TypeSignature elementType = enumerableType.TypeArguments[0];
+
+            // We're declaring an 'internal abstract class' type
+            enumerableMethodsType = new TypeDefinition(
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, "IEnumerableMethods"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IEnumerableMethodsImpl1.MakeGenericInstanceType(elementType).Import(module).ToTypeDefOrRef()) }
+            };
+
+            module.TopLevelTypes.Add(enumerableMethodsType);
+
+            // Define the 'GetEnumerator' method as follows:
+            //
+            // public static IEnumerator<<TYPE_ARGUMENT>> GetEnumerator(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition getEnumeratorMethod = new(
+                name: "GetEnumerator"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+
+            enumerableMethodsType.Methods.Add(getEnumeratorMethod);
+
+            // Mark the 'GetEnumerator' method as implementing the interface method
+            enumerableMethodsType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumerableMethodsImpl1GetEnumerator(elementType).Import(module),
+                body: getEnumeratorMethod));
+
+            // Create a method body for the 'GetEnumerator' method
+            getEnumeratorMethod.CilMethodBody = new CilMethodBody(getEnumeratorMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, iterableMethodsType.GetMethod("First"u8) },
+                    { Ret }
+                },
+            };
+        }
+
+        /// <summary>
         /// Creates a new type definition for the native object for an <c>IIterable&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
@@ -168,7 +277,11 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             TypeSignature elementType = enumerableType.TypeArguments[0];
-            TypeSignature windowsRuntimeEnumerable1Type = interopReferences.WindowsRuntimeEnumerable1.MakeGenericInstanceType(elementType);
+
+            // The 'NativeObject' is deriving from 'WindowsRuntimeEnumerable<<ELEMENT_TYPE>, <IITERABLE_METHODS>>'
+            TypeSignature windowsRuntimeEnumerable1Type = interopReferences.WindowsRuntimeEnumerable2.MakeGenericInstanceType(
+                elementType,
+                iterableMethodsType.ToTypeSignature(isValueType: false));
 
             // We're declaring an 'internal sealed class' type
             nativeObjectType = new(
@@ -187,33 +300,6 @@ internal partial class InteropTypeDefinitionBuilder
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
             _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeEnumerator1_ctor(windowsRuntimeEnumerable1Type).Import(module));
-
-            // Define the 'FirstNative' method as follows:
-            //
-            // public static IEnumerator<<ELEMENT_TYPE>> FirstNative()
-            MethodDefinition firstNativeMethod = new(
-                name: "FirstNative"u8,
-                attributes: MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
-
-            nativeObjectType.Methods.Add(firstNativeMethod);
-
-            // Mark the 'CurrentNative' method as overriding the base method
-            nativeObjectType.MethodImplementations.Add(new MethodImplementation(
-                declaration: interopReferences.WindowsRuntimeEnumerable1FirstNative.Import(module),
-                body: firstNativeMethod));
-
-            // Create a method body for the 'CurrentNative' method
-            firstNativeMethod.CilMethodBody = new CilMethodBody(firstNativeMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Call, interopReferences.WindowsRuntimeObjectget_NativeObjectReference.Import(module) },
-                    { Call, iterableMethodsType.GetMethod("First"u8) },
-                    { Ret }
-                }
-            };
         }
 
         /// <summary>
@@ -654,18 +740,18 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for some <c>IIterable&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
+        /// <param name="interfaceType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceType"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="implType">The resulting implementation type.</param>
-        /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
         public static void ImplType(
             GenericInstanceTypeSignature enumerableType,
+            TypeDefinition interfaceType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
-            out TypeDefinition implType,
-            out FieldDefinition iidRvaField)
+            out TypeDefinition implType)
         {
             // We're declaring an 'internal static class' type
             implType = new TypeDefinition(
@@ -717,16 +803,11 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Create the field for the IID for the enumerable type
             WellKnownMemberDefinitionFactory.IID(
-                iidRvaFieldName: InteropUtf8NameFactory.TypeName(enumerableType, "IID"),
-                iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
+                interfaceType.GetMethod("get_IID"u8),
                 interopReferences: interopReferences,
                 module: module,
-                iid: Guid.NewGuid(),
-                out iidRvaField,
                 out PropertyDefinition iidProperty,
                 out MethodDefinition get_iidMethod);
-
-            interopDefinitions.RvaFields.Fields.Add(iidRvaField);
 
             implType.Properties.Add(iidProperty);
             implType.Methods.Add(get_iidMethod);

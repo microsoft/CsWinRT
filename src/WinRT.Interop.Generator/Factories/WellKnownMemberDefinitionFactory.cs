@@ -9,6 +9,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
+using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Factories;
 
@@ -38,7 +39,7 @@ internal static class WellKnownMemberDefinitionFactory
         out PropertyDefinition iidProperty,
         out MethodDefinition get_IidMethod)
     {
-        // Create the field for the IID for the delegate type
+        // Create the field for the IID
         iidRvaField = new FieldDefinition(
             name: iidRvaFieldName,
             attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.HasFieldRva,
@@ -68,11 +69,60 @@ internal static class WellKnownMemberDefinitionFactory
         };
 
         // Create a method body for the 'IID' property
-        CilInstructionCollection get_IIDInstructions = get_IidMethod.CreateAndBindCilMethodBody().Instructions;
+        get_IidMethod.CilMethodBody = new CilMethodBody(get_IidMethod)
+        {
+            Instructions =
+            {
+                { Ldsflda, iidRvaField },
+                { Ret }
+            }
+        };
+    }
 
-        // The 'get_IID' method directly returns the IID RVA field address
-        _ = get_IIDInstructions.Add(CilOpCodes.Ldsflda, iidRvaField);
-        _ = get_IIDInstructions.Add(CilOpCodes.Ret);
+    /// <summary>
+    /// Creates the 'IID' property that forwards to another property.
+    /// </summary>
+    /// <param name="forwardedIidMethod">The <see cref="MethodDefinition"/> to forward calls to.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="iidProperty">The resulting 'IID' property.</param>
+    /// <param name="get_IidMethod">The resulting 'IID' getter method.</param>
+    public static void IID(
+        MethodDefinition forwardedIidMethod,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        out PropertyDefinition iidProperty,
+        out MethodDefinition get_IidMethod)
+    {
+        // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
+        TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences).Import(module);
+
+        // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
+        PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
+
+        // Create the 'get_IID' getter method
+        get_IidMethod = new MethodDefinition(
+            name: "get_IID"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(iidPropertyType))
+        { IsAggressiveInlining = true };
+
+        // Create the 'IID' property
+        iidProperty = new PropertyDefinition("IID"u8, PropertyAttributes.None, iidPropertySignature)
+        {
+            CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
+            GetMethod = get_IidMethod
+        };
+
+        // Create a method body for the 'IID' property
+        get_IidMethod.CilMethodBody = new CilMethodBody(get_IidMethod)
+        {
+            Instructions =
+            {
+                { Call, forwardedIidMethod },
+                { Ret }
+            }
+        };
     }
 
     /// <summary>
@@ -102,12 +152,15 @@ internal static class WellKnownMemberDefinitionFactory
         vtableProperty = new PropertyDefinition("Vtable"u8, PropertyAttributes.None, vtablePropertySignature) { GetMethod = get_VtableMethod };
 
         // Create a method body for the 'Vtable' property
-        CilInstructionCollection get_VtableInstructions = vtableProperty.GetMethod!.CreateAndBindCilMethodBody().Instructions;
-
-        // The 'get_Vtable' method directly returns the 'Vftbl' field address
-        _ = get_VtableInstructions.Add(CilOpCodes.Ldsflda, vftblField);
-        _ = get_VtableInstructions.Add(CilOpCodes.Conv_U);
-        _ = get_VtableInstructions.Add(CilOpCodes.Ret);
+        vtableProperty.GetMethod.CilMethodBody = new CilMethodBody(vtableProperty.GetMethod)
+        {
+            Instructions =
+            {
+                { Ldsflda, vftblField },
+                { Conv_U },
+                { Ret }
+            }
+        };
     }
 
     /// <summary>

@@ -22,7 +22,7 @@ namespace WindowsRuntime;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterable-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class WindowsRuntimeEnumerable<T, TIEnumerableMethods> : WindowsRuntimeObject, IEnumerable<T>, IWindowsRuntimeInterface<IEnumerable<T>>
+public abstract class WindowsRuntimeEnumerable<T, TIEnumerableMethods> : WindowsRuntimeObject, IEnumerable<T>, IWindowsRuntimeInterface<IEnumerable<T>>
     where TIEnumerableMethods : IEnumerableMethodsImpl<T>
 {
     /// <summary>
@@ -30,7 +30,7 @@ public sealed class WindowsRuntimeEnumerable<T, TIEnumerableMethods> : WindowsRu
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeEnumerable(WindowsRuntimeObjectReference nativeObjectReference)
+    protected WindowsRuntimeEnumerable(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
