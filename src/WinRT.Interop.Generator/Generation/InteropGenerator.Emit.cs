@@ -501,6 +501,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     readOnlyListMethodsType: out TypeDefinition readOnlyListMethodsType);
+
+                // Define the 'NativeObject' type (with the RCW implementation)
+                InteropTypeDefinitionBuilder.IReadOnlyList1.NativeObject(
+                    readOnlyListType: typeSignature,
+                    readOnlyListMethodsType: readOnlyListMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

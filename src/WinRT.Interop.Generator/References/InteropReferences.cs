@@ -324,10 +324,22 @@ internal sealed class InteropReferences
     public TypeReference IIteratorMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IIteratorMethods");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethodsImpl&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IIteratorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IIteratorMethodsImpl`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapter&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IEnumeratorAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IEnumeratorAdapter`1");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumerableMethodsImpl&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IEnumerableMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IEnumerableMethodsImpl`1");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorViewMethods&lt;T&gt;</c>.
@@ -348,6 +360,12 @@ internal sealed class InteropReferences
     public TypeReference IReadOnlyListMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyListMethods`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethodsImpl&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IReadOnlyListMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyListMethodsImpl`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -357,13 +375,25 @@ internal sealed class InteropReferences
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeEnumerator&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference WindowsRuntimeEnumerator1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeEnumerator`1");
+    public TypeReference WindowsRuntimeEnumerator2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeEnumerator`2");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeEnumerable&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference WindowsRuntimeEnumerable1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeEnumerable`1");
+    public TypeReference WindowsRuntimeEnumerable2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeEnumerable`2");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReadOnlyList&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeReadOnlyList4 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeReadOnlyList`4");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeInterface</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IWindowsRuntimeInterface => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IWindowsRuntimeInterface");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback</c>.
@@ -832,20 +862,12 @@ internal sealed class InteropReferences
             parameterTypes: [RuntimeTypeHandle.ToTypeSignature(isValueType: true)]));
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeEnumerator1"/>'s <c>CurrentNative</c> method.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeInterface.get_IID()</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public MemberReference WindowsRuntimeEnumerator1CurrentNative => field ??= WindowsRuntimeEnumerator1
-        .CreateMemberReference("CurrentNative", MethodSignature.CreateInstance(
-            returnType: new GenericParameterSignature(GenericParameterType.Type, 0)));
-
-    /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <see cref="WindowsRuntimeEnumerable1"/>'s <c>FirstNative</c> method.
-    /// </summary>
-    [field: MaybeNull, AllowNull]
-    public MemberReference WindowsRuntimeEnumerable1FirstNative => field ??= WindowsRuntimeEnumerable1
-        .CreateMemberReference("FirstNative", MethodSignature.CreateInstance(
-            returnType: new GenericParameterSignature(GenericParameterType.Type, 0)));
+    public MemberReference IWindowsRuntimeInterfaceget_IID => field ??= IWindowsRuntimeInterface
+        .CreateMemberReference("get_IID", MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeComWrappersCallback.CreateObject(void*)</c>.
@@ -1145,6 +1167,32 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IIteratorMethodsImpl&lt;T&gt;.Current</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IIteratorMethodsImpl1Current(TypeSignature elementType)
+    {
+        return IIteratorMethodsImpl1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Current", MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumerableMethodsImpl&lt;T&gt;.GetEnumerator</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IEnumerableMethodsImpl1GetEnumerator(TypeSignature elementType)
+    {
+        return IEnumerableMethodsImpl1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("GetEnumerator", MethodSignature.CreateStatic(new GenericParameterSignature(GenericParameterType.Type, 0)));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IEnumerable{T}.GetEnumerator"/>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -1243,6 +1291,22 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
                     _windowsRuntimeModule.CorLibTypeFactory.Int32]))
             .MakeGenericInstanceMethod(vectorViewMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethodsImpl&lt;T&gt;.Item</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IReadOnlyListMethodsImpl1Item(TypeSignature elementType)
+    {
+        return IReadOnlyListMethodsImpl1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Item", MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    _windowsRuntimeModule.CorLibTypeFactory.Int32]));
     }
 
     /// <summary>

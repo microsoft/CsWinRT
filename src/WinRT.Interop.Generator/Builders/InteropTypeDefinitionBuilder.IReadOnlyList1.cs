@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -241,8 +242,11 @@ internal partial class InteropTypeDefinitionBuilder
             readOnlyListMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IReadOnlyListMethods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IReadOnlyListMethodsImpl1.MakeGenericInstanceType(elementType).Import(module).ToTypeDefOrRef()) }
+            };
 
             module.TopLevelTypes.Add(readOnlyListMethodsType);
 
@@ -259,6 +263,11 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.Int32]));
 
             readOnlyListMethodsType.Methods.Add(get_ItemMethod);
+
+            // Mark the 'Item' method as overriding the base method
+            vectorViewMethodsType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IReadOnlyListMethodsImpl1Item(elementType).Import(module),
+                body: get_ItemMethod));
 
             // Create a method body for the 'Item' method
             get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
@@ -294,6 +303,58 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for an <c>IVectorView&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyListMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature readOnlyListType,
+            TypeDefinition readOnlyListMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
+
+            // The namespace is the same for 'IReadOnlyList<T>' and the other interfaces
+            Utf8String ns = InteropUtf8NameFactory.TypeNamespace(readOnlyListType);
+
+            // Precompute the names of all target enumerable types
+            Utf8String enumerableTypeName = InteropUtf8NameFactory.TypeName(enumerableType);
+            Utf8String enumerableInterfaceTypeName = enumerableTypeName + "Interface"u8;
+            Utf8String enumerableMethodsTypeName = enumerableTypeName + "IEnumerableMethods"u8;
+
+            // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IENUMERABLE_METHODS, <IREADONLYLIST_METHODS>>'
+            TypeSignature windowsRuntimeReadOnlyList4Type = interopReferences.WindowsRuntimeReadOnlyList4.MakeGenericInstanceType(
+                elementType,
+                module.GetType(ns, enumerableInterfaceTypeName).ToTypeSignature(isValueType: false),
+                module.GetType(ns, enumerableMethodsTypeName).ToTypeSignature(isValueType: false),
+                readOnlyListMethodsType.ToTypeSignature(isValueType: false));
+
+            // We're declaring an 'internal sealed class' type
+            nativeObjectType = new(
+                ns: ns,
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "NativeObject"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+                baseType: windowsRuntimeReadOnlyList4Type.Import(module).ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(nativeObjectType);
+
+            // Define the constructor
+            MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false));
+
+            nativeObjectType.Methods.Add(ctor);
+
+            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
+            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeEnumerator1_ctor(windowsRuntimeReadOnlyList4Type).Import(module));
         }
     }
 }
