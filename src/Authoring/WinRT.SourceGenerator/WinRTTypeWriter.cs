@@ -2530,6 +2530,11 @@ namespace Generator
                 // Prioritize any mapped types before treating an attribute as a projected type.
                 AddProjectedType(type);
             }
+            // Check if CsWinRT component projected type from another project.
+            else if (Model.Compilation.GetTypeByMetadataName("ABI.Impl." + qualifiedName) != null)
+            {
+                AddProjectedType(type);
+            }
             else
             {
                 AddComponentType(type);

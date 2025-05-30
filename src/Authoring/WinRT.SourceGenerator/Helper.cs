@@ -438,12 +438,13 @@ namespace Generator
 
             if (!isProjectedType & type.ContainingNamespace != null)
             {
-                isProjectedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+                string qualifiedTypeName = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
+                isProjectedType = mapper.HasMappingForType(qualifiedTypeName);
 
                 // Check if CsWinRT component projected type from another project.
                 if (!isProjectedType)
                 {
-                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName("ABI.Impl." + type.MetadataName) != null;
+                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName("ABI.Impl." + qualifiedTypeName) != null;
                 }
             }
 
@@ -477,12 +478,13 @@ namespace Generator
             bool isProjectedType = HasAttributeWithType(type, winrtRuntimeTypeAttribute);
             if (!isProjectedType & type.ContainingNamespace != null)
             {
-                isProjectedType = mapper.HasMappingForType(string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName));
+                string qualifiedTypeName = string.Join(".", type.ContainingNamespace.ToDisplayString(), type.MetadataName);
+                isProjectedType = mapper.HasMappingForType(qualifiedTypeName);
 
                 // Check if CsWinRT component projected type from another project.
                 if (!isProjectedType)
                 {
-                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName("ABI.Impl." + type.MetadataName) != null;
+                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName("ABI.Impl." + qualifiedTypeName) != null;
                 }
             }
 
