@@ -10,9 +10,9 @@ using WindowsRuntime.InteropGenerator.Errors;
 namespace WindowsRuntime.InteropGenerator.Generation;
 
 /// <summary>
-/// Global state tracking type for <see cref="InteropGenerator"/>.
+/// Global state tracking type for <see cref="InteropGenerator"/>, specifically for the discovery phase.
 /// </summary>
-internal sealed class InteropGeneratorState
+internal sealed class InteropGeneratorDiscoveryState
 {
     /// <summary>Backing field for <see cref="ModuleDefinitions"/>.</summary>
     private readonly ConcurrentDictionary<string, ModuleDefinition> _moduleDefinitions = [];

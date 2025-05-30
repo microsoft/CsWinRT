@@ -21,14 +21,14 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     /// <returns>The resulting state.</returns>
-    private static InteropGeneratorState Discover(InteropGeneratorArgs args)
+    private static InteropGeneratorDiscoveryState Discover(InteropGeneratorArgs args)
     {
         // Initialize the assembly resolver (we need to reuse this to allow caching)
         PathAssemblyResolver pathAssemblyResolver = new(args.ReferencePath);
 
         // Initialize the state, which contains all the discovered info we'll use for generation.
         // No additional parameters will be passed to later steps: all the info is in this object.
-        InteropGeneratorState state = new() { AssemblyResolver = pathAssemblyResolver };
+        InteropGeneratorDiscoveryState discoveryState = new() { AssemblyResolver = pathAssemblyResolver };
 
         try
         {
@@ -36,7 +36,7 @@ internal partial class InteropGenerator
             ParallelLoopResult result = Parallel.ForEach(
                 source: args.ReferencePath.Concat([args.AssemblyPath]),
                 parallelOptions: new ParallelOptions { CancellationToken = args.Token, MaxDegreeOfParallelism = args.MaxDegreesOfParallelism },
-                body: path => LoadAndProcessModule(args, state, path));
+                body: path => LoadAndProcessModule(args, discoveryState, path));
 
             // Ensure we did complete all iterations (this should always be the case)
             if (!result.IsCompleted)
@@ -57,20 +57,20 @@ internal partial class InteropGenerator
         }
 
         // We want to ensure the state will never be mutated after this method completes
-        state.MakeReadOnly();
+        discoveryState.MakeReadOnly();
 
-        return state;
+        return discoveryState;
     }
 
     /// <summary>
     /// Loads and processes a module definition.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="state">The state for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="path">The path of the module to load.</param>
     private static void LoadAndProcessModule(
         InteropGeneratorArgs args,
-        InteropGeneratorState state,
+        InteropGeneratorDiscoveryState discoveryState,
         string path)
     {
         ModuleDefinition module;
@@ -78,7 +78,7 @@ internal partial class InteropGenerator
         // Try to load the .dll at the current path
         try
         {
-            module = ModuleDefinition.FromFile(path, ((PathAssemblyResolver)state.AssemblyResolver).ReaderParameters);
+            module = ModuleDefinition.FromFile(path, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
         }
         catch (BadImageFormatException)
         {
@@ -87,7 +87,7 @@ internal partial class InteropGenerator
             return;
         }
 
-        state.TrackModuleDefinition(path, module);
+        discoveryState.TrackModuleDefinition(path, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -102,23 +102,23 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Discover all type hierarchy types
-        DiscoverTypeHierarchyTypes(args, state, module);
+        DiscoverTypeHierarchyTypes(args, discoveryState, module);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Discover all generic type instantiations
-        DiscoverGenericTypeInstantiations(args, state, module);
+        DiscoverGenericTypeInstantiations(args, discoveryState, module);
     }
 
     /// <summary>
     /// Discovers all type hierarchy types in a given assembly.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="state">The state for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="module">The module currently being analyzed.</param>
     private static void DiscoverTypeHierarchyTypes(
         InteropGeneratorArgs args,
-        InteropGeneratorState state,
+        InteropGeneratorDiscoveryState discoveryState,
         ModuleDefinition module)
     {
         try
@@ -142,7 +142,7 @@ internal partial class InteropGenerator
                 // If the base type is also a projected Windows Runtime type, track it
                 if (type.BaseType.IsProjectedWindowsRuntimeType)
                 {
-                    state.TrackTypeHierarchyEntry(type.FullName, type.BaseType.FullName);
+                    discoveryState.TrackTypeHierarchyEntry(type.FullName, type.BaseType.FullName);
                 }
             }
         }
@@ -156,11 +156,11 @@ internal partial class InteropGenerator
     /// Discovers all generic type instantiations in a given assembly.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="state">The state for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="module">The module currently being analyzed.</param>
     private static void DiscoverGenericTypeInstantiations(
         InteropGeneratorArgs args,
-        InteropGeneratorState state,
+        InteropGeneratorDiscoveryState discoveryState,
         ModuleDefinition module)
     {
         try
@@ -194,56 +194,56 @@ internal partial class InteropGenerator
                     (typeSignature.IsCustomMappedWindowsRuntimeDelegateType(interopReferences) ||
                      typeSignature.GenericType.IsProjectedWindowsRuntimeType))
                 {
-                    state.TrackGenericDelegateType(typeSignature);
+                    discoveryState.TrackGenericDelegateType(typeSignature);
                 }
 
                 // Gather all 'KeyValuePair<,>' instances
                 if (typeDefinition.IsValueType &&
                     SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.KeyValuePair))
                 {
-                    state.TrackKeyValuePairType(typeSignature);
+                    discoveryState.TrackKeyValuePairType(typeSignature);
                 }
 
                 // Track all projected Windows Runtime generic interfaces
                 if (typeDefinition.IsInterface)
                 {
                     static void TrackGenericInterfaceType(
-                        InteropGeneratorState state,
+                        InteropGeneratorDiscoveryState discoveryState,
                         GenericInstanceTypeSignature typeSignature,
                         InteropReferences interopReferences)
                     {
                         if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
                         {
-                            state.TrackIEnumerator1Type(typeSignature);
+                            discoveryState.TrackIEnumerator1Type(typeSignature);
                         }
                         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerable1))
                         {
-                            state.TrackIEnumerable1Type(typeSignature);
+                            discoveryState.TrackIEnumerable1Type(typeSignature);
                         }
                         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
                         {
-                            state.TrackIList1Type(typeSignature);
+                            discoveryState.TrackIList1Type(typeSignature);
                         }
                         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
                         {
-                            state.TrackIReadOnlyList1Type(typeSignature);
+                            discoveryState.TrackIReadOnlyList1Type(typeSignature);
                         }
                         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
                         {
-                            state.TrackIDictionary2Type(typeSignature);
+                            discoveryState.TrackIDictionary2Type(typeSignature);
                         }
                         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
                         {
-                            state.TrackIReadOnlyDictionary2Type(typeSignature);
+                            discoveryState.TrackIReadOnlyDictionary2Type(typeSignature);
                         }
                     }
 
-                    TrackGenericInterfaceType(state, typeSignature, interopReferences);
+                    TrackGenericInterfaceType(discoveryState, typeSignature, interopReferences);
 
                     // We also want to crawl base interfaces
                     foreach (GenericInstanceTypeSignature interfaceSignature in typeDefinition.EnumerateGenericInstanceInterfaceSignatures(typeSignature))
                     {
-                        TrackGenericInterfaceType(state, interfaceSignature, interopReferences);
+                        TrackGenericInterfaceType(discoveryState, interfaceSignature, interopReferences);
                     }
                 }
             }

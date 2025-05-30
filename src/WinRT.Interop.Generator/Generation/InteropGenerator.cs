@@ -44,7 +44,7 @@ internal static partial class InteropGenerator
     /// <param name="args">The arguments for this invocation.</param>
     private static void RunCore(InteropGeneratorArgs args)
     {
-        InteropGeneratorState state;
+        InteropGeneratorDiscoveryState discoveryState;
 
         // Wrap the actual logic, to ensure that we're only ever throwing an exception that will result
         // in either graceful cancellation, or a well formatted error message. The 'ConsoleApp' code is
@@ -54,7 +54,7 @@ internal static partial class InteropGenerator
         {
             ConsoleApp.Log($"Processing {args.ReferencePath.Length + 1} modules");
 
-            state = Discover(args);
+            discoveryState = Discover(args);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
@@ -68,7 +68,7 @@ internal static partial class InteropGenerator
         {
             ConsoleApp.Log("Generating interop code");
 
-            Emit(args, state);
+            Emit(args, discoveryState);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
