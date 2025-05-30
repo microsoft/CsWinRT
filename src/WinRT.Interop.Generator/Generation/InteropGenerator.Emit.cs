@@ -500,6 +500,16 @@ internal partial class InteropGenerator
                     module: module,
                     vftblType: out TypeDefinition vftblType);
 
+                // Define the 'Impl' type (with the CCW vtable implementation)
+                InteropTypeDefinitionBuilder.IReadOnlyList1.ImplType(
+                    readOnlyListType: typeSignature,
+                    vftblType: vftblType,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    implType: out TypeDefinition enumerableImplType,
+                    iidRvaField: out _);
+
                 // Define the 'IVectorViewMethods' type (with the public thunks for 'IVectorView<T>' native calls)
                 InteropTypeDefinitionBuilder.IReadOnlyList1.IVectorViewMethods(
                     readOnlyListType: typeSignature,

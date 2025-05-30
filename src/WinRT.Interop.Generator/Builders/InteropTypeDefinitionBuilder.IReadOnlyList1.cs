@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver;
+using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -350,6 +350,91 @@ internal partial class InteropTypeDefinitionBuilder
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
             _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeEnumerator1_ctor(windowsRuntimeReadOnlyList4Type).Import(module));
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for some <c>IVectorView&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature readOnlyListType,
+            TypeDefinition vftblType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition implType,
+            out FieldDefinition iidRvaField)
+        {
+            // We're declaring an 'internal static class' type
+            implType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Impl"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(implType);
+
+            // The vtable field looks like this:
+            //
+            // [FixedAddressValueType]
+            // private static readonly <VTABLE_TYPE> Vftbl;
+            FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, vftblType.ToTypeSignature(isValueType: true))
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
+            };
+
+            implType.Fields.Add(vftblField);
+
+            // TODO
+
+            // Create the static constructor to initialize the vtable
+            MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
+
+            // Initialize the enumerator vtable
+            cctor.CilMethodBody = new CilMethodBody(cctor)
+            {
+                Instructions =
+                {
+                    { Ldsflda, vftblField },
+                    { Conv_U },
+                    { Call, interopReferences.IInspectableImplget_Vtable.Import(module) },
+                    { Ldobj, interopDefinitions.IInspectableVftbl },
+                    { Stobj, interopDefinitions.IInspectableVftbl },
+                    { Ret }
+                }
+            };
+
+            // Create the field for the IID for the enumerator type
+            WellKnownMemberDefinitionFactory.IID(
+                iidRvaFieldName: InteropUtf8NameFactory.TypeName(readOnlyListType, "IID"),
+                iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
+                interopReferences: interopReferences,
+                module: module,
+                iid: Guid.NewGuid(),
+                out iidRvaField,
+                out PropertyDefinition iidProperty,
+                out MethodDefinition get_iidMethod);
+
+            interopDefinitions.RvaFields.Fields.Add(iidRvaField);
+
+            implType.Properties.Add(iidProperty);
+            implType.Methods.Add(get_iidMethod);
+
+            // Create the 'Vtable' property
+            WellKnownMemberDefinitionFactory.Vtable(
+                vftblField: vftblField,
+                corLibTypeFactory: module.CorLibTypeFactory,
+                out PropertyDefinition vtableProperty,
+                out MethodDefinition get_VtableMethod);
+
+            implType.Properties.Add(vtableProperty);
+            implType.Methods.Add(get_VtableMethod);
         }
     }
 }
