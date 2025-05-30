@@ -34,12 +34,14 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
+            TypeSignature baseEventSourceType = interopReferences.EventHandler1EventSource.MakeGenericInstanceType(delegateType.TypeArguments[0]);
+
             // We're declaring an 'internal sealed class' type
             eventSourceType = new(
                 ns: "ABI.WindowsRuntime.InteropServices"u8,
-                name: InteropUtf8NameFactory.TypeName(delegateType, "EventSource"),
+                name: InteropUtf8NameFactory.TypeName(baseEventSourceType),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.EventHandler1EventSource.MakeGenericInstanceType([.. delegateType.TypeArguments]).Import(module).ToTypeDefOrRef());
+                baseType: baseEventSourceType.Import(module).ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(eventSourceType);
 
@@ -101,12 +103,14 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
+            TypeSignature baseEventSourceType = interopReferences.EventHandler2EventSource.MakeGenericInstanceType([.. delegateType.TypeArguments]);
+
             // We're declaring an 'internal sealed class' type
             eventSourceType = new(
                 ns: "ABI.WindowsRuntime.InteropServices"u8,
-                name: InteropUtf8NameFactory.TypeName(delegateType, "EventSource"),
+                name: InteropUtf8NameFactory.TypeName(baseEventSourceType),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.EventHandler2EventSource.MakeGenericInstanceType([.. delegateType.TypeArguments]).Import(module).ToTypeDefOrRef());
+                baseType: baseEventSourceType.Import(module).ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(eventSourceType);
 
