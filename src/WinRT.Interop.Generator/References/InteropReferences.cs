@@ -1023,7 +1023,7 @@ internal sealed class InteropReferences
             returnType: WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
             genericParameterCount: 1,
             parameterTypes: [
-                _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
+                new GenericParameterSignature(GenericParameterType.Method, 0),
                 Guid.MakeByReferenceType()]));
 
     /// <summary>
