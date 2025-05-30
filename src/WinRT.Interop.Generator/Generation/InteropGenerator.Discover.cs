@@ -23,6 +23,8 @@ internal partial class InteropGenerator
     /// <returns>The resulting state.</returns>
     private static InteropGeneratorDiscoveryState Discover(InteropGeneratorArgs args)
     {
+        args.Token.ThrowIfCancellationRequested();
+
         // Initialize the assembly resolver (we need to reuse this to allow caching)
         PathAssemblyResolver pathAssemblyResolver = new(args.ReferencePath);
 
@@ -219,6 +221,12 @@ internal partial class InteropGenerator
                         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerable1))
                         {
                             discoveryState.TrackIEnumerable1Type(typeSignature);
+
+                            // We need special handling for 'IEnumerator<T>' types whenever we discover any constructed 'IEnumerable<T>'
+                            // type. This ensures that we're never missing any 'IEnumerator<T>' instantiation, which we might depend on
+                            // from other generated code, or projections. This special handling is needed because unlike with the other
+                            // interfaces, 'IEnumerator<T>' will not show up as a base interface for other collection interface types.
+                            discoveryState.TrackIEnumerator1Type(interopReferences.IEnumerator1.MakeGenericInstanceType(typeSignature.TypeArguments[0]));
                         }
                         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
                         {
