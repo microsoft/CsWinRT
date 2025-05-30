@@ -207,29 +207,43 @@ internal partial class InteropGenerator
                 // Track all projected Windows Runtime generic interfaces
                 if (typeDefinition.IsInterface)
                 {
-                    if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
+                    static void TrackGenericInterfaceType(
+                        InteropGeneratorState state,
+                        GenericInstanceTypeSignature typeSignature,
+                        InteropReferences interopReferences)
                     {
-                        state.TrackIEnumerator1Type(typeSignature);
+                        if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
+                        {
+                            state.TrackIEnumerator1Type(typeSignature);
+                        }
+                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerable1))
+                        {
+                            state.TrackIEnumerable1Type(typeSignature);
+                        }
+                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
+                        {
+                            state.TrackIList1Type(typeSignature);
+                        }
+                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
+                        {
+                            state.TrackIReadOnlyList1Type(typeSignature);
+                        }
+                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
+                        {
+                            state.TrackIDictionary2Type(typeSignature);
+                        }
+                        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
+                        {
+                            state.TrackIReadOnlyDictionary2Type(typeSignature);
+                        }
                     }
-                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerable1))
+
+                    TrackGenericInterfaceType(state, typeSignature, interopReferences);
+
+                    // We also want to crawl base interfaces
+                    foreach (GenericInstanceTypeSignature interfaceSignature in typeDefinition.EnumerateGenericInstanceInterfaceSignatures(typeSignature))
                     {
-                        state.TrackIEnumerable1Type(typeSignature);
-                    }
-                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
-                    {
-                        state.TrackIList1Type(typeSignature);
-                    }
-                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
-                    {
-                        state.TrackIReadOnlyList1Type(typeSignature);
-                    }
-                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
-                    {
-                        state.TrackIDictionary2Type(typeSignature);
-                    }
-                    else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
-                    {
-                        state.TrackIReadOnlyDictionary2Type(typeSignature);
+                        TrackGenericInterfaceType(state, interfaceSignature, interopReferences);
                     }
                 }
             }

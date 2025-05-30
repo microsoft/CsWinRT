@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using AsmResolver;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator;
 
@@ -74,6 +76,55 @@ internal static class TypeDefinitionExtensions
             }
 
             throw new ArgumentException($"Field with name '{new Utf8String(name)}' not found.", nameof(name));
+        }
+
+        /// <summary>
+        /// Enumerates all generic instance type signatures for base interfaces, from a given starting interface.
+        /// </summary>
+        /// <param name="typeSignature">The constructed signature for the interface type.</param>
+        /// <returns>All (unique) generic type signatures for base interfaces.</returns>
+        /// <remarks>
+        /// This method can only be called when <paramref name="type"/> is an interface type.
+        /// Additionally, <paramref name="typeSignature"/> must be constructed over that type.
+        /// </remarks>
+        /// <exception cref="ArgumentException"><paramref name="type"/> is not an interface type, or <paramref name="typeSignature"/> is not a match for it.</exception>
+        public IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceInterfaceSignatures(GenericInstanceTypeSignature typeSignature)
+        {
+            // This method is only valid when called on interface types (it's meant to enumerate the base interfaces)
+            if (!type.IsInterface)
+            {
+                throw new ArgumentException($"The target type must be an interface type.", nameof(type));
+            }
+
+            // Verify the provided signature is valid
+            if (!SignatureComparer.IgnoreVersion.Equals(type, typeSignature.GenericType))
+            {
+                throw new ArgumentException("The input type signature does not match the type definition.", nameof(typeSignature));
+            }
+
+            GenericContext genericContext = new(typeSignature, null);
+
+            foreach (InterfaceImplementation interfaceImplementation in type.Interfaces)
+            {
+                // Ignore the interface, if we couldn't construct it. Note that we only need to care about generic
+                // interfaces. If an interface were e.g. 'IA : IB<int>', then 'IB<int>' would be present in the
+                // 'TypeSpec' table of the declaring module for 'IA', meaning we'd have already seen it.
+                if (interfaceImplementation.Interface?.ToTypeSignature(isValueType: false).InstantiateGenericTypes(genericContext) is not GenericInstanceTypeSignature interfaceSignature)
+                {
+                    continue;
+                }
+
+                yield return interfaceSignature;
+
+                // Also recurse on the base interfaces
+                if (interfaceSignature.IsFullyResolvable)
+                {
+                    foreach (GenericInstanceTypeSignature baseInterfaceImplementation in interfaceSignature.Resolve()!.EnumerateGenericInstanceInterfaceSignatures(interfaceSignature))
+                    {
+                        yield return baseInterfaceImplementation;
+                    }
+                }
+            }
         }
     }
 }
