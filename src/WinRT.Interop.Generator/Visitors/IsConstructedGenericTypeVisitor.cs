@@ -43,7 +43,7 @@ internal sealed class IsConstructedGenericTypeVisitor : ITypeSignatureVisitor<bo
     /// <inheritdoc/>
     public bool VisitCorLibType(CorLibTypeSignature signature)
     {
-        return false;
+        return true;
     }
 
     /// <inheritdoc/>
