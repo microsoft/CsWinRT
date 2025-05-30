@@ -113,8 +113,8 @@ internal static partial class InteropMethodDefinitionFactory
             if (SignatureComparer.IgnoreVersion.Equals(elementType, module.CorLibTypeFactory.String))
             {
                 currentMethod.CilMethodBody!.Instructions.ReplaceRange(nop_convertToUnmanaged, [
-                    new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString),
-                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged),
+                    new CilInstruction(Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module)),
+                    new CilInstruction(Call, interopReferences.HStringMarshallerConvertToUnmanaged.Import(module)),
                     new CilInstruction(Stind_I)]);
             }
             else
