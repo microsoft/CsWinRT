@@ -507,7 +507,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    implType: out TypeDefinition enumerableImplType,
+                    implType: out TypeDefinition readOnlyListImplType,
                     iidRvaField: out _);
 
                 // Define the 'IVectorViewMethods' type (with the public thunks for 'IVectorView<T>' native calls)
@@ -534,6 +534,41 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     out TypeDefinition nativeObjectType);
+
+                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
+                InteropTypeDefinitionBuilder.IReadOnlyList1.ComWrappersCallbackType(
+                    readOnlyListType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    readOnlyListImplType: readOnlyListImplType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition readOnlyListComWrappersCallbackType);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropTypeDefinitionBuilder.IReadOnlyList1.ComWrappersMarshallerAttribute(
+                    readOnlyListType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    readOnlyListImplType: readOnlyListImplType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition readOnlyListComWrappersMarshallerType);
+
+                // Define the 'Marshaller' type (with the static marshaller methods)
+                InteropTypeDefinitionBuilder.IReadOnlyList1.Marshaller(
+                    readOnlyListType: typeSignature,
+                    readOnlyListImplType: readOnlyListImplType,
+                    readOnlyListComWrappersCallbackType: readOnlyListComWrappersCallbackType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
+
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.IReadOnlyList1.Proxy(
+                    readOnlyListType: typeSignature,
+                    readOnlyListComWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out _);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

@@ -353,6 +353,340 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeUnsealedObjectComWrappersCallback</c> interface for some <c>IVectorView&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+        /// <param name="readOnlyListImplType">The type returned by <see cref="ImplType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="callbackType">The resulting callback type.</param>
+        public static void ComWrappersCallbackType(
+            TypeSignature readOnlyListType,
+            TypeDefinition nativeObjectType,
+            TypeDefinition readOnlyListImplType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition callbackType)
+        {
+            // We're declaring an 'internal abstract class' type
+            callbackType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "ComWrappersCallback"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallback.Import(module)) }
+            };
+
+            module.TopLevelTypes.Add(callbackType);
+
+            // Define the 'TryCreateObject' method as follows:
+            //
+            // public static bool TryCreateObject(
+            //     void* value,
+            //     ReadOnlySpan<char> runtimeClassName,
+            //     out object? result,
+            //     out CreatedWrapperFlags wrapperFlags)
+            MethodDefinition tryCreateObjectMethod = new(
+                name: "TryCreateObject"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module),
+                        module.CorLibTypeFactory.Object.MakeByReferenceType(),
+                        interopReferences.CreatedWrapperFlags.MakeByReferenceType().Import(module)]))
+            {
+                // The last two parameters are '[out]'
+                ParameterDefinitions =
+                {
+                    new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out),
+                    new ParameterDefinition(sequence: 4, name: null, attributes: ParameterAttributes.Out)
+                }
+            };
+
+            callbackType.Methods.Add(tryCreateObjectMethod);
+
+            // Mark the 'CreateObject' method as implementing the interface method
+            callbackType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallbackTryCreateObject.Import(module),
+                body: tryCreateObjectMethod));
+
+            // Declare the local variables:
+            //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
+            CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module));
+
+            // Jump labels
+            CilInstruction ldc_i4_0_noFlags = new(Ldc_I4_0);
+            CilInstruction stind_i4_setFlags = new(Stind_I4);
+            CilInstruction ldarg_3_failure = new(Ldarg_3);
+
+            // Create a method body for the 'TryCreateObject' method
+            tryCreateObjectMethod.CilMethodBody = new CilMethodBody(tryCreateObjectMethod)
+            {
+                LocalVariables = { loc_0_result },
+                Instructions =
+                {
+                    // Compare the runtime class name for the fast path
+                    { Ldarg_1 },
+                    { Ldstr, readOnlyListType.FullName }, // TODO
+                    { Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module) },
+                    { Call, interopReferences.MemoryExtensionsSequenceEqualChar.Import(module) },
+                    { Brfalse_S, ldarg_3_failure.CreateLabel() },
+
+                    // Create the 'NativeObject' instance to return
+                    { Ldarg_0 },
+                    { Call, readOnlyListImplType.GetMethod("get_IID"u8) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
+                    { Stloc_0 },
+                    { Ldarg_3 },
+                    { Ldloc_0 },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceGetReferenceTrackerPtrUnsafe.Import(module) },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Beq_S, ldc_i4_0_noFlags.CreateLabel() },
+                    { Ldc_I4_1 },
+                    { Br_S, stind_i4_setFlags.CreateLabel() },
+                    { ldc_i4_0_noFlags },
+                    { stind_i4_setFlags },
+                    { Ldarg_2 },
+                    { Ldloc_0 },
+                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Stind_Ref },
+                    { Ldc_I4_1 },
+                    { Ret },
+
+                    // Failure path
+                    { ldarg_3_failure },
+                    { Ldc_I4_0 },
+                    { Stind_I4 },
+                    { Ldarg_2 },
+                    { Ldnull },
+                    { Stind_Ref },
+                    { Ldc_I4_0 },
+                    { Ret }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller attribute of some <c>IVectorView&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+        /// <param name="readOnlyListImplType">The type returned by <see cref="ImplType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void ComWrappersMarshallerAttribute(
+            GenericInstanceTypeSignature readOnlyListType,
+            TypeDefinition nativeObjectType,
+            TypeDefinition readOnlyListImplType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            // We're declaring an 'internal sealed class' type
+            marshallerType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "ComWrappersMarshallerAttribute"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+
+            module.TopLevelTypes.Add(marshallerType);
+
+            // Define the constructor
+            MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+
+            marshallerType.Methods.Add(ctor);
+
+            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
+
+            // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+
+            // Define the 'ComputeVtables' method as follows:
+            //
+            // public static ComInterfaceEntry* ComputeVtables(out int count)
+            MethodDefinition computeVtablesMethod = new(
+                name: "ComputeVtables"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: computeVtablesReturnType,
+                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+            {
+                // The parameter is '[out]'
+                ParameterDefinitions = { new ParameterDefinition(sequence: 1, name: null, attributes: ParameterAttributes.Out) }
+            };
+
+            marshallerType.Methods.Add(computeVtablesMethod);
+
+            // Mark the 'ComputeVtables' method as overriding the base method
+            marshallerType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
+                body: computeVtablesMethod));
+
+            // Create a method body for the 'ComputeVtables' method
+            computeVtablesMethod.CilMethodBody = new CilMethodBody(computeVtablesMethod)
+            {
+                Instructions =
+                {
+                    { Newobj, interopReferences.UnreachableException_ctor.Import(module) },
+                    { Throw }
+                }
+            };
+
+            // Define the 'CreateObject' method as follows:
+            //
+            // public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+            MethodDefinition createObjectMethod = new(
+                name: "CreateObject"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Object,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Void.MakePointerType(),
+                        interopReferences.CreatedWrapperFlags.MakeByReferenceType().Import(module)]))
+            {
+                // The 'wrapperFlags' parameter is '[out]'
+                ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
+            };
+
+            marshallerType.Methods.Add(createObjectMethod);
+
+            // Mark the 'CreateObject' method as overriding the base method
+            marshallerType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
+                body: createObjectMethod));
+
+            // Declare the local variables:
+            //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
+            CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module));
+
+            // Jump labels
+            CilInstruction ldc_i4_0_noFlags = new(Ldc_I4_0);
+            CilInstruction stind_i4_setFlags = new(Stind_I4);
+
+            // Create a method body for the 'CreateObject' method
+            createObjectMethod.CilMethodBody = new CilMethodBody(createObjectMethod)
+            {
+                LocalVariables = { loc_0_result },
+                Instructions =
+                {
+                    { Ldarg_1 },
+                    { Call, readOnlyListImplType.GetMethod("get_IID"u8) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
+                    { Stloc_0 },
+                    { Ldarg_2 },
+                    { Ldloc_0 },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceGetReferenceTrackerPtrUnsafe.Import(module) },
+                    { Ldc_I4_0 },
+                    { Conv_U },
+                    { Beq_S, ldc_i4_0_noFlags.CreateLabel() },
+                    { Ldc_I4_1 },
+                    { Br_S, stind_i4_setFlags.CreateLabel() },
+                    { ldc_i4_0_noFlags },
+                    { stind_i4_setFlags },
+                    { Ldloc_0 },
+                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Ret },
+                }
+            };
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller of some <c>IVectorView&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="readOnlyListImplType">The type returned by <see cref="ImplType"/>.</param>
+        /// <param name="readOnlyListComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void Marshaller(
+            GenericInstanceTypeSignature readOnlyListType,
+            TypeDefinition readOnlyListImplType,
+            TypeDefinition readOnlyListComWrappersCallbackType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            // We're declaring an 'internal static class' type
+            marshallerType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Marshaller"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(marshallerType);
+
+            // Prepare the external types we need in the implemented methods
+            TypeSignature readOnlyListType2 = readOnlyListType.Import(module);
+            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true);
+
+            // Define the 'ConvertToUnmanaged' method as follows:
+            //
+            // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<READONLYLIST_TYPE> value)
+            MethodDefinition convertToUnmanagedMethod = new(
+                name: "ConvertToUnmanaged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                signature: MethodSignature.CreateStatic(
+                    returnType: windowsRuntimeObjectReferenceValueType,
+                    parameterTypes: [readOnlyListType2]));
+
+            marshallerType.Methods.Add(convertToUnmanagedMethod);
+
+            // Reference the instantiated 'ConvertToUnmanaged' method for the marshaller
+            MethodSpecification windowsRuntimeInterfaceMarshallerConvertToUnmanaged =
+                interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged
+                .MakeGenericInstanceMethod(readOnlyListType);
+
+            // Create a method body for the 'ConvertToUnmanaged' method
+            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, readOnlyListImplType.GetMethod("get_IID"u8) },
+                    { Call, windowsRuntimeInterfaceMarshallerConvertToUnmanaged.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'ConvertToManaged' method as follows:
+            //
+            // public static <READONLYLIST_TYPE> ConvertToManaged(void* value)
+            MethodDefinition convertToManagedMethod = new(
+                name: "ConvertToManaged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                signature: MethodSignature.CreateStatic(
+                    returnType: readOnlyListType2,
+                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+
+            marshallerType.Methods.Add(convertToManagedMethod);
+
+            // Construct a descriptor for 'WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<<READONLYLIST_CALLBACK_TYPE>>(void*)'
+            IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
+                interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
+                .Import(module)
+                .MakeGenericInstanceMethod(readOnlyListComWrappersCallbackType.ToTypeSignature(isValueType: false));
+
+            // Create a method body for the 'ConvertToManaged' method
+            convertToManagedMethod.CilMethodBody = new CilMethodBody(convertToManagedMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, windowsRuntimeUnsealedObjectMarshallerConvertToManaged },
+                    { Ret }
+                }
+            };
+        }
+
+        /// <summary>
         /// Creates a new type definition for the implementation of the vtable for some <c>IVectorView&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
@@ -435,6 +769,33 @@ internal partial class InteropTypeDefinitionBuilder
 
             implType.Properties.Add(vtableProperty);
             implType.Methods.Add(get_VtableMethod);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the proxy type of some <c>IVectorView&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="readOnlyListComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            GenericInstanceTypeSignature readOnlyListType,
+            TypeDefinition readOnlyListComWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition proxyType)
+        {
+            string runtimeClassName = $"Windows.Foundation.Collections.IVectorView`1<{readOnlyListType.TypeArguments[0]}>"; // TODO
+
+            ProxyType(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType),
+                runtimeClassName: runtimeClassName,
+                comWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
         }
     }
 }
