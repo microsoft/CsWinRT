@@ -364,12 +364,6 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallbackTryCreateObject.Import(module),
                 body: tryCreateObjectMethod));
 
-            // Constructor reference for the native object type
-            MemberReference nativeObject_ctor = nativeObjectType
-                .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
-
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
             CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module));
@@ -409,7 +403,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { stind_i4_setFlags },
                     { Ldarg_2 },
                     { Ldloc_0 },
-                    { Newobj, nativeObject_ctor.Import(module) },
+                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
                     { Stind_Ref },
                     { Ldc_I4_1 },
                     { Ret },
@@ -518,12 +512,6 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
                 body: createObjectMethod));
 
-            // Constructor reference for the native object type
-            MemberReference nativeObject_ctor = nativeObjectType
-                .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
-
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
             CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module));
@@ -553,7 +541,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { ldc_i4_0_noFlags },
                     { stind_i4_setFlags },
                     { Ldloc_0 },
-                    { Newobj, nativeObject_ctor.Import(module) },
+                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
                     { Ret },
                 }
             };
