@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -509,6 +510,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumeratorImplType">The type returned by <see cref="ImplType"/>.</param>
         /// <param name="enumeratorComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
@@ -516,6 +518,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition enumeratorImplType,
             TypeDefinition enumeratorComWrappersCallbackType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
@@ -527,6 +530,9 @@ internal partial class InteropTypeDefinitionBuilder
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(marshallerType);
+
+            // Track the type (it's needed by 'IEnumerable<T>')
+            emitState.TrackTypeDefinition(marshallerType, enumeratorType, "Marshaller");
 
             // Prepare the external types we need in the implemented methods
             TypeSignature enumeratorType2 = enumeratorType.Import(module);

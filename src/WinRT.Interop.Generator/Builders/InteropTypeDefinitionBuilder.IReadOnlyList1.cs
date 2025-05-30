@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -311,36 +312,30 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
         /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyListMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeObjectType">The resulting native object type.</param>
         public static void NativeObject(
             GenericInstanceTypeSignature readOnlyListType,
             TypeDefinition readOnlyListMethodsType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition nativeObjectType)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
 
-            // The namespace is the same for 'IReadOnlyList<T>' and the other interfaces
-            Utf8String ns = InteropUtf8NameFactory.TypeNamespace(readOnlyListType);
-
-            // Precompute the names of all target enumerable types
-            Utf8String enumerableTypeName = InteropUtf8NameFactory.TypeName(enumerableType);
-            Utf8String enumerableInterfaceTypeName = enumerableTypeName + "Interface"u8;
-            Utf8String enumerableMethodsTypeName = enumerableTypeName + "IEnumerableMethods"u8;
-
             // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IENUMERABLE_METHODS, <IREADONLYLIST_METHODS>>'
             TypeSignature windowsRuntimeReadOnlyList4Type = interopReferences.WindowsRuntimeReadOnlyList4.MakeGenericInstanceType(
                 elementType,
-                module.GetType(ns, enumerableInterfaceTypeName).ToTypeSignature(isValueType: false),
-                module.GetType(ns, enumerableMethodsTypeName).ToTypeSignature(isValueType: false),
+                emitState.LookupTypeDefinition(enumerableType, "Interface").ToTypeSignature(isValueType: false),
+                emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").ToTypeSignature(isValueType: false),
                 readOnlyListMethodsType.ToTypeSignature(isValueType: false));
 
             // We're declaring an 'internal sealed class' type
             nativeObjectType = new(
-                ns: ns,
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "NativeObject"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: windowsRuntimeReadOnlyList4Type.Import(module).ToTypeDefOrRef());

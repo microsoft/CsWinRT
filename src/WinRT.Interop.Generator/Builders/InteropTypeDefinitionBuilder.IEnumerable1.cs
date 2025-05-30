@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -27,6 +28,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="interfaceType">The resulting interface type.</param>
         /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
@@ -34,6 +36,7 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature enumerableType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition interfaceType,
             out FieldDefinition iidRvaField)
@@ -49,6 +52,9 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             module.TopLevelTypes.Add(interfaceType);
+
+            // Track the type (it's needed by 'IReadOnlyList<T>')
+            emitState.TrackTypeDefinition(interfaceType, enumerableType, "Interface");
 
             // Create the field for the IID for the enumerable type
             WellKnownMemberDefinitionFactory.IID(
@@ -78,12 +84,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="iterableMethodsType">The resulting methods type.</param>
         public static void IIterableMethods(
             GenericInstanceTypeSignature enumerableType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition iterableMethodsType)
         {
@@ -113,14 +121,10 @@ internal partial class InteropTypeDefinitionBuilder
 
             iterableMethodsType.Methods.Add(firstMethod);
 
-            // Reference the generated 'ConvertToManaged' method to marshal the 'IEnumerator<T>' instance to managed
-            MemberReference convertToManagedMethod = module
-                .CreateTypeReference(
-                    ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                    name: InteropUtf8NameFactory.TypeName(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType), "Marshaller"))
-                .CreateMemberReference("ConvertToManaged", MethodSignature.CreateStatic(
-                    returnType: interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module),
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
+            // Get the generated 'ConvertToManaged' method to marshal the 'IEnumerator<T>' instance to managed
+            MethodDefinition convertToManagedMethod = emitState.LookupTypeDefinition(
+                typeSignature: interopReferences.IEnumerator1.MakeGenericInstanceType(elementType),
+                key: "Marshaller").GetMethod("ConvertToManaged"u8);
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
@@ -172,7 +176,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // '.try/.finally' code to marshal the enumerator
                     { ldloc_2_tryStart },
-                    { Call, convertToManagedMethod.Import(module) },
+                    { Call, convertToManagedMethod },
                     { Stloc_3 },
                     { Leave_S, ldloc_3_finallyEnd.CreateLabel() },
                     { ldloc_2_finallyStart },
@@ -209,12 +213,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="iterableMethodsType">The type returned by <see cref="IIterableMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="enumerableMethodsType">The resulting methods type.</param>
         public static void IEnumerableMethods(
             GenericInstanceTypeSignature enumerableType,
             TypeDefinition iterableMethodsType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition enumerableMethodsType)
         {
@@ -231,6 +237,9 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             module.TopLevelTypes.Add(enumerableMethodsType);
+
+            // Track the type (it's needed by 'IReadOnlyList<T>')
+            emitState.TrackTypeDefinition(enumerableMethodsType, enumerableType, "IEnumerableMethods");
 
             // Define the 'GetEnumerator' method as follows:
             //

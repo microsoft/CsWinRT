@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
 
@@ -189,6 +191,26 @@ internal static class WellKnownInteropExceptions
     public static Exception IReadOnlyList1TypeCodeGenerationError(string? enumeratorType, Exception exception)
     {
         return Exception(22, $"Failed to generate marshalling code for 'IReadOnlyList<T>' type '{enumeratorType}'.", exception);
+    }
+
+    /// <summary>
+    /// Registering a tracked type definition multiple times for the same signature.
+    /// </summary>
+    /// <param name="typeSignature">The type signature.</param>
+    /// <param name="key">The key.</param>
+    public static Exception AddingDuplicateTrackedTypeDefinition(TypeSignature typeSignature, string key)
+    {
+        return Exception(23, $"Duplicate tracked type definition for signature '{typeSignature}' and key '{key}'.");
+    }
+
+    /// <summary>
+    /// Failed to find a tracked type definition.
+    /// </summary>
+    /// <param name="typeSignature">The type signature.</param>
+    /// <param name="key">The key.</param>
+    public static Exception TrackedTypeDefinitionLookupError(TypeSignature typeSignature, string key)
+    {
+        return Exception(24, $"Failed to find a tracked type definition for signature '{typeSignature}' and key '{key}'.");
     }
 
     /// <summary>

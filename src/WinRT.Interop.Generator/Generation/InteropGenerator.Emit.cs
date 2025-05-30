@@ -24,6 +24,10 @@ internal partial class InteropGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
+        // Initialize the emit state, which tracks all state to use during the emit phase specifically.
+        // For instance, it enables fast lookups for type definitions referenced in multiple places.
+        InteropGeneratorEmitState emitState = new();
+
         // Define the module to emit
         ModuleDefinition module = DefineInteropModule(args, discoveryState, out ModuleDefinition windowsRuntimeModule);
 
@@ -52,17 +56,17 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for 'IEnumerator<T>' types
-        DefineIEnumeratorTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+        DefineIEnumeratorTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for 'IEnumerable<T>' types
-        DefineIEnumerableTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+        DefineIEnumerableTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for 'IReadOnlyList<T>' types
-        DefineIReadOnlyListTypes(args, discoveryState, interopDefinitions, interopReferences, module);
+        DefineIReadOnlyListTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -253,12 +257,14 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineIEnumeratorTypes(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
@@ -318,6 +324,7 @@ internal partial class InteropGenerator
                     enumeratorImplType: enumeratorImplType,
                     enumeratorComWrappersCallbackType: enumeratorComWrappersCallbackType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
@@ -349,12 +356,14 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineIEnumerableTypes(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
@@ -370,6 +379,7 @@ internal partial class InteropGenerator
                     enumerableType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     interfaceType: out TypeDefinition interfaceType,
                     iidRvaField: out _);
@@ -388,6 +398,7 @@ internal partial class InteropGenerator
                     enumerableType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     iterableMethodsType: out TypeDefinition iterableMethodsType);
 
@@ -396,6 +407,7 @@ internal partial class InteropGenerator
                     enumerableType: typeSignature,
                     iterableMethodsType: iterableMethodsType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     enumerableMethodsType: out TypeDefinition enumerableMethodsType);
 
@@ -462,12 +474,14 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineIReadOnlyListTypes(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
@@ -507,6 +521,7 @@ internal partial class InteropGenerator
                     readOnlyListType: typeSignature,
                     readOnlyListMethodsType: readOnlyListMethodsType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     out TypeDefinition nativeObjectType);
             }
