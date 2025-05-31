@@ -444,7 +444,7 @@ namespace Generator
                 // Check if CsWinRT component projected type from another project.
                 if (!isProjectedType)
                 {
-                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName("ABI.Impl." + qualifiedTypeName) != null;
+                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName(GetAuthoringMetadataType(qualifiedTypeName)) != null;
                 }
             }
 
@@ -484,7 +484,7 @@ namespace Generator
                 // Check if CsWinRT component projected type from another project.
                 if (!isProjectedType)
                 {
-                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName("ABI.Impl." + qualifiedTypeName) != null;
+                    isProjectedType = type.ContainingAssembly.GetTypeByMetadataName(GetAuthoringMetadataType(qualifiedTypeName)) != null;
                 }
             }
 
@@ -1338,6 +1338,11 @@ namespace Generator
             }
 
             return assemblyName;
+        }
+
+        public static string GetAuthoringMetadataType(string authoringType)
+        {
+            return $"ABI.Impl.{authoringType}";
         }
     }
 }
