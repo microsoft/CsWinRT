@@ -2531,7 +2531,7 @@ namespace Generator
                 AddProjectedType(type);
             }
             // Check if CsWinRT component projected type from another project.
-            else if (Model.Compilation.GetTypeByMetadataName(GeneratorHelper.GetAuthoringMetadataType(qualifiedName)) != null)
+            else if (Model.Compilation.GetTypeByMetadataName(GeneratorHelper.GetAuthoringMetadataTypeName(qualifiedName)) != null)
             {
                 AddProjectedType(type);
             }
