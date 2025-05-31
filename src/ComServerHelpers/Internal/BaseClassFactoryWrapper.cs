@@ -32,7 +32,10 @@ internal sealed partial class BaseClassFactoryWrapper(BaseClassFactory factory, 
         try
         {
             var instance = factory.CreateInstance();
+            factory.OnInstanceCreated(instance);
+
             unknown = comWrappers.GetOrCreateComInterfaceForObject(instance, CreateComInterfaceFlags.None);
+
 
             if (riid->Equals(IUnknown.IID_Guid))
             {
@@ -48,8 +51,6 @@ internal sealed partial class BaseClassFactoryWrapper(BaseClassFactory factory, 
                 }
                 *ppvObject = (void*)ppv;
             }
-
-            factory.OnInstanceCreated(instance);
         }
         catch (Exception e)
         {

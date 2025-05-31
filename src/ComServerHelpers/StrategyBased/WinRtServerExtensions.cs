@@ -13,8 +13,6 @@ namespace ComServerHelpers.StrategyBased;
 [SupportedOSPlatform("windows8.0")]
 public static class WinRtServerExtensions
 {
-    private static readonly StrategyBasedComWrappers comWrappers = new();
-
     /// <summary>
     /// Register a type with the server.
     /// </summary>
@@ -28,7 +26,7 @@ public static class WinRtServerExtensions
     {
         ArgumentNullException.ThrowIfNull(server);
 
-        return server.RegisterActivationFactory(new GeneralActivationFactory<T>(), comWrappers);
+        return server.RegisterActivationFactory(new GeneralActivationFactory<T>(), Utils.StrategyBasedComWrappers);
     }
 
     /// <summary>
@@ -46,7 +44,7 @@ public static class WinRtServerExtensions
         ArgumentNullException.ThrowIfNull(server);
         ArgumentNullException.ThrowIfNull(factory);
 
-        return server.RegisterActivationFactory(new DelegateActivationFactory<T>(factory), comWrappers);
+        return server.RegisterActivationFactory(new DelegateActivationFactory<T>(factory), Utils.StrategyBasedComWrappers);
     }
 
     /// <summary>
@@ -62,6 +60,6 @@ public static class WinRtServerExtensions
     {
         ArgumentNullException.ThrowIfNull(server);
 
-        return server.RegisterActivationFactory(new T(), comWrappers);
+        return server.RegisterActivationFactory(new T(), Utils.StrategyBasedComWrappers);
     }
 }

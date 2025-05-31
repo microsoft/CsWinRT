@@ -12,7 +12,6 @@ using ComServerHelpers.Internal.Windows;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Com;
 using Windows.Win32.System.WinRT;
-using WinRT;
 using static Windows.Win32.PInvoke;
 //using unsafe DllActivationCallback = delegate* unmanaged[Stdcall]<Windows.Win32.System.WinRT.HSTRING, Windows.Win32.System.WinRT.IActivationFactory**, Windows.Win32.Foundation.HRESULT>;
 
@@ -49,7 +48,6 @@ public sealed class WinRtServer : IDisposable
     private readonly unsafe DllGetActivationFactory activationFactoryCallbackWrapper;
 
     private unsafe readonly delegate* unmanaged[Stdcall]<HSTRING, IActivationFactory**, HRESULT> activationFactoryCallbackPointer;
-    private readonly StrategyBasedComWrappers comWrappers = new();
 
     /// <summary>
     /// Tracks the creation of the first instance after server is started.
@@ -66,16 +64,7 @@ public sealed class WinRtServer : IDisposable
         activationFactoryCallbackWrapper = ActivationFactoryCallback;
         activationFactoryCallbackPointer = (delegate* unmanaged[Stdcall]<HSTRING, IActivationFactory**, HRESULT>)Marshal.GetFunctionPointerForDelegate(activationFactoryCallbackWrapper);
 
-        Guid clsid = CLSID_GlobalOptions;
-        Guid iid = IGlobalOptions.IID_Guid;
-
-        IntPtr abiPtr = IntPtr.Zero;
-        if (CoCreateInstance(&clsid, null, CLSCTX.CLSCTX_INPROC_SERVER, &iid, (void**)&abiPtr) == HRESULT.S_OK)
-        {
-            var options = (IGlobalOptions*)abiPtr;
-            options->Set(GLOBALOPT_PROPERTIES.COMGLB_RO_SETTINGS, (nuint)GLOBALOPT_RO_FLAGS.COMGLB_FAST_RUNDOWN);
-            Marshal.Release(abiPtr);
-        }
+        Utils.SetDefaultGlobalOptions();
     }
 
     private void Factory_InstanceCreated(object? sender, InstanceCreatedEventArgs e)
@@ -149,7 +138,7 @@ public sealed class WinRtServer : IDisposable
             return HRESULT.E_NOINTERFACE;
         }
 
-        var unknown = comWrappers.GetOrCreateComInterfaceForObject(new BaseActivationFactoryWrapper(managedFactory.Factory, managedFactory.Wrapper), CreateComInterfaceFlags.None);
+        var unknown = Utils.StrategyBasedComWrappers.GetOrCreateComInterfaceForObject(new BaseActivationFactoryWrapper(managedFactory.Factory, managedFactory.Wrapper), CreateComInterfaceFlags.None);
         var hr = (HRESULT)Marshal.QueryInterface(unknown, in global::Windows.Win32.System.WinRT.IActivationFactory.IID_Guid, out nint ppv);
         *factory = (IActivationFactory*)ppv;
         if (unknown != 0)

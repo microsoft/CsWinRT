@@ -43,8 +43,6 @@ public sealed class ComServer : IDisposable
     /// </summary>
     private readonly Dictionary<Guid, (BaseClassFactory factory, uint cookie)> factories = [];
 
-    private readonly StrategyBasedComWrappers comWrappers = new();
-
     /// <summary>
     /// Tracks the creation of the first instance after server is started.
     /// </summary>
@@ -55,16 +53,7 @@ public sealed class ComServer : IDisposable
     /// </summary>
     public unsafe ComServer()
     {
-        Guid clsid = CLSID_GlobalOptions;
-        Guid iid = IGlobalOptions.IID_Guid;
-
-        IntPtr abiPtr = IntPtr.Zero;
-        if (CoCreateInstance(&clsid, null, CLSCTX.CLSCTX_INPROC_SERVER, &iid, (void**)&abiPtr) == HRESULT.S_OK)
-        {
-            var options = (IGlobalOptions*)abiPtr;
-            options->Set(GLOBALOPT_PROPERTIES.COMGLB_RO_SETTINGS, (nuint)GLOBALOPT_RO_FLAGS.COMGLB_FAST_RUNDOWN);
-            Marshal.Release(abiPtr);
-        }
+        Utils.SetDefaultGlobalOptions();
     }
 
     /// <summary>
@@ -98,7 +87,7 @@ public sealed class ComServer : IDisposable
         nint wrapper = 0;
         try
         {
-            wrapper = this.comWrappers.GetOrCreateComInterfaceForObject(new BaseClassFactoryWrapper(factory, comWrappers), CreateComInterfaceFlags.None);
+            wrapper = Utils.StrategyBasedComWrappers.GetOrCreateComInterfaceForObject(new BaseClassFactoryWrapper(factory, comWrappers), CreateComInterfaceFlags.None);
 
             uint cookie;
             CoRegisterClassObject(&clsid, (IUnknown*)wrapper, CLSCTX.CLSCTX_LOCAL_SERVER, (REGCLS.REGCLS_MULTIPLEUSE | REGCLS.REGCLS_SUSPENDED), &cookie).ThrowOnFailure();

@@ -13,8 +13,6 @@ namespace ComServerHelpers.StrategyBased;
 [SupportedOSPlatform("windows6.0.6000")]
 public static class ComServerExtensions
 {
-    private static readonly StrategyBasedComWrappers comWrappers = new();
-
     /// <summary>
     /// Register a type with the server.
     /// </summary>
@@ -30,7 +28,7 @@ public static class ComServerExtensions
     {
         ArgumentNullException.ThrowIfNull(server);
 
-        return server.RegisterClassFactory(new GeneralClassFactory<T, TInterface>(), comWrappers);
+        return server.RegisterClassFactory(new GeneralClassFactory<T, TInterface>(), Utils.StrategyBasedComWrappers);
     }
 
     /// <summary>
@@ -50,7 +48,7 @@ public static class ComServerExtensions
         ArgumentNullException.ThrowIfNull(server);
         ArgumentNullException.ThrowIfNull(factory);
 
-        return server.RegisterClassFactory(new DelegateClassFactory<T, TInterface>(factory), comWrappers);
+        return server.RegisterClassFactory(new DelegateClassFactory<T, TInterface>(factory), Utils.StrategyBasedComWrappers);
     }
 
     /// <summary>
@@ -67,7 +65,7 @@ public static class ComServerExtensions
     {
         ArgumentNullException.ThrowIfNull(server);
 
-        return server.RegisterClassFactory(new T(), comWrappers);
+        return server.RegisterClassFactory(new T(), Utils.StrategyBasedComWrappers);
     }
 
     /// <summary>
