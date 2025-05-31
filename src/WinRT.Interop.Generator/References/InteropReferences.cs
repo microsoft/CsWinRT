@@ -168,6 +168,12 @@ internal sealed class InteropReferences
     public TypeReference IEnumerable1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IEnumerable`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyCollection{T}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IReadOnlyCollection1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IReadOnlyCollection`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IList{T}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1272,6 +1278,32 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
                     _windowsRuntimeModule.CorLibTypeFactory.UInt32]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IReadOnlyCollection{T}"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IReadOnlyCollection1get_Count(TypeSignature elementType)
+    {
+        return IReadOnlyCollection1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Count", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Int32));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IReadOnlyList{T}.this"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IReadOnlyList1get_Item(TypeSignature elementType)
+    {
+        return IReadOnlyList1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Item", MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [_interopModule.CorLibTypeFactory.Int32]));
     }
 
     /// <summary>

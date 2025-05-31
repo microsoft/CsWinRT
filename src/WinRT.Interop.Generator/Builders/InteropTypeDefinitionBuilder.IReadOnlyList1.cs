@@ -687,6 +687,177 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates a new type definition for the interface implementation of some <c>IVectorView&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyListMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceImplType">The resulting interface implementation type.</param>
+        public static void InterfaceImpl(
+            GenericInstanceTypeSignature readOnlyListType,
+            TypeDefinition readOnlyListMethodsType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition interfaceImplType)
+        {
+            TypeSignature elementType = readOnlyListType.TypeArguments[0];
+            TypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericInstanceType(elementType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
+
+            // We're declaring an 'internal interface class' type
+            interfaceImplType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "InterfaceImpl"),
+                attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: null)
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                Interfaces =
+                {
+                    new InterfaceImplementation(readOnlyListType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(readOnlyCollectionType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                }
+            };
+
+            module.TopLevelTypes.Add(interfaceImplType);
+
+            // Create the 'get_Item' getter method
+            MethodDefinition get_ItemMethod = new(
+                name: $"System.Collections.Generic.IReadOnlyList<{elementType.FullName}>.get_Item",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32));
+
+            interfaceImplType.Methods.Add(get_ItemMethod);
+
+            // Mark the 'get_Item' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IReadOnlyList1get_Item(elementType).Import(module),
+                body: get_ItemMethod));
+
+            // Create a body for the 'get_Item' method
+            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, readOnlyListType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Call, readOnlyListMethodsType.GetMethod("Item"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Item' property
+            PropertyDefinition itemProperty = new(
+                name: $"System.Collections.Generic.IReadOnlyList<{elementType.FullName}>.Item",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32))
+            { GetMethod = get_ItemMethod };
+
+            interfaceImplType.Properties.Add(itemProperty);
+
+            // Create the 'get_Count' getter method
+            MethodDefinition get_CountMethod = new(
+                name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.get_Count",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+
+            interfaceImplType.Methods.Add(get_CountMethod);
+
+            // Mark the 'get_Count' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IReadOnlyCollection1get_Count(elementType).Import(module),
+                body: get_CountMethod));
+
+            // Create a body for the 'get_Item' method
+            get_CountMethod.CilMethodBody = new CilMethodBody(get_CountMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, readOnlyListType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Call, readOnlyListMethodsType.GetMethod("Count"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Count' property
+            PropertyDefinition countProperty = new(
+                name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.Count",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.CreateInstance(module.CorLibTypeFactory.Int32))
+            { GetMethod = get_CountMethod };
+
+            interfaceImplType.Properties.Add(countProperty);
+
+            // Create the 'IEnumerable<T>.GetEnumerator' method
+            MethodDefinition enumerable1GetEnumeratorMethod = new(
+                name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
+
+            interfaceImplType.Methods.Add(enumerable1GetEnumeratorMethod);
+
+            // Mark the 'IEnumerable<T>.GetEnumerator' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
+                body: enumerable1GetEnumeratorMethod));
+
+            // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
+            enumerable1GetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerable1GetEnumeratorMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, enumerableType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Call, emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'IEnumerable.GetEnumerator' method
+            MethodDefinition enumerableGetEnumeratorMethod = new(
+                name: "System.Collections.IEnumerable.GetEnumerator"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToTypeSignature(isValueType: false)));
+
+            interfaceImplType.Methods.Add(enumerableGetEnumeratorMethod);
+
+            // Mark the 'IEnumerable.GetEnumerator' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
+                body: enumerableGetEnumeratorMethod));
+
+            // Create a method body for the 'IEnumerable.GetEnumerator' method
+            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerableGetEnumeratorMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
+                    { Ret }
+                }
+            };
+        }
+
+        /// <summary>
         /// Creates a new type definition for the implementation of the vtable for some <c>IVectorView&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
