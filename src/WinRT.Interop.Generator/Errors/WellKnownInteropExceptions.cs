@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
@@ -172,7 +171,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IEnumerator{T}"/> type.
     /// </summary>
-    public static Exception IEnumerator1TypeCodeGenerationError(string? enumeratorType, Exception exception)
+    public static Exception IEnumerator1TypeCodeGenerationError(TypeSignature enumeratorType, Exception exception)
     {
         return Exception(20, $"Failed to generate marshalling code for 'IEnumerator<T>' type '{enumeratorType}'.", exception);
     }
@@ -180,17 +179,17 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IEnumerable{T}"/> type.
     /// </summary>
-    public static Exception IEnumerable1TypeCodeGenerationError(string? enumeratorType, Exception exception)
+    public static Exception IEnumerable1TypeCodeGenerationError(TypeSignature enumerableType, Exception exception)
     {
-        return Exception(21, $"Failed to generate marshalling code for 'IEnumerable<T>' type '{enumeratorType}'.", exception);
+        return Exception(21, $"Failed to generate marshalling code for 'IEnumerable<T>' type '{enumerableType}'.", exception);
     }
 
     /// <summary>
     /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.
     /// </summary>
-    public static Exception IReadOnlyList1TypeCodeGenerationError(string? enumeratorType, Exception exception)
+    public static Exception IReadOnlyList1TypeCodeGenerationError(TypeSignature readOnlyListType, Exception exception)
     {
-        return Exception(22, $"Failed to generate marshalling code for 'IReadOnlyList<T>' type '{enumeratorType}'.", exception);
+        return Exception(22, $"Failed to generate marshalling code for 'IReadOnlyList<T>' type '{readOnlyListType}'.", exception);
     }
 
     /// <summary>
@@ -211,6 +210,14 @@ internal static class WellKnownInteropExceptions
     public static Exception TrackedTypeDefinitionLookupError(TypeSignature typeSignature, string key)
     {
         return Exception(24, $"Failed to find a tracked type definition for signature '{typeSignature}' and key '{key}'.");
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IList{T}"/> type.
+    /// </summary>
+    public static Exception IList1TypeCodeGenerationError(TypeSignature listType, Exception exception)
+    {
+        return Exception(22, $"Failed to generate marshalling code for 'IList<T>' type '{listType}'.", exception);
     }
 
     /// <summary>

@@ -70,6 +70,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit interop types for 'IList<T>' types
+        DefineIListTypes(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Emit interop types for 'KeyValuePair<,>' types
         DefineKeyValuePairTypes(args, discoveryState, interopDefinitions, interopReferences, module);
 
@@ -346,7 +351,7 @@ internal partial class InteropGenerator
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
-                throw WellKnownInteropExceptions.IEnumerator1TypeCodeGenerationError(typeSignature.Name, e);
+                throw WellKnownInteropExceptions.IEnumerator1TypeCodeGenerationError(typeSignature, e);
             }
         }
     }
@@ -464,7 +469,7 @@ internal partial class InteropGenerator
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
-                throw WellKnownInteropExceptions.IEnumerable1TypeCodeGenerationError(typeSignature.Name, e);
+                throw WellKnownInteropExceptions.IEnumerable1TypeCodeGenerationError(typeSignature, e);
             }
         }
     }
@@ -581,7 +586,45 @@ internal partial class InteropGenerator
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
-                throw WellKnownInteropExceptions.IReadOnlyList1TypeCodeGenerationError(typeSignature.Name, e);
+                throw WellKnownInteropExceptions.IReadOnlyList1TypeCodeGenerationError(typeSignature, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Defines the interop types for <see cref="System.Collections.Generic.IList{T}"/> types.
+    /// </summary>
+    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
+    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
+    /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineIListTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IList1Types)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            try
+            {
+                // Define the 'Vftbl' type
+                InteropTypeDefinitionBuilder.IList1.Vftbl(
+                    listType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    vftblType: out TypeDefinition vftblType);
+            }
+            catch (Exception e) when (!e.IsWellKnown)
+            {
+                throw WellKnownInteropExceptions.IReadOnlyList1TypeCodeGenerationError(typeSignature, e);
             }
         }
     }
