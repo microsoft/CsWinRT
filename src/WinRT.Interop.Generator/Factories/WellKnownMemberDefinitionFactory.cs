@@ -51,9 +51,6 @@ internal static class WellKnownMemberDefinitionFactory
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
         TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences).Import(module);
 
-        // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
-        PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
-
         // Create the 'get_IID' getter method
         get_IidMethod = new MethodDefinition(
             name: "get_IID"u8,
@@ -62,7 +59,10 @@ internal static class WellKnownMemberDefinitionFactory
         { IsAggressiveInlining = true };
 
         // Create the 'IID' property
-        iidProperty = new PropertyDefinition("IID"u8, PropertyAttributes.None, iidPropertySignature)
+        iidProperty = new PropertyDefinition(
+            name: "IID"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.CreateStatic(iidPropertyType))
         {
             CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
             GetMethod = get_IidMethod
@@ -97,9 +97,6 @@ internal static class WellKnownMemberDefinitionFactory
         // The 'IID' property type has the signature being 'Guid& modreq(InAttribute)'
         TypeSignature iidPropertyType = WellKnownTypeSignatureFactory.InGuid(interopReferences).Import(module);
 
-        // The 'IID' property has the signature being 'Guid& modreq(InAttribute)'
-        PropertySignature iidPropertySignature = new(CallingConventionAttributes.Property, iidPropertyType, []);
-
         // Create the 'get_IID' getter method
         get_IidMethod = new MethodDefinition(
             name: "get_IID"u8,
@@ -108,7 +105,10 @@ internal static class WellKnownMemberDefinitionFactory
         { IsAggressiveInlining = true };
 
         // Create the 'IID' property
-        iidProperty = new PropertyDefinition("IID"u8, PropertyAttributes.None, iidPropertySignature)
+        iidProperty = new PropertyDefinition(
+            name: "IID"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.CreateStatic(iidPropertyType))
         {
             CustomAttributes = { new CustomAttribute(interopReferences.IsReadOnlyAttribute_ctor.Import(module)) },
             GetMethod = get_IidMethod
@@ -138,9 +138,6 @@ internal static class WellKnownMemberDefinitionFactory
         out PropertyDefinition vtableProperty,
         out MethodDefinition get_VtableMethod)
     {
-        // The 'Vtable' property has the signature being just 'nint'
-        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, corLibTypeFactory.IntPtr, []);
-
         // Create the 'get_Vtable' getter method
         get_VtableMethod = new MethodDefinition(
             name: "get_Vtable"u8,
@@ -148,8 +145,12 @@ internal static class WellKnownMemberDefinitionFactory
             signature: MethodSignature.CreateStatic(corLibTypeFactory.IntPtr))
         { IsAggressiveInlining = true };
 
-        // Create the 'Vtable' property
-        vtableProperty = new PropertyDefinition("Vtable"u8, PropertyAttributes.None, vtablePropertySignature) { GetMethod = get_VtableMethod };
+        // Create the 'Vtable' property (the signature is just 'nint')
+        vtableProperty = new PropertyDefinition(
+            name: "Vtable"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.CreateStatic(corLibTypeFactory.IntPtr))
+        { GetMethod = get_VtableMethod };
 
         // Create a method body for the 'Vtable' property
         vtableProperty.GetMethod.CilMethodBody = new CilMethodBody(vtableProperty.GetMethod)

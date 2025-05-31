@@ -665,7 +665,7 @@ internal partial class InteropTypeDefinitionBuilder
             PropertyDefinition enumerator1CurrentProperty = new(
                 name: $"System.Collections.Generic.IEnumerator<{elementType.FullName}>.get_Current",
                 attributes: PropertyAttributes.None,
-                signature: new PropertySignature(CallingConventionAttributes.Property, elementType.Import(module), []))
+                signature: PropertySignature.CreateInstance(elementType.Import(module)))
             {
                 GetMethod = get_IEnumerator1CurrentMethod
             };
@@ -700,7 +700,7 @@ internal partial class InteropTypeDefinitionBuilder
             PropertyDefinition enumeratorCurrentProperty = new(
                 name: "System.Collections.IEnumerator.get_Current"u8,
                 attributes: PropertyAttributes.None,
-                signature: new PropertySignature(CallingConventionAttributes.Property, elementType.Import(module), []))
+                signature: PropertySignature.CreateInstance(elementType.Import(module)))
             {
                 GetMethod = get_IEnumeratorCurrentMethod
             };

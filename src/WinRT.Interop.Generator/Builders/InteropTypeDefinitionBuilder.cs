@@ -94,11 +94,11 @@ internal static partial class InteropTypeDefinitionBuilder
         // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
         PointerTypeSignature vtablesPropertyType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
 
-        // The 'Vtables' property doesn't have a special signature
-        PropertySignature vtablePropertySignature = new(CallingConventionAttributes.Property, vtablesPropertyType, []);
-
         // Create the 'Vtables' property
-        PropertyDefinition vtablesProperty = new("Vtables"u8, PropertyAttributes.None, vtablePropertySignature)
+        PropertyDefinition vtablesProperty = new(
+            name: "Vtables"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.CreateStatic(vtablesPropertyType))
         {
             GetMethod = new MethodDefinition(
                 name: "get_Vtables"u8,
