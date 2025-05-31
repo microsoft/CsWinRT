@@ -15,11 +15,14 @@ namespace ComServerHelpers;
 [SupportedOSPlatform("windows8.0")]
 public sealed class DelegateActivationFactory<T>(Func<T> factory) : BaseActivationFactory where T : class
 {
+    // State
     private readonly Func<T> factory = factory;
 
+    // Properties (special values)
     /// <inheritdoc/>
     public override string ActivatableClassId => typeof(T).FullName ?? throw new InvalidOperationException($"Unable to get activation class ID for type {typeof(T)}");
 
+    // Other members (methods)
     /// <inheritdoc/>
     public override object ActivateInstance()
     {

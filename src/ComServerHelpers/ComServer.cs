@@ -38,6 +38,7 @@ namespace ComServerHelpers;
 [SupportedOSPlatform("windows6.0.6000")]
 public sealed class ComServer : IDisposable
 {
+    // State
     /// <summary>
     /// Map of class factories and the registration cookie from the CLSID that the factory creates.
     /// </summary>
@@ -48,6 +49,7 @@ public sealed class ComServer : IDisposable
     /// </summary>
     private TaskCompletionSource<object>? firstInstanceCreated;
 
+    // Constructor
     /// <summary>
     /// Initializes a new instance of the <see cref="ComServer"/> class.
     /// </summary>
@@ -56,6 +58,24 @@ public sealed class ComServer : IDisposable
         Utils.SetDefaultGlobalOptions();
     }
 
+    // Properties (special values)
+    /// <summary>
+    /// Gets a value indicating whether the server is running.
+    /// </summary>
+    public bool IsRunning { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the instance is disposed.
+    /// </summary>
+    public bool IsDisposed { get; private set; }
+
+    // Events
+    /// <summary>
+    /// Occurs when the server creates an object.
+    /// </summary>
+    public event EventHandler<InstanceCreatedEventArgs>? InstanceCreated;
+
+    // Other members (methods)
     /// <summary>
     /// Register a class factory with the server.
     /// </summary>
@@ -134,22 +154,6 @@ public sealed class ComServer : IDisposable
         return true;
     }
 
-    private void Factory_InstanceCreated(object? sender, InstanceCreatedEventArgs e)
-    {
-        if (IsDisposed)
-        {
-            return;
-        }
-
-        InstanceCreated?.Invoke(this, e);
-        firstInstanceCreated?.TrySetResult(e.Instance);
-    }
-
-    /// <summary>
-    /// Gets a value indicating whether the server is running.
-    /// </summary>
-    public bool IsRunning { get; private set; }
-
     /// <summary>
     /// Starts the server.
     /// </summary>
@@ -203,15 +207,6 @@ public sealed class ComServer : IDisposable
     }
 
     /// <summary>
-    /// Gets a value indicating whether the instance is disposed.
-    /// </summary>
-    public bool IsDisposed
-    {
-        get;
-        private set;
-    }
-
-    /// <summary>
     /// Force the server to stop and release all resources.
     /// </summary>
     public void Dispose()
@@ -236,8 +231,14 @@ public sealed class ComServer : IDisposable
         }
     }
 
-    /// <summary>
-    /// Occurs when the server creates an object.
-    /// </summary>
-    public event EventHandler<InstanceCreatedEventArgs>? InstanceCreated;
+    private void Factory_InstanceCreated(object? sender, InstanceCreatedEventArgs e)
+    {
+        if (IsDisposed)
+        {
+            return;
+        }
+
+        InstanceCreated?.Invoke(this, e);
+        firstInstanceCreated?.TrySetResult(e.Instance);
+    }
 }

@@ -13,17 +13,7 @@ namespace ComServerHelpers;
 [SupportedOSPlatform("windows6.0.6000")]
 public abstract class BaseClassFactory
 {
-    /// <summary>
-    /// Creates an instance of the object.
-    /// </summary>
-    /// <returns>An instance of the object.</returns>
-    protected internal abstract object CreateInstance();
-
-    /// <summary>
-    /// Occurs when a new instance is created.
-    /// </summary>
-    public event EventHandler<InstanceCreatedEventArgs>? InstanceCreated;
-
+    // Properties (special values)
     /// <summary>
     /// Gets the <c>CLSID</c>.
     /// </summary>
@@ -39,6 +29,19 @@ public abstract class BaseClassFactory
     {
         get;
     }
+
+    // Events
+    /// <summary>
+    /// Occurs when a new instance is created.
+    /// </summary>
+    public event EventHandler<InstanceCreatedEventArgs>? InstanceCreated;
+    
+    // Other members (methods)
+    /// <summary>
+    /// Creates an instance of the object.
+    /// </summary>
+    /// <returns>An instance of the object.</returns>
+    protected internal abstract object CreateInstance();
 
     /// <summary>
     /// Raises the <see cref="InstanceCreated"/> event.

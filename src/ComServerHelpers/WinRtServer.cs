@@ -40,6 +40,7 @@ namespace ComServerHelpers;
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1724", Justification = "No better idea")]
 public sealed class WinRtServer : IDisposable
 {
+    // State
     /// <summary>
     /// Mapping of Activatable Class IDs to activation factories and their <see cref="ComWrappers"/> implementation.
     /// </summary>
@@ -56,6 +57,7 @@ public sealed class WinRtServer : IDisposable
 
     private RO_REGISTRATION_COOKIE registrationCookie = (RO_REGISTRATION_COOKIE)0;
 
+    // Constructor
     /// <summary>
     /// Initializes a new instance of the <see cref="WinRtServer"/> class.
     /// </summary>
@@ -67,17 +69,28 @@ public sealed class WinRtServer : IDisposable
         Utils.SetDefaultGlobalOptions();
     }
 
-    private void Factory_InstanceCreated(object? sender, InstanceCreatedEventArgs e)
+    // Properties (special values)
+    /// <summary>
+    /// Gets a value indicating whether the instance is disposed.
+    /// </summary>
+    public bool IsDisposed
     {
-        if (IsDisposed)
-        {
-            return;
-        }
-
-        InstanceCreated?.Invoke(this, e);
-        firstInstanceCreated?.TrySetResult(e.Instance);
+        get;
+        private set;
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the server is running.
+    /// </summary>
+    public bool IsRunning => registrationCookie != 0;
+
+    // Events
+    /// <summary>
+    /// Occurs when the server creates an object.
+    /// </summary>
+    public event EventHandler<InstanceCreatedEventArgs>? InstanceCreated;
+
+    // Other members (methods)
     /// <summary>
     /// Register an activation factory with the server.
     /// </summary>
@@ -124,44 +137,6 @@ public sealed class WinRtServer : IDisposable
 
         return factories.Remove(factory.ActivatableClassId);
     }
-
-    private unsafe HRESULT ActivationFactoryCallback(HSTRING activatableClassId, IActivationFactory** factory)
-    {
-        if (activatableClassId == HSTRING.Null || factory is null)
-        {
-            return HRESULT.E_INVALIDARG;
-        }
-
-        if (!factories.TryGetValue(activatableClassId.AsString(), out var managedFactory))
-        {
-            factory = null;
-            return HRESULT.E_NOINTERFACE;
-        }
-
-        var unknown = Utils.StrategyBasedComWrappers.GetOrCreateComInterfaceForObject(new BaseActivationFactoryWrapper(managedFactory.Factory, managedFactory.Wrapper), CreateComInterfaceFlags.None);
-        var hr = (HRESULT)Marshal.QueryInterface(unknown, in global::Windows.Win32.System.WinRT.IActivationFactory.IID_Guid, out nint ppv);
-        *factory = (IActivationFactory*)ppv;
-        if (unknown != 0)
-        {
-            Marshal.Release(unknown);
-        }
-
-        return hr;
-    }
-
-    /// <summary>
-    /// Gets a value indicating whether the instance is disposed.
-    /// </summary>
-    public bool IsDisposed
-    {
-        get;
-        private set;
-    }
-
-    /// <summary>
-    /// Gets a value indicating whether the server is running.
-    /// </summary>
-    public bool IsRunning => registrationCookie != 0;
 
     /// <summary>
     /// Starts the server.
@@ -271,8 +246,38 @@ public sealed class WinRtServer : IDisposable
         }
     }
 
-    /// <summary>
-    /// Occurs when the server creates an object.
-    /// </summary>
-    public event EventHandler<InstanceCreatedEventArgs>? InstanceCreated;
+    private unsafe HRESULT ActivationFactoryCallback(HSTRING activatableClassId, IActivationFactory** factory)
+    {
+        if (activatableClassId == HSTRING.Null || factory is null)
+        {
+            return HRESULT.E_INVALIDARG;
+        }
+
+        if (!factories.TryGetValue(activatableClassId.AsString(), out var managedFactory))
+        {
+            factory = null;
+            return HRESULT.E_NOINTERFACE;
+        }
+
+        var unknown = Utils.StrategyBasedComWrappers.GetOrCreateComInterfaceForObject(new BaseActivationFactoryWrapper(managedFactory.Factory, managedFactory.Wrapper), CreateComInterfaceFlags.None);
+        var hr = (HRESULT)Marshal.QueryInterface(unknown, in global::Windows.Win32.System.WinRT.IActivationFactory.IID_Guid, out nint ppv);
+        *factory = (IActivationFactory*)ppv;
+        if (unknown != 0)
+        {
+            Marshal.Release(unknown);
+        }
+
+        return hr;
+    }
+
+    private void Factory_InstanceCreated(object? sender, InstanceCreatedEventArgs e)
+    {
+        if (IsDisposed)
+        {
+            return;
+        }
+
+        InstanceCreated?.Invoke(this, e);
+        firstInstanceCreated?.TrySetResult(e.Instance);
+    }
 }

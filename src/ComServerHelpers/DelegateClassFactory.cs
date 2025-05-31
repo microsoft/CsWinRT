@@ -16,14 +16,17 @@ namespace ComServerHelpers;
 [SupportedOSPlatform("windows6.0.6000")]
 public sealed class DelegateClassFactory<T, TInterface>(Func<T> factory) : BaseClassFactory where T : class, TInterface
 {
+    // State
     private readonly Func<T> factory = factory;
 
+    // Properties (special values)
     /// <inheritdoc/>
     protected internal override Guid Clsid => typeof(T).GUID;
 
     /// <inheritdoc/>
     protected internal override Guid Iid => typeof(TInterface).GUID;
 
+    // Other members (methods)
     /// <inheritdoc/>
     protected internal override object CreateInstance()
     {
