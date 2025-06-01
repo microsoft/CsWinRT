@@ -38,29 +38,29 @@ These are the well-known assemblies and their compact identifiers:
 
 Compact identifiers are prefixed with `#` to distinguish them from user-defined assembly names.
 
-## Examples
+### Examples
 
-### **Primitive type**
+**Primitive type**
 
 - Type: `System.Int32`
 - Mangled name: `ABI.System.<#corlib>int`
 
-### **User-defined type**
+**User-defined type**
 
 - Type: `MyNamespace.MyType` (from assembly `MyAssembly`)
 - Mangled name: `ABI.MyNamespace.<MyAssembly>MyType`
 
-### **Generic type**
+**Generic type**
 
-Type: `System.Collections.Generic.IEnumerable<System.String>`
-Mangled name: ``ABI.System.Collections.Generic.<#corlib>IEnumerable`1<<#corlib>string>"``
+- Type: `System.Collections.Generic.IEnumerable<System.String>`
+- Mangled name: ``ABI.System.Collections.Generic.<#corlib>IEnumerable`1<<#corlib>string>"``
 
-### **Nested generic type**
+**Nested generic type**
 
 - Type: `System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePairSystem.String, MyNamespace.MyType>` (`MyType` is from assembly `MyAssembly`)
 - Mangled name: ``ABI.System.Collections.Generic.<#corlib>ICollection`1<<#corlib>System-Collections-Generic-KeyValuePair`2<<#corlib>string|<MyAssembly>MyNamespace-MyType>>``
 
-## ANTLR4 name mangling rules
+### ANTLR4 name mangling rules
 
 Below is the full specification of the name mangling scheme using ANTLR4 syntax:
 
