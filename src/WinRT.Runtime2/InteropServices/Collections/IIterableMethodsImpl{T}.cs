@@ -4,13 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
-#pragma warning disable CS1573
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// An interface for implementations of <see cref="IReadOnlyList{T}"/> types.
+/// An interface for implementations of <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
 /// <remarks>
@@ -18,9 +17,14 @@ namespace WindowsRuntime.InteropServices;
 /// </remarks>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IReadOnlyListMethodsImpl<T>
+public interface IIterableMethodsImpl<T>
 {
-    /// <inheritdoc cref="IReadOnlyList{T}.this"/>
+    /// <summary>
+    /// Returns an iterator for the items in the collection.
+    /// </summary>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
-    static abstract T Item(WindowsRuntimeObjectReference thisReference, int index);
+    /// <returns>The iterator.</returns>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterable-1.first"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    static abstract IEnumerator<T> First(WindowsRuntimeObjectReference thisReference);
 }

@@ -20,27 +20,27 @@ namespace WindowsRuntime;
 /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
 /// <typeparam name="TIIterable">The <see cref="IEnumerable{T}"/> interface type.</typeparam>
-/// <typeparam name="TIEnumerableMethods">The <see cref="IEnumerableMethodsImpl{T}"/> implementation type.</typeparam>
-/// <typeparam name="TIDictionaryMethods">The <see cref="IDictionaryMethodsImpl{TKey, TValue}"/> implementation type.</typeparam>
+/// <typeparam name="TIIterableMethods">The <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> implementation type.</typeparam>
+/// <typeparam name="TIMapMethods">The <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> implementation type.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class WindowsRuntimeDictionary<
+public abstract class WindowsRuntimeDictionary<
     TKey,
     TValue,
     TIIterable,
-    TIEnumerableMethods,
-    TIDictionaryMethods> : WindowsRuntimeObject,
+    TIIterableMethods,
+    TIMapMethods> : WindowsRuntimeObject,
     IDictionary<TKey, TValue>,
     IReadOnlyDictionary<TKey, TValue>,
     IWindowsRuntimeInterface<IDictionary<TKey, TValue>>,
     IWindowsRuntimeInterface<IEnumerable<KeyValuePair<TKey, TValue>>>
     where TIIterable : IWindowsRuntimeInterface
-    where TIEnumerableMethods : IEnumerableMethodsImpl<KeyValuePair<TKey, TValue>>
-    where TIDictionaryMethods : IDictionaryMethodsImpl<TKey, TValue>
+    where TIIterableMethods : IIterableMethodsImpl<KeyValuePair<TKey, TValue>>
+    where TIMapMethods : IMapMethodsImpl<TKey, TValue>
 {
     /// <summary>
     /// The <see cref="DictionaryKeyCollection{TKey, TValue}"/> instance, if initialized.
@@ -57,7 +57,7 @@ public sealed class WindowsRuntimeDictionary<
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeDictionary(WindowsRuntimeObjectReference nativeObjectReference)
+    protected WindowsRuntimeDictionary(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
@@ -86,7 +86,7 @@ public sealed class WindowsRuntimeDictionary<
     }
 
     /// <inheritdoc/>
-    protected internal override bool HasUnwrappableNativeObjectReference => true;
+    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
     public ICollection<TKey> Keys => _keys ??= new DictionaryKeyCollection<TKey, TValue>(this);
@@ -109,32 +109,32 @@ public sealed class WindowsRuntimeDictionary<
     /// <inheritdoc/>
     public TValue this[TKey key]
     {
-        get => TIDictionaryMethods.Item(NativeObjectReference, key);
-        set => TIDictionaryMethods.Item(NativeObjectReference, key, value);
+        get => IDictionaryMethods<TKey, TValue>.Item<TIMapMethods>(NativeObjectReference, key);
+        set => IDictionaryMethods<TKey, TValue>.Item<TIMapMethods>(NativeObjectReference, key, value);
     }
 
     /// <inheritdoc/>
     public void Add(TKey key, TValue value)
     {
-        TIDictionaryMethods.Add(NativeObjectReference, key, value);
+        IDictionaryMethods<TKey, TValue>.Add<TIMapMethods>(NativeObjectReference, key, value);
     }
 
     /// <inheritdoc/>
     public bool ContainsKey(TKey key)
     {
-        return TIDictionaryMethods.ContainsKey(NativeObjectReference, key);
+        return IDictionaryMethods<TKey, TValue>.ContainsKey<TIMapMethods>(NativeObjectReference, key);
     }
 
     /// <inheritdoc/>
     public bool Remove(TKey key)
     {
-        return TIDictionaryMethods.Remove(NativeObjectReference, key);
+        return IDictionaryMethods<TKey, TValue>.Remove<TIMapMethods>(NativeObjectReference, key);
     }
 
     /// <inheritdoc/>
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
-        return TIDictionaryMethods.TryGetValue(NativeObjectReference, key, out value);
+        return IDictionaryMethods<TKey, TValue>.TryGetValue<TIMapMethods>(NativeObjectReference, key, out value);
     }
 
     /// <inheritdoc/>
@@ -146,13 +146,13 @@ public sealed class WindowsRuntimeDictionary<
     /// <inheritdoc/>
     public void Add(KeyValuePair<TKey, TValue> item)
     {
-        TIDictionaryMethods.Add(NativeObjectReference, item.Key, item.Value);
+        IDictionaryMethods<TKey, TValue>.Add<TIMapMethods>(NativeObjectReference, item.Key, item.Value);
     }
 
     /// <inheritdoc/>
     public bool Contains(KeyValuePair<TKey, TValue> item)
     {
-        if (!TIDictionaryMethods.TryGetValue(NativeObjectReference, item.Key, out TValue? value))
+        if (!IDictionaryMethods<TKey, TValue>.TryGetValue<TIMapMethods>(NativeObjectReference, item.Key, out TValue? value))
         {
             return false;
         }
@@ -189,7 +189,7 @@ public sealed class WindowsRuntimeDictionary<
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
         // TODO: should we handle the value as well?
-        _ = TIDictionaryMethods.Remove(NativeObjectReference, item.Key);
+        _ = IDictionaryMethods<TKey, TValue>.Remove<TIMapMethods>(NativeObjectReference, item.Key);
 
         return true;
     }
@@ -197,7 +197,7 @@ public sealed class WindowsRuntimeDictionary<
     /// <inheritdoc/>
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
-        return TIEnumerableMethods.GetEnumerator(IIterableObjectReference);
+        return TIIterableMethods.First(IIterableObjectReference);
     }
 
     /// <inheritdoc/>
@@ -219,7 +219,7 @@ public sealed class WindowsRuntimeDictionary<
     }
 
     /// <inheritdoc/>
-    protected override bool IsOverridableInterface(in Guid iid)
+    protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;
     }

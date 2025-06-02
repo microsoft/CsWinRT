@@ -18,26 +18,26 @@ namespace WindowsRuntime;
 /// <typeparam name="TKey">The type of keys in the read-only dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the read-only dictionary.</typeparam>
 /// <typeparam name="TIIterable">The <see cref="IEnumerable{T}"/> interface type.</typeparam>
-/// <typeparam name="TIEnumerableMethods">The <see cref="IEnumerableMethodsImpl{T}"/> implementation type.</typeparam>
-/// <typeparam name="TIReadOnlyDictionaryMethods">The <see cref="IReadOnlyDictionaryMethodsImpl{TKey, TValue}"/> implementation type.</typeparam>
+/// <typeparam name="TIIterableMethods">The <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> implementation type.</typeparam>
+/// <typeparam name="TIMapViewMethods">The <c>Windows.Foundation.Collections.IMapView&lt;K, V&gt;</c> implementation type.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class WindowsRuntimeReadOnlyDictionary<
+public abstract class WindowsRuntimeReadOnlyDictionary<
     TKey,
     TValue,
     TIIterable,
-    TIEnumerableMethods,
-    TIReadOnlyDictionaryMethods> : WindowsRuntimeObject,
+    TIIterableMethods,
+    TIMapViewMethods> : WindowsRuntimeObject,
     IReadOnlyDictionary<TKey, TValue>,
     IWindowsRuntimeInterface<IReadOnlyDictionary<TKey, TValue>>,
     IWindowsRuntimeInterface<IEnumerable<KeyValuePair<TKey, TValue>>>
     where TIIterable : IWindowsRuntimeInterface
-    where TIEnumerableMethods : IEnumerableMethodsImpl<KeyValuePair<TKey, TValue>>
-    where TIReadOnlyDictionaryMethods : IReadOnlyDictionaryMethodsImpl<TKey, TValue>
+    where TIIterableMethods : IIterableMethodsImpl<KeyValuePair<TKey, TValue>>
+    where TIMapViewMethods : IMapViewMethodsImpl<TKey, TValue>
 {
     /// <summary>
     /// The <see cref="ReadOnlyDictionaryKeyCollection{TKey, TValue}"/> instance, if initialized.
@@ -54,7 +54,7 @@ public sealed class WindowsRuntimeReadOnlyDictionary<
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeReadOnlyDictionary(WindowsRuntimeObjectReference nativeObjectReference)
+    protected WindowsRuntimeReadOnlyDictionary(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
@@ -83,7 +83,7 @@ public sealed class WindowsRuntimeReadOnlyDictionary<
     }
 
     /// <inheritdoc/>
-    protected internal override bool HasUnwrappableNativeObjectReference => true;
+    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
     public IEnumerable<TKey> Keys => _keys ??= new ReadOnlyDictionaryKeyCollection<TKey, TValue>(this);
@@ -95,24 +95,24 @@ public sealed class WindowsRuntimeReadOnlyDictionary<
     public int Count => IReadOnlyDictionaryMethods.Count(NativeObjectReference);
 
     /// <inheritdoc/>
-    public TValue this[TKey key] => TIReadOnlyDictionaryMethods.Item(NativeObjectReference, key);
+    public TValue this[TKey key] => IReadOnlyDictionaryMethods<TKey, TValue>.Item<TIMapViewMethods>(NativeObjectReference, key);
 
     /// <inheritdoc/>
     public bool ContainsKey(TKey key)
     {
-        return TIReadOnlyDictionaryMethods.ContainsKey(NativeObjectReference, key);
+        return IReadOnlyDictionaryMethods<TKey, TValue>.ContainsKey<TIMapViewMethods>(NativeObjectReference, key);
     }
 
     /// <inheritdoc/>
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
-        return TIReadOnlyDictionaryMethods.TryGetValue(NativeObjectReference, key, out value);
+        return IReadOnlyDictionaryMethods<TKey, TValue>.TryGetValue<TIMapViewMethods>(NativeObjectReference, key, out value);
     }
 
     /// <inheritdoc/>
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
-        return TIEnumerableMethods.GetEnumerator(IIterableObjectReference);
+        return TIIterableMethods.First(IIterableObjectReference);
     }
 
     /// <inheritdoc/>
@@ -134,7 +134,7 @@ public sealed class WindowsRuntimeReadOnlyDictionary<
     }
 
     /// <inheritdoc/>
-    protected override bool IsOverridableInterface(in Guid iid)
+    protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;
     }

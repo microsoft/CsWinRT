@@ -115,7 +115,7 @@ public static class IDictionaryMethods<TKey, TValue>
     /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     public static bool TryGetValue<TMethods>(WindowsRuntimeObjectReference thisReference, TKey key, [MaybeNullWhen(false)] out TValue value)
-        where TMethods : IMapViewMethodsImpl<TKey, TValue>
+        where TMethods : IMapMethodsImpl<TKey, TValue>
     {
         ArgumentNullException.ThrowIfNull(key);
 

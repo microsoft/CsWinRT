@@ -15,15 +15,15 @@ namespace WindowsRuntime;
 /// The implementation of all projected Windows Runtime <see cref="IEnumerable{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
-/// <typeparam name="TIEnumerableMethods">The <see cref="IEnumerableMethodsImpl{T}"/> implementation type.</typeparam>
+/// <typeparam name="TIIterableMethods">The <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> implementation type.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterable-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class WindowsRuntimeEnumerable<T, TIEnumerableMethods> : WindowsRuntimeObject, IEnumerable<T>, IWindowsRuntimeInterface<IEnumerable<T>>
-    where TIEnumerableMethods : IEnumerableMethodsImpl<T>
+public abstract class WindowsRuntimeEnumerable<T, TIIterableMethods> : WindowsRuntimeObject, IEnumerable<T>, IWindowsRuntimeInterface<IEnumerable<T>>
+    where TIIterableMethods : IIterableMethodsImpl<T>
 {
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeEnumerable{T, TIEnumerableMethods}"/> instance with the specified parameters.
@@ -41,7 +41,7 @@ public abstract class WindowsRuntimeEnumerable<T, TIEnumerableMethods> : Windows
     /// <inheritdoc/>
     public IEnumerator<T> GetEnumerator()
     {
-        return TIEnumerableMethods.GetEnumerator(NativeObjectReference);
+        return TIIterableMethods.First(NativeObjectReference);
     }
 
     /// <inheritdoc/>

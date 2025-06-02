@@ -18,34 +18,34 @@ namespace WindowsRuntime;
 /// The implementation of all projected Windows Runtime <see cref="IList{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
-/// <typeparam name="TIIterable">The <see cref="IEnumerable{T}"/> interface type.</typeparam>
-/// <typeparam name="TIEnumerableMethods">The <see cref="IEnumerableMethodsImpl{T}"/> implementation type.</typeparam>
-/// <typeparam name="TIListMethods">The <see cref="IListMethodsImpl{T}"/> implementation type.</typeparam>
+/// <typeparam name="TIIterable">The <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> interface type.</typeparam>
+/// <typeparam name="TIIterableMethods">The <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> implementation type.</typeparam>
+/// <typeparam name="TIVectorMethods">The <c>Windows.Foundation.Collections.IVector&lt;T&gt;</c> implementation type.</typeparam>
 /// <remarks>
 /// This type should only be used as a base type by generated generic instantiations.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1"/>
 [Obsolete("This type is an implementation detail, and it's only meant to be consumed by 'cswinrtgen'")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class WindowsRuntimeList<
+public abstract class WindowsRuntimeList<
     T,
     TIIterable,
-    TIEnumerableMethods,
-    TIListMethods> : WindowsRuntimeObject,
+    TIIterableMethods,
+    TIVectorMethods> : WindowsRuntimeObject,
     IList<T>,
     IReadOnlyList<T>,
     IWindowsRuntimeInterface<IList<T>>,
     IWindowsRuntimeInterface<IEnumerable<T>>
     where TIIterable : IWindowsRuntimeInterface
-    where TIEnumerableMethods : IEnumerableMethodsImpl<T>
-    where TIListMethods : IListMethodsImpl<T>
+    where TIIterableMethods : IIterableMethodsImpl<T>
+    where TIVectorMethods : IVectorMethodsImpl<T>
 {
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeList{T, TIIterable, TIEnumerableMethods, TIListMethods}"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeList(WindowsRuntimeObjectReference nativeObjectReference)
+    protected WindowsRuntimeList(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
@@ -72,7 +72,7 @@ public sealed class WindowsRuntimeList<
     }
 
     /// <inheritdoc/>
-    protected internal override bool HasUnwrappableNativeObjectReference => true;
+    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
     public int Count => IListMethods.Count(NativeObjectReference);
@@ -83,20 +83,20 @@ public sealed class WindowsRuntimeList<
     /// <inheritdoc/>
     public T this[int index]
     {
-        get => TIListMethods.Item(NativeObjectReference, index);
-        set => TIListMethods.Item(NativeObjectReference, index, value);
+        get => IListMethods<T>.Item<TIVectorMethods>(NativeObjectReference, index);
+        set => IListMethods<T>.Item<TIVectorMethods>(NativeObjectReference, index, value);
     }
 
     /// <inheritdoc/>
     public int IndexOf(T item)
     {
-        return TIListMethods.IndexOf(NativeObjectReference, item);
+        return IListMethods<T>.IndexOf<TIVectorMethods>(NativeObjectReference, item);
     }
 
     /// <inheritdoc/>
     public void Insert(int index, T item)
     {
-        TIListMethods.Insert(NativeObjectReference, index, item);
+        IListMethods<T>.Insert<TIVectorMethods>(NativeObjectReference, index, item);
     }
 
     /// <inheritdoc/>
@@ -108,7 +108,7 @@ public sealed class WindowsRuntimeList<
     /// <inheritdoc/>
     public void Add(T item)
     {
-        TIListMethods.Add(NativeObjectReference, item);
+        IListMethods<T>.Add<TIVectorMethods>(NativeObjectReference, item);
     }
 
     /// <inheritdoc/>
@@ -120,25 +120,25 @@ public sealed class WindowsRuntimeList<
     /// <inheritdoc/>
     public bool Contains(T item)
     {
-        return TIListMethods.Contains(NativeObjectReference, item);
+        return IListMethods<T>.Contains<TIVectorMethods>(NativeObjectReference, item);
     }
 
     /// <inheritdoc/>
     public void CopyTo(T[] array, int arrayIndex)
     {
-        TIListMethods.CopyTo(NativeObjectReference, array, arrayIndex);
+        IListMethods<T>.CopyTo<TIVectorMethods>(NativeObjectReference, array, arrayIndex);
     }
 
     /// <inheritdoc/>
     public bool Remove(T item)
     {
-        return TIListMethods.Remove(NativeObjectReference, item);
+        return IListMethods<T>.Remove<TIVectorMethods>(NativeObjectReference, item);
     }
 
     /// <inheritdoc/>
     public IEnumerator<T> GetEnumerator()
     {
-        return TIEnumerableMethods.GetEnumerator(IIterableObjectReference);
+        return TIIterableMethods.First(IIterableObjectReference);
     }
 
     /// <inheritdoc/>
@@ -160,7 +160,7 @@ public sealed class WindowsRuntimeList<
     }
 
     /// <inheritdoc/>
-    protected override bool IsOverridableInterface(in Guid iid)
+    protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;
     }
