@@ -106,9 +106,7 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
                         module.CorLibTypeFactory.UInt32]))
-            {
-                NoInlining = true
-            };
+            { NoInlining = true };
 
             vectorViewMethodsType.Methods.Add(getAtMethod);
 

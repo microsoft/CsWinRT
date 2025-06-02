@@ -115,9 +115,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module),
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]))
-            {
-                NoInlining = true
-            };
+            { NoInlining = true };
 
             iterableMethodsType.Methods.Add(firstMethod);
 

@@ -621,6 +621,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     vftblType: out TypeDefinition vftblType);
+
+                // Define the 'IVectorMethods' type (with the public thunks for 'IVector<T>' native calls)
+                InteropTypeDefinitionBuilder.IList1.IVectorMethods(
+                    listType: typeSignature,
+                    vftblType: vftblType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    vectorMethodsType: out TypeDefinition vectorMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
