@@ -6,6 +6,7 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -514,6 +515,52 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for an <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="vectorMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IVectorMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature listType,
+            TypeDefinition vectorMethodsType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
+
+            // The 'NativeObject' is deriving from 'WindowsRuntimeList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IVECTOR_METHODS>>'
+            TypeSignature windowsRuntimeList4Type = interopReferences.WindowsRuntimeList4.MakeGenericInstanceType(
+                elementType,
+                emitState.LookupTypeDefinition(enumerableType, "Interface").ToTypeSignature(isValueType: false),
+                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToTypeSignature(isValueType: false),
+                vectorMethodsType.ToTypeSignature(isValueType: false));
+
+            // We're declaring an 'internal sealed class' type
+            nativeObjectType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(listType),
+                name: InteropUtf8NameFactory.TypeName(listType, "NativeObject"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+                baseType: windowsRuntimeList4Type.Import(module).ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(nativeObjectType);
+
+            // Define the constructor
+            MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false));
+
+            nativeObjectType.Methods.Add(ctor);
+
+            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+            _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
+            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(windowsRuntimeList4Type).Import(module));
         }
     }
 }

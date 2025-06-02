@@ -637,6 +637,15 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     listMethodsType: out TypeDefinition listMethodsType);
+
+                // Define the 'NativeObject' type (with the RCW implementation)
+                InteropTypeDefinitionBuilder.IList1.NativeObject(
+                    listType: typeSignature,
+                    vectorMethodsType: vectorMethodsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

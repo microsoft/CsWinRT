@@ -316,11 +316,11 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
 
-            // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IENUMERABLE_METHODS, <IREADONLYLIST_METHODS>>'
+            // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IREADONLYLIST_METHODS>>'
             TypeSignature windowsRuntimeReadOnlyList4Type = interopReferences.WindowsRuntimeReadOnlyList4.MakeGenericInstanceType(
                 elementType,
                 emitState.LookupTypeDefinition(enumerableType, "Interface").ToTypeSignature(isValueType: false),
-                emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").ToTypeSignature(isValueType: false),
+                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToTypeSignature(isValueType: false),
                 readOnlyListMethodsType.ToTypeSignature(isValueType: false));
 
             // We're declaring an 'internal sealed class' type
@@ -339,7 +339,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
-            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeEnumerator1_ctor(windowsRuntimeReadOnlyList4Type).Import(module));
+            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(windowsRuntimeReadOnlyList4Type).Import(module));
         }
 
         /// <summary>

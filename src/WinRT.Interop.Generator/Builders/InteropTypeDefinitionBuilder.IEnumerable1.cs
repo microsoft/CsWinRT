@@ -106,6 +106,9 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(iterableMethodsType);
 
+            // Track the type (it's needed by 'IList<T>' and 'IReadOnlyList<T>')
+            emitState.TrackTypeDefinition(iterableMethodsType, enumerableType, "IIterableMethods");
+
             // Define the 'First' method as follows:
             //
             // public static IEnumerator<<TYPE_ARGUMENT>> First(WindowsRuntimeObjectReference thisReference)
@@ -233,7 +236,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(enumerableMethodsType);
 
-            // Track the type (it's needed by 'IReadOnlyList<T>')
+            // Track the type (it's needed by interface implementations)
             emitState.TrackTypeDefinition(enumerableMethodsType, enumerableType, "IEnumerableMethods");
 
             // Define the 'GetEnumerator' method as follows:
@@ -298,7 +301,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
-            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeEnumerator1_ctor(windowsRuntimeEnumerable1Type).Import(module));
+            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(windowsRuntimeEnumerable1Type).Import(module));
         }
 
         /// <summary>

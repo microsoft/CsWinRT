@@ -402,6 +402,12 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeEnumerable2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeEnumerable`2");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeList&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeList4 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeList`4");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReadOnlyList&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1606,25 +1612,12 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given <see cref="WindowsRuntimeEnumerator1"/> instantiation.
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given base type for a <c>NativeObject</c> type.
     /// </summary>
-    /// <param name="enumeratorType">The input delegate type.</param>
-    public MemberReference WindowsRuntimeEnumerator1_ctor(TypeSignature enumeratorType)
+    /// <param name="enumeratorType">The input native object base type.</param>
+    public MemberReference WindowsRuntimeNativeObjectBaseType_ctor(TypeSignature enumeratorType)
     {
         return enumeratorType
-            .ToTypeDefOrRef()
-            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
-                returnType: _interopModule.CorLibTypeFactory.Void,
-                parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given <see cref="WindowsRuntimeEnumerable1"/> instantiation.
-    /// </summary>
-    /// <param name="enumerableType">The input delegate type.</param>
-    public MemberReference WindowsRuntimeEnumerable1_ctor(TypeSignature enumerableType)
-    {
-        return enumerableType
             .ToTypeDefOrRef()
             .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
                 returnType: _interopModule.CorLibTypeFactory.Void,
