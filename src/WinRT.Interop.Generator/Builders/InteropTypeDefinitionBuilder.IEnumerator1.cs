@@ -817,27 +817,27 @@ internal partial class InteropTypeDefinitionBuilder
             implType.Fields.Add(vftblField);
 
             // Define the 'Current' method
-            MethodDefinition currentMethod = InteropMethodDefinitionFactory.IEnumerator1.Current(
+            MethodDefinition currentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.Current(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
 
             // Define the 'get_HasCurrent' method
-            MethodDefinition hasCurrentMethod = InteropMethodDefinitionFactory.IEnumerator1.HasCurrentOrMoveNext(
+            MethodDefinition hasCurrentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.HasCurrentOrMoveNext(
                 nameUtf8: "get_HasCurrent"u8,
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
 
             // Define the 'MoveNext' method
-            MethodDefinition moveNextMethod = InteropMethodDefinitionFactory.IEnumerator1.HasCurrentOrMoveNext(
+            MethodDefinition moveNextMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.HasCurrentOrMoveNext(
                 nameUtf8: "MoveNext"u8,
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
                 module: module);
 
             // Define the 'GetMany' method
-            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IEnumerator1.GetMany(
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.GetMany(
                 enumeratorType: enumeratorType,
                 interopReferences: interopReferences,
                 module: module);

@@ -771,7 +771,7 @@ internal partial class InteropTypeDefinitionBuilder
             implType.Fields.Add(vftblField);
 
             // Define the 'First' method
-            MethodDefinition firstMethod = InteropMethodDefinitionFactory.IEnumerable1.First(
+            MethodDefinition firstMethod = InteropMethodDefinitionFactory.IEnumerable1Impl.First(
                 enumerableType: enumerableType,
                 interopReferences: interopReferences,
                 module: module);

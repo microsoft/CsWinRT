@@ -18,9 +18,9 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 internal static partial class InteropMethodDefinitionFactory
 {
     /// <summary>
-    /// Helpers for <see cref="System.Collections.Generic.IEnumerator{T}"/> types.
+    /// Helpers for impl types for <see cref="System.Collections.Generic.IEnumerator{T}"/> interfaces.
     /// </summary>
-    public static class IEnumerator1
+    public static class IEnumerator1Impl
     {
         /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>get_Current</c> export method.

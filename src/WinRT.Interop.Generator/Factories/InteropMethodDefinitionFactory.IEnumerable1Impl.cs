@@ -15,9 +15,9 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 internal partial class InteropMethodDefinitionFactory
 {
     /// <summary>
-    /// Helpers for <see cref="System.Collections.Generic.IEnumerable{T}"/> types.
+    /// Helpers for impl types for <see cref="System.Collections.Generic.IEnumerable{T}"/> interfaces.
     /// </summary>
-    public static class IEnumerable1
+    public static class IEnumerable1Impl
     {
         /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>First</c> export method.
