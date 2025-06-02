@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -20,6 +21,30 @@ internal partial class InteropTypeDefinitionBuilder
     /// </summary>
     public static class IList1
     {
+        /// <summary>
+        /// Creates the 'IID' property for some <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="listType"/>.</param>
+        public static void IID(
+            GenericInstanceTypeSignature listType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out MethodDefinition get_IidMethod)
+        {
+            InteropTypeDefinitionBuilder.IID(
+                name: InteropUtf8NameFactory.TypeName(listType, "IID"),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                iid: Guid.NewGuid(), // TODO
+                out get_IidMethod);
+        }
+
         /// <summary>
         /// Creates a new type definition for the vtable for an <c>IVector&lt;T&gt;</c> interface.
         /// </summary>

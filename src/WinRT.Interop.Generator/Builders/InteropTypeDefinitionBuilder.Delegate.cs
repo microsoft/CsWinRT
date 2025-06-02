@@ -22,21 +22,57 @@ internal partial class InteropTypeDefinitionBuilder
     public static class Delegate
     {
         /// <summary>
-        /// Creates a new type definition for the implementation of the vtable for an 'IDelegate' interface.
+        /// Creates the 'IID' properties for an 'IDelegate' interface.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <param name="implType">The resulting implementation type.</param>
-        /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
-        public static void ImplType(
+        /// <param name="get_IidMethod">The resulting 'IID' get method for the 'IDelegate' interface.</param>
+        /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
+        public static void IIDs(
             GenericInstanceTypeSignature delegateType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
-            out TypeDefinition implType,
-            out FieldDefinition iidRvaField)
+            out MethodDefinition get_IidMethod,
+            out MethodDefinition get_ReferenceIidMethod)
+        {
+            // 'IDelegate' IID
+            IID(
+                name: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                iid: Guid.NewGuid(), // TODO
+                out get_IidMethod);
+
+            // 'IReference<T>' IID
+            IID(
+                name: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceIID"),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                iid: Guid.NewGuid(), // TODO
+                out get_ReferenceIidMethod);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for an 'IDelegate' interface.
+        /// </summary>
+        /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for the 'IDelegate' interface.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature delegateType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition implType)
         {
             // We're declaring an 'internal static class' type
             implType = new(
@@ -145,21 +181,16 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Create the field for the IID for the delegate type
+            // Create the public 'IID' property
             WellKnownMemberDefinitionFactory.IID(
-                iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "IID"),
-                iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
+                forwardedIidMethod: get_IidMethod,
                 interopReferences: interopReferences,
                 module: module,
-                iid: Guid.NewGuid(),
-                out iidRvaField,
-                out PropertyDefinition iidProperty,
-                out MethodDefinition get_iidMethod);
+                out MethodDefinition get_IidMethod2,
+                out PropertyDefinition iidProperty);
 
-            interopDefinitions.RvaFields.Fields.Add(iidRvaField);
-
+            implType.Methods.Add(get_IidMethod2);
             implType.Properties.Add(iidProperty);
-            implType.Methods.Add(get_iidMethod);
 
             // Create the 'Vtable' property
             WellKnownMemberDefinitionFactory.Vtable(
@@ -176,18 +207,20 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for the 'IReference`1&lt;T&gt;' instantiation for some <see cref="Delegate"/> type.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
+        /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Marshaller"/>.</param>
+        /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="implType">The resulting implementation type.</param>
-        /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
         public static void ReferenceImplType(
             GenericInstanceTypeSignature delegateType,
+            TypeDefinition marshallerType,
+            MethodDefinition get_ReferenceIidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
-            out TypeDefinition implType,
-            out FieldDefinition iidRvaField)
+            out TypeDefinition implType)
         {
             // We're declaring an 'internal static class' type
             implType = new(
@@ -227,14 +260,6 @@ internal partial class InteropTypeDefinitionBuilder
 
             implType.Methods.Add(valueMethod);
 
-            // Reference the generated 'ConvertToUnmanaged' method
-            MemberReference convertToUnmanagedMethod = module
-                .CreateTypeReference(InteropUtf8NameFactory.TypeNamespace(delegateType), InteropUtf8NameFactory.TypeName(delegateType, "Marshaller"))
-                .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
-                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
-                    parameterTypes: [delegateType]))
-                .Import(module);
-
             // Jump labels
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
@@ -266,7 +291,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType).Import(module) },
-                    { Call, convertToUnmanagedMethod },
+                    { Call, marshallerType.GetMethod("ConvertToUnmanaged"u8) },
                     { Stloc_1 },
                     { Ldloca_S, loc_1_referenceValue },
                     { Call, interopReferences.WindowsRuntimeObjectReferenceValueDetachThisPtrUnsafe.Import(module) },
@@ -318,21 +343,16 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Create the field for the IID for the boxed delegate type
+            // Create the public 'IID' property
             WellKnownMemberDefinitionFactory.IID(
-                iidRvaFieldName: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceIID"),
-                iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
+                forwardedIidMethod: get_ReferenceIidMethod,
                 interopReferences: interopReferences,
                 module: module,
-                iid: Guid.NewGuid(),
-                out iidRvaField,
-                out PropertyDefinition iidProperty,
-                out MethodDefinition get_iidMethod);
+                out MethodDefinition get_IidMethod2,
+                out PropertyDefinition iidProperty);
 
-            interopDefinitions.RvaFields.Fields.Add(iidRvaField);
-
+            implType.Methods.Add(get_IidMethod2);
             implType.Properties.Add(iidProperty);
-            implType.Methods.Add(get_iidMethod);
 
             // Create the 'Vtable' property
             WellKnownMemberDefinitionFactory.Vtable(
@@ -387,15 +407,15 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the <c>IComWrappersCallback</c> interface for some <see cref="Delegate"/> type.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-        /// <param name="delegateImplType">The type returned by <see cref="ImplType"/>.</param>
         /// <param name="nativeDelegateType">The type returned by <see cref="NativeDelegateType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for the 'IDelegate' interface.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="callbackType">The resulting callback type.</param>
         public static void ComWrappersCallbackType(
             TypeSignature delegateType,
-            TypeDefinition delegateImplType,
             TypeDefinition nativeDelegateType,
+            MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition callbackType)
@@ -435,7 +455,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Call, delegateImplType.GetMethod("get_IID"u8) },
+                    { Call, get_IidMethod },
                     { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
                     { Ldftn, nativeDelegateType.GetMethod("Invoke"u8) },
                     { Newobj, interopReferences.Delegate_ctor(delegateType).Import(module) },
@@ -590,18 +610,18 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the marshaller attribute of some <see cref="Delegate"/> type.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-        /// <param name="delegateReferenceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ReferenceImplType"/>.</param>
         /// <param name="delegateInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImplType"/>.</param>
         /// <param name="delegateComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+        /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void ComWrappersMarshallerAttribute(
             GenericInstanceTypeSignature delegateType,
-            TypeDefinition delegateReferenceImplType,
             TypeDefinition delegateInterfaceEntriesImplType,
             TypeDefinition delegateComWrappersCallbackType,
+            MethodDefinition get_ReferenceIidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -698,7 +718,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldc_I4_1 },
                     { Stind_I4 },
                     { Ldarg_1 },
-                    { Call, delegateReferenceImplType.GetMethod("get_IID"u8) },
+                    { Call, get_ReferenceIidMethod },
                     { Call, windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor },
                     { Ret }
                 }
@@ -709,17 +729,17 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the marshaller of some <see cref="Delegate"/> type.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-        /// <param name="delegateImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ImplType"/>.</param>
-        /// <param name="delegateReferenceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="ReferenceImplType"/>.</param>
         /// <param name="delegateComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for the 'IDelegate' interface.</param>
+        /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
             GenericInstanceTypeSignature delegateType,
-            TypeDefinition delegateImplType,
-            TypeDefinition delegateReferenceImplType,
             TypeDefinition delegateComWrappersCallbackType,
+            MethodDefinition get_IidMethod,
+            MethodDefinition get_ReferenceIidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -755,7 +775,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Call, delegateImplType.GetMethod("get_IID"u8) },
+                    { Call, get_IidMethod },
                     { Call, interopReferences.WindowsRuntimeDelegateMarshallerConvertToUnmanaged.Import(module) },
                     { Ret }
                 }
@@ -808,7 +828,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Call, delegateReferenceImplType.GetMethod("get_IID"u8) },
+                    { Call, get_ReferenceIidMethod },
                     { Call, interopReferences.WindowsRuntimeDelegateMarshallerBoxToUnmanaged.Import(module) },
                     { Ret }
                 }

@@ -60,6 +60,12 @@ internal sealed class InteropDefinitions
     public TypeDefinition IIDRvaDataSize_16 => RvaFields.NestedTypes[0];
 
     /// <summary>
+    /// Gets the <see cref="TypeDefinition"/> for the <c>InterfaceIIDs</c> type.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopModule);
+
+    /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IUnknownVftbl</c> type.
     /// </summary>
     [field: MaybeNull, AllowNull]

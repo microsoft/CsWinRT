@@ -832,6 +832,21 @@ internal static partial class WellKnownTypeDefinitionFactory
     }
 
     /// <summary>
+    /// Creates the container type for all IID properties.
+    /// </summary>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <returns>The resulting <c>InterfaceIIDs</c> type.</returns>
+    public static TypeDefinition InterfaceIIDs(ModuleDefinition module)
+    {
+        // We're declaring an 'internal static class' type
+        return new(
+            ns: null,
+            name: "<InterfaceIIDs>"u8,
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+    }
+
+    /// <summary>
     /// Creates a type to hold implementation detail helpers.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>

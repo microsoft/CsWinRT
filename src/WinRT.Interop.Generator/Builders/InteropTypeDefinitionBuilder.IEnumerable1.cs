@@ -23,23 +23,45 @@ internal partial class InteropTypeDefinitionBuilder
     public static class IEnumerable1
     {
         /// <summary>
-        /// Creates a new type definition for the interface type for some <c>IIterable&lt;T&gt;</c> interface.
+        /// Creates the 'IID' property for some <c>IIterable&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <param name="interfaceType">The resulting interface type.</param>
-        /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
-        public static void Interface(
+        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="enumerableType"/>.</param>
+        public static void IID(
             GenericInstanceTypeSignature enumerableType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            ModuleDefinition module,
+            out MethodDefinition get_IidMethod)
+        {
+            InteropTypeDefinitionBuilder.IID(
+                name: InteropUtf8NameFactory.TypeName(enumerableType, "IID"),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                iid: Guid.NewGuid(), // TODO
+                out get_IidMethod);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the interface type for some <c>IIterable&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumerableType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="interfaceType">The resulting interface type.</param>
+        public static void Interface(
+            GenericInstanceTypeSignature enumerableType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
-            out TypeDefinition interfaceType,
-            out FieldDefinition iidRvaField)
+            out TypeDefinition interfaceType)
         {
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
@@ -56,26 +78,21 @@ internal partial class InteropTypeDefinitionBuilder
             // Track the type (it's needed by 'IReadOnlyList<T>')
             emitState.TrackTypeDefinition(interfaceType, enumerableType, "Interface");
 
-            // Create the field for the IID for the enumerable type
+            // Create the public 'IID' property
             WellKnownMemberDefinitionFactory.IID(
-                iidRvaFieldName: InteropUtf8NameFactory.TypeName(enumerableType, "IID"),
-                iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
+                forwardedIidMethod: get_IidMethod,
                 interopReferences: interopReferences,
                 module: module,
-                iid: Guid.NewGuid(),
-                out iidRvaField,
-                out PropertyDefinition iidProperty,
-                out MethodDefinition get_iidMethod);
-
-            interopDefinitions.RvaFields.Fields.Add(iidRvaField);
+                out MethodDefinition get_IidMethod2,
+                out PropertyDefinition iidProperty);
 
             interfaceType.Properties.Add(iidProperty);
-            interfaceType.Methods.Add(get_iidMethod);
+            interfaceType.Methods.Add(get_IidMethod2);
 
             // Mark the 'get_IID' method as implementing the interface method
             interfaceType.MethodImplementations.Add(new MethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeInterfaceget_IID.Import(module),
-                body: get_iidMethod));
+                body: get_IidMethod2));
         }
 
         /// <summary>
@@ -309,14 +326,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="enumerableType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
-        /// <param name="enumerableImplType">The type returned by <see cref="ImplType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumerableType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="callbackType">The resulting callback type.</param>
         public static void ComWrappersCallbackType(
             TypeSignature enumerableType,
             TypeDefinition nativeObjectType,
-            TypeDefinition enumerableImplType,
+            MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition callbackType)
@@ -390,7 +407,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // Create the 'NativeObject' instance to return
                     { Ldarg_0 },
-                    { Call, enumerableImplType.GetMethod("get_IID"u8) },
+                    { Call, get_IidMethod },
                     { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
                     { Stloc_0 },
                     { Ldarg_3 },
@@ -428,14 +445,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
-        /// <param name="enumerableImplType">The type returned by <see cref="ImplType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumerableType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void ComWrappersMarshallerAttribute(
             GenericInstanceTypeSignature enumerableType,
             TypeDefinition nativeObjectType,
-            TypeDefinition enumerableImplType,
+            MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -529,7 +546,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_1 },
-                    { Call, enumerableImplType.GetMethod("get_IID"u8) },
+                    { Call, get_IidMethod },
                     { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
                     { Stloc_0 },
                     { Ldarg_2 },
@@ -553,15 +570,15 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the marshaller of some <c>IIterable&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
-        /// <param name="enumerableImplType">The type returned by <see cref="ImplType"/>.</param>
         /// <param name="enumerableComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumerableType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
             GenericInstanceTypeSignature enumerableType,
-            TypeDefinition enumerableImplType,
             TypeDefinition enumerableComWrappersCallbackType,
+            MethodDefinition get_IidMethod,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -602,7 +619,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Call, enumerableImplType.GetMethod("get_IID"u8) },
+                    { Call, get_IidMethod },
                     { Call, windowsRuntimeInterfaceMarshallerConvertToUnmanaged.Import(module) },
                     { Ret }
                 }
@@ -730,14 +747,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the implementation of the vtable for some <c>IIterable&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
-        /// <param name="interfaceType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumerableType"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="implType">The resulting implementation type.</param>
         public static void ImplType(
             GenericInstanceTypeSignature enumerableType,
-            TypeDefinition interfaceType,
+            MethodDefinition get_IidMethod,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -791,16 +808,16 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Create the field for the IID for the enumerable type
+            // Create the public 'IID' property
             WellKnownMemberDefinitionFactory.IID(
-                interfaceType.GetMethod("get_IID"u8),
+                forwardedIidMethod: get_IidMethod,
                 interopReferences: interopReferences,
                 module: module,
-                out PropertyDefinition iidProperty,
-                out MethodDefinition get_iidMethod);
+                out MethodDefinition get_IidMethod2,
+                out PropertyDefinition iidProperty);
 
+            implType.Methods.Add(get_IidMethod2);
             implType.Properties.Add(iidProperty);
-            implType.Methods.Add(get_iidMethod);
 
             // Create the 'Vtable' property
             WellKnownMemberDefinitionFactory.Vtable(

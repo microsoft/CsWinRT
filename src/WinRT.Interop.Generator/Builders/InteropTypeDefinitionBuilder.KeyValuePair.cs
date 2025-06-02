@@ -22,21 +22,45 @@ internal partial class InteropTypeDefinitionBuilder
     public static class KeyValuePair
     {
         /// <summary>
-        /// Creates a new type definition for the implementation of the vtable for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.
+        /// Creates the 'IID' property for some <c>IKeyValuePair&lt;K, V&gt;</c> interface.
         /// </summary>
-        /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        /// <param name="keyValuePairType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
-        /// <param name="implType">The resulting implementation type.</param>
-        /// <param name="iidRvaField">The resulting RVA field for the IID data.</param>
-        public static void ImplType(
+        /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="keyValuePairType"/>.</param>
+        public static void IID(
             GenericInstanceTypeSignature keyValuePairType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
-            out TypeDefinition implType,
-            out FieldDefinition iidRvaField)
+            out MethodDefinition get_IidMethod)
+        {
+            InteropTypeDefinitionBuilder.IID(
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType, "IID"),
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                iid: Guid.NewGuid(), // TODO
+                out get_IidMethod);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> interface.
+        /// </summary>
+        /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="keyValuePairType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature keyValuePairType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition implType)
         {
             // We're declaring an 'internal static class' type
             implType = new(
@@ -197,21 +221,16 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Create the field for the IID for the 'KeyValuePair<,>' type
+            // Create the public 'IID' property
             WellKnownMemberDefinitionFactory.IID(
-                iidRvaFieldName: InteropUtf8NameFactory.TypeName(keyValuePairType, "IID"),
-                iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
+                forwardedIidMethod: get_IidMethod,
                 interopReferences: interopReferences,
                 module: module,
-                iid: Guid.NewGuid(),
-                out iidRvaField,
-                out PropertyDefinition iidProperty,
-                out MethodDefinition get_iidMethod);
+                out MethodDefinition get_IidMethod2,
+                out PropertyDefinition iidProperty);
 
-            interopDefinitions.RvaFields.Fields.Add(iidRvaField);
-
+            implType.Methods.Add(get_IidMethod2);
             implType.Properties.Add(iidProperty);
-            implType.Methods.Add(get_iidMethod);
 
             // Create the 'Vtable' property
             WellKnownMemberDefinitionFactory.Vtable(

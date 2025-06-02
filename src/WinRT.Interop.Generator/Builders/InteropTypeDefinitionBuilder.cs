@@ -7,6 +7,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
@@ -17,6 +18,39 @@ namespace WindowsRuntime.InteropGenerator.Builders;
 /// </summary>
 internal static partial class InteropTypeDefinitionBuilder
 {
+    /// <summary>
+    /// Creates an 'IID' property with the specified parameters.
+    /// </summary>
+    /// <param name="name">The property and field name.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="iid">The <see cref="Guid"/> value to use for the RVA field.</param>
+    /// <param name="get_IidMethod">The resulting 'get_IID' method.</param>
+    private static void IID(
+        Utf8String name,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        in Guid iid,
+        out MethodDefinition get_IidMethod)
+    {
+        WellKnownMemberDefinitionFactory.IID(
+            propertyName: name,
+            iidRvaFieldName: name,
+            iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
+            interopReferences: interopReferences,
+            module: module,
+            iid: in iid,
+            out FieldDefinition iidRvaField,
+            out get_IidMethod,
+            out PropertyDefinition iidProperty);
+
+        interopDefinitions.RvaFields.Fields.Add(iidRvaField);
+        interopDefinitions.InterfaceIIDs.Methods.Add(get_IidMethod);
+        interopDefinitions.InterfaceIIDs.Properties.Add(iidProperty);
+    }
+
     /// <summary>
     /// Creates a new type definition for the implementation of the COM interface entries for a managed type.
     /// </summary>
