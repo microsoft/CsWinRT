@@ -215,6 +215,34 @@ public sealed class RuntimeClassCastAnalyzer : DiagnosticAnalyzer
                         typeSymbol));
                 }
             }, OperationKind.TypePattern);
+
+            // This handles the following cases:
+            //
+            // case C:
+            // {
+            // }
+            context.RegisterOperationAction(context =>
+            {
+                if (context.Operation is IPatternCaseClauseOperation { IsImplicit: false, Pattern: { NarrowedType: INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Enum, IsStatic: false } typeSymbol } patternOperation } &&
+                    typeSymbol.HasAttributeWithType(windowsRuntimeTypeAttribute) &&
+                    patternOperation.InputType.IsReferenceType &&
+                    !context.Compilation.HasImplicitConversion(patternOperation.InputType, typeSymbol) &&
+                    !IsDynamicCastAttributePresentOnOperation(context.Operation, typeSymbol))
+                {
+                    // Special case: we're already handling declaration patterns above, and we don't want to emit two
+                    // warnings for the same code. This callback is just to handle simple patterns in 'switch' statements.
+                    if (patternOperation is IDeclarationPatternOperation)
+                    {
+                        return;
+                    }
+
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        typeSymbol.TypeKind is TypeKind.Class ? WinRTRules.RuntimeClassCast : WinRTRules.IReferenceTypeCast,
+                        patternOperation.Syntax.GetLocation(),
+                        ImmutableDictionary.Create<string, string?>().Add(WindowsRuntimeTypeId, typeSymbol.GetFullyQualifiedMetadataName()),
+                        typeSymbol));
+                }
+            }, OperationKind.CaseClause);
         });
     }
 }
