@@ -224,15 +224,12 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature elementType = enumerableType.TypeArguments[0];
 
-            // We're declaring an 'internal abstract class' type
+            // We're declaring an 'internal static class' type
             enumerableMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
                 name: InteropUtf8NameFactory.TypeName(enumerableType, "IEnumerableMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
-            {
-                Interfaces = { new InterfaceImplementation(interopReferences.IEnumerableMethodsImpl1.MakeGenericInstanceType(elementType).Import(module).ToTypeDefOrRef()) }
-            };
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(enumerableMethodsType);
 
@@ -250,11 +247,6 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
 
             enumerableMethodsType.Methods.Add(getEnumeratorMethod);
-
-            // Mark the 'GetEnumerator' method as implementing the interface method
-            enumerableMethodsType.MethodImplementations.Add(new MethodImplementation(
-                declaration: interopReferences.IEnumerableMethodsImpl1GetEnumerator(elementType).Import(module),
-                body: getEnumeratorMethod));
 
             // Create a method body for the 'GetEnumerator' method
             getEnumeratorMethod.CilMethodBody = new CilMethodBody(getEnumeratorMethod)

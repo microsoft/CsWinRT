@@ -241,11 +241,8 @@ internal partial class InteropTypeDefinitionBuilder
             readOnlyListMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IReadOnlyListMethods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
-            {
-                Interfaces = { new InterfaceImplementation(interopReferences.IReadOnlyListMethodsImpl1.MakeGenericInstanceType(elementType).Import(module).ToTypeDefOrRef()) }
-            };
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(readOnlyListMethodsType);
 
@@ -263,11 +260,6 @@ internal partial class InteropTypeDefinitionBuilder
 
             readOnlyListMethodsType.Methods.Add(get_ItemMethod);
 
-            // Mark the 'Item' method as overriding the base method
-            vectorViewMethodsType.MethodImplementations.Add(new MethodImplementation(
-                declaration: interopReferences.IReadOnlyListMethodsImpl1Item(elementType).Import(module),
-                body: get_ItemMethod));
-
             // Create a method body for the 'Item' method
             get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
             {
@@ -275,7 +267,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IReadOnlyListMethods1Item(elementType, vectorViewMethodsType).Import(module) },
+                    { Call, interopReferences.IReadOnlyListMethods1get_Item(elementType, vectorViewMethodsType).Import(module) },
                     { Ret }
                 }
             };

@@ -629,6 +629,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     vectorMethodsType: out TypeDefinition vectorMethodsType);
+
+                // Define the 'ListMethods' type
+                InteropTypeDefinitionBuilder.IList1.IListMethods(
+                    listType: typeSignature,
+                    vectorMethodsType: vectorMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    listMethodsType: out TypeDefinition listMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

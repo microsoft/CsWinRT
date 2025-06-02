@@ -342,16 +342,16 @@ internal sealed class InteropReferences
     public TypeReference IEnumeratorAdapter1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IEnumeratorAdapter`1");
 
     /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumerableMethodsImpl&lt;T&gt;</c>.
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsImpl&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference IEnumerableMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IEnumerableMethodsImpl`1");
+    public TypeReference IVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IVectorMethodsImpl`1");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsImpl&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public TypeReference IVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IVectorMethodsImpl`1");
+    public TypeReference IVectorMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IVectorMethodsImpl`1");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorViewMethodsImpl&lt;T&gt;</c>.
@@ -360,22 +360,28 @@ internal sealed class InteropReferences
     public TypeReference IVectorViewMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IVectorViewMethodsImpl`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IListMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IListMethods");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IReadOnlyListMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyListMethods");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IListMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IListMethods`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods&lt;T&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
     public TypeReference IReadOnlyListMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyListMethods`1");
-
-    /// <summary>
-    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethodsImpl&lt;T&gt;</c>.
-    /// </summary>
-    [field: MaybeNull, AllowNull]
-    public TypeReference IReadOnlyListMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyListMethodsImpl`1");
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
@@ -848,6 +854,24 @@ internal sealed class InteropReferences
             parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListMethods.Count</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IListMethodsCount => field ??= IListMethods
+        .CreateMemberReference("Count", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Int32,
+            parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListMethods.Clear</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IListMethodsClear => field ??= IListMethods
+        .CreateMemberReference("Clear", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Void,
+            parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods.Count</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1193,18 +1217,6 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IEnumerableMethodsImpl&lt;T&gt;.GetEnumerator</c>.
-    /// </summary>
-    /// <param name="elementType">The input element type.</param>
-    public MemberReference IEnumerableMethodsImpl1GetEnumerator(TypeSignature elementType)
-    {
-        return IEnumerableMethodsImpl1
-            .MakeGenericInstanceType(elementType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("GetEnumerator", MethodSignature.CreateStatic(new GenericParameterSignature(GenericParameterType.Type, 0)));
-    }
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IEnumerable{T}.GetEnumerator"/>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -1396,11 +1408,166 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;.Item</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="vectorMethods">The <see cref="IVectorMethods1"/> type.</param>
+    public MethodSpecification IListMethods1get_Item(TypeSignature elementType, TypeDefinition vectorMethods)
+    {
+        return IListMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Item", MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    _windowsRuntimeModule.CorLibTypeFactory.Int32]))
+            .MakeGenericInstanceMethod(vectorMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;.Item</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="vectorMethods">The <see cref="IVectorMethods1"/> type.</param>
+    public MethodSpecification IListMethods1set_Item(TypeSignature elementType, TypeDefinition vectorMethods)
+    {
+        return IListMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Item", MethodSignature.CreateStatic(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    _windowsRuntimeModule.CorLibTypeFactory.Int32,
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]))
+            .MakeGenericInstanceMethod(vectorMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;.Add</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="vectorMethods">The <see cref="IVectorMethods1"/> type.</param>
+    public MethodSpecification IListMethods1Add(TypeSignature elementType, TypeDefinition vectorMethods)
+    {
+        return IListMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Add", MethodSignature.CreateStatic(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]))
+            .MakeGenericInstanceMethod(vectorMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;.Contains</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="vectorMethods">The <see cref="IVectorMethods1"/> type.</param>
+    public MethodSpecification IListMethods1Contains(TypeSignature elementType, TypeDefinition vectorMethods)
+    {
+        return IListMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Contains", MethodSignature.CreateStatic(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]))
+            .MakeGenericInstanceMethod(vectorMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;.CopyTo</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="vectorMethods">The <see cref="IVectorMethods1"/> type.</param>
+    public MethodSpecification IListMethods1CopyTo(TypeSignature elementType, TypeDefinition vectorMethods)
+    {
+        return IListMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("CopyTo", MethodSignature.CreateStatic(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    new GenericParameterSignature(GenericParameterType.Type, 0).MakeSzArrayType(),
+                    _windowsRuntimeModule.CorLibTypeFactory.Int32]))
+            .MakeGenericInstanceMethod(vectorMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;.Remove</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="vectorMethods">The <see cref="IVectorMethods1"/> type.</param>
+    public MethodSpecification IListMethods1Remove(TypeSignature elementType, TypeDefinition vectorMethods)
+    {
+        return IListMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Remove", MethodSignature.CreateStatic(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]))
+            .MakeGenericInstanceMethod(vectorMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;.IndexOf</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="vectorMethods">The <see cref="IVectorMethods1"/> type.</param>
+    public MethodSpecification IListMethods1IndexOf(TypeSignature elementType, TypeDefinition vectorMethods)
+    {
+        return IListMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("IndexOf", MethodSignature.CreateStatic(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Int32,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]))
+            .MakeGenericInstanceMethod(vectorMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListMethods&lt;T&gt;.Insert</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="vectorMethods">The <see cref="IVectorMethods1"/> type.</param>
+    public MethodSpecification IListMethods1Insert(TypeSignature elementType, TypeDefinition vectorMethods)
+    {
+        return IListMethods1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Insert", MethodSignature.CreateStatic(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    _windowsRuntimeModule.CorLibTypeFactory.Int32,
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]))
+            .MakeGenericInstanceMethod(vectorMethods.ToTypeSignature());
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods&lt;T&gt;.Item</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
     /// <param name="vectorViewMethods">The <see cref="IVectorViewMethods1"/> type.</param>
-    public MethodSpecification IReadOnlyListMethods1Item(TypeSignature elementType, TypeDefinition vectorViewMethods)
+    public MethodSpecification IReadOnlyListMethods1get_Item(TypeSignature elementType, TypeDefinition vectorViewMethods)
     {
         return IReadOnlyListMethods1
             .MakeGenericInstanceType(elementType)
@@ -1412,22 +1579,6 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
                     _windowsRuntimeModule.CorLibTypeFactory.Int32]))
             .MakeGenericInstanceMethod(vectorViewMethods.ToTypeSignature());
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethodsImpl&lt;T&gt;.Item</c>.
-    /// </summary>
-    /// <param name="elementType">The input element type.</param>
-    public MemberReference IReadOnlyListMethodsImpl1Item(TypeSignature elementType)
-    {
-        return IReadOnlyListMethodsImpl1
-            .MakeGenericInstanceType(elementType)
-            .ToTypeDefOrRef()
-            .CreateMemberReference("Item", MethodSignature.CreateStatic(
-                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
-                parameterTypes: [
-                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
-                    _windowsRuntimeModule.CorLibTypeFactory.Int32]));
     }
 
     /// <summary>

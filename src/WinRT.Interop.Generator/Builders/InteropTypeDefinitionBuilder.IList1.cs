@@ -228,5 +228,292 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
         }
+
+        /// <summary>
+        /// Creates a new type definition for the methods for an <see cref="System.Collections.Generic.IList{T}"/> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="vectorMethodsType">The type returned by <see cref="IVectorMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="listMethodsType">The resulting methods type.</param>
+        public static void IListMethods(
+            GenericInstanceTypeSignature listType,
+            TypeDefinition vectorMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition listMethodsType)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            // We're declaring an 'internal static class' type
+            listMethodsType = new TypeDefinition(
+                ns: InteropUtf8NameFactory.TypeNamespace(listType),
+                name: InteropUtf8NameFactory.TypeName(listType, "IListMethods"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(listMethodsType);
+
+            // Define the 'Item' getter method as follows:
+            //
+            // public static <TYPE_ARGUMENT> Item(WindowsRuntimeObjectReference thisReference, int index)
+            MethodDefinition get_ItemMethod = new(
+                name: "Item"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: elementType.Import(module),
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        module.CorLibTypeFactory.Int32]));
+
+            listMethodsType.Methods.Add(get_ItemMethod);
+
+            // Create a method body for the 'Item' getter method
+            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IListMethods1get_Item(elementType, vectorMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Item' setter method as follows:
+            //
+            // public static void Item(WindowsRuntimeObjectReference thisReference, int index, <TYPE_ARGUMENT> value)
+            MethodDefinition set_ItemMethod = new(
+                name: "Item"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        module.CorLibTypeFactory.Int32,
+                        elementType.Import(module)]));
+
+            listMethodsType.Methods.Add(set_ItemMethod);
+
+            // Create a method body for the 'Item' setter method
+            set_ItemMethod.CilMethodBody = new CilMethodBody(set_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, interopReferences.IListMethods1set_Item(elementType, vectorMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Count' method as follows:
+            //
+            // public static int Count(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition countMethod = new(
+                name: "Count"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+
+            listMethodsType.Methods.Add(countMethod);
+
+            // Create a method body for the 'Count' method
+            countMethod.CilMethodBody = new CilMethodBody(countMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.IListMethodsCount.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Add' method as follows:
+            //
+            // public static void Add(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> item)
+            MethodDefinition addMethod = new(
+                name: "Add"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        elementType.Import(module)]));
+
+            listMethodsType.Methods.Add(addMethod);
+
+            // Create a method body for the 'Add' method
+            addMethod.CilMethodBody = new CilMethodBody(addMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IListMethods1Add(elementType, vectorMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Contains' method as follows:
+            //
+            // public static bool Contains(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> item)
+            MethodDefinition containsMethod = new(
+                name: "Contains"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        elementType.Import(module)]));
+
+            listMethodsType.Methods.Add(containsMethod);
+
+            // Create a method body for the 'Contains' method
+            containsMethod.CilMethodBody = new CilMethodBody(containsMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IListMethods1Contains(elementType, vectorMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'CopyTo' method as follows:
+            //
+            // public static void CopyTo(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT>[] array, int arrayIndex)
+            MethodDefinition copyToMethod = new(
+                name: "CopyTo"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        elementType.Import(module).MakeSzArrayType(),
+                        module.CorLibTypeFactory.Int32]));
+
+            listMethodsType.Methods.Add(copyToMethod);
+
+            // Create a method body for the 'CopyTo' method
+            copyToMethod.CilMethodBody = new CilMethodBody(copyToMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, interopReferences.IListMethods1CopyTo(elementType, vectorMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Remove' method as follows:
+            //
+            // public static bool Remove(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> item)
+            MethodDefinition removeMethod = new(
+                name: "Remove"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        elementType.Import(module)]));
+
+            listMethodsType.Methods.Add(removeMethod);
+
+            // Create a method body for the 'Remove' method
+            removeMethod.CilMethodBody = new CilMethodBody(removeMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IListMethods1Remove(elementType, vectorMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'IndexOf' method as follows:
+            //
+            // public static int IndexOf(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> item)
+            MethodDefinition indexOfMethod = new(
+                name: "IndexOf"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        elementType.Import(module)]));
+
+            listMethodsType.Methods.Add(indexOfMethod);
+
+            // Create a method body for the 'IndexOf' method
+            indexOfMethod.CilMethodBody = new CilMethodBody(indexOfMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IListMethods1IndexOf(elementType, vectorMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Insert' method as follows:
+            //
+            // public static void Insert(WindowsRuntimeObjectReference thisReference, int index, <TYPE_ARGUMENT> item)
+            MethodDefinition insertMethod = new(
+                name: "Insert"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        module.CorLibTypeFactory.Int32,
+                        elementType.Import(module)]));
+
+            listMethodsType.Methods.Add(insertMethod);
+
+            // Create a method body for the 'Insert' method
+            insertMethod.CilMethodBody = new CilMethodBody(insertMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, interopReferences.IListMethods1Insert(elementType, vectorMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Clear' method as follows:
+            //
+            // public static void Clear(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition clearMethod = new(
+                name: "Clear"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+
+            listMethodsType.Methods.Add(clearMethod);
+
+            // Create a method body for the 'Clear' method
+            clearMethod.CilMethodBody = new CilMethodBody(clearMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.IListMethodsClear.Import(module) },
+                    { Ret }
+                }
+            };
+        }
     }
 }
