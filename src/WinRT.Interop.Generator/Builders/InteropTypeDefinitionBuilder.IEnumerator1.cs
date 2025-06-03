@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -538,26 +539,6 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            // We're declaring an 'internal static class' type
-            implType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType, "Impl"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
-
-            module.TopLevelTypes.Add(implType);
-
-            // The vtable field looks like this:
-            //
-            // [FixedAddressValueType]
-            // private static readonly <IEnumerator1Vftbl> Vftbl;
-            FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, interopDefinitions.IEnumerator1Vftbl.ToTypeSignature(isValueType: true))
-            {
-                CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
-            };
-
-            implType.Fields.Add(vftblField);
-
             // Define the 'Current' method
             MethodDefinition currentMethod = InteropMethodDefinitionFactory.IEnumerator1Impl.Current(
                 enumeratorType: enumeratorType,
@@ -584,60 +565,21 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module);
 
-            implType.Methods.Add(currentMethod);
-            implType.Methods.Add(hasCurrentMethod);
-            implType.Methods.Add(moveNextMethod);
-            implType.Methods.Add(getManyMethod);
-
-            // Create the static constructor to initialize the vtable
-            MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
-
-            // Initialize the enumerator vtable
-            cctor.CilMethodBody = new CilMethodBody(cctor)
-            {
-                Instructions =
-                {
-                    { Ldsflda, vftblField },
-                    { Conv_U },
-                    { Call, interopReferences.IInspectableImplget_Vtable.Import(module) },
-                    { Ldobj, interopDefinitions.IInspectableVftbl },
-                    { Stobj, interopDefinitions.IInspectableVftbl },
-                    { Ldsflda, vftblField },
-                    { Ldftn, currentMethod },
-                    { Stfld, interopDefinitions.IEnumerator1Vftbl.Fields[6] },
-                    { Ldsflda, vftblField },
-                    { Ldftn, hasCurrentMethod },
-                    { Stfld, interopDefinitions.IEnumerator1Vftbl.Fields[7] },
-                    { Ldsflda, vftblField },
-                    { Ldftn, moveNextMethod },
-                    { Stfld, interopDefinitions.IEnumerator1Vftbl.Fields[8] },
-                    { Ldsflda, vftblField },
-                    { Ldftn, getManyMethod },
-                    { Stfld, interopDefinitions.IEnumerator1Vftbl.Fields[9] },
-                    { Ret }
-                }
-            };
-
-            // Create the public 'IID' property
-            WellKnownMemberDefinitionFactory.IID(
-                forwardedIidMethod: get_IidMethod,
+            InteropTypeDefinitionBuilder.ImplType(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, "Impl"),
+                vftblType: interopDefinitions.IEnumerator1Vftbl,
+                get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
-                out MethodDefinition get_IidMethod2,
-                out PropertyDefinition iidProperty);
-
-            implType.Methods.Add(get_IidMethod2);
-            implType.Properties.Add(iidProperty);
-
-            // Create the 'Vtable' property
-            WellKnownMemberDefinitionFactory.Vtable(
-                vftblField: vftblField,
-                corLibTypeFactory: module.CorLibTypeFactory,
-                out PropertyDefinition vtableProperty,
-                out MethodDefinition get_VtableMethod);
-
-            implType.Properties.Add(vtableProperty);
-            implType.Methods.Add(get_VtableMethod);
+                implType: out implType,
+                vtableMethods: [
+                    currentMethod,
+                    hasCurrentMethod,
+                    moveNextMethod,
+                    getManyMethod]);
         }
 
         /// <summary>

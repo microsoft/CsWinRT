@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
@@ -423,6 +425,125 @@ internal static partial class InteropTypeDefinitionBuilder
                 { Ret }
             }
         };
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the implementation of the vtable for some managed type.
+    /// </summary>
+    /// <param name="interfaceType">The type of interface being constructed (either <see cref="ComInterfaceType.InterfaceIsIUnknown"/> or <see cref="ComInterfaceType.InterfaceIsIInspectable"/>).</param>
+    /// <param name="ns">The namespace for the type.</param>
+    /// <param name="name">The type name.</param>
+    /// <param name="vftblType">The vtable type to use for the CCW vtable.</param>
+    /// <param name="get_IidMethod">The 'IID' get method for the interface being constructed.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="implType">The resulting implementation type.</param>
+    /// <param name="vtableMethods">The set of implementation methods for the implementation type.</param>
+    public static void ImplType(
+        [ConstantExpected] ComInterfaceType interfaceType,
+        Utf8String ns,
+        Utf8String name,
+        TypeDefinition vftblType,
+        MethodDefinition get_IidMethod,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        out TypeDefinition implType,
+        params ReadOnlySpan<MethodDefinition> vtableMethods)
+    {
+        // We're declaring an 'internal static class' type
+        implType = new TypeDefinition(
+            ns: ns,
+            name: name,
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+        module.TopLevelTypes.Add(implType);
+
+        // The vtable field looks like this:
+        //
+        // [FixedAddressValueType]
+        // private static readonly <VTABLE_TYPE> Vftbl;
+        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, vftblType.ToTypeSignature(isValueType: true))
+        {
+            CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
+        };
+
+        implType.Fields.Add(vftblField);
+
+        // Create the static constructor to initialize the vtable
+        MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
+
+        // Initialize the base vtable
+        cctor.CilMethodBody = new CilMethodBody(cctor)
+        {
+            Instructions =
+            {
+                { Ldsflda, vftblField },
+                { Conv_U }
+            }
+        };
+
+        int vtableOffset;
+
+        // Initialize the base interface
+        switch (interfaceType)
+        {
+            case ComInterfaceType.InterfaceIsIUnknown:
+                _ = cctor.CilMethodBody.Instructions.Add(Call, interopReferences.IInspectableImplget_Vtable.Import(module));
+                _ = cctor.CilMethodBody.Instructions.Add(Ldobj, interopDefinitions.IInspectableVftbl);
+                _ = cctor.CilMethodBody.Instructions.Add(Stobj, interopDefinitions.IInspectableVftbl);
+                vtableOffset = 3;
+                break;
+            case ComInterfaceType.InterfaceIsIInspectable:
+                _ = cctor.CilMethodBody.Instructions.Add(Call, interopReferences.IUnknownImplget_Vtable.Import(module));
+                _ = cctor.CilMethodBody.Instructions.Add(Ldobj, interopDefinitions.IUnknownVftbl);
+                _ = cctor.CilMethodBody.Instructions.Add(Stobj, interopDefinitions.IUnknownVftbl);
+                vtableOffset = 6;
+                break;
+            case ComInterfaceType.InterfaceIsDual:
+            case ComInterfaceType.InterfaceIsIDispatch:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(interfaceType));
+        }
+
+        // Add all implementation methods, at the right offset
+        foreach (MethodDefinition method in vtableMethods)
+        {
+            implType.Methods.Add(method);
+
+            _ = cctor.CilMethodBody.Instructions.Add(Ldsflda, vftblField);
+            _ = cctor.CilMethodBody.Instructions.Add(Ldftn, method);
+            _ = cctor.CilMethodBody.Instructions.Add(Stfld, vftblType.Fields[vtableOffset++]);
+        }
+
+        // Enforce that we did initialize all vtable entries
+        ArgumentOutOfRangeException.ThrowIfNotEqual(vftblType.Fields.Count, vtableOffset, nameof(vtableMethods));
+
+        // Don't forget the 'ret' at the end of the static constructor
+        _ = cctor.CilMethodBody.Instructions.Add(Ret);
+
+        // Create the public 'IID' property
+        WellKnownMemberDefinitionFactory.IID(
+            forwardedIidMethod: get_IidMethod,
+            interopReferences: interopReferences,
+            module: module,
+            out MethodDefinition get_IidMethod2,
+            out PropertyDefinition iidProperty);
+
+        implType.Methods.Add(get_IidMethod2);
+        implType.Properties.Add(iidProperty);
+
+        // Create the 'Vtable' property
+        WellKnownMemberDefinitionFactory.Vtable(
+            vftblField: vftblField,
+            corLibTypeFactory: module.CorLibTypeFactory,
+            out PropertyDefinition vtableProperty,
+            out MethodDefinition get_VtableMethod);
+
+        implType.Properties.Add(vtableProperty);
+        implType.Methods.Add(get_VtableMethod);
     }
 
     /// <summary>

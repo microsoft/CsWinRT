@@ -663,6 +663,16 @@ internal partial class InteropGenerator
                     module: module,
                     vftblType: out TypeDefinition vftblType);
 
+                // Define the 'Impl' type (with the CCW vtable implementation)
+                InteropTypeDefinitionBuilder.IList1.ImplType(
+                    listType: typeSignature,
+                    vftblType: vftblType,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    implType: out _);
+
                 // Define the 'IVectorMethods' type (with the public thunks for 'IVector<T>' native calls)
                 InteropTypeDefinitionBuilder.IList1.IVectorMethods(
                     listType: typeSignature,

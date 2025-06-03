@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -614,65 +615,19 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            // We're declaring an 'internal static class' type
-            implType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Impl"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            implType = null!;
 
-            module.TopLevelTypes.Add(implType);
-
-            // The vtable field looks like this:
-            //
-            // [FixedAddressValueType]
-            // private static readonly <VTABLE_TYPE> Vftbl;
-            FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, vftblType.ToTypeSignature(isValueType: true))
-            {
-                CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
-            };
-
-            implType.Fields.Add(vftblField);
-
-            // TODO
-
-            // Create the static constructor to initialize the vtable
-            MethodDefinition cctor = implType.GetOrCreateStaticConstructor(module);
-
-            // Initialize the enumerator vtable
-            cctor.CilMethodBody = new CilMethodBody(cctor)
-            {
-                Instructions =
-                {
-                    { Ldsflda, vftblField },
-                    { Conv_U },
-                    { Call, interopReferences.IInspectableImplget_Vtable.Import(module) },
-                    { Ldobj, interopDefinitions.IInspectableVftbl },
-                    { Stobj, interopDefinitions.IInspectableVftbl },
-                    { Ret }
-                }
-            };
-
-            // Create the public 'IID' property
-            WellKnownMemberDefinitionFactory.IID(
-                forwardedIidMethod: get_IidMethod,
-                interopReferences: interopReferences,
-                module: module,
-                out MethodDefinition get_IidMethod2,
-                out PropertyDefinition iidProperty);
-
-            implType.Methods.Add(get_IidMethod2);
-            implType.Properties.Add(iidProperty);
-
-            // Create the 'Vtable' property
-            WellKnownMemberDefinitionFactory.Vtable(
-                vftblField: vftblField,
-                corLibTypeFactory: module.CorLibTypeFactory,
-                out PropertyDefinition vtableProperty,
-                out MethodDefinition get_VtableMethod);
-
-            implType.Properties.Add(vtableProperty);
-            implType.Methods.Add(get_VtableMethod);
+            //InteropTypeDefinitionBuilder.ImplType(
+            //    interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+            //    ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
+            //    name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Impl"),
+            //    vtableType: vftblType,
+            //    get_IidMethod: get_IidMethod,
+            //    interopDefinitions: interopDefinitions,
+            //    interopReferences: interopReferences,
+            //    module: module,
+            //    implType: out implType,
+            //    vtableMethods: []);
         }
 
         /// <summary>
