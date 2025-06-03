@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -64,16 +63,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
 
-            // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type)
-            if (!elementType.IsValueType)
-            {
-                vftblType = interopDefinitions.IReadOnlyList1Vftbl;
-
-                return;
-            }
-
-            // We can also share vtables for 'KeyValuePair<,>' types, as their ABI type is an interface
-            if (elementType.IsKeyValuePairType(interopReferences))
+            // Same logic as with 'IList1.Vftbl' (i.e. share for all reference types)
+            if (!elementType.IsValueType || elementType.IsKeyValuePairType(interopReferences))
             {
                 vftblType = interopDefinitions.IReadOnlyList1Vftbl;
 

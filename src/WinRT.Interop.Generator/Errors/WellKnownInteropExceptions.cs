@@ -217,7 +217,15 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static Exception IList1TypeCodeGenerationError(TypeSignature listType, Exception exception)
     {
-        return Exception(22, $"Failed to generate marshalling code for 'IList<T>' type '{listType}'.", exception);
+        return Exception(25, $"Failed to generate marshalling code for 'IList<T>' type '{listType}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.
+    /// </summary>
+    public static Exception IReadOnlyDictionary2TypeCodeGenerationError(TypeSignature readOnlyDictionaryType, Exception exception)
+    {
+        return Exception(26, $"Failed to generate marshalling code for 'IReadOnlyDictionary<TKey, TValue>' type '{readOnlyDictionaryType}'.", exception);
     }
 
     /// <summary>

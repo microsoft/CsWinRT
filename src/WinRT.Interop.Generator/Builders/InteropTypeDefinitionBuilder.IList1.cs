@@ -62,16 +62,9 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
-            // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type)
-            if (!elementType.IsValueType)
-            {
-                vftblType = interopDefinitions.IList1Vftbl;
-
-                return;
-            }
-
-            // We can also share vtables for 'KeyValuePair<,>' types, as their ABI type is an interface
-            if (elementType.IsKeyValuePairType(interopReferences))
+            // All reference types can share the same vtable type (as it just uses 'void*' for the ABI type).
+            // We can also share vtables for 'KeyValuePair<,>' types, as their ABI type is an interface.
+            if (!elementType.IsValueType || elementType.IsKeyValuePairType(interopReferences))
             {
                 vftblType = interopDefinitions.IList1Vftbl;
 

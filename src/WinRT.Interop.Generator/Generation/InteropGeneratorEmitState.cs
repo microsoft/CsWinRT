@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -19,6 +20,11 @@ internal sealed class InteropGeneratorEmitState
     /// A map to provide fast lookup for generated types that need to be referenced in different parts of the emit phase.
     /// </summary>
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<TypeSignature, TypeDefinition>> _typeDefinitionLookup = [];
+
+    /// <summary>
+    /// A map to allow reusing vtable types for applicable map view interfaces.
+    /// </summary>
+    private readonly ConcurrentDictionary<TypeSignature, TypeDefinition> _mapViewVftblTypes = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>
     /// Tracks a new type generation for a given signature and key, for fast lookup.
@@ -53,5 +59,27 @@ internal sealed class InteropGeneratorEmitState
         }
 
         throw WellKnownInteropExceptions.TrackedTypeDefinitionLookupError(typeSignature, key);
+    }
+
+    /// <summary>
+    /// Tries to get a previously registered vtable type for an <c>IMapView&lt;K, V&gt;</c> interface.
+    /// </summary>
+    /// <param name="keyType">The key type.</param>
+    /// <param name="vftblType">The resulting vtable type, if present.</param>
+    /// <returns>Whether <paramref name="vftblType"/> was successfully retrieved.</returns>
+    public bool TryGetIMapView2VftblType(TypeSignature keyType, [NotNullWhen(true)] out TypeDefinition? vftblType)
+    {
+        return _mapViewVftblTypes.TryGetValue(keyType, out vftblType);
+    }
+
+    /// <summary>
+    /// Gets or adds a vtable type for an <c>IMapView&lt;K, V&gt;</c> interface.
+    /// </summary>
+    /// <param name="keyType">The key type.</param>
+    /// <param name="vftblType">The created vtable type for <paramref name="keyType"/>.</param>
+    /// <returns>The vtable type that should be used.</returns>
+    public TypeDefinition GetOrAddIMapView2VftblType(TypeSignature keyType, TypeDefinition vftblType)
+    {
+        return _mapViewVftblTypes.GetOrAdd(keyType, vftblType);
     }
 }
