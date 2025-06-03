@@ -69,12 +69,10 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true),
                     parameterTypes: [delegateType.Import(module)]));
 
-            eventSourceType.Methods.Add(convertToUnmanagedMethod);
-
-            // Mark the 'ConvertToUnmanaged' method as overriding the base method
-            eventSourceType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'ConvertToUnmanaged' method
+            eventSourceType.AddMethodImplementation(
                 declaration: interopReferences.EventHandler1EventSourceConvertToUnmanaged(delegateType).Import(module),
-                body: convertToUnmanagedMethod));
+                method: convertToUnmanagedMethod);
 
             // Create a method body for the 'CreateObject' method
             convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)
@@ -138,12 +136,10 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true),
                     parameterTypes: [delegateType.Import(module)]));
 
-            eventSourceType.Methods.Add(convertToUnmanagedMethod);
-
-            // Mark the 'ConvertToUnmanaged' method as overriding the base method
-            eventSourceType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'ConvertToUnmanaged' method
+            eventSourceType.AddMethodImplementation(
                 declaration: interopReferences.EventHandler2EventSourceConvertToUnmanaged(delegateType).Import(module),
-                body: convertToUnmanagedMethod));
+                method: convertToUnmanagedMethod);
 
             // Create a method body for the 'CreateObject' method
             convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)

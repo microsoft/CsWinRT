@@ -143,12 +143,10 @@ internal static partial class InteropTypeDefinitionBuilder
             }
         };
 
-        callbackType.Methods.Add(tryCreateObjectMethod);
-
-        // Mark the 'CreateObject' method as implementing the interface method
-        callbackType.MethodImplementations.Add(new MethodImplementation(
+        // Add and implement 'TryCreateObject'
+        callbackType.AddMethodImplementation(
             declaration: interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallbackTryCreateObject.Import(module),
-            body: tryCreateObjectMethod));
+            method: tryCreateObjectMethod);
 
         // Declare the local variables:
         //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
@@ -262,12 +260,10 @@ internal static partial class InteropTypeDefinitionBuilder
             ParameterDefinitions = { new ParameterDefinition(sequence: 1, name: null, attributes: ParameterAttributes.Out) }
         };
 
-        marshallerType.Methods.Add(computeVtablesMethod);
-
-        // Mark the 'ComputeVtables' method as overriding the base method
-        marshallerType.MethodImplementations.Add(new MethodImplementation(
+        // Add and implement the 'ComputeVtables' method
+        marshallerType.AddMethodImplementation(
             declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
-            body: computeVtablesMethod));
+            method: computeVtablesMethod);
 
         // Create a method body for the 'ComputeVtables' method
         computeVtablesMethod.CilMethodBody = new CilMethodBody(computeVtablesMethod)
@@ -295,12 +291,10 @@ internal static partial class InteropTypeDefinitionBuilder
             ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
         };
 
-        marshallerType.Methods.Add(createObjectMethod);
-
-        // Mark the 'CreateObject' method as overriding the base method
-        marshallerType.MethodImplementations.Add(new MethodImplementation(
+        // Add and implement the 'CreateObject' method
+        marshallerType.AddMethodImplementation(
             declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
-            body: createObjectMethod));
+            method: createObjectMethod);
 
         // Declare the local variables:
         //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')

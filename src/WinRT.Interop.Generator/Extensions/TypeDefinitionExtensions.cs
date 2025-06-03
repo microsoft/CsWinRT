@@ -99,6 +99,17 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Adds a method implementation to the specified type, and marks it as implementing a given declaration.
+        /// </summary>
+        /// <param name="declaration">The interface method that is implemented.</param>
+        /// <param name="method">The method implementing the base method.</param>
+        public void AddMethodImplementation(IMethodDefOrRef declaration, MethodDefinition method)
+        {
+            type.Methods.Add(method);
+            type.MethodImplementations.Add(new MethodImplementation(declaration, method));
+        }
+
+        /// <summary>
         /// Enumerates all generic instance type signatures for base interfaces, from a given starting interface.
         /// </summary>
         /// <param name="typeSignature">The constructed signature for the interface type.</param>

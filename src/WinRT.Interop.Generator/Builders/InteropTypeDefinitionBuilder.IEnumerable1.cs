@@ -87,12 +87,11 @@ internal partial class InteropTypeDefinitionBuilder
                 out PropertyDefinition iidProperty);
 
             interfaceType.Properties.Add(iidProperty);
-            interfaceType.Methods.Add(get_IidMethod2);
 
-            // Mark the 'get_IID' method as implementing the interface method
-            interfaceType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'get_IID' method
+            interfaceType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeInterfaceget_IID.Import(module),
-                body: get_IidMethod2));
+                method: get_IidMethod2);
         }
 
         /// <summary>
@@ -427,12 +426,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
 
-            interfaceImplType.Methods.Add(enumerable1GetEnumeratorMethod);
-
-            // Mark the 'IEnumerable<T>.GetEnumerator' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IEnumerable<T>.GetEnumerator' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
-                body: enumerable1GetEnumeratorMethod));
+                method: enumerable1GetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
             enumerable1GetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerable1GetEnumeratorMethod)
@@ -456,12 +453,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToTypeSignature(isValueType: false)));
 
-            interfaceImplType.Methods.Add(enumerableGetEnumeratorMethod);
-
-            // Mark the 'IEnumerable.GetEnumerator' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IEnumerable.GetEnumerator' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
-                body: enumerableGetEnumeratorMethod));
+                method: enumerableGetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable.GetEnumerator' method
             enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerableGetEnumeratorMethod)

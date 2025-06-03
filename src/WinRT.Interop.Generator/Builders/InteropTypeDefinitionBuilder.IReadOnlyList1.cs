@@ -132,12 +132,10 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.UInt32]))
             { NoInlining = true };
 
-            vectorViewMethodsType.Methods.Add(getAtMethod);
-
-            // Mark the 'GetAt' method as overriding the base method
-            vectorViewMethodsType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'GetAt' method
+            vectorViewMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorViewMethods1GetAt(elementType).Import(module),
-                body: getAtMethod));
+                method: getAtMethod);
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
@@ -480,12 +478,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32));
 
-            interfaceImplType.Methods.Add(get_ItemMethod);
-
-            // Mark the 'get_Item' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'get_Item' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IReadOnlyList1get_Item(elementType).Import(module),
-                body: get_ItemMethod));
+                method: get_ItemMethod);
 
             // Create a body for the 'get_Item' method
             get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
@@ -519,12 +515,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
 
-            interfaceImplType.Methods.Add(get_CountMethod);
-
-            // Mark the 'get_Count' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'get_Count' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IReadOnlyCollection1get_Count(elementType).Import(module),
-                body: get_CountMethod));
+                method: get_CountMethod);
 
             // Create a body for the 'get_Count' method
             get_CountMethod.CilMethodBody = new CilMethodBody(get_CountMethod)
@@ -557,12 +551,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
 
-            interfaceImplType.Methods.Add(enumerable1GetEnumeratorMethod);
-
-            // Mark the 'IEnumerable<T>.GetEnumerator' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IEnumerable<T>.GetEnumerator' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
-                body: enumerable1GetEnumeratorMethod));
+                method: enumerable1GetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
             enumerable1GetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerable1GetEnumeratorMethod)
@@ -586,12 +578,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToTypeSignature(isValueType: false)));
 
-            interfaceImplType.Methods.Add(enumerableGetEnumeratorMethod);
-
-            // Mark the 'IEnumerable.GetEnumerator' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IEnumerable.GetEnumerator' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
-                body: enumerableGetEnumeratorMethod));
+                method: enumerableGetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable.GetEnumerator' method
             enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerableGetEnumeratorMethod)

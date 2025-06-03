@@ -131,12 +131,10 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.UInt32]))
             { NoInlining = true };
 
-            vectorMethodsType.Methods.Add(getAtMethod);
-
-            // Mark the 'GetAt' method as overriding the base method
-            vectorMethodsType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'GetAt' method
+            vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1GetAt(elementType).Import(module),
-                body: getAtMethod));
+                method: getAtMethod);
 
             // Create a method body for the 'GetAt' method
             getAtMethod.CilMethodBody = new CilMethodBody(getAtMethod)
@@ -158,12 +156,10 @@ internal partial class InteropTypeDefinitionBuilder
                         elementType.Import(module)]))
             { NoInlining = true };
 
-            vectorMethodsType.Methods.Add(setAtMethod);
-
-            // Mark the 'SetAt' method as overriding the base method
-            vectorMethodsType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'SetAt' method
+            vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1SetAt(elementType).Import(module),
-                body: setAtMethod));
+                method: setAtMethod);
 
             // Create a method body for the 'SetAt' method
             setAtMethod.CilMethodBody = new CilMethodBody(setAtMethod)
@@ -184,12 +180,10 @@ internal partial class InteropTypeDefinitionBuilder
                         elementType.Import(module)]))
             { NoInlining = true };
 
-            vectorMethodsType.Methods.Add(appendMethod);
-
-            // Mark the 'Append' method as overriding the base method
-            vectorMethodsType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'Append' method
+            vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1Append(elementType).Import(module),
-                body: appendMethod));
+                method: appendMethod);
 
             // Create a method body for the 'Append' method
             appendMethod.CilMethodBody = new CilMethodBody(appendMethod)
@@ -214,12 +208,10 @@ internal partial class InteropTypeDefinitionBuilder
                 ParameterDefinitions = { new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out) }
             };
 
-            vectorMethodsType.Methods.Add(indexOfMethod);
-
-            // Mark the 'IndexOf' method as overriding the base method
-            vectorMethodsType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IndexOf' method
+            vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1IndexOf(elementType).Import(module),
-                body: indexOfMethod));
+                method: indexOfMethod);
 
             // Create a method body for the 'IndexOf' method
             indexOfMethod.CilMethodBody = new CilMethodBody(indexOfMethod)
@@ -241,12 +233,10 @@ internal partial class InteropTypeDefinitionBuilder
                         elementType.Import(module)]))
             { NoInlining = true };
 
-            vectorMethodsType.Methods.Add(insertAtMethod);
-
-            // Mark the 'InsertAt' method as overriding the base method
-            vectorMethodsType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'InsertAt' method
+            vectorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IVectorMethodsImpl1InsertAt(elementType).Import(module),
-                body: insertAtMethod));
+                method: insertAtMethod);
 
             // Create a method body for the 'InsertAt' method
             insertAtMethod.CilMethodBody = new CilMethodBody(insertAtMethod)
@@ -730,12 +720,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32));
 
-            interfaceImplType.Methods.Add(get_ItemMethod);
-
-            // Mark the 'get_Item' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'get_Item' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IList1get_Item(elementType).Import(module),
-                body: get_ItemMethod));
+                method: get_ItemMethod);
 
             // Create a body for the 'get_Item' method
             get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
@@ -764,12 +752,10 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.Int32,
                         elementType.Import(module)]));
 
-            interfaceImplType.Methods.Add(set_ItemMethod);
-
-            // Mark the 'set_Item' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'set_Item' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IList1set_Item(elementType).Import(module),
-                body: set_ItemMethod));
+                method: set_ItemMethod);
 
             // Create a body for the 'set_Item' method
             set_ItemMethod.CilMethodBody = new CilMethodBody(set_ItemMethod)
@@ -807,12 +793,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32, elementType.Import(module)));
 
-            interfaceImplType.Methods.Add(indexOfMethod);
-
-            // Mark the 'IndexOf' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IndexOf' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IList1get_Item(elementType).Import(module),
-                body: indexOfMethod));
+                method: indexOfMethod);
 
             // Create a body for the 'IndexOf' method
             indexOfMethod.CilMethodBody = new CilMethodBody(indexOfMethod)
@@ -841,12 +825,10 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.Int32,
                         elementType.Import(module)]));
 
-            interfaceImplType.Methods.Add(insertMethod);
-
-            // Mark the 'Insert' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'Insert' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IList1Insert(elementType).Import(module),
-                body: insertMethod));
+                method: insertMethod);
 
             // Create a body for the 'Insert' method
             insertMethod.CilMethodBody = new CilMethodBody(insertMethod)
@@ -872,12 +854,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, module.CorLibTypeFactory.Int32));
 
-            interfaceImplType.Methods.Add(removeAtMethod);
-
-            // Mark the 'RemoveAt' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'RemoveAt' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IList1RemoveAt(elementType).Import(module),
-                body: removeAtMethod));
+                method: removeAtMethod);
 
             // Create a body for the 'RemoveAt' method
             removeAtMethod.CilMethodBody = new CilMethodBody(removeAtMethod)
@@ -902,12 +882,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
 
-            interfaceImplType.Methods.Add(get_CountMethod);
-
-            // Mark the 'get_Count' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'get_Count' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.ICollection1get_Count(elementType).Import(module),
-                body: get_CountMethod));
+                method: get_CountMethod);
 
             // Create a body for the 'get_Count' method
             get_CountMethod.CilMethodBody = new CilMethodBody(get_CountMethod)
@@ -940,12 +918,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, elementType.Import(module)));
 
-            interfaceImplType.Methods.Add(addMethod);
-
-            // Mark the 'Add' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'Add' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.ICollection1Add(elementType).Import(module),
-                body: addMethod));
+                method: addMethod);
 
             // Create a body for the 'Add' method
             addMethod.CilMethodBody = new CilMethodBody(addMethod)
@@ -970,12 +946,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
-            interfaceImplType.Methods.Add(clearMethod);
-
-            // Mark the 'Clear' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'Clear' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.ICollection1Clear(elementType).Import(module),
-                body: clearMethod));
+                method: clearMethod);
 
             // Create a body for the 'Clear' method
             clearMethod.CilMethodBody = new CilMethodBody(clearMethod)
@@ -999,12 +973,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
 
-            interfaceImplType.Methods.Add(containsMethod);
-
-            // Mark the 'Contains' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'Contains' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.ICollection1Contains(elementType).Import(module),
-                body: containsMethod));
+                method: containsMethod);
 
             // Create a body for the 'Contains' method
             containsMethod.CilMethodBody = new CilMethodBody(containsMethod)
@@ -1033,12 +1005,10 @@ internal partial class InteropTypeDefinitionBuilder
                         elementType.MakeSzArrayType().Import(module),
                         module.CorLibTypeFactory.Int32]));
 
-            interfaceImplType.Methods.Add(copyToMethod);
-
-            // Mark the 'CopyTo' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'CopyTo' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.ICollection1CopyTo(elementType).Import(module),
-                body: copyToMethod));
+                method: copyToMethod);
 
             // Create a body for the 'CopyTo' method
             copyToMethod.CilMethodBody = new CilMethodBody(copyToMethod)
@@ -1064,12 +1034,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
 
-            interfaceImplType.Methods.Add(removeMethod);
-
-            // Mark the 'Remove' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'Remove' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.ICollection1Remove(elementType).Import(module),
-                body: removeMethod));
+                method: removeMethod);
 
             // Create a body for the 'Remove' method
             removeMethod.CilMethodBody = new CilMethodBody(removeMethod)
@@ -1094,12 +1062,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
 
-            interfaceImplType.Methods.Add(enumerable1GetEnumeratorMethod);
-
-            // Mark the 'IEnumerable<T>.GetEnumerator' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IEnumerable<T>.GetEnumerator' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
-                body: enumerable1GetEnumeratorMethod));
+                method: enumerable1GetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
             enumerable1GetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerable1GetEnumeratorMethod)
@@ -1123,12 +1089,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToTypeSignature(isValueType: false)));
 
-            interfaceImplType.Methods.Add(enumerableGetEnumeratorMethod);
-
-            // Mark the 'IEnumerable.GetEnumerator' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IEnumerable.GetEnumerator' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
-                body: enumerableGetEnumeratorMethod));
+                method: enumerableGetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable.GetEnumerator' method
             enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerableGetEnumeratorMethod)

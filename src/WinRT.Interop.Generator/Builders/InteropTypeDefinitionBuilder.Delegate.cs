@@ -442,12 +442,10 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Object,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
 
-            callbackType.Methods.Add(createObjectMethod);
-
-            // Mark the 'CreateObject' method as implementing the interface method
-            callbackType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'CreateObject' method
+            callbackType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeComWrappersCallbackCreateObject.Import(module),
-                body: createObjectMethod));
+                method: createObjectMethod);
 
             // Create a method body for the 'CreateObject' method
             createObjectMethod.CilMethodBody = new CilMethodBody(createObjectMethod)
@@ -661,12 +659,10 @@ internal partial class InteropTypeDefinitionBuilder
                 ParameterDefinitions = { new ParameterDefinition(sequence: 1, name: null, attributes: ParameterAttributes.Out) }
             };
 
-            marshallerType.Methods.Add(computeVtablesMethod);
-
-            // Mark the 'ComputeVtables' method as overriding the base method
-            marshallerType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'ComputeVtables' method
+            marshallerType.AddMethodImplementation(
                 declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
-                body: computeVtablesMethod));
+                method: computeVtablesMethod);
 
             // Create a method body for the 'ComputeVtables' method
             computeVtablesMethod.CilMethodBody = new CilMethodBody(computeVtablesMethod)
@@ -697,12 +693,10 @@ internal partial class InteropTypeDefinitionBuilder
                 ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
             };
 
-            marshallerType.Methods.Add(createObjectMethod);
-
-            // Mark the 'CreateObject' method as overriding the base method
-            marshallerType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'CreateObject' method
+            marshallerType.AddMethodImplementation(
                 declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
-                body: createObjectMethod));
+                method: createObjectMethod);
 
             // Import the 'UnboxToManaged<TCallback>' method for the delegate
             IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor = interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged2

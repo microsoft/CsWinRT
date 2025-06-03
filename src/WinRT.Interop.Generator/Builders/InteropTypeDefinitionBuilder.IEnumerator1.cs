@@ -86,12 +86,10 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]))
             { NoInlining = true };
 
-            iteratorMethodsType.Methods.Add(currentMethod);
-
-            // Mark the 'Current' method as implementing the interface method
-            iteratorMethodsType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'Current' method
+            iteratorMethodsType.AddMethodImplementation(
                 declaration: interopReferences.IIteratorMethodsImpl1Current(elementType).Import(module),
-                body: currentMethod));
+                method: currentMethod);
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
@@ -392,12 +390,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(elementType.Import(module)));
 
-            interfaceImplType.Methods.Add(get_IEnumerator1CurrentMethod);
-
-            // Mark the 'IEnumerator<T>.Current' get accessor method as implementing the interface accessor
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IEnumerator<T>.Current' get accessor method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumerator1get_Current(elementType).Import(module),
-                body: get_IEnumerator1CurrentMethod));
+                method: get_IEnumerator1CurrentMethod);
 
             // Create a method body for the 'IEnumerator<T>.Current' property
             get_IEnumerator1CurrentMethod.CilMethodBody = new CilMethodBody(get_IEnumerator1CurrentMethod)
@@ -432,12 +428,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Object));
 
-            interfaceImplType.Methods.Add(get_IEnumeratorCurrentMethod);
-
-            // Mark the 'IEnumerator.Current' get accessor method as implementing the interface accessor
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'IEnumerator.Current' get accessor method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumeratorget_Current.Import(module),
-                body: get_IEnumeratorCurrentMethod));
+                method: get_IEnumeratorCurrentMethod);
 
             // Create a method body for the 'IEnumerator.Current' property
             get_IEnumeratorCurrentMethod.CilMethodBody = new CilMethodBody(get_IEnumeratorCurrentMethod)
@@ -467,12 +461,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
 
-            interfaceImplType.Methods.Add(moveNextMethod);
-
-            // Mark the 'Reset' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'Reset' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumeratorMoveNext.Import(module),
-                body: moveNextMethod));
+                method: moveNextMethod);
 
             // Create a method body for the 'MoveNext' method
             moveNextMethod.CilMethodBody = new CilMethodBody(moveNextMethod)
@@ -496,12 +488,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
-            interfaceImplType.Methods.Add(resetMethod);
-
-            // Mark the 'Reset' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // Add and implement the 'Reset' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IEnumeratorReset.Import(module),
-                body: resetMethod));
+                method: resetMethod);
 
             // Create a method body for the 'Reset' method
             resetMethod.CilMethodBody = new CilMethodBody(resetMethod)
@@ -519,12 +509,10 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
-            interfaceImplType.Methods.Add(disposeMethod);
-
-            // Mark the 'Dispose' method as implementing the interface method
-            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+            // And and implement the 'Dispose' method
+            interfaceImplType.AddMethodImplementation(
                 declaration: interopReferences.IDisposableDispose.Import(module),
-                body: disposeMethod));
+                method: disposeMethod);
 
             // Create a method body for the 'Dispose' method
             disposeMethod.CilMethodBody = new CilMethodBody(disposeMethod)
