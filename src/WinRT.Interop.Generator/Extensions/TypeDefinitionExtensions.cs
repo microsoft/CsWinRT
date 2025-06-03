@@ -41,6 +41,26 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Gets all methods with a given name from the specified type.
+        /// </summary>
+        /// <param name="name">The name of the methods to get.</param>
+        /// <returns>The resulting methods.</returns>
+        public MethodDefinition[] GetMethods(ReadOnlySpan<byte> name)
+        {
+            List<MethodDefinition> methods = [];
+
+            foreach (MethodDefinition method in type.Methods)
+            {
+                if (method.Name?.AsSpan().SequenceEqual(name) is true)
+                {
+                    methods.Add(method);
+                }
+            }
+
+            return [.. methods];
+        }
+
+        /// <summary>
         /// Gets the first property with a given name from the specified type.
         /// </summary>
         /// <param name="name">The name of the property to get.</param>
