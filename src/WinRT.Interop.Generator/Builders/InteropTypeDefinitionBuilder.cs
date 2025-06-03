@@ -212,6 +212,137 @@ internal static partial class InteropTypeDefinitionBuilder
     }
 
     /// <summary>
+    /// Creates a new type definition for the marshaller attribute for a generic interface.
+    /// </summary>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the generic interface type.</param>
+    /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+    /// <param name="get_IidMethod">The 'IID' get method for <paramref name="typeSignature"/>.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="marshallerType">The resulting marshaller type.</param>
+    public static void ComWrappersMarshallerAttribute(
+        TypeSignature typeSignature,
+        TypeDefinition nativeObjectType,
+        MethodDefinition get_IidMethod,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        out TypeDefinition marshallerType)
+    {
+        // We're declaring an 'internal sealed class' type
+        marshallerType = new(
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersMarshallerAttribute"),
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+
+        module.TopLevelTypes.Add(marshallerType);
+
+        // Define the constructor
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(module);
+
+        marshallerType.Methods.Add(ctor);
+
+        _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+        _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor.Import(module));
+
+        // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
+        PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+
+        // Define the 'ComputeVtables' method as follows:
+        //
+        // public static ComInterfaceEntry* ComputeVtables(out int count)
+        MethodDefinition computeVtablesMethod = new(
+            name: "ComputeVtables"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+            signature: MethodSignature.CreateInstance(
+                returnType: computeVtablesReturnType,
+                parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+        {
+            // The parameter is '[out]'
+            ParameterDefinitions = { new ParameterDefinition(sequence: 1, name: null, attributes: ParameterAttributes.Out) }
+        };
+
+        marshallerType.Methods.Add(computeVtablesMethod);
+
+        // Mark the 'ComputeVtables' method as overriding the base method
+        marshallerType.MethodImplementations.Add(new MethodImplementation(
+            declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeComputeVtables.Import(module),
+            body: computeVtablesMethod));
+
+        // Create a method body for the 'ComputeVtables' method
+        computeVtablesMethod.CilMethodBody = new CilMethodBody(computeVtablesMethod)
+        {
+            Instructions =
+            {
+                { Newobj, interopReferences.UnreachableException_ctor.Import(module) },
+                { Throw }
+            }
+        };
+
+        // Define the 'CreateObject' method as follows:
+        //
+        // public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+        MethodDefinition createObjectMethod = new(
+            name: "CreateObject"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+            signature: MethodSignature.CreateInstance(
+                returnType: module.CorLibTypeFactory.Object,
+                parameterTypes: [
+                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    interopReferences.CreatedWrapperFlags.MakeByReferenceType().Import(module)]))
+        {
+            // The 'wrapperFlags' parameter is '[out]'
+            ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
+        };
+
+        marshallerType.Methods.Add(createObjectMethod);
+
+        // Mark the 'CreateObject' method as overriding the base method
+        marshallerType.MethodImplementations.Add(new MethodImplementation(
+            declaration: interopReferences.WindowsRuntimeComWrappersMarshallerAttributeCreateObject.Import(module),
+            body: createObjectMethod));
+
+        // Declare the local variables:
+        //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
+        CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module));
+
+        // Jump labels
+        CilInstruction ldc_i4_0_noFlags = new(Ldc_I4_0);
+        CilInstruction stind_i4_setFlags = new(Stind_I4);
+
+        // Create a method body for the 'CreateObject' method
+        createObjectMethod.CilMethodBody = new CilMethodBody(createObjectMethod)
+        {
+            LocalVariables = { loc_0_result },
+            Instructions =
+            {
+                // Create and initialize the 'WindowsRuntimeObjectReference' instance
+                { Ldarg_1 },
+                { Call, get_IidMethod },
+                { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
+                { Stloc_0 },
+
+                // Set the 'CreatedWrapperFlags' value correctly
+                { Ldarg_2 },
+                { Ldloc_0 },
+                { Callvirt, interopReferences.WindowsRuntimeObjectReferenceGetReferenceTrackerPtrUnsafe.Import(module) },
+                { Ldc_I4_0 },
+                { Conv_U },
+                { Beq_S, ldc_i4_0_noFlags.CreateLabel() },
+                { Ldc_I4_1 },
+                { Br_S, stind_i4_setFlags.CreateLabel() },
+                { ldc_i4_0_noFlags },
+                { stind_i4_setFlags },
+
+                // Create and return the 'NativeObject' instance
+                { Ldloc_0 },
+                { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                { Ret },
+            }
+        };
+    }
+
+    /// <summary>
     /// Creates a new type definition for the implementation of the COM interface entries for a managed type.
     /// </summary>
     /// <param name="ns">The namespace for the type.</param>
