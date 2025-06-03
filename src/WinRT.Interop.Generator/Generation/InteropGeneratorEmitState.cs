@@ -22,9 +22,14 @@ internal sealed class InteropGeneratorEmitState
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<TypeSignature, TypeDefinition>> _typeDefinitionLookup = [];
 
     /// <summary>
-    /// A map to allow reusing vtable types for applicable map view interfaces.
+    /// A map to allow reusing vtable types for applicable <c>IMapView&lt;K, V&gt;</c> interfaces.
     /// </summary>
     private readonly ConcurrentDictionary<TypeSignature, TypeDefinition> _mapViewVftblTypes = new(SignatureComparer.IgnoreVersion);
+
+    /// <summary>
+    /// A map to allow reusing vtable types for applicable <c>IMap&lt;K, V&gt;</c> interfaces.
+    /// </summary>
+    private readonly ConcurrentDictionary<(TypeSignature Key, TypeSignature Value), TypeDefinition> _mapVftblTypes = new(SignatureComparer.IgnoreVersion.MakeValueTupleComparer());
 
     /// <summary>
     /// Tracks a new type generation for a given signature and key, for fast lookup.
@@ -81,5 +86,29 @@ internal sealed class InteropGeneratorEmitState
     public TypeDefinition GetOrAddIMapView2VftblType(TypeSignature keyType, TypeDefinition vftblType)
     {
         return _mapViewVftblTypes.GetOrAdd(keyType, vftblType);
+    }
+
+    /// <summary>
+    /// Tries to get a previously registered vtable type for an <c>IMap&lt;K, V&gt;</c> interface.
+    /// </summary>
+    /// <param name="keyType">The key type.</param>
+    /// <param name="valueType">The value type.</param>
+    /// <param name="vftblType">The resulting vtable type, if present.</param>
+    /// <returns>Whether <paramref name="vftblType"/> was successfully retrieved.</returns>
+    public bool TryGetIMap2VftblType(TypeSignature keyType, TypeSignature valueType, [NotNullWhen(true)] out TypeDefinition? vftblType)
+    {
+        return _mapVftblTypes.TryGetValue((keyType, valueType), out vftblType);
+    }
+
+    /// <summary>
+    /// Gets or adds a vtable type for an <c>IMap&lt;K, V&gt;</c> interface.
+    /// </summary>
+    /// <param name="keyType">The key type.</param>
+    /// <param name="valueType">The value type.</param>
+    /// <param name="vftblType">The created vtable type for <paramref name="keyType"/>.</param>
+    /// <returns>The vtable type that should be used.</returns>
+    public TypeDefinition GetOrAddIMap2VftblType(TypeSignature keyType, TypeSignature valueType, TypeDefinition vftblType)
+    {
+        return _mapVftblTypes.GetOrAdd((keyType, valueType), vftblType);
     }
 }

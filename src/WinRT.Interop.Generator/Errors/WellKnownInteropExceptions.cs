@@ -229,6 +229,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to generate marshalling code for an <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.
+    /// </summary>
+    public static Exception IDictionary2TypeCodeGenerationError(TypeSignature dictionaryType, Exception exception)
+    {
+        return Exception(27, $"Failed to generate marshalling code for 'IDictionary<TKey, TValue>' type '{dictionaryType}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
