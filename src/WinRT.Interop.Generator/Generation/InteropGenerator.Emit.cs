@@ -714,6 +714,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
+
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.IList1.Proxy(
+                    listType: typeSignature,
+                    listComWrappersMarshallerAttributeType: listComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out _);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

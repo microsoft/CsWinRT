@@ -655,5 +655,32 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out marshallerType);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the proxy type of some <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="listComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            GenericInstanceTypeSignature listType,
+            TypeDefinition listComWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition proxyType)
+        {
+            string runtimeClassName = $"Windows.Foundation.Collections.IVector`1<{listType.TypeArguments[0]}>"; // TODO
+
+            ProxyType(
+                ns: InteropUtf8NameFactory.TypeNamespace(listType),
+                name: InteropUtf8NameFactory.TypeName(listType),
+                runtimeClassName: runtimeClassName,
+                comWrappersMarshallerAttributeType: listComWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
+        }
     }
 }
