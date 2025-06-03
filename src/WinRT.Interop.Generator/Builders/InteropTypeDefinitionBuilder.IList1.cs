@@ -464,6 +464,32 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
+            // Define the 'RemoveAt' method as follows:
+            //
+            // public static void RemoveAt(WindowsRuntimeObjectReference thisReference, int index)
+            MethodDefinition removeAtMethod = new(
+                name: "RemoveAt"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        module.CorLibTypeFactory.Int32]));
+
+            listMethodsType.Methods.Add(removeAtMethod);
+
+            // Create a method body for the 'RemoveAt' method
+            removeAtMethod.CilMethodBody = new CilMethodBody(removeAtMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IListMethodsRemoveAt.Import(module) },
+                    { Ret }
+                }
+            };
+
             // Define the 'IndexOf' method as follows:
             //
             // public static int IndexOf(WindowsRuntimeObjectReference thisReference, <TYPE_ARGUMENT> item)

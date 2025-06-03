@@ -878,6 +878,17 @@ internal sealed class InteropReferences
             parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IListMethods.RemoveAt</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IListMethodsRemoveAt => field ??= IListMethods
+        .CreateMemberReference("RemoveAt", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Void,
+            parameterTypes: [
+                WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                _windowsRuntimeModule.CorLibTypeFactory.Int32]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListMethods.Count</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
