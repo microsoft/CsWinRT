@@ -52,6 +52,40 @@ internal static partial class InteropTypeDefinitionBuilder
     }
 
     /// <summary>
+    /// Creates a new type definition for the native object for a generic interface.
+    /// </summary>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the generic interface type.</param>
+    /// <param name="nativeObjectBaseType">The <see cref="TypeSignature"/> for the base native object type.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="nativeObjectType">The resulting native object type.</param>
+    public static void NativeObject(
+        TypeSignature typeSignature,
+        TypeSignature nativeObjectBaseType,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        out TypeDefinition nativeObjectType)
+    {
+        // We're declaring an 'internal sealed class' type
+        nativeObjectType = new(
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, "NativeObject"),
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            baseType: nativeObjectBaseType.Import(module).ToTypeDefOrRef());
+
+        module.TopLevelTypes.Add(nativeObjectType);
+
+        // Define the constructor
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false));
+
+        nativeObjectType.Methods.Add(ctor);
+
+        _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
+        _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
+        _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(nativeObjectBaseType).Import(module));
+    }
+
+    /// <summary>
     /// Creates a new type definition for the implementation of the COM interface entries for a managed type.
     /// </summary>
     /// <param name="ns">The namespace for the type.</param>

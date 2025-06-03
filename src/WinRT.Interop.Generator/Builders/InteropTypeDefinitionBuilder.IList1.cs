@@ -569,23 +569,12 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToTypeSignature(isValueType: false),
                 vectorMethodsType.ToTypeSignature(isValueType: false));
 
-            // We're declaring an 'internal sealed class' type
-            nativeObjectType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "NativeObject"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: windowsRuntimeList4Type.Import(module).ToTypeDefOrRef());
-
-            module.TopLevelTypes.Add(nativeObjectType);
-
-            // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false));
-
-            nativeObjectType.Methods.Add(ctor);
-
-            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
-            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(windowsRuntimeList4Type).Import(module));
+            InteropTypeDefinitionBuilder.NativeObject(
+                typeSignature: listType,
+                nativeObjectBaseType: windowsRuntimeList4Type,
+                interopReferences: interopReferences,
+                module: module,
+                out nativeObjectType);
         }
     }
 }

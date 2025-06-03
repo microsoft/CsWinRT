@@ -295,30 +295,17 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition nativeObjectType)
         {
-            TypeSignature elementType = enumerableType.TypeArguments[0];
-
             // The 'NativeObject' is deriving from 'WindowsRuntimeEnumerable<<ELEMENT_TYPE>, <IITERABLE_METHODS>>'
             TypeSignature windowsRuntimeEnumerable1Type = interopReferences.WindowsRuntimeEnumerable2.MakeGenericInstanceType(
-                elementType,
+                enumerableType.TypeArguments[0],
                 iterableMethodsType.ToTypeSignature(isValueType: false));
 
-            // We're declaring an 'internal sealed class' type
-            nativeObjectType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "NativeObject"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: windowsRuntimeEnumerable1Type.Import(module).ToTypeDefOrRef());
-
-            module.TopLevelTypes.Add(nativeObjectType);
-
-            // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false));
-
-            nativeObjectType.Methods.Add(ctor);
-
-            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
-            _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(windowsRuntimeEnumerable1Type).Import(module));
+            InteropTypeDefinitionBuilder.NativeObject(
+                typeSignature: enumerableType,
+                nativeObjectBaseType: windowsRuntimeEnumerable1Type,
+                interopReferences: interopReferences,
+                module: module,
+                out nativeObjectType);
         }
 
         /// <summary>
