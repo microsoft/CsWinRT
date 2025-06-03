@@ -629,5 +629,31 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out marshallerType);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller of some <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="listComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void Marshaller(
+            GenericInstanceTypeSignature listType,
+            TypeDefinition listComWrappersCallbackType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            InteropTypeDefinitionBuilder.Marshaller(
+                typeSignature: listType,
+                interfaceComWrappersCallbackType: listComWrappersCallbackType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out marshallerType);
+        }
     }
 }

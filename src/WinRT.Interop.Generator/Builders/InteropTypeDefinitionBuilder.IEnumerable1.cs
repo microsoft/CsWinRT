@@ -378,76 +378,13 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition marshallerType)
         {
-            // We're declaring an 'internal static class' type
-            marshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "Marshaller"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
-
-            module.TopLevelTypes.Add(marshallerType);
-
-            // Prepare the external types we need in the implemented methods
-            TypeSignature enumerableType2 = enumerableType.Import(module);
-            TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true);
-
-            // Define the 'ConvertToUnmanaged' method as follows:
-            //
-            // public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(<ENUMERABLE_TYPE> value)
-            MethodDefinition convertToUnmanagedMethod = new(
-                name: "ConvertToUnmanaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: windowsRuntimeObjectReferenceValueType,
-                    parameterTypes: [enumerableType2]));
-
-            marshallerType.Methods.Add(convertToUnmanagedMethod);
-
-            // Reference the instantiated 'ConvertToUnmanaged' method for the marshaller
-            MethodSpecification windowsRuntimeInterfaceMarshallerConvertToUnmanaged =
-                interopReferences.WindowsRuntimeInterfaceMarshallerConvertToUnmanaged
-                .MakeGenericInstanceMethod(enumerableType);
-
-            // Create a method body for the 'ConvertToUnmanaged' method
-            convertToUnmanagedMethod.CilMethodBody = new CilMethodBody(convertToUnmanagedMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Call, get_IidMethod },
-                    { Call, windowsRuntimeInterfaceMarshallerConvertToUnmanaged.Import(module) },
-                    { Ret }
-                }
-            };
-
-            // Define the 'ConvertToManaged' method as follows:
-            //
-            // public static <ENUMERABLE_TYPE> ConvertToManaged(void* value)
-            MethodDefinition convertToManagedMethod = new(
-                name: "ConvertToManaged"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(
-                    returnType: enumerableType2,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]));
-
-            marshallerType.Methods.Add(convertToManagedMethod);
-
-            // Construct a descriptor for 'WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<<ENUMERABLE_CALLBACK_TYPE>>(void*)'
-            IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
-                interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
-                .Import(module)
-                .MakeGenericInstanceMethod(enumerableComWrappersCallbackType.ToTypeSignature(isValueType: false));
-
-            // Create a method body for the 'ConvertToManaged' method
-            convertToManagedMethod.CilMethodBody = new CilMethodBody(convertToManagedMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Call, windowsRuntimeUnsealedObjectMarshallerConvertToManaged },
-                    { Ret }
-                }
-            };
+            InteropTypeDefinitionBuilder.Marshaller(
+                typeSignature: enumerableType,
+                interfaceComWrappersCallbackType: enumerableComWrappersCallbackType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out marshallerType);
         }
 
         /// <summary>

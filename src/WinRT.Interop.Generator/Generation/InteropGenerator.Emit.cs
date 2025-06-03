@@ -705,6 +705,15 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition listComWrappersMarshallerType);
+
+                // Define the 'Marshaller' type (with the static marshaller methods)
+                InteropTypeDefinitionBuilder.IList1.Marshaller(
+                    listType: typeSignature,
+                    listComWrappersCallbackType: listComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
