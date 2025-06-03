@@ -65,12 +65,7 @@ public sealed partial class DispatcherQueueSynchronizationContext : Synchronizat
             dispatcherQueueProxyHandler->Release();
         }
 
-        if (hresult >= 0)
-        {
-            Exception ex = ExceptionHelpers.GetExceptionForHR(hresult);
-            ExceptionHelpers.ReportUnhandledError(ex);
-            throw ex;
-        }
+        ExceptionHelpers.ThrowExceptionForHR(hresult);
     }
 
     /// <inheritdoc/>
