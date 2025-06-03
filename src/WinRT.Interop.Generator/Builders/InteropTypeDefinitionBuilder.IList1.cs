@@ -576,5 +576,32 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 out nativeObjectType);
         }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeUnsealedObjectComWrappersCallback</c> interface for some <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="callbackType">The resulting callback type.</param>
+        public static void ComWrappersCallbackType(
+            TypeSignature listType,
+            TypeDefinition nativeObjectType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition callbackType)
+        {
+            InteropTypeDefinitionBuilder.ComWrappersCallbackType(
+                runtimeClassName: listType.FullName, // TODO
+                typeSignature: listType,
+                nativeObjectType: nativeObjectType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out callbackType);
+        }
     }
 }

@@ -6,6 +6,7 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
@@ -83,6 +84,131 @@ internal static partial class InteropTypeDefinitionBuilder
         _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
         _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
         _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(nativeObjectBaseType).Import(module));
+    }
+
+    /// <summary>
+    /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeUnsealedObjectComWrappersCallback</c> interface for a generic interface.
+    /// </summary>
+    /// <param name="runtimeClassName">The runtime class name for the specialized check.</param>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the generic interface type.</param>
+    /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+    /// <param name="get_IidMethod">The 'IID' get method for <paramref name="typeSignature"/>.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    /// <param name="callbackType">The resulting callback type.</param>
+    public static void ComWrappersCallbackType(
+        string runtimeClassName,
+        TypeSignature typeSignature,
+        TypeDefinition nativeObjectType,
+        MethodDefinition get_IidMethod,
+        InteropReferences interopReferences,
+        ModuleDefinition module,
+        out TypeDefinition callbackType)
+    {
+        // We're declaring an 'internal abstract class' type
+        callbackType = new(
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersCallback"),
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+        {
+            Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallback.Import(module)) }
+        };
+
+        module.TopLevelTypes.Add(callbackType);
+
+        // Define the 'TryCreateObject' method as follows:
+        //
+        // public static bool TryCreateObject(
+        //     void* value,
+        //     ReadOnlySpan<char> runtimeClassName,
+        //     out object? result,
+        //     out CreatedWrapperFlags wrapperFlags)
+        MethodDefinition tryCreateObjectMethod = new(
+            name: "TryCreateObject"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(
+                returnType: module.CorLibTypeFactory.Boolean,
+                parameterTypes: [
+                    module.CorLibTypeFactory.Void.MakePointerType(),
+                    interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module),
+                    module.CorLibTypeFactory.Object.MakeByReferenceType(),
+                    interopReferences.CreatedWrapperFlags.MakeByReferenceType().Import(module)]))
+        {
+            // The last two parameters are '[out]'
+            ParameterDefinitions =
+            {
+                new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out),
+                new ParameterDefinition(sequence: 4, name: null, attributes: ParameterAttributes.Out)
+            }
+        };
+
+        callbackType.Methods.Add(tryCreateObjectMethod);
+
+        // Mark the 'CreateObject' method as implementing the interface method
+        callbackType.MethodImplementations.Add(new MethodImplementation(
+            declaration: interopReferences.IWindowsRuntimeUnsealedObjectComWrappersCallbackTryCreateObject.Import(module),
+            body: tryCreateObjectMethod));
+
+        // Declare the local variables:
+        //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
+        CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module));
+
+        // Jump labels
+        CilInstruction ldc_i4_0_noFlags = new(Ldc_I4_0);
+        CilInstruction stind_i4_setFlags = new(Stind_I4);
+        CilInstruction ldarg_3_failure = new(Ldarg_3);
+
+        // Create a method body for the 'TryCreateObject' method
+        tryCreateObjectMethod.CilMethodBody = new CilMethodBody(tryCreateObjectMethod)
+        {
+            LocalVariables = { loc_0_result },
+            Instructions =
+            {
+                // Compare the runtime class name for the fast path
+                { Ldarg_1 },
+                { Ldstr, runtimeClassName },
+                { Call, interopReferences.MemoryExtensionsAsSpanCharString.Import(module) },
+                { Call, interopReferences.MemoryExtensionsSequenceEqualChar.Import(module) },
+                { Brfalse_S, ldarg_3_failure.CreateLabel() },
+
+                // Create the 'WindowsRuntimeObjectReference' instance
+                { Ldarg_0 },
+                { Call, get_IidMethod },
+                { Call, interopReferences.WindowsRuntimeObjectReferenceCreateUnsafe.Import(module) },
+                { Stloc_0 },
+
+                // Set the 'CreatedWrapperFlags' value correctly
+                { Ldarg_3 },
+                { Ldloc_0 },
+                { Callvirt, interopReferences.WindowsRuntimeObjectReferenceGetReferenceTrackerPtrUnsafe.Import(module) },
+                { Ldc_I4_0 },
+                { Conv_U },
+                { Beq_S, ldc_i4_0_noFlags.CreateLabel() },
+                { Ldc_I4_1 },
+                { Br_S, stind_i4_setFlags.CreateLabel() },
+                { ldc_i4_0_noFlags },
+                { stind_i4_setFlags },
+
+                // Create and assign the 'NativeObject' instance to return
+                { Ldarg_2 },
+                { Ldloc_0 },
+                { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                { Stind_Ref },
+                { Ldc_I4_1 },
+                { Ret },
+
+                // Failure path
+                { ldarg_3_failure },
+                { Ldc_I4_0 },
+                { Stind_I4 },
+                { Ldarg_2 },
+                { Ldnull },
+                { Stind_Ref },
+                { Ldc_I4_0 },
+                { Ret }
+            }
+        };
     }
 
     /// <summary>

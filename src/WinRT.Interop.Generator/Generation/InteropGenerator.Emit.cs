@@ -687,6 +687,15 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     out TypeDefinition nativeObjectType);
+
+                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
+                InteropTypeDefinitionBuilder.IList1.ComWrappersCallbackType(
+                    listType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition listComWrappersCallbackType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
