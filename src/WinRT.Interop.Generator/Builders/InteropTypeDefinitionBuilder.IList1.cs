@@ -471,7 +471,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "RemoveAt"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
                         module.CorLibTypeFactory.Int32]));
@@ -497,7 +497,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "IndexOf"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
                         elementType.Import(module)]));
@@ -680,6 +680,466 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the interface implementation of some <c>IVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="listMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IListMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceImplType">The resulting interface implementation type.</param>
+        public static void InterfaceImpl(
+            GenericInstanceTypeSignature listType,
+            TypeDefinition listMethodsType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition interfaceImplType)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericInstanceType(elementType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
+
+            // We're declaring an 'internal interface class' type
+            interfaceImplType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(listType),
+                name: InteropUtf8NameFactory.TypeName(listType, "InterfaceImpl"),
+                attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: null)
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                Interfaces =
+                {
+                    new InterfaceImplementation(listType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(collectionType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                }
+            };
+
+            module.TopLevelTypes.Add(interfaceImplType);
+
+            MethodDefinition[] itemMethods = listMethodsType.GetMethods("Item"u8);
+
+            // Create the 'get_Item' getter method
+            MethodDefinition get_ItemMethod = new(
+                name: $"System.Collections.Generic.IList<{elementType.FullName}>.get_Item",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32));
+
+            interfaceImplType.Methods.Add(get_ItemMethod);
+
+            // Mark the 'get_Item' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IList1get_Item(elementType).Import(module),
+                body: get_ItemMethod));
+
+            // Create a body for the 'get_Item' method
+            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Call, itemMethods[0] },
+                    { Ret }
+                }
+            };
+
+            // Create the 'set_Item' getter method
+            MethodDefinition set_ItemMethod = new(
+                name: $"System.Collections.Generic.IList<{elementType.FullName}>.set_Item",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Int32,
+                        elementType.Import(module)]));
+
+            interfaceImplType.Methods.Add(set_ItemMethod);
+
+            // Mark the 'set_Item' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IList1set_Item(elementType).Import(module),
+                body: set_ItemMethod));
+
+            // Create a body for the 'set_Item' method
+            set_ItemMethod.CilMethodBody = new CilMethodBody(set_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, itemMethods[1] },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Item' property
+            PropertyDefinition itemProperty = new(
+                name: $"System.Collections.Generic.IList<{elementType.FullName}>.Item",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32))
+            {
+                GetMethod = get_ItemMethod,
+                SetMethod = set_ItemMethod
+            };
+
+            interfaceImplType.Properties.Add(itemProperty);
+
+            // Create the 'IndexOf' method
+            MethodDefinition indexOfMethod = new(
+                name: $"System.Collections.Generic.IList<{elementType.FullName}>.IndexOf",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32, elementType.Import(module)));
+
+            interfaceImplType.Methods.Add(indexOfMethod);
+
+            // Mark the 'IndexOf' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IList1get_Item(elementType).Import(module),
+                body: indexOfMethod));
+
+            // Create a body for the 'IndexOf' method
+            indexOfMethod.CilMethodBody = new CilMethodBody(indexOfMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Call, listMethodsType.GetMethod("IndexOf"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Insert' method
+            MethodDefinition insertMethod = new(
+                name: $"System.Collections.Generic.IList<{elementType.FullName}>.Insert",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        module.CorLibTypeFactory.Int32,
+                        elementType.Import(module)]));
+
+            interfaceImplType.Methods.Add(insertMethod);
+
+            // Mark the 'Insert' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IList1Insert(elementType).Import(module),
+                body: insertMethod));
+
+            // Create a body for the 'Insert' method
+            insertMethod.CilMethodBody = new CilMethodBody(insertMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, listMethodsType.GetMethod("Insert"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'RemoveAt' method
+            MethodDefinition removeAtMethod = new(
+                name: $"System.Collections.Generic.IList<{elementType.FullName}>.RemoveAt",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, module.CorLibTypeFactory.Int32));
+
+            interfaceImplType.Methods.Add(removeAtMethod);
+
+            // Mark the 'RemoveAt' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IList1RemoveAt(elementType).Import(module),
+                body: removeAtMethod));
+
+            // Create a body for the 'RemoveAt' method
+            removeAtMethod.CilMethodBody = new CilMethodBody(removeAtMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Call, listMethodsType.GetMethod("RemoveAt"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'get_Count' getter method
+            MethodDefinition get_CountMethod = new(
+                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_Count",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+
+            interfaceImplType.Methods.Add(get_CountMethod);
+
+            // Mark the 'get_Count' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.ICollection1get_Count(elementType).Import(module),
+                body: get_CountMethod));
+
+            // Create a body for the 'get_Count' method
+            get_CountMethod.CilMethodBody = new CilMethodBody(get_CountMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Call, listMethodsType.GetMethod("Count"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Count' property
+            PropertyDefinition countProperty = new(
+                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Count",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.CreateInstance(module.CorLibTypeFactory.Int32))
+            { GetMethod = get_CountMethod };
+
+            interfaceImplType.Properties.Add(countProperty);
+
+            // Create the 'Add' method
+            MethodDefinition addMethod = new(
+                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, elementType.Import(module)));
+
+            interfaceImplType.Methods.Add(addMethod);
+
+            // Mark the 'Add' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.ICollection1Add(elementType).Import(module),
+                body: addMethod));
+
+            // Create a body for the 'Add' method
+            addMethod.CilMethodBody = new CilMethodBody(addMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Call, listMethodsType.GetMethod("Add"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Clear' method
+            MethodDefinition clearMethod = new(
+                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Clear",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
+
+            interfaceImplType.Methods.Add(clearMethod);
+
+            // Mark the 'Clear' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.ICollection1Clear(elementType).Import(module),
+                body: clearMethod));
+
+            // Create a body for the 'Clear' method
+            clearMethod.CilMethodBody = new CilMethodBody(clearMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Call, listMethodsType.GetMethod("Clear"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Contains' method
+            MethodDefinition containsMethod = new(
+                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Contains",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
+
+            interfaceImplType.Methods.Add(containsMethod);
+
+            // Mark the 'Contains' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.ICollection1Contains(elementType).Import(module),
+                body: containsMethod));
+
+            // Create a body for the 'Contains' method
+            containsMethod.CilMethodBody = new CilMethodBody(containsMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Call, listMethodsType.GetMethod("Contains"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'CopyTo' method
+            MethodDefinition copyToMethod = new(
+                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.CopyTo",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        elementType.MakeSzArrayType().Import(module),
+                        module.CorLibTypeFactory.Int32]));
+
+            interfaceImplType.Methods.Add(copyToMethod);
+
+            // Mark the 'CopyTo' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.ICollection1CopyTo(elementType).Import(module),
+                body: copyToMethod));
+
+            // Create a body for the 'CopyTo' method
+            copyToMethod.CilMethodBody = new CilMethodBody(copyToMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, listMethodsType.GetMethod("CopyTo"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Remove' method
+            MethodDefinition removeMethod = new(
+                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Remove",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
+
+            interfaceImplType.Methods.Add(removeMethod);
+
+            // Mark the 'Remove' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.ICollection1Remove(elementType).Import(module),
+                body: removeMethod));
+
+            // Create a body for the 'Remove' method
+            removeMethod.CilMethodBody = new CilMethodBody(removeMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Call, listMethodsType.GetMethod("Remove"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'IEnumerable<T>.GetEnumerator' method
+            MethodDefinition enumerable1GetEnumeratorMethod = new(
+                name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
+
+            interfaceImplType.Methods.Add(enumerable1GetEnumeratorMethod);
+
+            // Mark the 'IEnumerable<T>.GetEnumerator' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumerable1GetEnumerator(elementType).Import(module),
+                body: enumerable1GetEnumeratorMethod));
+
+            // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
+            enumerable1GetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerable1GetEnumeratorMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, enumerableType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Call, emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'IEnumerable.GetEnumerator' method
+            MethodDefinition enumerableGetEnumeratorMethod = new(
+                name: "System.Collections.IEnumerable.GetEnumerator"u8,
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToTypeSignature(isValueType: false)));
+
+            interfaceImplType.Methods.Add(enumerableGetEnumeratorMethod);
+
+            // Mark the 'IEnumerable.GetEnumerator' method as implementing the interface method
+            interfaceImplType.MethodImplementations.Add(new MethodImplementation(
+                declaration: interopReferences.IEnumerableGetEnumerator.Import(module),
+                body: enumerableGetEnumeratorMethod));
+
+            // Create a method body for the 'IEnumerable.GetEnumerator' method
+            enumerableGetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerableGetEnumeratorMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType).Import(module) },
+                    { Ret }
+                }
+            };
         }
 
         /// <summary>

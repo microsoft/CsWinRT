@@ -168,6 +168,12 @@ internal sealed class InteropReferences
     public TypeReference IEnumerable1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "IEnumerable`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.ICollection{T}"/>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference ICollection1 => field ??= _interopModule.CorLibTypeFactory.CorLibScope.CreateTypeReference("System.Collections.Generic", "ICollection`1");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Collections.Generic.IReadOnlyCollection{T}"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1399,7 +1405,89 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IReadOnlyCollection{T}"/>.
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.ICollection{T}.Count"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference ICollection1get_Count(TypeSignature elementType)
+    {
+        return ICollection1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Count", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Int32));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.ICollection{T}.Add"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference ICollection1Add(TypeSignature elementType)
+    {
+        return ICollection1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Add", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.ICollection{T}.Clear"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference ICollection1Clear(TypeSignature elementType)
+    {
+        return ICollection1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Clear", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Void));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.ICollection{T}.Contains"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference ICollection1Contains(TypeSignature elementType)
+    {
+        return ICollection1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Contains", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Boolean,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.ICollection{T}.CopyTo"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference ICollection1CopyTo(TypeSignature elementType)
+    {
+        return ICollection1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Contains", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0).MakeSzArrayType(),
+                    _interopModule.CorLibTypeFactory.Int32]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.ICollection{T}.Remove"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference ICollection1Remove(TypeSignature elementType)
+    {
+        return ICollection1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Remove", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Boolean,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IReadOnlyCollection{T}.Count"/>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
     public MemberReference IReadOnlyCollection1get_Count(TypeSignature elementType)
@@ -1408,6 +1496,80 @@ internal sealed class InteropReferences
             .MakeGenericInstanceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Count", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Int32));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IList{T}.this"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IList1get_Item(TypeSignature elementType)
+    {
+        return IList1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Item", MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
+                parameterTypes: [_interopModule.CorLibTypeFactory.Int32]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IList{T}.this"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IList1set_Item(TypeSignature elementType)
+    {
+        return IList1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("set_Item", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    _interopModule.CorLibTypeFactory.Int32,
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IList{T}.IndexOf"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IList1IndexOf(TypeSignature elementType)
+    {
+        return IList1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("IndexOf", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Int32,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IList{T}.Insert"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IList1Insert(TypeSignature elementType)
+    {
+        return IList1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Insert", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    _interopModule.CorLibTypeFactory.Int32,
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IList{T}.RemoveAt"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference IList1RemoveAt(TypeSignature elementType)
+    {
+        return IList1
+            .MakeGenericInstanceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("RemoveAt", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [_interopModule.CorLibTypeFactory.Int32]));
     }
 
     /// <summary>

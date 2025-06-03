@@ -715,6 +715,15 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
+                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
+                InteropTypeDefinitionBuilder.IList1.InterfaceImpl(
+                    listType: typeSignature,
+                    listMethodsType: listMethodsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    interfaceImplType: out _);
+
                 // Define the proxy type (for the type map)
                 InteropTypeDefinitionBuilder.IList1.Proxy(
                     listType: typeSignature,

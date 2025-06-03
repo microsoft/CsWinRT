@@ -526,7 +526,7 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IReadOnlyCollection1get_Count(elementType).Import(module),
                 body: get_CountMethod));
 
-            // Create a body for the 'get_Item' method
+            // Create a body for the 'get_Count' method
             get_CountMethod.CilMethodBody = new CilMethodBody(get_CountMethod)
             {
                 Instructions =
