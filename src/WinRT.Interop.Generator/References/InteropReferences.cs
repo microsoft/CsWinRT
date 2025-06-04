@@ -366,6 +366,12 @@ internal sealed class InteropReferences
     public TypeReference IVectorViewMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IVectorViewMethodsImpl`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapViewMethodsImpl&lt;K, V&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IMapViewMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IMapViewMethodsImpl`2");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IListMethods</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1758,6 +1764,40 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
                     _windowsRuntimeModule.CorLibTypeFactory.Int32]))
             .MakeGenericInstanceMethod(vectorViewMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapViewMethodsImpl&lt;K, V&gt;.HasKey</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IMapViewMethodsImpl2HasKey(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IMapViewMethodsImpl2
+            .MakeGenericInstanceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("HasKey", MethodSignature.CreateInstance(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    keyType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapViewMethodsImpl&lt;K, V&gt;.Lookup</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IMapViewMethodsImpl2Lookup(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IMapViewMethodsImpl2
+            .MakeGenericInstanceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Lookup", MethodSignature.CreateInstance(
+                returnType: valueType,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    keyType]));
     }
 
     /// <summary>
