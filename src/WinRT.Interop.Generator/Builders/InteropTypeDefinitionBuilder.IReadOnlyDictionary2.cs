@@ -184,5 +184,140 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
         }
+
+        /// <summary>
+        /// Creates a new type definition for the methods for an <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> interface.
+        /// </summary>
+        /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="mapViewMethodsType">The type returned by <see cref="IMapViewMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="readOnlyDictionaryMethodsType">The resulting methods type.</param>
+        public static void IReadOnlyDictionaryMethods(
+            GenericInstanceTypeSignature readOnlyDictionaryType,
+            TypeDefinition mapViewMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition readOnlyDictionaryMethodsType)
+        {
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
+
+            // We're declaring an 'internal static class' type
+            readOnlyDictionaryMethodsType = new TypeDefinition(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "IReadOnlyDictionaryMethods"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(readOnlyDictionaryMethodsType);
+
+            // Define the 'Item' getter method as follows:
+            //
+            // public static <VALUE_TYPE> Item(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
+            MethodDefinition get_ItemMethod = new(
+                name: "Item"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: valueType.Import(module),
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        keyType.Import(module)]));
+
+            readOnlyDictionaryMethodsType.Methods.Add(get_ItemMethod);
+
+            // Create a method body for the 'Item' method
+            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IReadOnlyDictionaryMethods2get_Item(keyType, valueType, mapViewMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Count' method as follows:
+            //
+            // public static int Count(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition countMethod = new(
+                name: "Count"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+
+            readOnlyDictionaryMethodsType.Methods.Add(countMethod);
+
+            // Create a method body for the 'Count' method
+            countMethod.CilMethodBody = new CilMethodBody(countMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.IReadOnlyDictionaryMethodsCount.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'ContainsKey' method as follows:
+            //
+            // public static bool ContainsKey(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
+            MethodDefinition containsKeyMethod = new(
+                name: "ContainsKey"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        keyType.Import(module)]));
+
+            readOnlyDictionaryMethodsType.Methods.Add(containsKeyMethod);
+
+            // Create a method body for the 'ContainsKey' method
+            containsKeyMethod.CilMethodBody = new CilMethodBody(containsKeyMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IReadOnlyDictionaryMethods2ContainsKey(keyType, valueType, mapViewMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'TryGetValue' method as follows:
+            //
+            // public static bool TryGetKey(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key, out <VALUE_TYPE> value)
+            MethodDefinition tryGetKeyMethod = new(
+                name: "TryGetKey"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        keyType.Import(module),
+                        valueType.MakeByReferenceType().Import(module)]))
+            {
+                // The 'value' parameter is '[out]'
+                ParameterDefinitions = { new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out) }
+            };
+
+            readOnlyDictionaryMethodsType.Methods.Add(tryGetKeyMethod);
+
+            // Create a method body for the 'TryGetKey' method
+            tryGetKeyMethod.CilMethodBody = new CilMethodBody(tryGetKeyMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Ldarg_3 },
+                    { Call, interopReferences.IReadOnlyDictionaryMethods2TryGetValue(keyType, valueType, mapViewMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+        }
     }
 }

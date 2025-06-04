@@ -806,6 +806,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     mapViewMethodsType: out TypeDefinition mapViewMethodsType);
+
+                // Define the 'ReadOnlyDictionaryMethods' type
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.IReadOnlyDictionaryMethods(
+                    readOnlyDictionaryType: typeSignature,
+                    mapViewMethodsType: mapViewMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    readOnlyDictionaryMethodsType: out TypeDefinition readOnlyDictionaryMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

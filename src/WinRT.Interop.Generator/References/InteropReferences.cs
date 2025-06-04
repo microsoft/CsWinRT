@@ -396,6 +396,18 @@ internal sealed class InteropReferences
     public TypeReference IReadOnlyListMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyListMethods`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IReadOnlyDictionaryMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyDictionaryMethods");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IReadOnlyDictionaryMethods2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IReadOnlyDictionaryMethods`2");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObject</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -905,6 +917,15 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference IReadOnlyListMethodsCount => field ??= IReadOnlyListMethods
+        .CreateMemberReference("Count", MethodSignature.CreateStatic(
+            returnType: _interopModule.CorLibTypeFactory.Int32,
+            parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionary.Count</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public MemberReference IReadOnlyDictionaryMethodsCount => field ??= IReadOnlyDictionaryMethods
         .CreateMemberReference("Count", MethodSignature.CreateStatic(
             returnType: _interopModule.CorLibTypeFactory.Int32,
             parameterTypes: [WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false)]));
@@ -1798,6 +1819,67 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
                     keyType]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;.Item</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    /// <param name="mapViewMethods">The <see cref="IMapViewMethodsImpl2"/> type.</param>
+    public MethodSpecification IReadOnlyDictionaryMethods2get_Item(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapViewMethods)
+    {
+        return IReadOnlyDictionaryMethods2
+            .MakeGenericInstanceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Item", MethodSignature.CreateStatic(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    keyType]))
+            .MakeGenericInstanceMethod(mapViewMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;.ContainsKey</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    /// <param name="mapViewMethods">The <see cref="IMapViewMethodsImpl2"/> type.</param>
+    public MethodSpecification IReadOnlyDictionaryMethods2ContainsKey(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapViewMethods)
+    {
+        return IReadOnlyDictionaryMethods2
+            .MakeGenericInstanceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ContainsKey", MethodSignature.CreateStatic(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    keyType]))
+            .MakeGenericInstanceMethod(mapViewMethods.ToTypeSignature());
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyDictionaryMethods&lt;TKey, TValue&gt;.TryGetValue</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    /// <param name="mapViewMethods">The <see cref="IMapViewMethodsImpl2"/> type.</param>
+    public MethodSpecification IReadOnlyDictionaryMethods2TryGetValue(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapViewMethods)
+    {
+        return IReadOnlyDictionaryMethods2
+            .MakeGenericInstanceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("TryGetValue", MethodSignature.CreateStatic(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false),
+                    keyType,
+                    valueType.MakeByReferenceType()]))
+            .MakeGenericInstanceMethod(mapViewMethods.ToTypeSignature());
     }
 
     /// <summary>
