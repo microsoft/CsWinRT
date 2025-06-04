@@ -814,6 +814,42 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     readOnlyDictionaryMethodsType: out TypeDefinition readOnlyDictionaryMethodsType);
+
+                // Define the 'NativeObject' type (with the RCW implementation)
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.NativeObject(
+                    readOnlyDictionaryType: typeSignature,
+                    mapViewMethodsType: mapViewMethodsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
+
+                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.ComWrappersCallbackType(
+                    readOnlyDictionaryType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition readOnlyDictionaryComWrappersCallbackType);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.ComWrappersMarshallerAttribute(
+                    readOnlyDictionaryType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition readOnlyDictionaryComWrappersMarshallerType);
+
+                // Define the 'Marshaller' type (with the static marshaller methods)
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Marshaller(
+                    readOnlyDictionaryType: typeSignature,
+                    readOnlyDictionaryComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
