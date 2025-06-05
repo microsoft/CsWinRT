@@ -58,7 +58,7 @@ internal partial class WellKnownTypeDefinitionFactory
         PropertyDefinition assemblyNameProperty = new(
             name: "AssemblyName"u8,
             attributes: PropertyAttributes.None,
-            signature: PropertySignature.CreateInstance(module.CorLibTypeFactory.String))
+            signature: PropertySignature.FromGetMethod(get_AssemblyNameMethod))
         {
             GetMethod = get_AssemblyNameMethod
         };

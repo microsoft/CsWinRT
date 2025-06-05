@@ -508,7 +508,7 @@ internal partial class InteropTypeDefinitionBuilder
             PropertyDefinition itemProperty = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.Item",
                 attributes: PropertyAttributes.None,
-                signature: PropertySignature.CreateInstance(valueType.Import(module), keyType.Import(module)))
+                signature: PropertySignature.FromGetMethod(get_ItemMethod))
             { GetMethod = get_ItemMethod };
 
             interfaceImplType.Properties.Add(itemProperty);
@@ -539,7 +539,7 @@ internal partial class InteropTypeDefinitionBuilder
             PropertyDefinition keysProperty = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.Keys",
                 attributes: PropertyAttributes.None,
-                signature: PropertySignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType).Import(module)))
+                signature: PropertySignature.FromGetMethod(get_KeysMethod))
             { GetMethod = get_KeysMethod };
 
             interfaceImplType.Properties.Add(keysProperty);
@@ -548,7 +548,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ValuesMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Values",
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType).Import(module)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(valueType).Import(module)));
 
             // Add and implement the 'get_Values' method
             interfaceImplType.AddMethodImplementation(
@@ -570,7 +570,7 @@ internal partial class InteropTypeDefinitionBuilder
             PropertyDefinition valuesProperty = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.Values",
                 attributes: PropertyAttributes.None,
-                signature: PropertySignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType).Import(module)))
+                signature: PropertySignature.FromGetMethod(get_ValuesMethod))
             { GetMethod = get_ValuesMethod };
 
             interfaceImplType.Properties.Add(valuesProperty);
@@ -670,7 +670,7 @@ internal partial class InteropTypeDefinitionBuilder
             PropertyDefinition countProperty = new(
                 name: $"System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Count",
                 attributes: PropertyAttributes.None,
-                signature: PropertySignature.CreateInstance(module.CorLibTypeFactory.Int32))
+                signature: PropertySignature.FromGetMethod(get_CountMethod))
             { GetMethod = get_CountMethod };
 
             interfaceImplType.Properties.Add(countProperty);

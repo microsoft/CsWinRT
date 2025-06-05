@@ -773,7 +773,7 @@ internal partial class InteropTypeDefinitionBuilder
             PropertyDefinition itemProperty = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.Item",
                 attributes: PropertyAttributes.None,
-                signature: PropertySignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32))
+                signature: PropertySignature.FromGetMethod(get_ItemMethod))
             {
                 GetMethod = get_ItemMethod,
                 SetMethod = set_ItemMethod
@@ -901,7 +901,7 @@ internal partial class InteropTypeDefinitionBuilder
             PropertyDefinition countProperty = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Count",
                 attributes: PropertyAttributes.None,
-                signature: PropertySignature.CreateInstance(module.CorLibTypeFactory.Int32))
+                signature: PropertySignature.FromGetMethod(get_CountMethod))
             { GetMethod = get_CountMethod };
 
             interfaceImplType.Properties.Add(countProperty);

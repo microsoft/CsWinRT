@@ -154,7 +154,7 @@ internal static class WellKnownMemberDefinitionFactory
         vtableProperty = new PropertyDefinition(
             name: "Vtable"u8,
             attributes: PropertyAttributes.None,
-            signature: PropertySignature.CreateStatic(corLibTypeFactory.IntPtr))
+            signature: PropertySignature.FromGetMethod(get_VtableMethod))
         { GetMethod = get_VtableMethod };
 
         // Create a method body for the 'Vtable' property
