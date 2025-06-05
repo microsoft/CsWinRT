@@ -44,9 +44,6 @@ internal static class WellKnownCilMethodBodyFactory
                 { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
                 { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
                 { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                { Nop },
-                { Call, forwardedMethod },
-                { Ret }
             }
         };
 

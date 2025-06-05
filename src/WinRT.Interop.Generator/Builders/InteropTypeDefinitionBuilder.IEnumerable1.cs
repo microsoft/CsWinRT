@@ -433,20 +433,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: enumerable1GetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
-            enumerable1GetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerable1GetEnumeratorMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, enumerableType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Call, iterableMethodsType.GetMethod("First"u8) },
-                    { Ret }
-                }
-            };
+            enumerable1GetEnumeratorMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: enumerableType,
+                implementationMethod: enumerable1GetEnumeratorMethod,
+                forwardedMethod: iterableMethodsType.GetMethod("First"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'IEnumerable.GetEnumerator' method
             MethodDefinition enumerableGetEnumeratorMethod = new(

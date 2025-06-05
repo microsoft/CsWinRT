@@ -488,21 +488,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_ItemMethod);
 
             // Create a body for the 'get_Item' method
-            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, readOnlyDictionaryType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Call, readOnlyDictionaryMethodsType.GetMethod("Item"u8) },
-                    { Ret }
-                }
-            };
+            get_ItemMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: readOnlyDictionaryType,
+                implementationMethod: get_ItemMethod,
+                forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("Item"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -589,21 +580,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: containsKeyMethod);
 
             // Create a body for the 'ContainsKey' method
-            containsKeyMethod.CilMethodBody = new CilMethodBody(containsKeyMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, readOnlyDictionaryType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Call, readOnlyDictionaryMethodsType.GetMethod("ContainsKey"u8) },
-                    { Ret }
-                }
-            };
+            containsKeyMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: readOnlyDictionaryType,
+                implementationMethod: containsKeyMethod,
+                forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("ContainsKey"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'TryGetValue' method
             MethodDefinition tryGetValueMethod = new(
@@ -622,22 +604,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: tryGetValueMethod);
 
             // Create a body for the 'TryGetValue' method
-            tryGetValueMethod.CilMethodBody = new CilMethodBody(tryGetValueMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, readOnlyDictionaryType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Ldarg_2 },
-                    { Call, readOnlyDictionaryMethodsType.GetMethod("TryGetValue"u8) },
-                    { Ret }
-                }
-            };
+            tryGetValueMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: readOnlyDictionaryType,
+                implementationMethod: tryGetValueMethod,
+                forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("TryGetValue"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'get_Count' getter method
             MethodDefinition get_CountMethod = new(
@@ -651,20 +623,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_CountMethod);
 
             // Create a body for the 'get_Count' method
-            get_CountMethod.CilMethodBody = new CilMethodBody(get_CountMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, readOnlyDictionaryType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Call, readOnlyDictionaryMethodsType.GetMethod("Count"u8) },
-                    { Ret }
-                }
-            };
+            get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: readOnlyDictionaryType,
+                implementationMethod: get_CountMethod,
+                forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("Count"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Count' property
             PropertyDefinition countProperty = new(

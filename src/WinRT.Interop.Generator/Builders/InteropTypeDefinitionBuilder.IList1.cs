@@ -720,21 +720,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_ItemMethod);
 
             // Create a body for the 'get_Item' method
-            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Call, itemMethods[0] },
-                    { Ret }
-                }
-            };
+            get_ItemMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: get_ItemMethod,
+                forwardedMethod: itemMethods[0],
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'set_Item' getter method
             MethodDefinition set_ItemMethod = new(
@@ -752,22 +743,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: set_ItemMethod);
 
             // Create a body for the 'set_Item' method
-            set_ItemMethod.CilMethodBody = new CilMethodBody(set_ItemMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Ldarg_2 },
-                    { Call, itemMethods[1] },
-                    { Ret }
-                }
-            };
+            set_ItemMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: set_ItemMethod,
+                forwardedMethod: itemMethods[1],
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -793,21 +774,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: indexOfMethod);
 
             // Create a body for the 'IndexOf' method
-            indexOfMethod.CilMethodBody = new CilMethodBody(indexOfMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Call, listMethodsType.GetMethod("IndexOf"u8) },
-                    { Ret }
-                }
-            };
+            indexOfMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: indexOfMethod,
+                forwardedMethod: listMethodsType.GetMethod("IndexOf"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Insert' method
             MethodDefinition insertMethod = new(
@@ -825,22 +797,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: insertMethod);
 
             // Create a body for the 'Insert' method
-            insertMethod.CilMethodBody = new CilMethodBody(insertMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Ldarg_2 },
-                    { Call, listMethodsType.GetMethod("Insert"u8) },
-                    { Ret }
-                }
-            };
+            insertMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: insertMethod,
+                forwardedMethod: listMethodsType.GetMethod("Insert"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'RemoveAt' method
             MethodDefinition removeAtMethod = new(
@@ -854,21 +816,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: removeAtMethod);
 
             // Create a body for the 'RemoveAt' method
-            removeAtMethod.CilMethodBody = new CilMethodBody(removeAtMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Call, listMethodsType.GetMethod("RemoveAt"u8) },
-                    { Ret }
-                }
-            };
+            removeAtMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: removeAtMethod,
+                forwardedMethod: listMethodsType.GetMethod("RemoveAt"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'get_Count' getter method
             MethodDefinition get_CountMethod = new(
@@ -882,20 +835,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_CountMethod);
 
             // Create a body for the 'get_Count' method
-            get_CountMethod.CilMethodBody = new CilMethodBody(get_CountMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Call, listMethodsType.GetMethod("Count"u8) },
-                    { Ret }
-                }
-            };
+            get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: get_CountMethod,
+                forwardedMethod: listMethodsType.GetMethod("Count"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Count' property
             PropertyDefinition countProperty = new(
@@ -918,21 +863,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: addMethod);
 
             // Create a body for the 'Add' method
-            addMethod.CilMethodBody = new CilMethodBody(addMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Call, listMethodsType.GetMethod("Add"u8) },
-                    { Ret }
-                }
-            };
+            addMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: addMethod,
+                forwardedMethod: listMethodsType.GetMethod("Add"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Clear' method
             MethodDefinition clearMethod = new(
@@ -946,20 +882,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: clearMethod);
 
             // Create a body for the 'Clear' method
-            clearMethod.CilMethodBody = new CilMethodBody(clearMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Call, listMethodsType.GetMethod("Clear"u8) },
-                    { Ret }
-                }
-            };
+            clearMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: clearMethod,
+                forwardedMethod: listMethodsType.GetMethod("Clear"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Contains' method
             MethodDefinition containsMethod = new(
@@ -973,21 +901,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: containsMethod);
 
             // Create a body for the 'Contains' method
-            containsMethod.CilMethodBody = new CilMethodBody(containsMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Call, listMethodsType.GetMethod("Contains"u8) },
-                    { Ret }
-                }
-            };
+            containsMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: containsMethod,
+                forwardedMethod: listMethodsType.GetMethod("Contains"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'CopyTo' method
             MethodDefinition copyToMethod = new(
@@ -1005,22 +924,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: copyToMethod);
 
             // Create a body for the 'CopyTo' method
-            copyToMethod.CilMethodBody = new CilMethodBody(copyToMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Ldarg_2 },
-                    { Call, listMethodsType.GetMethod("CopyTo"u8) },
-                    { Ret }
-                }
-            };
+            copyToMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: copyToMethod,
+                forwardedMethod: listMethodsType.GetMethod("CopyTo"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Remove' method
             MethodDefinition removeMethod = new(
@@ -1034,21 +943,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: removeMethod);
 
             // Create a body for the 'Remove' method
-            removeMethod.CilMethodBody = new CilMethodBody(removeMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Call, listMethodsType.GetMethod("Remove"u8) },
-                    { Ret }
-                }
-            };
+            removeMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: listType,
+                implementationMethod: removeMethod,
+                forwardedMethod: listMethodsType.GetMethod("Remove"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'IEnumerable<T>.GetEnumerator' method
             MethodDefinition enumerable1GetEnumeratorMethod = new(
@@ -1062,20 +962,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: enumerable1GetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
-            enumerable1GetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerable1GetEnumeratorMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, enumerableType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Call, emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8) },
-                    { Ret }
-                }
-            };
+            enumerable1GetEnumeratorMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: enumerableType,
+                implementationMethod: enumerable1GetEnumeratorMethod,
+                forwardedMethod: emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'IEnumerable.GetEnumerator' method
             MethodDefinition enumerableGetEnumeratorMethod = new(

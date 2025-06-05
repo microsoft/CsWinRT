@@ -476,21 +476,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_ItemMethod);
 
             // Create a body for the 'get_Item' method
-            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, readOnlyListType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Ldarg_1 },
-                    { Call, readOnlyListMethodsType.GetMethod("Item"u8) },
-                    { Ret }
-                }
-            };
+            get_ItemMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: readOnlyListType,
+                implementationMethod: get_ItemMethod,
+                forwardedMethod: readOnlyListMethodsType.GetMethod("Item"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -513,20 +504,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_CountMethod);
 
             // Create a body for the 'get_Count' method
-            get_CountMethod.CilMethodBody = new CilMethodBody(get_CountMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, readOnlyListType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Call, readOnlyListMethodsType.GetMethod("Count"u8) },
-                    { Ret }
-                }
-            };
+            get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: readOnlyListType,
+                implementationMethod: get_CountMethod,
+                forwardedMethod: readOnlyListMethodsType.GetMethod("Count"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'Count' property
             PropertyDefinition countProperty = new(
@@ -549,20 +532,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: enumerable1GetEnumeratorMethod);
 
             // Create a method body for the 'IEnumerable<T>.GetEnumerator' method
-            enumerable1GetEnumeratorMethod.CilMethodBody = new CilMethodBody(enumerable1GetEnumeratorMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, enumerableType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Call, emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8) },
-                    { Ret }
-                }
-            };
+            enumerable1GetEnumeratorMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: enumerableType,
+                implementationMethod: enumerable1GetEnumeratorMethod,
+                forwardedMethod: emitState.LookupTypeDefinition(enumerableType, "IEnumerableMethods").GetMethod("GetEnumerator"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'IEnumerable.GetEnumerator' method
             MethodDefinition enumerableGetEnumeratorMethod = new(

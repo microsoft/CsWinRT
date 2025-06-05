@@ -397,20 +397,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: get_IEnumerator1CurrentMethod);
 
             // Create a method body for the 'IEnumerator<T>.Current' property
-            get_IEnumerator1CurrentMethod.CilMethodBody = new CilMethodBody(get_IEnumerator1CurrentMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, enumeratorType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Call, iteratorMethodsType.GetMethod("Current"u8) },
-                    { Ret }
-                }
-            };
+            get_IEnumerator1CurrentMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: enumeratorType,
+                implementationMethod: get_IEnumerator1CurrentMethod,
+                forwardedMethod: iteratorMethodsType.GetMethod("Current"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Create the 'IEnumerator<T>.Current' property
             PropertyDefinition enumerator1CurrentProperty = new(
@@ -468,20 +460,12 @@ internal partial class InteropTypeDefinitionBuilder
                 method: moveNextMethod);
 
             // Create a method body for the 'MoveNext' method
-            moveNextMethod.CilMethodBody = new CilMethodBody(moveNextMethod)
-            {
-                Instructions =
-                {
-                    { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
-                    { Ldtoken, enumeratorType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
-                    { Call, iteratorMethodsType.GetMethod("MoveNext"u8) },
-                    { Ret }
-                }
-            };
+            moveNextMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
+                interfaceType: enumeratorType,
+                implementationMethod: moveNextMethod,
+                forwardedMethod: iteratorMethodsType.GetMethod("MoveNext"u8),
+                interopReferences: interopReferences,
+                module: module);
 
             // Define the 'System.IEnumerator.Reset' method
             MethodDefinition resetMethod = new(
