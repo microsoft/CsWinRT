@@ -711,7 +711,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'get_Item' getter method
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.get_Item",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32));
 
             // Add and implement the 'get_Item' method
@@ -739,7 +739,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'set_Item' getter method
             MethodDefinition set_ItemMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.set_Item",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
@@ -784,7 +784,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'IndexOf' method
             MethodDefinition indexOfMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.IndexOf",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32, elementType.Import(module)));
 
             // Add and implement the 'IndexOf' method
@@ -812,7 +812,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'Insert' method
             MethodDefinition insertMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.Insert",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
@@ -845,7 +845,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'RemoveAt' method
             MethodDefinition removeAtMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.RemoveAt",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, module.CorLibTypeFactory.Int32));
 
             // Add and implement the 'RemoveAt' method
@@ -873,7 +873,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'get_Count' getter method
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_Count",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
 
             // Add and implement the 'get_Count' method
@@ -909,7 +909,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'Add' method
             MethodDefinition addMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, elementType.Import(module)));
 
             // Add and implement the 'Add' method
@@ -937,7 +937,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'Clear' method
             MethodDefinition clearMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Clear",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
             // Add and implement the 'Clear' method
@@ -964,7 +964,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'Contains' method
             MethodDefinition containsMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Contains",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
 
             // Add and implement the 'Contains' method
@@ -992,7 +992,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'CopyTo' method
             MethodDefinition copyToMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.CopyTo",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
@@ -1025,7 +1025,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'Remove' method
             MethodDefinition removeMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Remove",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean, elementType.Import(module)));
 
             // Add and implement the 'Remove' method
@@ -1053,7 +1053,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'IEnumerable<T>.GetEnumerator' method
             MethodDefinition enumerable1GetEnumeratorMethod = new(
                 name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module)));
 
             // Add and implement the 'IEnumerable<T>.GetEnumerator' method
@@ -1080,7 +1080,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'IEnumerable.GetEnumerator' method
             MethodDefinition enumerableGetEnumeratorMethod = new(
                 name: "System.Collections.IEnumerable.GetEnumerator"u8,
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToReferenceTypeSignature()));
 
             // Add and implement the 'IEnumerable.GetEnumerator' method

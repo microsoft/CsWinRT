@@ -388,7 +388,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'IEnumerator<T>.Current' getter method
             MethodDefinition get_IEnumerator1CurrentMethod = new(
                 name: $"System.Collections.Generic.IEnumerator<{elementType.FullName}>.get_Current",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(elementType.Import(module)));
 
             // Add and implement the 'IEnumerator<T>.Current' get accessor method
@@ -426,7 +426,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'IEnumerator.Current' getter method
             MethodDefinition get_IEnumeratorCurrentMethod = new(
                 name: "System.Collections.IEnumerator.get_Current"u8,
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Object));
 
             // Add and implement the 'IEnumerator.Current' get accessor method
@@ -459,7 +459,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Define the 'System.IEnumerator.MoveNext' method
             MethodDefinition moveNextMethod = new(
                 name: "System.IEnumerator.MoveNext"u8,
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
 
             // Add and implement the 'Reset' method
@@ -486,7 +486,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Define the 'System.IEnumerator.Reset' method
             MethodDefinition resetMethod = new(
                 name: "System.IEnumerator.Reset"u8,
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
             // Add and implement the 'Reset' method
@@ -507,7 +507,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Define the 'System.IDisposable.Dispose' method
             MethodDefinition disposeMethod = new(
                 name: "System.IDisposable.Dispose"u8,
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Void));
 
             // And and implement the 'Dispose' method

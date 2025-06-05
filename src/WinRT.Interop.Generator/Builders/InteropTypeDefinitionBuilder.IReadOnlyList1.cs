@@ -467,7 +467,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'get_Item' getter method
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyList<{elementType.FullName}>.get_Item",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32));
 
             // Add and implement the 'get_Item' method
@@ -504,7 +504,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'get_Count' getter method
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.get_Count",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
 
             // Add and implement the 'get_Count' method
@@ -540,7 +540,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'IEnumerable<T>.GetEnumerator' method
             MethodDefinition enumerable1GetEnumeratorMethod = new(
                 name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module)));
 
             // Add and implement the 'IEnumerable<T>.GetEnumerator' method
@@ -567,7 +567,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'IEnumerable.GetEnumerator' method
             MethodDefinition enumerableGetEnumeratorMethod = new(
                 name: "System.Collections.IEnumerable.GetEnumerator"u8,
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToReferenceTypeSignature()));
 
             // Add and implement the 'IEnumerable.GetEnumerator' method

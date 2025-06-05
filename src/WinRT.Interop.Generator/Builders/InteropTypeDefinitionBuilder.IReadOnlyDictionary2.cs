@@ -479,7 +479,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'get_Item' getter method
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Item",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(valueType.Import(module), keyType.Import(module)));
 
             // Add and implement the 'get_Item' method
@@ -516,7 +516,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'get_Keys' getter method
             MethodDefinition get_KeysMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Keys",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType).Import(module)));
 
             // Add and implement the 'get_Keys' method
@@ -547,7 +547,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'get_Values' getter method
             MethodDefinition get_ValuesMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Values",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(valueType).Import(module)));
 
             // Add and implement the 'get_Values' method
@@ -578,7 +578,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'ContainsKey' method
             MethodDefinition containsKeyMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.ContainsKey",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [keyType.Import(module)]));
@@ -608,7 +608,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'TryGetValue' method
             MethodDefinition tryGetValueMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.TryGetValue",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [keyType.Import(module), valueType.Import(module).MakeByReferenceType()]))
@@ -642,7 +642,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Create the 'get_Count' getter method
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_Count",
-                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
 
             // Add and implement the 'get_Count' method
