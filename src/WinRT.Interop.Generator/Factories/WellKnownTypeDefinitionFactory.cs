@@ -198,7 +198,7 @@ internal static partial class WellKnownTypeDefinitionFactory
             baseType: interopReferences.ValueType.Import(module));
 
         // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToTypeSignature(isValueType: true);
+        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
 
         // The type layout looks like this:
         //
@@ -775,7 +775,7 @@ internal static partial class WellKnownTypeDefinitionFactory
             baseType: interopReferences.ValueType.Import(module));
 
         // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToTypeSignature(isValueType: true);
+        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
 
         // The type layout looks like this:
         //

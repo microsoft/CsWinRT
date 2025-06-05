@@ -106,7 +106,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IVectorMethodsImpl1.MakeGenericInstanceType(elementType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IVectorMethodsImpl1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(vectorMethodsType);
@@ -120,7 +120,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: elementType.Import(module),
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.UInt32]))
             { NoInlining = true };
 
@@ -144,7 +144,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.UInt32,
                         elementType.Import(module)]))
             { NoInlining = true };
@@ -169,7 +169,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         elementType.Import(module)]))
             { NoInlining = true };
 
@@ -193,7 +193,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         elementType.Import(module),
                         module.CorLibTypeFactory.UInt32.MakeByReferenceType()]))
             {
@@ -221,7 +221,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.UInt32,
                         elementType.Import(module)]))
             { NoInlining = true };
@@ -273,7 +273,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: elementType.Import(module),
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.Int32]));
 
             listMethodsType.Methods.Add(get_ItemMethod);
@@ -299,7 +299,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.Int32,
                         elementType.Import(module)]));
 
@@ -326,7 +326,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
 
             listMethodsType.Methods.Add(countMethod);
 
@@ -350,7 +350,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         elementType.Import(module)]));
 
             listMethodsType.Methods.Add(addMethod);
@@ -376,7 +376,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         elementType.Import(module)]));
 
             listMethodsType.Methods.Add(containsMethod);
@@ -402,7 +402,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         elementType.Import(module).MakeSzArrayType(),
                         module.CorLibTypeFactory.Int32]));
 
@@ -430,7 +430,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         elementType.Import(module)]));
 
             listMethodsType.Methods.Add(removeMethod);
@@ -456,7 +456,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.Int32]));
 
             listMethodsType.Methods.Add(removeAtMethod);
@@ -482,7 +482,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         elementType.Import(module)]));
 
             listMethodsType.Methods.Add(indexOfMethod);
@@ -508,7 +508,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.Int32,
                         elementType.Import(module)]));
 
@@ -535,7 +535,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
 
             listMethodsType.Methods.Add(clearMethod);
 
@@ -569,14 +569,14 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             TypeSignature elementType = listType.TypeArguments[0];
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IVECTOR_METHODS>>'
-            TypeSignature windowsRuntimeList4Type = interopReferences.WindowsRuntimeList4.MakeGenericInstanceType(
+            TypeSignature windowsRuntimeList4Type = interopReferences.WindowsRuntimeList4.MakeGenericReferenceType(
                 elementType,
-                emitState.LookupTypeDefinition(enumerableType, "Interface").ToTypeSignature(isValueType: false),
-                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToTypeSignature(isValueType: false),
-                vectorMethodsType.ToTypeSignature(isValueType: false));
+                emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
+                vectorMethodsType.ToReferenceTypeSignature());
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: listType,
@@ -683,8 +683,8 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition interfaceImplType)
         {
             TypeSignature elementType = listType.TypeArguments[0];
-            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericInstanceType(elementType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
+            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(elementType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
@@ -1053,7 +1053,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition enumerable1GetEnumeratorMethod = new(
                 name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module)));
 
             // Add and implement the 'IEnumerable<T>.GetEnumerator' method
             interfaceImplType.AddMethodImplementation(
@@ -1080,7 +1080,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition enumerableGetEnumeratorMethod = new(
                 name: "System.Collections.IEnumerable.GetEnumerator"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToTypeSignature(isValueType: false)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToReferenceTypeSignature()));
 
             // Add and implement the 'IEnumerable.GetEnumerator' method
             interfaceImplType.AddMethodImplementation(

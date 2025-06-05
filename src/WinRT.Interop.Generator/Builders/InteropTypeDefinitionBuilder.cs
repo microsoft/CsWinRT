@@ -79,7 +79,7 @@ internal static partial class InteropTypeDefinitionBuilder
         module.TopLevelTypes.Add(nativeObjectType);
 
         // Define the constructor
-        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false));
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(module, interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature());
 
         nativeObjectType.Methods.Add(ctor);
 
@@ -133,7 +133,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: module.CorLibTypeFactory.Boolean,
                 parameterTypes: [
                     module.CorLibTypeFactory.Void.MakePointerType(),
-                    interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module),
+                    interopReferences.ReadOnlySpanChar.ToValueTypeSignature().Import(module),
                     module.CorLibTypeFactory.Object.MakeByReferenceType(),
                     interopReferences.CreatedWrapperFlags.MakeByReferenceType().Import(module)]))
         {
@@ -152,7 +152,7 @@ internal static partial class InteropTypeDefinitionBuilder
 
         // Declare the local variables:
         //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
-        CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module));
+        CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module));
 
         // Jump labels
         CilInstruction ldc_i4_0_noFlags = new(Ldc_I4_0);
@@ -300,7 +300,7 @@ internal static partial class InteropTypeDefinitionBuilder
 
         // Declare the local variables:
         //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'result')
-        CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToTypeSignature(isValueType: false).Import(module));
+        CilLocalVariable loc_0_result = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module));
 
         // Jump labels
         CilInstruction ldc_i4_0_noFlags = new(Ldc_I4_0);
@@ -366,7 +366,7 @@ internal static partial class InteropTypeDefinitionBuilder
 
         // Prepare the external types we need in the implemented methods
         TypeSignature typeSignature2 = typeSignature.Import(module);
-        TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true);
+        TypeSignature windowsRuntimeObjectReferenceValueType = interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature();
 
         // Define the 'ConvertToUnmanaged' method as follows:
         //
@@ -413,7 +413,7 @@ internal static partial class InteropTypeDefinitionBuilder
         IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
             interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
             .Import(module)
-            .MakeGenericInstanceMethod(interfaceComWrappersCallbackType.ToTypeSignature(isValueType: false));
+            .MakeGenericInstanceMethod(interfaceComWrappersCallbackType.ToReferenceTypeSignature());
 
         // Create a method body for the 'ConvertToManaged' method
         convertToManagedMethod.CilMethodBody = new CilMethodBody(convertToManagedMethod)
@@ -465,7 +465,7 @@ internal static partial class InteropTypeDefinitionBuilder
         //
         // [FixedAddressValueType]
         // private static readonly <VTABLE_TYPE> Vftbl;
-        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, vftblType.ToTypeSignature(isValueType: true))
+        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private, vftblType.ToValueTypeSignature())
         {
             CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
         };
@@ -580,7 +580,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // private static readonly <DelegateInterfaceEntries> Entries;
         //
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
-        FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private, entriesFieldType.ToTypeSignature(isValueType: true))
+        FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private, entriesFieldType.ToValueTypeSignature())
         {
             CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor.Import(module)) }
         };

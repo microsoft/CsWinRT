@@ -272,7 +272,7 @@ internal static partial class InteropMethodDefinitionFactory
                 LocalVariables =
                 {
                     new CilLocalVariable(module.CorLibTypeFactory.Int32),
-                    new CilLocalVariable(interopReferences.IEnumeratorAdapter1.MakeGenericInstanceType(elementType).Import(module))
+                    new CilLocalVariable(interopReferences.IEnumeratorAdapter1.MakeGenericReferenceType(elementType).Import(module))
                 },
                 Instructions =
                 {

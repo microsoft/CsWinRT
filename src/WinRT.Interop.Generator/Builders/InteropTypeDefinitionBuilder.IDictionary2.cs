@@ -109,7 +109,7 @@ internal partial class InteropTypeDefinitionBuilder
                 }
 
                 // Create a dummy signature just to generate the mangled name for the vtable type
-                TypeSignature sharedReadOnlyDictionaryType = interopReferences.IDictionary2.MakeGenericInstanceType(
+                TypeSignature sharedReadOnlyDictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(
                     displayKeyType,
                     displayValueType);
 

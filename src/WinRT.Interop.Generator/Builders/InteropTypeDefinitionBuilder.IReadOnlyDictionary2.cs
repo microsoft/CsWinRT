@@ -83,7 +83,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Construct a signature using 'object' as the value, and we use that to generate
             // the namespace and type name for the shared vtable type ('object' is a placeholder).
-            TypeSignature sharedReadOnlyDictionaryType = interopReferences.IReadOnlyDictionary2.MakeGenericInstanceType(
+            TypeSignature sharedReadOnlyDictionaryType = interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType(
                 keyType,
                 module.CorLibTypeFactory.Object);
 
@@ -131,7 +131,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IMapViewMethodsImpl2.MakeGenericInstanceType(keyType, valueType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IMapViewMethodsImpl2.MakeGenericReferenceType(keyType, valueType).Import(module).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(mapViewMethodsType);
@@ -145,7 +145,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module)]))
             { NoInlining = true };
 
@@ -169,7 +169,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: valueType.Import(module),
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module)]))
             { NoInlining = true };
 
@@ -221,7 +221,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: valueType.Import(module),
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module)]));
 
             readOnlyDictionaryMethodsType.Methods.Add(get_ItemMethod);
@@ -246,7 +246,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
 
             readOnlyDictionaryMethodsType.Methods.Add(countMethod);
 
@@ -270,7 +270,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module)]));
 
             readOnlyDictionaryMethodsType.Methods.Add(containsKeyMethod);
@@ -296,7 +296,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module),
                         valueType.MakeByReferenceType().Import(module)]))
             {
@@ -339,16 +339,16 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
             TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair.MakeGenericInstanceType(keyType, valueType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(keyValuePairType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyDictionary<<KEY_TYPE>, <VALUE_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IMAPVIEW_METHODS>>'
-            TypeSignature windowsRuntimeReadOnlyDictionary5Type = interopReferences.WindowsRuntimeReadOnlyDictionary5.MakeGenericInstanceType(
+            TypeSignature windowsRuntimeReadOnlyDictionary5Type = interopReferences.WindowsRuntimeReadOnlyDictionary5.MakeGenericReferenceType(
                 keyType,
                 valueType,
-                emitState.LookupTypeDefinition(enumerableType, "Interface").ToTypeSignature(isValueType: false),
-                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToTypeSignature(isValueType: false),
-                mapViewMethodsType.ToTypeSignature(isValueType: false));
+                emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
+                mapViewMethodsType.ToReferenceTypeSignature());
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: readOnlyDictionaryType,

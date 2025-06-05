@@ -34,7 +34,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
-            TypeSignature baseEventSourceType = interopReferences.EventHandler1EventSource.MakeGenericInstanceType(delegateType.TypeArguments[0]);
+            TypeSignature baseEventSourceType = interopReferences.EventHandler1EventSource.MakeGenericReferenceType(delegateType.TypeArguments[0]);
 
             // We're declaring an 'internal sealed class' type
             eventSourceType = new(
@@ -49,7 +49,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition ctor = MethodDefinition.CreateConstructor(
                 module: module,
                 parameterTypes: [
-                    interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                    interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                     module.CorLibTypeFactory.Int32]);
 
             eventSourceType.Methods.Add(ctor);
@@ -66,7 +66,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true),
+                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature(),
                     parameterTypes: [delegateType.Import(module)]));
 
             // Add and implement the 'ConvertToUnmanaged' method
@@ -101,7 +101,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
-            TypeSignature baseEventSourceType = interopReferences.EventHandler2EventSource.MakeGenericInstanceType([.. delegateType.TypeArguments]);
+            TypeSignature baseEventSourceType = interopReferences.EventHandler2EventSource.MakeGenericReferenceType([.. delegateType.TypeArguments]);
 
             // We're declaring an 'internal sealed class' type
             eventSourceType = new(
@@ -116,7 +116,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition ctor = MethodDefinition.CreateConstructor(
                 module: module,
                 parameterTypes: [
-                    interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                    interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                     module.CorLibTypeFactory.Int32]);
 
             eventSourceType.Methods.Add(ctor);
@@ -133,7 +133,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToTypeSignature(isValueType: true),
+                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature(),
                     parameterTypes: [delegateType.Import(module)]));
 
             // Add and implement the 'ConvertToUnmanaged' method

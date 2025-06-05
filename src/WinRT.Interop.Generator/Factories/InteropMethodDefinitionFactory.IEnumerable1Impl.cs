@@ -52,10 +52,10 @@ internal partial class InteropMethodDefinitionFactory
             MemberReference convertToUnmanagedMethod = module
                 .CreateTypeReference(
                     ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                    name: InteropUtf8NameFactory.TypeName(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType), "Marshaller"))
+                    name: InteropUtf8NameFactory.TypeName(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType), "Marshaller"))
                 .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
-                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true),
-                    parameterTypes: [interopReferences.IEnumerator1.MakeGenericInstanceType(elementType)]));
+                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                    parameterTypes: [interopReferences.IEnumerator1.MakeGenericReferenceType(elementType)]));
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
@@ -67,7 +67,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: 'int' (the 'HRESULT' to return)
             //   [1]: 'WindowsRuntimeObjectReferenceValue' (the marshalled 'IEnumerator<T>' instance)
             CilLocalVariable loc_0_hresult = new(module.CorLibTypeFactory.Int32);
-            CilLocalVariable loc_1_enumeratorValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true).Import(module));
+            CilLocalVariable loc_1_enumeratorValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
 
             // Create a method body for the 'get_Current' method
             firstMethod.CilMethodBody = new CilMethodBody(firstMethod)

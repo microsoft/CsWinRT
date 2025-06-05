@@ -115,10 +115,10 @@ internal static class TypeDefinitionExtensions
         /// <param name="typeSignature">The constructed signature for the interface type.</param>
         /// <returns>All (unique) generic type signatures for base interfaces.</returns>
         /// <remarks>
-        /// This method can only be called when <paramref name="type"/> is an interface type.
+        /// This method can only be called when <paramref name="typeSignature"/> is an interface type.
         /// Additionally, <paramref name="typeSignature"/> must be constructed over that type.
         /// </remarks>
-        /// <exception cref="ArgumentException"><paramref name="type"/> is not an interface type, or <paramref name="typeSignature"/> is not a match for it.</exception>
+        /// <exception cref="ArgumentException"><paramref name="typeSignature"/> is not an interface type, or <paramref name="typeSignature"/> is not a match for it.</exception>
         public IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceInterfaceSignatures(GenericInstanceTypeSignature typeSignature)
         {
             // This method is only valid when called on interface types (it's meant to enumerate the base interfaces)
@@ -140,7 +140,7 @@ internal static class TypeDefinitionExtensions
                 // Ignore the interface, if we couldn't construct it. Note that we only need to care about generic
                 // interfaces. If an interface were e.g. 'IA : IB<int>', then 'IB<int>' would be present in the
                 // 'TypeSpec' table of the declaring module for 'IA', meaning we'd have already seen it.
-                if (interfaceImplementation.Interface?.ToTypeSignature(isValueType: false).InstantiateGenericTypes(genericContext) is not GenericInstanceTypeSignature interfaceSignature)
+                if (interfaceImplementation.Interface?.ToReferenceTypeSignature().InstantiateGenericTypes(genericContext) is not GenericInstanceTypeSignature interfaceSignature)
                 {
                     continue;
                 }

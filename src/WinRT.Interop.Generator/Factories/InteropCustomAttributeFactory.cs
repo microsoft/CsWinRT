@@ -38,7 +38,7 @@ internal static class InteropCustomAttributeFactory
                 argumentType: typeArraySignature,
                 argument: new CustomAttributeArgument(
                     argumentType: typeArraySignature,
-                    elements: interopReferences.CallConvMemberFunction.Import(module).ToTypeSignature(isValueType: false)))]));
+                    elements: interopReferences.CallConvMemberFunction.Import(module).ToReferenceTypeSignature()))]));
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ internal static class InteropCustomAttributeFactory
         // [AttributeUsage(<attributeTargets>, AllowMultiple = <allowMultiple>)]
         return new(interopReferences.AttributeUsageAttribute_ctor_AttributeTargets.Import(module), new CustomAttributeSignature(
             fixedArguments: [new CustomAttributeArgument(
-                argumentType: interopReferences.AttributeTargets.Import(module).ToTypeSignature(isValueType: true),
+                argumentType: interopReferences.AttributeTargets.Import(module).ToValueTypeSignature(),
                 value: (int)attributeTargets)],
             namedArguments: [new CustomAttributeNamedArgument(
                 memberType: CustomAttributeArgumentMemberType.Property,

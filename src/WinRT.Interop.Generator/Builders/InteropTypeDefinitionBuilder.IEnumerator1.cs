@@ -71,7 +71,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IIteratorMethodsImpl1.MakeGenericInstanceType(elementType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IIteratorMethodsImpl1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(iteratorMethodsType);
@@ -84,7 +84,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: enumeratorType.TypeArguments[0].Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]))
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             { NoInlining = true };
 
             // Add and implement the 'Current' method
@@ -96,7 +96,7 @@ internal partial class InteropTypeDefinitionBuilder
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: 'void*' (the native value that was retrieved)
-            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true).Import(module));
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
             CilLocalVariable loc_2_currentNative = new(module.CorLibTypeFactory.Void.MakePointerType());
 
@@ -199,7 +199,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
 
             iteratorMethodsType.Methods.Add(hasCurrentMethod);
 
@@ -222,7 +222,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
 
             iteratorMethodsType.Methods.Add(moveNextMethod);
 
@@ -254,9 +254,9 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             // The 'NativeObject' is deriving from 'WindowsRuntimeEnumerator<<ELEMENT_TYPE>, <IITERATOR_METHODS>>'
-            TypeSignature windowsRuntimeEnumerator2Type = interopReferences.WindowsRuntimeEnumerator2.MakeGenericInstanceType(
+            TypeSignature windowsRuntimeEnumerator2Type = interopReferences.WindowsRuntimeEnumerator2.MakeGenericReferenceType(
                 enumeratorType.TypeArguments[0],
-                iteratorMethodsType.ToTypeSignature(isValueType: false));
+                iteratorMethodsType.ToReferenceTypeSignature());
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: enumeratorType,

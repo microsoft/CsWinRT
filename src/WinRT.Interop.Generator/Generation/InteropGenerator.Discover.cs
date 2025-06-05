@@ -226,7 +226,7 @@ internal partial class InteropGenerator
                             // type. This ensures that we're never missing any 'IEnumerator<T>' instantiation, which we might depend on
                             // from other generated code, or projections. This special handling is needed because unlike with the other
                             // interfaces, 'IEnumerator<T>' will not show up as a base interface for other collection interface types.
-                            discoveryState.TrackIEnumerator1Type(interopReferences.IEnumerator1.MakeGenericInstanceType(typeSignature.TypeArguments[0]));
+                            discoveryState.TrackIEnumerator1Type(interopReferences.IEnumerator1.MakeGenericReferenceType(typeSignature.TypeArguments[0]));
                         }
                         else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
                         {

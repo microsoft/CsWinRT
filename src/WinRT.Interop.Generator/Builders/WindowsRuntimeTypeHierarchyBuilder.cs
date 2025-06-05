@@ -490,8 +490,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Boolean,
                 parameterTypes: [
-                    interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module),
-                    interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module).MakeByReferenceType(),
+                    interopReferences.ReadOnlySpanChar.ToValueTypeSignature().Import(module),
+                    interopReferences.ReadOnlySpanChar.ToValueTypeSignature().Import(module).MakeByReferenceType(),
                     module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
         {
             // Both 'baseRuntimeClassName' and 'nextBaseRuntimeClassNameIndex' are '[out]' parameters.
@@ -541,7 +541,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         CilLocalVariable loc_1_keysRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
         CilLocalVariable loc_2_keyLength = new(module.CorLibTypeFactory.Int32);
         CilLocalVariable loc_3_valueOffset = new(module.CorLibTypeFactory.Int32);
-        CilLocalVariable loc_4_keySpan = new(interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module));
+        CilLocalVariable loc_4_keySpan = new(interopReferences.ReadOnlySpanChar.ToValueTypeSignature().Import(module));
         CilLocalVariable loc_5_valuesRef = new(module.CorLibTypeFactory.Byte.MakeByReferenceType());
         CilLocalVariable loc_6_valueLength = new(module.CorLibTypeFactory.Int32);
 
@@ -695,7 +695,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 returnType: module.CorLibTypeFactory.Boolean,
                 parameterTypes: [
                     module.CorLibTypeFactory.Int32,
-                    interopReferences.ReadOnlySpanChar.ToTypeSignature(isValueType: true).Import(module).MakeByReferenceType(),
+                    interopReferences.ReadOnlySpanChar.ToValueTypeSignature().Import(module).MakeByReferenceType(),
                     module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
         {
             // Both 'baseRuntimeClassName' and 'nextBaseRuntimeClassNameIndex' are '[out]' parameters

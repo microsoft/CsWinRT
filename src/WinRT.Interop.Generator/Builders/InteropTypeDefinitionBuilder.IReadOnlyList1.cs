@@ -106,7 +106,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IVectorViewMethods1.MakeGenericInstanceType(elementType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IVectorViewMethods1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(vectorViewMethodsType);
@@ -120,7 +120,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: elementType.Import(module),
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.UInt32]))
             { NoInlining = true };
 
@@ -133,7 +133,7 @@ internal partial class InteropTypeDefinitionBuilder
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: '<ABI_TYPE_ARGUMENT>' (the ABI type for the type argument)
-            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToTypeSignature(isValueType: true).Import(module));
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
             CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
             CilLocalVariable loc_2_result = new(elementType.Import(module)); // TODO: use ABI type
 
@@ -269,7 +269,7 @@ internal partial class InteropTypeDefinitionBuilder
                 signature: MethodSignature.CreateStatic(
                     returnType: elementType.Import(module),
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false),
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         module.CorLibTypeFactory.Int32]));
 
             readOnlyListMethodsType.Methods.Add(get_ItemMethod);
@@ -294,7 +294,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToTypeSignature(isValueType: false)]));
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
 
             readOnlyListMethodsType.Methods.Add(countMethod);
 
@@ -328,14 +328,14 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IREADONLYLIST_METHODS>>'
-            TypeSignature windowsRuntimeReadOnlyList4Type = interopReferences.WindowsRuntimeReadOnlyList4.MakeGenericInstanceType(
+            TypeSignature windowsRuntimeReadOnlyList4Type = interopReferences.WindowsRuntimeReadOnlyList4.MakeGenericReferenceType(
                 elementType,
-                emitState.LookupTypeDefinition(enumerableType, "Interface").ToTypeSignature(isValueType: false),
-                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToTypeSignature(isValueType: false),
-                readOnlyListMethodsType.ToTypeSignature(isValueType: false));
+                emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
+                readOnlyListMethodsType.ToReferenceTypeSignature());
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: readOnlyListType,
@@ -442,8 +442,8 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition interfaceImplType)
         {
             TypeSignature elementType = readOnlyListType.TypeArguments[0];
-            TypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericInstanceType(elementType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericInstanceType(elementType);
+            TypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(elementType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
@@ -541,7 +541,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition enumerable1GetEnumeratorMethod = new(
                 name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericInstanceType(elementType).Import(module)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType).Import(module)));
 
             // Add and implement the 'IEnumerable<T>.GetEnumerator' method
             interfaceImplType.AddMethodImplementation(
@@ -568,7 +568,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition enumerableGetEnumeratorMethod = new(
                 name: "System.Collections.IEnumerable.GetEnumerator"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToTypeSignature(isValueType: false)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator.Import(module).ToReferenceTypeSignature()));
 
             // Add and implement the 'IEnumerable.GetEnumerator' method
             interfaceImplType.AddMethodImplementation(
