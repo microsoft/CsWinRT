@@ -182,7 +182,7 @@ internal static class WellKnownMemberDefinitionFactory
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
             signature: MethodSignature.CreateStatic(
                 returnType: module.CorLibTypeFactory.Int32,
-                parameterTypes: [interopReferences.ReadOnlySpanChar.Import(module).ToValueTypeSignature()]));
+                parameterTypes: [interopReferences.ReadOnlySpanChar.Import(module)]));
 
         // Jump labels
         CilInstruction ldloc_1_rangeCheck = new(Ldloc_1);

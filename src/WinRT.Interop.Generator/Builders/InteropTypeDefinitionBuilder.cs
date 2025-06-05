@@ -133,7 +133,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: module.CorLibTypeFactory.Boolean,
                 parameterTypes: [
                     module.CorLibTypeFactory.Void.MakePointerType(),
-                    interopReferences.ReadOnlySpanChar.ToValueTypeSignature().Import(module),
+                    interopReferences.ReadOnlySpanChar.Import(module),
                     module.CorLibTypeFactory.Object.MakeByReferenceType(),
                     interopReferences.CreatedWrapperFlags.MakeByReferenceType().Import(module)]))
         {

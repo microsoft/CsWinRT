@@ -91,9 +91,7 @@ internal sealed class InteropReferences
     /// Gets the <see cref="ITypeDefOrRef"/> for <see cref="System.ReadOnlySpan{T}"/> of <see cref="char"/>.
     /// </summary>
     [field: MaybeNull, AllowNull]
-    public ITypeDefOrRef ReadOnlySpanChar => field ??= ReadOnlySpan
-        .MakeGenericValueType(_interopModule.CorLibTypeFactory.Char)
-        .ToTypeDefOrRef();
+    public GenericInstanceTypeSignature ReadOnlySpanChar => field ??= ReadOnlySpan.MakeGenericValueType(_interopModule.CorLibTypeFactory.Char);
 
     /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Exception"/>.
@@ -620,6 +618,7 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference ReadOnlySpanCharget_Item => field ??= ReadOnlySpanChar
+        .ToTypeDefOrRef()
         .CreateMemberReference("get_Item", MethodSignature.CreateInstance(
             returnType:
                 new GenericParameterSignature(GenericParameterType.Type, index: 0)
@@ -632,6 +631,7 @@ internal sealed class InteropReferences
     /// </summary>
     [field: MaybeNull, AllowNull]
     public MemberReference ReadOnlySpanCharget_Length => field ??= ReadOnlySpanChar
+        .ToTypeDefOrRef()
         .CreateMemberReference("get_Length", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Int32));
 
     /// <summary>
@@ -653,7 +653,7 @@ internal sealed class InteropReferences
     [field: MaybeNull, AllowNull]
     public MemberReference MemoryExtensionsAsSpanCharString => field ??= MemoryExtensions
         .CreateMemberReference("AsSpan", MethodSignature.CreateStatic(
-            returnType: ReadOnlySpanChar.ToValueTypeSignature(),
+            returnType: ReadOnlySpanChar,
             parameterTypes: [_interopModule.CorLibTypeFactory.String]));
 
     /// <summary>
@@ -979,7 +979,7 @@ internal sealed class InteropReferences
             returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
             parameterTypes: [
                 _windowsRuntimeModule.CorLibTypeFactory.Void.MakePointerType(),
-                ReadOnlySpanChar.ToValueTypeSignature(),
+                ReadOnlySpanChar,
                 _windowsRuntimeModule.CorLibTypeFactory.Object.MakeByReferenceType(),
                 CreatedWrapperFlags.MakeByReferenceType()]));
 
@@ -1179,7 +1179,7 @@ internal sealed class InteropReferences
     public MemberReference HStringMarshallerConvertToUnmanaged => field ??= HStringMarshaller
         .CreateMemberReference("ConvertToUnmanaged", MethodSignature.CreateStatic(
             returnType: _interopModule.CorLibTypeFactory.Void.MakePointerType(),
-            parameterTypes: [ReadOnlySpanChar.ToValueTypeSignature()]));
+            parameterTypes: [ReadOnlySpanChar]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.HStringMarshaller.ConvertToManaged</c>.
