@@ -289,25 +289,25 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'TryGetValue' method as follows:
             //
-            // public static bool TryGetKey(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key, out <VALUE_TYPE> value)
-            MethodDefinition tryGetKeyMethod = new(
-                name: "TryGetKey"u8,
+            // public static bool TryGetValue(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key, out <VALUE_TYPE> value)
+            MethodDefinition tryGetValueMethod = new(
+                name: "TryGetValue"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module),
-                        valueType.MakeByReferenceType().Import(module)]))
+                        valueType.Import(module).MakeByReferenceType()]))
             {
                 // The 'value' parameter is '[out]'
                 ParameterDefinitions = { new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out) }
             };
 
-            readOnlyDictionaryMethodsType.Methods.Add(tryGetKeyMethod);
+            readOnlyDictionaryMethodsType.Methods.Add(tryGetValueMethod);
 
-            // Create a method body for the 'TryGetKey' method
-            tryGetKeyMethod.CilMethodBody = new CilMethodBody(tryGetKeyMethod)
+            // Create a method body for the 'TryGetValue' method
+            tryGetValueMethod.CilMethodBody = new CilMethodBody(tryGetValueMethod)
             {
                 Instructions =
                 {
@@ -435,6 +435,245 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the interface implementation of some <c>IMapView&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="readOnlyDictionaryMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyDictionaryMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="interfaceImplType">The resulting interface implementation type.</param>
+        public static void InterfaceImpl(
+            GenericInstanceTypeSignature readOnlyDictionaryType,
+            TypeDefinition readOnlyDictionaryMethodsType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition interfaceImplType)
+        {
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType);
+            TypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(keyValuePairType);
+
+            // We're declaring an 'internal interface class' type
+            interfaceImplType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "InterfaceImpl"),
+                attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: null)
+            {
+                CustomAttributes = { new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)) },
+                Interfaces =
+                {
+                    new InterfaceImplementation(readOnlyDictionaryType.Import(module).ToTypeDefOrRef()),
+                    new InterfaceImplementation(readOnlyCollectionType.Import(module).ToTypeDefOrRef())
+                }
+            };
+
+            module.TopLevelTypes.Add(interfaceImplType);
+
+            // Create the 'get_Item' getter method
+            MethodDefinition get_ItemMethod = new(
+                name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Item",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(valueType.Import(module), keyType.Import(module)));
+
+            // Add and implement the 'get_Item' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IReadOnlyDictionary2get_Item(keyType, valueType).Import(module),
+                method: get_ItemMethod);
+
+            // Create a body for the 'get_Item' method
+            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, readOnlyDictionaryType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Call, readOnlyDictionaryMethodsType.GetMethod("Item"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Item' property
+            PropertyDefinition itemProperty = new(
+                name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.Item",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.CreateInstance(valueType.Import(module), keyType.Import(module)))
+            { GetMethod = get_ItemMethod };
+
+            interfaceImplType.Properties.Add(itemProperty);
+
+            // Create the 'get_Keys' getter method
+            MethodDefinition get_KeysMethod = new(
+                name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Keys",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType).Import(module)));
+
+            // Add and implement the 'get_Keys' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IReadOnlyDictionary2get_Keys(keyType, valueType).Import(module),
+                method: get_KeysMethod);
+
+            // Create a body for the 'get_Keys' method
+            get_KeysMethod.CilMethodBody = new CilMethodBody(get_KeysMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, interopReferences.ReadOnlyDictionaryKeyCollection2_ctor(keyType, valueType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Keys' property
+            PropertyDefinition keysProperty = new(
+                name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.Keys",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType).Import(module)))
+            { GetMethod = get_KeysMethod };
+
+            interfaceImplType.Properties.Add(keysProperty);
+
+            // Create the 'get_Values' getter method
+            MethodDefinition get_ValuesMethod = new(
+                name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Values",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType).Import(module)));
+
+            // Add and implement the 'get_Values' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IReadOnlyDictionary2get_Values(keyType, valueType).Import(module),
+                method: get_ValuesMethod);
+
+            // Create a body for the 'get_Values' method
+            get_ValuesMethod.CilMethodBody = new CilMethodBody(get_ValuesMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, interopReferences.ReadOnlyDictionaryValueCollection2_ctor(keyType, valueType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Value' property
+            PropertyDefinition valuesProperty = new(
+                name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.Values",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType).Import(module)))
+            { GetMethod = get_ValuesMethod };
+
+            interfaceImplType.Properties.Add(valuesProperty);
+
+            // Create the 'ContainsKey' method
+            MethodDefinition containsKeyMethod = new(
+                name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.ContainsKey",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [keyType.Import(module)]));
+
+            // Add and implement the 'ContainsKey' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IReadOnlyDictionary2ContainsKey(keyType, valueType).Import(module),
+                method: containsKeyMethod);
+
+            // Create a body for the 'ContainsKey' method
+            containsKeyMethod.CilMethodBody = new CilMethodBody(containsKeyMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, readOnlyDictionaryType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Call, readOnlyDictionaryMethodsType.GetMethod("ContainsKey"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'TryGetValue' method
+            MethodDefinition tryGetValueMethod = new(
+                name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.TryGetValue",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [keyType.Import(module), valueType.Import(module).MakeByReferenceType()]))
+            {
+                ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
+            };
+
+            // Add and implement the 'TryGetValue' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IReadOnlyDictionary2ContainsKey(keyType, valueType).Import(module),
+                method: tryGetValueMethod);
+
+            // Create a body for the 'TryGetValue' method
+            tryGetValueMethod.CilMethodBody = new CilMethodBody(tryGetValueMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, readOnlyDictionaryType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, readOnlyDictionaryMethodsType.GetMethod("TryGetValue"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'get_Count' getter method
+            MethodDefinition get_CountMethod = new(
+                name: $"System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_Count",
+                attributes: MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+
+            // Add and implement the 'get_Count' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IReadOnlyCollection1get_Count(keyValuePairType).Import(module),
+                method: get_CountMethod);
+
+            // Create a body for the 'get_Count' method
+            get_CountMethod.CilMethodBody = new CilMethodBody(get_CountMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Ldtoken, readOnlyDictionaryType.Import(module).ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
+                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Call, readOnlyDictionaryMethodsType.GetMethod("Count"u8) },
+                    { Ret }
+                }
+            };
+
+            // Create the 'Count' property
+            PropertyDefinition countProperty = new(
+                name: $"System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.Count",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.CreateInstance(module.CorLibTypeFactory.Int32))
+            { GetMethod = get_CountMethod };
+
+            interfaceImplType.Properties.Add(countProperty);
         }
     }
 }

@@ -850,6 +850,15 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
+
+                // Define the 'InterfaceImpl' type (with '[DynamicInterfaceCastableImplementation]')
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.InterfaceImpl(
+                    readOnlyDictionaryType: typeSignature,
+                    readOnlyDictionaryMethodsType: readOnlyDictionaryMethodsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    interfaceImplType: out _);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

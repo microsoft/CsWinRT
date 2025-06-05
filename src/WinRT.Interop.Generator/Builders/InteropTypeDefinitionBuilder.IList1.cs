@@ -705,6 +705,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(interfaceImplType);
 
+            // Get the getter and setter accessor methods for 'IList<T>'
             MethodDefinition[] itemMethods = listMethodsType.GetMethods("Item"u8);
 
             // Create the 'get_Item' getter method

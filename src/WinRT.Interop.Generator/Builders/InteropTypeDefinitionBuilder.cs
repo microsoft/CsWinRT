@@ -135,7 +135,7 @@ internal static partial class InteropTypeDefinitionBuilder
                     module.CorLibTypeFactory.Void.MakePointerType(),
                     interopReferences.ReadOnlySpanChar.Import(module),
                     module.CorLibTypeFactory.Object.MakeByReferenceType(),
-                    interopReferences.CreatedWrapperFlags.MakeByReferenceType().Import(module)]))
+                    interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
         {
             // The last two parameters are '[out]'
             ParameterDefinitions =
@@ -287,7 +287,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: module.CorLibTypeFactory.Object,
                 parameterTypes: [
                     module.CorLibTypeFactory.Void.MakePointerType(),
-                    interopReferences.CreatedWrapperFlags.MakeByReferenceType().Import(module)]))
+                    interopReferences.CreatedWrapperFlags.Import(module).MakeByReferenceType()]))
         {
             // The 'wrapperFlags' parameter is '[out]'
             ParameterDefinitions = { new ParameterDefinition(sequence: 2, name: null, attributes: ParameterAttributes.Out) }
