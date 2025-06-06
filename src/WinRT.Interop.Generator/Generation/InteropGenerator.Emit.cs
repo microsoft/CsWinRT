@@ -923,6 +923,14 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     vftblType: out TypeDefinition vftblType);
+
+                // Define the 'IMapMethods' type (with the public thunks for 'IMap<K, V>' native calls)
+                InteropTypeDefinitionBuilder.IDictionary2.IMapMethods(
+                    dictionaryType: typeSignature,
+                    vftblType: vftblType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    mapMethodsType: out TypeDefinition mapMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

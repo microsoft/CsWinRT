@@ -364,6 +364,12 @@ internal sealed class InteropReferences
     public TypeReference IVectorViewMethods1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IVectorViewMethodsImpl`1");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapMethodsImpl&lt;K, V&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference IMapMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices", "IMapMethodsImpl`2");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapViewMethodsImpl&lt;K, V&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -1806,6 +1812,75 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapMethodsImpl&lt;K, V&gt;.HasKey</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IMapMethodsImpl2HasKey(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IMapMethodsImpl2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("HasKey", MethodSignature.CreateInstance(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapMethodsImpl&lt;K, V&gt;.Lookup</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IMapMethodsImpl2Lookup(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IMapMethodsImpl2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Lookup", MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapMethodsImpl&lt;K, V&gt;.Insert</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IMapMethodsImpl2Insert(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IMapMethodsImpl2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Insert", MethodSignature.CreateInstance(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapMethodsImpl&lt;K, V&gt;.Remove</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IMapMethodsImpl2Remove(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IMapMethodsImpl2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Remove", MethodSignature.CreateInstance(
+                returnType: _windowsRuntimeModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMapViewMethodsImpl&lt;K, V&gt;.HasKey</c>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>
@@ -1819,7 +1894,7 @@ internal sealed class InteropReferences
                 returnType: _windowsRuntimeModule.CorLibTypeFactory.Boolean,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    keyType]));
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
     /// <summary>
@@ -1833,10 +1908,10 @@ internal sealed class InteropReferences
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("Lookup", MethodSignature.CreateInstance(
-                returnType: valueType,
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    keyType]));
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
     /// <summary>
@@ -1855,7 +1930,7 @@ internal sealed class InteropReferences
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    keyType]))
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]))
             .MakeGenericInstanceMethod(mapViewMethods.ToTypeSignature());
     }
 
@@ -1875,7 +1950,7 @@ internal sealed class InteropReferences
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    keyType]))
+                    new GenericParameterSignature(GenericParameterType.Type, 0)]))
             .MakeGenericInstanceMethod(mapViewMethods.ToTypeSignature());
     }
 
@@ -1895,8 +1970,8 @@ internal sealed class InteropReferences
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    keyType,
-                    valueType.MakeByReferenceType()]))
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1).MakeByReferenceType()]))
             .MakeGenericInstanceMethod(mapViewMethods.ToTypeSignature());
     }
 
