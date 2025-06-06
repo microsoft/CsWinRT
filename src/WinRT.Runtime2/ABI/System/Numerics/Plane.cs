@@ -12,7 +12,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE1006
+#pragma warning disable IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.Foundation.Numerics.Plane>",
@@ -131,6 +131,7 @@ internal sealed unsafe class PlaneComWrappersMarshallerAttribute : WindowsRuntim
 /// <summary>
 /// Binding type for the <c>IReference`1</c> implementation for <see cref="global::System.Numerics.Plane"/>.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 file unsafe struct PlaneReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

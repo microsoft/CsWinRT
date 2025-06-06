@@ -15,7 +15,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE0008, IDE1006
+#pragma warning disable IDE0008, IDE1006
 
 namespace ABI.System.ComponentModel;
 
@@ -106,6 +106,7 @@ public static unsafe class INotifyDataErrorInfoMethods
 /// <summary>
 /// Binding type for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct INotifyDataErrorInfoVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

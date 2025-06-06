@@ -12,7 +12,7 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE0008, IDE1006
+#pragma warning disable IDE0008, IDE1006
 
 namespace ABI.System.ComponentModel;
 
@@ -54,6 +54,7 @@ public static unsafe class INotifyPropertyChangedMethods
 /// <summary>
 /// Binding type for <see cref="global::System.ComponentModel.INotifyPropertyChanged"/>.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct INotifyPropertyChangedVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

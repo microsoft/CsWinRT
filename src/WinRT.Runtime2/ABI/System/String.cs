@@ -12,7 +12,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE0008, IDE1006
+#pragma warning disable IDE0008, IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<String>",
@@ -162,6 +162,7 @@ internal sealed unsafe class StringComWrappersMarshallerAttribute : WindowsRunti
 /// <summary>
 /// Binding type for the <c>IReference`1</c> implementation for <see cref="string"/>.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 file unsafe struct StringReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, String*, void**, HRESULT> QueryInterface;

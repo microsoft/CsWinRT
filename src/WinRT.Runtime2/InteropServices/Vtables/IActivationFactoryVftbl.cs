@@ -4,9 +4,10 @@
 using System;
 using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Windows.Foundation;
 
-#pragma warning disable CS0649, CS1573
+#pragma warning disable CS1573
 
 namespace WindowsRuntime.InteropServices;
 
@@ -14,6 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// Binding type for the <c>IAgileReference</c> interface vtable.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/activation/nn-activation-iactivationfactory"/>
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IActivationFactoryVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

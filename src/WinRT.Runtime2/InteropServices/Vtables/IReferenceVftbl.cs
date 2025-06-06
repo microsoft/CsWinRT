@@ -3,9 +3,10 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Windows.Foundation;
 
-#pragma warning disable CS0649, IDE1006
+#pragma warning disable IDE1006
 
 namespace WindowsRuntime.InteropServices;
 
@@ -13,6 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// Binding type for the <c>IReference`1</c> interface vtable.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1"/>
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

@@ -12,7 +12,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE0008, IDE1006
+#pragma warning disable IDE0008, IDE1006
 
 [assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(
     typeof(EventHandler),
@@ -182,6 +182,7 @@ file sealed unsafe class EventHandlerComWrappersMarshallerAttribute : WindowsRun
 /// <summary>
 /// Binding type for the <see cref="global::System.EventHandler"/> implementation.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 file unsafe struct EventHandlerVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
@@ -244,6 +245,7 @@ file static unsafe class EventHandlerImpl
 /// <summary>
 /// Binding type for the <c>IReference`1</c> implementation for <see cref="global::System.EventHandler"/>.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 file unsafe struct EventHandlerReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

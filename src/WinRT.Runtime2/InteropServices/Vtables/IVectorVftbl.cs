@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using Windows.Foundation;
-
-#pragma warning disable CS0649
 
 namespace WindowsRuntime.InteropServices;
 
@@ -12,6 +11,7 @@ namespace WindowsRuntime.InteropServices;
 /// Binding type for the <c>IVector&lt;T&gt;</c> interface vtable.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1"/>
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IVectorVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

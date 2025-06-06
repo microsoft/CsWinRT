@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#pragma warning disable CS0649
-
 namespace WindowsRuntime.InteropServices;
 
 /// <see href="https://docs.rs/windows-sys/latest/windows_sys/Win32/System/Com/struct.ComCallData.html"/>

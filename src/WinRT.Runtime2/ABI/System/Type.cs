@@ -17,7 +17,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE1006
+#pragma warning disable IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName>",
@@ -238,6 +238,7 @@ file sealed unsafe class TypeComWrappersMarshallerAttribute : WindowsRuntimeComW
 /// <summary>
 /// Binding type for the <c>IReference`1</c> implementation for <see cref="global::System.Type"/>.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 file unsafe struct TypeReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

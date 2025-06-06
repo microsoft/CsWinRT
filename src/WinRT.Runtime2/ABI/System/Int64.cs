@@ -11,7 +11,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE1006
+#pragma warning disable IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Int64>",
@@ -129,6 +129,7 @@ internal sealed unsafe class Int64ComWrappersMarshallerAttribute : WindowsRuntim
 /// <summary>
 /// Binding type for the <c>IReference`1</c> implementation for <see cref="long"/>.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 file unsafe struct Int64ReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

@@ -12,7 +12,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649, IDE0008, IDE1006
+#pragma warning disable IDE0008, IDE1006
 
 [assembly: TypeMap<WindowsRuntimeTypeMapGroup>(
     value: "Windows.Foundation.IReference<Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler>",
@@ -191,6 +191,7 @@ file sealed unsafe class NotifyCollectionChangedEventHandlerComWrappersMarshalle
 /// <summary>
 /// Binding type for the <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/> implementation.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 file unsafe struct NotifyCollectionChangedEventHandlerVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
@@ -260,6 +261,7 @@ file static unsafe class NotifyCollectionChangedEventHandlerImpl
 /// <summary>
 /// Binding type for the <c>IReference`1</c> implementation for <see cref="global::System.Collections.Specialized.NotifyCollectionChangedEventHandler"/>.
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 file unsafe struct NotifyCollectionChangedEventHandlerReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

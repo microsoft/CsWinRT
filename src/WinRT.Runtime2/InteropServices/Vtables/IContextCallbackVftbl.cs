@@ -3,8 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
-
-#pragma warning disable CS0649
+using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -13,6 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/ctxtcall/nn-ctxtcall-icontextcallback"/>
 /// <seealso href="https://devblogs.microsoft.com/oldnewthing/20191128-00/?p=103157"/>
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IContextCallbackVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;

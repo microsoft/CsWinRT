@@ -9,8 +9,6 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CS0649
-
 [assembly: TypeMapAssociation<WindowsRuntimeTypeMapGroup>(typeof(object), typeof(ABI.System.Object))]
 
 namespace ABI.System;
