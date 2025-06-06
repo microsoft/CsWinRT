@@ -288,5 +288,348 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions = { { Ldnull }, { Throw } } // TODO
             };
         }
+
+        /// <summary>
+        /// Creates a new type definition for the methods for an <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="mapMethodsType">The type returned by <see cref="IMapMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="dictionaryMethodsType">The resulting methods type.</param>
+        public static void IDictionaryMethods(
+            GenericInstanceTypeSignature dictionaryType,
+            TypeDefinition mapMethodsType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition dictionaryMethodsType)
+        {
+            TypeSignature keyType = dictionaryType.TypeArguments[0];
+            TypeSignature valueType = dictionaryType.TypeArguments[1];
+
+            // We're declaring an 'internal static class' type
+            dictionaryMethodsType = new TypeDefinition(
+                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, "IDictionaryMethods"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+
+            module.TopLevelTypes.Add(dictionaryMethodsType);
+
+            // Define the 'Item' getter method as follows:
+            //
+            // public static <VALUE_TYPE> Item(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
+            MethodDefinition get_ItemMethod = new(
+                name: "Item"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: valueType.Import(module),
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        keyType.Import(module)]));
+
+            dictionaryMethodsType.Methods.Add(get_ItemMethod);
+
+            // Create a method body for the 'Item' getter method
+            get_ItemMethod.CilMethodBody = new CilMethodBody(get_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IDictionaryMethods2get_Item(keyType, valueType, mapMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Item' setter method as follows:
+            //
+            // public static void Item(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key, <VALUE_TYPE> value)
+            MethodDefinition set_ItemMethod = new(
+                name: "Item"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        keyType.Import(module),
+                        valueType.Import(module)]));
+
+            dictionaryMethodsType.Methods.Add(set_ItemMethod);
+
+            // Create a method body for the 'Item' setter method
+            set_ItemMethod.CilMethodBody = new CilMethodBody(set_ItemMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, interopReferences.IDictionaryMethods2set_Item(keyType, valueType, mapMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Add' method as follows:
+            //
+            // public static void Add(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key, <VALUE_TYPE> value)
+            MethodDefinition addMethod = new(
+                name: "Add"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        keyType.Import(module),
+                        valueType.Import(module)]));
+
+            dictionaryMethodsType.Methods.Add(addMethod);
+
+            // Create a method body for the 'Add' method
+            addMethod.CilMethodBody = new CilMethodBody(addMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, interopReferences.IDictionaryMethods2Add(keyType, valueType, mapMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Remove' method as follows:
+            //
+            // public static bool Remove(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
+            MethodDefinition removeMethod = new(
+                name: "Remove"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        keyType.Import(module)]));
+
+            dictionaryMethodsType.Methods.Add(removeMethod);
+
+            // Create a method body for the 'Remove' method
+            removeMethod.CilMethodBody = new CilMethodBody(removeMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IDictionaryMethods2Remove(keyType, valueType, mapMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Count' method as follows:
+            //
+            // public static int Count(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition countMethod = new(
+                name: "Count"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Int32,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
+
+            dictionaryMethodsType.Methods.Add(countMethod);
+
+            // Create a method body for the 'Count' method
+            countMethod.CilMethodBody = new CilMethodBody(countMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.IDictionaryMethodsCount.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'ContainsKey' method as follows:
+            //
+            // public static bool ContainsKey(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
+            MethodDefinition containsKeyMethod = new(
+                name: "ContainsKey"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        keyType.Import(module)]));
+
+            dictionaryMethodsType.Methods.Add(containsKeyMethod);
+
+            // Create a method body for the 'ContainsKey' method
+            containsKeyMethod.CilMethodBody = new CilMethodBody(containsKeyMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IDictionaryMethods2ContainsKey(keyType, valueType, mapMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'TryGetValue' method as follows:
+            //
+            // public static bool TryGetValue(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key, out <VALUE_TYPE> value)
+            MethodDefinition tryGetValueMethod = new(
+                name: "TryGetValue"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        keyType.Import(module),
+                        valueType.Import(module).MakeByReferenceType()]))
+            {
+                // The 'value' parameter is '[out]'
+                ParameterDefinitions = { new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out) }
+            };
+
+            dictionaryMethodsType.Methods.Add(tryGetValueMethod);
+
+            // Create a method body for the 'TryGetValue' method
+            tryGetValueMethod.CilMethodBody = new CilMethodBody(tryGetValueMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Call, interopReferences.IDictionaryMethods2TryGetValue(keyType, valueType, mapMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Add' ('KeyValuePair<,>') method as follows:
+            //
+            // public static void Add(WindowsRuntimeObjectReference thisReference, KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>> item)
+            MethodDefinition addKeyValuePairMethod = new(
+                name: "Add"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module)]));
+
+            dictionaryMethodsType.Methods.Add(addKeyValuePairMethod);
+
+            // Create a method body for the 'Add' method
+            addKeyValuePairMethod.CilMethodBody = new CilMethodBody(addKeyValuePairMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IDictionaryMethods2AddKeyValuePair(keyType, valueType, mapMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Remove' ('KeyValuePair<,>') method as follows:
+            //
+            // public static void Remove(WindowsRuntimeObjectReference thisReference, KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>> item)
+            MethodDefinition removeKeyValuePairMethod = new(
+                name: "Remove"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module)]));
+
+            dictionaryMethodsType.Methods.Add(removeKeyValuePairMethod);
+
+            // Create a method body for the 'Remove' method
+            removeKeyValuePairMethod.CilMethodBody = new CilMethodBody(removeKeyValuePairMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IDictionaryMethods2RemoveKeyValuePair(keyType, valueType, mapMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Clear' method as follows:
+            //
+            // public static void Clear(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition clearMethod = new(
+                name: "Clear"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
+
+            dictionaryMethodsType.Methods.Add(clearMethod);
+
+            // Create a method body for the 'Clear' method
+            clearMethod.CilMethodBody = new CilMethodBody(clearMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.IDictionaryMethodsClear.Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Contains' method as follows:
+            //
+            // public static bool Contains(WindowsRuntimeObjectReference thisReference, KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>> item)
+            MethodDefinition containsMethod = new(
+                name: "Contains"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module)]));
+
+            dictionaryMethodsType.Methods.Add(containsMethod);
+
+            // Create a method body for the 'Contains' method
+            containsMethod.CilMethodBody = new CilMethodBody(containsMethod)
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, interopReferences.IDictionaryMethods2Contains(keyType, valueType, mapMethodsType).Import(module) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'CopyTo' method as follows:
+            //
+            // public static void CopyTo(WindowsRuntimeObjectReference thisReference, KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>>[] array, int arrayIndex)
+            MethodDefinition copyToMethod = new(
+                name: "CopyTo"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: module.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module).MakeSzArrayType(),
+                        module.CorLibTypeFactory.Int32]));
+
+            dictionaryMethodsType.Methods.Add(copyToMethod);
+
+            // Create a method body for the 'CopyTo' method
+            copyToMethod.CilMethodBody = new CilMethodBody(copyToMethod)
+            {
+                Instructions =
+                {
+                    { Ldnull },
+                    { Throw } // TODO
+                }
+            };
+        }
     }
 }

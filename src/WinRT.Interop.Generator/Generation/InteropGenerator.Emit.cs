@@ -931,6 +931,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     mapMethodsType: out TypeDefinition mapMethodsType);
+
+                // Define the 'DictionaryMethods' type
+                InteropTypeDefinitionBuilder.IDictionary2.IDictionaryMethods(
+                    dictionaryType: typeSignature,
+                    mapMethodsType: mapMethodsType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    dictionaryMethodsType: out TypeDefinition dictionaryMethodsType);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
