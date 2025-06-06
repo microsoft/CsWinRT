@@ -937,6 +937,7 @@ internal partial class InteropGenerator
                     dictionaryType: typeSignature,
                     mapMethodsType: mapMethodsType,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     dictionaryMethodsType: out TypeDefinition dictionaryMethodsType);
             }

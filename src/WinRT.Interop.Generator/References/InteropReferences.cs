@@ -2132,6 +2132,7 @@ internal sealed class InteropReferences
                 genericParameterCount: 2,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     KeyValuePair.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)).MakeSzArrayType(),

@@ -295,12 +295,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="mapMethodsType">The type returned by <see cref="IMapMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="dictionaryMethodsType">The resulting methods type.</param>
         public static void IDictionaryMethods(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition mapMethodsType,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition dictionaryMethodsType)
         {
@@ -606,15 +608,25 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
+            // We need to pass the 'IIterableMethods' type as a second type argument, as it's needed to enumerate key-value pairs
+            TypeDefinition iterableMethodsType = emitState.LookupTypeDefinition(
+                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType(interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType)),
+                key: "IIterableMethods");
+
             // Define the 'CopyTo' method as follows:
             //
-            // public static void CopyTo(WindowsRuntimeObjectReference thisReference, KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>>[] array, int arrayIndex)
+            // public static void CopyTo(
+            //     WindowsRuntimeObjectReference thisIMapReference,
+            //     WindowsRuntimeObjectReference thisIIterableReference,
+            //     KeyValuePair<<KEY_TYPE>, <VALUE_TYPE>>[] array,
+            //     int arrayIndex)
             MethodDefinition copyToMethod = new(
                 name: "CopyTo"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module).MakeSzArrayType(),
                         module.CorLibTypeFactory.Int32]));
@@ -626,8 +638,12 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 Instructions =
                 {
-                    { Ldnull },
-                    { Throw } // TODO
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Ldarg_3 },
+                    { Call, interopReferences.IDictionaryMethods2CopyTo(keyType, valueType, mapMethodsType, iterableMethodsType).Import(module) },
+                    { Ret }
                 }
             };
         }
