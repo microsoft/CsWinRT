@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -636,6 +637,68 @@ internal partial class InteropTypeDefinitionBuilder
             { GetMethod = get_CountMethod };
 
             interfaceImplType.Properties.Add(countProperty);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the vtable for some <c>IMapView&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="readOnlyDictionaryType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="implType">The resulting implementation type.</param>
+        public static void ImplType(
+            GenericInstanceTypeSignature readOnlyDictionaryType,
+            TypeDefinition vftblType,
+            MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition implType)
+        {
+            InteropTypeDefinitionBuilder.ImplType(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "Impl"),
+                vftblType: vftblType,
+                get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: []);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the proxy type of some <c>IMapView&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="readOnlyDictionaryComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            GenericInstanceTypeSignature readOnlyDictionaryType,
+            TypeDefinition readOnlyDictionaryComWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition proxyType)
+        {
+            TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
+            TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
+
+            string runtimeClassName = $"Windows.Foundation.Collections.IMapView`2<{keyType},{valueType}>"; // TODO
+
+            ProxyType(
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType),
+                runtimeClassName: runtimeClassName,
+                comWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
         }
     }
 }

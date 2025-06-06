@@ -799,6 +799,16 @@ internal partial class InteropGenerator
                     module: module,
                     vftblType: out TypeDefinition vftblType);
 
+                // Define the 'Impl' type (with the CCW vtable implementation)
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.ImplType(
+                    readOnlyDictionaryType: typeSignature,
+                    vftblType: vftblType,
+                    get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    implType: out _);
+
                 // Define the 'IMapViewMethods' type (with the public thunks for 'IMapView<K, V>' native calls)
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.IMapViewMethods(
                     readOnlyDictionaryType: typeSignature,
@@ -858,6 +868,14 @@ internal partial class InteropGenerator
                     interopReferences: interopReferences,
                     module: module,
                     interfaceImplType: out _);
+
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Proxy(
+                    readOnlyDictionaryType: typeSignature,
+                    readOnlyDictionaryComWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out _);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {
