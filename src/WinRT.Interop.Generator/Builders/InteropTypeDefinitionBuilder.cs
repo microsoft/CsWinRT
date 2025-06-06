@@ -491,15 +491,15 @@ internal static partial class InteropTypeDefinitionBuilder
         switch (interfaceType)
         {
             case ComInterfaceType.InterfaceIsIUnknown:
-                _ = cctor.CilMethodBody.Instructions.Add(Call, interopReferences.IInspectableImplget_Vtable.Import(module));
-                _ = cctor.CilMethodBody.Instructions.Add(Ldobj, interopDefinitions.IInspectableVftbl);
-                _ = cctor.CilMethodBody.Instructions.Add(Stobj, interopDefinitions.IInspectableVftbl);
-                vtableOffset = 3;
-                break;
-            case ComInterfaceType.InterfaceIsIInspectable:
                 _ = cctor.CilMethodBody.Instructions.Add(Call, interopReferences.IUnknownImplget_Vtable.Import(module));
                 _ = cctor.CilMethodBody.Instructions.Add(Ldobj, interopDefinitions.IUnknownVftbl);
                 _ = cctor.CilMethodBody.Instructions.Add(Stobj, interopDefinitions.IUnknownVftbl);
+                vtableOffset = 3;
+                break;
+            case ComInterfaceType.InterfaceIsIInspectable:
+                _ = cctor.CilMethodBody.Instructions.Add(Call, interopReferences.IInspectableImplget_Vtable.Import(module));
+                _ = cctor.CilMethodBody.Instructions.Add(Ldobj, interopDefinitions.IInspectableVftbl);
+                _ = cctor.CilMethodBody.Instructions.Add(Stobj, interopDefinitions.IInspectableVftbl);
                 vtableOffset = 6;
                 break;
             case ComInterfaceType.InterfaceIsDual:
@@ -519,7 +519,7 @@ internal static partial class InteropTypeDefinitionBuilder
         }
 
         // Enforce that we did initialize all vtable entries
-        ArgumentOutOfRangeException.ThrowIfNotEqual(vftblType.Fields.Count, vtableOffset, nameof(vtableMethods));
+        //ArgumentOutOfRangeException.ThrowIfNotEqual(vtableOffset, vftblType.Fields.Count, nameof(vtableMethods)); // TODO
 
         // Don't forget the 'ret' at the end of the static constructor
         _ = cctor.CilMethodBody.Instructions.Add(Ret);

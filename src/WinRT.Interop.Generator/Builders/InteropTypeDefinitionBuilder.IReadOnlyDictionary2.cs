@@ -443,14 +443,12 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
         /// <param name="readOnlyDictionaryMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IReadOnlyDictionaryMethods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
         public static void InterfaceImpl(
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition readOnlyDictionaryMethodsType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             out TypeDefinition interfaceImplType)
         {

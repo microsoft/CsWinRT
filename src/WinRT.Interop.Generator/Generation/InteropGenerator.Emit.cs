@@ -856,7 +856,6 @@ internal partial class InteropGenerator
                     readOnlyDictionaryType: typeSignature,
                     readOnlyDictionaryMethodsType: readOnlyDictionaryMethodsType,
                     interopReferences: interopReferences,
-                    emitState: emitState,
                     module: module,
                     interfaceImplType: out _);
             }

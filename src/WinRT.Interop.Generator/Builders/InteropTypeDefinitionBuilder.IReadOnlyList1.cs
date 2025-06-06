@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
@@ -581,19 +582,17 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            implType = null!;
-
-            //InteropTypeDefinitionBuilder.ImplType(
-            //    interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-            //    ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-            //    name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Impl"),
-            //    vtableType: vftblType,
-            //    get_IidMethod: get_IidMethod,
-            //    interopDefinitions: interopDefinitions,
-            //    interopReferences: interopReferences,
-            //    module: module,
-            //    implType: out implType,
-            //    vtableMethods: []);
+            InteropTypeDefinitionBuilder.ImplType(
+                interfaceType: ComInterfaceType.InterfaceIsIInspectable,
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Impl"),
+                vftblType: vftblType,
+                get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                implType: out implType,
+                vtableMethods: []);
         }
 
         /// <summary>
