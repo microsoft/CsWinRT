@@ -647,5 +647,152 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
         }
+
+        /// <summary>
+        /// Creates a new type definition for the native object for an <c>IMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="mapMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IMapMethods"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="nativeObjectType">The resulting native object type.</param>
+        public static void NativeObject(
+            GenericInstanceTypeSignature dictionaryType,
+            TypeDefinition mapMethodsType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition nativeObjectType)
+        {
+            TypeSignature keyType = dictionaryType.TypeArguments[0];
+            TypeSignature valueType = dictionaryType.TypeArguments[1];
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+
+            // The 'NativeObject' is deriving from 'WindowsRuntimeDictionary<<KEY_TYPE>, <VALUE_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IMAP_METHODS>>'
+            TypeSignature windowsRuntimeDictionary5Type = interopReferences.WindowsRuntimeDictionary5.MakeGenericReferenceType(
+                keyType,
+                valueType,
+                emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
+                emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
+                mapMethodsType.ToReferenceTypeSignature());
+
+            InteropTypeDefinitionBuilder.NativeObject(
+                typeSignature: dictionaryType,
+                nativeObjectBaseType: windowsRuntimeDictionary5Type,
+                interopReferences: interopReferences,
+                module: module,
+                out nativeObjectType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the implementation of the <c>IWindowsRuntimeUnsealedObjectComWrappersCallback</c> interface for some <c>IMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="dictionaryType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="callbackType">The resulting callback type.</param>
+        public static void ComWrappersCallbackType(
+            TypeSignature dictionaryType,
+            TypeDefinition nativeObjectType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition callbackType)
+        {
+            InteropTypeDefinitionBuilder.ComWrappersCallbackType(
+                runtimeClassName: dictionaryType.FullName, // TODO
+                typeSignature: dictionaryType,
+                nativeObjectType: nativeObjectType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out callbackType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller attribute of some <c>IMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="dictionaryType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void ComWrappersMarshallerAttribute(
+            GenericInstanceTypeSignature dictionaryType,
+            TypeDefinition nativeObjectType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            InteropTypeDefinitionBuilder.ComWrappersMarshallerAttribute(
+                typeSignature: dictionaryType,
+                nativeObjectType: nativeObjectType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out marshallerType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the marshaller of some <c>IMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="dictionaryComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
+        /// <param name="get_IidMethod">The 'IID' get method for <paramref name="dictionaryType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="marshallerType">The resulting marshaller type.</param>
+        public static void Marshaller(
+            GenericInstanceTypeSignature dictionaryType,
+            TypeDefinition dictionaryComWrappersCallbackType,
+            MethodDefinition get_IidMethod,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition marshallerType)
+        {
+            InteropTypeDefinitionBuilder.Marshaller(
+                typeSignature: dictionaryType,
+                interfaceComWrappersCallbackType: dictionaryComWrappersCallbackType,
+                get_IidMethod: get_IidMethod,
+                interopReferences: interopReferences,
+                module: module,
+                out marshallerType);
+        }
+
+        /// <summary>
+        /// Creates a new type definition for the proxy type of some <c>IMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
+        /// <param name="dictionaryComWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="proxyType">The resulting proxy type.</param>
+        public static void Proxy(
+            GenericInstanceTypeSignature dictionaryType,
+            TypeDefinition dictionaryComWrappersMarshallerAttributeType,
+            InteropReferences interopReferences,
+            ModuleDefinition module,
+            out TypeDefinition proxyType)
+        {
+            TypeSignature keyType = dictionaryType.TypeArguments[0];
+            TypeSignature valueType = dictionaryType.TypeArguments[1];
+
+            string runtimeClassName = $"Windows.Foundation.Collections.IMap`2<{keyType},{valueType}>"; // TODO
+
+            ProxyType(
+                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType),
+                runtimeClassName: runtimeClassName,
+                comWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerAttributeType,
+                interopReferences: interopReferences,
+                module: module,
+                out proxyType);
+        }
     }
 }

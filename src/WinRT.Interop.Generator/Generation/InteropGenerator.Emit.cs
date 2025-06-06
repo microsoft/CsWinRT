@@ -940,6 +940,50 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     dictionaryMethodsType: out TypeDefinition dictionaryMethodsType);
+
+                // Define the 'NativeObject' type (with the RCW implementation)
+                InteropTypeDefinitionBuilder.IDictionary2.NativeObject(
+                    dictionaryType: typeSignature,
+                    mapMethodsType: mapMethodsType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    out TypeDefinition nativeObjectType);
+
+                // Define the 'ComWrappersCallback' type (with the 'IWindowsRuntimeUnsealedObjectComWrappersCallback' implementation)
+                InteropTypeDefinitionBuilder.IDictionary2.ComWrappersCallbackType(
+                    dictionaryType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition dictionaryComWrappersCallbackType);
+
+                // Define the 'ComWrappersMarshallerAttribute' type
+                InteropTypeDefinitionBuilder.IDictionary2.ComWrappersMarshallerAttribute(
+                    dictionaryType: typeSignature,
+                    nativeObjectType: nativeObjectType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out TypeDefinition dictionaryComWrappersMarshallerType);
+
+                // Define the 'Marshaller' type (with the static marshaller methods)
+                InteropTypeDefinitionBuilder.IDictionary2.Marshaller(
+                    dictionaryType: typeSignature,
+                    dictionaryComWrappersCallbackType: dictionaryComWrappersCallbackType,
+                    get_IidMethod: get_IidMethod,
+                    interopReferences: interopReferences,
+                    module: module,
+                    marshallerType: out TypeDefinition marshallerType);
+
+                // Define the proxy type (for the type map)
+                InteropTypeDefinitionBuilder.IDictionary2.Proxy(
+                    dictionaryType: typeSignature,
+                    dictionaryComWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out _);
             }
             catch (Exception e) when (!e.IsWellKnown)
             {

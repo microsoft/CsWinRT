@@ -454,6 +454,12 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeReadOnlyList4 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeReadOnlyList`4");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeDictionary&lt;TKey, TValue, ...&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference WindowsRuntimeDictionary5 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeDictionary`5");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReadOnlyDictionary&lt;TKey, TValue, ...&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
