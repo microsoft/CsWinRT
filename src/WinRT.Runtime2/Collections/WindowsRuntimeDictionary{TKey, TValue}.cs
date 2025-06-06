@@ -10,8 +10,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using WindowsRuntime.InteropServices;
 
-#pragma warning disable IDE0046
-
 namespace WindowsRuntime;
 
 /// <summary>
@@ -152,46 +150,23 @@ public abstract class WindowsRuntimeDictionary<
     /// <inheritdoc/>
     public bool Contains(KeyValuePair<TKey, TValue> item)
     {
-        if (!IDictionaryMethods<TKey, TValue>.TryGetValue<TIMapMethods>(NativeObjectReference, item.Key, out TValue? value))
-        {
-            return false;
-        }
-
-        return EqualityComparer<TValue>.Default.Equals(value, item.Value);
+        return IDictionaryMethods<TKey, TValue>.Contains<TIMapMethods>(NativeObjectReference, item);
     }
 
     /// <inheritdoc/>
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
-        ArgumentNullException.ThrowIfNull(array);
-        ArgumentOutOfRangeException.ThrowIfNegative(arrayIndex);
-
-        int count = IDictionaryMethods.Count(NativeObjectReference);
-
-        if (array.Length <= arrayIndex && count > 0)
-        {
-            throw new ArgumentException("Argument_IndexOutOfArrayBounds");
-        }
-
-        if (array.Length - arrayIndex < count)
-        {
-            throw new ArgumentException("Argument_InsufficientSpaceToCopyCollection");
-        }
-
-        // Copy all items into the target array, at the specified starting offset
-        foreach (KeyValuePair<TKey, TValue> item in this)
-        {
-            array[arrayIndex++] = item;
-        }
+        IDictionaryMethods<TKey, TValue>.CopyTo<TIMapMethods, TIIterableMethods>(
+            thisIMapReference: NativeObjectReference,
+            thisIIterableReference: IIterableObjectReference,
+            array: array,
+            arrayIndex: arrayIndex);
     }
 
     /// <inheritdoc/>
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
-        // TODO: should we handle the value as well?
-        _ = IDictionaryMethods<TKey, TValue>.Remove<TIMapMethods>(NativeObjectReference, item.Key);
-
-        return true;
+        return IDictionaryMethods<TKey, TValue>.Remove<TIMapMethods>(NativeObjectReference, item.Key);
     }
 
     /// <inheritdoc/>

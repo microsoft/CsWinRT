@@ -48,7 +48,7 @@ public static unsafe class IVectorMethods
     /// <summary>
     /// Removes all items from the vector.
     /// </summary>
-    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param></param>
+    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.clear"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Clear(WindowsRuntimeObjectReference thisReference)

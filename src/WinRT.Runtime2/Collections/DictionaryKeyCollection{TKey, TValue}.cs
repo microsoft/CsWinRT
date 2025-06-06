@@ -9,7 +9,7 @@ using System.ComponentModel;
 namespace WindowsRuntime;
 
 /// <summary>
-/// Provides an implementation for <see cref="IDictionary{TKey, TValue}.Keys"/> for <see cref="WindowsRuntimeDictionary{TKey, TValue}"/>.
+/// Provides an implementation for <see cref="IDictionary{TKey, TValue}.Keys"/> for some <see cref="IDictionary{TKey, TValue}"/> type.
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>

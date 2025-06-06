@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
-#pragma warning disable CS1573
+#pragma warning disable CS1573, IDE0046
 
 namespace WindowsRuntime.InteropServices;
 
@@ -141,5 +141,76 @@ public static class IDictionaryMethods<TKey, TValue>
 
             return false;
         }
+    }
+
+    /// <inheritdoc cref="ICollection{T}.Add"/>
+    /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
+    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
+    public static void Add<TMethods>(WindowsRuntimeObjectReference thisReference, KeyValuePair<TKey, TValue> item)
+        where TMethods : IMapMethodsImpl<TKey, TValue>
+    {
+        Add<TMethods>(thisReference, item.Key, item.Value);
+    }
+
+    /// <inheritdoc cref="ICollection{T}.Add"/>
+    /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
+    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
+    public static bool Contains<TMethods>(WindowsRuntimeObjectReference thisReference, KeyValuePair<TKey, TValue> item)
+        where TMethods : IMapMethodsImpl<TKey, TValue>
+    {
+        if (!TryGetValue<TMethods>(thisReference, item.Key, out TValue? value))
+        {
+            return false;
+        }
+
+        return EqualityComparer<TValue>.Default.Equals(value, item.Value);
+    }
+
+    /// <inheritdoc cref="ICollection{T}.Add"/>
+    /// <typeparam name="TIMapMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
+    /// <typeparam name="TIIterableMethods">The <see cref="IIterableMethodsImpl{T}"/> implementation to use.</typeparam>
+    /// <param name="thisIMapReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method (for <c>IMap&lt;K, V&gt;</c>).</param>
+    /// <param name="thisIIterableReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method (for <c>IEnumerable&lt;T&gt;</c>).</param>
+    public static void CopyTo<TIMapMethods, TIIterableMethods>(
+        WindowsRuntimeObjectReference thisIMapReference,
+        WindowsRuntimeObjectReference thisIIterableReference,
+        KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        where TIMapMethods : IMapMethodsImpl<TKey, TValue>
+        where TIIterableMethods : IIterableMethodsImpl<KeyValuePair<TKey, TValue>>
+    {
+        ArgumentNullException.ThrowIfNull(array);
+        ArgumentOutOfRangeException.ThrowIfNegative(arrayIndex);
+
+        int count = IDictionaryMethods.Count(thisIMapReference);
+
+        if (array.Length <= arrayIndex && count > 0)
+        {
+            throw new ArgumentException("Argument_IndexOutOfArrayBounds");
+        }
+
+        if (array.Length - arrayIndex < count)
+        {
+            throw new ArgumentException("Argument_InsufficientSpaceToCopyCollection");
+        }
+
+        using IEnumerator<KeyValuePair<TKey, TValue>> enumerator = TIIterableMethods.First(thisIIterableReference);
+
+        // Copy all items into the target array, at the specified starting offset
+        while (enumerator.MoveNext())
+        {
+            array[arrayIndex++] = enumerator.Current;
+        }
+    }
+
+    /// <inheritdoc cref="ICollection{T}.Add"/>
+    /// <typeparam name="TMethods">The <see cref="IMapMethodsImpl{K, V}"/> implementation to use.</typeparam>
+    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
+    public static bool Remove<TMethods>(WindowsRuntimeObjectReference thisReference, KeyValuePair<TKey, TValue> item)
+        where TMethods : IMapMethodsImpl<TKey, TValue>
+    {
+        // TODO: should we handle the value as well?
+        _ = Remove<TMethods>(thisReference, item.Key);
+
+        return true;
     }
 }
