@@ -556,7 +556,7 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Create the 'Value' property
+            // Create the 'Values' property
             PropertyDefinition valuesProperty = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.Values",
                 attributes: PropertyAttributes.None,
@@ -623,7 +623,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Create a body for the 'get_Count' method
             get_CountMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
-                interfaceType: readOnlyDictionaryType,
+                interfaceType: readOnlyCollectionType,
                 implementationMethod: get_CountMethod,
                 forwardedMethod: readOnlyDictionaryMethodsType.GetMethod("Count"u8),
                 interopReferences: interopReferences,

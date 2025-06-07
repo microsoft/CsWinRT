@@ -466,6 +466,18 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeReadOnlyDictionary5 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "WindowsRuntimeReadOnlyDictionary`5");
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.DictionaryKeyCollection2&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference DictionaryKeyCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "DictionaryKeyCollection`2");
+
+    /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.DictionaryValueCollection2&lt;TKey, TValue&gt;</c>.
+    /// </summary>
+    [field: MaybeNull, AllowNull]
+    public TypeReference DictionaryValueCollection2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime", "DictionaryValueCollection`2");
+
+    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.ReadOnlyDictionaryKeyCollection2&lt;TKey, TValue&gt;</c>.
     /// </summary>
     [field: MaybeNull, AllowNull]
@@ -2230,6 +2242,130 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.this"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionary2get_Item(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionary2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Item", MethodSignature.CreateInstance(
+                returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.this"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionary2set_Item(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionary2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("set_Item", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.Keys"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionary2get_Keys(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionary2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Keys", MethodSignature.CreateInstance(
+                ICollection1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.Values"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionary2get_Values(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionary2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_Values", MethodSignature.CreateInstance(
+                ICollection1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 1))));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.Add"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionary2Add(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionary2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Add", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.ContainsKey"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionary2ContainsKey(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionary2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ContainsKey", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Boolean,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.Remove"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionary2Remove(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionary2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("Remove", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Boolean,
+                parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IDictionary{TKey, TValue}.TryGetValue"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference IDictionary2TryGetValue(TypeSignature keyType, TypeSignature valueType)
+    {
+        return IDictionary2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("TryGetValue", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Boolean,
+                parameterTypes: [
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1).MakeByReferenceType()]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}.this"/>.
     /// </summary>
     /// <param name="keyType">The input key type.</param>
@@ -2339,6 +2475,40 @@ internal sealed class InteropReferences
             .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
                 returnType: _interopModule.CorLibTypeFactory.Void,
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method for <see cref="DictionaryKeyCollection2"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference DictionaryKeyCollection2_ctor(TypeSignature keyType, TypeSignature valueType)
+    {
+        return DictionaryKeyCollection2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method for <see cref="DictionaryValueCollection2"/>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    public MemberReference DictionaryValueCollection2_ctor(TypeSignature keyType, TypeSignature valueType)
+    {
+        return DictionaryValueCollection2
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
+                returnType: _interopModule.CorLibTypeFactory.Void,
+                parameterTypes: [ICollection1.MakeGenericReferenceType(KeyValuePair.MakeGenericValueType(
+                    new GenericParameterSignature(GenericParameterType.Type, 0),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)))]));
     }
 
     /// <summary>
