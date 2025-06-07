@@ -852,6 +852,36 @@ internal partial class InteropTypeDefinitionBuilder
 
             interfaceImplType.Properties.Add(countProperty);
 
+            // Create the 'get_IsReadOnly' getter method
+            MethodDefinition get_IsReadOnlyMethod = new(
+                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.get_IsReadOnly",
+                attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
+
+            // Add and implement the 'get_IsReadOnly' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.ICollection1get_IsReadOnly(elementType).Import(module),
+                method: get_IsReadOnlyMethod);
+
+            // Create a body for the 'get_IsReadOnly' method
+            get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody(get_IsReadOnlyMethod)
+            {
+                Instructions =
+                {
+                    { Ldc_I4_0 },
+                    { Ret }
+                }
+            };
+
+            // Create the 'IsReadOnly' property
+            PropertyDefinition isReadOnlyProperty = new(
+                name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.IsReadOnly",
+                attributes: PropertyAttributes.None,
+                signature: PropertySignature.FromGetMethod(get_IsReadOnlyMethod))
+            { GetMethod = get_IsReadOnlyMethod };
+
+            interfaceImplType.Properties.Add(isReadOnlyProperty);
+
             // Create the 'Add' method
             MethodDefinition addMethod = new(
                 name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",

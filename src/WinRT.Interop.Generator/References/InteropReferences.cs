@@ -1516,6 +1516,18 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.ICollection{T}.IsReadOnly"/>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MemberReference ICollection1get_IsReadOnly(TypeSignature elementType)
+    {
+        return ICollection1
+            .MakeGenericReferenceType(elementType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("get_IsReadOnly", MethodSignature.CreateInstance(_interopModule.CorLibTypeFactory.Boolean));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="System.Collections.Generic.ICollection{T}.Add"/>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
