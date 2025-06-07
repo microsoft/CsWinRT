@@ -50,7 +50,7 @@ internal static class WellKnownCilMethodBodyFactory
         // Load all the additional parameters, based on the method signature
         for (int i = 1; i <= implementationMethod.Parameters.Count; i++)
         {
-            body.Instructions.Add(CilInstruction.CreateLdloc(i));
+            body.Instructions.Add(CilInstruction.CreateLdarg(i));
         }
 
         // Call the forwarded method and return
