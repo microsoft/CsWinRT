@@ -328,14 +328,9 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: valueType.Import(module),
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]));
-
-            dictionaryMethodsType.Methods.Add(get_ItemMethod);
-
-            // Create a method body for the 'Item' getter method
-            get_ItemMethod.CilMethodBody = new CilMethodBody()
+                        keyType.Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -343,6 +338,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(get_ItemMethod);
 
             // Define the 'Item' setter method as follows:
             //
@@ -355,14 +352,9 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module),
-                        valueType.Import(module)]));
-
-            dictionaryMethodsType.Methods.Add(set_ItemMethod);
-
-            // Create a method body for the 'Item' setter method
-            set_ItemMethod.CilMethodBody = new CilMethodBody()
+                        valueType.Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -371,6 +363,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(set_ItemMethod);
 
             // Define the 'Add' method as follows:
             //
@@ -383,14 +377,9 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         keyType.Import(module),
-                        valueType.Import(module)]));
-
-            dictionaryMethodsType.Methods.Add(addMethod);
-
-            // Create a method body for the 'Add' method
-            addMethod.CilMethodBody = new CilMethodBody()
+                        valueType.Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -399,6 +388,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(addMethod);
 
             // Define the 'Remove' method as follows:
             //
@@ -410,14 +401,9 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]));
-
-            dictionaryMethodsType.Methods.Add(removeMethod);
-
-            // Create a method body for the 'Remove' method
-            removeMethod.CilMethodBody = new CilMethodBody()
+                        keyType.Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -425,6 +411,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(removeMethod);
 
             // Define the 'Count' method as follows:
             //
@@ -434,20 +422,17 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
-
-            dictionaryMethodsType.Methods.Add(countMethod);
-
-            // Create a method body for the 'Count' method
-            countMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Call, interopReferences.IDictionaryMethodsCount.Import(module) },
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(countMethod);
 
             // Define the 'ContainsKey' method as follows:
             //
@@ -459,14 +444,9 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]));
-
-            dictionaryMethodsType.Methods.Add(containsKeyMethod);
-
-            // Create a method body for the 'ContainsKey' method
-            containsKeyMethod.CilMethodBody = new CilMethodBody()
+                        keyType.Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -474,6 +454,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(containsKeyMethod);
 
             // Define the 'TryGetValue' method as follows:
             //
@@ -489,15 +471,8 @@ internal partial class InteropTypeDefinitionBuilder
                         valueType.Import(module).MakeByReferenceType()]))
             {
                 // The 'value' parameter is '[out]'
-                ParameterDefinitions = { new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out) }
-            };
-
-            dictionaryMethodsType.Methods.Add(tryGetValueMethod);
-
-            // Create a method body for the 'TryGetValue' method
-            tryGetValueMethod.CilMethodBody = new CilMethodBody()
-            {
-                Instructions =
+                ParameterDefinitions = { new ParameterDefinition(sequence: 3, name: null, attributes: ParameterAttributes.Out) },
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -506,6 +481,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(tryGetValueMethod);
 
             // Define the 'Add' ('KeyValuePair<,>') method as follows:
             //
@@ -517,14 +494,9 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module)]));
-
-            dictionaryMethodsType.Methods.Add(addKeyValuePairMethod);
-
-            // Create a method body for the 'Add' method
-            addKeyValuePairMethod.CilMethodBody = new CilMethodBody()
+                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -532,6 +504,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(addKeyValuePairMethod);
 
             // Define the 'Remove' ('KeyValuePair<,>') method as follows:
             //
@@ -543,14 +517,9 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module)]));
-
-            dictionaryMethodsType.Methods.Add(removeKeyValuePairMethod);
-
-            // Create a method body for the 'Remove' method
-            removeKeyValuePairMethod.CilMethodBody = new CilMethodBody()
+                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -558,6 +527,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(removeKeyValuePairMethod);
 
             // Define the 'Clear' method as follows:
             //
@@ -567,20 +538,17 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
-
-            dictionaryMethodsType.Methods.Add(clearMethod);
-
-            // Create a method body for the 'Clear' method
-            clearMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Call, interopReferences.IDictionaryMethodsClear.Import(module) },
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(clearMethod);
 
             // Define the 'Contains' method as follows:
             //
@@ -592,14 +560,9 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module)]));
-
-            dictionaryMethodsType.Methods.Add(containsMethod);
-
-            // Create a method body for the 'Contains' method
-            containsMethod.CilMethodBody = new CilMethodBody()
+                        interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module)]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -607,6 +570,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(containsMethod);
 
             // We need to pass the 'IIterableMethods' type as a second type argument, as it's needed to enumerate key-value pairs
             TypeDefinition iterableMethodsType = emitState.LookupTypeDefinition(
@@ -629,14 +594,9 @@ internal partial class InteropTypeDefinitionBuilder
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
                         interopReferences.KeyValuePair.MakeGenericValueType(keyType, valueType).Import(module).MakeSzArrayType(),
-                        module.CorLibTypeFactory.Int32]));
-
-            dictionaryMethodsType.Methods.Add(copyToMethod);
-
-            // Create a method body for the 'CopyTo' method
-            copyToMethod.CilMethodBody = new CilMethodBody()
+                        module.CorLibTypeFactory.Int32]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
@@ -646,6 +606,8 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            dictionaryMethodsType.Methods.Add(copyToMethod);
         }
 
         /// <summary>
@@ -862,23 +824,20 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_KeysMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.get_Keys",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(keyType).Import(module)));
-
-            // Add and implement the 'get_Keys' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2get_Keys(keyType, valueType).Import(module),
-                method: get_KeysMethod);
-
-            // Create a body for the 'get_Keys' method
-            get_KeysMethod.CilMethodBody = new CilMethodBody()
+                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(keyType).Import(module)))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Newobj, interopReferences.DictionaryKeyCollection2_ctor(keyType, valueType).Import(module) },
                     { Ret }
                 }
             };
+
+            // Add and implement the 'get_Keys' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IDictionary2get_Keys(keyType, valueType).Import(module),
+                method: get_KeysMethod);
 
             // Create the 'Keys' property
             PropertyDefinition keysProperty = new(
@@ -893,23 +852,20 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ValuesMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.get_Values",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(valueType).Import(module)));
-
-            // Add and implement the 'get_Values' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2get_Values(keyType, valueType).Import(module),
-                method: get_ValuesMethod);
-
-            // Create a body for the 'get_Values' method
-            get_ValuesMethod.CilMethodBody = new CilMethodBody()
+                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(valueType).Import(module)))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Newobj, interopReferences.DictionaryValueCollection2_ctor(keyType, valueType).Import(module) },
                     { Ret }
                 }
             };
+
+            // Add and implement the 'get_Values' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.IDictionary2get_Values(keyType, valueType).Import(module),
+                method: get_ValuesMethod);
 
             // Create the 'Values' property
             PropertyDefinition valuesProperty = new(
@@ -1083,20 +1039,13 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: module.CorLibTypeFactory.Void,
                     parameterTypes: [
                         keyValuePairType.MakeSzArrayType().Import(module),
-                        module.CorLibTypeFactory.Int32]));
-
-            // Add and implement the 'CopyTo' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1CopyTo(keyValuePairType).Import(module),
-                method: copyToMethod);
-
-            // Create a body for the 'CopyTo' method. This method is special: we also need to pass a 'WindowsRuntimeObjectReference'
-            // for the 'IEnumerable<KeyValuePair<TKey, TValue>>' interface, as it needs to enumerate the key-value pairs. So here we
-            // are emitting code manually, to save the current 'WindowsRuntimeObject', resolve the two references, and forward the call.
-            copyToMethod.CilMethodBody = new CilMethodBody()
+                        module.CorLibTypeFactory.Int32]))
             {
-                LocalVariables = { new CilLocalVariable(interopReferences.WindowsRuntimeObject.Import(module).ToReferenceTypeSignature()) },
-                Instructions =
+                // Create a body for the 'CopyTo' method. This method is special: we also need to pass a 'WindowsRuntimeObjectReference'
+                // for the 'IEnumerable<KeyValuePair<TKey, TValue>>' interface, as it needs to enumerate the key-value pairs. So here we
+                // are emitting code manually, to save the current 'WindowsRuntimeObject', resolve the two references, and forward the call.
+                CilLocalVariables = { new CilLocalVariable(interopReferences.WindowsRuntimeObject.Import(module).ToReferenceTypeSignature()) },
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
@@ -1117,6 +1066,11 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
+
+            // Add and implement the 'CopyTo' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.ICollection1CopyTo(keyValuePairType).Import(module),
+                method: copyToMethod);
 
             // Create the 'get_Count' getter method
             MethodDefinition get_CountMethod = new(
@@ -1150,22 +1104,19 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IsReadOnlyMethod = new(
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_IsReadOnly",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean));
-
-            // Add and implement the 'get_IsReadOnly' method
-            interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICollection1get_IsReadOnly(keyValuePairType).Import(module),
-                method: get_IsReadOnlyMethod);
-
-            // Create a body for the 'get_IsReadOnly' method
-            get_IsReadOnlyMethod.CilMethodBody = new CilMethodBody()
+                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Boolean))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldc_I4_0 },
                     { Ret }
                 }
             };
+
+            // Add and implement the 'get_IsReadOnly' method
+            interfaceImplType.AddMethodImplementation(
+                declaration: interopReferences.ICollection1get_IsReadOnly(keyValuePairType).Import(module),
+                method: get_IsReadOnlyMethod);
 
             // Create the 'IsReadOnly' property
             PropertyDefinition isReadOnlyProperty = new(
